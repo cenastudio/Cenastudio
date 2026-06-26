@@ -394,12 +394,12 @@ export function initDatabase() {
     );
   `);
 
-  createIndexes();
   ensureUserColumns();
   ensureSubscriptionColumns();
   ensureProjectColumns();
   ensureClientColumns();
   ensureVideoReviewColumns();
+  createIndexes();
 
   const planCount = db.prepare("SELECT COUNT(*) as c FROM plans").get() as { c: number };
   if (planCount.c === 0) {
