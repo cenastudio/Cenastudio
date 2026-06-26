@@ -136,6 +136,39 @@ function readJson<T>(key: string, fallback: T): T {
   }
 }
 
+function printHtmlDocument(docHtml: string) {
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+  iframe.style.opacity = "0";
+  document.body.appendChild(iframe);
+
+  const cleanup = () => {
+    window.setTimeout(() => iframe.remove(), 1000);
+  };
+
+  iframe.onload = () => {
+    const frameWindow = iframe.contentWindow;
+    if (!frameWindow) {
+      cleanup();
+      toast.error("Não foi possível preparar o PDF");
+      return;
+    }
+    frameWindow.focus();
+    frameWindow.onafterprint = cleanup;
+    window.setTimeout(() => {
+      frameWindow.print();
+      cleanup();
+    }, 250);
+  };
+
+  iframe.srcdoc = docHtml;
+}
+
 function buildProposalHtml(form: ProposalForm, lines: ProposalLine[]) {
   const subtotal = lines.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const discountValue = Math.round((subtotal * form.discount) / 100);
@@ -282,19 +315,12 @@ function ProposalsContent() {
     setSelected((current) => current.filter((item) => item.id !== id));
   };
 
-  const exportPdf = (html = proposalHtml) => {
-    if (!selected.length) {
+  const exportPdf = (html = proposalHtml, requireSelection = true) => {
+    if (requireSelection && !selected.length) {
       toast.error("Selecione pelo menos um servico");
       return;
     }
-    const win = window.open("", "_blank", "noopener,noreferrer");
-    if (!win) {
-      toast.error("Permita pop-ups para exportar PDF");
-      return;
-    }
-    win.document.write(html);
-    win.document.close();
-    window.setTimeout(() => win.print(), 500);
+    printHtmlDocument(html);
   };
 
   const saveProposal = () => {
@@ -476,11 +502,11 @@ function ProposalsContent() {
                   {history.map((item) => (
                     <div key={item.id} className="flex items-center gap-3 border border-frame-gray-3 bg-frame-black/30 p-3">
                       <BriefcaseBusiness className="w-4 h-4 text-frame-orange shrink-0" />
-                      <button type="button" onClick={() => exportPdf(item.html)} className="flex-1 text-left min-w-0">
+                      <button type="button" onClick={() => exportPdf(item.html, false)} className="flex-1 text-left min-w-0">
                         <div className="text-sm font-semibold truncate">{item.title}</div>
                         <div className="text-[0.62rem] text-frame-gray-light truncate">{item.clientName} · {formatCurrency(item.total)} · {new Date(item.createdAt).toLocaleDateString("pt-BR")}</div>
                       </button>
-                      <button type="button" onClick={() => exportPdf(item.html)} className="text-frame-orange hover:text-frame-white" title="Exportar">
+                      <button type="button" onClick={() => exportPdf(item.html, false)} className="text-frame-orange hover:text-frame-white" title="Exportar">
                         <Download className="w-4 h-4" />
                       </button>
                       <button type="button" onClick={() => persistHistory(history.filter((saved) => saved.id !== item.id))} className="text-frame-gray-light hover:text-red-400" title="Excluir">

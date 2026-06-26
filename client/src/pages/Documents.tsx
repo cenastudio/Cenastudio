@@ -212,6 +212,39 @@ function readSavedDocs(): StudioDocument[] {
   }
 }
 
+function printHtmlDocument(docHtml: string) {
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+  iframe.style.opacity = "0";
+  document.body.appendChild(iframe);
+
+  const cleanup = () => {
+    window.setTimeout(() => iframe.remove(), 1000);
+  };
+
+  iframe.onload = () => {
+    const frameWindow = iframe.contentWindow;
+    if (!frameWindow) {
+      cleanup();
+      toast.error("Não foi possível preparar o PDF");
+      return;
+    }
+    frameWindow.focus();
+    frameWindow.onafterprint = cleanup;
+    window.setTimeout(() => {
+      frameWindow.print();
+      cleanup();
+    }, 250);
+  };
+
+  iframe.srcdoc = docHtml;
+}
+
 function DocumentsContent() {
   const [form, setForm] = useState<DocumentForm>(initialForm);
   const [savedDocs, setSavedDocs] = useState<StudioDocument[]>([]);
@@ -241,14 +274,7 @@ function DocumentsContent() {
   };
 
   const exportPdf = (docHtml = html) => {
-    const win = window.open("", "_blank", "noopener,noreferrer");
-    if (!win) {
-      toast.error("Permita pop-ups para exportar PDF");
-      return;
-    }
-    win.document.write(docHtml);
-    win.document.close();
-    window.setTimeout(() => win.print(), 500);
+    printHtmlDocument(docHtml);
   };
 
   const copyHtml = async () => {
