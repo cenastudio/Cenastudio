@@ -1,23 +1,27 @@
-import React, { useEffect, useState } from "react";
-import { useLocation } from "wouter";
-import { useAuth } from "@/contexts/AuthContext";
+import React, { useEffect, useMemo, useState } from "react";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AnimatedModal from "@/components/AnimatedModal";
-import {
-  Plus,
-  DollarSign,
-  TrendingUp,
-  Calendar,
-  MoreVertical,
-  Edit,
-  Trash2,
-  Building2,
-  ArrowRight,
-  Inbox,
-} from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import { toast } from "sonner";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Building2,
+  Calendar,
+  Clock,
+  DollarSign,
+  Edit,
+  Eye,
+  Filter,
+  Inbox,
+  MoreVertical,
+  Plus,
+  Search,
+  Target,
+  Trash2,
+  TrendingUp,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,7 +32,8 @@ import { motion } from "framer-motion";
 
 interface Opportunity {
   id: number;
-  clientId: number | null;
+  client_id?: number | null;
+  clientId?: number | null;
   client_name?: string;
   client_company?: string;
   title: string;
@@ -48,742 +53,763 @@ interface PipelineStats {
   wonThisMonth: { count: number; value: number };
 }
 
+interface ClientOption {
+  id: number;
+  name: string;
+  company?: string | null;
+}
+
 const STAGES = [
-  { id: "prospect", label: "Prospecção", color: "border-blue-500/30" },
-  { id: "meeting", label: "Reunião", color: "border-yellow-500/30" },
-  { id: "proposal", label: "Proposta", color: "border-purple-500/30" },
-  { id: "negotiation", label: "Negociação", color: "border-orange-500/30" },
-  { id: "won", label: "Fechado", color: "border-green-500/30" },
-  { id: "lost", label: "Perdido", color: "border-red-500/30" },
+  { id: "prospect", label: "Lead", description: "Entrou no radar", color: "border-sky-400/40", dot: "bg-sky-400" },
+  { id: "meeting", label: "Diagnóstico", description: "Reunião e briefing", color: "border-amber-400/40", dot: "bg-amber-400" },
+  { id: "proposal", label: "Proposta", description: "Escopo enviado", color: "border-violet-400/40", dot: "bg-violet-400" },
+  { id: "negotiation", label: "Negociação", description: "Ajustes finais", color: "border-orange-400/50", dot: "bg-frame-orange" },
+  { id: "won", label: "Ganho", description: "Virou projeto", color: "border-emerald-400/50", dot: "bg-emerald-400" },
+  { id: "lost", label: "Perdido", description: "Encerrado", color: "border-red-400/45", dot: "bg-frame-red" },
 ];
 
-function PipelineContent() {
-  const [, setLocation] = useLocation();
+const STAGE_ORDER = STAGES.map((stage) => stage.id);
 
+const emptyForm = {
+  title: "",
+  clientId: "",
+  stage: "prospect",
+  estimatedValue: "",
+  probability: "35",
+  expectedCloseDate: "",
+  lostReason: "",
+};
+
+function PipelineContent() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [stats, setStats] = useState<PipelineStats | null>(null);
+  const [clients, setClients] = useState<ClientOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
-
-  // Form states
-  const [title, setTitle] = useState("");
-  const [clientId, setClientId] = useState("");
-  const [stage, setStage] = useState("prospect");
-  const [estimatedValue, setEstimatedValue] = useState("");
-  const [probability, setProbability] = useState("50");
-  const [expectedCloseDate, setExpectedCloseDate] = useState("");
-  const [lostReason, setLostReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [clients, setClients] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
+  const [stageFilter, setStageFilter] = useState("all");
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+  const [modalMode, setModalMode] = useState<"create" | "edit" | "detail" | "delete" | null>(null);
+  const [form, setForm] = useState(emptyForm);
 
   useEffect(() => {
-    loadOpportunities();
-    loadStats();
-    loadClients();
+    void loadPipeline();
   }, []);
 
-  const loadOpportunities = async () => {
+  const loadPipeline = async () => {
+    setIsLoading(true);
     try {
-      const response = await fetch("/api/clients/opportunities");
-      const data = await response.json();
-      if (data.success) {
-        setOpportunities(data.data);
-      }
-    } catch (error) {
-      console.error("Error loading opportunities:", error);
+      const [opportunitiesRes, statsRes, clientsRes] = await Promise.all([
+        fetch("/api/pipeline-opportunities", { credentials: "include" }),
+        fetch("/api/pipeline-stats", { credentials: "include" }),
+        fetch("/api/clients", { credentials: "include" }),
+      ]);
+
+      const [opportunitiesData, statsData, clientsData] = await Promise.all([
+        opportunitiesRes.json(),
+        statsRes.json(),
+        clientsRes.json(),
+      ]);
+
+      if (opportunitiesData.success) setOpportunities(opportunitiesData.data || []);
+      if (statsData.success) setStats(statsData.data);
+      if (clientsData.success) setClients(clientsData.data || []);
+    } catch {
+      toast.error("Erro ao carregar pipeline");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const loadStats = async () => {
-    try {
-      const response = await fetch("/api/clients/opportunities/stats");
-      const data = await response.json();
-      if (data.success) {
-        setStats(data.data);
-      }
-    } catch (error) {
-      console.error("Error loading stats:", error);
-    }
+  const filteredOpportunities = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return opportunities.filter((opp) => {
+      const matchesStage = stageFilter === "all" || opp.stage === stageFilter;
+      const matchesSearch =
+        !term ||
+        opp.title.toLowerCase().includes(term) ||
+        opp.client_name?.toLowerCase().includes(term) ||
+        opp.client_company?.toLowerCase().includes(term);
+      return matchesStage && matchesSearch;
+    });
+  }, [opportunities, search, stageFilter]);
+
+  const weightedValue = useMemo(
+    () =>
+      filteredOpportunities
+        .filter((opp) => !["won", "lost"].includes(opp.stage))
+        .reduce((sum, opp) => sum + ((opp.estimated_value || 0) * (opp.probability || 0)) / 100, 0),
+    [filteredOpportunities],
+  );
+
+  const nextClosing = useMemo(() => {
+    return filteredOpportunities
+      .filter((opp) => opp.expected_close_date && !["won", "lost"].includes(opp.stage))
+      .sort((a, b) => new Date(a.expected_close_date!).getTime() - new Date(b.expected_close_date!).getTime())[0];
+  }, [filteredOpportunities]);
+
+  const getOpportunitiesByStage = (stageId: string) =>
+    filteredOpportunities.filter((opp) => opp.stage === stageId);
+
+  const getStageTotal = (stageId: string) =>
+    getOpportunitiesByStage(stageId).reduce((sum, opp) => sum + (opp.estimated_value || 0), 0);
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value || 0);
+
+  const formatDate = (value?: string | null) => {
+    if (!value) return "Sem data";
+    return new Date(value).toLocaleDateString("pt-BR", { timeZone: "UTC" });
   };
 
-  const loadClients = async () => {
-    try {
-      const response = await fetch("/api/clients");
-      const data = await response.json();
-      if (data.success) {
-        setClients(data.data);
-      }
-    } catch (error) {
-      console.error("Error loading clients:", error);
-    }
+  const getDueTone = (value?: string | null) => {
+    if (!value) return "text-frame-gray-light";
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const due = new Date(value);
+    due.setHours(0, 0, 0, 0);
+    const days = Math.ceil((due.getTime() - today.getTime()) / 86400000);
+    if (days < 0) return "text-frame-red";
+    if (days <= 7) return "text-amber-300";
+    return "text-frame-gray-light";
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim()) return;
-
-    setIsSubmitting(true);
-    try {
-      const response = await fetch("/api/clients/opportunities", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: title.trim(),
-          clientId: clientId ? parseInt(clientId) : undefined,
-          stage,
-          estimatedValue: estimatedValue ? parseInt(estimatedValue) : undefined,
-          probability: parseInt(probability),
-          expectedCloseDate: expectedCloseDate || undefined,
-        }),
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        toast.success("Oportunidade criada com sucesso!");
-        setIsCreateOpen(false);
-        resetForm();
-        loadOpportunities();
-        loadStats();
-      } else {
-        toast.error(data.error || "Erro ao criar oportunidade");
-      }
-    } catch (error) {
-      toast.error("Erro ao criar oportunidade");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const resetForm = () => {
+    setForm(emptyForm);
+    setSelectedOpportunity(null);
   };
 
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedOpportunity || !title.trim()) return;
-
-    setIsSubmitting(true);
-    try {
-      const response = await fetch(`/api/clients/opportunities/${selectedOpportunity.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: title.trim(),
-          stage,
-          estimatedValue: estimatedValue ? parseInt(estimatedValue) : undefined,
-          probability: parseInt(probability),
-          expectedCloseDate: expectedCloseDate || undefined,
-          lostReason: stage === "lost" ? lostReason : undefined,
-        }),
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        toast.success("Oportunidade atualizada com sucesso!");
-        setIsEditOpen(false);
-        resetForm();
-        loadOpportunities();
-        loadStats();
-      } else {
-        toast.error(data.error || "Erro ao atualizar oportunidade");
-      }
-    } catch (error) {
-      toast.error("Erro ao atualizar oportunidade");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const updateForm = (key: keyof typeof emptyForm, value: string) => {
+    setForm((current) => ({ ...current, [key]: value }));
   };
 
-  const handleDelete = async () => {
-    if (!selectedOpportunity) return;
-
-    setIsSubmitting(true);
-    try {
-      const response = await fetch(`/api/clients/opportunities/${selectedOpportunity.id}`, {
-        method: "DELETE",
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        toast.success("Oportunidade excluída com sucesso!");
-        setIsDeleteOpen(false);
-        setSelectedOpportunity(null);
-        loadOpportunities();
-        loadStats();
-      } else {
-        toast.error(data.error || "Erro ao excluir oportunidade");
-      }
-    } catch (error) {
-      toast.error("Erro ao excluir oportunidade");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleMoveStage = async (opportunity: Opportunity, newStage: string) => {
-    try {
-      const response = await fetch(`/api/clients/opportunities/${opportunity.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stage: newStage }),
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        toast.success("Estágio atualizado!");
-        loadOpportunities();
-        loadStats();
-      } else {
-        toast.error(data.error || "Erro ao atualizar estágio");
-      }
-    } catch (error) {
-      toast.error("Erro ao atualizar estágio");
-    }
+  const openCreateModal = () => {
+    resetForm();
+    setModalMode("create");
   };
 
   const openEditModal = (opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity);
-    setTitle(opportunity.title);
-    setClientId(opportunity.clientId?.toString() || "");
-    setStage(opportunity.stage);
-    setEstimatedValue(opportunity.estimated_value?.toString() || "");
-    setProbability(opportunity.probability.toString());
-    setExpectedCloseDate(opportunity.expected_close_date || "");
-    setLostReason(opportunity.lost_reason || "");
-    setIsEditOpen(true);
+    setForm({
+      title: opportunity.title,
+      clientId: (opportunity.client_id ?? opportunity.clientId ?? "").toString(),
+      stage: opportunity.stage,
+      estimatedValue: opportunity.estimated_value?.toString() || "",
+      probability: opportunity.probability?.toString() || "35",
+      expectedCloseDate: opportunity.expected_close_date || "",
+      lostReason: opportunity.lost_reason || "",
+    });
+    setModalMode("edit");
   };
 
-  const resetForm = () => {
-    setTitle("");
-    setClientId("");
-    setStage("prospect");
-    setEstimatedValue("");
-    setProbability("50");
-    setExpectedCloseDate("");
-    setLostReason("");
+  const openDetailModal = (opportunity: Opportunity) => {
+    setSelectedOpportunity(opportunity);
+    setModalMode("detail");
+  };
+
+  const closeModal = () => {
+    setModalMode(null);
     setSelectedOpportunity(null);
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
+  const submitOpportunity = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!form.title.trim()) {
+      toast.error("Dê um nome para a oportunidade");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const isEdit = modalMode === "edit" && selectedOpportunity;
+      const response = await fetch(
+        isEdit ? `/api/pipeline-opportunity?id=${selectedOpportunity.id}` : "/api/pipeline-opportunity",
+        {
+          method: isEdit ? "PUT" : "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: form.title.trim(),
+            clientId: form.clientId ? Number(form.clientId) : undefined,
+            stage: form.stage,
+            estimatedValue: form.estimatedValue ? Number(form.estimatedValue) : undefined,
+            probability: Number(form.probability || 0),
+            expectedCloseDate: form.expectedCloseDate || undefined,
+            lostReason: form.stage === "lost" ? form.lostReason : undefined,
+          }),
+        },
+      );
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || "Erro ao salvar oportunidade");
+
+      toast.success(isEdit ? "Oportunidade atualizada" : "Oportunidade criada");
+      closeModal();
+      resetForm();
+      await loadPipeline();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao salvar oportunidade");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("pt-BR");
+  const moveOpportunity = async (opportunity: Opportunity, targetStage: string) => {
+    if (opportunity.stage === targetStage) return;
+    try {
+      const response = await fetch(`/api/pipeline-opportunity?id=${opportunity.id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stage: targetStage }),
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || "Erro ao mover oportunidade");
+      setOpportunities((current) =>
+        current.map((item) => (item.id === opportunity.id ? { ...item, stage: targetStage } : item)),
+      );
+      void loadPipeline();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao mover oportunidade");
+    }
   };
 
-  const getOpportunitiesByStage = (stageId: string) => {
-    return opportunities.filter((opp) => opp.stage === stageId);
+  const deleteOpportunity = async () => {
+    if (!selectedOpportunity) return;
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/pipeline-opportunity?id=${selectedOpportunity.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || "Erro ao excluir oportunidade");
+      toast.success("Oportunidade removida");
+      closeModal();
+      await loadPipeline();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao excluir oportunidade");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const getStageTotal = (stageId: string) => {
-    return getOpportunitiesByStage(stageId).reduce((sum, opp) => sum + (opp.estimated_value || 0), 0);
+  const nextStage = (opportunity: Opportunity) => {
+    const index = STAGE_ORDER.indexOf(opportunity.stage);
+    return STAGES[index + 1];
   };
+
+  const previousStage = (opportunity: Opportunity) => {
+    const index = STAGE_ORDER.indexOf(opportunity.stage);
+    return STAGES[index - 1];
+  };
+
+  const stageById = (id: string) => STAGES.find((stage) => stage.id === id) || STAGES[0];
 
   return (
-    <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
+    <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col overflow-x-hidden">
       <AppNavBar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-10 space-y-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <p className="frame-label mb-2">// VENDAS</p>
-            <h1 className="frame-title text-[clamp(2.1rem,4vw,3.5rem)]">
-              PIPELINE
-            </h1>
-            <p className="text-frame-gray-light text-sm mt-2">
-              Gerencie seu pipeline de oportunidades de vendas
+      <main className="flex-1 w-full px-4 md:px-6 py-6 space-y-5">
+        <section className="flex flex-col xl:flex-row xl:items-end justify-between gap-5 border-b border-frame-gray-3 pb-5">
+          <div className="max-w-3xl min-w-0">
+            <p className="frame-label mb-2">// COMERCIAL</p>
+            <h1 className="frame-title text-[clamp(2rem,4vw,3.4rem)]">PIPELINE</h1>
+            <p className="text-frame-gray-light text-sm mt-2 max-w-2xl leading-relaxed">
+              Funil de vendas com próximos passos, valor ponderado e tomada de decisão rápida.
             </p>
           </div>
 
-          <button
-            onClick={() => {
-              resetForm();
-              setIsCreateOpen(true);
-            }}
-            className="frame-btn-primary flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Nova Oportunidade
-          </button>
-        </div>
-
-        {/* Stats */}
-        {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="border border-frame-gray-3 bg-frame-gray-1/30 p-4"
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-frame-orange/10 rounded-lg">
-                  <TrendingUp className="w-5 h-5 text-frame-orange" />
-                </div>
-                <div>
-                  <p className="text-[0.65rem] text-frame-gray-light font-frame-mono uppercase tracking-wider">
-                    Total Pipeline
-                  </p>
-                  <p className="text-2xl font-bold">{formatCurrency(stats.totalPipelineValue)}</p>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="border border-frame-gray-3 bg-frame-gray-1/30 p-4"
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500/10 rounded-lg">
-                  <DollarSign className="w-5 h-5 text-blue-400" />
-                </div>
-                <div>
-                  <p className="text-[0.65rem] text-frame-gray-light font-frame-mono uppercase tracking-wider">
-                    Oportunidades
-                  </p>
-                  <p className="text-2xl font-bold">{stats.totalOpportunities}</p>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="border border-frame-gray-3 bg-frame-gray-1/30 p-4"
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-500/10 rounded-lg">
-                  <TrendingUp className="w-5 h-5 text-green-400" />
-                </div>
-                <div>
-                  <p className="text-[0.65rem] text-frame-gray-light font-frame-mono uppercase tracking-wider">
-                    Fechados (Mês)
-                  </p>
-                  <p className="text-2xl font-bold">{formatCurrency(stats.wonThisMonth.value)}</p>
-                </div>
-              </div>
-            </motion.div>
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(260px,360px)_190px_auto] gap-2 w-full xl:w-auto">
+            <div className="relative min-w-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                className="w-full bg-frame-gray-1 border border-frame-gray-3 pl-9 pr-3 py-2.5 text-sm outline-none focus:border-frame-orange"
+                placeholder="Buscar oportunidade ou cliente"
+              />
+            </div>
+            <div className="relative min-w-0">
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
+              <select
+                value={stageFilter}
+                onChange={(event) => setStageFilter(event.target.value)}
+                className="w-full bg-frame-gray-1 border border-frame-gray-3 pl-9 pr-3 py-2.5 text-sm outline-none focus:border-frame-orange appearance-none"
+              >
+                <option value="all">Todas etapas</option>
+                {STAGES.map((stage) => (
+                  <option key={stage.id} value={stage.id}>
+                    {stage.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button onClick={openCreateModal} className="frame-btn-primary flex items-center justify-center gap-2 whitespace-nowrap">
+              <Plus className="w-4 h-4" />
+              Nova oportunidade
+            </button>
           </div>
-        )}
+        </section>
 
-        {/* Kanban Board */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+          <Metric icon={DollarSign} label="Pipeline aberto" value={formatCurrency(stats?.totalPipelineValue || 0)} />
+          <Metric icon={Target} label="Valor ponderado" value={formatCurrency(weightedValue)} />
+          <Metric icon={TrendingUp} label="Ganho no mês" value={formatCurrency(stats?.wonThisMonth.value || 0)} />
+          <Metric
+            icon={Clock}
+            label="Próximo fechamento"
+            value={nextClosing ? formatDate(nextClosing.expected_close_date) : "Sem data"}
+          />
+        </section>
+
         {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-frame-orange" />
+          <div className="flex items-center justify-center py-24">
+            <div className="h-8 w-8 animate-spin border-2 border-frame-gray-3 border-t-frame-orange" />
+          </div>
+        ) : filteredOpportunities.length === 0 ? (
+          <div className="border border-frame-gray-3 bg-frame-gray-1/20 py-16">
+            <EmptyState icon={Inbox} title="Nenhuma oportunidade no filtro" />
           </div>
         ) : (
-          <div className="flex gap-4 overflow-x-auto pb-4">
+          <section className="flex gap-3 overflow-x-auto pb-4">
             {STAGES.map((stage) => {
               const stageOpps = getOpportunitiesByStage(stage.id);
-              const stageTotal = getStageTotal(stage.id);
-
               return (
-                <div
-                  key={stage.id}
-                  className={`flex-shrink-0 w-80 border ${stage.color} bg-frame-gray-1/10 rounded-none`}
-                >
-                  <div className="p-4 border-b border-frame-gray-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-frame-mono text-sm font-semibold">{stage.label}</h3>
-                      <span className="text-xs text-frame-gray-light">{stageOpps.length}</span>
+                <div key={stage.id} className={`w-[310px] shrink-0 border ${stage.color} bg-frame-gray-1/10`}>
+                  <div className="p-3 border-b border-frame-gray-3 bg-frame-black/60">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 ${stage.dot}`} />
+                        <h2 className="font-frame-mono uppercase tracking-[0.14em] text-xs">{stage.label}</h2>
+                      </div>
+                      <span className="text-[0.68rem] text-frame-gray-light">{stageOpps.length}</span>
                     </div>
-                    <p className="text-sm font-bold text-frame-orange">{formatCurrency(stageTotal)}</p>
+                    <div className="mt-2 flex items-center justify-between gap-3">
+                      <p className="text-xs text-frame-gray-light">{stage.description}</p>
+                      <p className="text-xs text-frame-orange font-semibold">{formatCurrency(getStageTotal(stage.id))}</p>
+                    </div>
                   </div>
 
-                  <div className="p-3 space-y-3 min-h-[200px]">
-                    {stageOpps.map((opp) => (
-                      <motion.div
-                        key={opp.id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="bg-frame-gray-2 border border-frame-gray-3 p-3 hover:border-frame-orange/50 transition cursor-pointer group"
-                      >
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <h4 className="text-sm font-semibold text-frame-white line-clamp-2">
-                            {opp.title}
-                          </h4>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button className="p-1 hover:bg-frame-gray-3 transition rounded-none opacity-0 group-hover:opacity-100">
-                                <MoreVertical className="w-4 h-4" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-frame-black border-frame-gray-3">
-                              <DropdownMenuItem
-                                onClick={() => openEditModal(opp)}
-                                className="cursor-pointer"
-                              >
-                                <Edit className="w-4 h-4 mr-2" />
-                                Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setSelectedOpportunity(opp);
-                                  setIsDeleteOpen(true);
-                                }}
-                                className="cursor-pointer text-frame-red"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Excluir
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-
-                        {opp.client_name && (
-                          <div className="flex items-center gap-1 text-xs text-frame-gray-light mb-2">
-                            <Building2 className="w-3 h-3" />
-                            <span className="truncate">{opp.client_name}</span>
-                          </div>
-                        )}
-
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-frame-orange font-semibold">
-                            {opp.estimated_value ? formatCurrency(opp.estimated_value) : "N/A"}
-                          </span>
-                          <span className="text-frame-gray-light">{opp.probability}%</span>
-                        </div>
-
-                        {opp.expected_close_date && (
-                          <div className="flex items-center gap-1 text-xs text-frame-gray-light mt-2">
-                            <Calendar className="w-3 h-3" />
-                            <span>{formatDate(opp.expected_close_date)}</span>
-                          </div>
-                        )}
-
-                        {/* Stage Navigation */}
-                        <div className="flex gap-1 mt-3 pt-3 border-t border-frame-gray-3">
-                          {STAGES.map((s) => {
-                            const currentIndex = STAGES.findIndex((st) => st.id === stage.id);
-                            const targetIndex = STAGES.findIndex((st) => st.id === s.id);
-                            const canMove = Math.abs(targetIndex - currentIndex) === 1;
-
-                            if (!canMove || s.id === stage.id) return null;
-
-                            return (
-                              <button
-                                key={s.id}
-                                onClick={() => handleMoveStage(opp, s.id)}
-                                className="flex-1 p-1.5 text-xs bg-frame-gray-3 hover:bg-frame-orange/20 hover:text-frame-orange transition rounded-none"
-                                title={s.label}
-                              >
-                                <ArrowRight className="w-3 h-3 mx-auto" />
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </motion.div>
+                  <div className="p-2.5 space-y-2 min-h-[54vh]">
+                    {stageOpps.map((opportunity) => (
+                      <OpportunityCard
+                        key={opportunity.id}
+                        opportunity={opportunity}
+                        formatCurrency={formatCurrency}
+                        formatDate={formatDate}
+                        dueTone={getDueTone(opportunity.expected_close_date)}
+                        onOpen={() => openDetailModal(opportunity)}
+                        onEdit={() => openEditModal(opportunity)}
+                        onDelete={() => {
+                          setSelectedOpportunity(opportunity);
+                          setModalMode("delete");
+                        }}
+                        onMove={moveOpportunity}
+                        previousStage={previousStage(opportunity)}
+                        nextStage={nextStage(opportunity)}
+                      />
                     ))}
 
                     {stageOpps.length === 0 && (
-                      <EmptyState icon={Inbox} title="Nenhuma oportunidade" />
+                      <button
+                        onClick={openCreateModal}
+                        className="w-full border border-dashed border-frame-gray-3 p-4 text-left text-xs text-frame-gray-light hover:border-frame-orange/60 hover:text-frame-orange transition"
+                      >
+                        Adicionar oportunidade aqui
+                      </button>
                     )}
                   </div>
                 </div>
               );
             })}
-          </div>
+          </section>
         )}
       </main>
 
-      {/* Create Modal */}
       <AnimatedModal
-        isOpen={isCreateOpen}
-        onClose={() => setIsCreateOpen(false)}
-        title="NOVA OPORTUNIDADE"
-        description="Adicione uma nova oportunidade ao pipeline"
+        isOpen={modalMode === "create" || modalMode === "edit"}
+        onClose={closeModal}
+        title={modalMode === "edit" ? "EDITAR OPORTUNIDADE" : "NOVA OPORTUNIDADE"}
+        description="Defina cliente, valor, probabilidade e próximo fechamento."
+        className="max-w-3xl"
         footer={
           <>
-            <button
-              type="button"
-              disabled={isSubmitting}
-              onClick={() => setIsCreateOpen(false)}
-              className="frame-btn-ghost"
-            >
+            <button type="button" disabled={isSubmitting} onClick={closeModal} className="frame-btn-ghost">
               Cancelar
             </button>
             <button
               type="submit"
-              form="create-opportunity-form"
-              disabled={isSubmitting || !title.trim()}
+              form="pipeline-form"
+              disabled={isSubmitting || !form.title.trim()}
               className="frame-btn-primary"
             >
-              {isSubmitting ? "Criando..." : "Criar Oportunidade"}
+              {isSubmitting ? "Salvando..." : modalMode === "edit" ? "Salvar" : "Criar"}
             </button>
           </>
         }
       >
-        <form id="create-opportunity-form" onSubmit={handleCreate} className="space-y-4">
-            <div className="space-y-2">
-              <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                Título *
-              </label>
-              <input
-                type="text"
-                required
-                disabled={isSubmitting}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
-                placeholder="Nome do projeto/operação"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                Cliente
-              </label>
-              <select
-                disabled={isSubmitting}
-                value={clientId}
-                onChange={(e) => setClientId(e.target.value)}
-                className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
-              >
-                <option value="">Nenhum cliente</option>
-                {clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.company ? `${client.name} (${client.company})` : client.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                  Valor Estimado
-                </label>
-                <input
-                  type="number"
-                  disabled={isSubmitting}
-                  value={estimatedValue}
-                  onChange={(e) => setEstimatedValue(e.target.value)}
-                  className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
-                  placeholder="0,00"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                  Probabilidade %
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  disabled={isSubmitting}
-                  value={probability}
-                  onChange={(e) => setProbability(e.target.value)}
-                  className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
-                  placeholder="50"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                  Estágio
-                </label>
-                <select
-                  disabled={isSubmitting}
-                  value={stage}
-                  onChange={(e) => setStage(e.target.value)}
-                  className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
-                >
-                  {STAGES.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                  Data Fechamento
-                </label>
-                <input
-                  type="date"
-                  disabled={isSubmitting}
-                  value={expectedCloseDate}
-                  onChange={(e) => setExpectedCloseDate(e.target.value)}
-                  className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
-                />
-              </div>
-            </div>
-
-        </form>
+        <PipelineForm
+          form={form}
+          clients={clients}
+          isSubmitting={isSubmitting}
+          updateForm={updateForm}
+          onSubmit={submitOpportunity}
+        />
       </AnimatedModal>
 
-      {/* Edit Modal */}
       <AnimatedModal
-        isOpen={isEditOpen}
-        onClose={() => setIsEditOpen(false)}
-        title="EDITAR OPORTUNIDADE"
-        description="Atualize os detalhes da oportunidade"
+        isOpen={modalMode === "detail"}
+        onClose={closeModal}
+        title="DETALHE DA OPORTUNIDADE"
+        description={selectedOpportunity ? stageById(selectedOpportunity.stage).description : ""}
+        className="max-w-3xl"
         footer={
-          <>
-            <button
-              type="button"
-              disabled={isSubmitting}
-              onClick={() => setIsEditOpen(false)}
-              className="frame-btn-ghost"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              form="edit-opportunity-form"
-              disabled={isSubmitting || !title.trim()}
-              className="frame-btn-primary"
-            >
-              {isSubmitting ? "Atualizando..." : "Atualizar Oportunidade"}
-            </button>
-          </>
+          selectedOpportunity && (
+            <>
+              <button onClick={() => openEditModal(selectedOpportunity)} className="frame-btn-ghost">
+                Editar
+              </button>
+              {previousStage(selectedOpportunity) && (
+                <button
+                  onClick={() => moveOpportunity(selectedOpportunity, previousStage(selectedOpportunity)!.id)}
+                  className="frame-btn-ghost"
+                >
+                  Voltar etapa
+                </button>
+              )}
+              {nextStage(selectedOpportunity) && (
+                <button
+                  onClick={() => moveOpportunity(selectedOpportunity, nextStage(selectedOpportunity)!.id)}
+                  className="frame-btn-primary"
+                >
+                  Avançar etapa
+                </button>
+              )}
+            </>
+          )
         }
       >
-        <form id="edit-opportunity-form" onSubmit={handleUpdate} className="space-y-4">
-            <div className="space-y-2">
-              <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                Título *
-              </label>
-              <input
-                type="text"
-                required
-                disabled={isSubmitting}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
+        {selectedOpportunity && (
+          <div className="space-y-5">
+            <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="frame-label mb-2">{stageById(selectedOpportunity.stage).label}</p>
+                  <h3 className="text-xl font-semibold">{selectedOpportunity.title}</h3>
+                  <p className="text-sm text-frame-gray-light mt-1">
+                    {selectedOpportunity.client_name || "Sem cliente vinculado"}
+                    {selectedOpportunity.client_company ? ` / ${selectedOpportunity.client_company}` : ""}
+                  </p>
+                </div>
+                <span className="text-frame-orange font-semibold">
+                  {formatCurrency(selectedOpportunity.estimated_value || 0)}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <DetailStat label="Probabilidade" value={`${selectedOpportunity.probability || 0}%`} />
+              <DetailStat
+                label="Valor ponderado"
+                value={formatCurrency(((selectedOpportunity.estimated_value || 0) * (selectedOpportunity.probability || 0)) / 100)}
               />
+              <DetailStat label="Fechamento" value={formatDate(selectedOpportunity.expected_close_date)} />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                  Valor Estimado
-                </label>
-                <input
-                  type="number"
-                  disabled={isSubmitting}
-                  value={estimatedValue}
-                  onChange={(e) => setEstimatedValue(e.target.value)}
-                  className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                  Probabilidade %
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  disabled={isSubmitting}
-                  value={probability}
-                  onChange={(e) => setProbability(e.target.value)}
-                  className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                  Estágio
-                </label>
-                <select
-                  disabled={isSubmitting}
-                  value={stage}
-                  onChange={(e) => setStage(e.target.value)}
-                  className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
-                >
-                  {STAGES.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                  Data Fechamento
-                </label>
-                <input
-                  type="date"
-                  disabled={isSubmitting}
-                  value={expectedCloseDate}
-                  onChange={(e) => setExpectedCloseDate(e.target.value)}
-                  className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
-                />
-              </div>
-            </div>
-
-            {stage === "lost" && (
-              <div className="space-y-2">
-                <label className="block font-frame-mono text-xs text-frame-red uppercase">
-                  Motivo da Perda
-                </label>
-                <textarea
-                  disabled={isSubmitting}
-                  value={lostReason}
-                  onChange={(e) => setLostReason(e.target.value)}
-                  className="w-full bg-frame-gray-2 border border-frame-red/30 px-3 py-2 text-sm outline-none focus:border-frame-red rounded-none resize-none h-20"
-                  placeholder="Descreva o motivo..."
-                />
+            {selectedOpportunity.lost_reason && (
+              <div className="border border-frame-red/30 bg-frame-red/5 p-4">
+                <p className="frame-label text-frame-red mb-2">Motivo da perda</p>
+                <p className="text-sm text-frame-gray-light">{selectedOpportunity.lost_reason}</p>
               </div>
             )}
-
-        </form>
+          </div>
+        )}
       </AnimatedModal>
 
-      {/* Delete Modal */}
       <AnimatedModal
-        isOpen={isDeleteOpen}
-        onClose={() => setIsDeleteOpen(false)}
+        isOpen={modalMode === "delete"}
+        onClose={closeModal}
         title="EXCLUIR OPORTUNIDADE?"
         description="Esta ação é permanente."
         footer={
           <>
-            <button
-              type="button"
-              disabled={isSubmitting}
-              onClick={() => setIsDeleteOpen(false)}
-              className="frame-btn-ghost"
-            >
+            <button type="button" disabled={isSubmitting} onClick={closeModal} className="frame-btn-ghost">
               Cancelar
             </button>
             <button
               type="button"
               disabled={isSubmitting}
-              onClick={handleDelete}
-              className="bg-frame-red hover:bg-red-600 text-white px-4 py-2 text-sm font-frame-mono uppercase tracking-wider transition rounded-none"
+              onClick={deleteOpportunity}
+              className="bg-frame-red hover:bg-red-600 text-white px-4 py-2 text-sm font-frame-mono uppercase tracking-wider transition"
             >
               {isSubmitting ? "Excluindo..." : "Excluir"}
             </button>
           </>
         }
       >
-        <div className="flex items-center gap-4 mt-4 p-4 border border-frame-red/30 bg-frame-red/5">
-          <Trash2 className="w-5 h-5 text-frame-red" />
-          <div>
-            <p className="font-semibold text-frame-white">{selectedOpportunity?.title}</p>
-            {selectedOpportunity?.client_name && (
-              <p className="text-sm text-frame-gray-light">{selectedOpportunity.client_name}</p>
-            )}
-          </div>
+        <div className="border border-frame-red/30 bg-frame-red/5 p-4">
+          <p className="font-semibold">{selectedOpportunity?.title}</p>
+          <p className="text-sm text-frame-gray-light mt-1">{selectedOpportunity?.client_name || "Sem cliente"}</p>
         </div>
       </AnimatedModal>
+    </div>
+  );
+}
+
+function Metric({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+  return (
+    <div className="border border-frame-gray-3 bg-frame-gray-1/25 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="frame-label text-frame-gray-light">{label}</p>
+          <p className="text-xl font-semibold mt-1">{value}</p>
+        </div>
+        <Icon className="w-5 h-5 text-frame-orange" />
+      </div>
+    </div>
+  );
+}
+
+function OpportunityCard({
+  opportunity,
+  formatCurrency,
+  formatDate,
+  dueTone,
+  onOpen,
+  onEdit,
+  onDelete,
+  onMove,
+  previousStage,
+  nextStage,
+}: {
+  opportunity: Opportunity;
+  formatCurrency: (value: number) => string;
+  formatDate: (value?: string | null) => string;
+  dueTone: string;
+  onOpen: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onMove: (opportunity: Opportunity, stage: string) => void;
+  previousStage?: (typeof STAGES)[number];
+  nextStage?: (typeof STAGES)[number];
+}) {
+  const weighted = ((opportunity.estimated_value || 0) * (opportunity.probability || 0)) / 100;
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="group border border-frame-gray-3 bg-frame-black/80 hover:border-frame-orange/50 transition"
+    >
+      <button onClick={onOpen} className="w-full text-left p-3 space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="text-sm font-semibold leading-snug">{opportunity.title}</h3>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <span
+                role="button"
+                tabIndex={0}
+                onClick={(event) => event.stopPropagation()}
+                className="p-1 text-frame-gray-light hover:text-frame-orange"
+              >
+                <MoreVertical className="w-4 h-4" />
+              </span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-frame-black border-frame-gray-3">
+              <DropdownMenuItem onClick={onOpen} className="cursor-pointer">
+                <Eye className="w-4 h-4 mr-2" />
+                Abrir
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onEdit} className="cursor-pointer">
+                <Edit className="w-4 h-4 mr-2" />
+                Editar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onDelete} className="cursor-pointer text-frame-red">
+                <Trash2 className="w-4 h-4 mr-2" />
+                Excluir
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div className="flex items-center gap-2 text-xs text-frame-gray-light">
+          <Building2 className="w-3.5 h-3.5" />
+          <span className="truncate">{opportunity.client_name || "Sem cliente"}</span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-2">
+            <p className="text-frame-gray-light">Valor</p>
+            <p className="font-semibold text-frame-orange mt-0.5">
+              {formatCurrency(opportunity.estimated_value || 0)}
+            </p>
+          </div>
+          <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-2">
+            <p className="text-frame-gray-light">Ponderado</p>
+            <p className="font-semibold mt-0.5">{formatCurrency(weighted)}</p>
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between text-[0.68rem] text-frame-gray-light mb-1">
+            <span>Probabilidade</span>
+            <span>{opportunity.probability || 0}%</span>
+          </div>
+          <div className="h-1.5 bg-frame-gray-3">
+            <div className="h-full bg-frame-orange" style={{ width: `${Math.min(opportunity.probability || 0, 100)}%` }} />
+          </div>
+        </div>
+
+        <div className={`flex items-center gap-2 text-xs ${dueTone}`}>
+          <Calendar className="w-3.5 h-3.5" />
+          <span>{formatDate(opportunity.expected_close_date)}</span>
+        </div>
+      </button>
+
+      <div className="grid grid-cols-2 border-t border-frame-gray-3">
+        <button
+          disabled={!previousStage}
+          onClick={() => previousStage && onMove(opportunity, previousStage.id)}
+          className="flex items-center justify-center gap-1.5 py-2 text-xs text-frame-gray-light hover:text-frame-white disabled:opacity-30 disabled:hover:text-frame-gray-light"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Voltar
+        </button>
+        <button
+          disabled={!nextStage}
+          onClick={() => nextStage && onMove(opportunity, nextStage.id)}
+          className="flex items-center justify-center gap-1.5 py-2 text-xs text-frame-orange hover:bg-frame-orange/10 disabled:opacity-30 disabled:hover:bg-transparent"
+        >
+          Avançar
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </motion.article>
+  );
+}
+
+function PipelineForm({
+  form,
+  clients,
+  isSubmitting,
+  updateForm,
+  onSubmit,
+}: {
+  form: typeof emptyForm;
+  clients: ClientOption[];
+  isSubmitting: boolean;
+  updateForm: (key: keyof typeof emptyForm, value: string) => void;
+  onSubmit: (event: React.FormEvent) => void;
+}) {
+  return (
+    <form id="pipeline-form" onSubmit={onSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <label className="block font-frame-mono text-xs text-frame-orange uppercase">Título *</label>
+        <input
+          required
+          disabled={isSubmitting}
+          value={form.title}
+          onChange={(event) => updateForm("title", event.target.value)}
+          className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange"
+          placeholder="Ex: Filme institucional / Retainer mensal"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label className="block font-frame-mono text-xs text-frame-orange uppercase">Cliente</label>
+          <select
+            disabled={isSubmitting}
+            value={form.clientId}
+            onChange={(event) => updateForm("clientId", event.target.value)}
+            className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange"
+          >
+            <option value="">Sem cliente vinculado</option>
+            {clients.map((client) => (
+              <option key={client.id} value={client.id}>
+                {client.company ? `${client.name} / ${client.company}` : client.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="block font-frame-mono text-xs text-frame-orange uppercase">Etapa</label>
+          <select
+            disabled={isSubmitting}
+            value={form.stage}
+            onChange={(event) => updateForm("stage", event.target.value)}
+            className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange"
+          >
+            {STAGES.map((stage) => (
+              <option key={stage.id} value={stage.id}>
+                {stage.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <label className="block font-frame-mono text-xs text-frame-orange uppercase">Valor</label>
+          <input
+            type="number"
+            min="0"
+            disabled={isSubmitting}
+            value={form.estimatedValue}
+            onChange={(event) => updateForm("estimatedValue", event.target.value)}
+            className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange"
+            placeholder="15000"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="block font-frame-mono text-xs text-frame-orange uppercase">Probabilidade</label>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            disabled={isSubmitting}
+            value={form.probability}
+            onChange={(event) => updateForm("probability", event.target.value)}
+            className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="block font-frame-mono text-xs text-frame-orange uppercase">Fechamento</label>
+          <input
+            type="date"
+            disabled={isSubmitting}
+            value={form.expectedCloseDate}
+            onChange={(event) => updateForm("expectedCloseDate", event.target.value)}
+            className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange"
+          />
+        </div>
+      </div>
+
+      {form.stage === "lost" && (
+        <div className="space-y-2">
+          <label className="block font-frame-mono text-xs text-frame-red uppercase">Motivo da perda</label>
+          <textarea
+            disabled={isSubmitting}
+            value={form.lostReason}
+            onChange={(event) => updateForm("lostReason", event.target.value)}
+            className="w-full h-24 bg-frame-gray-2 border border-frame-red/40 px-3 py-2 text-sm outline-none focus:border-frame-red resize-none"
+            placeholder="Preço, timing, concorrência, escopo..."
+          />
+        </div>
+      )}
+    </form>
+  );
+}
+
+function DetailStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-3">
+      <p className="frame-label text-frame-gray-light">{label}</p>
+      <p className="text-sm font-semibold mt-1">{value}</p>
     </div>
   );
 }

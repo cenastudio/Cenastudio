@@ -12,6 +12,14 @@ import filesRoutes from "./routes/files.js";
 import collaboratorsRoutes from "./routes/collaborators.js";
 import analyticsRoutes from "./routes/analytics.js";
 import projectMembersRoutes from "./routes/projectMembers.js";
+import {
+  createOpportunity,
+  deleteOpportunity,
+  getOpportunity,
+  getPipelineStats,
+  listOpportunities,
+  updateOpportunity,
+} from "./controllers/opportunitiesController.js";
 import videoReviewsRoutes, { publicRouter as videoReviewsPublicRoutes } from "./routes/videoReviews.js";
 import {
   accessSharedReview,
@@ -53,6 +61,12 @@ router.use("/files", filesRoutes);
 router.use("/collaborators", collaboratorsRoutes);
 router.use("/analytics", analyticsRoutes);
 router.use("/project-members", projectMembersRoutes);
+router.get("/pipeline-opportunities", authenticate, listOpportunities);
+router.get("/pipeline-stats", authenticate, getPipelineStats);
+router.get("/pipeline-opportunity", authenticate, withParam("id", "id", getOpportunity));
+router.post("/pipeline-opportunity", authenticate, createOpportunity);
+router.put("/pipeline-opportunity", authenticate, withParam("id", "id", updateOpportunity));
+router.delete("/pipeline-opportunity", authenticate, withParam("id", "id", deleteOpportunity));
 router.get("/video-review", authenticate, withParam("id", "id", getVideoReview));
 router.put("/video-review", authenticate, withParam("id", "id", updateVideoReview));
 router.post("/video-review-share", authenticate, withParam("id", "reviewId", generateShareLink));
