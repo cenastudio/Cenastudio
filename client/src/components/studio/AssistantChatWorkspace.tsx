@@ -72,8 +72,9 @@ export default function AssistantChatWorkspace({ tool, projectId }: AssistantCha
         ...current,
         {
           role: "assistant",
-          content:
-            "Não consegui responder agora. Se estiver no deploy, confirme se a chave NVIDIA está configurada na Vercel e tente novamente.",
+          content: message.toLowerCase().includes("atingiu") || message.toLowerCase().includes("plano")
+            ? `Sua mensagem foi recebida, mas a conta está sem cota IA agora.\n\n${message}\n\nO administrador pode liberar plano/cota na aba Admin > Gerenciar usuários.`
+            : `Não consegui responder agora.\n\nErro recebido: ${message}\n\nSeu texto ficou preservado. Tente novamente em alguns segundos.`,
         },
       ]);
     } finally {

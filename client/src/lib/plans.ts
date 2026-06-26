@@ -23,6 +23,7 @@ export function planDisplayLabel(
 ): string {
   if (status === "trial" && trialEndsAt) {
     const days = daysRemaining(trialEndsAt);
+    if (days === 0) return "Trial encerrado";
     if (days !== null) return `Trial · ${days} dias`;
   }
   if (planId === "free") return "Free";

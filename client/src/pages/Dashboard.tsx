@@ -420,7 +420,7 @@ function DashboardContent() {
                       </div>
 
                       <p className="text-[0.76rem] font-medium text-frame-white leading-normal group-hover:text-frame-orange transition-colors">
-                        Geração Claude concluída.
+                        Geração IA concluída.
                       </p>
 
                       {act.projectName && (

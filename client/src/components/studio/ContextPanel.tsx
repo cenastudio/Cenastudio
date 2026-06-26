@@ -10,7 +10,7 @@ export default function ContextPanel() {
       <div className="flex items-center gap-2 text-frame-gray-light">
         <div className="w-1.5 h-1.5 rounded-full bg-frame-orange animate-pulse" />
         <span className="font-frame-mono text-[0.55rem] tracking-wider uppercase">
-          Claude 3.5 Sonnet
+          NVIDIA MiniMax / IA
         </span>
       </div>
       <div className="mt-2 text-[0.63rem] font-frame-mono text-frame-gray-light flex flex-col gap-1">

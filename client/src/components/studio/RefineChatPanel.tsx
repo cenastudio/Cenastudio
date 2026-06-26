@@ -130,7 +130,7 @@ ${userMessage}`;
         {/* AI Loading State */}
         {isProcessing && (
           <div className="flex items-center gap-2.5 px-4 font-frame-mono text-[0.6rem] text-frame-orange py-1">
-            <span>Orquestrando refinamento Claude</span>
+            <span>Orquestrando refinamento IA</span>
             <div className="flex gap-1">
               <span className="w-1 h-1 rounded-full bg-frame-orange animate-bounce delay-100" />
               <span className="w-1 h-1 rounded-full bg-frame-orange animate-bounce delay-200" />

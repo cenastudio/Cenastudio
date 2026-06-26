@@ -143,7 +143,7 @@ export default function StudioShell() {
     try {
       const result = await api.ai.generate(tool.id, formData, activeProject?.id);
       setOutput(result.output);
-      toast.success("Geração Claude concluída com sucesso!");
+      toast.success("Geração IA concluída com sucesso!");
       if (activeProject) {
         saveToolStateImmediately(tool.id, formData, result.output);
       }
