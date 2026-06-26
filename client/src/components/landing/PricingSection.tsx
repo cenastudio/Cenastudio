@@ -1,6 +1,4 @@
 import { PRICING } from "@shared/site";
-import { useAuth } from "@/contexts/AuthContext";
-import { useApp } from "@/contexts/AppContext";
 import { motion } from "framer-motion";
 import { Check, MessageCircle } from "lucide-react";
 import { useLocation } from "wouter";
@@ -8,22 +6,17 @@ import { WHATSAPP_NUMBER, WHATSAPP_MESSAGE } from "@/lib/constants";
 
 export default function PricingSection() {
   const [, setLocation] = useLocation();
-  const { isAuthenticated } = useAuth();
-  const { openModal, selectPlan } = useApp();
 
-  const handleSelectPlan = (planId: string) => {
+  const handleSelectPlan = (planId: string, planLabel: string) => {
     if (planId === "iniciante") {
       setLocation("/register");
       return;
     }
 
-    if (isAuthenticated) {
-      selectPlan(planId as "profissional" | "produtora");
-      openModal("checkout");
-      return;
-    }
-
-    setLocation(`/register?plan=${planId}`);
+    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+      WHATSAPP_MESSAGE(planLabel),
+    )}`;
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   };
 
   const ctaLabel = (planId: string) => {
@@ -105,7 +98,7 @@ export default function PricingSection() {
 
                 <button
                   type="button"
-                  onClick={() => handleSelectPlan(plan.id)}
+                  onClick={() => handleSelectPlan(plan.id, plan.tier)}
                   className={`w-full mb-8 flex items-center justify-center gap-2 ${
                     plan.highlight ? "frame-btn-primary" : "frame-btn-ghost"
                   }`}

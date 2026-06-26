@@ -1,6 +1,6 @@
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import express from "express";
+import express, { type Request, type Response } from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import path from "path";
@@ -44,9 +44,20 @@ export function createApp() {
 
   app.use(express.json({ limit: "1mb" }));
 
-  const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
-  const aiLimiter = rateLimit({ windowMs: 60 * 1000, max: 10 });
-  const formLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30 });
+  const tooManyRequestsHandler = (_req: Request, res: Response) => {
+    res.status(429).json({
+      success: false,
+      error: "Muitas tentativas no servidor. Aguarde alguns segundos e tente novamente.",
+    });
+  };
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 60,
+    skip: (req) => req.method === "GET",
+    handler: tooManyRequestsHandler,
+  });
+  const aiLimiter = rateLimit({ windowMs: 60 * 1000, max: 20, handler: tooManyRequestsHandler });
+  const formLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 60, handler: tooManyRequestsHandler });
 
   app.use("/api/auth", authLimiter);
   app.use("/api/ai", aiLimiter);

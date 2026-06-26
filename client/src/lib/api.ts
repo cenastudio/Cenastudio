@@ -37,15 +37,34 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     ...options,
   });
 
-  const json = (await res.json()) as ApiResponse<T>;
-  if (!res.ok || !json.success) {
+  const contentType = res.headers.get("content-type") || "";
+  let json: ApiResponse<T> | null = null;
+  let text = "";
+
+  if (contentType.includes("application/json")) {
+    try {
+      json = (await res.json()) as ApiResponse<T>;
+    } catch {
+      json = null;
+    }
+  } else {
+    text = await res.text().catch(() => "");
+  }
+
+  if (!res.ok || !json?.success) {
     if (res.status === 401) {
       window.dispatchEvent(new CustomEvent("frame:auth-expired"));
     }
+
+    const fallbackMessage =
+      res.status === 429
+        ? "Muitas tentativas no servidor. Aguarde alguns segundos e tente novamente."
+        : text || `Request failed (${res.status})`;
+
     throw new ApiError(
       res.status === 401
-        ? json.error || "Sessão expirada. Entre novamente para continuar."
-        : json.error || `Request failed (${res.status})`,
+        ? json?.error || "Sessão expirada. Entre novamente para continuar."
+        : json?.error || fallbackMessage,
       res.status,
     );
   }

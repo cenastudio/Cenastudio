@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { api, type AuthUser, type UserPlan } from "@/lib/api";
+import { ApiError, api, type AuthUser, type UserPlan } from "@/lib/api";
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -14,10 +14,39 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AUTH_SNAPSHOT_KEY = "frame.auth.snapshot";
+
+interface AuthSnapshot {
+  user: AuthUser;
+  plan: UserPlan | null;
+}
+
+function readAuthSnapshot(): AuthSnapshot | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(AUTH_SNAPSHOT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as AuthSnapshot;
+    return parsed?.user?.id ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeAuthSnapshot(user: AuthUser, plan: UserPlan | null) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(AUTH_SNAPSHOT_KEY, JSON.stringify({ user, plan }));
+}
+
+function clearAuthSnapshot() {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(AUTH_SNAPSHOT_KEY);
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [plan, setPlan] = useState<UserPlan | null>(null);
+  const snapshot = readAuthSnapshot();
+  const [user, setUser] = useState<AuthUser | null>(() => snapshot?.user ?? null);
+  const [plan, setPlan] = useState<UserPlan | null>(() => snapshot?.plan ?? null);
   const [isLoading, setIsLoading] = useState(true);
 
   const refresh = useCallback(async () => {
@@ -25,9 +54,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await api.auth.me();
       setUser(data.user);
       setPlan(data.plan);
-    } catch {
+      writeAuthSnapshot(data.user, data.plan);
+    } catch (error) {
+      if (error instanceof ApiError && (error.status === 429 || error.status >= 500)) {
+        const cached = readAuthSnapshot();
+        if (cached) {
+          setUser(cached.user);
+          setPlan(cached.plan);
+          return;
+        }
+      }
       setUser(null);
       setPlan(null);
+      clearAuthSnapshot();
     }
   }, []);
 
@@ -39,6 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const handleExpiredSession = () => {
       setUser(null);
       setPlan(null);
+      clearAuthSnapshot();
     };
     window.addEventListener("frame:auth-expired", handleExpiredSession);
     return () => window.removeEventListener("frame:auth-expired", handleExpiredSession);
@@ -47,6 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     const { user: loggedIn } = await api.auth.login(email, password);
     setUser(loggedIn);
+    writeAuthSnapshot(loggedIn, plan);
     await refresh();
     return loggedIn;
   };
@@ -54,14 +95,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (name: string, email: string, password: string) => {
     const { user: registered } = await api.auth.register(name, email, password);
     setUser(registered);
+    writeAuthSnapshot(registered, plan);
     await refresh();
     return registered;
   };
 
   const logout = async () => {
-    await api.auth.logout();
+    await api.auth.logout().catch(() => null);
     setUser(null);
     setPlan(null);
+    clearAuthSnapshot();
   };
 
   return (
