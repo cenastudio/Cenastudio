@@ -1,3 +1,4 @@
+import { memo } from "react";
 import CustomCursor from "@/components/landing/CustomCursor";
 
 interface FrameShellProps {
@@ -7,11 +8,13 @@ interface FrameShellProps {
 }
 
 /** Global cinematic shell: film grain + optional custom cursor */
-export default function FrameShell({ children, cursor = true }: FrameShellProps) {
+const FrameShell = memo(function FrameShell({ children, cursor = true }: FrameShellProps) {
   return (
     <div className="frame-shell min-h-screen bg-frame-black text-frame-white font-frame-body">
       {cursor && <CustomCursor />}
       {children}
     </div>
   );
-}
+});
+
+export default FrameShell;

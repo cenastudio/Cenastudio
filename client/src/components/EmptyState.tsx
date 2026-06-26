@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { LucideIcon } from "lucide-react";
 
 interface EmptyStateProps {
@@ -11,7 +12,7 @@ interface EmptyStateProps {
   className?: string;
 }
 
-export default function EmptyState({ icon: Icon, title, description, action, className = "" }: EmptyStateProps) {
+const EmptyState = memo(function EmptyState({ icon: Icon, title, description, action, className = "" }: EmptyStateProps) {
   return (
     <div className={`border border-dashed border-frame-gray-3 p-12 text-center ${className}`}>
       <Icon className="w-12 h-12 text-frame-gray-light mx-auto mb-4" />
@@ -24,4 +25,6 @@ export default function EmptyState({ icon: Icon, title, description, action, cla
       )}
     </div>
   );
-}
+});
+
+export default EmptyState;

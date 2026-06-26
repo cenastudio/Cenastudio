@@ -14,6 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useDebounce } from "@/hooks/useDebounce";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   DndContext, DragOverlay, PointerSensor, useSensor, useSensors, DragStartEvent, DragEndEvent,
@@ -182,6 +183,7 @@ function ClientsContent() {
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 300);
   const [filterStatus, setFilterStatus] = useState("");
   const [filterSegment, setFilterSegment] = useState("");
 
@@ -203,7 +205,7 @@ function ClientsContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [filterStatus, filterSegment, searchTerm]);
+  }, [filterStatus, filterSegment, debouncedSearch]);
 
   const loadStats = async () => {
     try {
@@ -222,7 +224,7 @@ function ClientsContent() {
 
   useEffect(() => {
     loadClients();
-  }, [filterStatus, filterSegment, searchTerm]);
+  }, [filterStatus, filterSegment, debouncedSearch]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveDragId(String(event.active.id));
