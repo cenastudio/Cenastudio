@@ -2,6 +2,7 @@ import type { RequestHandler } from "express";
 import { db } from "../models/db.js";
 import { AppError } from "../middleware/errorHandler.js";
 import type { DbClient, DbCount, DbSum } from "../models/types.js";
+import { notifyAdmins, notifyUser } from "../services/notificationService.js";
 
 // List all clients for current user
 export const listClients: RequestHandler = (req, res, next) => {
@@ -138,6 +139,14 @@ export const createClient: RequestHandler = (req, res, next) => {
       );
 
     const newClient = db.prepare("SELECT * FROM clients WHERE id = ?").get(result.lastInsertRowid);
+    const clientName = name.trim();
+    notifyUser(userId, "Cliente cadastrado", `${clientName} entrou no seu CRM.`, "client", "/clients");
+    notifyAdmins(
+      "Novo cliente no CRM",
+      `${req.user?.email || "Um usuário"} cadastrou ${clientName} como cliente.`,
+      "client",
+      "/clients",
+    );
 
     res.json({ success: true, data: newClient });
   } catch (e) {

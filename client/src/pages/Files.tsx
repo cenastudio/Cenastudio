@@ -54,7 +54,7 @@ function FilesContent() {
   const [selectedFileForUpload, setSelectedFileForUpload] = useState<File | null>(null);
   const [linkUrl, setLinkUrl] = useState("");
   const [linkName, setLinkName] = useState("");
-  const [uploadTab, setUploadTab] = useState<UploadTab>("file");
+  const [uploadTab, setUploadTab] = useState<UploadTab>("link");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [dragOver, setDragOver] = useState(false);
@@ -171,6 +171,7 @@ function FilesContent() {
         const response = await fetch("/api/files/upload", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({
             projectId,
             fileName: selectedFileForUpload.name,
@@ -201,6 +202,7 @@ function FilesContent() {
       const response = await fetch("/api/files/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           projectId,
           fileName: linkName.trim(),
@@ -223,7 +225,7 @@ function FilesContent() {
   const handleDelete = async () => {
     if (!selectedFile) return;
     try {
-      const response = await fetch(`/api/files/${selectedFile.id}`, { method: "DELETE" });
+      const response = await fetch(`/api/files/${selectedFile.id}`, { method: "DELETE", credentials: "include" });
       const data = await response.json();
       if (data.success) {
         toast.success("Arquivo excluído!");
@@ -295,12 +297,12 @@ function FilesContent() {
           <div>
             <p className="frame-label mb-2">// ARQUIVOS</p>
             <h1 className="frame-title text-[clamp(2.1rem,4vw,3.5rem)]">
-              {currentProject ? currentProject.name : "CENTRAL DE ARQUIVOS"}
+              {currentProject ? currentProject.name : "BIBLIOTECA DO PROJETO"}
             </h1>
             <p className="text-frame-gray-light text-sm mt-2">
               {currentProject
                 ? `${files.length} arquivo${files.length !== 1 ? "s" : ""} no projeto`
-                : "Gerencie arquivos, links e referências dos seus projetos"}
+                : "Centralize links externos e referências sem pesar no sistema"}
             </p>
           </div>
 
@@ -346,12 +348,13 @@ function FilesContent() {
             <button
               onClick={() => {
                 if (!projectId) { toast.error("Selecione um projeto primeiro"); return; }
+                setUploadTab("link");
                 setIsUploadOpen(true);
               }}
               className="frame-btn-primary flex items-center gap-2"
             >
               <Upload className="w-4 h-4" />
-              Upload
+              Adicionar
             </button>
           </div>
         </div>
@@ -374,20 +377,20 @@ function FilesContent() {
                 </button>
               </div>
               <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-6 text-center hover:border-frame-orange/50 transition">
-                <Upload className="w-10 h-10 text-frame-orange mx-auto mb-3" />
-                <h3 className="font-semibold mb-1">Upload de Arquivos</h3>
+                <Link className="w-10 h-10 text-frame-orange mx-auto mb-3" />
+                <h3 className="font-semibold mb-1">Links Externos</h3>
                 <p className="text-sm text-frame-gray-light mb-4">
-                  Faça upload de imagens, vídeos, documentos e áudio organizados por projeto.
+                  Salve Drive, Vimeo, YouTube, Dropbox e referências sem consumir armazenamento.
                 </p>
-                <p className="text-xs text-frame-gray-light/60">Arraste arquivos ou clique para enviar</p>
+                <p className="text-xs text-frame-gray-light/60">Recomendado para vídeos grandes</p>
               </div>
               <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-6 text-center hover:border-frame-orange/50 transition">
-                <Link className="w-10 h-10 text-frame-orange mx-auto mb-3" />
-                <h3 className="font-semibold mb-1">Salvar Links</h3>
+                <Upload className="w-10 h-10 text-frame-orange mx-auto mb-3" />
+                <h3 className="font-semibold mb-1">Upload Leve</h3>
                 <p className="text-sm text-frame-gray-light mb-4">
-                  Salve links do Google Drive, Vimeo, YouTube ou qualquer URL de referência.
+                  Envie imagens, PDFs e arquivos pequenos quando realmente precisar anexar algo.
                 </p>
-                <p className="text-xs text-frame-gray-light/60">Links aparecem como arquivos no projeto</p>
+                <p className="text-xs text-frame-gray-light/60">Limite atual: 10MB por arquivo</p>
               </div>
             </div>
 
@@ -469,8 +472,8 @@ function FilesContent() {
               <EmptyState
                 icon={Folder}
                 title={searchQuery || filter !== "all" ? "Nenhum arquivo para esses filtros" : "Nenhum arquivo neste projeto"}
-                description={searchQuery || filter !== "all" ? "Tente outros filtros" : "Faça upload ou salve links de referência"}
-                action={{ label: "Adicionar", onClick: () => setIsUploadOpen(true) }}
+                description={searchQuery || filter !== "all" ? "Tente outros filtros" : "Salve um link externo ou envie um arquivo leve"}
+                action={{ label: "Adicionar link", onClick: () => { setUploadTab("link"); setIsUploadOpen(true); } }}
               />
             ) : viewMode === "grid" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -576,19 +579,11 @@ function FilesContent() {
           <DialogHeader>
             <DialogTitle className="frame-title text-2xl">ADICIONAR AO PROJETO</DialogTitle>
             <DialogDescription className="text-frame-gray-light text-sm">
-              Envie um arquivo ou salve um link externo
+              Salve links externos como padrão. Use upload apenas para arquivos leves.
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex gap-1 mb-4 border border-frame-gray-3">
-            <button
-              onClick={() => setUploadTab("file")}
-              className={`flex-1 py-2 text-xs font-frame-mono uppercase tracking-wider transition ${
-                uploadTab === "file" ? "bg-frame-orange text-frame-black" : "text-frame-gray-light hover:text-frame-white"
-              }`}
-            >
-              <Upload className="w-3.5 h-3.5 inline mr-1" /> Arquivo
-            </button>
             <button
               onClick={() => setUploadTab("link")}
               className={`flex-1 py-2 text-xs font-frame-mono uppercase tracking-wider transition ${
@@ -596,6 +591,14 @@ function FilesContent() {
               }`}
             >
               <Link className="w-3.5 h-3.5 inline mr-1" /> Link
+            </button>
+            <button
+              onClick={() => setUploadTab("file")}
+              className={`flex-1 py-2 text-xs font-frame-mono uppercase tracking-wider transition ${
+                uploadTab === "file" ? "bg-frame-orange text-frame-black" : "text-frame-gray-light hover:text-frame-white"
+              }`}
+            >
+              <Upload className="w-3.5 h-3.5 inline mr-1" /> Upload leve
             </button>
           </div>
 
@@ -614,7 +617,7 @@ function FilesContent() {
                   <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-3">
                     <Upload className={`w-8 h-8 ${dragOver ? "text-frame-orange" : "text-frame-gray-light"}`} />
                     <p className="text-sm text-frame-gray-light">Clique ou arraste um arquivo aqui</p>
-                    <p className="text-xs text-frame-gray-light/60">Imagens, vídeos, documentos, áudio</p>
+                    <p className="text-xs text-frame-gray-light/60">Até 10MB. Para vídeos, prefira link externo.</p>
                   </label>
                 </div>
               ) : (
@@ -667,7 +670,7 @@ function FilesContent() {
               </div>
               <div className="bg-frame-gray-2/30 p-3 text-xs text-frame-gray-light">
                 <Globe className="w-3.5 h-3.5 inline mr-1" />
-                Compatível com Google Drive, Vimeo, YouTube, Dropbox e qualquer URL
+                Melhor fluxo: arquivos pesados ficam no Drive/Vimeo/YouTube; a plataforma organiza o link no projeto.
               </div>
             </div>
           )}
@@ -678,7 +681,7 @@ function FilesContent() {
             </button>
             {uploadTab === "file" ? (
               <button type="button" disabled={!selectedFileForUpload || isUploading} onClick={handleUpload} className="frame-btn-primary">
-                {isUploading ? "Enviando..." : "Enviar Arquivo"}
+                {isUploading ? "Enviando..." : "Enviar arquivo leve"}
               </button>
             ) : (
               <button type="button" disabled={!linkUrl.trim() || !linkName.trim() || isUploading} onClick={handleLinkSubmit} className="frame-btn-primary">

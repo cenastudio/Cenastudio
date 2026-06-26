@@ -52,7 +52,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   }
 
   if (!res.ok || !json?.success) {
-    if (res.status === 401) {
+    if (res.status === 401 && path !== "/auth/me") {
       window.dispatchEvent(new CustomEvent("frame:auth-expired"));
     }
 
@@ -90,6 +90,18 @@ export interface UserPlan {
   features: string[];
 }
 
+export interface StudioSettingsPayload {
+  studioName: string;
+  legalName: string;
+  document: string;
+  email: string;
+  phone: string;
+  city: string;
+  website: string;
+  signature: string;
+  primaryColor: string;
+}
+
 export const api = {
   auth: {
     login: (email: string, password: string) =>
@@ -120,7 +132,7 @@ export const api = {
         body: JSON.stringify(data),
       }),
     supabase: (accessToken: string) =>
-      request<{ user: AuthUser }>("/auth/supabase", {
+      request<{ user: AuthUser; plan: UserPlan | null }>("/auth/supabase", {
         method: "POST",
         body: JSON.stringify({ accessToken }),
       }),
@@ -171,6 +183,14 @@ export const api = {
     populatedStates: (id: number) =>
       request<Array<{ toolId: string; updatedAt: string }>>(`/projects/${id}/states`),
   },
+  studioSettings: {
+    get: () => request<StudioSettingsPayload>("/studio-settings"),
+    update: (data: StudioSettingsPayload) =>
+      request<StudioSettingsPayload>("/studio-settings", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+  },
   admin: {
     listTools: () => request<ToolFromApi[]>("/admin/tools"),
     updateTool: (id: string, body: Record<string, unknown>) =>
@@ -188,6 +208,11 @@ export const api = {
         method: "DELETE",
       }),
     users: () => request<{ count: number; users: { id: number; email: string; role: string; name?: string; plan?: string }[] }>("/admin-users"),
+    createUser: (body: { name: string; email: string; password: string; role: "user" | "admin"; planId: "free" | "pro" | "studio" }) =>
+      request<{ id: number; email: string; role: string; planId: string }>("/admin/users", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
   },
   contact: {
     submit: (data: ContactPayload) =>

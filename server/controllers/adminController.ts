@@ -45,6 +45,15 @@ export const listUsers: RequestHandler = (_req, res, next) => {
   }
 };
 
+export const createManagedUser: RequestHandler = (req, res, next) => {
+  try {
+    const user = authService.createManagedUser(req.body);
+    res.status(201).json({ success: true, data: user });
+  } catch (e) {
+    next(e);
+  }
+};
+
 export const updateUserRole: RequestHandler = (req, res, next) => {
   try {
     const userId = parseInt(req.params.id);

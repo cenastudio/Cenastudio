@@ -7,7 +7,7 @@ import { useLocation } from "wouter";
 
 export default function AuthCallback() {
   const [, setLocation] = useLocation();
-  const { refresh } = useAuth();
+  const { refresh, setSession } = useAuth();
   const [message, setMessage] = useState("Finalizando login...");
 
   useEffect(() => {
@@ -26,8 +26,9 @@ export default function AuthCallback() {
           throw new Error("Sessão do GitHub não encontrada.");
         }
 
-        await api.auth.supabase(accessToken);
-        await refresh();
+        const session = await api.auth.supabase(accessToken);
+        setSession(session.user, session.plan);
+        refresh().catch(() => null);
         if (mounted) setLocation("/tools");
       } catch (error) {
         if (mounted) {

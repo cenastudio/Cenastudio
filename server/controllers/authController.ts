@@ -96,8 +96,9 @@ export const supabaseLogin: RequestHandler = async (req, res, next) => {
       supabaseUser.user_metadata?.user_name;
     const user = authService.upsertOAuthUser(supabaseUser.email, name);
     const token = signToken(user);
+    const plan = authService.formatUserPlan(authService.getUserPlan(user.id));
     res.cookie(COOKIE_NAME, token, cookieOptions);
-    res.json({ success: true, data: { user } });
+    res.json({ success: true, data: { user, plan } });
   } catch (e) {
     next(e);
   }
@@ -106,8 +107,7 @@ export const supabaseLogin: RequestHandler = async (req, res, next) => {
 export const me: RequestHandler = (req, res, next) => {
   try {
     if (!req.user) throw new AppError("Unauthorized", 401);
-    const user = authService.getUserById(req.user.id);
-    if (!user) throw new AppError("User not found", 401);
+    const user = authService.getUserById(req.user.id) || req.user;
     const planRow = authService.getUserPlan(req.user.id);
     const plan = authService.formatUserPlan(planRow);
     res.json({ success: true, data: { user, plan } });

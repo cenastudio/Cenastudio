@@ -11,6 +11,7 @@ interface AuthContextType {
   register: (name: string, email: string, password: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
+  setSession: (user: AuthUser, plan: UserPlan | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setPlan(data.plan);
       writeAuthSnapshot(data.user, data.plan);
     } catch (error) {
-      if (error instanceof ApiError && (error.status === 429 || error.status >= 500)) {
+      if (error instanceof ApiError && (error.status === 401 || error.status === 429 || error.status >= 500)) {
         const cached = readAuthSnapshot();
         if (cached) {
           setUser(cached.user);
@@ -68,6 +69,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setPlan(null);
       clearAuthSnapshot();
     }
+  }, []);
+
+  const setSession = useCallback((nextUser: AuthUser, nextPlan: UserPlan | null) => {
+    setUser(nextUser);
+    setPlan(nextPlan);
+    writeAuthSnapshot(nextUser, nextPlan);
   }, []);
 
   useEffect(() => {
@@ -119,6 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         register,
         logout,
         refresh,
+        setSession,
       }}
     >
       {children}

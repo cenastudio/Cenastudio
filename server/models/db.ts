@@ -205,6 +205,25 @@ function ensureVideoReviewColumns() {
   }
 }
 
+function ensureStudioSettingsColumns() {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS studio_settings (
+      user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      studio_name TEXT NOT NULL DEFAULT 'FRAME.AI Studio',
+      legal_name TEXT DEFAULT '',
+      document TEXT DEFAULT '',
+      email TEXT DEFAULT '',
+      phone TEXT DEFAULT '',
+      city TEXT DEFAULT '',
+      website TEXT DEFAULT '',
+      signature TEXT DEFAULT 'Responsavel comercial',
+      primary_color TEXT DEFAULT '#ff4d1d',
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+}
+
 function ensureSubscription(userId: number, planId: string, status = "active") {
   const existing = db.prepare("SELECT id FROM subscriptions WHERE user_id = ?").get(userId);
   if (!existing) {
@@ -246,6 +265,7 @@ function createIndexes() {
     "CREATE INDEX IF NOT EXISTS idx_project_members_collaborator_id ON project_members(collaborator_id)",
     "CREATE INDEX IF NOT EXISTS idx_reset_tokens_token ON reset_tokens(token)",
     "CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_studio_settings_user_id ON studio_settings(user_id)",
   ];
   for (const sql of indexes) {
     db.exec(sql);
@@ -475,6 +495,7 @@ export function initDatabase() {
   ensureClientColumns();
   ensureCollaboratorColumns();
   ensureVideoReviewColumns();
+  ensureStudioSettingsColumns();
   createIndexes();
 
   const planCount = db.prepare("SELECT COUNT(*) as c FROM plans").get() as { c: number };

@@ -77,6 +77,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
       {navLink("/pipeline", "Pipeline")}
       {navLink("/proposals", "Propostas")}
       {navLink("/documents", "Docs")}
+      {navLink("/company", "Empresa")}
       {navLink("/files", "Arquivos")}
       {navLink("/video-reviews", "Aprovação")}
       {navLink("/collaborators", "Equipe")}

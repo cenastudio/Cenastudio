@@ -12,6 +12,7 @@ import filesRoutes from "./routes/files.js";
 import collaboratorsRoutes from "./routes/collaborators.js";
 import analyticsRoutes from "./routes/analytics.js";
 import projectMembersRoutes from "./routes/projectMembers.js";
+import studioSettingsRoutes from "./routes/studioSettings.js";
 import {
   getActivityAnalytics,
   getOverallAnalytics,
@@ -73,6 +74,7 @@ router.use("/files", filesRoutes);
 router.use("/collaborators", collaboratorsRoutes);
 router.use("/analytics", analyticsRoutes);
 router.use("/project-members", projectMembersRoutes);
+router.use("/studio-settings", studioSettingsRoutes);
 router.get("/analytics-overall", authenticate, getOverallAnalytics);
 router.get("/analytics-revenue", authenticate, getRevenueAnalytics);
 router.get("/analytics-activity", authenticate, getActivityAnalytics);

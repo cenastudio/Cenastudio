@@ -2,6 +2,7 @@ import type { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 import { AppError } from "./errorHandler.js";
 import { db } from "../models/db.js";
+import { ensureUserFromToken } from "../services/authService.js";
 
 export interface AuthUser {
   id: number;
@@ -68,8 +69,9 @@ export const authenticate: RequestHandler = (req, res, next) => {
       )
       .get(payload.id) as AuthUser | undefined;
     if (!currentUser) {
-      res.clearCookie(COOKIE_NAME, { path: "/" });
-      return next(new AppError("Sessão expirada. Entre novamente para continuar.", 401));
+      req.user = ensureUserFromToken(payload);
+      next();
+      return;
     }
     req.user = currentUser;
     next();

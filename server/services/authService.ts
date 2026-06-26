@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { db } from "../models/db.js";
 import type { AuthUser } from "../middleware/authenticate.js";
 import { AppError } from "../middleware/errorHandler.js";
+import { notifyAdmins } from "./notificationService.js";
 
 interface DbUser {
   id: number;
@@ -109,6 +110,30 @@ export function getUserById(id: number): AuthUser | null {
   return row ?? null;
 }
 
+export function ensureUserFromToken(tokenUser: AuthUser): AuthUser {
+  const existing = getUserById(tokenUser.id);
+  if (existing) return existing;
+
+  const normalized = tokenUser.email.toLowerCase().trim();
+  const role = tokenUser.role === "admin" || isAdminEmail(normalized) ? "admin" : "user";
+  const hash = hashPassword(crypto.randomBytes(24).toString("hex"));
+
+  db.prepare(
+    `INSERT OR IGNORE INTO users (id, name, email, password_hash, role, email_verified)
+     VALUES (?, ?, ?, ?, ?, 1)`,
+  ).run(tokenUser.id, tokenUser.name || normalized.split("@")[0], normalized, hash, role);
+
+  if (role === "admin") {
+    ensureUserSubscription(tokenUser.id, "pro", "active");
+  } else if (!getUserPlan(tokenUser.id)) {
+    createTrialSubscription(tokenUser.id);
+  }
+
+  const restored = getUserById(tokenUser.id);
+  if (!restored) throw new AppError("Sessão expirada. Entre novamente para continuar.", 401);
+  return restored;
+}
+
 export function updateProfile(
   userId: number,
   data: { name?: string; studioName?: string; studioRole?: string; phone?: string },
@@ -161,6 +186,12 @@ export function upsertOAuthUser(email: string, name?: string | null): AuthUser {
 
   const userId = Number(result.lastInsertRowid);
   createTrialSubscription(userId);
+  notifyAdmins(
+    "Nova conta via GitHub",
+    `${name || normalized} criou acesso na plataforma e recebeu trial Pro de 14 dias.`,
+    "user",
+    "/admin/gerenciar",
+  );
 
   return {
     id: userId,
@@ -187,8 +218,54 @@ export function registerUser(name: string, email: string, password: string) {
 
   const userId = Number(result.lastInsertRowid);
   createTrialSubscription(userId);
+  notifyAdmins(
+    "Nova conta criada",
+    `${name} (${normalized}) criou acesso na plataforma e recebeu trial Pro de 14 dias.`,
+    "user",
+    "/admin/gerenciar",
+  );
 
   return { id: userId, name, email: normalized, role: "user" as const };
+}
+
+export function createManagedUser(data: {
+  name: string;
+  email: string;
+  password: string;
+  role: "user" | "admin";
+  planId: string;
+}) {
+  const normalized = data.email.toLowerCase().trim();
+  const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(normalized);
+  if (existing) {
+    throw new AppError("E-mail já cadastrado.", 409);
+  }
+
+  const role = data.role === "admin" || isAdminEmail(normalized) ? "admin" : "user";
+  const hash = hashPassword(data.password);
+  const result = db
+    .prepare(
+      "INSERT INTO users (name, email, password_hash, role, email_verified) VALUES (?, ?, ?, ?, ?)",
+    )
+    .run(data.name.trim(), normalized, hash, role, 1);
+
+  const userId = Number(result.lastInsertRowid);
+  ensureUserSubscription(userId, data.planId, "active");
+
+  notifyAdmins(
+    "Conta criada pelo admin",
+    `${data.name} (${normalized}) recebeu acesso ${data.planId.toUpperCase()} como ${role}.`,
+    "user",
+    "/admin/gerenciar",
+  );
+
+  return {
+    id: userId,
+    name: data.name.trim(),
+    email: normalized,
+    role,
+    planId: data.planId,
+  };
 }
 
 export function getUserPlan(userId: number): UserPlanRow | undefined {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { api } from "@/lib/api";
 import {
   CalendarDays,
   Check,
@@ -14,6 +15,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { readStudioSettings, saveStudioSettings, type StudioSettings } from "@/lib/studioSettings";
 
 type DocType = "briefing" | "roteiro" | "callsheet" | "decupagem" | "orcamento" | "cronograma" | "checklist" | "entrega";
 
@@ -146,8 +148,9 @@ function documentSections(form: DocumentForm) {
   return defaults[form.type];
 }
 
-function buildDocumentHtml(form: DocumentForm) {
+function buildDocumentHtml(form: DocumentForm, studio: StudioSettings) {
   const doc = DOC_TYPES.find((item) => item.id === form.type) || DOC_TYPES[0];
+  const accent = studio.primaryColor || doc.accent;
   const metadata = [
     ["Cliente", form.client || "A definir"],
     ["Projeto", form.project || form.title],
@@ -155,10 +158,13 @@ function buildDocumentHtml(form: DocumentForm) {
     ["Duracao", form.duration],
     ["Prazo", form.deadline || "A definir"],
     ["Locacao", form.location || "A definir"],
+    ["Produtora", studio.studioName],
+    ["Contato", studio.email || studio.phone || "A definir"],
+    ["Cidade", studio.city || "A definir"],
   ];
 
   const content = documentSections(form)
-    .map(([title, items]) => renderList(title, items, doc.accent))
+    .map(([title, items]) => renderList(title, items, accent))
     .join("");
 
   return `<!doctype html>
@@ -169,10 +175,10 @@ function buildDocumentHtml(form: DocumentForm) {
   <style>
     *{box-sizing:border-box} body{margin:0;background:#f4f0e8;color:#141414;font-family:Arial,sans-serif}
     .doc-page{max-width:880px;min-height:100vh;margin:0 auto;background:#f8f4ed;padding:48px}
-    .doc-kicker{font-size:10px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:${doc.accent}}
+    .doc-kicker{font-size:10px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:${accent}}
     .doc-title{font-size:44px;line-height:.95;margin:10px 0 10px;font-weight:900;color:#111}
     .doc-muted{color:#666;line-height:1.5;font-size:14px}
-    .doc-header{display:flex;justify-content:space-between;gap:24px;border-bottom:3px solid ${doc.accent};padding-bottom:22px}
+    .doc-header{display:flex;justify-content:space-between;gap:24px;border-bottom:3px solid ${accent};padding-bottom:22px}
     .doc-brand{text-align:right;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#666}
     .doc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:24px}
     .doc-field{border:1px solid #ddd4c7;background:#fffdf8;padding:11px}
@@ -189,16 +195,16 @@ function buildDocumentHtml(form: DocumentForm) {
   <main class="doc-page">
     <header class="doc-header">
       <div>
-        <div class="doc-kicker">FRAME.AI Studio · ${esc(doc.label)}</div>
+        <div class="doc-kicker">${esc(studio.studioName)} · ${esc(doc.label)}</div>
         <h1 class="doc-title">${esc(form.title || doc.label)}</h1>
         <div class="doc-muted">${esc(doc.description)}</div>
       </div>
-      <div class="doc-brand">FRAME.AI<br/>Documento operacional<br/>${new Date().toLocaleDateString("pt-BR")}</div>
+      <div class="doc-brand">${esc(studio.studioName)}<br/>${esc(studio.email || studio.phone || "Documento operacional")}<br/>${new Date().toLocaleDateString("pt-BR")}</div>
     </header>
     <div class="doc-grid">${metadata.map(([key, value]) => `<div class="doc-field"><div class="doc-field-label">${esc(key)}</div><div class="doc-field-value">${esc(value)}</div></div>`).join("")}</div>
     ${content}
-    ${form.notes ? renderList("Notas adicionais", lines(form.notes), doc.accent) : ""}
-    <footer class="doc-footer"><div>FRAME.AI Director · Documento pronto para producao</div><div>Gerado em ${new Date().toLocaleString("pt-BR")}</div></footer>
+    ${form.notes ? renderList("Notas adicionais", lines(form.notes), accent) : ""}
+    <footer class="doc-footer"><div>${esc(studio.studioName)} · ${esc(studio.signature)}</div><div>Gerado em ${new Date().toLocaleString("pt-BR")}</div></footer>
   </main>
 </body>
 </html>`;
@@ -248,11 +254,20 @@ function printHtmlDocument(docHtml: string) {
 function DocumentsContent() {
   const [form, setForm] = useState<DocumentForm>(initialForm);
   const [savedDocs, setSavedDocs] = useState<StudioDocument[]>([]);
+  const [studio, setStudio] = useState<StudioSettings>(() => readStudioSettings());
   const selectedDoc = DOC_TYPES.find((item) => item.id === form.type) || DOC_TYPES[0];
-  const html = useMemo(() => buildDocumentHtml(form), [form]);
+  const html = useMemo(() => buildDocumentHtml(form, studio), [form, studio]);
 
   useEffect(() => {
     setSavedDocs(readSavedDocs());
+    setStudio(readStudioSettings());
+    api.studioSettings
+      .get()
+      .then((data) => {
+        setStudio(data);
+        saveStudioSettings(data);
+      })
+      .catch(() => null);
   }, []);
 
   const update = (key: keyof DocumentForm, value: string) => setForm((current) => ({ ...current, [key]: value }));

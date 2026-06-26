@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { api } from "@/lib/api";
 import {
   BriefcaseBusiness,
   Copy,
@@ -12,6 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { readStudioSettings, saveStudioSettings, type StudioSettings } from "@/lib/studioSettings";
 
 interface ServiceItem {
   id: string;
@@ -169,7 +171,7 @@ function printHtmlDocument(docHtml: string) {
   iframe.srcdoc = docHtml;
 }
 
-function buildProposalHtml(form: ProposalForm, lines: ProposalLine[]) {
+function buildProposalHtml(form: ProposalForm, lines: ProposalLine[], studio: StudioSettings) {
   const subtotal = lines.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const discountValue = Math.round((subtotal * form.discount) / 100);
   const total = subtotal - discountValue;
@@ -190,17 +192,17 @@ function buildProposalHtml(form: ProposalForm, lines: ProposalLine[]) {
   <title>Proposta - ${esc(form.clientName || form.company || "Cliente")}</title>
   <style>
     *{box-sizing:border-box} body{margin:0;background:#0d0d0d;color:#e8e8e8;font-family:Arial,sans-serif;padding:46px}
-    .page{max-width:900px;margin:0 auto}.header{display:flex;justify-content:space-between;gap:32px;padding-bottom:28px;border-bottom:3px solid #ff4d1d}
-    .brand{font-size:34px;font-weight:900;letter-spacing:.06em;color:#fff}.brand span{color:#ff4d1d}.sub{font-size:11px;color:#ff4d1d;font-weight:900;letter-spacing:.18em;text-transform:uppercase;margin-top:5px}
-    .doc{text-align:right}.doc small{display:block;color:#777;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.doc strong{display:block;color:#ff4d1d;font-size:28px;margin-top:4px}
+    .page{max-width:900px;margin:0 auto}.header{display:flex;justify-content:space-between;gap:32px;padding-bottom:28px;border-bottom:3px solid ${studio.primaryColor}}
+    .brand{font-size:34px;font-weight:900;letter-spacing:.06em;color:#fff}.brand span{color:${studio.primaryColor}}.sub{font-size:11px;color:${studio.primaryColor};font-weight:900;letter-spacing:.18em;text-transform:uppercase;margin-top:5px}
+    .doc{text-align:right}.doc small{display:block;color:#777;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.doc strong{display:block;color:${studio.primaryColor};font-size:28px;margin-top:4px}
     h1{font-size:42px;line-height:1;margin:38px 0 10px;color:#fff}.muted{color:#999;line-height:1.55}
     .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:28px 0}.field{background:#151515;border:1px solid #252525;padding:13px 15px}.label{font-size:9px;color:#777;font-weight:900;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}.value{font-size:13px;color:#eee;font-weight:700}
-    .section{margin-top:34px}.section-title{font-size:11px;color:#ff4d1d;font-weight:900;letter-spacing:.16em;text-transform:uppercase;margin-bottom:12px}
+    .section{margin-top:34px}.section-title{font-size:11px;color:${studio.primaryColor};font-weight:900;letter-spacing:.16em;text-transform:uppercase;margin-bottom:12px}
     table{width:100%;border-collapse:collapse;background:#141414;border:1px solid #252525} th{padding:12px 14px;text-align:left;background:#1b1b1b;color:#777;font-size:10px;text-transform:uppercase;letter-spacing:.1em}
     td{padding:13px 14px;border-top:1px solid #252525;color:#ddd;font-size:13px;vertical-align:top}td:nth-child(2){text-align:center}td:nth-child(3),td:nth-child(4){text-align:right}td small{display:block;color:#777;font-size:11px;margin-top:3px;line-height:1.35}
     .totals{margin-top:12px;background:#141414;border:1px solid #252525}.total-row{display:flex;justify-content:space-between;padding:12px 18px;border-top:1px solid #252525;color:#aaa}.total-row:first-child{border-top:0}
-    .final{margin-top:16px;display:flex;justify-content:space-between;align-items:center;gap:20px;padding:22px 24px;border:1px solid rgba(255,77,29,.45);background:linear-gradient(135deg,rgba(255,77,29,.16),rgba(0,0,0,0))}
-    .final small{display:block;color:#ff4d1d;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.12em}.final strong{font-size:40px;color:#fff}
+    .final{margin-top:16px;display:flex;justify-content:space-between;align-items:center;gap:20px;padding:22px 24px;border:1px solid ${studio.primaryColor}77;background:linear-gradient(135deg,${studio.primaryColor}29,rgba(0,0,0,0))}
+    .final small{display:block;color:${studio.primaryColor};font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.12em}.final strong{font-size:40px;color:#fff}
     .terms{background:#111;border:1px solid #242424;padding:20px;margin-top:28px;color:#aaa;font-size:12px;line-height:1.7}.footer{display:flex;justify-content:space-between;gap:40px;margin-top:56px}.sign{width:240px;border-top:1px solid #333;padding-top:8px;text-align:center;color:#777;font-size:10px}
     @media print{body{padding:28px;background:#0d0d0d}.section{break-inside:avoid}}
   </style>
@@ -208,7 +210,7 @@ function buildProposalHtml(form: ProposalForm, lines: ProposalLine[]) {
 <body>
   <main class="page">
     <header class="header">
-      <div><div class="brand">FRAME<span>.</span>AI</div><div class="sub">Proposta comercial audiovisual</div></div>
+      <div><div class="brand">${esc(studio.studioName)}<span>.</span></div><div class="sub">${esc(studio.legalName || "Proposta comercial audiovisual")}</div></div>
       <div class="doc"><small>Proposta</small><strong>#${docNumber}</strong><small>${new Date().toLocaleDateString("pt-BR")}</small></div>
     </header>
     <h1>${esc(form.projectTitle || "Proposta audiovisual")}</h1>
@@ -219,7 +221,7 @@ function buildProposalHtml(form: ProposalForm, lines: ProposalLine[]) {
         ["Empresa", form.company || "A definir"],
         ["Email", form.email || "A definir"],
         ["WhatsApp", form.phone || "A definir"],
-        ["Cidade", form.city || "A definir"],
+        ["Cidade", form.city || studio.city || "A definir"],
         ["Prazo", form.deadline || "A definir"],
         ["Validade", `${form.validityDays || 15} dias`],
         ["Pagamento", form.paymentTerms],
@@ -235,7 +237,7 @@ function buildProposalHtml(form: ProposalForm, lines: ProposalLine[]) {
       <div class="final"><div><small>Valor total do projeto</small>${form.notes ? `<p class="muted">${esc(form.notes)}</p>` : ""}</div><strong>${formatCurrency(total)}</strong></div>
     </section>
     <div class="terms">Esta proposta tem validade de ${form.validityDays || 15} dias. Alteracoes fora do escopo podem gerar revisao de valores e prazos. Direitos, uso de imagem, entregaveis finais e pagamentos seguem as condicoes comerciais aprovadas pelas partes.</div>
-    <footer class="footer"><div class="sign">FRAME.AI / Produtora<br/>Responsavel comercial</div><div class="sign">${esc(form.clientName || "Cliente")}<br/>Aceite da proposta</div></footer>
+    <footer class="footer"><div class="sign">${esc(studio.studioName)}<br/>${esc(studio.signature || studio.email || "Responsavel comercial")}</div><div class="sign">${esc(form.clientName || "Cliente")}<br/>Aceite da proposta</div></footer>
   </main>
 </body>
 </html>`;
@@ -246,6 +248,7 @@ function ProposalsContent() {
   const [proposal, setProposal] = useState<ProposalForm>(initialProposal);
   const [selected, setSelected] = useState<ProposalLine[]>([]);
   const [history, setHistory] = useState<SavedProposal[]>([]);
+  const [studio, setStudio] = useState<StudioSettings>(() => readStudioSettings());
   const [editingService, setEditingService] = useState<ServiceItem>({
     id: "",
     name: "",
@@ -257,12 +260,20 @@ function ProposalsContent() {
   useEffect(() => {
     setCatalog(readJson(CATALOG_KEY, DEFAULT_CATALOG));
     setHistory(readJson(HISTORY_KEY, []));
+    setStudio(readStudioSettings());
+    api.studioSettings
+      .get()
+      .then((data) => {
+        setStudio(data);
+        saveStudioSettings(data);
+      })
+      .catch(() => null);
   }, []);
 
   const subtotal = selected.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const discountValue = Math.round((subtotal * proposal.discount) / 100);
   const total = subtotal - discountValue;
-  const proposalHtml = useMemo(() => buildProposalHtml(proposal, selected), [proposal, selected]);
+  const proposalHtml = useMemo(() => buildProposalHtml(proposal, selected, studio), [proposal, selected, studio]);
 
   const persistCatalog = (items: ServiceItem[]) => {
     setCatalog(items);

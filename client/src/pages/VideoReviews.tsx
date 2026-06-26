@@ -441,10 +441,10 @@ function VideoReviewsContent() {
             <Loader2 className="w-8 h-8 animate-spin text-frame-orange" />
           </div>
         ) : (
-          <div className="flex-1 grid grid-cols-1 xl:grid-cols-[320px_minmax(0,1fr)_380px] min-h-0">
+          <div className="flex-1 grid grid-cols-1 xl:grid-cols-[340px_minmax(0,1fr)_400px] min-h-0">
             <aside className="border-b xl:border-b-0 xl:border-r border-frame-gray-3 bg-frame-gray-1/10 overflow-y-auto">
               <div className="p-4 border-b border-frame-gray-3">
-                <p className="frame-label mb-3">// NOVO LINK</p>
+                <p className="frame-label mb-3">// CRIAR SALA</p>
                 <div className="space-y-3">
                   <input value={title} onChange={(e) => setTitle(e.target.value)} className="frame-input w-full" placeholder="Título do review" />
                   <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="frame-input w-full h-20 resize-none" placeholder="Contexto para o cliente" />
@@ -472,8 +472,11 @@ function VideoReviewsContent() {
                   )}
                   <button onClick={handleCreateReview} disabled={isCreating} className="frame-btn-primary w-full flex items-center justify-center gap-2">
                     <Plus className="w-4 h-4" />
-                    {isCreating ? "Criando..." : "Criar review e link"}
+                    {isCreating ? "Criando..." : "Criar sala de aprovação"}
                   </button>
+                  <p className="text-[0.62rem] text-frame-gray-light leading-relaxed">
+                    O cliente recebe um link com player, comentários por tempo e ações de aprovação.
+                  </p>
                 </div>
               </div>
 
@@ -522,7 +525,7 @@ function VideoReviewsContent() {
                 <div className="min-w-0">
                   <p className="text-sm font-semibold truncate">{selectedReview?.title || title || "Preview do review"}</p>
                   <p className="text-xs text-frame-gray-light truncate">
-                    {selectedReview?.description || description || "Cole um link para testar o player antes de enviar ao cliente."}
+                    {selectedReview?.description || description || "Cole um link para validar o player e gerar a sala do cliente."}
                   </p>
                 </div>
                 {selectedReview && (
@@ -552,7 +555,7 @@ function VideoReviewsContent() {
                       onAddAnnotatedComment={handleAddAnnotatedComment}
                     />
                     <p className="mt-3 text-[0.6rem] font-frame-mono uppercase tracking-wider text-frame-gray-light">
-                      Pause o vídeo para desenhar no frame. Comentários abaixo ficam com timestamp.
+                      Player de aprovação com comentários por timestamp e marcações no frame.
                     </p>
                   </div>
                 ) : previewUrl ? (
@@ -562,9 +565,9 @@ function VideoReviewsContent() {
                 ) : (
                   <div className="text-center max-w-md border border-dashed border-frame-gray-3 p-10">
                     <Video className="w-16 h-16 mx-auto mb-4 text-frame-gray-light" />
-                    <h2 className="text-xl font-bold mb-2">Player pronto para aprovação</h2>
+                    <h2 className="text-xl font-bold mb-2">Sala de aprovação pronta</h2>
                     <p className="text-sm text-frame-gray-light">
-                      Cole um link do Drive/YouTube/Vimeo ou escolha um vídeo do projeto para gerar a sala de review.
+                      Cole um link do Drive/YouTube/Vimeo ou escolha um vídeo do projeto. O player aparece aqui antes de enviar ao cliente.
                     </p>
                   </div>
                 )}
@@ -572,53 +575,59 @@ function VideoReviewsContent() {
             </section>
 
             <aside className="border-t xl:border-t-0 xl:border-l border-frame-gray-3 bg-frame-gray-1/10 flex flex-col min-h-[460px] xl:min-h-0">
-              {selectedReview && (
-                <div className="p-4 border-b border-frame-gray-3 space-y-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="text-sm font-semibold flex items-center gap-2">
-                      <Share2 className="w-4 h-4 text-frame-orange" />
-                      Link do cliente
-                    </h3>
-                    <span className="text-[0.55rem] font-frame-mono uppercase tracking-wider text-frame-gray-light">
-                      {selectedReview.expires_at ? "7 dias" : "pendente"}
-                    </span>
-                  </div>
-                  {selectedShareUrl ? (
-                    <>
-                      <div className="border border-frame-gray-3 bg-frame-black/40 p-3 text-xs text-frame-gray-light break-all">
-                        {selectedShareUrl}
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigator.clipboard.writeText(selectedShareUrl);
-                            toast.success("Link copiado");
-                          }}
-                          className="frame-btn-ghost flex items-center justify-center gap-2"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                          Copiar
-                        </button>
-                        <a
-                          href={selectedShareUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="frame-btn-primary flex items-center justify-center gap-2"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          Abrir
-                        </a>
-                      </div>
-                    </>
-                  ) : (
-                    <button type="button" onClick={handleGenerateShareLink} className="frame-btn-primary w-full flex items-center justify-center gap-2">
-                      <Share2 className="w-4 h-4" />
-                      Gerar link do cliente
-                    </button>
-                  )}
+              <div className="p-4 border-b border-frame-gray-3 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-sm font-semibold flex items-center gap-2">
+                    <Share2 className="w-4 h-4 text-frame-orange" />
+                    Sala do cliente
+                  </h3>
+                  <span className="text-[0.55rem] font-frame-mono uppercase tracking-wider text-frame-gray-light">
+                    {selectedReview ? (selectedReview.expires_at ? "link ativo" : "sem link") : "aguardando"}
+                  </span>
                 </div>
-              )}
+                {selectedReview && selectedShareUrl ? (
+                  <>
+                    <div className="border border-frame-gray-3 bg-frame-black/40 p-3 text-xs text-frame-gray-light break-all">
+                      {selectedShareUrl}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(selectedShareUrl);
+                          toast.success("Link copiado");
+                        }}
+                        className="frame-btn-ghost flex items-center justify-center gap-2"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        Copiar
+                      </button>
+                      <a
+                        href={selectedShareUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="frame-btn-primary flex items-center justify-center gap-2"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        Abrir
+                      </a>
+                    </div>
+                  </>
+                ) : selectedReview ? (
+                  <button type="button" onClick={handleGenerateShareLink} className="frame-btn-primary w-full flex items-center justify-center gap-2">
+                    <Share2 className="w-4 h-4" />
+                    Gerar link do cliente
+                  </button>
+                ) : (
+                  <div className="border border-frame-gray-3 bg-frame-black/30 p-4">
+                    <FileVideo className="w-5 h-5 text-frame-orange mb-3" />
+                    <p className="text-sm font-semibold text-frame-white">Crie ou selecione um review</p>
+                    <p className="text-xs text-frame-gray-light mt-2">
+                      Aqui ficam o link público, aprovação, comentários e histórico do vídeo selecionado.
+                    </p>
+                  </div>
+                )}
+              </div>
               <div className="p-4 border-b border-frame-gray-3">
                 <h3 className="text-sm font-semibold flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-frame-orange" />
@@ -672,12 +681,9 @@ function VideoReviewsContent() {
                     </div>
                   )
                 ) : (
-                  <div className="space-y-3 text-sm text-frame-gray-light">
-                    <div className="border border-frame-gray-3 bg-frame-black/30 p-4">
-                      <FileVideo className="w-5 h-5 text-frame-orange mb-3" />
-                      <p className="font-semibold text-frame-white">Workflow ideal</p>
-                      <p className="text-xs mt-2">1. Cole o link do vídeo. 2. Crie o review. 3. Copie o link para o cliente. 4. Receba comentários e aprovação.</p>
-                    </div>
+                  <div className="text-center py-10">
+                    <MessageSquare className="w-8 h-8 mx-auto mb-2 text-frame-gray-light/30" />
+                    <p className="text-xs text-frame-gray-light/60">Comentários aparecem quando houver uma sala selecionada</p>
                   </div>
                 )}
               </div>

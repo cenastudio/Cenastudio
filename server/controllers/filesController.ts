@@ -4,7 +4,8 @@ import { AppError } from "../middleware/errorHandler.js";
 import path from "path";
 import fs from "fs";
 
-const MAX_UPLOAD_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_UPLOAD_SIZE_MB = Number.parseInt(process.env.MAX_UPLOAD_SIZE_MB || "10", 10);
+const MAX_UPLOAD_SIZE = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
 
 // Ensure uploads directory exists
 const UPLOADS_DIR =
@@ -58,7 +59,7 @@ export const uploadFile: RequestHandler = (req, res, next) => {
 
     const decodedSize = Buffer.byteLength(fileData, "utf8") * 0.75;
     if (decodedSize > MAX_UPLOAD_SIZE) {
-      throw new AppError(`File exceeds maximum size of ${MAX_UPLOAD_SIZE / 1024 / 1024}MB`, 413);
+      throw new AppError(`Arquivo excede o limite de ${MAX_UPLOAD_SIZE_MB}MB`, 413);
     }
 
     // Verify user owns the project
@@ -68,6 +69,27 @@ export const uploadFile: RequestHandler = (req, res, next) => {
 
     if (!project) {
       throw new AppError("Project not found", 404);
+    }
+
+    if (fileType === "text/uri-list") {
+      const decodedUrl = Buffer.from(fileData, "base64").toString("utf8").trim();
+      if (!/^https?:\/\/\S+$/i.test(decodedUrl)) {
+        throw new AppError("URL inválida", 400);
+      }
+
+      const result = db
+        .prepare(
+          `INSERT INTO files (user_id, project_id, filename, original_name, mime_type, size, path, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+        )
+        .run(userId, projectId, fileName, fileName, fileType, decodedUrl.length, decodedUrl);
+
+      const newFile = db
+        .prepare("SELECT * FROM files WHERE id = ?")
+        .get(result.lastInsertRowid);
+
+      res.json({ success: true, data: newFile });
+      return;
     }
 
     // Create project-specific directory
@@ -124,7 +146,7 @@ export const deleteFile: RequestHandler = (req, res, next) => {
     }
 
     // Delete physical file
-    if (fs.existsSync(file.path)) {
+    if (file.mime_type !== "text/uri-list" && fs.existsSync(file.path)) {
       fs.unlinkSync(file.path);
     }
 
@@ -177,6 +199,11 @@ export const downloadFile: RequestHandler = (req, res, next) => {
 
     if (!file) {
       throw new AppError("File not found", 404);
+    }
+
+    if (file.mime_type === "text/uri-list") {
+      res.redirect(file.path);
+      return;
     }
 
     if (!fs.existsSync(file.path)) {
