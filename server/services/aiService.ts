@@ -7,11 +7,21 @@ interface NvidiaChatResponse {
   choices?: Array<{
     message?: {
       content?: string;
+      reasoning_content?: string;
     };
   }>;
   error?: {
     message?: string;
   };
+}
+
+function shouldEnableNvidiaThinking(model: string): boolean {
+  const explicit = process.env.NVIDIA_ENABLE_THINKING;
+  if (explicit !== undefined) {
+    return explicit === "1" || explicit.toLowerCase() === "true";
+  }
+
+  return model.includes("nemotron");
 }
 
 async function generateWithNvidia(system: string, userText: string): Promise<string> {
@@ -25,9 +35,10 @@ async function generateWithNvidia(system: string, userText: string): Promise<str
     () => controller.abort(),
     Number(process.env.NVIDIA_TIMEOUT_MS || 60000),
   );
-  const reasoningBudget = Number(process.env.NVIDIA_REASONING_BUDGET || 512);
+  const model = process.env.NVIDIA_MODEL || "nvidia/nemotron-3-ultra-550b-a55b";
+  const reasoningBudget = Number(process.env.NVIDIA_REASONING_BUDGET || 0);
   const body: Record<string, unknown> = {
-    model: process.env.NVIDIA_MODEL || "nvidia/nemotron-3-ultra-550b-a55b",
+    model,
     messages: [
       { role: "system", content: system },
       { role: "user", content: userText },
@@ -38,8 +49,10 @@ async function generateWithNvidia(system: string, userText: string): Promise<str
     stream: false,
   };
 
-  if (reasoningBudget > 0) {
-    body.reasoning_budget = reasoningBudget;
+  if (shouldEnableNvidiaThinking(model)) {
+    if (reasoningBudget > 0) {
+      body.reasoning_budget = reasoningBudget;
+    }
     body.chat_template_kwargs = { enable_thinking: true };
   }
 

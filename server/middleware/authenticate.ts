@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 import { AppError } from "./errorHandler.js";
+import { db } from "../models/db.js";
 
 export interface AuthUser {
   id: number;
@@ -54,7 +55,13 @@ export const authenticate: RequestHandler = (req, _res, next) => {
   }
   try {
     const payload = jwt.verify(token, getJwtSecret()) as AuthUser;
-    req.user = payload;
+    const currentUser = db
+      .prepare("SELECT id, email, role, name FROM users WHERE id = ?")
+      .get(payload.id) as AuthUser | undefined;
+    if (!currentUser) {
+      return next(new AppError("User not found", 401));
+    }
+    req.user = currentUser;
     next();
   } catch {
     next(new AppError("Invalid or expired session", 401));

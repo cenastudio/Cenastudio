@@ -35,6 +35,16 @@ function hashPassword(password: string): string {
   return bcrypt.hashSync(password, 12);
 }
 
+export function isAdminEmail(email?: string | null): boolean {
+  if (!email) return false;
+  const adminEmails = new Set(
+    ["admin@frame.ai", ...(process.env.ADMIN_EMAILS || "").split(",")]
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean),
+  );
+  return adminEmails.has(email.toLowerCase().trim());
+}
+
 export function ensureUserSubscription(userId: number, planId: string, status = "active") {
   const existing = db.prepare("SELECT id FROM subscriptions WHERE user_id = ?").get(userId);
   if (!existing) {
@@ -94,11 +104,7 @@ export function getUserById(id: number): AuthUser | null {
 }
 
 function roleForEmail(email: string): "user" | "admin" {
-  const adminEmails = (process.env.ADMIN_EMAILS || "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  return adminEmails.includes(email.toLowerCase()) ? "admin" : "user";
+  return isAdminEmail(email) ? "admin" : "user";
 }
 
 export function upsertOAuthUser(email: string, name?: string | null): AuthUser {
@@ -168,19 +174,40 @@ export function getUserPlan(userId: number): UserPlanRow | undefined {
     .get(userId) as UserPlanRow | undefined;
 }
 
+function ensureUsablePlan(userId: number): UserPlanRow | undefined {
+  let plan = getUserPlan(userId);
+  if (!plan) {
+    createTrialSubscription(userId);
+    return getUserPlan(userId);
+  }
+
+  if (
+    plan.status === "trial" &&
+    plan.trial_ends_at &&
+    new Date(plan.trial_ends_at).getTime() < Date.now()
+  ) {
+    db.prepare(
+      `UPDATE subscriptions
+       SET plan_id = 'free', status = 'active', trial_ends_at = NULL,
+           current_period_start = datetime('now'),
+           current_period_end = datetime('now', '+1 month')
+       WHERE user_id = ?`,
+    ).run(userId);
+    plan = getUserPlan(userId);
+  }
+
+  return plan;
+}
+
 export function checkAndIncrementUsage(userId: number, toolId: string) {
   const userRow = db.prepare("SELECT role, email FROM users WHERE id = ?").get(userId) as { role: string; email: string } | undefined;
   const role = userRow?.role;
   const email = userRow?.email?.toLowerCase();
-  const adminEmails = (process.env.ADMIN_EMAILS || "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  if (role === "admin" || adminEmails.includes(email || "")) return;
+  if (role === "admin" || isAdminEmail(email)) return;
 
-  const plan = getUserPlan(userId);
+  const plan = ensureUsablePlan(userId);
   if (!plan) {
-    throw new AppError("Plano não encontrado.", 403);
+    throw new AppError("Não conseguimos ativar seu plano automaticamente. Tente sair e entrar novamente.", 403);
   }
 
   if (plan.generation_limit === -1) return;
@@ -198,7 +225,7 @@ export function checkAndIncrementUsage(userId: number, toolId: string) {
   const total = totalRow?.total ?? 0;
   if (total >= plan.generation_limit) {
     throw new AppError(
-      `Limite de ${plan.generation_limit} gerações/mês atingido. Faça upgrade do seu plano.`,
+      `Você atingiu ${plan.generation_limit} gerações neste mês. Seu trabalho foi preservado; atualize o plano ou chame o administrador para liberar mais uso.`,
       403,
     );
   }

@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { planDisplayLabel } from "@/lib/plans";
 import { WHATSAPP_NUMBER } from "@/lib/constants";
-import { LogOut, Sun, Moon, ChevronDown } from "lucide-react";
+import { LogOut, Sun, Moon, ChevronDown, Menu, X } from "lucide-react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import NotificationsPopover from "@/components/NotificationsPopover";
@@ -17,6 +18,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
   const { openModal, selectPlan } = useApp();
   const { theme, toggleTheme } = useTheme();
   const [location, setLocation] = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -51,7 +53,10 @@ export default function AppNavBar({ children }: AppNavBarProps) {
     return (
       <motion.button
         type="button"
-        onClick={() => setLocation(href)}
+        onClick={() => {
+          setLocation(href);
+          setMobileMenuOpen(false);
+        }}
         className={`frame-nav-link ${active ? "active" : ""}`}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -64,26 +69,47 @@ export default function AppNavBar({ children }: AppNavBarProps) {
     );
   };
 
+  const navItems = (
+    <>
+      {navLink("/dashboard", "Painel")}
+      {navLink("/tools", "Ferramentas")}
+      {navLink("/clients", "Clientes")}
+      {navLink("/pipeline", "Pipeline")}
+      {navLink("/files", "Arquivos")}
+      {navLink("/video-reviews", "Aprovação")}
+      {navLink("/collaborators", "Equipe")}
+      {navLink("/analytics", "Analytics")}
+      {isAdmin && navLink("/admin", "Admin")}
+    </>
+  );
+
   return (
     <header className="frame-nav">
-      <button
-        type="button"
-        onClick={() => setLocation("/tools")}
-        className="font-frame-display text-[1.55rem] tracking-[0.1em] text-frame-white bg-transparent border-none"
-      >
-        FRAME<span className="text-frame-orange">.</span>AI
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen((open) => !open)}
+          className="md:hidden p-2 border border-frame-gray-3 text-frame-gray-light hover:text-frame-orange hover:border-frame-orange transition rounded-none"
+          aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
+          aria-expanded={mobileMenuOpen}
+        >
+          {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setLocation("/tools");
+            setMobileMenuOpen(false);
+          }}
+          className="font-frame-display text-[1.35rem] md:text-[1.55rem] tracking-[0.1em] text-frame-white bg-transparent border-none"
+        >
+          FRAME<span className="text-frame-orange">.</span>AI
+        </button>
+      </div>
 
       <nav className="hidden md:flex items-center gap-5">
-        {navLink("/dashboard", "Painel")}
-        {navLink("/tools", "Ferramentas")}
-        {navLink("/clients", "Clientes")}
-        {navLink("/pipeline", "Pipeline")}
-        {navLink("/files", "Arquivos")}
-        {navLink("/video-reviews", "Aprovação")}
-        {navLink("/collaborators", "Equipe")}
-        {navLink("/analytics", "Analytics")}
-        {isAdmin && navLink("/admin", "Admin")}
+        {navItems}
       </nav>
 
       <div className="flex items-center gap-2.5">
@@ -126,12 +152,28 @@ export default function AppNavBar({ children }: AppNavBarProps) {
         <button
           type="button"
           onClick={handleLogout}
-          className="font-frame-mono text-[0.58rem] tracking-[0.09em] uppercase bg-transparent border border-frame-gray-3 text-frame-gray-light px-2.5 py-1.5 transition hover:border-frame-red hover:text-frame-red flex items-center gap-1.5"
+          className="hidden sm:flex font-frame-mono text-[0.58rem] tracking-[0.09em] uppercase bg-transparent border border-frame-gray-3 text-frame-gray-light px-2.5 py-1.5 transition hover:border-frame-red hover:text-frame-red items-center gap-1.5"
         >
           <LogOut className="w-3 h-3" />
           Sair
         </button>
       </div>
+
+      {mobileMenuOpen && (
+        <div className="absolute left-0 right-0 top-full md:hidden border-b border-frame-gray-2 bg-frame-black/98 backdrop-blur px-4 py-4 shadow-2xl">
+          <nav className="grid grid-cols-2 gap-2">
+            {navItems}
+          </nav>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="mt-3 w-full font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase bg-transparent border border-frame-gray-3 text-frame-gray-light px-3 py-2.5 transition hover:border-frame-red hover:text-frame-red flex items-center justify-center gap-2"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            Sair
+          </button>
+        </div>
+      )}
     </header>
   );
 }

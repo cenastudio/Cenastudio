@@ -103,7 +103,7 @@ function AnalyticsContent() {
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
       <AppNavBar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-10 space-y-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6">
           <div>
@@ -116,7 +116,7 @@ function AnalyticsContent() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-2 w-full xl:w-auto">
+          <div className="grid grid-cols-2 xl:grid-cols-5 gap-2 w-full xl:w-auto">
             <button onClick={() => setLocation("/pipeline")} className="frame-btn-ghost flex items-center justify-center gap-2">
               <TrendingUp className="w-4 h-4" />
               Pipeline
@@ -136,7 +136,7 @@ function AnalyticsContent() {
             <button
               onClick={loadAnalytics}
               disabled={refreshing}
-              className="frame-btn-primary flex items-center justify-center gap-2"
+              className="frame-btn-primary flex items-center justify-center gap-2 col-span-2 xl:col-span-1"
             >
               <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
               Atualizar
@@ -152,7 +152,7 @@ function AnalyticsContent() {
           <>
             {/* Overall Stats */}
             {overall && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -267,7 +267,7 @@ function AnalyticsContent() {
             )}
 
             {overall && (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
                 <ActionCard
                   title="Pipeline comercial"
                   description={`${overall.pipeline.totalOpportunities} oportunidades abertas para revisar.`}
@@ -291,7 +291,7 @@ function AnalyticsContent() {
 
             {/* Revenue Analytics */}
             {revenue && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
