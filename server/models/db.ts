@@ -141,6 +141,43 @@ function ensureSubscription(userId: number, planId: string, status = "active") {
   }
 }
 
+function createIndexes() {
+  const indexes = [
+    "CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)",
+    "CREATE INDEX IF NOT EXISTS idx_users_github_id ON users(github_id)",
+    "CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_projects_client_id ON projects(client_id)",
+    "CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status)",
+    "CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_clients_status ON clients(status)",
+    "CREATE INDEX IF NOT EXISTS idx_generations_user_id ON generations(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_generations_tool_id ON generations(tool_id)",
+    "CREATE INDEX IF NOT EXISTS idx_generations_project_id ON generations(project_id)",
+    "CREATE INDEX IF NOT EXISTS idx_generations_created_at ON generations(created_at)",
+    "CREATE INDEX IF NOT EXISTS idx_project_states_project_id ON project_states(project_id)",
+    "CREATE INDEX IF NOT EXISTS idx_interactions_client_id ON interactions(client_id)",
+    "CREATE INDEX IF NOT EXISTS idx_interactions_user_id ON interactions(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_opportunities_user_id ON opportunities(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_opportunities_client_id ON opportunities(client_id)",
+    "CREATE INDEX IF NOT EXISTS idx_opportunities_stage ON opportunities(stage)",
+    "CREATE INDEX IF NOT EXISTS idx_files_project_id ON files(project_id)",
+    "CREATE INDEX IF NOT EXISTS idx_files_user_id ON files(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_video_reviews_project_id ON video_reviews(project_id)",
+    "CREATE INDEX IF NOT EXISTS idx_video_reviews_share_token ON video_reviews(share_token)",
+    "CREATE INDEX IF NOT EXISTS idx_video_comments_review_id ON video_comments(review_id)",
+    "CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read)",
+    "CREATE INDEX IF NOT EXISTS idx_collaborators_user_id ON collaborators(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_project_members_project_id ON project_members(project_id)",
+    "CREATE INDEX IF NOT EXISTS idx_project_members_collaborator_id ON project_members(collaborator_id)",
+    "CREATE INDEX IF NOT EXISTS idx_reset_tokens_token ON reset_tokens(token)",
+    "CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id)",
+  ];
+  for (const sql of indexes) {
+    db.exec(sql);
+  }
+}
+
 export function initDatabase() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -357,6 +394,7 @@ export function initDatabase() {
     );
   `);
 
+  createIndexes();
   ensureUserColumns();
   ensureSubscriptionColumns();
   ensureProjectColumns();

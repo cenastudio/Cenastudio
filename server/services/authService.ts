@@ -214,6 +214,10 @@ export function createResetToken(email: string) {
   const token = crypto.randomBytes(32).toString("hex");
   const expires = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
+  if (process.env.NODE_ENV !== "production") {
+    console.log(`[DEV] Reset token for ${normalized}: ${token}`);
+  }
+
   db.prepare("DELETE FROM reset_tokens WHERE user_id = ?").run(user.id);
   db.prepare("INSERT INTO reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)").run(
     user.id,

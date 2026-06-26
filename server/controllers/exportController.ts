@@ -2,6 +2,13 @@ import { RequestHandler } from "express";
 import { db } from "../models/db.js";
 import { AppError } from "../middleware/errorHandler.js";
 
+function escapeCsv(value: unknown): string {
+  const str = value == null ? "" : String(value);
+  const escaped = str.replace(/"/g, '""');
+  if (/^[=+\-@%]/.test(escaped)) return `\t"${escaped}"`;
+  return `"${escaped}"`;
+}
+
 // Export project data to various formats
 export const exportProject: RequestHandler = (req, res, next) => {
   try {
@@ -50,9 +57,7 @@ export const exportProject: RequestHandler = (req, res, next) => {
         const csvRows = states
           .map(
             (state: any) =>
-              `"${state.tool_id}","${state.form_data?.replace(/"/g, '""') || ""}","${
-                state.output_data?.replace(/"/g, '""') || ""
-              }","${state.updated_at}"`,
+              `${escapeCsv(state.tool_id)},${escapeCsv(state.form_data)},${escapeCsv(state.output_data)},${escapeCsv(state.updated_at)}`,
           )
           .join("\n");
         const csv = csvHeader + csvRows;
@@ -133,9 +138,9 @@ export const exportClient: RequestHandler = (req, res, next) => {
         const oppRows = opportunities
           .map(
             (opp: any) =>
-              `${opp.id},"${opp.title}","${opp.stage}",${opp.estimated_value || 0},${
+              `${escapeCsv(opp.id)},${escapeCsv(opp.title)},${escapeCsv(opp.stage)},${opp.estimated_value || 0},${
                 opp.probability
-              },"${opp.expected_close_date || ""}","${opp.created_at}"`,
+              },${escapeCsv(opp.expected_close_date)},${escapeCsv(opp.created_at)}`,
           )
           .join("\n");
         const csv = oppHeader + oppRows;
@@ -189,11 +194,11 @@ export const exportAllClients: RequestHandler = (req, res, next) => {
         const csvRows = clients
           .map(
             (client: any) =>
-              `${client.id},"${client.name}","${client.company || ""}","${client.email || ""}","${
-                client.phone || ""
-              }","${client.segment}","${client.status}",${client.total_spent || 0},"${
-                client.first_contact_at || ""
-              }","${client.last_contact_at || ""}","${client.created_at}"`,
+              `${escapeCsv(client.id)},${escapeCsv(client.name)},${escapeCsv(client.company)},${escapeCsv(client.email)},${
+                escapeCsv(client.phone)
+              },${escapeCsv(client.segment)},${escapeCsv(client.status)},${client.total_spent || 0},${
+                escapeCsv(client.first_contact_at)
+              },${escapeCsv(client.last_contact_at)},${escapeCsv(client.created_at)}`,
           )
           .join("\n");
         const csv = csvHeader + csvRows;
@@ -256,11 +261,11 @@ export const exportPipeline: RequestHandler = (req, res, next) => {
         const csvRows = opportunities
           .map(
             (opp: any) =>
-              `${opp.id},"${opp.title}","${opp.client_name || ""}","${opp.client_company || ""}","${
-                opp.stage
-              }",${opp.estimated_value || 0},${opp.probability},"${opp.expected_close_date || ""}","${
-                opp.created_at
-              }"`,
+              `${escapeCsv(opp.id)},${escapeCsv(opp.title)},${escapeCsv(opp.client_name)},${escapeCsv(opp.client_company)},${
+                escapeCsv(opp.stage)
+              },${opp.estimated_value || 0},${opp.probability},${escapeCsv(opp.expected_close_date)},${
+                escapeCsv(opp.created_at)
+              }`,
           )
           .join("\n");
         const csv = csvHeader + csvRows;

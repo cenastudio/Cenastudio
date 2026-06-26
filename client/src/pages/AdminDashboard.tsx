@@ -21,7 +21,7 @@ function AdminContent() {
     try {
       const [toolList, users] = await Promise.all([api.admin.listTools(), api.admin.users()]);
       setTools(toolList);
-      setUserCount(users.online);
+      setUserCount(users.count);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao carregar admin");
     } finally {

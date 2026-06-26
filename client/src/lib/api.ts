@@ -139,7 +139,7 @@ export const api = {
       request<{ id: string; isActive: boolean }>(`/admin/tools/${id}`, {
         method: "DELETE",
       }),
-    users: () => request<{ count: number; online: number }>("/admin/users"),
+    users: () => request<{ count: number; users: { id: number; email: string; role: string; name?: string; plan?: string }[] }>("/admin/users"),
   },
   contact: {
     submit: (data: ContactPayload) =>

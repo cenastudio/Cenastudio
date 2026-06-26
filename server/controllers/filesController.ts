@@ -4,6 +4,8 @@ import { AppError } from "../middleware/errorHandler.js";
 import path from "path";
 import fs from "fs";
 
+const MAX_UPLOAD_SIZE = 50 * 1024 * 1024; // 50MB
+
 // Ensure uploads directory exists
 const UPLOADS_DIR =
   process.env.VERCEL === "1" ? path.join("/tmp", "uploads") : path.join(process.cwd(), "uploads");
@@ -52,6 +54,11 @@ export const uploadFile: RequestHandler = (req, res, next) => {
 
     if (!projectId || !fileName || !fileData) {
       throw new AppError("Missing required fields", 400);
+    }
+
+    const decodedSize = Buffer.byteLength(fileData, "utf8") * 0.75;
+    if (decodedSize > MAX_UPLOAD_SIZE) {
+      throw new AppError(`File exceeds maximum size of ${MAX_UPLOAD_SIZE / 1024 / 1024}MB`, 413);
     }
 
     // Verify user owns the project

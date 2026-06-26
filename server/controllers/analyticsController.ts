@@ -111,7 +111,7 @@ export const getRevenueAnalytics: RequestHandler = (req, res, next) => {
       .prepare(
         `SELECT 
            strftime('%Y-%m', created_at) as month,
-           SUM(estimated_value) as revenue,
+           COALESCE(SUM(estimated_value), 0) as revenue,
            COUNT(*) as count
          FROM opportunities 
          WHERE user_id = ? AND stage = 'won'
@@ -126,7 +126,7 @@ export const getRevenueAnalytics: RequestHandler = (req, res, next) => {
       .prepare(
         `SELECT 
            c.segment,
-           SUM(o.estimated_value) as revenue,
+           COALESCE(SUM(o.estimated_value), 0) as revenue,
            COUNT(*) as count
          FROM opportunities o
          LEFT JOIN clients c ON o.client_id = c.id
@@ -138,7 +138,7 @@ export const getRevenueAnalytics: RequestHandler = (req, res, next) => {
     // Average deal size
     const avgDealSize = db
       .prepare(
-        "SELECT AVG(estimated_value) as avg FROM opportunities WHERE user_id = ? AND stage = 'won'",
+        "SELECT COALESCE(AVG(estimated_value), 0) as avg FROM opportunities WHERE user_id = ? AND stage = 'won'",
       )
       .get(userId) as { avg: number };
 
