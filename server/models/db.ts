@@ -123,6 +123,52 @@ function ensureVideoReviewColumns() {
     db.prepare("ALTER TABLE video_reviews ADD COLUMN video_url TEXT").run();
   }
 
+  const fileIdCol = (
+    db.prepare("PRAGMA table_info(video_reviews)").all() as { name: string; notnull: number }[]
+  ).find((c) => c.name === "file_id");
+  if (fileIdCol?.notnull) {
+    db.pragma("foreign_keys = OFF");
+    try {
+      db.exec(`
+        BEGIN;
+
+        CREATE TABLE IF NOT EXISTS video_reviews_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+          file_id INTEGER REFERENCES files(id) ON DELETE SET NULL,
+          user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          title TEXT NOT NULL,
+          description TEXT,
+          status TEXT DEFAULT 'draft',
+          share_token TEXT UNIQUE,
+          expires_at TEXT,
+          video_url TEXT,
+          created_at TEXT DEFAULT (datetime('now')),
+          updated_at TEXT DEFAULT (datetime('now'))
+        );
+
+        INSERT INTO video_reviews_new (
+          id, project_id, file_id, user_id, title, description, status,
+          share_token, expires_at, video_url, created_at, updated_at
+        )
+        SELECT
+          id, project_id, file_id, user_id, title, description, status,
+          share_token, expires_at, video_url, created_at, updated_at
+        FROM video_reviews;
+
+        DROP TABLE video_reviews;
+        ALTER TABLE video_reviews_new RENAME TO video_reviews;
+
+        COMMIT;
+      `);
+    } catch (error) {
+      db.exec("ROLLBACK");
+      throw error;
+    } finally {
+      db.pragma("foreign_keys = ON");
+    }
+  }
+
   const commentsCols = (db.prepare("PRAGMA table_info(video_comments)").all() as { name: string }[]).map(
     (c) => c.name,
   );
@@ -359,13 +405,14 @@ export function initDatabase() {
     CREATE TABLE IF NOT EXISTS video_reviews (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-      file_id INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+      file_id INTEGER REFERENCES files(id) ON DELETE SET NULL,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       title TEXT NOT NULL,
       description TEXT,
       status TEXT DEFAULT 'draft',
       share_token TEXT UNIQUE,
       expires_at TEXT,
+      video_url TEXT,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     );

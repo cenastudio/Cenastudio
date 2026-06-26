@@ -9,8 +9,10 @@ import {
   deleteVideoReview,
   generateShareLink,
   accessSharedReview,
+  streamSharedReviewVideo,
   addComment,
   addSharedComment,
+  updateSharedReviewStatus,
   resolveComment,
   deleteComment,
 } from "../controllers/videoReviewsController.js";
@@ -53,6 +55,8 @@ router.delete("/comments/:id", deleteComment);
 // Public route for accessing shared reviews (no authentication required)
 export const publicRouter = Router();
 publicRouter.get("/shared/:token", accessSharedReview);
+publicRouter.get("/shared/:token/video", streamSharedReviewVideo);
 publicRouter.post("/shared/:token/comments", addSharedComment);
+publicRouter.patch("/shared/:token/status", updateSharedReviewStatus);
 
 export default router;

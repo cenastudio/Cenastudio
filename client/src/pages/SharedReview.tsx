@@ -3,7 +3,7 @@ import { useParams } from "wouter";
 import { motion } from "framer-motion";
 import VideoPlayer from "@/components/VideoPlayer";
 import {
-  MessageSquare, Clock, Send, AlertCircle, User,
+  MessageSquare, Clock, Send, AlertCircle, User, CheckCircle2, XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -16,6 +16,7 @@ interface SharedReview {
   file_id: number;
   project_name: string;
   expires_at: string | null;
+  status: string;
   video_url?: string;
 }
 
@@ -36,6 +37,8 @@ export default function SharedReview() {
   const [newComment, setNewComment] = useState("");
   const [newCommentTimestamp, setNewCommentTimestamp] = useState<number>(0);
   const [authorName, setAuthorName] = useState("");
+  const [decisionNote, setDecisionNote] = useState("");
+  const [isDeciding, setIsDeciding] = useState(false);
   const [seekTo, setSeekTo] = useState<number | null>(null);
 
   useEffect(() => {
@@ -96,6 +99,45 @@ export default function SharedReview() {
     }
   };
 
+  const handleDecision = async (status: "approved" | "changes_requested" | "rejected") => {
+    if (!authorName.trim()) {
+      toast.error("Digite seu nome antes de enviar a decisão");
+      return;
+    }
+
+    setIsDeciding(true);
+    try {
+      const response = await fetch(`/api/public/video-reviews/shared/${token}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status,
+          authorName,
+          comment: decisionNote,
+        }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setReview(data.data);
+        setComments(data.data.comments || []);
+        setDecisionNote("");
+        toast.success(
+          status === "approved"
+            ? "Vídeo aprovado!"
+            : status === "changes_requested"
+              ? "Alterações solicitadas!"
+              : "Review rejeitado.",
+        );
+      } else {
+        toast.error(data.error || "Erro ao enviar decisão");
+      }
+    } catch {
+      toast.error("Erro ao enviar decisão");
+    } finally {
+      setIsDeciding(false);
+    }
+  };
+
   const handleTimestampClick = (seconds: number) => {
     setSeekTo(seconds);
   };
@@ -150,10 +192,27 @@ export default function SharedReview() {
         className="max-w-7xl mx-auto p-8"
       >
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-frame-white mb-2">{review.title}</h1>
-          {review.description && (
-            <p className="text-frame-gray-light mb-4">{review.description}</p>
-          )}
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-frame-white mb-2">{review.title}</h1>
+              {review.description && (
+                <p className="text-frame-gray-light mb-4">{review.description}</p>
+              )}
+            </div>
+            <span
+              className={`inline-flex items-center gap-2 border px-3 py-2 text-xs font-mono uppercase tracking-wider ${
+                review.status === "approved"
+                  ? "border-green-500/30 bg-green-500/10 text-green-400"
+                  : review.status === "changes_requested"
+                    ? "border-orange-500/30 bg-orange-500/10 text-orange-400"
+                    : review.status === "rejected"
+                      ? "border-red-500/30 bg-red-500/10 text-red-400"
+                      : "border-frame-gray-3 bg-frame-gray-2 text-frame-gray-light"
+              }`}
+            >
+              {review.status === "approved" ? "Aprovado" : review.status === "changes_requested" ? "Alterações" : review.status === "rejected" ? "Rejeitado" : "Pendente"}
+            </span>
+          </div>
           <div className="flex items-center gap-4 text-sm text-frame-gray-4">
             <span>Projeto: {review.project_name}</span>
             {review.expires_at && (
@@ -174,6 +233,47 @@ export default function SharedReview() {
                 onProgress={handlePlayerProgress}
                 seekTo={seekTo}
               />
+            </div>
+
+            <div className="bg-frame-gray-1 rounded-lg border border-frame-gray-3 p-6">
+              <h3 className="text-xl font-bold text-frame-white mb-2">Decisão final</h3>
+              <p className="text-frame-gray-light text-sm mb-4">
+                Quando terminar de assistir, envie uma aprovação ou solicite ajustes.
+              </p>
+              <textarea
+                value={decisionNote}
+                onChange={(e) => setDecisionNote(e.target.value)}
+                className="frame-input w-full h-20 mb-4"
+                placeholder="Observação opcional para a decisão..."
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  disabled={isDeciding}
+                  onClick={() => handleDecision("approved")}
+                  className="border border-green-500/30 bg-green-500/10 text-green-400 px-3 py-3 text-xs font-mono uppercase tracking-wider hover:bg-green-500/20 transition flex items-center justify-center gap-2"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  Aprovar
+                </button>
+                <button
+                  type="button"
+                  disabled={isDeciding}
+                  onClick={() => handleDecision("changes_requested")}
+                  className="border border-orange-500/30 bg-orange-500/10 text-orange-400 px-3 py-3 text-xs font-mono uppercase tracking-wider hover:bg-orange-500/20 transition"
+                >
+                  Pedir ajustes
+                </button>
+                <button
+                  type="button"
+                  disabled={isDeciding}
+                  onClick={() => handleDecision("rejected")}
+                  className="border border-red-500/30 bg-red-500/10 text-red-400 px-3 py-3 text-xs font-mono uppercase tracking-wider hover:bg-red-500/20 transition flex items-center justify-center gap-2"
+                >
+                  <XCircle className="w-4 h-4" />
+                  Rejeitar
+                </button>
+              </div>
             </div>
 
             <div className="bg-frame-gray-1 rounded-lg border border-frame-gray-3 p-6">

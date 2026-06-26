@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 import { db } from "../models/db.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { randomBytes } from "crypto";
+import fs from "fs";
 
 // List all video reviews for the authenticated user
 export const listAllVideoReviews: RequestHandler = (req, res, next) => {
@@ -375,8 +376,47 @@ export const accessSharedReview: RequestHandler = (req, res, next) => {
       annotations: c.annotations ? JSON.parse(c.annotations) : [],
     }));
 
-    review.video_url = review.video_url || undefined;
+    review.video_url =
+      review.video_url || (review.file_id ? `/api/public/video-reviews/shared/${token}/video` : undefined);
     res.json({ success: true, data: { ...review, comments } });
+  } catch (e) {
+    next(e);
+  }
+};
+
+// Stream a review video through the public token, without exposing all files publicly.
+export const streamSharedReviewVideo: RequestHandler = (req, res, next) => {
+  try {
+    const { token } = req.params;
+
+    if (!token) {
+      throw new AppError("Share token is required", 400);
+    }
+
+    const review = db
+      .prepare(
+        `SELECT vr.*, f.path as file_path, f.original_name, f.mime_type
+         FROM video_reviews vr
+         LEFT JOIN files f ON vr.file_id = f.id
+         WHERE vr.share_token = ?`,
+      )
+      .get(token) as any;
+
+    if (!review || !review.file_path) {
+      throw new AppError("Video not found", 404);
+    }
+
+    if (review.expires_at && new Date(review.expires_at) < new Date()) {
+      throw new AppError("Share link has expired", 410);
+    }
+
+    if (!fs.existsSync(review.file_path)) {
+      throw new AppError("Video file not found on disk", 404);
+    }
+
+    res.setHeader("Content-Type", review.mime_type || "video/mp4");
+    res.setHeader("Content-Disposition", `inline; filename="${review.original_name || "review-video"}"`);
+    res.sendFile(review.file_path);
   } catch (e) {
     next(e);
   }
@@ -462,6 +502,80 @@ export const addSharedComment: RequestHandler = (req, res, next) => {
     const newComment = db.prepare("SELECT * FROM video_comments WHERE id = ?").get(result.lastInsertRowid);
 
     res.json({ success: true, data: newComment });
+  } catch (e) {
+    next(e);
+  }
+};
+
+// Let clients approve or request changes from the public share page.
+export const updateSharedReviewStatus: RequestHandler = (req, res, next) => {
+  try {
+    const { token } = req.params;
+    const { status, authorName, comment } = req.body as {
+      status?: string;
+      authorName?: string;
+      comment?: string;
+    };
+
+    const allowed = new Set(["approved", "changes_requested", "rejected"]);
+    if (!token || !status || !allowed.has(status)) {
+      throw new AppError("Token and a valid status are required", 400);
+    }
+
+    const review = db
+      .prepare("SELECT * FROM video_reviews WHERE share_token = ?")
+      .get(token) as any;
+
+    if (!review) {
+      throw new AppError("Review not found", 404);
+    }
+
+    if (review.expires_at && new Date(review.expires_at) < new Date()) {
+      throw new AppError("Share link has expired", 410);
+    }
+
+    db.prepare(
+      `UPDATE video_reviews
+       SET status = ?, updated_at = datetime('now')
+       WHERE id = ?`,
+    ).run(status, review.id);
+
+    const statusLabel =
+      status === "approved"
+        ? "Aprovado"
+        : status === "changes_requested"
+          ? "Alterações solicitadas"
+          : "Rejeitado";
+    const decisionComment = comment?.trim() || statusLabel;
+    db.prepare(
+      `INSERT INTO video_comments (review_id, user_id, author_name, timestamp_seconds, comment, annotations, created_at, updated_at)
+       VALUES (?, ?, ?, 0, ?, '[]', datetime('now'), datetime('now'))`,
+    ).run(review.id, review.user_id, authorName?.trim() || "Cliente", `[${statusLabel}] ${decisionComment}`);
+
+    const updatedReview = db
+      .prepare(
+        `SELECT vr.*, f.original_name, f.path as file_path, p.name as project_name
+         FROM video_reviews vr
+         LEFT JOIN files f ON vr.file_id = f.id
+         LEFT JOIN projects p ON vr.project_id = p.id
+         WHERE vr.id = ?`,
+      )
+      .get(review.id) as any;
+
+    const comments = (db
+      .prepare(
+        `SELECT * FROM video_comments
+         WHERE review_id = ?
+         ORDER BY timestamp_seconds ASC, created_at ASC`,
+      )
+      .all(review.id) as any[]).map((c) => ({
+      ...c,
+      annotations: c.annotations ? JSON.parse(c.annotations) : [],
+    }));
+
+    updatedReview.video_url =
+      updatedReview.video_url || (updatedReview.file_id ? `/api/public/video-reviews/shared/${token}/video` : undefined);
+    res.json({ success: true, data: { ...updatedReview, comments } });
   } catch (e) {
     next(e);
   }

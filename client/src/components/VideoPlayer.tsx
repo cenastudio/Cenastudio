@@ -20,10 +20,30 @@ interface VideoPlayerProps {
   seekTo?: number | null;
   onReady?: () => void;
   commentMarkers?: CommentMarker[];
-  onAddAnnotatedComment?: (annotation: Annotation[], timestamp: number) => void;
+  onAddAnnotatedComment?: (annotation: Annotation[], timestamp: number, comment: string) => void;
 }
 
 const PLAYBACK_SPEEDS = [0.5, 1, 1.5, 2];
+
+function extractGoogleDriveId(url: string): string | null {
+  const patterns = [
+    /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,
+    /drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/,
+    /drive\.google\.com\/uc\?(?:export=(?:download|view)&)?id=([a-zA-Z0-9_-]+)/,
+    /docs\.google\.com\/uc\?(?:export=(?:download|view)&)?id=([a-zA-Z0-9_-]+)/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match?.[1]) return match[1];
+  }
+  return null;
+}
+
+function getGoogleDrivePreviewUrl(url: string): string | null {
+  const id = extractGoogleDriveId(url);
+  return id ? `https://drive.google.com/file/d/${id}/preview` : null;
+}
 
 export default function VideoPlayer({
   url, onProgress, onDuration, seekTo, onReady,
@@ -51,6 +71,7 @@ export default function VideoPlayer({
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   const controlsTimeoutRef = useRef<any>(null);
+  const googleDrivePreviewUrl = getGoogleDrivePreviewUrl(url);
 
   useEffect(() => {
     if (seekTo != null && playerRef.current) {
@@ -181,7 +202,7 @@ export default function VideoPlayer({
   const handleSubmitAnnotation = () => {
     if (!commentText.trim()) return;
     const timestamp = Math.floor(currentTime);
-    onAddAnnotatedComment?.(annotations, timestamp);
+    onAddAnnotatedComment?.(annotations, timestamp, commentText.trim());
     setAnnotations([]);
     setCommentText("");
     setShowCommentInput(false);
@@ -218,6 +239,36 @@ export default function VideoPlayer({
         <div className="text-center">
           <Play className="w-16 h-16 mx-auto mb-4 text-frame-gray-4" />
           <p className="text-frame-gray-light text-sm">Nenhum vídeo carregado</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (googleDrivePreviewUrl) {
+    return (
+      <div
+        ref={containerRef}
+        className="relative bg-black rounded-lg overflow-hidden border border-frame-gray-3"
+        style={{ aspectRatio: "16/9" }}
+      >
+        <iframe
+          src={googleDrivePreviewUrl}
+          title="Google Drive video preview"
+          allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+          allowFullScreen
+          className="absolute inset-0 h-full w-full border-0 bg-black"
+        />
+        <div className="absolute left-3 bottom-3 right-3 flex flex-wrap items-center gap-2 rounded-none border border-white/10 bg-black/70 px-3 py-2 text-[0.62rem] text-white/70 backdrop-blur">
+          <span className="font-mono uppercase tracking-wider text-frame-orange">Google Drive Preview</span>
+          <span>Se não tocar, confirme que o arquivo está compartilhado para qualquer pessoa com o link.</span>
+          <a
+            href={url}
+            target="_blank"
+            rel="noreferrer"
+            className="ml-auto text-frame-orange hover:text-frame-white transition"
+          >
+            Abrir origem
+          </a>
         </div>
       </div>
     );

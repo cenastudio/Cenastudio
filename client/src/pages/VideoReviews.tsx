@@ -170,6 +170,18 @@ function VideoReviewsContent() {
         toast.success("Review criado!");
         setShowCreateModal(false);
         setNewReviewTitle(""); setNewReviewDescription(""); setSelectedFileId(""); setDriveLink("");
+        const shareResponse = await fetch(`/api/video-reviews/${data.data.id}/share`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ expiresInDays: 7 }),
+        });
+        const shareData = await shareResponse.json();
+        if (shareData.success) {
+          setShareUrl(shareData.data.shareUrl);
+          setShowShareModal(true);
+        }
+        setSelectedReview(data.data);
         loadAllReviews();
       } else toast.error(data.error || "Erro ao criar review");
     } catch { toast.error("Erro ao criar review"); } finally { setIsUploading(false); }
@@ -187,12 +199,12 @@ function VideoReviewsContent() {
     } catch { toast.error("Erro ao gerar link"); }
   };
 
-  const handleAddAnnotatedComment = async (annotations: Annotation[], timestamp: number) => {
+  const handleAddAnnotatedComment = async (annotations: Annotation[], timestamp: number, commentText: string) => {
     if (!selectedReview) return;
     try {
       const response = await fetch(`/api/video-reviews/${selectedReview.id}/comments`, {
         method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include",
-        body: JSON.stringify({ timestampSeconds: timestamp, comment: newComment || "Feedback no frame", authorName: "Você", annotations }),
+        body: JSON.stringify({ timestampSeconds: timestamp, comment: commentText, authorName: "Você", annotations }),
       });
       const data = await response.json();
       if (data.success) { toast.success("Feedback enviado!"); setNewComment(""); loadReviewDetails(selectedReview.id); }
