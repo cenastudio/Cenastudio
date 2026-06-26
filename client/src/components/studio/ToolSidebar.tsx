@@ -65,9 +65,9 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
                 // {cat.name}
               </p>
               <div className="flex lg:flex-col gap-1 px-2 lg:px-0">
-                {categoryTools.map((t) => {
-                  const TIcon = getToolIcon(t.slug);
-                  const active = t.id === activeToolId;
+{categoryTools.map((t) => {
+                   const TIcon = getToolIcon(t.slug);
+                   const active = t.id === activeToolId || t.slug === activeToolId;
                   return (
                     <button
                       key={t.id}

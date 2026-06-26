@@ -169,10 +169,14 @@ export function getUserPlan(userId: number): UserPlanRow | undefined {
 }
 
 export function checkAndIncrementUsage(userId: number, toolId: string) {
-  const user = db.prepare("SELECT role FROM users WHERE id = ?").get(userId) as
-    | { role: string }
-    | undefined;
-  if (user?.role === "admin") return;
+  const userRow = db.prepare("SELECT role, email FROM users WHERE id = ?").get(userId) as { role: string; email: string } | undefined;
+  const role = userRow?.role;
+  const email = userRow?.email?.toLowerCase();
+  const adminEmails = (process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  if (role === "admin" || adminEmails.includes(email || "")) return;
 
   const plan = getUserPlan(userId);
   if (!plan) {

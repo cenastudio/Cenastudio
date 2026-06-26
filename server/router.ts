@@ -13,6 +13,13 @@ import collaboratorsRoutes from "./routes/collaborators.js";
 import analyticsRoutes from "./routes/analytics.js";
 import projectMembersRoutes from "./routes/projectMembers.js";
 import {
+  getActivityAnalytics,
+  getOverallAnalytics,
+  getProjectAnalytics,
+  getRevenueAnalytics,
+} from "./controllers/analyticsController.js";
+import { exportPipeline } from "./controllers/exportController.js";
+import {
   createOpportunity,
   deleteOpportunity,
   getOpportunity,
@@ -20,6 +27,11 @@ import {
   listOpportunities,
   updateOpportunity,
 } from "./controllers/opportunitiesController.js";
+import {
+  listUsers,
+  updateUserPlan,
+  updateUserRole,
+} from "./controllers/adminController.js";
 import videoReviewsRoutes, { publicRouter as videoReviewsPublicRoutes } from "./routes/videoReviews.js";
 import {
   accessSharedReview,
@@ -33,7 +45,7 @@ import {
   updateSharedReviewStatus,
   updateVideoReview,
 } from "./controllers/videoReviewsController.js";
-import { authenticate } from "./middleware/authenticate.js";
+import { authenticate, requireAdmin } from "./middleware/authenticate.js";
 import notificationsRoutes from "./routes/notifications.js";
 
 const router = Router();
@@ -61,6 +73,14 @@ router.use("/files", filesRoutes);
 router.use("/collaborators", collaboratorsRoutes);
 router.use("/analytics", analyticsRoutes);
 router.use("/project-members", projectMembersRoutes);
+router.get("/analytics-overall", authenticate, getOverallAnalytics);
+router.get("/analytics-revenue", authenticate, getRevenueAnalytics);
+router.get("/analytics-activity", authenticate, getActivityAnalytics);
+router.get("/analytics-project", authenticate, withParam("id", "id", getProjectAnalytics));
+router.get("/export-pipeline", authenticate, exportPipeline);
+router.get("/admin-users", authenticate, requireAdmin, listUsers);
+router.put("/admin-user-role", authenticate, requireAdmin, withParam("id", "userId", updateUserRole));
+router.put("/admin-user-plan", authenticate, requireAdmin, withParam("id", "userId", updateUserPlan));
 router.get("/pipeline-opportunities", authenticate, listOpportunities);
 router.get("/pipeline-stats", authenticate, getPipelineStats);
 router.get("/pipeline-opportunity", authenticate, withParam("id", "id", getOpportunity));

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import {
@@ -11,6 +12,9 @@ import {
   Calendar,
   Activity,
   RefreshCw,
+  Download,
+  FolderOpen,
+  ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -39,6 +43,7 @@ interface ActivityAnalytics {
 }
 
 function AnalyticsContent() {
+  const [, setLocation] = useLocation();
   const [overall, setOverall] = useState<OverallAnalytics | null>(null);
   const [revenue, setRevenue] = useState<RevenueAnalytics | null>(null);
   const [activity, setActivity] = useState<ActivityAnalytics | null>(null);
@@ -54,9 +59,9 @@ function AnalyticsContent() {
       setRefreshing(true);
 
       const [overallRes, revenueRes, activityRes] = await Promise.all([
-        fetch("/api/analytics/overall"),
-        fetch("/api/analytics/revenue"),
-        fetch("/api/analytics/activity"),
+        fetch("/api/analytics-overall", { credentials: "include" }),
+        fetch("/api/analytics-revenue", { credentials: "include" }),
+        fetch("/api/analytics-activity", { credentials: "include" }),
       ]);
 
       const overallData = await overallRes.json();
@@ -90,13 +95,17 @@ function AnalyticsContent() {
     return value.toFixed(1) + "%";
   };
 
+  const exportPipeline = (format: "csv" | "json") => {
+    window.open(`/api/export-pipeline?format=${format}`, "_blank");
+  };
+
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
       <AppNavBar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-10 space-y-8">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6">
           <div>
             <p className="frame-label mb-2">// DASHBOARD</p>
             <h1 className="frame-title text-[clamp(2.1rem,4vw,3.5rem)]">
@@ -107,14 +116,32 @@ function AnalyticsContent() {
             </p>
           </div>
 
-          <button
-            onClick={loadAnalytics}
-            disabled={refreshing}
-            className="frame-btn-ghost flex items-center gap-2"
-          >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
-            Atualizar
-          </button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-2 w-full xl:w-auto">
+            <button onClick={() => setLocation("/pipeline")} className="frame-btn-ghost flex items-center justify-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              Pipeline
+            </button>
+            <button onClick={() => setLocation("/dashboard")} className="frame-btn-ghost flex items-center justify-center gap-2">
+              <FolderOpen className="w-4 h-4" />
+              Projetos
+            </button>
+            <button onClick={() => setLocation("/files")} className="frame-btn-ghost flex items-center justify-center gap-2">
+              <Download className="w-4 h-4" />
+              Arquivos
+            </button>
+            <button onClick={() => exportPipeline("csv")} className="frame-btn-ghost flex items-center justify-center gap-2">
+              <Download className="w-4 h-4" />
+              CSV
+            </button>
+            <button
+              onClick={loadAnalytics}
+              disabled={refreshing}
+              className="frame-btn-primary flex items-center justify-center gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+              Atualizar
+            </button>
+          </div>
         </div>
 
         {isLoading ? (
@@ -236,6 +263,29 @@ function AnalyticsContent() {
                     </div>
                   </div>
                 </motion.div>
+              </div>
+            )}
+
+            {overall && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <ActionCard
+                  title="Pipeline comercial"
+                  description={`${overall.pipeline.totalOpportunities} oportunidades abertas para revisar.`}
+                  action="Abrir funil"
+                  onClick={() => setLocation("/pipeline")}
+                />
+                <ActionCard
+                  title="Projetos ativos"
+                  description={`${overall.projects.active} projetos ativos pedindo acompanhamento.`}
+                  action="Ver painel"
+                  onClick={() => setLocation("/dashboard")}
+                />
+                <ActionCard
+                  title="Exportar relatório"
+                  description="Baixe os dados do funil para conferência, backup ou reunião."
+                  action="Exportar JSON"
+                  onClick={() => exportPipeline("json")}
+                />
               </div>
             )}
 
@@ -431,6 +481,35 @@ function AnalyticsContent() {
         )}
       </main>
     </div>
+  );
+}
+
+function ActionCard({
+  title,
+  description,
+  action,
+  onClick,
+}: {
+  title: string;
+  description: string;
+  action: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="border border-frame-gray-3 bg-frame-gray-1/20 p-4 text-left hover:border-frame-orange/50 hover:bg-frame-orange/[0.03] transition group"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="font-frame-mono text-xs uppercase tracking-[0.14em] text-frame-orange mb-2">{title}</p>
+          <p className="text-sm text-frame-gray-light leading-relaxed">{description}</p>
+        </div>
+        <ArrowRight className="w-4 h-4 text-frame-gray-light group-hover:text-frame-orange transition shrink-0" />
+      </div>
+      <p className="mt-4 text-xs font-frame-mono uppercase tracking-[0.12em] text-frame-white">{action}</p>
+    </button>
   );
 }
 

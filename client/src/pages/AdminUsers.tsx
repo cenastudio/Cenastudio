@@ -32,7 +32,7 @@ function AdminUsersContent() {
 
   const loadUsers = async () => {
     try {
-      const res = await fetch("/api/admin/users", { credentials: "include" });
+      const res = await fetch("/api/admin-users", { credentials: "include" });
       const data = await res.json();
       if (data.success) setUsers(data.data.users);
       else toast.error("Erro ao carregar usuários");
@@ -46,11 +46,11 @@ function AdminUsersContent() {
   const toggleRole = async (user: ManagedUser) => {
     const newRole = user.role === "admin" ? "user" : "admin";
     try {
-      const res = await fetch(`/api/admin/users/${user.id}/role`, {
+      const res = await fetch("/api/admin-user-role", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ role: newRole }),
+        body: JSON.stringify({ userId: user.id, role: newRole }),
       });
       const data = await res.json();
       if (data.success) {
@@ -64,11 +64,11 @@ function AdminUsersContent() {
 
   const changePlan = async (user: ManagedUser, planId: string) => {
     try {
-      const res = await fetch(`/api/admin/users/${user.id}/plan`, {
+      const res = await fetch("/api/admin-user-plan", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ planId }),
+        body: JSON.stringify({ userId: user.id, planId }),
       });
       const data = await res.json();
       if (data.success) {
