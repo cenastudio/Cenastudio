@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { api, type ToolFromApi } from "@/lib/api";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { Edit2, LogOut, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Edit2, LogOut, Plus, Trash2, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
@@ -85,24 +85,44 @@ function AdminContent() {
   return (
     <div className="min-h-screen bg-frame-black text-frame-white pt-[62px]">
       <header className="fixed top-0 left-0 right-0 z-50 frame-nav">
-        <button
-          type="button"
-          onClick={() => setLocation("/tools")}
-          className="font-frame-display text-[1.55rem] tracking-[0.1em] text-frame-white bg-transparent border-none"
-        >
-          FRAME<span className="text-frame-orange">.</span>AI
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setLocation("/profile")}
+            className="font-frame-mono text-[0.58rem] tracking-[0.09em] uppercase bg-transparent border border-frame-gray-3 text-frame-gray-light px-2.5 py-1.5 transition hover:border-frame-orange hover:text-frame-orange flex items-center gap-1.5"
+          >
+            <ArrowLeft className="w-3 h-3" />
+            Voltar
+          </button>
+          <button
+            type="button"
+            onClick={() => setLocation("/dashboard")}
+            className="font-frame-display text-[1.55rem] tracking-[0.1em] text-frame-white bg-transparent border-none"
+          >
+            FRAME<span className="text-frame-orange">.</span>AI
+          </button>
+        </div>
         <p className="font-frame-mono text-[0.58rem] tracking-[0.14em] uppercase text-frame-gold hidden sm:block">
           Admin
         </p>
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="font-frame-mono text-[0.58rem] tracking-[0.09em] uppercase bg-transparent border border-frame-gray-3 text-frame-gray-light px-2.5 py-1.5 transition hover:border-frame-red hover:text-frame-red flex items-center gap-1.5"
-        >
-          <LogOut className="w-3 h-3" />
-          Sair
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setLocation("/admin/gerenciar")}
+            className="font-frame-mono text-[0.58rem] tracking-[0.09em] uppercase bg-transparent border border-frame-gold/50 text-frame-gold px-2.5 py-1.5 transition hover:border-frame-orange hover:text-frame-orange flex items-center gap-1.5"
+          >
+            <Users className="w-3 h-3" />
+            Usuários
+          </button>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="font-frame-mono text-[0.58rem] tracking-[0.09em] uppercase bg-transparent border border-frame-gray-3 text-frame-gray-light px-2.5 py-1.5 transition hover:border-frame-red hover:text-frame-red flex items-center gap-1.5"
+          >
+            <LogOut className="w-3 h-3" />
+            Sair
+          </button>
+        </div>
       </header>
 
       <div className="px-9 py-7 border-b border-frame-gray-2">

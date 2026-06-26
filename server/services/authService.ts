@@ -98,9 +98,39 @@ export function loginUser(email: string, password: string): AuthUser {
 
 export function getUserById(id: number): AuthUser | null {
   const row = db
-    .prepare("SELECT id, email, role, name FROM users WHERE id = ?")
+    .prepare(
+      `SELECT id, email, role, name,
+              studio_name as studioName,
+              studio_role as studioRole,
+              phone
+       FROM users WHERE id = ?`,
+    )
     .get(id) as AuthUser | undefined;
   return row ?? null;
+}
+
+export function updateProfile(
+  userId: number,
+  data: { name?: string; studioName?: string; studioRole?: string; phone?: string },
+): AuthUser {
+  const current = getUserById(userId);
+  if (!current) throw new AppError("Sessão expirada. Entre novamente para continuar.", 401);
+
+  db.prepare(
+    `UPDATE users
+     SET name = ?, studio_name = ?, studio_role = ?, phone = ?
+     WHERE id = ?`,
+  ).run(
+    data.name?.trim() || current.name || null,
+    data.studioName?.trim() || current.studioName || null,
+    data.studioRole?.trim() || current.studioRole || null,
+    data.phone?.trim() || current.phone || null,
+    userId,
+  );
+
+  const updated = getUserById(userId);
+  if (!updated) throw new AppError("Sessão expirada. Entre novamente para continuar.", 401);
+  return updated;
 }
 
 function roleForEmail(email: string): "user" | "admin" {

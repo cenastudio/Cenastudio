@@ -19,6 +19,7 @@ router.post("/reset-password", validateBody(resetPasswordSchema), authController
 router.post("/logout", authController.logout);
 router.post("/supabase", authController.supabaseLogin);
 router.get("/me", authenticate, authController.me);
+router.put("/profile", authenticate, authController.updateProfile);
 
 // GitHub OAuth routes for admin login
 router.get("/github", (req, res, next) => {

@@ -8,6 +8,9 @@ export interface AuthUser {
   email: string;
   role: "user" | "admin";
   name?: string;
+  studioName?: string;
+  studioRole?: string;
+  phone?: string;
 }
 
 declare global {
@@ -48,7 +51,7 @@ export const cookieOptions = {
 
 export { COOKIE_NAME };
 
-export const authenticate: RequestHandler = (req, _res, next) => {
+export const authenticate: RequestHandler = (req, res, next) => {
   const token = req.cookies?.[COOKIE_NAME];
   if (!token) {
     return next(new AppError("Unauthorized", 401));
@@ -56,10 +59,17 @@ export const authenticate: RequestHandler = (req, _res, next) => {
   try {
     const payload = jwt.verify(token, getJwtSecret()) as AuthUser;
     const currentUser = db
-      .prepare("SELECT id, email, role, name FROM users WHERE id = ?")
+      .prepare(
+        `SELECT id, email, role, name,
+                studio_name as studioName,
+                studio_role as studioRole,
+                phone
+         FROM users WHERE id = ?`,
+      )
       .get(payload.id) as AuthUser | undefined;
     if (!currentUser) {
-      return next(new AppError("User not found", 401));
+      res.clearCookie(COOKIE_NAME, { path: "/" });
+      return next(new AppError("Sessão expirada. Entre novamente para continuar.", 401));
     }
     req.user = currentUser;
     next();

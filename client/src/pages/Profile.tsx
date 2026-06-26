@@ -3,10 +3,11 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
 import { CHECKOUT_MODAL_PLAN, planDisplayLabel } from "@/lib/plans";
 import { useApp } from "@/contexts/AppContext";
-import { openBillingPortal, ApiError } from "@/lib/api";
-import { CalendarClock, Crown, LogOut, ShieldCheck, UserRound, Zap, Settings, Users } from "lucide-react";
+import { api, openBillingPortal, ApiError } from "@/lib/api";
+import { CalendarClock, Crown, LogOut, ShieldCheck, UserRound, Zap, Settings, Users, Save, Building2, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
+import { useEffect, useState } from "react";
 
 function formatDate(value: string | null | undefined) {
   if (!value) return "Sem data definida";
@@ -18,9 +19,21 @@ function formatDate(value: string | null | undefined) {
 }
 
 function ProfileContent() {
-  const { user, plan, logout } = useAuth();
+  const { user, plan, logout, refresh } = useAuth();
   const { openModal, selectPlan } = useApp();
   const [, setLocation] = useLocation();
+  const [name, setName] = useState("");
+  const [studioName, setStudioName] = useState("");
+  const [studioRole, setStudioRole] = useState("");
+  const [phone, setPhone] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  useEffect(() => {
+    setName(user?.name || "");
+    setStudioName(user?.studioName || "");
+    setStudioRole(user?.studioRole || "");
+    setPhone(user?.phone || "");
+  }, [user]);
 
   const planLabel = plan
     ? planDisplayLabel(plan.planId, plan.planName, plan.status, plan.trialEndsAt)
@@ -49,6 +62,19 @@ function ProfileContent() {
   const handleLogout = async () => {
     await logout();
     setLocation("/");
+  };
+
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    try {
+      await api.auth.updateProfile({ name, studioName, studioRole, phone });
+      await refresh();
+      toast.success("Perfil atualizado");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao atualizar perfil");
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
   return (
@@ -123,6 +149,51 @@ function ProfileContent() {
                 Sair
               </button>
             </div>
+          </div>
+
+          <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-6 space-y-5">
+            <div>
+              <p className="font-frame-mono text-[0.58rem] tracking-[0.18em] text-frame-orange uppercase">
+                Dados editáveis
+              </p>
+              <h2 className="frame-title text-[2rem] mt-1">STUDIO / USUÁRIO</h2>
+              <p className="text-frame-gray-light text-sm mt-2">
+                Atualize como a conta aparece internamente, para equipe, aprovações e operação.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label className="space-y-2">
+                <span className="frame-label text-frame-gray-light">Nome do usuário</span>
+                <div className="relative">
+                  <UserRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
+                  <input value={name} onChange={(e) => setName(e.target.value)} className="frame-input w-full pl-10" placeholder="Seu nome" />
+                </div>
+              </label>
+              <label className="space-y-2">
+                <span className="frame-label text-frame-gray-light">Telefone</span>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
+                  <input value={phone} onChange={(e) => setPhone(e.target.value)} className="frame-input w-full pl-10" placeholder="(00) 00000-0000" />
+                </div>
+              </label>
+              <label className="space-y-2">
+                <span className="frame-label text-frame-gray-light">Nome do studio</span>
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
+                  <input value={studioName} onChange={(e) => setStudioName(e.target.value)} className="frame-input w-full pl-10" placeholder="Nome da produtora/studio" />
+                </div>
+              </label>
+              <label className="space-y-2">
+                <span className="frame-label text-frame-gray-light">Função no studio</span>
+                <input value={studioRole} onChange={(e) => setStudioRole(e.target.value)} className="frame-input w-full" placeholder="Diretor, produtor, editor..." />
+              </label>
+            </div>
+
+            <button type="button" onClick={handleSaveProfile} disabled={savingProfile} className="frame-btn-primary flex items-center justify-center gap-2 w-full md:w-auto">
+              <Save className="w-4 h-4" />
+              {savingProfile ? "Salvando..." : "Salvar perfil"}
+            </button>
           </div>
 
           {user?.role === "admin" && (

@@ -40,7 +40,8 @@ interface Collaborator {
   role: string;
   phone: string;
   skills: string;
-  hourly_rate: number;
+  hourly_rate?: number;
+  daily_rate?: number;
   status: string;
   created_at: string;
   updated_at: string;
@@ -98,7 +99,7 @@ function CollaboratorsContent() {
 
   const loadCollaborators = async () => {
     try {
-      const response = await fetch("/api/collaborators");
+      const response = await fetch("/api/collaborators", { credentials: "include" });
       const data = await response.json();
       if (data.success) {
         setCollaborators(data.data);
@@ -112,7 +113,7 @@ function CollaboratorsContent() {
 
   const loadStats = async () => {
     try {
-      const response = await fetch("/api/collaborators/stats");
+      const response = await fetch("/api/collaborators/stats", { credentials: "include" });
       const data = await response.json();
       if (data.success) {
         setStats(data.data);
@@ -131,13 +132,14 @@ function CollaboratorsContent() {
       const response = await fetch("/api/collaborators", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           name: name.trim(),
           email: email.trim(),
           role,
           phone: phone.trim(),
           skills: skills.trim(),
-          hourlyRate: hourlyRate ? parseInt(hourlyRate) : undefined,
+          daily_rate: hourlyRate ? parseInt(hourlyRate) : undefined,
         }),
       });
 
@@ -167,13 +169,14 @@ function CollaboratorsContent() {
       const response = await fetch(`/api/collaborators/${selectedCollaborator.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           name: name.trim(),
           email: email.trim(),
           role,
           phone: phone.trim(),
           skills: skills.trim(),
-          hourlyRate: hourlyRate ? parseInt(hourlyRate) : undefined,
+          daily_rate: hourlyRate ? parseInt(hourlyRate) : undefined,
           status,
         }),
       });
@@ -202,6 +205,7 @@ function CollaboratorsContent() {
     try {
       const response = await fetch(`/api/collaborators/${selectedCollaborator.id}`, {
         method: "DELETE",
+        credentials: "include",
       });
 
       const data = await response.json();
@@ -228,7 +232,7 @@ function CollaboratorsContent() {
     setRole(collaborator.role);
     setPhone(collaborator.phone);
     setSkills(collaborator.skills);
-    setHourlyRate(collaborator.hourly_rate?.toString() || "");
+    setHourlyRate((collaborator.daily_rate ?? collaborator.hourly_rate)?.toString() || "");
     setStatus(collaborator.status);
     setIsEditOpen(true);
   };
@@ -407,6 +411,9 @@ function CollaboratorsContent() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {getFilteredCollaborators().map((collaborator) => (
+              (() => {
+                const dayRate = collaborator.daily_rate ?? collaborator.hourly_rate ?? 0;
+                return (
               <motion.div
                 key={collaborator.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -471,10 +478,10 @@ function CollaboratorsContent() {
                     </div>
                   )}
 
-                  {collaborator.hourly_rate > 0 && (
+                  {dayRate > 0 && (
                     <div className="flex items-center gap-2 text-frame-orange">
                       <DollarSign className="w-3 h-3" />
-                      <span>{formatCurrency(collaborator.hourly_rate)}/hora</span>
+                      <span>{formatCurrency(dayRate)}/diária</span>
                     </div>
                   )}
 
@@ -505,6 +512,8 @@ function CollaboratorsContent() {
                   </div>
                 </div>
               </motion.div>
+                );
+              })()
             ))}
           </div>
         )}

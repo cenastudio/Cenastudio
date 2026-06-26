@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
-import { api, type Project, type ToolState } from "@/lib/api";
+import { ApiError, api, type Project, type ToolState } from "@/lib/api";
 import { useAuth } from "./AuthContext";
 import { toast } from "sonner";
 
@@ -42,6 +42,12 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       const data = await api.projects.list();
       setProjects(data);
     } catch (e) {
+      if (e instanceof ApiError && e.status === 401) {
+        setProjects([]);
+        setActiveProject(null);
+        setToolStates({});
+        return;
+      }
       toast.error("Erro ao carregar a lista de projetos");
     } finally {
       setIsLoading(false);

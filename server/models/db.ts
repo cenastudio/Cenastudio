@@ -28,6 +28,9 @@ function ensureUserColumns() {
     db.prepare("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0").run();
   }
   if (!userCols.includes("github_id")) db.prepare("ALTER TABLE users ADD COLUMN github_id TEXT").run();
+  if (!userCols.includes("studio_name")) db.prepare("ALTER TABLE users ADD COLUMN studio_name TEXT").run();
+  if (!userCols.includes("studio_role")) db.prepare("ALTER TABLE users ADD COLUMN studio_role TEXT").run();
+  if (!userCols.includes("phone")) db.prepare("ALTER TABLE users ADD COLUMN phone TEXT").run();
 }
 
 function ensureSubscriptionColumns() {
@@ -112,6 +115,31 @@ function ensureClientColumns() {
   }
   if (!clientCols.includes("tax_id")) {
     db.prepare("ALTER TABLE clients ADD COLUMN tax_id TEXT").run();
+  }
+}
+
+function ensureCollaboratorColumns() {
+  const collaboratorCols = (
+    db.prepare("PRAGMA table_info(collaborators)").all() as { name: string }[]
+  ).map((c) => c.name);
+
+  if (!collaboratorCols.includes("phone")) {
+    db.prepare("ALTER TABLE collaborators ADD COLUMN phone TEXT DEFAULT ''").run();
+  }
+  if (!collaboratorCols.includes("skills")) {
+    db.prepare("ALTER TABLE collaborators ADD COLUMN skills TEXT").run();
+  }
+  if (!collaboratorCols.includes("daily_rate")) {
+    db.prepare("ALTER TABLE collaborators ADD COLUMN daily_rate INTEGER DEFAULT 0").run();
+  }
+  if (!collaboratorCols.includes("status")) {
+    db.prepare("ALTER TABLE collaborators ADD COLUMN status TEXT DEFAULT 'active'").run();
+  }
+  if (!collaboratorCols.includes("availability")) {
+    db.prepare("ALTER TABLE collaborators ADD COLUMN availability TEXT").run();
+  }
+  if (!collaboratorCols.includes("updated_at")) {
+    db.prepare("ALTER TABLE collaborators ADD COLUMN updated_at TEXT DEFAULT (datetime('now'))").run();
   }
 }
 
@@ -445,6 +473,7 @@ export function initDatabase() {
   ensureSubscriptionColumns();
   ensureProjectColumns();
   ensureClientColumns();
+  ensureCollaboratorColumns();
   ensureVideoReviewColumns();
   createIndexes();
 

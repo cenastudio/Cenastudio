@@ -26,7 +26,15 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   const json = (await res.json()) as ApiResponse<T>;
   if (!res.ok || !json.success) {
-    throw new ApiError(json.error || `Request failed (${res.status})`, res.status);
+    if (res.status === 401) {
+      window.dispatchEvent(new CustomEvent("frame:auth-expired"));
+    }
+    throw new ApiError(
+      res.status === 401
+        ? json.error || "Sessão expirada. Entre novamente para continuar."
+        : json.error || `Request failed (${res.status})`,
+      res.status,
+    );
   }
   return json.data as T;
 }
@@ -36,6 +44,9 @@ export interface AuthUser {
   email: string;
   role: "user" | "admin";
   name?: string;
+  studioName?: string;
+  studioRole?: string;
+  phone?: string;
 }
 
 export interface UserPlan {
@@ -71,6 +82,11 @@ export const api = {
       }),
     logout: () => request<null>("/auth/logout", { method: "POST" }),
     me: () => request<{ user: AuthUser; plan: UserPlan | null }>("/auth/me"),
+    updateProfile: (data: { name: string; studioName: string; studioRole: string; phone: string }) =>
+      request<{ user: AuthUser }>("/auth/profile", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
     supabase: (accessToken: string) =>
       request<{ user: AuthUser }>("/auth/supabase", {
         method: "POST",
@@ -139,7 +155,7 @@ export const api = {
       request<{ id: string; isActive: boolean }>(`/admin/tools/${id}`, {
         method: "DELETE",
       }),
-    users: () => request<{ count: number; users: { id: number; email: string; role: string; name?: string; plan?: string }[] }>("/admin/users"),
+    users: () => request<{ count: number; users: { id: number; email: string; role: string; name?: string; plan?: string }[] }>("/admin-users"),
   },
   contact: {
     submit: (data: ContactPayload) =>

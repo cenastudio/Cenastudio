@@ -116,6 +116,21 @@ export const me: RequestHandler = (req, res, next) => {
   }
 };
 
+export const updateProfile: RequestHandler = (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+    const user = authService.updateProfile(req.user.id, {
+      name: req.body.name,
+      studioName: req.body.studioName,
+      studioRole: req.body.studioRole,
+      phone: req.body.phone,
+    });
+    res.json({ success: true, data: { user } });
+  } catch (e) {
+    next(e);
+  }
+};
+
 export const githubCallback: RequestHandler = (req, res, next) => {
   try {
     if (!req.user) throw new AppError("Unauthorized", 401);
