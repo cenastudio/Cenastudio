@@ -23,6 +23,7 @@ import ForgotPassword from "@/pages/ForgotPassword";
 import AuthCallback from "@/pages/AuthCallback";
 import Login from "@/pages/Login";
 import Pipeline from "@/pages/Pipeline";
+import Proposals from "@/pages/Proposals";
 import Profile from "@/pages/Profile";
 import Register from "@/pages/Register";
 import ResetPassword from "@/pages/ResetPassword";
@@ -52,6 +53,7 @@ function Router() {
       <Route path="/clients" component={Clients} />
       <Route path="/clients/:id" component={Clients} />
       <Route path="/pipeline" component={Pipeline} />
+      <Route path="/proposals" component={Proposals} />
       <Route path="/interactions" component={Interactions} />
       <Route path="/documents" component={Documents} />
       <Route path="/files" component={Files} />
