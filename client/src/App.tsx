@@ -15,6 +15,7 @@ import NewClient from "@/pages/NewClient";
 import EditClient from "@/pages/EditClient";
 import Collaborators from "@/pages/Collaborators";
 import Dashboard from "@/pages/Dashboard";
+import Documents from "@/pages/Documents";
 import Files from "@/pages/Files";
 import Interactions from "@/pages/Interactions";
 import Landing from "@/pages/Landing";
@@ -52,6 +53,7 @@ function Router() {
       <Route path="/clients/:id" component={Clients} />
       <Route path="/pipeline" component={Pipeline} />
       <Route path="/interactions" component={Interactions} />
+      <Route path="/documents" component={Documents} />
       <Route path="/files" component={Files} />
       <Route path="/files/:projectId" component={Files} />
       <Route path="/video-reviews" component={VideoReviews} />

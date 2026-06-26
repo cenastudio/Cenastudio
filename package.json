@@ -4,7 +4,7 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "dev": "concurrently -k \"NODE_ENV=development tsx watch server/index.ts\" \"vite --host --port 5173\"",
+    "dev": "concurrently -k \"NODE_ENV=development PORT=5001 tsx watch server/index.ts\" \"VITE_API_PROXY=http://localhost:5001 vite --host --port 5173\"",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",
     "preview": "vite preview --host",

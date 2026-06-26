@@ -48,6 +48,20 @@ function parseVideoLink(url: string): string | null {
   return trimmed;
 }
 
+function normalizeShareUrl(url: string, token?: string | null): string {
+  if (token) return `${window.location.origin}/review/${token}`;
+  if (!url) return "";
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
+      return `${window.location.origin}${parsed.pathname}${parsed.search}${parsed.hash}`;
+    }
+  } catch {
+    return url;
+  }
+  return url;
+}
+
 interface VideoReview {
   id: number;
   project_id: number;
@@ -234,7 +248,7 @@ function VideoReviewsContent() {
       }
 
       if (data.data.shareUrl) {
-        setShareUrl(data.data.shareUrl);
+        setShareUrl(normalizeShareUrl(data.data.shareUrl, data.data.share_token));
         setShowShareModal(true);
       } else {
         const shareResponse = await fetch("/api/video-review-share", {
@@ -245,7 +259,7 @@ function VideoReviewsContent() {
         });
         const shareData = await shareResponse.json();
         if (shareData.success) {
-          setShareUrl(shareData.data.shareUrl);
+          setShareUrl(normalizeShareUrl(shareData.data.shareUrl));
           setShowShareModal(true);
         }
       }
@@ -272,7 +286,7 @@ function VideoReviewsContent() {
       });
       const data = await response.json();
       if (data.success) {
-        setShareUrl(data.data.shareUrl);
+        setShareUrl(normalizeShareUrl(data.data.shareUrl, selectedReview.share_token));
         setShowShareModal(true);
       } else {
         toast.error(data.error || "Erro ao gerar link");
@@ -378,6 +392,11 @@ function VideoReviewsContent() {
   };
 
   const currentStatus = selectedReview ? STATUS_CONFIG[selectedReview.status] || STATUS_CONFIG.draft : null;
+  const selectedShareUrl = useMemo(() => {
+    if (shareUrl && selectedReview) return shareUrl;
+    if (selectedReview?.share_token) return `${window.location.origin}/review/${selectedReview.share_token}`;
+    return "";
+  }, [selectedReview, shareUrl]);
   const commentMarkers = comments.map((comment) => ({
     id: comment.id,
     timestampSeconds: comment.timestamp_seconds,
@@ -411,7 +430,7 @@ function VideoReviewsContent() {
             {selectedReview && (
               <button onClick={handleGenerateShareLink} className="frame-btn-primary flex items-center gap-2">
                 <Share2 className="w-4 h-4" />
-                Link cliente
+                {selectedShareUrl ? "Atualizar link" : "Gerar link"}
               </button>
             )}
           </div>
@@ -440,6 +459,16 @@ function VideoReviewsContent() {
                         <option key={file.id} value={file.id}>{file.original_name}</option>
                       ))}
                     </select>
+                  )}
+                  {previewUrl && (
+                    <div className="border border-frame-orange/30 bg-frame-orange/5 p-3">
+                      <p className="text-[0.58rem] font-frame-mono uppercase tracking-wider text-frame-orange mb-1">
+                        Preview detectado
+                      </p>
+                      <p className="text-xs text-frame-gray-light break-all">
+                        {previewUrl}
+                      </p>
+                    </div>
                   )}
                   <button onClick={handleCreateReview} disabled={isCreating} className="frame-btn-primary w-full flex items-center justify-center gap-2">
                     <Plus className="w-4 h-4" />
@@ -543,6 +572,53 @@ function VideoReviewsContent() {
             </section>
 
             <aside className="border-t xl:border-t-0 xl:border-l border-frame-gray-3 bg-frame-gray-1/10 flex flex-col min-h-[460px] xl:min-h-0">
+              {selectedReview && (
+                <div className="p-4 border-b border-frame-gray-3 space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-sm font-semibold flex items-center gap-2">
+                      <Share2 className="w-4 h-4 text-frame-orange" />
+                      Link do cliente
+                    </h3>
+                    <span className="text-[0.55rem] font-frame-mono uppercase tracking-wider text-frame-gray-light">
+                      {selectedReview.expires_at ? "7 dias" : "pendente"}
+                    </span>
+                  </div>
+                  {selectedShareUrl ? (
+                    <>
+                      <div className="border border-frame-gray-3 bg-frame-black/40 p-3 text-xs text-frame-gray-light break-all">
+                        {selectedShareUrl}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(selectedShareUrl);
+                            toast.success("Link copiado");
+                          }}
+                          className="frame-btn-ghost flex items-center justify-center gap-2"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                          Copiar
+                        </button>
+                        <a
+                          href={selectedShareUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="frame-btn-primary flex items-center justify-center gap-2"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          Abrir
+                        </a>
+                      </div>
+                    </>
+                  ) : (
+                    <button type="button" onClick={handleGenerateShareLink} className="frame-btn-primary w-full flex items-center justify-center gap-2">
+                      <Share2 className="w-4 h-4" />
+                      Gerar link do cliente
+                    </button>
+                  )}
+                </div>
+              )}
               <div className="p-4 border-b border-frame-gray-3">
                 <h3 className="text-sm font-semibold flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-frame-orange" />
