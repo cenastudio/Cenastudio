@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type RequestHandler } from "express";
 import adminRoutes from "./routes/admin.js";
 import aiRoutes from "./routes/ai.js";
 import authRoutes from "./routes/auth.js";
@@ -13,9 +13,32 @@ import collaboratorsRoutes from "./routes/collaborators.js";
 import analyticsRoutes from "./routes/analytics.js";
 import projectMembersRoutes from "./routes/projectMembers.js";
 import videoReviewsRoutes, { publicRouter as videoReviewsPublicRoutes } from "./routes/videoReviews.js";
+import {
+  accessSharedReview,
+  addComment,
+  addSharedComment,
+  deleteComment,
+  generateShareLink,
+  getVideoReview,
+  resolveComment,
+  streamSharedReviewVideo,
+  updateSharedReviewStatus,
+  updateVideoReview,
+} from "./controllers/videoReviewsController.js";
+import { authenticate } from "./middleware/authenticate.js";
 import notificationsRoutes from "./routes/notifications.js";
 
 const router = Router();
+
+const withParam =
+  (paramName: string, sourceName: string, handler: RequestHandler): RequestHandler =>
+  (req, res, next) => {
+    const value = req.params[sourceName] || req.body?.[sourceName] || req.query[sourceName];
+    if (value !== undefined) {
+      req.params[paramName] = String(value);
+    }
+    return handler(req, res, next);
+  };
 
 router.use("/auth", authRoutes);
 router.use("/tools", toolsRoutes);
@@ -30,6 +53,16 @@ router.use("/files", filesRoutes);
 router.use("/collaborators", collaboratorsRoutes);
 router.use("/analytics", analyticsRoutes);
 router.use("/project-members", projectMembersRoutes);
+router.get("/video-review", authenticate, withParam("id", "id", getVideoReview));
+router.put("/video-review", authenticate, withParam("id", "id", updateVideoReview));
+router.post("/video-review-share", authenticate, withParam("id", "reviewId", generateShareLink));
+router.post("/video-review-comment", authenticate, withParam("id", "reviewId", addComment));
+router.put("/video-review-comment-resolve", authenticate, withParam("id", "commentId", resolveComment));
+router.delete("/video-review-comment", authenticate, withParam("id", "commentId", deleteComment));
+router.get("/public-review", withParam("token", "token", accessSharedReview));
+router.get("/public-review-video", withParam("token", "token", streamSharedReviewVideo));
+router.post("/public-review-comment", withParam("token", "token", addSharedComment));
+router.patch("/public-review-status", withParam("token", "token", updateSharedReviewStatus));
 router.use("/video-reviews", videoReviewsRoutes);
 router.use("/public/video-reviews", videoReviewsPublicRoutes);
 router.use("/notifications", notificationsRoutes);

@@ -48,7 +48,7 @@ export default function SharedReview() {
   const loadSharedReview = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/public/video-reviews/shared/${token}`);
+      const response = await fetch(`/api/public-review?token=${token}`);
       const data = await response.json();
       if (data.success) {
         setReview(data.data);
@@ -78,10 +78,11 @@ export default function SharedReview() {
       return;
     }
     try {
-      const response = await fetch(`/api/public/video-reviews/shared/${token}/comments`, {
+      const response = await fetch("/api/public-review-comment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          token,
           timestampSeconds: newCommentTimestamp,
           comment: newComment,
           authorName,
@@ -107,10 +108,11 @@ export default function SharedReview() {
 
     setIsDeciding(true);
     try {
-      const response = await fetch(`/api/public/video-reviews/shared/${token}/status`, {
+      const response = await fetch("/api/public-review-status", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          token,
           status,
           authorName,
           comment: decisionNote,

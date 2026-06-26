@@ -376,8 +376,7 @@ export const accessSharedReview: RequestHandler = (req, res, next) => {
       annotations: c.annotations ? JSON.parse(c.annotations) : [],
     }));
 
-    review.video_url =
-      review.video_url || (review.file_id ? `/api/public/video-reviews/shared/${token}/video` : undefined);
+    review.video_url = review.video_url || (review.file_id ? `/api/public-review-video?token=${token}` : undefined);
     res.json({ success: true, data: { ...review, comments } });
   } catch (e) {
     next(e);
@@ -574,7 +573,7 @@ export const updateSharedReviewStatus: RequestHandler = (req, res, next) => {
     }));
 
     updatedReview.video_url =
-      updatedReview.video_url || (updatedReview.file_id ? `/api/public/video-reviews/shared/${token}/video` : undefined);
+      updatedReview.video_url || (updatedReview.file_id ? `/api/public-review-video?token=${token}` : undefined);
     res.json({ success: true, data: { ...updatedReview, comments } });
   } catch (e) {
     next(e);

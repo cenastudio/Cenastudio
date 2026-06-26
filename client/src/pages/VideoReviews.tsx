@@ -136,7 +136,7 @@ function VideoReviewsContent() {
 
   const loadReviewDetails = async (reviewId: number) => {
     try {
-      const response = await fetch(`/api/video-reviews/${reviewId}`, { credentials: "include" });
+      const response = await fetch(`/api/video-review?id=${reviewId}`, { credentials: "include" });
       const data = await response.json();
       if (data.success) {
         setSelectedReview(data.data);
@@ -170,11 +170,11 @@ function VideoReviewsContent() {
         toast.success("Review criado!");
         setShowCreateModal(false);
         setNewReviewTitle(""); setNewReviewDescription(""); setSelectedFileId(""); setDriveLink("");
-        const shareResponse = await fetch(`/api/video-reviews/${data.data.id}/share`, {
+        const shareResponse = await fetch("/api/video-review-share", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ expiresInDays: 7 }),
+          body: JSON.stringify({ reviewId: data.data.id, expiresInDays: 7 }),
         });
         const shareData = await shareResponse.json();
         if (shareData.success) {
@@ -190,9 +190,9 @@ function VideoReviewsContent() {
   const handleGenerateShareLink = async () => {
     if (!selectedReview) return;
     try {
-      const response = await fetch(`/api/video-reviews/${selectedReview.id}/share`, {
+      const response = await fetch("/api/video-review-share", {
         method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include",
-        body: JSON.stringify({ expiresInDays: 7 }),
+        body: JSON.stringify({ reviewId: selectedReview.id, expiresInDays: 7 }),
       });
       const data = await response.json();
       if (data.success) { setShareUrl(data.data.shareUrl); setShowShareModal(true); }
@@ -202,9 +202,9 @@ function VideoReviewsContent() {
   const handleAddAnnotatedComment = async (annotations: Annotation[], timestamp: number, commentText: string) => {
     if (!selectedReview) return;
     try {
-      const response = await fetch(`/api/video-reviews/${selectedReview.id}/comments`, {
+      const response = await fetch("/api/video-review-comment", {
         method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include",
-        body: JSON.stringify({ timestampSeconds: timestamp, comment: commentText, authorName: "Você", annotations }),
+        body: JSON.stringify({ reviewId: selectedReview.id, timestampSeconds: timestamp, comment: commentText, authorName: "Você", annotations }),
       });
       const data = await response.json();
       if (data.success) { toast.success("Feedback enviado!"); setNewComment(""); loadReviewDetails(selectedReview.id); }
@@ -214,9 +214,9 @@ function VideoReviewsContent() {
   const handleAddComment = async () => {
     if (!selectedReview || !newComment.trim()) { toast.error("Comentário é obrigatório"); return; }
     try {
-      const response = await fetch(`/api/video-reviews/${selectedReview.id}/comments`, {
+      const response = await fetch("/api/video-review-comment", {
         method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include",
-        body: JSON.stringify({ timestampSeconds: newCommentTimestamp ?? 0, comment: newComment, authorName: "Você" }),
+        body: JSON.stringify({ reviewId: selectedReview.id, timestampSeconds: newCommentTimestamp ?? 0, comment: newComment, authorName: "Você" }),
       });
       const data = await response.json();
       if (data.success) { toast.success("Comentário adicionado!"); setNewComment(""); setNewCommentTimestamp(null); loadReviewDetails(selectedReview.id); }
@@ -225,9 +225,9 @@ function VideoReviewsContent() {
 
   const handleResolveComment = async (commentId: number, resolved: boolean) => {
     try {
-      const response = await fetch(`/api/video-reviews/comments/${commentId}/resolve`, {
+      const response = await fetch("/api/video-review-comment-resolve", {
         method: "PUT", headers: { "Content-Type": "application/json" }, credentials: "include",
-        body: JSON.stringify({ resolved }),
+        body: JSON.stringify({ commentId, resolved }),
       });
       if (response.ok) { toast.success(resolved ? "Resolvido!" : "Reaberto!"); if (selectedReview) loadReviewDetails(selectedReview.id); }
     } catch { toast.error("Erro ao atualizar"); }
@@ -236,7 +236,7 @@ function VideoReviewsContent() {
   const handleDeleteComment = async (commentId: number) => {
     if (!confirm("Excluir comentário?")) return;
     try {
-      const response = await fetch(`/api/video-reviews/comments/${commentId}`, { method: "DELETE", credentials: "include" });
+      const response = await fetch(`/api/video-review-comment?commentId=${commentId}`, { method: "DELETE", credentials: "include" });
       if (response.ok) { toast.success("Excluído!"); if (selectedReview) loadReviewDetails(selectedReview.id); }
     } catch { toast.error("Erro ao excluir"); }
   };
@@ -244,7 +244,7 @@ function VideoReviewsContent() {
   const handleUpdateReviewStatus = async (status: string) => {
     if (!selectedReview) return;
     try {
-      const response = await fetch(`/api/video-reviews/${selectedReview.id}`, {
+      const response = await fetch(`/api/video-review?id=${selectedReview.id}`, {
         method: "PUT", headers: { "Content-Type": "application/json" }, credentials: "include",
         body: JSON.stringify({ status }),
       });
