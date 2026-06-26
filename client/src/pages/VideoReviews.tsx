@@ -233,16 +233,21 @@ function VideoReviewsContent() {
         return;
       }
 
-      const shareResponse = await fetch("/api/video-review-share", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ reviewId: data.data.id, expiresInDays: 7 }),
-      });
-      const shareData = await shareResponse.json();
-      if (shareData.success) {
-        setShareUrl(shareData.data.shareUrl);
+      if (data.data.shareUrl) {
+        setShareUrl(data.data.shareUrl);
         setShowShareModal(true);
+      } else {
+        const shareResponse = await fetch("/api/video-review-share", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ reviewId: data.data.id, expiresInDays: 7 }),
+        });
+        const shareData = await shareResponse.json();
+        if (shareData.success) {
+          setShareUrl(shareData.data.shareUrl);
+          setShowShareModal(true);
+        }
       }
 
       toast.success("Review criado e link gerado");

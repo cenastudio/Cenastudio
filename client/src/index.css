@@ -153,6 +153,24 @@
   background: rgba(0, 0, 0, 0.02);
 }
 
+.cinematic-theme {
+  --color-frame-black: #080808;
+  --color-frame-white: #f5f0e8;
+  --color-frame-cream: #e8e0d0;
+  --color-frame-gray-1: #141414;
+  --color-frame-gray-2: #1e1e1e;
+  --color-frame-gray-3: #2a2a2a;
+  --color-frame-gray-light: #9a9a9a;
+  --color-frame-gray-muted: #5d5d5d;
+  --background: #080808;
+  --foreground: #f5f0e8;
+  color: #f5f0e8;
+}
+
+.cinematic-theme .frame-nav {
+  background: rgba(8, 8, 8, 0.96);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -340,7 +358,8 @@
   }
 
   .frame-input::placeholder {
-    color: #2a2a2a;
+    color: var(--color-frame-gray-light);
+    opacity: 0.75;
   }
 
   /* App nav — fixed glass */

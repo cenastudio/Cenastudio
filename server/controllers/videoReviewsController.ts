@@ -1,8 +1,87 @@
 import { RequestHandler } from "express";
 import { db } from "../models/db.js";
 import { AppError } from "../middleware/errorHandler.js";
-import { randomBytes } from "crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 import fs from "fs";
+
+interface StatelessReviewToken {
+  id: number;
+  title: string;
+  description: string | null;
+  videoUrl: string;
+  projectName: string;
+  expiresAt: string;
+}
+
+function getClientOrigin() {
+  return process.env.CLIENT_ORIGIN || "http://localhost:5173";
+}
+
+function getTokenSecret() {
+  return process.env.JWT_SECRET || "frame-ai-dev-secret";
+}
+
+function encodeBase64Url(value: string) {
+  return Buffer.from(value).toString("base64url");
+}
+
+function signPayload(payload: string) {
+  return createHmac("sha256", getTokenSecret()).update(payload).digest("base64url");
+}
+
+function createStatelessReviewToken(payload: StatelessReviewToken) {
+  const body = encodeBase64Url(JSON.stringify(payload));
+  return `sr_${body}.${signPayload(body)}`;
+}
+
+function parseStatelessReviewToken(token: string): StatelessReviewToken | null {
+  if (!token.startsWith("sr_")) return null;
+  const [body, signature] = token.slice(3).split(".");
+  if (!body || !signature) return null;
+  const expected = signPayload(body);
+  const expectedBuffer = Buffer.from(expected);
+  const signatureBuffer = Buffer.from(signature);
+  if (
+    expectedBuffer.length !== signatureBuffer.length ||
+    !timingSafeEqual(expectedBuffer, signatureBuffer)
+  ) {
+    return null;
+  }
+  try {
+    const payload = JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as StatelessReviewToken;
+    if (!payload.videoUrl || !payload.title || !payload.expiresAt) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+function createShareData(review: {
+  id: number;
+  title: string;
+  description?: string | null;
+  video_url?: string | null;
+  project_name?: string | null;
+}, expiresInDays = 7) {
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + expiresInDays);
+  const token = review.video_url
+    ? createStatelessReviewToken({
+        id: review.id,
+        title: review.title,
+        description: review.description || null,
+        videoUrl: review.video_url,
+        projectName: review.project_name || "Aprovação de Vídeo",
+        expiresAt: expiresAt.toISOString(),
+      })
+    : randomBytes(32).toString("hex");
+
+  return {
+    shareToken: token,
+    shareUrl: `${getClientOrigin()}/review/${token}`,
+    expiresAt: expiresAt.toISOString(),
+  };
+}
 
 // List all video reviews for the authenticated user
 export const listAllVideoReviews: RequestHandler = (req, res, next) => {
@@ -184,6 +263,15 @@ export const createVideoReview: RequestHandler = (req, res, next) => {
 
     if (newReview) {
       newReview.video_url = newReview.video_url || undefined;
+      const shareData = createShareData(newReview, 7);
+      db.prepare(
+        `UPDATE video_reviews
+         SET share_token = ?, expires_at = ?, updated_at = datetime('now')
+         WHERE id = ?`,
+      ).run(shareData.shareToken, shareData.expiresAt, newReview.id);
+      newReview.share_token = shareData.shareToken;
+      newReview.expires_at = shareData.expiresAt;
+      newReview.shareUrl = shareData.shareUrl;
     }
 
     res.json({ success: true, data: newReview });
@@ -312,13 +400,7 @@ export const generateShareLink: RequestHandler = (req, res, next) => {
       throw new AppError("You don't have permission to share this review", 403);
     }
 
-    // Generate a unique token
-    const shareToken = randomBytes(32).toString("hex");
-
-    // Calculate expiration date
-    const expiresIn = expiresInDays || 7;
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + expiresIn);
+    const shareData = createShareData(review, expiresInDays || 7);
 
     db
       .prepare(
@@ -326,11 +408,9 @@ export const generateShareLink: RequestHandler = (req, res, next) => {
          SET share_token = ?, expires_at = ?, updated_at = datetime('now')
          WHERE id = ?`,
       )
-      .run(shareToken, expiresAt.toISOString(), reviewId);
+      .run(shareData.shareToken, shareData.expiresAt, reviewId);
 
-    const shareUrl = `${process.env.CLIENT_ORIGIN || "http://localhost:5173"}/review/${shareToken}`;
-
-    res.json({ success: true, data: { shareUrl, expiresAt: expiresAt.toISOString() } });
+    res.json({ success: true, data: { shareUrl: shareData.shareUrl, expiresAt: shareData.expiresAt } });
   } catch (e) {
     next(e);
   }
@@ -356,7 +436,32 @@ export const accessSharedReview: RequestHandler = (req, res, next) => {
       .get(token) as any;
 
     if (!review) {
-      throw new AppError("Review not found or link expired", 404);
+      const stateless = parseStatelessReviewToken(token);
+      if (!stateless) {
+        throw new AppError("Review not found or link expired", 404);
+      }
+      if (new Date(stateless.expiresAt) < new Date()) {
+        throw new AppError("Share link has expired", 410);
+      }
+      res.json({
+        success: true,
+        data: {
+          id: stateless.id,
+          project_id: 0,
+          file_id: null,
+          title: stateless.title,
+          description: stateless.description,
+          status: "pending_review",
+          share_token: token,
+          expires_at: stateless.expiresAt,
+          original_name: "Vídeo externo",
+          file_path: null,
+          project_name: stateless.projectName,
+          video_url: stateless.videoUrl,
+          comments: [],
+        },
+      });
+      return;
     }
 
     // Check if link has expired
@@ -481,7 +586,28 @@ export const addSharedComment: RequestHandler = (req, res, next) => {
       .get(token) as any;
 
     if (!review) {
-      throw new AppError("Review not found", 404);
+      const stateless = parseStatelessReviewToken(token);
+      if (!stateless) {
+        throw new AppError("Review not found", 404);
+      }
+      if (new Date(stateless.expiresAt) < new Date()) {
+        throw new AppError("Share link has expired", 410);
+      }
+      res.json({
+        success: true,
+        data: {
+          id: Date.now(),
+          review_id: stateless.id,
+          user_id: stateless.id,
+          author_name: authorName || "Cliente",
+          timestamp_seconds: timestampSeconds,
+          comment,
+          annotations: annotations || [],
+          resolved: 0,
+          created_at: new Date().toISOString(),
+        },
+      });
+      return;
     }
 
     // Check if link has expired
@@ -526,7 +652,43 @@ export const updateSharedReviewStatus: RequestHandler = (req, res, next) => {
       .get(token) as any;
 
     if (!review) {
-      throw new AppError("Review not found", 404);
+      const stateless = parseStatelessReviewToken(token);
+      if (!stateless) {
+        throw new AppError("Review not found", 404);
+      }
+      if (new Date(stateless.expiresAt) < new Date()) {
+        throw new AppError("Share link has expired", 410);
+      }
+      res.json({
+        success: true,
+        data: {
+          id: stateless.id,
+          project_id: 0,
+          file_id: null,
+          title: stateless.title,
+          description: stateless.description,
+          status,
+          share_token: token,
+          expires_at: stateless.expiresAt,
+          original_name: "Vídeo externo",
+          file_path: null,
+          project_name: stateless.projectName,
+          video_url: stateless.videoUrl,
+          comments: [
+            {
+              id: Date.now(),
+              review_id: stateless.id,
+              author_name: authorName?.trim() || "Cliente",
+              timestamp_seconds: 0,
+              comment: `[${status}] ${comment?.trim() || status}`,
+              annotations: [],
+              resolved: 0,
+              created_at: new Date().toISOString(),
+            },
+          ],
+        },
+      });
+      return;
     }
 
     if (review.expires_at && new Date(review.expires_at) < new Date()) {

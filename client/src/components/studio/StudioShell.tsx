@@ -10,6 +10,7 @@ import AppNavBar from "../AppNavBar";
 import { Loader2 } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import ProjectTimeline from "./ProjectTimeline";
+import AssistantChatWorkspace from "./AssistantChatWorkspace";
 
 export default function StudioShell() {
   const [, setLocation] = useLocation();
@@ -224,81 +225,86 @@ export default function StudioShell() {
 
         {/* Studio Shell Body Container */}
         <div className="flex-1 flex overflow-hidden flex-col md:flex-row relative">
-          
-          {/* Main workspace (Inputs & Forms) */}
-          <ToolWorkspace
-            tool={tool}
-            formData={formData}
-            onChangeField={handleChangeField}
-            onExecute={handleExecute}
-            isProcessing={isProcessing}
-            error={error}
-            onSetOutput={(newOut) => {
-              setOutput(newOut);
-              if (activeProject) {
-                saveToolStateImmediately(tool.id, formData, newOut);
-              }
-            }}
-          />
+          {tool.slug === "assistente" ? (
+            <AssistantChatWorkspace tool={tool} projectId={activeProject?.id} />
+          ) : (
+            <>
+              {/* Main workspace (Inputs & Forms) */}
+              <ToolWorkspace
+                tool={tool}
+                formData={formData}
+                onChangeField={handleChangeField}
+                onExecute={handleExecute}
+                isProcessing={isProcessing}
+                error={error}
+                onSetOutput={(newOut) => {
+                  setOutput(newOut);
+                  if (activeProject) {
+                    saveToolStateImmediately(tool.id, formData, newOut);
+                  }
+                }}
+              />
 
-          {/* Output and Refinement Chat Panel */}
-          <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Limit Reached Warning Alert Banner */}
-            {limitReached && (
-              <div className="mx-6 mt-4 px-4 py-3 border border-frame-orange/40 bg-[rgba(255,77,0,0.08)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0 rounded-none">
-                <p className="font-frame-mono text-[0.63rem] tracking-[0.1em] text-frame-orange">
-                  Limite de gerações atingido — faça upgrade do seu plano para continuar
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    className="frame-btn-primary !py-1.5 !px-3 !text-[0.58rem]"
-                    onClick={async () => {
-                      try {
-                        await startCheckout("pro");
-                      } catch (e) {
-                        toast.error(e instanceof Error ? e.message : "Erro ao iniciar checkout");
-                      }
-                    }}
-                  >
-                    Upgrade Pro
-                  </button>
-                  <button
-                    type="button"
-                    className="frame-btn-ghost !py-1.5 !px-3 !text-[0.58rem]"
-                    onClick={() => {
-                      window.location.hash = "pricing";
-                    }}
-                  >
-                    Ver Planos
-                  </button>
-                </div>
+              {/* Output and Refinement Chat Panel */}
+              <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Limit Reached Warning Alert Banner */}
+                {limitReached && (
+                  <div className="mx-6 mt-4 px-4 py-3 border border-frame-orange/40 bg-[rgba(255,77,0,0.08)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0 rounded-none">
+                    <p className="font-frame-mono text-[0.63rem] tracking-[0.1em] text-frame-orange">
+                      Limite de gerações atingido — faça upgrade do seu plano para continuar
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        className="frame-btn-primary !py-1.5 !px-3 !text-[0.58rem]"
+                        onClick={async () => {
+                          try {
+                            await startCheckout("pro");
+                          } catch (e) {
+                            toast.error(e instanceof Error ? e.message : "Erro ao iniciar checkout");
+                          }
+                        }}
+                      >
+                        Upgrade Pro
+                      </button>
+                      <button
+                        type="button"
+                        className="frame-btn-ghost !py-1.5 !px-3 !text-[0.58rem]"
+                        onClick={() => {
+                          window.location.hash = "pricing";
+                        }}
+                      >
+                        Ver Planos
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <OutputPanel
+                  tool={tool}
+                  output={output}
+                  onUpdateOutput={(newOut) => {
+                    setOutput(newOut);
+                    if (activeProject && tool) {
+                      saveToolStateImmediately(tool.id, formData, newOut);
+                    }
+                  }}
+                  onClearAll={handleClear}
+                  onToggleHistory={() => setHistoryOpen(!historyOpen)}
+                  onCopy={handleCopy}
+                  onDownload={handleDownload}
+                />
               </div>
-            )}
 
-            <OutputPanel
-              tool={tool}
-              output={output}
-              onUpdateOutput={(newOut) => {
-                setOutput(newOut);
-                if (activeProject && tool) {
-                  saveToolStateImmediately(tool.id, formData, newOut);
-                }
-              }}
-              onClearAll={handleClear}
-              onToggleHistory={() => setHistoryOpen(!historyOpen)}
-              onCopy={handleCopy}
-              onDownload={handleDownload}
-            />
-          </div>
-
-          {/* Generation History Sidebar Drawer Panel */}
-          <HistoryPanel
-            isOpen={historyOpen}
-            onClose={() => setHistoryOpen(false)}
-            toolId={tool.id}
-            onRestore={handleRestore}
-          />
+              {/* Generation History Sidebar Drawer Panel */}
+              <HistoryPanel
+                isOpen={historyOpen}
+                onClose={() => setHistoryOpen(false)}
+                toolId={tool.id}
+                onRestore={handleRestore}
+              />
+            </>
+          )}
 
         </div>
       </div>

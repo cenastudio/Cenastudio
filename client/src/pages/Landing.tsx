@@ -60,7 +60,7 @@ export default function Landing() {
   const { openModal, modals } = useApp();
 
   return (
-    <div className="min-h-screen bg-frame-black text-frame-white overflow-x-hidden">
+    <div className="cinematic-theme min-h-screen bg-frame-black text-frame-white overflow-x-hidden">
       <Navigation />
       <Hero />
       <ToolsSection />

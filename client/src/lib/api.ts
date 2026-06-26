@@ -1,4 +1,17 @@
-const API_BASE = import.meta.env.VITE_API_URL ?? "";
+function resolveApiBase() {
+  const raw = (import.meta.env.VITE_API_URL ?? "").trim();
+  if (!raw) return "";
+  if (raw.startsWith("/")) return raw.replace(/\/$/, "");
+
+  const withProtocol = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+  try {
+    return new URL(withProtocol).origin;
+  } catch {
+    return "";
+  }
+}
+
+const API_BASE = resolveApiBase();
 
 interface ApiResponse<T> {
   success: boolean;
