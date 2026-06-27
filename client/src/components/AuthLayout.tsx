@@ -1,4 +1,5 @@
 import { useLocation } from "wouter";
+import BrandLogo from "@/components/BrandLogo";
 
 interface AuthLayoutProps {
   title: string;
@@ -12,7 +13,7 @@ export default function AuthLayout({ title, subtitle, children, mode }: AuthLayo
   const [, setLocation] = useLocation();
 
   return (
-    <div className="cinematic-theme min-h-screen flex flex-col lg:flex-row bg-[#080808] text-[#f5f0e8]">
+    <div className="cinematic-theme min-h-screen flex flex-col lg:flex-row bg-frame-black text-frame-white">
       {/* Left panel — cinematic reel */}
       <div className="relative hidden lg:flex lg:w-[52%] flex-col justify-end p-14 overflow-hidden bg-gradient-to-br from-[#0d0d0d] via-[#1a0800] to-[#0d0d0d]">
         <div className="absolute inset-0 flex flex-wrap gap-0.5 p-0.5 opacity-10">
@@ -32,11 +33,9 @@ export default function AuthLayout({ title, subtitle, children, mode }: AuthLayo
           }}
         />
         <div className="relative z-10">
-          <h1 className="frame-title text-[3.8rem] text-frame-white leading-none">
-            FRAME<span className="text-frame-orange">.</span>AI
-          </h1>
+          <BrandLogo className="scale-[1.45] origin-left" />
           <p className="mt-2.5 text-sm text-frame-gray-light font-light max-w-[310px] leading-relaxed">
-            Inteligência artificial cinematográfica para filmmakers, produtoras e criadores de conteúdo.
+            Plataforma operacional audiovisual feita por filmmakers, para filmmakers.
           </p>
           <div className="mt-7 flex flex-col gap-2">
             {["12 ferramentas IA especializadas", "Trial Pro de 14 dias grátis", "Workflow profissional"].map(
@@ -52,7 +51,7 @@ export default function AuthLayout({ title, subtitle, children, mode }: AuthLayo
       </div>
 
       {/* Right panel — form */}
-      <div className="flex-1 flex items-center justify-center px-5 sm:px-9 py-11 bg-[#0b0b0b] lg:bg-[#080808]">
+      <div className="flex-1 flex items-center justify-center px-5 sm:px-9 py-11 bg-frame-black">
         <div className="w-full max-w-[430px] border border-frame-gray-3 bg-frame-gray-1/45 p-6 sm:p-8 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
           {mode && (
             <div className="flex mb-8 border border-frame-gray-3">

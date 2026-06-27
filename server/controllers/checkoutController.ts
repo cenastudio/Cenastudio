@@ -38,6 +38,22 @@ export const createPortal: RequestHandler = async (req, res, next) => {
   }
 };
 
+export const syncSession: RequestHandler = async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (!user) throw new AppError("Unauthorized", 401);
+    const { sessionId } = req.body as { sessionId?: string };
+    if (!sessionId) {
+      throw new AppError("Session ID é obrigatório.", 400);
+    }
+
+    const result = await stripeService.syncCheckoutSession(user.id, sessionId);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const webhook: RequestHandler = async (req, res, next) => {
   try {
     const sig = req.headers["stripe-signature"] as string;

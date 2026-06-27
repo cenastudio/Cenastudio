@@ -3,6 +3,7 @@ import { db } from "../models/db.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 import fs from "fs";
+import { notifyUser } from "../services/notificationService.js";
 
 interface StatelessReviewToken {
   id: number;
@@ -18,7 +19,7 @@ function getClientOrigin() {
 }
 
 function getTokenSecret() {
-  return process.env.JWT_SECRET || "frame-ai-dev-secret";
+  return process.env.JWT_SECRET || "cena-studio-dev-secret";
 }
 
 function encodeBase64Url(value: string) {
@@ -65,22 +66,19 @@ function createShareData(review: {
 }, expiresInDays = 7) {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + expiresInDays);
-  const token = review.video_url
-    ? createStatelessReviewToken({
-        id: review.id,
-        title: review.title,
-        description: review.description || null,
-        videoUrl: review.video_url,
-        projectName: review.project_name || "Aprovação de Vídeo",
-        expiresAt: expiresAt.toISOString(),
-      })
-    : randomBytes(32).toString("hex");
+  const token = randomBytes(32).toString("hex");
 
   return {
     shareToken: token,
     shareUrl: `${getClientOrigin()}/review/${token}`,
     expiresAt: expiresAt.toISOString(),
   };
+}
+
+function reviewLink(review: { project_id?: number | null; id: number }) {
+  return review.project_id
+    ? `/project/${review.project_id}/video-reviews?review=${review.id}`
+    : `/video-reviews?review=${review.id}`;
 }
 
 // List all video reviews for the authenticated user
@@ -565,6 +563,14 @@ export const addComment: RequestHandler = (req, res, next) => {
 
     const newComment = db.prepare("SELECT * FROM video_comments WHERE id = ?").get(result.lastInsertRowid);
 
+    notifyUser(
+      review.user_id,
+      "Novo comentário no review",
+      `${authorName || "Cliente"} comentou em ${Math.floor(Number(timestampSeconds) / 60)}:${String(Math.floor(Number(timestampSeconds) % 60)).padStart(2, "0")}.`,
+      "client",
+      reviewLink(review),
+    );
+
     res.json({ success: true, data: newComment });
   } catch (e) {
     next(e);
@@ -624,9 +630,23 @@ export const addSharedComment: RequestHandler = (req, res, next) => {
       )
       .run(review.id, review.user_id, authorName || "Anonymous", timestampSeconds, comment, annsJson);
 
-    const newComment = db.prepare("SELECT * FROM video_comments WHERE id = ?").get(result.lastInsertRowid);
+    const newComment = db.prepare("SELECT * FROM video_comments WHERE id = ?").get(result.lastInsertRowid) as any;
 
-    res.json({ success: true, data: newComment });
+    notifyUser(
+      review.user_id,
+      "Novo comentário do cliente",
+      `${authorName || "Cliente"} comentou em ${Math.floor(Number(timestampSeconds) / 60)}:${String(Math.floor(Number(timestampSeconds) % 60)).padStart(2, "0")} no review "${review.title}".`,
+      "client",
+      reviewLink(review),
+    );
+
+    res.json({
+      success: true,
+      data: {
+        ...newComment,
+        annotations: newComment.annotations ? JSON.parse(newComment.annotations) : [],
+      },
+    });
   } catch (e) {
     next(e);
   }
@@ -712,6 +732,14 @@ export const updateSharedReviewStatus: RequestHandler = (req, res, next) => {
       `INSERT INTO video_comments (review_id, user_id, author_name, timestamp_seconds, comment, annotations, created_at, updated_at)
        VALUES (?, ?, ?, 0, ?, '[]', datetime('now'), datetime('now'))`,
     ).run(review.id, review.user_id, authorName?.trim() || "Cliente", `[${statusLabel}] ${decisionComment}`);
+
+    notifyUser(
+      review.user_id,
+      `Review ${statusLabel.toLowerCase()}`,
+      `${authorName?.trim() || "Cliente"} atualizou o status de "${review.title}".`,
+      status === "approved" ? "success" : status === "changes_requested" ? "warning" : "error",
+      reviewLink(review),
+    );
 
     const updatedReview = db
       .prepare(

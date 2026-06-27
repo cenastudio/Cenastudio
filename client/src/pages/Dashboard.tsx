@@ -16,6 +16,10 @@ import {
   Loader2,
   Clock,
   Building2,
+  Target,
+  CheckCircle2,
+  AlertCircle,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -29,6 +33,10 @@ import {
 
 interface ProjectMetadata {
   isPinned?: boolean;
+  projectType?: string;
+  deadline?: string;
+  objective?: string;
+  workflowFocus?: string;
   creativeGoals?: {
     format?: string;
     client?: string;
@@ -69,8 +77,24 @@ function DashboardContent() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [clientId, setClientId] = useState("");
+  const [projectType, setProjectType] = useState("Comercial");
+  const [deadline, setDeadline] = useState("");
+  const [objective, setObjective] = useState("");
+  const [format, setFormat] = useState("");
+  const [tone, setTone] = useState("");
   const [clients, setClients] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const resetCreateForm = () => {
+    setName("");
+    setDescription("");
+    setClientId("");
+    setProjectType("Comercial");
+    setDeadline("");
+    setObjective("");
+    setFormat("");
+    setTone("");
+  };
 
   // Fetch recent activities on mount
   useEffect(() => {
@@ -96,6 +120,9 @@ function DashboardContent() {
   // Filter pinned & general projects
   const pinnedProjects = projects.filter((p) => getMetadata(p).isPinned);
   const generalProjects = projects.filter((p) => !getMetadata(p).isPinned);
+  const activeProjects = projects.filter((p) => p.status === "active");
+  const recentProject = projects[0];
+  const pendingBriefings = projects.filter((p) => !getMetadata(p).objective && !getMetadata(p).creativeGoals?.format);
 
   // Toggle Pinned status in metadataJson
   const handleTogglePin = async (p: Project, e: React.MouseEvent) => {
@@ -120,7 +147,7 @@ function DashboardContent() {
 
   // Open Studio inside Project
   const handleOpenProject = (projectId: number) => {
-    setLocation(`/project/${projectId}/studio/roteiro`);
+    setLocation(`/project/${projectId}`);
   };
 
   // Handle Create Project
@@ -130,17 +157,28 @@ function DashboardContent() {
 
     setIsSubmitting(true);
     try {
+      const selectedClient = clients.find((client) => String(client.id) === clientId);
+      const metadata: ProjectMetadata = {
+        projectType,
+        deadline: deadline || undefined,
+        objective: objective.trim() || undefined,
+        workflowFocus: "briefing",
+        creativeGoals: {
+          format: format.trim() || undefined,
+          client: selectedClient?.company || selectedClient?.name || undefined,
+          tone: tone.trim() || undefined,
+        },
+      };
       const newProj = await createProject(
         name.trim(),
         description.trim() || undefined,
         clientId ? parseInt(clientId) : undefined,
+        JSON.stringify(metadata),
       );
       setIsCreateOpen(false);
-      setName("");
-      setDescription("");
-      setClientId("");
-      toast.success("Projeto criado!");
-      handleOpenProject(newProj.id);
+      resetCreateForm();
+      toast.success("Projeto criado com briefing inicial!");
+      setLocation(`/project/${newProj.id}/studio/briefing`);
     } catch {
       // Toast handled by context
     } finally {
@@ -200,8 +238,7 @@ function DashboardContent() {
             </div>
             <button
               onClick={() => {
-                setName("");
-                setDescription("");
+                resetCreateForm();
                 setIsCreateOpen(true);
               }}
               className="frame-btn-primary !py-3 !px-5 !text-[0.62rem] flex items-center justify-center gap-2 cursor-pointer h-full self-stretch"
@@ -211,6 +248,74 @@ function DashboardContent() {
             </button>
           </div>
         </div>
+
+        <section className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          <div className="lg:col-span-2 border border-frame-gray-3 bg-frame-gray-1/20 p-5">
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <div>
+                <p className="frame-label mb-1">// Próxima ação</p>
+                <h2 className="text-frame-white font-semibold tracking-tight">
+                  {recentProject ? "Continuar operação audiovisual" : "Começar um projeto estruturado"}
+                </h2>
+              </div>
+              <Sparkles className="w-4 h-4 text-frame-orange shrink-0" />
+            </div>
+            <p className="text-sm text-frame-gray-light leading-relaxed mb-4">
+              {recentProject
+                ? `Último projeto: ${recentProject.name}. Abra o hub para ver briefing, arquivos, aprovações e equipe no mesmo fluxo.`
+                : "Crie o primeiro projeto com contexto suficiente para alimentar briefing, roteiro, arquivos e aprovações."}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (recentProject) {
+                    setLocation(`/project/${recentProject.id}`);
+                    return;
+                  }
+                  resetCreateForm();
+                  setIsCreateOpen(true);
+                }}
+                className="frame-btn-primary !py-2.5 !px-4 !text-[0.6rem] flex items-center gap-2"
+              >
+                {recentProject ? "Abrir Hub" : "Criar Projeto"}
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+              {recentProject && (
+                <button
+                  type="button"
+                  onClick={() => setLocation(`/project/${recentProject.id}/studio/briefing`)}
+                  className="frame-btn-ghost !py-2.5 !px-4 !text-[0.6rem] flex items-center gap-2"
+                >
+                  Continuar Briefing
+                  <Target className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-5">
+            <div className="flex items-center justify-between mb-3">
+              <span className="font-frame-mono text-[0.55rem] tracking-[0.15em] uppercase text-frame-gray-light">
+                Projetos ativos
+              </span>
+              <CheckCircle2 className="w-4 h-4 text-frame-orange" />
+            </div>
+            <strong className="block text-3xl text-frame-white">{activeProjects.length}</strong>
+            <p className="text-xs text-frame-gray-light mt-2">Escopos em produção ou pré-produção.</p>
+          </div>
+
+          <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-5">
+            <div className="flex items-center justify-between mb-3">
+              <span className="font-frame-mono text-[0.55rem] tracking-[0.15em] uppercase text-frame-gray-light">
+                Briefings pendentes
+              </span>
+              <AlertCircle className="w-4 h-4 text-frame-orange" />
+            </div>
+            <strong className="block text-3xl text-frame-white">{pendingBriefings.length}</strong>
+            <p className="text-xs text-frame-gray-light mt-2">Projetos que precisam de direção inicial.</p>
+          </div>
+        </section>
 
         {/* Dashboard Grid Workspace */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -301,12 +406,11 @@ function DashboardContent() {
               ) : projects.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 px-4 text-center border border-dashed border-frame-gray-3 space-y-4">
                   <p className="text-sm text-frame-gray-light font-light max-w-sm">
-                    Você ainda não criou nenhum projeto de pré-produção no Frame.AI.
+                    Você ainda não criou nenhum projeto de pré-produção no Cena Studio.
                   </p>
                   <button
                     onClick={() => {
-                      setName("");
-                      setDescription("");
+                      resetCreateForm();
                       setIsCreateOpen(true);
                     }}
                     className="frame-btn-ghost !py-2 !px-4 !text-[0.62rem] flex items-center gap-1.5"
@@ -457,7 +561,7 @@ function DashboardContent() {
 
       {/* CREATE MODAL */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-sm rounded-none p-6">
+        <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-2xl rounded-none p-6">
           <DialogHeader>
             <DialogTitle className="font-frame-display text-2xl tracking-wider text-frame-white">
               CRIAR NOVO PROJETO
@@ -493,6 +597,81 @@ function DashboardContent() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full bg-[#111] border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition resize-none h-[75px] focus:border-frame-orange rounded-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="block font-frame-mono text-[0.58rem] tracking-[0.15em] text-frame-orange uppercase">
+                  Tipo
+                </label>
+                <select
+                  disabled={isSubmitting}
+                  value={projectType}
+                  onChange={(e) => setProjectType(e.target.value)}
+                  className="w-full bg-[#111] border border-frame-gray-3 text-frame-white px-3 py-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none appearance-none cursor-pointer"
+                >
+                  <option>Comercial</option>
+                  <option>Institucional</option>
+                  <option>Videoclipe</option>
+                  <option>Social media</option>
+                  <option>Documentário</option>
+                  <option>Evento</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="block font-frame-mono text-[0.58rem] tracking-[0.15em] text-frame-orange uppercase">
+                  Prazo alvo
+                </label>
+                <input
+                  type="date"
+                  disabled={isSubmitting}
+                  value={deadline}
+                  onChange={(e) => setDeadline(e.target.value)}
+                  className="w-full bg-[#111] border border-frame-gray-3 text-frame-white px-3 py-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="block font-frame-mono text-[0.58rem] tracking-[0.15em] text-frame-orange uppercase">
+                  Formato
+                </label>
+                <input
+                  type="text"
+                  disabled={isSubmitting}
+                  placeholder="ex: filme 30s, reels, case, teaser"
+                  value={format}
+                  onChange={(e) => setFormat(e.target.value)}
+                  className="w-full bg-[#111] border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="block font-frame-mono text-[0.58rem] tracking-[0.15em] text-frame-orange uppercase">
+                  Tom criativo
+                </label>
+                <input
+                  type="text"
+                  disabled={isSubmitting}
+                  placeholder="ex: elegante, energético, documental"
+                  value={tone}
+                  onChange={(e) => setTone(e.target.value)}
+                  className="w-full bg-[#111] border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block font-frame-mono text-[0.58rem] tracking-[0.15em] text-frame-orange uppercase">
+                Objetivo
+              </label>
+              <textarea
+                placeholder="O que esse projeto precisa resolver para o cliente?"
+                disabled={isSubmitting}
+                value={objective}
+                onChange={(e) => setObjective(e.target.value)}
+                className="w-full bg-[#111] border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition resize-none h-[70px] focus:border-frame-orange rounded-none"
               />
             </div>
 

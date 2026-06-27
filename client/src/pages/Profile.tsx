@@ -88,15 +88,15 @@ function ProfileContent() {
             PERFIL DO <em className="not-italic text-transparent [-webkit-text-stroke:1px_#f5f0e8]">ESTUDIO</em>
           </h1>
           <p className="text-frame-gray-light text-sm mt-3 max-w-2xl">
-            Dados da conta, acesso atual e plano ativo para operar o Frame.AI.
+            Dados da conta, acesso atual e plano ativo para operar o Cena Studio.
           </p>
         </div>
 
         <section className="grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-6">
-          <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-6">
+          <div className="border border-frame-gray-3 bg-frame-gray-2/55 p-6 shadow-[0_18px_60px_rgba(0,0,0,0.32)]">
             <div className="flex items-start gap-4">
               <div
-                className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold ${
+                className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold shadow-[0_0_0_1px_rgba(255,255,255,0.08)] ${
                   user?.role === "admin"
                     ? "bg-frame-gold text-frame-black"
                     : "bg-frame-orange text-frame-black"
@@ -109,14 +109,14 @@ function ProfileContent() {
                   Usuario ativo
                 </p>
                 <h2 className="frame-title text-[2rem] mt-1 truncate">
-                  {user?.name || "Conta Frame.AI"}
+                  {user?.name || "Conta Cena Studio"}
                 </h2>
                 <p className="text-frame-gray-light text-sm break-all">{user?.email}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-8">
-              <div className="border border-frame-gray-3 bg-frame-black/30 p-4">
+              <div className="border border-frame-gray-3 bg-frame-gray-1 p-4">
                 <UserRound className="w-5 h-5 text-frame-orange mb-3" />
                 <p className="font-frame-mono text-[0.58rem] tracking-[0.16em] uppercase text-frame-gray-light">
                   Tipo de conta
@@ -125,7 +125,7 @@ function ProfileContent() {
                   {user?.role === "admin" ? "Administrador" : "Usuario"}
                 </p>
               </div>
-              <div className="border border-frame-gray-3 bg-frame-black/30 p-4">
+              <div className="border border-frame-gray-3 bg-frame-gray-1 p-4">
                 <ShieldCheck className="w-5 h-5 text-frame-orange mb-3" />
                 <p className="font-frame-mono text-[0.58rem] tracking-[0.16em] uppercase text-frame-gray-light">
                   Acesso
@@ -151,7 +151,7 @@ function ProfileContent() {
             </div>
           </div>
 
-          <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-6 space-y-5">
+          <div className="border border-frame-gray-3 bg-frame-gray-2/55 p-6 space-y-5 shadow-[0_18px_60px_rgba(0,0,0,0.32)]">
             <div>
               <p className="font-frame-mono text-[0.58rem] tracking-[0.18em] text-frame-orange uppercase">
                 Dados editáveis
@@ -197,7 +197,7 @@ function ProfileContent() {
           </div>
 
           {user?.role === "admin" && (
-            <div className="border border-frame-gold/40 bg-frame-gold/5 p-6">
+            <div className="border border-frame-gold/50 bg-frame-gold/10 p-6 shadow-[0_18px_60px_rgba(0,0,0,0.32)]">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="font-frame-mono text-[0.58rem] tracking-[0.18em] text-frame-gold uppercase">
@@ -218,7 +218,7 @@ function ProfileContent() {
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-3 mt-5">
-                <div className="border border-frame-gold/30 bg-frame-black/30 p-4">
+                <div className="border border-frame-gold/35 bg-frame-black/60 p-4">
                   <Settings className="w-5 h-5 text-frame-gold mb-3" />
                   <p className="font-frame-mono text-[0.55rem] tracking-[0.16em] uppercase text-frame-gray-light">
                     Painel Admin
@@ -231,7 +231,7 @@ function ProfileContent() {
                     Acessar dashboard →
                   </button>
                 </div>
-                <div className="border border-frame-gold/30 bg-frame-black/30 p-4">
+                <div className="border border-frame-gold/35 bg-frame-black/60 p-4">
                   <Users className="w-5 h-5 text-frame-gold mb-3" />
                   <p className="font-frame-mono text-[0.55rem] tracking-[0.16em] uppercase text-frame-gray-light">
                     Usuarios
@@ -244,7 +244,7 @@ function ProfileContent() {
             </div>
           )}
 
-          <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-6 space-y-6">
+          <div className="border border-frame-gray-3 bg-frame-gray-2/55 p-6 space-y-6 shadow-[0_18px_60px_rgba(0,0,0,0.32)]">
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
               <div>
                 <p className="font-frame-mono text-[0.58rem] tracking-[0.18em] text-frame-orange uppercase">
@@ -261,14 +261,14 @@ function ProfileContent() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="border border-frame-gray-3 bg-frame-black/30 p-4">
+              <div className="border border-frame-gray-3 bg-frame-gray-1 p-4">
                 <Crown className="w-5 h-5 text-frame-gold mb-3" />
                 <p className="font-frame-mono text-[0.55rem] tracking-[0.16em] uppercase text-frame-gray-light">
                   Status
                 </p>
                 <p className="text-lg font-semibold mt-1">{plan?.status || "—"}</p>
               </div>
-              <div className="border border-frame-gray-3 bg-frame-black/30 p-4">
+              <div className="border border-frame-gray-3 bg-frame-gray-1 p-4">
                 <Zap className="w-5 h-5 text-frame-orange mb-3" />
                 <p className="font-frame-mono text-[0.55rem] tracking-[0.16em] uppercase text-frame-gray-light">
                   Geracoes
@@ -277,7 +277,7 @@ function ProfileContent() {
                   {plan?.generationLimit === -1 ? "Ilimitado" : `${plan?.generationLimit ?? 0}/mes`}
                 </p>
               </div>
-              <div className="border border-frame-gray-3 bg-frame-black/30 p-4">
+              <div className="border border-frame-gray-3 bg-frame-gray-1 p-4">
                 <CalendarClock className="w-5 h-5 text-frame-orange mb-3" />
                 <p className="font-frame-mono text-[0.55rem] tracking-[0.16em] uppercase text-frame-gray-light">
                   Trial ate

@@ -174,7 +174,7 @@ export default function StudioShell() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `frame-ai-${tool.slug}.txt`;
+    a.download = `cena-studio-${tool.slug}.txt`;
     a.click();
     URL.revokeObjectURL(url);
   };

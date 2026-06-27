@@ -5,6 +5,7 @@ import { ArrowLeft, Crown, KeyRound, LogOut, ShieldCheck, Sparkles, UserPlus, Us
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
+import BrandLogo from "@/components/BrandLogo";
 
 interface AdminUser {
   id: number;
@@ -110,9 +111,9 @@ function AdminContent() {
           <button
             type="button"
             onClick={() => setLocation("/dashboard")}
-            className="font-frame-display text-[1.55rem] tracking-[0.1em] text-frame-white bg-transparent border-none"
+            className="bg-transparent border-none"
           >
-            FRAME<span className="text-frame-orange">.</span>AI
+            <BrandLogo compact className="scale-90 origin-left" />
           </button>
         </div>
         <p className="font-frame-mono text-[0.58rem] tracking-[0.14em] uppercase text-frame-gold hidden sm:block">

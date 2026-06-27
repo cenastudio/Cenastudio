@@ -1,4 +1,4 @@
-# FRAME.AI Director
+# Cena Studio
 
 Inteligência artificial para produção audiovisual — roteiros, callsheets, decupagem, orçamentos, CRM, reviews de vídeos e muito mais.
 
@@ -7,7 +7,7 @@ Inteligência artificial para produção audiovisual — roteiros, callsheets, d
 - **Project Hub**: Página `/project/:id` com visão geral do projeto, ferramentas de acesso rápido, arquivos recentes e aprovações
 - **Nav Contextual**: Barra `ProjectNav` com abas (Visão Geral, Studio, Arquivos, Aprovação, Equipe) em todas as páginas do projeto
 - **Admin Users**: Página `/admin/gerenciar` para gerenciar usuários, papéis e planos
-- **Pagamento via PIX/WhatsApp**: Stripe substituído por contato direto via WhatsApp + PIX para mercado brasileiro
+- **Pagamento via PIX/WhatsApp**: landing direciona para contato comercial via WhatsApp + PIX; Stripe permanece como integração legada/API disponível
 - **opencode Skills**: 5 skills configuradas (ui-refine, ux-flow, animations, routes-structure, database-evolve)
 - **In-App Notifications**: Sistema de notificações com popover no navbar
 - **Command Palette**: Cmd+K global com 12 comandos de navegação
@@ -26,7 +26,7 @@ Inteligência artificial para produção audiovisual — roteiros, callsheets, d
 | `/dashboard` | **Painel** — lista de projetos, fixar, criar, excluir |
 | `/clients` | **CRM** — listagem de clientes |
 | `/clients/new` | **CRM** — criação de cliente |
-| `/clients/:id/edit` | **CRM** — edição de cliente |
+| `/clients/:id/editar` | **CRM** — edição de cliente |
 | `/pipeline` | **Pipeline** — Kanban de oportunidades de vendas |
 | `/interactions` | **Interações** — histórico de contatos com clientes |
 | `/files/:projectId` | **Arquivos** — upload e gestão de arquivos por projeto |
@@ -46,12 +46,12 @@ Inteligência artificial para produção audiovisual — roteiros, callsheets, d
 | `/admin` | **Admin Dashboard** — métricas do sistema |
 | `/admin/gerenciar` | **Admin Users** — gerenciar usuários, papéis e planos (admin only, não listado) |
 
-Rotas autenticadas: `/dashboard`, `/project/:id/*`, `/tools`, `/tools/:id`, `/studio/:id`, `/admin`, `/admin/gerenciar`, `/clients`, `/clients/new`, `/clients/:id/edit`, `/pipeline`, `/interactions`, `/files/:projectId`, `/video-reviews/:projectId`, `/collaborators`, `/analytics`, `/profile`.
+Rotas autenticadas: `/dashboard`, `/project/:id`, `/project/:id/*`, `/tools`, `/tools/:id`, `/studio/:id`, `/admin`, `/admin/gerenciar`, `/clients`, `/clients/new`, `/clients/:id/editar`, `/pipeline`, `/interactions`, `/files/:projectId`, `/video-reviews/:projectId`, `/collaborators`, `/analytics`, `/profile`.
 
 ## 🛠️ Setup
 
 ```bash
-cd frame-ai-director
+cd cena-studio
 pnpm install
 cp .env.example .env
 # Edite .env — JWT_SECRET é obrigatório, ANTHROPIC_API_KEY para IA, GITHUB_CLIENT_ID/SECRET para login GitHub
@@ -59,14 +59,14 @@ pnpm dev
 ```
 
 - Frontend: http://localhost:5173
-- API: http://localhost:5000 (proxied via Vite como `/api`)
+- API: http://localhost:5001 (proxied via Vite como `/api`)
 
 ### Contas Padrão (primeiro boot)
 
 | Email | Senha | Role |
 |-------|--------|------|
-| `admin@frame.ai` | `admin123` (ou `ADMIN_DEFAULT_PASSWORD`) | admin |
-| `demo@frame.ai` | `demo123` (ou `DEMO_USER_PASSWORD`) | user |
+| `admin@cenastudio.com.br` | `admin123` (ou `ADMIN_DEFAULT_PASSWORD`) | admin |
+| `demo@cenastudio.com.br` | `demo123` (ou `DEMO_USER_PASSWORD`) | user |
 
 Altere estas senhas imediatamente em produção.
 
@@ -89,7 +89,7 @@ Browser (React + Vite)
 Express (server/index.ts)
     ├── middleware: helmet, cors, rate-limit, cookie-parser, passport (GitHub OAuth)
     ├── routes: auth, tools, ai, admin, contact, checkout, clients, export, files, collaborators, analytics, video-reviews
-    ├── services: auth, tools, AI (Anthropic), stripe
+    ├── services: auth, tools, AI (NVIDIA ou Anthropic), stripe
     └── SQLite (better-sqlite3)
 ```
 
@@ -143,9 +143,9 @@ Dark e Light mode com `next-themes` + `ThemeProvider`. CSS variables de tema em 
 ### Arquivos
 | Método | Path | Auth | Descrição |
 |--------|------|------|-----------|
-| GET | `/api/files/:projectId` | Yes | Lista arquivos do projeto |
-| POST | `/api/files/:projectId` | Yes | Upload de arquivo |
-| GET | `/api/files/download/:id` | Yes | Download de arquivo |
+| GET | `/api/files/projects/:projectId` | Yes | Lista arquivos do projeto |
+| POST | `/api/files/upload` | Yes | Upload de arquivo ou link |
+| GET | `/api/files/:id/download` | Yes | Download de arquivo |
 | DELETE | `/api/files/:id` | Yes | Exclui arquivo |
 
 ### Video Reviews
@@ -183,8 +183,8 @@ Dark e Light mode com `next-themes` + `ThemeProvider`. CSS variables de tema em 
 ### Export
 | Método | Path | Auth | Descrição |
 |--------|------|------|-----------|
-| GET | `/api/export/project/:id` | Yes | Exporta projeto (JSON/CSV) |
-| GET | `/api/export/client/:id` | Yes | Exporta cliente (JSON/CSV) |
+| GET | `/api/export/projects/:id` | Yes | Exporta projeto (JSON/CSV) |
+| GET | `/api/export/clients/:id` | Yes | Exporta cliente (JSON/CSV) |
 | GET | `/api/export/clients` | Yes | Exporta todos clientes (JSON/CSV) |
 | GET | `/api/export/pipeline` | Yes | Exporta pipeline (JSON/CSV) |
 
@@ -204,13 +204,13 @@ Dark e Light mode com `next-themes` + `ThemeProvider`. CSS variables de tema em 
 | DELETE | `/api/admin/tools/:id` | Admin | Soft-delete (desativa) |
 | GET | `/api/admin/users` | Admin | Contagem de usuários |
 
-### Checkout (Stripe)
+### Checkout e Comercial
 | Método | Path | Auth | Descrição |
 |--------|------|------|-----------|
-| POST | `/api/checkout/start` | No | Checkout intent legado (DB only) |
-| POST | `/api/checkout/session` | Yes | URL de sessão Stripe Checkout |
-| POST | `/api/checkout/portal` | Yes | URL de Stripe Customer Portal |
-| POST | `/api/checkout/webhook` | No (Stripe sig) | Webhooks de assinatura Stripe |
+| UI | Landing pricing | No | Fluxo comercial atual via WhatsApp para PIX, transferência ou boleto |
+| POST | `/api/checkout/session` | Yes | URL de sessão Stripe Checkout (legado/API) |
+| POST | `/api/checkout/portal` | Yes | URL de Stripe Customer Portal (legado/API) |
+| POST | `/api/checkout/webhook` | No (Stripe sig) | Webhooks de assinatura Stripe (legado/API) |
 
 ### Contato
 | Método | Path | Auth | Descrição |
@@ -222,7 +222,7 @@ Todas respostas JSON: `{ success: true, data: ... }` ou `{ success: false, error
 
 ## ⚙️ Variáveis de Ambiente
 
-Veja `.env.example`. O servidor **falha ao iniciar** se `JWT_SECRET` estiver faltando. Rotas IA retornam **503** se `ANTHROPIC_API_KEY` não estiver configurado. Login GitHub requer `GITHUB_CLIENT_ID` e `GITHUB_CLIENT_SECRET`.
+Veja `.env.example`. O servidor **falha ao iniciar** se `JWT_SECRET` estiver faltando. Rotas IA retornam **503** se o provider configurado não tiver chave (`NVIDIA_API_KEY` ou `ANTHROPIC_API_KEY`). Login GitHub requer `GITHUB_CLIENT_ID` e `GITHUB_CLIENT_SECRET`.
 
 ## 🧩 Dependências Principais
 
@@ -234,8 +234,8 @@ Veja `.env.example`. O servidor **falha ao iniciar** se `JWT_SECRET` estiver fal
 | tailwindcss v4 | Estilização utilitária |
 | framer-motion | Animações e transições |
 | next-themes | Dark/light mode |
-| @anthropic-ai/sdk | Geração IA (Claude) |
-| stripe | Pagamentos e assinaturas |
+| @anthropic-studio/sdk | Geração IA via Anthropic quando configurado |
+| stripe | Pagamentos e assinaturas legadas/API |
 | passport + passport-github2 | OAuth GitHub |
 | wouter | Roteamento SPA |
 | @supabase/supabase-js | Integração Supabase |
@@ -270,7 +270,7 @@ SQLite local em `./data/frame.db`. Tabelas principais:
 - `files` — Arquivos organizados por projeto
 - `video_reviews` — Reviews de vídeos
 - `video_comments` — Comentários em vídeos
-- `subscriptions` — Assinaturas Stripe
+- `subscriptions` — Assinaturas e plano ativo
 - `plans` — Planos de preços
 
 ## 🚀 Deployment
@@ -278,13 +278,14 @@ SQLite local em `./data/frame.db`. Tabelas principais:
 ### Vercel
 1. Configure as variáveis de ambiente no painel Vercel
 2. Deploy automático via push para branch `main`
-3. URL: https://frame-ai-director-frame-ai-landing.vercel.app
+3. URL: https://cena-studio-frame-studio-landing.vercel.app
 
 ### Variáveis de Ambiente Necessárias
 - `JWT_SECRET` — Obrigatório
-- `ANTHROPIC_API_KEY` — Para funcionalidades IA
-- `STRIPE_SECRET_KEY` — Para pagamentos
-- `STRIPE_WEBHOOK_SECRET` — Para webhooks Stripe
+- `NVIDIA_API_KEY` ou `ANTHROPIC_API_KEY` — Para funcionalidades IA
+- `AI_PROVIDER` — Define o provider de IA (`nvidia` ou `anthropic`)
+- `STRIPE_SECRET_KEY` — Para checkout Stripe legado/API
+- `STRIPE_WEBHOOK_SECRET` — Para webhooks Stripe legado/API
 - `GITHUB_CLIENT_ID` — Para login GitHub
 - `GITHUB_CLIENT_SECRET` — Para login GitHub
 - `GITHUB_CALLBACK_URL` — URL de callback OAuth

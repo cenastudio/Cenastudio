@@ -112,6 +112,11 @@ const STATUS_ACTIONS = [
 
 function VideoReviewsContent() {
   const { projectId } = useParams<{ projectId: string }>();
+  const targetReviewId = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    const raw = new URLSearchParams(window.location.search).get("review");
+    return raw ? parseInt(raw, 10) : null;
+  }, []);
   const [reviews, setReviews] = useState<VideoReview[]>([]);
   const [projectFiles, setProjectFiles] = useState<ProjectFile[]>([]);
   const [selectedReview, setSelectedReview] = useState<VideoReview | null>(null);
@@ -127,6 +132,7 @@ function VideoReviewsContent() {
   const [newComment, setNewComment] = useState("");
   const [newCommentTimestamp, setNewCommentTimestamp] = useState<number | null>(null);
   const [seekTo, setSeekTo] = useState<number | null>(null);
+  const [commentModalOpen, setCommentModalOpen] = useState(false);
 
   const loadReviewDetails = useCallback(async (reviewId: number) => {
     try {
@@ -147,7 +153,8 @@ function VideoReviewsContent() {
   const loadAllReviews = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/video-reviews", { credentials: "include" });
+      const endpoint = projectId ? `/api/video-reviews/projects/${projectId}` : "/api/video-reviews";
+      const response = await fetch(endpoint, { credentials: "include" });
       const data = await response.json();
       if (!data.success) {
         toast.error(data.error || "Erro ao carregar reviews");
@@ -156,7 +163,10 @@ function VideoReviewsContent() {
       const nextReviews = data.data || [];
       setReviews(nextReviews);
       if (nextReviews.length > 0) {
-        await loadReviewDetails(nextReviews[0].id);
+        const targetReview = targetReviewId
+          ? nextReviews.find((review: VideoReview) => review.id === targetReviewId)
+          : null;
+        await loadReviewDetails((targetReview || nextReviews[0]).id);
       } else {
         setSelectedReview(null);
         setComments([]);
@@ -166,7 +176,7 @@ function VideoReviewsContent() {
     } finally {
       setLoading(false);
     }
-  }, [loadReviewDetails]);
+  }, [loadReviewDetails, projectId, targetReviewId]);
 
   const loadProjectFiles = useCallback(async () => {
     if (!projectId) return;
@@ -343,9 +353,10 @@ function VideoReviewsContent() {
       });
       const data = await response.json();
       if (data.success) {
-        setNewComment("");
-        setNewCommentTimestamp(null);
-        await loadReviewDetails(selectedReview.id);
+      setNewComment("");
+      setNewCommentTimestamp(null);
+      setCommentModalOpen(false);
+      await loadReviewDetails(selectedReview.id);
       } else {
         toast.error(data.error || "Erro ao comentar");
       }
@@ -689,25 +700,16 @@ function VideoReviewsContent() {
               </div>
 
               <div className="border-t border-frame-gray-3 p-4">
-                <div className="flex gap-2">
-                  <input
-                    value={newComment}
-                    disabled={!selectedReview}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey && selectedReview) {
-                        e.preventDefault();
-                        addComment(newComment, newCommentTimestamp ?? 0);
-                      }
-                    }}
-                    className="flex-1 bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-xs outline-none focus:border-frame-orange disabled:opacity-50"
-                    placeholder={selectedReview ? "Comentário com timestamp..." : "Selecione um review"}
-                  />
-                  <button disabled={!selectedReview} onClick={() => addComment(newComment, newCommentTimestamp ?? 0)} className="frame-btn-primary px-3 disabled:opacity-50">
-                    <Send className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-                <div className="flex items-center gap-2 mt-2 text-[0.55rem] text-frame-gray-light/50">
+                <button
+                  type="button"
+                  disabled={!selectedReview}
+                  onClick={() => setCommentModalOpen(true)}
+                  className="frame-btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  Comentar no tempo
+                </button>
+                <div className="flex items-center gap-2 mt-2 text-[0.55rem] text-frame-gray-light/60">
                   <Clock className="w-3 h-3" />
                   Timestamp: {newCommentTimestamp !== null ? formatTimestamp(newCommentTimestamp) : "--:--"}
                 </div>
@@ -757,6 +759,57 @@ function VideoReviewsContent() {
               <div className="p-6 border-t border-frame-gray-3">
                 <button onClick={() => setShowShareModal(false)} className="frame-btn-primary w-full">Fechar</button>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {commentModalOpen && selectedReview && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 18 }}
+              className="w-full max-w-lg border border-frame-gray-3 bg-frame-black p-5 shadow-2xl"
+            >
+              <div className="mb-5 flex items-center justify-between">
+                <div>
+                  <p className="frame-label mb-1">// Comentário</p>
+                  <h3 className="text-xl font-bold text-frame-white">
+                    Ajuste em {formatTimestamp(newCommentTimestamp ?? 0)}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCommentModalOpen(false)}
+                  className="border border-frame-gray-3 p-2 text-frame-gray-light hover:border-frame-orange hover:text-frame-orange"
+                  aria-label="Fechar comentário"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                className="frame-input h-32 w-full"
+                placeholder="Descreva o ajuste para este momento do vídeo..."
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={() => addComment(newComment, newCommentTimestamp ?? 0)}
+                disabled={!newComment.trim()}
+                className="frame-btn-primary mt-4 w-full flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <Send className="w-4 h-4" />
+                Enviar comentário
+              </button>
             </motion.div>
           </motion.div>
         )}

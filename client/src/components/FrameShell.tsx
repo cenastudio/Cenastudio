@@ -7,7 +7,7 @@ interface FrameShellProps {
   cursor?: boolean;
 }
 
-/** Global cinematic shell: film grain + optional custom cursor */
+/** Global shell with optional custom cursor. */
 const FrameShell = memo(function FrameShell({ children, cursor = false }: FrameShellProps) {
   return (
     <div className="frame-shell min-h-screen bg-frame-black text-frame-white font-frame-body">

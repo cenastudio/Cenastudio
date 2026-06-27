@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { useParams } from "wouter";
 import AppNavBar from "@/components/AppNavBar";
+import ProjectNav from "@/components/ProjectNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import {
   Plus,
@@ -70,6 +72,8 @@ const STATUS = [
 ];
 
 function CollaboratorsContent() {
+  const { projectId } = useParams<{ projectId?: string }>();
+  const projectIdNumber = projectId ? parseInt(projectId) : null;
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [stats, setStats] = useState<CollaboratorStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -270,6 +274,7 @@ function CollaboratorsContent() {
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
       <AppNavBar />
+      {projectIdNumber && <ProjectNav projectId={projectIdNumber} />}
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-10 space-y-8">
         {/* Header */}

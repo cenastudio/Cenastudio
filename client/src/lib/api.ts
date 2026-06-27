@@ -161,10 +161,10 @@ export const api = {
   projects: {
     list: () => request<Project[]>("/projects"),
     activity: () => request<RecentActivity[]>("/projects/activity"),
-    create: (name: string, description?: string, clientId?: number) =>
+    create: (name: string, description?: string, clientId?: number, metadataJson?: string) =>
       request<Project>("/projects", {
         method: "POST",
-        body: JSON.stringify({ name, description, clientId }),
+        body: JSON.stringify({ name, description, clientId, metadataJson }),
       }),
     get: (id: number) => request<Project>(`/projects/${id}`),
     update: (id: number, data: Partial<Omit<Project, "id" | "userId" | "createdAt" | "updatedAt">>) =>
@@ -232,6 +232,14 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ planId }),
       }),
+    syncSession: (sessionId: string) =>
+      request<{ synced: boolean; status: string | null; paymentStatus: string | null; planId: string }>(
+        "/checkout/sync-session",
+        {
+          method: "POST",
+          body: JSON.stringify({ sessionId }),
+        },
+      ),
     portal: () =>
       request<{ url: string }>("/checkout/portal", {
         method: "POST",

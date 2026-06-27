@@ -1,4 +1,4 @@
-/* FRAME.AI Design System Tokens
+/* Cena Studio Design System Tokens
    Source of truth for global variables (used by Tailwind + components)
 */
 
@@ -9,21 +9,21 @@
   --ds-font-mono: "JetBrains Mono", monospace;
 
   /* Color system */
-  --ds-black: #080808;
+  --ds-black: #000000;
   --ds-white: #f5f0e8;
   --ds-cream: #e8e0d0;
   --ds-orange: #ff4d00;
   --ds-orange-2: #cc3d00;
 
-  --ds-surface-0: #080808; /* app bg */
-  --ds-surface-1: #141414; /* chrome */
-  --ds-surface-2: #1e1e1e; /* cards */
-  --ds-surface-3: #2a2a2a; /* borders */
+  --ds-surface-0: #000000; /* app bg */
+  --ds-surface-1: #151515; /* chrome */
+  --ds-surface-2: #222222; /* cards */
+  --ds-surface-3: #3a3a3a; /* borders */
 
   --ds-text-1: #f5f0e8;
   --ds-text-2: #e8e0d0;
-  --ds-text-3: #777777;
-  --ds-text-4: #444444;
+  --ds-text-3: #b8b8b8;
+  --ds-text-4: #8a8a8a;
 
   --ds-success: #00c864;
   --ds-danger: #ff3b3b;
@@ -67,4 +67,3 @@
   --ds-dur-2: 180ms;
   --ds-dur-3: 280ms;
 }
-

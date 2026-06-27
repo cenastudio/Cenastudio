@@ -2,6 +2,7 @@ import { getToolIcon } from "@/lib/toolIcons";
 import { type ToolFromApi } from "@/lib/api";
 import ContextPanel from "./ContextPanel";
 import ProjectSelector from "./ProjectSelector";
+import BrandLogo from "@/components/BrandLogo";
 
 interface ToolSidebarProps {
   tools: ToolFromApi[];
@@ -37,9 +38,7 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
     <aside className="w-full lg:w-64 shrink-0 bg-frame-gray-1 border-b lg:border-b-0 lg:border-r border-frame-gray-2 flex flex-col overflow-x-auto lg:overflow-y-auto">
       {/* Brand Header (Hidden on Mobile) */}
       <div className="hidden lg:block px-[18px] py-5 border-b border-frame-gray-2">
-        <p className="frame-title text-[1.35rem] text-frame-white font-frame-display">
-          FRAME<span className="text-frame-orange">.</span>AI
-        </p>
+        <BrandLogo compact className="scale-90 origin-left" />
         <p className="font-frame-mono text-[0.52rem] tracking-[0.15em] uppercase text-frame-gray-light mt-0.5">
           Studio WORKSPACE
         </p>

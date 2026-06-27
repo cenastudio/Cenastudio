@@ -8,6 +8,7 @@ import { LogOut, Sun, Moon, ChevronDown, Menu, X } from "lucide-react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import NotificationsPopover from "@/components/NotificationsPopover";
+import BrandLogo from "@/components/BrandLogo";
 
 interface AppNavBarProps {
   children?: React.ReactNode;
@@ -43,7 +44,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
     }
 
     window.open(
-      `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Olá! Quero falar sobre meu plano FRAME.AI Director.")}`,
+      `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Olá! Quero falar sobre meu plano Cena Studio.")}`,
       "_blank",
     );
   };
@@ -105,9 +106,9 @@ export default function AppNavBar({ children }: AppNavBarProps) {
             setLocation("/tools");
             setMobileMenuOpen(false);
           }}
-          className="font-frame-display text-[1.35rem] md:text-[1.55rem] tracking-[0.1em] text-frame-white bg-transparent border-none"
+          className="bg-transparent border-none"
         >
-          FRAME<span className="text-frame-orange">.</span>AI
+          <BrandLogo compact className="scale-90 origin-left" />
         </button>
       </div>
 

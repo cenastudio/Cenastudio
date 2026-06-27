@@ -13,7 +13,7 @@ export interface StudioSettings {
 export const STUDIO_SETTINGS_KEY = "frame.studio.settings.v1";
 
 export const DEFAULT_STUDIO_SETTINGS: StudioSettings = {
-  studioName: "FRAME.AI Studio",
+  studioName: "Cena Studio",
   legalName: "",
   document: "",
   email: "",

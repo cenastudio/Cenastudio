@@ -209,7 +209,7 @@ function ensureStudioSettingsColumns() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS studio_settings (
       user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-      studio_name TEXT NOT NULL DEFAULT 'FRAME.AI Studio',
+      studio_name TEXT NOT NULL DEFAULT 'Cena Studio',
       legal_name TEXT DEFAULT '',
       document TEXT DEFAULT '',
       email TEXT DEFAULT '',
@@ -536,7 +536,7 @@ export function initDatabase() {
     );
   }
 
-  const seedAdmin = db.prepare("SELECT id FROM users WHERE email = ?").get("admin@frame.ai") as
+  const seedAdmin = db.prepare("SELECT id FROM users WHERE email = ?").get("admin@cenastudio.com.br") as
     | { id: number }
     | undefined;
   if (!seedAdmin) {
@@ -545,13 +545,13 @@ export function initDatabase() {
       .prepare(
         "INSERT INTO users (name, email, password_hash, role, email_verified) VALUES (?, ?, ?, 'admin', 1)",
       )
-      .run("Admin", "admin@frame.ai", hash);
+      .run("Admin", "admin@cenastudio.com.br", hash);
     ensureSubscription(Number(result.lastInsertRowid), "studio", "active");
   } else {
     ensureSubscription(seedAdmin.id, "studio", "active");
   }
 
-  const seedDemo = db.prepare("SELECT id FROM users WHERE email = ?").get("demo@frame.ai") as
+  const seedDemo = db.prepare("SELECT id FROM users WHERE email = ?").get("demo@cenastudio.com.br") as
     | { id: number }
     | undefined;
   if (!seedDemo) {
@@ -560,7 +560,7 @@ export function initDatabase() {
       .prepare(
         "INSERT INTO users (name, email, password_hash, role, email_verified) VALUES (?, ?, ?, 'user', 1)",
       )
-      .run("Demo User", "demo@frame.ai", hash);
+      .run("Demo User", "demo@cenastudio.com.br", hash);
     ensureSubscription(Number(result.lastInsertRowid), "free", "active");
   } else {
     ensureSubscription(seedDemo.id, "free", "active");

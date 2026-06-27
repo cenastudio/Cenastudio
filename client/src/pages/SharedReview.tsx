@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useParams } from "wouter";
 import { motion } from "framer-motion";
 import VideoPlayer from "@/components/VideoPlayer";
+import BrandLogo from "@/components/BrandLogo";
 import {
-  MessageSquare, Clock, Send, AlertCircle, User, CheckCircle2, XCircle,
+  MessageSquare, Clock, Send, AlertCircle, User, CheckCircle2, XCircle, Plus, X,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -40,6 +41,7 @@ export default function SharedReview() {
   const [decisionNote, setDecisionNote] = useState("");
   const [isDeciding, setIsDeciding] = useState(false);
   const [seekTo, setSeekTo] = useState<number | null>(null);
+  const [commentModalOpen, setCommentModalOpen] = useState(false);
 
   useEffect(() => {
     loadSharedReview();
@@ -93,6 +95,7 @@ export default function SharedReview() {
         toast.success("Comentário adicionado!");
         setNewComment("");
         setNewCommentTimestamp(0);
+        setCommentModalOpen(false);
         loadSharedReview();
       }
     } catch {
@@ -148,6 +151,14 @@ export default function SharedReview() {
     setNewCommentTimestamp(Math.floor(seconds));
   };
 
+  const commentMarkers = comments.map((comment) => ({
+    id: comment.id,
+    timestampSeconds: comment.timestamp_seconds,
+    comment: comment.comment,
+    resolved: false,
+    authorName: comment.author_name,
+  }));
+
   const formatTimestamp = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
@@ -180,12 +191,10 @@ export default function SharedReview() {
     <div className="min-h-screen bg-frame-black">
       {/* Brand Header */}
       <div className="border-b border-frame-gray-3 px-6 py-4">
-        <p className="text-frame-orange font-bold text-lg tracking-wider">
-          FRAME<span className="text-frame-white">.</span>AI
-          <span className="text-frame-gray-light text-sm font-normal ml-2 tracking-normal">
-            — Review de Vídeo
-          </span>
-        </p>
+        <div className="flex items-center gap-3">
+          <BrandLogo compact />
+          <span className="text-frame-gray-light text-sm">Review de Vídeo</span>
+        </div>
       </div>
 
       <motion.div
@@ -234,8 +243,21 @@ export default function SharedReview() {
                 url={resolveVideoUrl(review)}
                 onProgress={handlePlayerProgress}
                 seekTo={seekTo}
+                commentMarkers={commentMarkers}
               />
             </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSeekTo(newCommentTimestamp);
+                setCommentModalOpen(true);
+              }}
+              className="frame-btn-primary w-full flex items-center justify-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Comentar no tempo {formatTimestamp(newCommentTimestamp)}
+            </button>
 
             <div className="bg-frame-gray-1 rounded-lg border border-frame-gray-3 p-6">
               <h3 className="text-xl font-bold text-frame-white mb-2">Decisão final</h3>
@@ -278,65 +300,6 @@ export default function SharedReview() {
               </div>
             </div>
 
-            <div className="bg-frame-gray-1 rounded-lg border border-frame-gray-3 p-6">
-              <h3 className="text-xl font-bold text-frame-white mb-4 flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" />
-                Adicionar Comentário
-              </h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-frame-gray-light mb-2 uppercase tracking-wider text-xs">
-                    Seu Nome
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
-                    <input
-                      type="text"
-                      value={authorName}
-                      onChange={(e) => setAuthorName(e.target.value)}
-                      className="frame-input w-full pl-10"
-                      placeholder="Digite seu nome"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-frame-gray-light mb-2 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-frame-orange" />
-                    <span className="uppercase tracking-wider text-xs">
-                      Timestamp: {formatTimestamp(newCommentTimestamp)}
-                    </span>
-                  </label>
-                  <p className="text-xs text-frame-gray-light/60 -mt-1 mb-2">
-                    Pause o vídeo no momento exato ou digite o timestamp manualmente
-                  </p>
-                  <input
-                    type="number"
-                    value={newCommentTimestamp}
-                    onChange={(e) => setNewCommentTimestamp(parseFloat(e.target.value) || 0)}
-                    className="frame-input w-full"
-                    placeholder="Segundos: 45"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-frame-gray-light mb-2 uppercase tracking-wider text-xs">
-                    Comentário
-                  </label>
-                  <textarea
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    className="frame-input w-full h-24"
-                    placeholder="Deixe seu feedback aqui..."
-                  />
-                </div>
-                <button
-                  onClick={handleAddComment}
-                  className="frame-btn-primary w-full flex items-center justify-center gap-2"
-                >
-                  <Send className="w-4 h-4" />
-                  Enviar Comentário
-                </button>
-              </div>
-            </div>
           </div>
 
           {/* Comments List */}
@@ -384,6 +347,65 @@ export default function SharedReview() {
           </div>
         </div>
       </motion.div>
+
+      {commentModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4">
+          <div className="w-full max-w-lg border border-frame-gray-3 bg-frame-black p-5 shadow-2xl">
+            <div className="mb-5 flex items-center justify-between">
+              <div>
+                <p className="frame-label mb-1">// Comentário</p>
+                <h3 className="text-xl font-bold text-frame-white">Ajuste em {formatTimestamp(newCommentTimestamp)}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCommentModalOpen(false)}
+                className="border border-frame-gray-3 p-2 text-frame-gray-light hover:border-frame-orange hover:text-frame-orange"
+                aria-label="Fechar comentário"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium uppercase tracking-wider text-frame-gray-light mb-2">
+                  Seu nome
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-frame-gray-light" />
+                  <input
+                    type="text"
+                    value={authorName}
+                    onChange={(e) => setAuthorName(e.target.value)}
+                    className="frame-input w-full pl-10"
+                    placeholder="Digite seu nome"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium uppercase tracking-wider text-frame-gray-light mb-2">
+                  Comentário
+                </label>
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  className="frame-input w-full h-28"
+                  placeholder="Descreva o ajuste para este momento do vídeo..."
+                  autoFocus
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleAddComment}
+                className="frame-btn-primary w-full flex items-center justify-center gap-2"
+              >
+                <Send className="w-4 h-4" />
+                Enviar comentário
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

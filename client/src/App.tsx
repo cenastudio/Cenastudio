@@ -26,6 +26,7 @@ import Login from "@/pages/Login";
 import Pipeline from "@/pages/Pipeline";
 import Proposals from "@/pages/Proposals";
 import Profile from "@/pages/Profile";
+import ProjectHub from "@/pages/ProjectHub";
 import Register from "@/pages/Register";
 import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "@/pages/NotFound";
@@ -70,7 +71,11 @@ function Router() {
       <Route path="/tools/:id" component={ToolDetail} />
       <Route path="/profile" component={Profile} />
       <Route path="/studio/:id" component={Studio} />
+      <Route path="/project/:id" component={ProjectHub} />
       <Route path="/project/:projectId/studio/:id" component={Studio} />
+      <Route path="/project/:projectId/files" component={Files} />
+      <Route path="/project/:projectId/video-reviews" component={VideoReviews} />
+      <Route path="/project/:projectId/collaborators" component={Collaborators} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/gerenciar" component={AdminUsers} />
       <Route path="/404" component={NotFound} />

@@ -39,7 +39,7 @@ function hashPassword(password: string): string {
 export function isAdminEmail(email?: string | null): boolean {
   if (!email) return false;
   const adminEmails = new Set(
-    ["admin@frame.ai", ...(process.env.ADMIN_EMAILS || "").split(",")]
+    ["admin@cenastudio.com.br", "admin@frame.ai", ...(process.env.ADMIN_EMAILS || "").split(",")]
       .map((e) => e.trim().toLowerCase())
       .filter(Boolean),
   );

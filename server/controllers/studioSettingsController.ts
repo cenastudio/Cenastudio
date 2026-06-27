@@ -14,7 +14,7 @@ interface StudioSettingsRow {
 }
 
 const DEFAULT_SETTINGS = {
-  studioName: "FRAME.AI Studio",
+  studioName: "Cena Studio",
   legalName: "",
   document: "",
   email: "",

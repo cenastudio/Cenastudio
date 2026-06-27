@@ -2,7 +2,6 @@ import { HERO } from "@shared/site";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
-import { useApp } from "@/contexts/AppContext";
 
 /**
  * Hero Section Component
@@ -11,7 +10,6 @@ import { useApp } from "@/contexts/AppContext";
  * Tipografia: Bebas Neue para títulos (display), DM Sans para corpo
  */
 export default function Hero() {
-  const { openModal } = useApp();
   const [, setLocation] = useLocation();
 
   const containerVariants = {
@@ -35,45 +33,22 @@ export default function Hero() {
   };
 
   return (
-    <section className="relative min-h-screen flex flex-col justify-end pb-20 pt-32 px-9 md:px-12 overflow-hidden">
-      {/* Background Gradient */}
-      <div
-        className="absolute inset-0 -z-10"
-        style={{
-          background: "radial-gradient(ellipse 80% 60% at 60% 40%, #1a0a00 0%, #080808 70%)",
-        }}
+    <section className="relative min-h-[96vh] flex flex-col justify-end pb-16 sm:pb-20 pt-32 px-6 sm:px-9 md:px-12 overflow-hidden border-b border-frame-gray-3">
+      <img
+        src="/landing/product/project-hub.png"
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 w-full h-full object-cover object-[62%_center] opacity-35"
       />
-
-      {/* Film Reel Background */}
-      <div className="absolute top-0 right-0 w-2/3 h-full -z-5 overflow-hidden" style={{ clipPath: "polygon(15% 0%, 100% 0%, 100% 100%, 0% 100%)" }}>
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            background: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,77,0,0.03) 3px, rgba(255,77,0,0.03) 4px)",
-          }}
-        />
-        <div className="absolute inset-0 flex flex-wrap gap-0.5 p-0.5 opacity-15">
-          {Array.from({ length: 60 }).map((_, i) => (
-            <motion.div
-              key={i}
-              className="w-1/5 h-20 bg-gradient-to-br from-[#222] to-[#111] border border-[#2a2a2a] rounded-sm"
-              animate={{ opacity: [0.3, 0.8, 0.3] }}
-              transition={{
-                duration: 3,
-                delay: (i % 20) * 0.15,
-                repeat: Infinity as any,
-              }}
-            />
-          ))}
-        </div>
-      </div>
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,#000_0%,rgba(0,0,0,0.92)_34%,rgba(0,0,0,0.58)_72%,rgba(0,0,0,0.88)_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_55%_at_30%_62%,rgba(255,77,0,0.2)_0%,rgba(0,0,0,0)_55%)]" />
 
       {/* Content */}
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="relative z-10 max-w-2xl"
+        className="relative z-10 max-w-3xl"
       >
         {/* Tag */}
         <motion.div
@@ -91,11 +66,11 @@ export default function Hero() {
         {/* Title */}
         <motion.div variants={itemVariants} className="mb-8">
           <h1
-            className="frame-title text-[clamp(4rem,9.5vw,8.5rem)] leading-[0.9] tracking-[0.02em]"
+            className="frame-title text-[clamp(4.1rem,10vw,9rem)] leading-[0.88] tracking-[0.02em] max-w-[980px]"
           >
             {(HERO as any).title[0]}
             <br />
-            <span className="text-frame-orange ml-16">{(HERO as any).title[1]}</span>
+            <span className="text-frame-orange sm:ml-16">{(HERO as any).title[1]}</span>
             <br />
             <span
               className="text-transparent"
@@ -111,7 +86,7 @@ export default function Hero() {
         {/* Subtitle */}
         <motion.p
           variants={itemVariants}
-          className="text-[0.93rem] leading-relaxed text-frame-gray-light mb-12 max-w-xl font-light"
+          className="text-[1rem] leading-relaxed text-frame-gray-light mb-10 max-w-xl font-light"
         >
           {(HERO as any).subtitle}
         </motion.p>
@@ -128,7 +103,7 @@ export default function Hero() {
           </motion.button>
 
           <motion.button
-            onClick={() => openModal("demo")}
+            onClick={() => document.querySelector("#product-proof")?.scrollIntoView({ behavior: "smooth" })}
             className="frame-btn-ghost flex items-center gap-2"
             whileHover={{ x: 4 }}
           >
@@ -141,16 +116,16 @@ export default function Hero() {
       {/* Stats */}
       <motion.div
         variants={itemVariants}
-        className="absolute bottom-20 right-9 md:right-12 flex gap-12"
+        className="relative z-10 mt-8 grid grid-cols-3 gap-4 sm:absolute sm:bottom-16 sm:right-9 md:right-12 sm:mt-0 sm:flex sm:gap-12"
       >
         {HERO.stats.map((stat: any) => (
-          <div key={stat.label} className="text-right">
+          <div key={stat.label} className="text-center sm:text-right min-w-0">
             <div
-              className="frame-title text-[2.3rem] text-frame-orange leading-none mb-1"
+              className="frame-title text-[1.7rem] sm:text-[2.3rem] text-frame-orange leading-none mb-1"
             >
               {stat.number}
             </div>
-            <div className="font-frame-mono text-[0.56rem] tracking-[0.15em] uppercase text-frame-gray-light">
+            <div className="font-frame-mono text-[0.48rem] sm:text-[0.56rem] tracking-[0.12em] sm:tracking-[0.15em] uppercase text-frame-gray-light leading-tight">
               {stat.label}
             </div>
           </div>

@@ -19,7 +19,7 @@ export default function ToolsSection() {
   return (
     <section id="tools" className="py-24 px-9 md:px-12 bg-frame-black">
       {/* Marquee — index_1 .mq */}
-      <div className="mb-16 overflow-hidden bg-frame-orange py-3">
+      <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] mb-16 w-screen overflow-hidden bg-frame-orange py-3">
         <div className="flex gap-10 animate-[marquee_22s_linear_infinite] whitespace-nowrap">
           {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, i) => (
             <span
@@ -48,7 +48,7 @@ export default function ToolsSection() {
         >
           {LANDING_TOOLS.map((tool) => (
             <motion.div key={tool.number} variants={cardVariants} className="frame-card group tool-card">
-              <span className="text-[1.7rem] mb-3.5 block grayscale brightness-50 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-300">
+              <span className="text-[1.7rem] mb-3.5 block grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-300">
                 {tool.icon}
               </span>
               <p className="font-frame-mono text-[0.56rem] tracking-[0.2em] text-frame-orange mb-2">

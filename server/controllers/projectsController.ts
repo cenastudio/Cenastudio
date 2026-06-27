@@ -3,14 +3,35 @@ import { db } from "../models/db.js";
 import { AppError } from "../middleware/errorHandler.js";
 import type { DbProject, DbProjectState } from "../models/types.js";
 
+function serializeProject(project: DbProject) {
+  return {
+    ...project,
+    userId: project.user_id,
+    clientId: project.client_id,
+    metadataJson: project.metadata_json,
+    createdAt: project.created_at,
+    updatedAt: project.updated_at,
+  };
+}
+
+function normalizeMetadataJson(value: unknown) {
+  if (typeof value !== "string" || !value.trim()) return "{}";
+
+  try {
+    return JSON.stringify(JSON.parse(value));
+  } catch {
+    throw new AppError("Metadados inválidos", 400);
+  }
+}
+
 // List all projects for current user
 export const listProjects: RequestHandler = (req, res, next) => {
   try {
     const userId = req.user!.id;
     const rows = db
       .prepare("SELECT * FROM projects WHERE user_id = ? ORDER BY id DESC")
-      .all(userId);
-    res.json({ success: true, data: rows });
+      .all(userId) as DbProject[];
+    res.json({ success: true, data: rows.map(serializeProject) });
   } catch (e) {
     next(e);
   }
@@ -20,23 +41,25 @@ export const listProjects: RequestHandler = (req, res, next) => {
 export const createProject: RequestHandler = (req, res, next) => {
   try {
     const userId = req.user!.id;
-    const { name, description, clientId } = req.body;
+    const { name, description, clientId, metadataJson, metadata_json } = req.body;
 
     if (!name || !name.trim()) {
       throw new AppError("O nome do projeto é obrigatório", 400);
     }
 
+    const metadata = normalizeMetadataJson(metadataJson ?? metadata_json);
+
     const result = db
       .prepare(
-        "INSERT INTO projects (user_id, name, description, status, metadata_json, client_id) VALUES (?, ?, ?, 'active', '{}', ?)",
+        "INSERT INTO projects (user_id, name, description, status, metadata_json, client_id) VALUES (?, ?, ?, 'active', ?, ?)",
       )
-      .run(userId, name.trim(), description?.trim() || "", clientId || null);
+      .run(userId, name.trim(), description?.trim() || "", metadata, clientId || null);
 
     const newProject = db
       .prepare("SELECT * FROM projects WHERE id = ?")
-      .get(result.lastInsertRowid);
+      .get(result.lastInsertRowid) as DbProject;
 
-    res.json({ success: true, data: newProject });
+    res.json({ success: true, data: serializeProject(newProject) });
   } catch (e) {
     next(e);
   }
@@ -50,13 +73,13 @@ export const getProject: RequestHandler = (req, res, next) => {
 
     const project = db
       .prepare("SELECT * FROM projects WHERE id = ? AND user_id = ?")
-      .get(projectId, userId);
+      .get(projectId, userId) as DbProject | undefined;
 
     if (!project) {
       throw new AppError("Projeto não encontrado ou acesso não autorizado", 404);
     }
 
-    res.json({ success: true, data: project });
+    res.json({ success: true, data: serializeProject(project) });
   } catch (e) {
     next(e);
   }
@@ -67,7 +90,7 @@ export const updateProject: RequestHandler = (req, res, next) => {
   try {
     const userId = req.user!.id;
     const projectId = req.params.id;
-    const { name, description, status, metadata_json } = req.body;
+    const { name, description, status, metadata_json, metadataJson } = req.body;
 
     const project = db
       .prepare("SELECT * FROM projects WHERE id = ? AND user_id = ?")
@@ -76,6 +99,11 @@ export const updateProject: RequestHandler = (req, res, next) => {
     if (!project) {
       throw new AppError("Projeto não encontrado ou acesso não autorizado", 404);
     }
+
+    const nextMetadata =
+      metadata_json !== undefined || metadataJson !== undefined
+        ? normalizeMetadataJson(metadataJson ?? metadata_json)
+        : project.metadata_json;
 
     db.prepare(
       `UPDATE projects SET
@@ -89,16 +117,16 @@ export const updateProject: RequestHandler = (req, res, next) => {
       name?.trim() ?? project.name,
       description?.trim() ?? project.description,
       status ?? project.status,
-      metadata_json ?? project.metadata_json,
+      nextMetadata,
       projectId,
       userId,
     );
 
     const updated = db
       .prepare("SELECT * FROM projects WHERE id = ?")
-      .get(projectId);
+      .get(projectId) as DbProject;
 
-    res.json({ success: true, data: updated });
+    res.json({ success: true, data: serializeProject(updated) });
   } catch (e) {
     next(e);
   }

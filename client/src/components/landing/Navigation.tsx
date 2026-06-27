@@ -2,6 +2,7 @@ import { NAVIGATION } from "@shared/site";
 import { useApp } from "@/contexts/AppContext";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
+import BrandLogo from "@/components/BrandLogo";
 
 export default function Navigation() {
   const [, setLocation] = useLocation();
@@ -27,9 +28,9 @@ export default function Navigation() {
       <button
         type="button"
         onClick={() => setLocation("/")}
-        className="font-frame-display text-[1.55rem] tracking-[0.1em] text-frame-white bg-transparent border-none"
+        className="bg-transparent border-none"
       >
-        FRAME<span className="text-frame-orange">.</span>AI
+        <BrandLogo />
       </button>
 
       <div className="flex gap-5 items-center">

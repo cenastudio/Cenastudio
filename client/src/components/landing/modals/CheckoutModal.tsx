@@ -1,16 +1,25 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useAuth } from "@/contexts/AuthContext";
 import { useApp } from "@/contexts/AppContext";
+import { startCheckout } from "@/lib/api";
 import { WHATSAPP_NUMBER, WHATSAPP_MESSAGE } from "@/lib/constants";
-import { MessageCircle, Copy, Check } from "lucide-react";
+import { toStripePlanId } from "@/lib/plans";
+import { MessageCircle, Copy, Check, CreditCard, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useLocation } from "wouter";
 
 export function CheckoutModal() {
   const { modals, closeModal, selectedPlan } = useApp();
+  const { isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
   const [copied, setCopied] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const isOpen = modals.checkout;
 
-  const planLabel = selectedPlan === "produtora" ? "Produtora" : "Profissional";
+  const planId = selectedPlan ?? "profissional";
+  const planLabel = planId === "produtora" ? "Studio" : "Pro";
+  const stripePlanId = toStripePlanId(planId);
   const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
     WHATSAPP_MESSAGE(planLabel),
   )}`;
@@ -22,21 +31,59 @@ export function CheckoutModal() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleStripeCheckout = async () => {
+    if (!stripePlanId) {
+      toast.error("Plano inválido.");
+      return;
+    }
+
+    if (!isAuthenticated) {
+      closeModal("checkout");
+      setLocation("/login");
+      toast.message("Entre na sua conta para assinar com segurança.");
+      return;
+    }
+
+    setIsCheckingOut(true);
+    try {
+      await startCheckout(stripePlanId);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao iniciar checkout");
+      setIsCheckingOut(false);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeModal("checkout")}>
       <DialogContent className="sm:max-w-md bg-frame-gray-2 border border-frame-gray-3">
         <DialogHeader>
           <DialogTitle className="frame-title text-2xl text-frame-white">Adquirir plano {planLabel}</DialogTitle>
           <DialogDescription className="text-frame-gray-light font-light">
-            Fale diretamente com nosso time comercial para negociar pagamento via PIX ou transferência.
+            Assine com cartão pelo Stripe ou fale com o time comercial para PIX, transferência ou boleto.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
+          <div className="border border-frame-orange/30 bg-frame-orange/[0.05] p-5 text-center space-y-3">
+            <CreditCard className="w-9 h-9 text-frame-orange mx-auto" />
+            <p className="text-sm text-frame-white font-medium">
+              Checkout seguro em modo teste pelo Stripe
+            </p>
+            <button
+              type="button"
+              disabled={isCheckingOut}
+              onClick={handleStripeCheckout}
+              className="inline-flex items-center justify-center gap-2 bg-frame-orange hover:bg-frame-orange/90 disabled:opacity-60 text-frame-black font-semibold px-6 py-3 text-sm transition mt-2 w-full"
+            >
+              {isCheckingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+              {isAuthenticated ? "Assinar com Stripe" : "Entrar para assinar"}
+            </button>
+          </div>
+
           <div className="border border-frame-orange/20 bg-frame-orange/[0.03] p-6 text-center space-y-3">
             <MessageCircle className="w-10 h-10 text-frame-orange mx-auto" />
             <p className="text-sm text-frame-white font-medium">
-              Clique no botão abaixo para falar conosco no WhatsApp
+              Prefere PIX, transferência ou boleto?
             </p>
             <p className="text-xs text-frame-gray-light">
               Respondemos em até 2 horas em dias úteis.

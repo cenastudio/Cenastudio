@@ -1,7 +1,9 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { api, openBillingPortal } from "@/lib/api";
 import { motion } from "framer-motion";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, CreditCard } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { useLocation } from "wouter";
 
 function getQueryParams() {
@@ -25,11 +27,32 @@ export default function Success() {
   const [, setLocation] = useLocation();
   const { refresh, plan, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const { plan: planParam, sessionId } = useMemo(() => getQueryParams(), []);
 
   useEffect(() => {
-    refresh().finally(() => setLoading(false));
-  }, [refresh]);
+    async function confirmCheckout() {
+      setLoading(true);
+      try {
+        if (sessionId && isAuthenticated) {
+          setSyncing(true);
+          const result = await api.checkout.syncSession(sessionId);
+          if (result.synced) {
+            toast.success("Assinatura confirmada no Cena Studio.");
+          }
+        }
+        await refresh();
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Erro ao confirmar assinatura");
+        await refresh();
+      } finally {
+        setSyncing(false);
+        setLoading(false);
+      }
+    }
+
+    void confirmCheckout();
+  }, [refresh, sessionId, isAuthenticated]);
 
   useEffect(() => {
     if (!loading && !sessionId && !planParam) {
@@ -38,7 +61,7 @@ export default function Success() {
   }, [loading, sessionId, planParam, setLocation]);
 
   const planName =
-    plan?.planName ?? (planParam ? (PLAN_NAMES[planParam] ?? planParam) : "FRAME.AI");
+    plan?.planName ?? (planParam ? (PLAN_NAMES[planParam] ?? planParam) : "Cena Studio");
 
   const title = sessionId
     ? `Assinatura ativada! Bem-vindo ao plano ${planName}.`
@@ -52,7 +75,7 @@ export default function Success() {
     return (
       <div className="min-h-screen bg-frame-black text-frame-white flex items-center justify-center">
         <p className="font-frame-mono text-[0.65rem] tracking-[0.15em] uppercase text-frame-gray-light">
-          Confirmando assinatura...
+          {syncing ? "Sincronizando assinatura..." : "Confirmando assinatura..."}
         </p>
       </div>
     );
@@ -119,6 +142,20 @@ export default function Success() {
           ) : (
             <button type="button" onClick={() => setLocation("/login")} className="frame-btn-primary">
               Fazer login
+            </button>
+          )}
+          {isAuthenticated && sessionId && (
+            <button
+              type="button"
+              onClick={() => {
+                openBillingPortal().catch((error) => {
+                  toast.error(error instanceof Error ? error.message : "Erro ao abrir portal");
+                });
+              }}
+              className="frame-btn-ghost inline-flex items-center justify-center gap-2"
+            >
+              <CreditCard className="w-4 h-4" />
+              Gerenciar cobrança
             </button>
           )}
           <button type="button" onClick={() => setLocation("/")} className="frame-btn-ghost">

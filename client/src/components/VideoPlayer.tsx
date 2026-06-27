@@ -76,7 +76,8 @@ export default function VideoPlayer({
   useEffect(() => {
     if (seekTo != null && playerRef.current) {
       playerRef.current.seekTo(seekTo, "seconds");
-      setPlaying(true);
+      setPlaying(false);
+      setShowControls(true);
       setAnnotationMode(false);
       setShowCommentInput(false);
       setAnnotations([]);
@@ -92,12 +93,6 @@ export default function VideoPlayer({
       setAnnotationMode(false);
     }
   }, [url]);
-
-  useEffect(() => {
-    if (playerRef.current) {
-      playerRef.current.getInternalPlayer()?.playbackRate?.(playbackRate);
-    }
-  }, [playbackRate]);
 
   const handleProgress = (state: any) => {
     setPlayed(state.played);
@@ -117,7 +112,6 @@ export default function VideoPlayer({
   const handlePlayPause = () => {
     if (playing) {
       setPlaying(false);
-      setAnnotationMode(true);
     } else {
       setPlaying(true);
       setAnnotationMode(false);
@@ -258,9 +252,7 @@ export default function VideoPlayer({
           allowFullScreen
           className="absolute inset-0 h-full w-full border-0 bg-black"
         />
-        <div className="absolute left-3 bottom-3 right-3 flex flex-wrap items-center gap-2 rounded-none border border-white/10 bg-black/70 px-3 py-2 text-[0.62rem] text-white/70 backdrop-blur">
-          <span className="font-mono uppercase tracking-wider text-frame-orange">Google Drive Preview</span>
-          <span>Se não tocar, confirme que o arquivo está compartilhado para qualquer pessoa com o link.</span>
+        <div className="absolute right-3 bottom-3 flex items-center gap-2 rounded-none border border-white/10 bg-black/70 px-3 py-2 text-[0.62rem] text-white/70 backdrop-blur">
           <a
             href={url}
             target="_blank"
@@ -269,6 +261,9 @@ export default function VideoPlayer({
           >
             Abrir origem
           </a>
+          <button type="button" onClick={toggleFullscreen} className="text-frame-orange hover:text-frame-white transition">
+            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+          </button>
         </div>
       </div>
     );
@@ -278,6 +273,7 @@ export default function VideoPlayer({
     <div
       ref={containerRef}
       className="relative bg-black rounded-lg overflow-hidden border border-frame-gray-3 group"
+      style={{ aspectRatio: "16/9" }}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => {
         if (playing) setShowControls(false);
@@ -328,6 +324,7 @@ export default function VideoPlayer({
             playing={false}
             muted={muted}
             volume={volume}
+            playbackRate={playbackRate}
             onProgress={handleProgress}
             onDuration={handleDuration}
             onReady={handleReady}
@@ -393,6 +390,7 @@ export default function VideoPlayer({
             playing={playing}
             muted={muted}
             volume={volume}
+            playbackRate={playbackRate}
             onProgress={handleProgress}
             onDuration={handleDuration}
             onReady={handleReady}
@@ -432,20 +430,36 @@ export default function VideoPlayer({
                     [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-frame-orange [&::-webkit-slider-thumb]:cursor-pointer"
                 />
                 {commentMarkers.map((marker) => (
-                  <div
+                  <button
                     key={marker.id}
-                    className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full cursor-pointer transition-transform hover:scale-150"
+                    type="button"
+                    className="absolute top-1/2 h-5 w-3 -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-125"
                     style={{
                       left: `${getMarkerPosition(marker)}%`,
-                      backgroundColor: marker.resolved ? "#6b7280" : "#f97316",
                     }}
+                    title={`${formatTime(marker.timestampSeconds)} - ${marker.comment}`}
                     onMouseEnter={(e) => {
                       setHoveredMarker(marker);
                       setMousePos({ x: e.clientX, y: e.clientY });
                     }}
                     onMouseLeave={() => setHoveredMarker(null)}
-                    onClick={() => handleSkip(marker.timestampSeconds - currentTime)}
-                  />
+                    onClick={() => {
+                      playerRef.current?.seekTo(marker.timestampSeconds, "seconds");
+                      setCurrentTime(marker.timestampSeconds);
+                      setPlayed(duration ? marker.timestampSeconds / duration : played);
+                      setPlaying(false);
+                      setShowControls(true);
+                    }}
+                  >
+                    <span
+                      className={`block h-5 w-0.5 mx-auto ${marker.resolved ? "bg-frame-gray-light" : "bg-frame-orange"}`}
+                    />
+                    <span
+                      className={`absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rotate-45 border ${
+                        marker.resolved ? "border-frame-gray-light bg-frame-gray-3" : "border-frame-orange bg-frame-orange"
+                      }`}
+                    />
+                  </button>
                 ))}
               </div>
 

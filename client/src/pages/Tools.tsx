@@ -48,7 +48,7 @@ function ToolsContent() {
                 className="frame-card cursor-pointer group"
                 onClick={() => setLocation(`/tools/${tool.id}`)}
               >
-                <Icon className="w-7 h-7 mb-3.5 text-frame-gray-light grayscale brightness-50 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-300" />
+                <Icon className="w-7 h-7 mb-3.5 text-frame-gray-light grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-300" />
                 <p className="font-frame-mono text-[0.56rem] tracking-[0.2em] text-frame-orange mb-2">
                   {tool.id}
                 </p>

@@ -1,11 +1,12 @@
 export const SITE_CONFIG = {
-  title: "FRAME.AI — Plataforma Inteligente para Produção Audiovisual",
+  title: "Cena Studio",
   description:
-    "A plataforma completa do filmmaker moderno. IA para roteiro, callsheet, decupagem, orçamento, gestão de arquivos, revisão de vídeos, CRM e pipeline comercial.",
-  domain: "frame.ai",
+    "Feito por filmmakers, para filmmakers. Central operacional para produtoras: projetos, IA, clientes, arquivos, aprovações, equipe e documentos conectados por job.",
+  domain: "cenastudio.com.br",
 };
 
 export const NAVIGATION = [
+  { label: "Produto", href: "#product-proof" },
   { label: "Ferramentas", href: "#tools" },
   { label: "Sobre", href: "#about" },
   { label: "Preços", href: "#pricing" },
@@ -13,18 +14,18 @@ export const NAVIGATION = [
 ];
 
 export const HERO = {
-  tag: "Plataforma Completa de Produção Audiovisual",
-  title: ["PRÉ-PRODUÇÃO", "PRODUÇÃO", "PÓS-PRODUÇÃO"],
+  tag: "Feito por filmmakers, para filmmakers",
+  title: ["SISTEMA", "OPERACIONAL", "AUDIOVISUAL"],
   subtitle:
-    "A plataforma que unifica todo o fluxo de produção audiovisual: roteiros com IA, callsheet inteligente, decupagem técnica, orçamentos automáticos, gestão de arquivos, revisão de vídeos com anotações no frame, CRM de clientes e pipeline comercial. Tudo em um só lugar.",
+    "Crie projetos com briefing, gere documentos com IA, organize arquivos, acompanhe aprovações e mantenha cliente, equipe e entrega dentro do mesmo hub.",
   cta: {
-    primary: { label: "Começar Agora", href: "/login" },
-    secondary: { label: "Ver Demonstração", href: "#" },
+    primary: { label: "Entrar no Produto", href: "/login" },
+    secondary: { label: "Ver fluxo real", href: "#" },
   },
   stats: [
-    { number: "5K+", label: "Projetos Realizados" },
-    { number: "50+", label: "Ferramentas e Módulos" },
-    { number: "12", label: "Países" },
+    { number: "12", label: "Ferramentas IA" },
+    { number: "1", label: "Hub por projeto" },
+    { number: "BR", label: "Produto em evolução" },
   ],
 };
 
@@ -33,15 +34,15 @@ export type PlanTier = "iniciante" | "profissional" | "produtora";
 export const PRICING = [
   {
     id: "iniciante" as PlanTier,
-    tier: "// Iniciante",
-    price: "R$97",
+    tier: "// Free",
+    price: "R$0",
     period: "/mês",
     description: "Para freelancers e criadores independentes",
     features: [
-      "15 gerações com IA/mês",
-      "Callsheet, roteiro e decupagem",
-      "10 arquivos em nuvem",
-      "3 projetos simultâneos",
+      "5 gerações com IA/mês",
+      "Acesso inicial às ferramentas",
+      "Export .txt",
+      "Projetos para teste",
       "CRM básico de clientes",
       "Suporte por email",
     ],
@@ -50,15 +51,15 @@ export const PRICING = [
   },
   {
     id: "profissional" as PlanTier,
-    tier: "// Profissional",
-    price: "R$297",
+    tier: "// Pro",
+    price: "R$49",
     period: "/mês — mais popular",
     description: "Para produtoras e profissionais",
     features: [
-      "Gerações ilimitadas com IA",
-      "Todas as ferramentas do estúdio",
-      "Arquivos ilimitados em nuvem",
-      "Projetos ilimitados",
+      "50 gerações com IA/mês",
+      "Todas as 12 ferramentas",
+      "Histórico completo",
+      "Export PDF e DOCX",
       "Review de vídeos com anotações",
       "CRM completo + pipeline",
       "Suporte prioritário",
@@ -68,18 +69,18 @@ export const PRICING = [
   },
   {
     id: "produtora" as PlanTier,
-    tier: "// Produtora",
-    price: "R$697",
+    tier: "// Studio",
+    price: "R$99",
     period: "/mês",
     description: "Para grandes produtoras e agências",
     features: [
       "Tudo do Profissional",
-      "Multi-usuários (10 seats)",
-      "API de integração",
-      "White-label",
-      "Onboarding dedicado",
-      "SLA garantido",
-      "Relatórios avançados",
+      "Gerações ilimitadas",
+      "Projetos e pastas",
+      "Equipe e colaboradores",
+      "Arquivos e aprovações por projeto",
+      "Suporte prioritário",
+      "Relatórios operacionais",
     ],
     cta: { label: "Falar com equipe", href: "#" },
     highlight: false,
@@ -110,20 +111,19 @@ export const FOOTER_LINKS = {
   tools: {
     title: "Plataforma",
     links: [
+      { label: "Produto real", href: "#product-proof" },
       { label: "Estúdio IA", href: "#tools" },
       { label: "Arquivos", href: "#tools" },
       { label: "Review de Vídeo", href: "#tools" },
-      { label: "CRM", href: "#tools" },
-      { label: "Pipeline", href: "#tools" },
-      { label: "Analytics", href: "#tools" },
     ],
   },
   company: {
-    title: "Empresa",
+    title: "Operação",
     links: [
       { label: "Sobre", href: "#about" },
-      { label: "Contato", href: "#contact" },
+      { label: "Fluxo", href: "#about" },
       { label: "Preços", href: "#pricing" },
+      { label: "Contato", href: "#contact" },
     ],
   },
   legal: {
@@ -132,6 +132,15 @@ export const FOOTER_LINKS = {
       { label: "Termos", href: "#" },
       { label: "Privacidade", href: "#" },
       { label: "Cookies", href: "#" },
+    ],
+  },
+  support: {
+    title: "Suporte",
+    links: [
+      { label: "Agendar demo", href: "#contact" },
+      { label: "Central do produto", href: "#product-proof" },
+      { label: "Planos", href: "#pricing" },
+      { label: "Login", href: "/login" },
     ],
   },
 };

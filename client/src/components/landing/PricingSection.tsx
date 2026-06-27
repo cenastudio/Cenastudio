@@ -1,27 +1,44 @@
 import { PRICING } from "@shared/site";
+import { useAuth } from "@/contexts/AuthContext";
+import { startCheckout } from "@/lib/api";
+import { toStripePlanId } from "@/lib/plans";
 import { motion } from "framer-motion";
-import { Check, MessageCircle } from "lucide-react";
+import { Check, CreditCard } from "lucide-react";
 import { useLocation } from "wouter";
-import { WHATSAPP_NUMBER, WHATSAPP_MESSAGE } from "@/lib/constants";
+import { toast } from "sonner";
 
 export default function PricingSection() {
   const [, setLocation] = useLocation();
+  const { isAuthenticated } = useAuth();
 
-  const handleSelectPlan = (planId: string, planLabel: string) => {
+  const handleSelectPlan = async (planId: string) => {
     if (planId === "iniciante") {
       setLocation("/register");
       return;
     }
 
-    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-      WHATSAPP_MESSAGE(planLabel),
-    )}`;
-    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+    if (!isAuthenticated) {
+      setLocation("/login");
+      toast.message("Entre na sua conta para assinar com segurança.");
+      return;
+    }
+
+    const stripePlanId = toStripePlanId(planId);
+    if (!stripePlanId) {
+      toast.error("Plano inválido.");
+      return;
+    }
+
+    try {
+      await startCheckout(stripePlanId);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao iniciar checkout");
+    }
   };
 
   const ctaLabel = (planId: string) => {
     if (planId === "iniciante") return "Começar grátis";
-    return "Falar com consultor";
+    return isAuthenticated ? "Assinar com Stripe" : "Entrar para assinar";
   };
 
   const containerVariants = {
@@ -98,12 +115,12 @@ export default function PricingSection() {
 
                 <button
                   type="button"
-                  onClick={() => handleSelectPlan(plan.id, plan.tier)}
+                  onClick={() => void handleSelectPlan(plan.id)}
                   className={`w-full mb-8 flex items-center justify-center gap-2 ${
                     plan.highlight ? "frame-btn-primary" : "frame-btn-ghost"
                   }`}
                 >
-                  <MessageCircle className="w-4 h-4" />
+                  <CreditCard className="w-4 h-4" />
                   {ctaLabel(plan.id)}
                 </button>
 
@@ -132,7 +149,7 @@ export default function PricingSection() {
           viewport={{ once: true }}
           className="text-center text-frame-gray-muted text-sm mt-12 font-light"
         >
-          Todos os planos incluem acesso a todas as ferramentas. Diferenças apenas em limite de uso e suporte.
+          O plano Free é para validação inicial. Pro e Studio liberam todas as 12 ferramentas, com diferenças em limite de uso, suporte e operação por projeto.
         </motion.p>
       </div>
     </section>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useLocation } from "wouter";
 import AppNavBar from "@/components/AppNavBar";
+import ProjectNav from "@/components/ProjectNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import {
   Upload, Download, Trash2, FileText,
@@ -39,8 +40,9 @@ type UploadTab = "file" | "link";
 
 function FilesContent() {
   const params = useParams();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const projectId = params.projectId ? parseInt(params.projectId) : null;
+  const isProjectScoped = location.startsWith("/project/");
 
   const [files, setFiles] = useState<FileData[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -113,7 +115,7 @@ function FilesContent() {
         setShowNewProject(false);
         setNewProjectName("");
         loadProjects();
-        setLocation(`/files/${data.data.id}`);
+        setLocation(isProjectScoped ? `/project/${data.data.id}/files` : `/files/${data.data.id}`);
       }
     } catch {
       toast.error("Erro ao criar projeto");
@@ -121,7 +123,7 @@ function FilesContent() {
   };
 
   const handleSelectProject = (id: number) => {
-    setLocation(`/files/${id}`);
+    setLocation(isProjectScoped ? `/project/${id}/files` : `/files/${id}`);
   };
 
   const filteredFiles = files.filter((f) => {
@@ -290,6 +292,7 @@ function FilesContent() {
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
       <AppNavBar />
+      {isProjectScoped && projectId && <ProjectNav projectId={projectId} />}
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-10 space-y-8">
         {/* Header com seletor de projeto */}
@@ -338,10 +341,10 @@ function FilesContent() {
                   ))}
                 </select>
                 <button
-                  onClick={() => setLocation("/files")}
+                  onClick={() => setLocation(isProjectScoped ? `/project/${projectId}` : "/files")}
                   className="text-xs text-frame-gray-light hover:text-frame-white transition"
                 >
-                  Sair do projeto
+                  {isProjectScoped ? "Visão geral" : "Sair do projeto"}
                 </button>
               </div>
             )}

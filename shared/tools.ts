@@ -1,5 +1,5 @@
 /**
- * Single source of truth for all FRAME.AI tools (IDs 01–12).
+ * Single source of truth for all Cena Studio tools (IDs 01–12).
  * Seeded into SQLite on server startup.
  */
 

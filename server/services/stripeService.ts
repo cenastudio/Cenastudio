@@ -42,7 +42,6 @@ export async function createCheckoutSession(
     cancel_url: cancelUrl,
     metadata: { userId: String(userId), planId },
     subscription_data: {
-      trial_period_days: 0,
       metadata: { userId: String(userId), planId },
     },
   });
@@ -79,6 +78,60 @@ export async function createPortalSession(userId: number, returnUrl: string) {
   }
 
   return session;
+}
+
+export async function syncCheckoutSession(userId: number, sessionId: string) {
+  const stripe = getStripe();
+  const session = await stripe.checkout.sessions.retrieve(sessionId, {
+    expand: ["subscription"],
+  });
+
+  const metadataUserId = Number(session.metadata?.userId);
+  if (metadataUserId !== userId) {
+    throw new AppError("Sessão de checkout não pertence a este usuário.", 403);
+  }
+
+  const planId = session.metadata?.planId;
+  if (!planId || !["pro", "studio"].includes(planId)) {
+    throw new AppError("Plano da sessão inválido.", 400);
+  }
+
+  if (session.status !== "complete" || session.payment_status !== "paid") {
+    return {
+      synced: false,
+      status: session.status,
+      paymentStatus: session.payment_status,
+      planId,
+    };
+  }
+
+  const customerId =
+    typeof session.customer === "string" ? session.customer : session.customer?.id;
+  const subscription =
+    typeof session.subscription === "string"
+      ? await stripe.subscriptions.retrieve(session.subscription)
+      : session.subscription;
+  const subscriptionId = subscription?.id;
+
+  if (!customerId || !subscriptionId || !subscription) {
+    throw new AppError("Assinatura Stripe incompleta.", 400);
+  }
+
+  const periodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+
+  db.prepare(
+    `UPDATE subscriptions
+     SET plan_id = ?, status = 'active', stripe_customer_id = ?, stripe_subscription_id = ?,
+         current_period_start = datetime('now'), current_period_end = ?, trial_ends_at = NULL
+     WHERE user_id = ?`,
+  ).run(planId, customerId, subscriptionId, periodEnd, userId);
+
+  return {
+    synced: true,
+    status: session.status,
+    paymentStatus: session.payment_status,
+    planId,
+  };
 }
 
 export async function handleWebhook(rawBody: Buffer, signature: string) {

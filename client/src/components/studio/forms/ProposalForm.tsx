@@ -20,7 +20,7 @@ export default function ProposalForm({ data, onChange }: FormProps) {
               type="text"
               value={data.empresa || ""}
               onChange={(e) => onChange("empresa", e.target.value)}
-              placeholder="Ex: Frame Filmes"
+              placeholder="Ex: Cena Filmes"
               className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
             />
           </div>

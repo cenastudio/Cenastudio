@@ -13,7 +13,7 @@ interface ProjectContextType {
   toolStates: Record<string, ToolState>;
   loadProjects: () => Promise<void>;
   selectProject: (id: number | null) => Promise<Project | null>;
-  createProject: (name: string, description?: string, clientId?: number) => Promise<Project>;
+  createProject: (name: string, description?: string, clientId?: number, metadataJson?: string) => Promise<Project>;
   updateProject: (id: number, data: Partial<Omit<Project, "id" | "userId" | "createdAt" | "updatedAt">>) => Promise<Project>;
   deleteProject: (id: number) => Promise<void>;
   fetchToolState: (toolId: string) => Promise<ToolState | null>;
@@ -88,9 +88,9 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Create a new project
-  const createProject = async (name: string, description?: string, clientId?: number) => {
+  const createProject = async (name: string, description?: string, clientId?: number, metadataJson?: string) => {
     try {
-      const newProj = await api.projects.create(name, description, clientId);
+      const newProj = await api.projects.create(name, description, clientId, metadataJson);
       setProjects((prev) => [newProj, ...prev]);
       return newProj;
     } catch (e) {

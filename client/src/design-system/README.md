@@ -1,4 +1,4 @@
-## FRAME.AI Design System (Global)
+## Cena Studio Design System (Global)
 
 Este design system centraliza **tokens globais** e padrões de UI para manter o frontend 100% consistente com a identidade do `index_1.html` / `index_2.html` (cinematográfico, high-end, alta precisão, low-radius).
 
