@@ -127,7 +127,7 @@ export default function ProjectSelector() {
 
   return (
     <div className="px-[18px] py-4 border-b border-frame-gray-2 bg-frame-black/30 select-none">
-      <span className="block font-frame-mono text-[0.52rem] tracking-[0.2em] uppercase text-frame-gray-light mb-1.5">
+      <span className="block font-frame-mono text-[0.62rem] tracking-[0.2em] uppercase text-frame-gray-light mb-1.5">
         // Contexto de Trabalho
       </span>
 
@@ -153,7 +153,7 @@ export default function ProjectSelector() {
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="start" className="w-[220px] bg-frame-gray-1 border-frame-gray-3 text-frame-white rounded-none">
-            <DropdownMenuLabel className="font-frame-mono text-[0.52rem] tracking-[0.15em] text-frame-gray-light uppercase">
+            <DropdownMenuLabel className="font-frame-mono text-[0.62rem] tracking-[0.15em] text-frame-gray-light uppercase">
               Seus Projetos
             </DropdownMenuLabel>
             
@@ -245,7 +245,7 @@ export default function ProjectSelector() {
 
           <form onSubmit={handleCreateSubmit} className="space-y-4 mt-2">
             <div className="space-y-1.5">
-              <label className="block font-frame-mono text-[0.58rem] tracking-[0.15em] text-frame-orange uppercase">
+              <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
                 Nome do Projeto *
               </label>
               <input
@@ -260,7 +260,7 @@ export default function ProjectSelector() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="block font-frame-mono text-[0.58rem] tracking-[0.15em] text-frame-orange uppercase">
+              <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
                 Descrição do Projeto
               </label>
               <textarea
@@ -314,7 +314,7 @@ export default function ProjectSelector() {
 
           <form onSubmit={handleEditSubmit} className="space-y-4 mt-2">
             <div className="space-y-1.5">
-              <label className="block font-frame-mono text-[0.58rem] tracking-[0.15em] text-frame-orange uppercase">
+              <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
                 Nome do Projeto *
               </label>
               <input
@@ -328,7 +328,7 @@ export default function ProjectSelector() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="block font-frame-mono text-[0.58rem] tracking-[0.15em] text-frame-orange uppercase">
+              <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
                 Descrição do Projeto
               </label>
               <textarea

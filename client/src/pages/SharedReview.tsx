@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "wouter";
 import { motion } from "framer-motion";
 import VideoPlayer from "@/components/VideoPlayer";
+import ReviewCommentComposer from "@/components/ReviewCommentComposer";
 import BrandLogo from "@/components/BrandLogo";
 import {
-  MessageSquare, Clock, Send, AlertCircle, User, CheckCircle2, XCircle, Plus, X,
+  MessageSquare, Clock, AlertCircle, CheckCircle2, XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -41,15 +42,13 @@ export default function SharedReview() {
   const [decisionNote, setDecisionNote] = useState("");
   const [isDeciding, setIsDeciding] = useState(false);
   const [seekTo, setSeekTo] = useState<number | null>(null);
-  const [commentModalOpen, setCommentModalOpen] = useState(false);
+  const [commentAnchor, setCommentAnchor] = useState<number | null>(null);
+  const [pauseRequest, setPauseRequest] = useState(0);
+  const [isCommenting, setIsCommenting] = useState(false);
 
-  useEffect(() => {
-    loadSharedReview();
-  }, [token]);
-
-  const loadSharedReview = async () => {
+  const loadSharedReview = useCallback(async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const response = await fetch(`/api/public-review?token=${token}`);
       const data = await response.json();
       if (data.success) {
@@ -61,9 +60,31 @@ export default function SharedReview() {
     } catch {
       setError("Erro ao carregar review");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    loadSharedReview();
+    const interval = window.setInterval(() => loadSharedReview(true), 5000);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") loadSharedReview(true);
+    };
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, [loadSharedReview]);
+
+  useEffect(() => {
+    const savedName = window.localStorage.getItem("cena-review-author");
+    if (savedName) setAuthorName(savedName);
+  }, []);
+
+  useEffect(() => {
+    if (authorName.trim()) window.localStorage.setItem("cena-review-author", authorName.trim());
+  }, [authorName]);
 
   const resolveVideoUrl = (review: SharedReview): string => {
     if (review.video_url) return review.video_url;
@@ -79,13 +100,14 @@ export default function SharedReview() {
       toast.error("Nome e comentário são obrigatórios");
       return;
     }
+    setIsCommenting(true);
     try {
       const response = await fetch("/api/public-review-comment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           token,
-          timestampSeconds: newCommentTimestamp,
+          timestampSeconds: commentAnchor ?? newCommentTimestamp,
           comment: newComment,
           authorName,
         }),
@@ -94,12 +116,15 @@ export default function SharedReview() {
       if (data.success) {
         toast.success("Comentário adicionado!");
         setNewComment("");
-        setNewCommentTimestamp(0);
-        setCommentModalOpen(false);
-        loadSharedReview();
+        setCommentAnchor(null);
+        await loadSharedReview(true);
+      } else {
+        toast.error(data.error || "Erro ao adicionar comentário");
       }
     } catch {
       toast.error("Erro ao adicionar comentário");
+    } finally {
+      setIsCommenting(false);
     }
   };
 
@@ -149,6 +174,11 @@ export default function SharedReview() {
 
   const handlePlayerProgress = (seconds: number) => {
     setNewCommentTimestamp(Math.floor(seconds));
+  };
+
+  const captureCommentTime = () => {
+    setCommentAnchor(Math.floor(newCommentTimestamp));
+    setPauseRequest((request) => request + 1);
   };
 
   const commentMarkers = comments.map((comment) => ({
@@ -244,20 +274,9 @@ export default function SharedReview() {
                 onProgress={handlePlayerProgress}
                 seekTo={seekTo}
                 commentMarkers={commentMarkers}
+                pauseRequest={pauseRequest}
               />
             </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setSeekTo(newCommentTimestamp);
-                setCommentModalOpen(true);
-              }}
-              className="frame-btn-primary w-full flex items-center justify-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Comentar no tempo {formatTimestamp(newCommentTimestamp)}
-            </button>
 
             <div className="bg-frame-gray-1 rounded-lg border border-frame-gray-3 p-6">
               <h3 className="text-xl font-bold text-frame-white mb-2">Decisão final</h3>
@@ -303,20 +322,20 @@ export default function SharedReview() {
           </div>
 
           {/* Comments List */}
-          <div className="bg-frame-gray-1 rounded-lg border border-frame-gray-3 p-6">
-            <h3 className="text-xl font-bold text-frame-white mb-4 flex items-center gap-2">
+          <div className="bg-frame-gray-1 border border-frame-gray-3 flex min-h-[520px] flex-col overflow-hidden">
+            <h3 className="text-lg font-bold text-frame-white p-5 border-b border-frame-gray-3 flex items-center gap-2">
               <MessageSquare className="w-5 h-5" />
               Comentários ({comments.length})
             </h3>
 
             {comments.length === 0 ? (
-              <div className="text-center py-8 text-frame-gray-light">
+              <div className="flex-1 text-center py-12 px-6 text-frame-gray-light">
                 <MessageSquare className="w-12 h-12 mx-auto mb-4 text-frame-gray-4" />
                 <p>Nenhum comentário ainda</p>
-                <p className="text-sm">Seja o primeiro a deixar um feedback!</p>
+                <p className="text-sm">Escreva abaixo enquanto assiste.</p>
               </div>
             ) : (
-              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+              <div className="flex-1 space-y-4 overflow-y-auto p-5">
                 {comments.map((comment) => (
                   <motion.div
                     key={comment.id}
@@ -344,68 +363,22 @@ export default function SharedReview() {
                 ))}
               </div>
             )}
+
+            <ReviewCommentComposer
+              currentTimestamp={newCommentTimestamp}
+              anchorTimestamp={commentAnchor}
+              comment={newComment}
+              onCommentChange={setNewComment}
+              authorName={authorName}
+              onAuthorNameChange={setAuthorName}
+              onBegin={captureCommentTime}
+              onRecapture={captureCommentTime}
+              onSubmit={handleAddComment}
+              submitting={isCommenting}
+            />
           </div>
         </div>
       </motion.div>
-
-      {commentModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4">
-          <div className="w-full max-w-lg border border-frame-gray-3 bg-frame-black p-5 shadow-2xl">
-            <div className="mb-5 flex items-center justify-between">
-              <div>
-                <p className="frame-label mb-1">// Comentário</p>
-                <h3 className="text-xl font-bold text-frame-white">Ajuste em {formatTimestamp(newCommentTimestamp)}</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setCommentModalOpen(false)}
-                className="border border-frame-gray-3 p-2 text-frame-gray-light hover:border-frame-orange hover:text-frame-orange"
-                aria-label="Fechar comentário"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium uppercase tracking-wider text-frame-gray-light mb-2">
-                  Seu nome
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-frame-gray-light" />
-                  <input
-                    type="text"
-                    value={authorName}
-                    onChange={(e) => setAuthorName(e.target.value)}
-                    className="frame-input w-full pl-10"
-                    placeholder="Digite seu nome"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium uppercase tracking-wider text-frame-gray-light mb-2">
-                  Comentário
-                </label>
-                <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  className="frame-input w-full h-28"
-                  placeholder="Descreva o ajuste para este momento do vídeo..."
-                  autoFocus
-                />
-              </div>
-              <button
-                type="button"
-                onClick={handleAddComment}
-                className="frame-btn-primary w-full flex items-center justify-center gap-2"
-              >
-                <Send className="w-4 h-4" />
-                Enviar comentário
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

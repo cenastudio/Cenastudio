@@ -83,7 +83,7 @@ export default function ProjectGateway({
                   onClick={() => openProject(project)}
                   className="text-left border border-frame-gray-3 bg-frame-black/30 p-4 hover:border-frame-orange hover:bg-frame-orange/[0.04] transition"
                 >
-                  <span className="font-frame-mono text-[0.55rem] tracking-[0.16em] text-frame-orange">
+                  <span className="font-frame-mono text-[0.64rem] tracking-[0.16em] text-frame-orange">
                     PROJETO #{project.id}
                   </span>
                   <h3 className="frame-title text-[1.45rem] mt-2">{project.name}</h3>

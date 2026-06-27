@@ -112,25 +112,6 @@ export default function Hero() {
           </motion.button>
         </motion.div>
       </motion.div>
-
-      {/* Stats */}
-      <motion.div
-        variants={itemVariants}
-        className="relative z-10 mt-8 grid grid-cols-3 gap-4 sm:absolute sm:bottom-16 sm:right-9 md:right-12 sm:mt-0 sm:flex sm:gap-12"
-      >
-        {HERO.stats.map((stat: any) => (
-          <div key={stat.label} className="text-center sm:text-right min-w-0">
-            <div
-              className="frame-title text-[1.7rem] sm:text-[2.3rem] text-frame-orange leading-none mb-1"
-            >
-              {stat.number}
-            </div>
-            <div className="font-frame-mono text-[0.48rem] sm:text-[0.56rem] tracking-[0.12em] sm:tracking-[0.15em] uppercase text-frame-gray-light leading-tight">
-              {stat.label}
-            </div>
-          </div>
-        ))}
-      </motion.div>
     </section>
   );
 }

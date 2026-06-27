@@ -1,6 +1,6 @@
 import { FOOTER_LINKS, SITE_CONFIG } from "@shared/site";
 import { motion } from "framer-motion";
-import { BadgeCheck, CreditCard, LockKeyhole, Receipt, ShieldCheck } from "lucide-react";
+import { ArrowUpRight, BadgeCheck, LockKeyhole, Receipt, ShieldCheck } from "lucide-react";
 import BrandLogo from "@/components/BrandLogo";
 
 /**
@@ -9,59 +9,77 @@ import BrandLogo from "@/components/BrandLogo";
  */
 export default function Footer() {
   const currentYear = new Date().getFullYear();
-  const paymentBrands = ["Visa", "Mastercard", "Elo", "Amex", "PIX"];
+  const trustItems = [
+    { icon: LockKeyhole, label: "Checkout seguro" },
+    { icon: ShieldCheck, label: "Dados protegidos" },
+    { icon: Receipt, label: "Planos claros" },
+  ];
 
   return (
-    <footer id="site-footer" className="bg-frame-black border-t border-frame-gray-3 px-6 py-16 sm:px-9 md:px-12">
-      <div className="max-w-7xl mx-auto space-y-10">
+    <footer id="site-footer" className="bg-frame-black border-t border-frame-gray-3 px-6 py-14 sm:px-9 md:px-12">
+      <div className="max-w-7xl mx-auto space-y-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-3 border border-frame-gray-3 bg-frame-gray-1/10"
+          className="grid grid-cols-1 gap-8 border-y border-frame-gray-3 py-8 lg:grid-cols-[1.1fr_0.9fr]"
         >
-          <div className="p-5 border-b md:border-b-0 md:border-r border-frame-gray-3">
-            <div className="flex items-center gap-2 mb-2 text-frame-orange">
-              <LockKeyhole className="w-4 h-4" />
-              <span className="font-frame-mono text-[0.55rem] tracking-[0.16em] uppercase">Checkout Seguro</span>
-            </div>
-            <p className="text-sm text-frame-gray-light leading-relaxed">Pagamentos processados em ambiente Stripe.</p>
+          <div>
+            <p className="frame-label mb-4">// Operação audiovisual</p>
+            <h2 className="frame-title max-w-3xl text-[clamp(2.4rem,5vw,5.4rem)] leading-[0.92] text-frame-white">
+              Feito por filmmakers,
+              <br />
+              <span className="text-frame-orange">para filmmakers.</span>
+            </h2>
           </div>
-          <div className="p-5 border-b md:border-b-0 md:border-r border-frame-gray-3">
-            <div className="flex items-center gap-2 mb-2 text-frame-orange">
-              <ShieldCheck className="w-4 h-4" />
-              <span className="font-frame-mono text-[0.55rem] tracking-[0.16em] uppercase">Dados do Estúdio</span>
+
+          <div className="flex flex-col justify-between gap-6 lg:items-end lg:text-right">
+            <p className="max-w-md text-[0.95rem] leading-relaxed text-frame-gray-light">
+              Projetos, IA, clientes, arquivos, aprovações e documentos no mesmo fluxo de produção.
+            </p>
+            <div className="flex flex-wrap gap-2 lg:justify-end">
+              {trustItems.map(({ icon: Icon, label }) => (
+                <span
+                  key={label}
+                  className="inline-flex items-center gap-2 border border-frame-gray-3 bg-frame-gray-1/25 px-3 py-2 font-frame-mono text-[0.62rem] uppercase tracking-[0.14em] text-frame-gray-light"
+                >
+                  <Icon className="h-3.5 w-3.5 text-frame-orange" />
+                  {label}
+                </span>
+              ))}
             </div>
-            <p className="text-sm text-frame-gray-light leading-relaxed">Projetos, clientes e documentos protegidos por autenticação.</p>
-          </div>
-          <div className="p-5">
-            <div className="flex items-center gap-2 mb-2 text-frame-orange">
-              <Receipt className="w-4 h-4" />
-              <span className="font-frame-mono text-[0.55rem] tracking-[0.16em] uppercase">Planos Claros</span>
-            </div>
-            <p className="text-sm text-frame-gray-light leading-relaxed">Free, Pro e Studio alinhados ao que o produto entrega hoje.</p>
           </div>
         </motion.div>
 
         {/* Top Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_1.45fr] gap-12 pb-10 border-b border-frame-gray-3">
+        <div className="grid grid-cols-1 gap-12 border-b border-frame-gray-3 pb-10 lg:grid-cols-[0.95fr_1.6fr]">
           {/* Brand */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <a href="/" className="mb-3 inline-block">
-              <BrandLogo className="scale-125 origin-left" />
+            <a href="/" className="mb-6 inline-block">
+              <BrandLogo className="h-14 w-auto" />
             </a>
-            <p className="text-frame-gray-light text-[0.8rem] font-light max-w-sm leading-relaxed">
+            <p className="max-w-md text-[0.92rem] font-light leading-relaxed text-frame-gray-light">
               Central operacional audiovisual para produtoras, filmmakers e equipes criativas:
               projetos, IA, clientes, arquivos, aprovações, documentos e equipe por job.
             </p>
-            <div className="mt-6 flex flex-wrap gap-2">
-              <span className="frame-tag">Produto BR</span>
-              <span className="frame-tag">Stripe test-ready</span>
-              <span className="frame-tag">Operação audiovisual</span>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <a
+                href="/login"
+                className="inline-flex items-center gap-2 border border-frame-orange bg-frame-orange px-4 py-2.5 font-frame-mono text-[0.64rem] uppercase tracking-[0.14em] text-frame-black transition hover:bg-frame-orange-dark"
+              >
+                Entrar no produto
+                <ArrowUpRight className="h-3.5 w-3.5" />
+              </a>
+              <a
+                href="#contact"
+                className="inline-flex items-center gap-2 border border-frame-gray-3 px-4 py-2.5 font-frame-mono text-[0.64rem] uppercase tracking-[0.14em] text-frame-gray-light transition hover:border-frame-gray-2 hover:text-frame-white"
+              >
+                Agendar demo
+              </a>
             </div>
           </motion.div>
 
@@ -71,19 +89,19 @@ export default function Footer() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="grid grid-cols-2 sm:grid-cols-4 gap-8"
+            className="grid grid-cols-2 gap-x-8 gap-y-9 sm:grid-cols-4"
           >
             {Object.entries(FOOTER_LINKS).map(([key, section]: any) => (
               <div key={key}>
-                <h4 className="font-frame-mono text-[0.56rem] tracking-[0.2em] uppercase text-frame-orange mb-4">
+                <h4 className="mb-5 font-frame-mono text-[0.64rem] uppercase tracking-[0.2em] text-frame-orange">
                   {section.title}
                 </h4>
-                <ul className="space-y-2">
+                <ul className="space-y-3">
                   {section.links.map((link: any) => (
                     <li key={link.href}>
                       <a
                         href={link.href}
-                        className="text-[0.82rem] text-frame-gray-light hover:text-frame-white transition-colors"
+                        className="text-[0.9rem] text-frame-gray-light transition-colors hover:text-frame-white"
                       >
                         {link.label}
                       </a>
@@ -95,34 +113,12 @@ export default function Footer() {
           </motion.div>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="flex flex-col gap-4 pb-10 border-b border-frame-gray-3 md:flex-row md:items-center md:justify-between"
-        >
-          <div className="flex items-center gap-2 text-frame-white">
-            <CreditCard className="w-4 h-4 text-frame-orange" />
-            <span className="font-frame-mono text-[0.58rem] tracking-[0.18em] uppercase">Pagamentos</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {paymentBrands.map((brand) => (
-              <span
-                key={brand}
-                className="border border-frame-gray-3 bg-frame-gray-1/40 px-3 py-1.5 font-frame-mono text-[0.5rem] tracking-[0.12em] uppercase text-frame-gray-light"
-              >
-                {brand}
-              </span>
-            ))}
-          </div>
-        </motion.div>
-
         {/* Bottom Section */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="flex flex-col lg:flex-row justify-between gap-5 font-frame-mono text-[0.56rem] tracking-[0.08em] text-frame-gray-muted"
+          className="flex flex-col justify-between gap-5 font-frame-mono text-[0.64rem] tracking-[0.08em] text-frame-gray-muted lg:flex-row"
         >
           <div className="max-w-2xl leading-relaxed">
             © {currentYear} {SITE_CONFIG.title}. Todos os direitos reservados. Plataforma em evolução contínua;

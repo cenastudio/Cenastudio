@@ -397,23 +397,50 @@ export function listAllUsers(): Array<{
   created_at: string;
   plan_name: string | null;
   generation_limit: number | null;
+  project_count: number;
+  file_count: number;
+  review_count: number;
 }> {
   return db
     .prepare(
       `SELECT u.id, u.name, u.email, u.role, u.github_id, u.created_at,
-              p.name as plan_name, p.generation_limit
+              p.name as plan_name, p.generation_limit,
+              COUNT(DISTINCT pr.id) as project_count,
+              COUNT(DISTINCT f.id) as file_count,
+              COUNT(DISTINCT vr.id) as review_count
        FROM users u
        LEFT JOIN subscriptions s ON s.user_id = u.id
        LEFT JOIN plans p ON p.id = s.plan_id
+       LEFT JOIN projects pr ON pr.user_id = u.id
+       LEFT JOIN files f ON f.user_id = u.id
+       LEFT JOIN video_reviews vr ON vr.user_id = u.id
+       GROUP BY u.id
        ORDER BY u.created_at DESC`,
     )
     .all() as any[];
 }
 
-export function updateUserRole(userId: number, role: string) {
+export function updateUserRole(userId: number, role: string, actorId?: number) {
   if (!["user", "admin"].includes(role)) {
     throw new AppError("Invalid role. Must be 'user' or 'admin'.", 400);
   }
+
+  const user = db.prepare("SELECT id, role FROM users WHERE id = ?").get(userId) as
+    | { id: number; role: string }
+    | undefined;
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+  if (actorId === userId && role !== "admin") {
+    throw new AppError("Você não pode remover seu próprio acesso admin.", 400);
+  }
+  if (user.role === "admin" && role !== "admin") {
+    const row = db.prepare("SELECT COUNT(*) as c FROM users WHERE role = 'admin'").get() as { c: number };
+    if (row.c <= 1) {
+      throw new AppError("Mantenha pelo menos um administrador ativo.", 400);
+    }
+  }
+
   const result = db.prepare("UPDATE users SET role = ? WHERE id = ?").run(role, userId);
   if (result.changes === 0) {
     throw new AppError("User not found", 404);
@@ -431,4 +458,53 @@ export function updateUserPlan(userId: number, planId: string) {
   } else {
     db.prepare("INSERT INTO subscriptions (user_id, plan_id, status, current_period_end) VALUES (?, ?, 'active', datetime('now', '+1 month'))").run(userId, planId);
   }
+}
+
+export function deleteManagedUser(userId: number, actorId: number) {
+  if (userId === actorId) {
+    throw new AppError("Você não pode apagar a própria conta enquanto está logado.", 400);
+  }
+
+  const user = db
+    .prepare("SELECT id, email, role FROM users WHERE id = ?")
+    .get(userId) as { id: number; email: string; role: string } | undefined;
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  if (user.role === "admin") {
+    const row = db.prepare("SELECT COUNT(*) as c FROM users WHERE role = 'admin'").get() as { c: number };
+    if (row.c <= 1) {
+      throw new AppError("Mantenha pelo menos um administrador ativo.", 400);
+    }
+  }
+
+  const summary = db
+    .prepare(
+      `SELECT
+         (SELECT COUNT(*) FROM projects WHERE user_id = ?) as projects,
+         (SELECT COUNT(*) FROM clients WHERE user_id = ?) as clients,
+         (SELECT COUNT(*) FROM files WHERE user_id = ?) as files,
+         (SELECT COUNT(*) FROM video_reviews WHERE user_id = ?) as reviews,
+         (SELECT COUNT(*) FROM generations WHERE user_id = ?) as generations`,
+    )
+    .get(userId, userId, userId, userId, userId) as {
+    projects: number;
+    clients: number;
+    files: number;
+    reviews: number;
+    generations: number;
+  };
+
+  const remove = db.transaction(() => {
+    db.prepare("DELETE FROM users WHERE id = ?").run(userId);
+  });
+  remove();
+
+  return {
+    id: userId,
+    email: user.email,
+    deleted: true,
+    summary,
+  };
 }

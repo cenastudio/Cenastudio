@@ -53,6 +53,7 @@
 :root {
   --frame-orange-bg: rgba(255, 77, 0, 0.09);
   --radius: 2px;
+  --app-font-scale: 1.06;
 
   --background: #000000;
   --foreground: #f5f0e8;
@@ -152,7 +153,6 @@
   border-color: #aaaaaa;
   background: rgba(0, 0, 0, 0.02);
 }
-
 .cinematic-theme {
   --color-frame-black: #000000;
   --color-frame-white: #f5f0e8;
@@ -178,11 +178,29 @@
 
   html {
     scroll-behavior: smooth;
+    font-size: calc(16px * var(--app-font-scale, 1.06));
+    overflow-x: hidden;
+    text-rendering: optimizeLegibility;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-frame-body);
+    min-width: 320px;
+  }
+
+  ::selection {
+    background: var(--color-frame-orange);
+    color: #000;
+  }
+
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
+  h1, h2, h3 {
+    text-wrap: balance;
   }
 
   /* Unified focus ring (premium, minimal) */
@@ -265,8 +283,12 @@
 
   .frame-btn-primary:hover:not(:disabled) {
     background: var(--color-frame-orange-dark);
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     box-shadow: var(--ds-shadow-glow);
+  }
+
+  .frame-btn-primary:active:not(:disabled) {
+    transform: translateY(0) scale(0.99);
   }
 
   .frame-btn-primary:disabled {
@@ -287,6 +309,7 @@
     transition: color var(--ds-dur-2) var(--ds-ease-out),
       border-color var(--ds-dur-2) var(--ds-ease-out),
       background var(--ds-dur-2) var(--ds-ease-out);
+    min-height: 42px;
   }
 
   .frame-btn-ghost:hover {
@@ -297,8 +320,8 @@
 
   /* Tool card — tcard */
   .frame-card {
-    background: var(--color-frame-gray-2);
-    border: 1px solid transparent;
+    background: rgba(21, 21, 21, 0.88);
+    border: 1px solid var(--color-frame-gray-3);
     padding: 34px 30px;
     position: relative;
     overflow: hidden;
@@ -319,9 +342,10 @@
   }
 
   .frame-card:hover {
-    background: #262626;
+    background: #181818;
     border-color: var(--color-frame-orange);
     transform: translateY(-1px);
+    box-shadow: var(--ds-shadow-2);
   }
 
   .frame-card:hover::before {
@@ -341,6 +365,8 @@
     outline: none;
     transition: border-color var(--ds-dur-2) var(--ds-ease-out),
       background var(--ds-dur-2) var(--ds-ease-out);
+    min-height: 44px;
+    line-height: 1.5;
   }
 
   .frame-input:focus {
@@ -362,8 +388,12 @@
     align-items: center;
     padding: 15px 36px;
     background: rgba(0, 0, 0, 0.97);
+    min-height: 64px;
+    gap: 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+    -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--color-frame-gray-3);
   }
 
   @media (max-width: 767px) {
@@ -396,6 +426,9 @@
     transition: color 0.2s, background 0.2s;
     background: none;
     border: none;
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
   }
 
   .frame-nav-link:hover,
@@ -489,5 +522,41 @@
       padding-right: 2rem;
       max-width: 1280px;
     }
+  }
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-frame-gray-3) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--color-frame-gray-3);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-frame-gray-muted);
+  background-clip: padding-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

@@ -81,7 +81,7 @@ function ProfileContent() {
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
       <AppNavBar />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-12 md:py-16 space-y-8">
+      <main id="main-content" className="flex-1 max-w-6xl w-full mx-auto px-6 py-12 md:py-16 space-y-8">
         <div className="border-b border-frame-gray-3 pb-6">
           <p className="frame-label mb-2">// Conta</p>
           <h1 className="frame-title text-[clamp(2.2rem,4vw,3.8rem)]">
@@ -105,7 +105,7 @@ function ProfileContent() {
                 {(user?.name ?? user?.email ?? "F").charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0">
-                <p className="font-frame-mono text-[0.58rem] tracking-[0.18em] text-frame-orange uppercase">
+                <p className="font-frame-mono text-[0.64rem] tracking-[0.18em] text-frame-orange uppercase">
                   Usuario ativo
                 </p>
                 <h2 className="frame-title text-[2rem] mt-1 truncate">
@@ -118,7 +118,7 @@ function ProfileContent() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-8">
               <div className="border border-frame-gray-3 bg-frame-gray-1 p-4">
                 <UserRound className="w-5 h-5 text-frame-orange mb-3" />
-                <p className="font-frame-mono text-[0.58rem] tracking-[0.16em] uppercase text-frame-gray-light">
+                <p className="font-frame-mono text-[0.64rem] tracking-[0.16em] uppercase text-frame-gray-light">
                   Tipo de conta
                 </p>
                 <p className="text-lg font-semibold mt-1">
@@ -127,7 +127,7 @@ function ProfileContent() {
               </div>
               <div className="border border-frame-gray-3 bg-frame-gray-1 p-4">
                 <ShieldCheck className="w-5 h-5 text-frame-orange mb-3" />
-                <p className="font-frame-mono text-[0.58rem] tracking-[0.16em] uppercase text-frame-gray-light">
+                <p className="font-frame-mono text-[0.64rem] tracking-[0.16em] uppercase text-frame-gray-light">
                   Acesso
                 </p>
                 <p className="text-lg font-semibold mt-1">
@@ -153,7 +153,7 @@ function ProfileContent() {
 
           <div className="border border-frame-gray-3 bg-frame-gray-2/55 p-6 space-y-5 shadow-[0_18px_60px_rgba(0,0,0,0.32)]">
             <div>
-              <p className="font-frame-mono text-[0.58rem] tracking-[0.18em] text-frame-orange uppercase">
+              <p className="font-frame-mono text-[0.64rem] tracking-[0.18em] text-frame-orange uppercase">
                 Dados editáveis
               </p>
               <h2 className="frame-title text-[2rem] mt-1">STUDIO / USUÁRIO</h2>
@@ -200,7 +200,7 @@ function ProfileContent() {
             <div className="border border-frame-gold/50 bg-frame-gold/10 p-6 shadow-[0_18px_60px_rgba(0,0,0,0.32)]">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="font-frame-mono text-[0.58rem] tracking-[0.18em] text-frame-gold uppercase">
+                  <p className="font-frame-mono text-[0.64rem] tracking-[0.18em] text-frame-gold uppercase">
                     Administracao
                   </p>
                   <h2 className="frame-title text-[2rem] mt-1">GERENCIAR CONTAS</h2>
@@ -220,7 +220,7 @@ function ProfileContent() {
               <div className="grid grid-cols-2 gap-3 mt-5">
                 <div className="border border-frame-gold/35 bg-frame-black/60 p-4">
                   <Settings className="w-5 h-5 text-frame-gold mb-3" />
-                  <p className="font-frame-mono text-[0.55rem] tracking-[0.16em] uppercase text-frame-gray-light">
+                  <p className="font-frame-mono text-[0.64rem] tracking-[0.16em] uppercase text-frame-gray-light">
                     Painel Admin
                   </p>
                   <button
@@ -233,7 +233,7 @@ function ProfileContent() {
                 </div>
                 <div className="border border-frame-gold/35 bg-frame-black/60 p-4">
                   <Users className="w-5 h-5 text-frame-gold mb-3" />
-                  <p className="font-frame-mono text-[0.55rem] tracking-[0.16em] uppercase text-frame-gray-light">
+                  <p className="font-frame-mono text-[0.64rem] tracking-[0.16em] uppercase text-frame-gray-light">
                     Usuarios
                   </p>
                   <p className="text-lg font-semibold mt-1 text-frame-gold">
@@ -247,7 +247,7 @@ function ProfileContent() {
           <div className="border border-frame-gray-3 bg-frame-gray-2/55 p-6 space-y-6 shadow-[0_18px_60px_rgba(0,0,0,0.32)]">
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
               <div>
-                <p className="font-frame-mono text-[0.58rem] tracking-[0.18em] text-frame-orange uppercase">
+                <p className="font-frame-mono text-[0.64rem] tracking-[0.18em] text-frame-orange uppercase">
                   Plano atual
                 </p>
                 <h2 className="frame-title text-[2.4rem] mt-1">{planLabel}</h2>
@@ -263,14 +263,14 @@ function ProfileContent() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="border border-frame-gray-3 bg-frame-gray-1 p-4">
                 <Crown className="w-5 h-5 text-frame-gold mb-3" />
-                <p className="font-frame-mono text-[0.55rem] tracking-[0.16em] uppercase text-frame-gray-light">
+                <p className="font-frame-mono text-[0.64rem] tracking-[0.16em] uppercase text-frame-gray-light">
                   Status
                 </p>
                 <p className="text-lg font-semibold mt-1">{plan?.status || "—"}</p>
               </div>
               <div className="border border-frame-gray-3 bg-frame-gray-1 p-4">
                 <Zap className="w-5 h-5 text-frame-orange mb-3" />
-                <p className="font-frame-mono text-[0.55rem] tracking-[0.16em] uppercase text-frame-gray-light">
+                <p className="font-frame-mono text-[0.64rem] tracking-[0.16em] uppercase text-frame-gray-light">
                   Geracoes
                 </p>
                 <p className="text-lg font-semibold mt-1">
@@ -279,7 +279,7 @@ function ProfileContent() {
               </div>
               <div className="border border-frame-gray-3 bg-frame-gray-1 p-4">
                 <CalendarClock className="w-5 h-5 text-frame-orange mb-3" />
-                <p className="font-frame-mono text-[0.55rem] tracking-[0.16em] uppercase text-frame-gray-light">
+                <p className="font-frame-mono text-[0.64rem] tracking-[0.16em] uppercase text-frame-gray-light">
                   Trial ate
                 </p>
                 <p className="text-sm font-semibold mt-1">{formatDate(plan?.trialEndsAt)}</p>
@@ -287,7 +287,7 @@ function ProfileContent() {
             </div>
 
             <div className="border-t border-frame-gray-3 pt-5">
-              <p className="font-frame-mono text-[0.58rem] tracking-[0.18em] uppercase text-frame-gray-light mb-3">
+              <p className="font-frame-mono text-[0.64rem] tracking-[0.18em] uppercase text-frame-gray-light mb-3">
                 Recursos liberados
               </p>
               <div className="flex flex-wrap gap-2">

@@ -8,12 +8,12 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
     <div className="space-y-4">
       {/* Seção 1: Cena */}
       <div>
-        <p className="font-frame-mono text-[0.54rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
+        <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
           // Cena
         </p>
         <div className="space-y-3">
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Descrição da Cena
             </label>
             <textarea
@@ -27,7 +27,7 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+              <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
                 Nº Estimado de Planos
               </label>
               <input
@@ -39,7 +39,7 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
               />
             </div>
             <div>
-              <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+              <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
                 Duração Estimada
               </label>
               <input
@@ -56,12 +56,12 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
 
       {/* Seção 2: Câmera */}
       <div className="pt-2 border-t border-frame-gray-2">
-        <p className="font-frame-mono text-[0.54rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
+        <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
           // Câmera & Estilo Visual
         </p>
         <div className="space-y-3">
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Modelo da Câmera / Sensor
             </label>
             <input
@@ -74,7 +74,7 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
           </div>
 
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Estilo de Movimento
             </label>
             <select
@@ -91,7 +91,7 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
           </div>
 
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Referência Estética / Fotografia
             </label>
             <input
@@ -104,7 +104,7 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
           </div>
 
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Equipe Técnica Principal
             </label>
             <input
@@ -117,7 +117,7 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
           </div>
 
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Observações / Luz Disponível
             </label>
             <textarea

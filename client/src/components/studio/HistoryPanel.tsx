@@ -66,14 +66,14 @@ export default function HistoryPanel({ isOpen, onClose, toolId, onRestore }: His
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12 gap-3 opacity-60">
             <Loader2 className="w-6 h-6 animate-spin text-frame-orange" />
-            <span className="font-frame-mono text-[0.58rem] uppercase tracking-wider text-frame-gray-light">
+            <span className="font-frame-mono text-[0.64rem] uppercase tracking-wider text-frame-gray-light">
               Carregando histórico...
             </span>
           </div>
         ) : items.length === 0 ? (
           <div className="text-center py-12 opacity-30 flex flex-col items-center justify-center gap-2">
             <span className="text-3xl">📁</span>
-            <p className="font-frame-mono text-[0.58rem] uppercase tracking-widest text-frame-gray-light leading-relaxed">
+            <p className="font-frame-mono text-[0.64rem] uppercase tracking-widest text-frame-gray-light leading-relaxed">
               Nenhuma geração
               <br />
               encontrada
@@ -111,10 +111,10 @@ export default function HistoryPanel({ isOpen, onClose, toolId, onRestore }: His
               >
                 <div>
                   <div className="flex justify-between items-start gap-2">
-                    <span className="font-frame-mono text-[0.55rem] text-frame-gray-light">
+                    <span className="font-frame-mono text-[0.64rem] text-frame-gray-light">
                       {formattedDate}
                     </span>
-                    <span className="font-frame-mono text-[0.52rem] text-frame-gold/70 bg-frame-gold/5 border border-frame-gold/10 px-1.5 py-0.5 rounded-sm">
+                    <span className="font-frame-mono text-[0.62rem] text-frame-gold/70 bg-frame-gold/5 border border-frame-gold/10 px-1.5 py-0.5 rounded-sm">
                       #{item.id}
                     </span>
                   </div>
@@ -132,7 +132,7 @@ export default function HistoryPanel({ isOpen, onClose, toolId, onRestore }: His
                     onRestore(parsedInput, item.output);
                     toast.success(`Geração #${item.id} restaurada!`);
                   }}
-                  className="w-full py-1.5 font-frame-mono text-[0.58rem] tracking-[0.1em] uppercase border border-frame-gray-3 text-frame-gray-light bg-transparent transition hover:border-frame-gold hover:text-frame-gold hover:bg-frame-gold/5 flex items-center justify-center gap-1.5"
+                  className="w-full py-1.5 font-frame-mono text-[0.64rem] tracking-[0.1em] uppercase border border-frame-gray-3 text-frame-gray-light bg-transparent transition hover:border-frame-gold hover:text-frame-gold hover:bg-frame-gold/5 flex items-center justify-center gap-1.5"
                 >
                   <Eye className="w-3.5 h-3.5" />
                   Visualizar / Restaurar

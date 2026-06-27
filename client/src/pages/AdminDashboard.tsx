@@ -103,7 +103,7 @@ function AdminContent() {
           <button
             type="button"
             onClick={() => setLocation("/tools")}
-            className="font-frame-mono text-[0.58rem] tracking-[0.09em] uppercase bg-transparent border border-frame-gray-3 text-frame-gray-light px-2.5 py-1.5 transition hover:border-frame-orange hover:text-frame-orange flex items-center gap-1.5"
+            className="font-frame-mono text-[0.64rem] tracking-[0.09em] uppercase bg-transparent border border-frame-gray-3 text-frame-gray-light px-2.5 py-1.5 transition hover:border-frame-orange hover:text-frame-orange flex items-center gap-1.5"
           >
             <ArrowLeft className="w-3 h-3" />
             Voltar
@@ -116,14 +116,14 @@ function AdminContent() {
             <BrandLogo compact className="scale-90 origin-left" />
           </button>
         </div>
-        <p className="font-frame-mono text-[0.58rem] tracking-[0.14em] uppercase text-frame-gold hidden sm:block">
+        <p className="font-frame-mono text-[0.64rem] tracking-[0.14em] uppercase text-frame-gold hidden sm:block">
           Admin
         </p>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setLocation("/admin/gerenciar")}
-            className="font-frame-mono text-[0.58rem] tracking-[0.09em] uppercase bg-transparent border border-frame-gold/50 text-frame-gold px-2.5 py-1.5 transition hover:border-frame-orange hover:text-frame-orange flex items-center gap-1.5"
+            className="font-frame-mono text-[0.64rem] tracking-[0.09em] uppercase bg-transparent border border-frame-gold/50 text-frame-gold px-2.5 py-1.5 transition hover:border-frame-orange hover:text-frame-orange flex items-center gap-1.5"
           >
             <Users className="w-3 h-3" />
             Usuarios
@@ -131,7 +131,7 @@ function AdminContent() {
           <button
             type="button"
             onClick={handleLogout}
-            className="font-frame-mono text-[0.58rem] tracking-[0.09em] uppercase bg-transparent border border-frame-gray-3 text-frame-gray-light px-2.5 py-1.5 transition hover:border-frame-red hover:text-frame-red flex items-center gap-1.5"
+            className="font-frame-mono text-[0.64rem] tracking-[0.09em] uppercase bg-transparent border border-frame-gray-3 text-frame-gray-light px-2.5 py-1.5 transition hover:border-frame-red hover:text-frame-red flex items-center gap-1.5"
           >
             <LogOut className="w-3 h-3" />
             Sair
@@ -161,7 +161,7 @@ function AdminContent() {
                 className={`bg-frame-gray-2 border border-frame-gray-3 p-5 relative overflow-hidden border-b-2 ${stat.accent}`}
               >
                 <div className="flex items-center justify-between gap-3">
-                  <p className="font-frame-mono text-[0.56rem] tracking-[0.14em] uppercase text-frame-gray-light">
+                  <p className="font-frame-mono text-[0.64rem] tracking-[0.14em] uppercase text-frame-gray-light">
                     {stat.label}
                   </p>
                   <Icon className="w-4 h-4 text-frame-gray-light" />
@@ -251,12 +251,12 @@ function AdminContent() {
                   <div key={user.id} className="border border-frame-gray-3 p-3 bg-frame-black/25">
                     <div className="flex items-center justify-between gap-2">
                       <p className="font-medium truncate">{user.name || "Sem nome"}</p>
-                      <span className="font-frame-mono text-[0.52rem] uppercase text-frame-orange">
+                      <span className="font-frame-mono text-[0.62rem] uppercase text-frame-orange">
                         {user.plan_name || "Sem plano"}
                       </span>
                     </div>
                     <p className="text-xs text-frame-gray-light truncate mt-1">{user.email}</p>
-                    <p className="text-[0.55rem] text-frame-gray-muted font-frame-mono uppercase mt-1">
+                    <p className="text-[0.64rem] text-frame-gray-muted font-frame-mono uppercase mt-1">
                       {user.role === "admin" ? "Admin" : "Usuario"}
                     </p>
                   </div>

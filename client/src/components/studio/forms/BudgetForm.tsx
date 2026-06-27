@@ -8,12 +8,12 @@ export default function BudgetForm({ data, onChange }: FormProps) {
     <div className="space-y-4">
       {/* Seção 1: Escopo do Projeto */}
       <div>
-        <p className="font-frame-mono text-[0.54rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
+        <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
           // Escopo do Projeto
         </p>
         <div className="space-y-3">
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Tipo de Produção
             </label>
             <select
@@ -33,7 +33,7 @@ export default function BudgetForm({ data, onChange }: FormProps) {
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+              <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
                 Dias de Filmagem
               </label>
               <input
@@ -45,7 +45,7 @@ export default function BudgetForm({ data, onChange }: FormProps) {
               />
             </div>
             <div>
-              <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+              <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
                 Nº de Locações
               </label>
               <input
@@ -62,12 +62,12 @@ export default function BudgetForm({ data, onChange }: FormProps) {
 
       {/* Seção 2: Recursos */}
       <div className="pt-2 border-t border-frame-gray-2">
-        <p className="font-frame-mono text-[0.54rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
+        <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
           // Recursos & Equipe
         </p>
         <div className="space-y-3">
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Tamanho da Equipe Técnica
             </label>
             <select
@@ -82,7 +82,7 @@ export default function BudgetForm({ data, onChange }: FormProps) {
           </div>
 
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Elenco / Apresentadores / Atores
             </label>
             <select
@@ -101,12 +101,12 @@ export default function BudgetForm({ data, onChange }: FormProps) {
 
       {/* Seção 3: Equipamento */}
       <div className="pt-2 border-t border-frame-gray-2">
-        <p className="font-frame-mono text-[0.54rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
+        <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
           // Infraestrutura & Equipamento
         </p>
         <div className="space-y-3">
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Câmeras & Ópticas
             </label>
             <select
@@ -122,7 +122,7 @@ export default function BudgetForm({ data, onChange }: FormProps) {
           </div>
 
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Drone e Capturas Aéreas
             </label>
             <select
@@ -137,7 +137,7 @@ export default function BudgetForm({ data, onChange }: FormProps) {
           </div>
 
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Kit de Iluminação
             </label>
             <select
@@ -155,12 +155,12 @@ export default function BudgetForm({ data, onChange }: FormProps) {
 
       {/* Seção 4: Pós-produção */}
       <div className="pt-2 border-t border-frame-gray-2">
-        <p className="font-frame-mono text-[0.54rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
+        <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
           // Pós-Produção & Finalização
         </p>
         <div className="space-y-3">
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Serviços de Edição / Montagem
             </label>
             <select
@@ -175,7 +175,7 @@ export default function BudgetForm({ data, onChange }: FormProps) {
           </div>
 
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Trilha Sonora & Direitos
             </label>
             <select

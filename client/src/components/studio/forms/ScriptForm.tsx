@@ -8,12 +8,12 @@ export default function ScriptForm({ data, onChange }: FormProps) {
     <div className="space-y-4">
       {/* Seção 1: Projeto */}
       <div>
-        <p className="font-frame-mono text-[0.54rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
+        <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
           // Projeto
         </p>
         <div className="space-y-3">
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Título do Roteiro
             </label>
             <input
@@ -26,7 +26,7 @@ export default function ScriptForm({ data, onChange }: FormProps) {
           </div>
 
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Formato
             </label>
             <select
@@ -47,7 +47,7 @@ export default function ScriptForm({ data, onChange }: FormProps) {
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+              <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
                 Duração
               </label>
               <input
@@ -59,7 +59,7 @@ export default function ScriptForm({ data, onChange }: FormProps) {
               />
             </div>
             <div>
-              <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+              <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
                 Gênero / Tom
               </label>
               <input
@@ -76,12 +76,12 @@ export default function ScriptForm({ data, onChange }: FormProps) {
 
       {/* Seção 2: História */}
       <div className="pt-2 border-t border-frame-gray-2">
-        <p className="font-frame-mono text-[0.54rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
+        <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
           // História & Conceito
         </p>
         <div className="space-y-3">
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Sinopse / Ideia Base
             </label>
             <textarea
@@ -94,7 +94,7 @@ export default function ScriptForm({ data, onChange }: FormProps) {
           </div>
 
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Personagens
             </label>
             <input
@@ -107,7 +107,7 @@ export default function ScriptForm({ data, onChange }: FormProps) {
           </div>
 
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Locações
             </label>
             <input
@@ -120,7 +120,7 @@ export default function ScriptForm({ data, onChange }: FormProps) {
           </div>
 
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Referências Estéticas
             </label>
             <input
@@ -133,7 +133,7 @@ export default function ScriptForm({ data, onChange }: FormProps) {
           </div>
 
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Observações Especiais
             </label>
             <textarea

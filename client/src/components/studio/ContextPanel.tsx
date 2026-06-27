@@ -9,7 +9,7 @@ export default function ContextPanel() {
     <div className="mt-auto px-[18px] py-4 border-t border-frame-gray-3 bg-frame-black/50 shrink-0">
       <div className="flex items-center gap-2 text-frame-gray-light">
         <div className="w-1.5 h-1.5 rounded-full bg-frame-orange animate-pulse" />
-        <span className="font-frame-mono text-[0.55rem] tracking-wider uppercase">
+        <span className="font-frame-mono text-[0.64rem] tracking-wider uppercase">
           NVIDIA MiniMax / IA
         </span>
       </div>

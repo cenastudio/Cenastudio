@@ -8,12 +8,12 @@ export default function ContractForm({ data, onChange }: FormProps) {
     <div className="space-y-4">
       {/* Seção 1: Modelo Contratual */}
       <div>
-        <p className="font-frame-mono text-[0.54rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
+        <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
           // Tipo de Instrumento
         </p>
         <div className="space-y-3">
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Modelo de Contrato
             </label>
             <select
@@ -34,13 +34,13 @@ export default function ContractForm({ data, onChange }: FormProps) {
 
       {/* Seção 2: Partes Contratantes */}
       <div className="pt-2 border-t border-frame-gray-2">
-        <p className="font-frame-mono text-[0.54rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
+        <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
           // Partes Envolvidas
         </p>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+              <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
                 Contratante (Cliente)
               </label>
               <input
@@ -52,7 +52,7 @@ export default function ContractForm({ data, onChange }: FormProps) {
               />
             </div>
             <div>
-              <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+              <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
                 CPF / CNPJ Contratante
               </label>
               <input
@@ -67,7 +67,7 @@ export default function ContractForm({ data, onChange }: FormProps) {
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+              <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
                 Contratado (Você)
               </label>
               <input
@@ -79,7 +79,7 @@ export default function ContractForm({ data, onChange }: FormProps) {
               />
             </div>
             <div>
-              <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+              <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
                 CPF / CNPJ Contratado
               </label>
               <input
@@ -96,12 +96,12 @@ export default function ContractForm({ data, onChange }: FormProps) {
 
       {/* Seção 3: Objeto do Serviço */}
       <div className="pt-2 border-t border-frame-gray-2">
-        <p className="font-frame-mono text-[0.54rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
+        <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
           // Objeto & Termos
         </p>
         <div className="space-y-3">
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Objeto (Descrição do Serviço)
             </label>
             <textarea
@@ -115,7 +115,7 @@ export default function ContractForm({ data, onChange }: FormProps) {
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+              <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
                 Valor Total (BRL)
               </label>
               <input
@@ -127,7 +127,7 @@ export default function ContractForm({ data, onChange }: FormProps) {
               />
             </div>
             <div>
-              <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+              <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
                 Prazo de Vigência/Entrega
               </label>
               <input
@@ -141,7 +141,7 @@ export default function ContractForm({ data, onChange }: FormProps) {
           </div>
 
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Foro para Resolução de Conflitos
             </label>
             <input

@@ -138,7 +138,9 @@ export async function generateForTool(
     throw new AppError("Input is required", 400);
   }
 
-  const system = `${tool.promptRole}\n\nFerramenta: ${tool.name}. Responda em português do Brasil, formato profissional para produção audiovisual.`;
+  const outputStyle = `\n\nFormato de entrega obrigatório:\n- Entregue como documento final limpo, pronto para cliente/exportação.\n- Não use Markdown bruto: sem #, **, listas com *, blocos de código, aspas decorativas ou sintaxe de programação.\n- Use títulos em texto simples, bullets com • quando necessário e parágrafos curtos.\n- A resposta deve parecer um documento de produção audiovisual, não uma nota técnica de IA.`;
+
+  const system = `${tool.promptRole}\n\nFerramenta: ${tool.name}. Responda em português do Brasil, formato profissional para produção audiovisual.${outputStyle}`;
   const output =
     provider === "nvidia"
       ? await generateWithNvidia(system, userText)

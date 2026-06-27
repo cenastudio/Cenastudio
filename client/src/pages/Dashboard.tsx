@@ -207,7 +207,7 @@ function DashboardContent() {
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
       <AppNavBar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-10 md:py-16 space-y-12">
+      <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-6 py-10 md:py-16 space-y-12">
         {/* Cinematic Header Block */}
         <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-frame-gray-3 pb-6 gap-6">
           <div>
@@ -223,13 +223,13 @@ function DashboardContent() {
           {/* Quick Stats Grid */}
           <div className="flex flex-wrap gap-4 shrink-0 font-frame-mono">
             <div className="px-4 py-3 border border-frame-gray-3 bg-frame-gray-1/30 min-w-[120px]">
-              <span className="block text-[0.52rem] text-frame-gray-light tracking-widest uppercase mb-1">
+              <span className="block text-[0.62rem] text-frame-gray-light tracking-widest uppercase mb-1">
                 Projetos
               </span>
               <span className="text-xl font-bold text-frame-white">{projects.length}</span>
             </div>
             <div className="px-4 py-3 border border-frame-gray-3 bg-frame-gray-1/30 min-w-[140px]">
-              <span className="block text-[0.52rem] text-frame-gray-light tracking-widest uppercase mb-1">
+              <span className="block text-[0.62rem] text-frame-gray-light tracking-widest uppercase mb-1">
                 Plano Atual
               </span>
               <span className="text-sm font-semibold text-frame-orange block truncate">
@@ -296,7 +296,7 @@ function DashboardContent() {
 
           <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-5">
             <div className="flex items-center justify-between mb-3">
-              <span className="font-frame-mono text-[0.55rem] tracking-[0.15em] uppercase text-frame-gray-light">
+              <span className="font-frame-mono text-[0.64rem] tracking-[0.15em] uppercase text-frame-gray-light">
                 Projetos ativos
               </span>
               <CheckCircle2 className="w-4 h-4 text-frame-orange" />
@@ -307,7 +307,7 @@ function DashboardContent() {
 
           <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-5">
             <div className="flex items-center justify-between mb-3">
-              <span className="font-frame-mono text-[0.55rem] tracking-[0.15em] uppercase text-frame-gray-light">
+              <span className="font-frame-mono text-[0.64rem] tracking-[0.15em] uppercase text-frame-gray-light">
                 Briefings pendentes
               </span>
               <AlertCircle className="w-4 h-4 text-frame-orange" />
@@ -349,7 +349,7 @@ function DashboardContent() {
                         </button>
 
                         <div className="space-y-2 pr-6">
-                          <span className="font-frame-mono text-[0.52rem] tracking-wider text-frame-gray-light block">
+                          <span className="font-frame-mono text-[0.62rem] tracking-wider text-frame-gray-light block">
                             PROJETO ID: #{p.id}
                           </span>
                           <h4 className="frame-title text-[1.4rem] text-frame-white group-hover:text-frame-orange transition-colors">
@@ -364,12 +364,12 @@ function DashboardContent() {
                         {goals && (goals.format || goals.tone) && (
                           <div className="flex flex-wrap gap-1.5 pt-3 border-t border-frame-gray-3/40 mt-3 font-frame-mono">
                             {goals.format && (
-                              <span className="text-[0.52rem] tracking-wider text-frame-orange bg-frame-orange/[0.08] px-2 py-0.5 border border-frame-orange/10">
+                              <span className="text-[0.62rem] tracking-wider text-frame-orange bg-frame-orange/[0.08] px-2 py-0.5 border border-frame-orange/10">
                                 {goals.format}
                               </span>
                             )}
                             {goals.tone && (
-                              <span className="text-[0.52rem] tracking-wider text-frame-white bg-frame-gray-2 px-2 py-0.5 border border-frame-gray-3">
+                              <span className="text-[0.62rem] tracking-wider text-frame-white bg-frame-gray-2 px-2 py-0.5 border border-frame-gray-3">
                                 {goals.tone}
                               </span>
                             )}
@@ -391,7 +391,7 @@ function DashboardContent() {
                     Todos os Projetos
                   </h3>
                 </div>
-                <span className="font-frame-mono text-[0.55rem] text-frame-gray-light">
+                <span className="font-frame-mono text-[0.64rem] text-frame-gray-light">
                   Total: {projects.length}
                 </span>
               </div>
@@ -434,7 +434,7 @@ function DashboardContent() {
                               {p.name}
                             </h4>
                             {goals?.format && (
-                              <span className="font-frame-mono text-[0.52rem] text-frame-gray-light bg-frame-gray-2 px-1.5 py-0.5 border border-frame-gray-3">
+                              <span className="font-frame-mono text-[0.62rem] text-frame-gray-light bg-frame-gray-2 px-1.5 py-0.5 border border-frame-gray-3">
                                 {goals.format}
                               </span>
                             )}
@@ -486,7 +486,7 @@ function DashboardContent() {
             {isActivitiesLoading ? (
               <div className="flex flex-col items-center justify-center py-10 gap-2 border border-frame-gray-3/40 bg-frame-gray-1/10 min-h-[200px]">
                 <Loader2 className="w-4 h-4 animate-spin text-frame-orange" />
-                <span className="font-frame-mono text-[0.52rem] text-frame-gray-light tracking-wider">
+                <span className="font-frame-mono text-[0.62rem] text-frame-gray-light tracking-wider">
                   Carregando atividades...
                 </span>
               </div>
@@ -514,10 +514,10 @@ function DashboardContent() {
                       className="group border border-[#1a1a1a] hover:border-frame-orange/30 bg-frame-black p-3 transition duration-150 cursor-pointer flex flex-col justify-between gap-1.5"
                     >
                       <div className="flex justify-between items-start gap-2">
-                        <span className="font-frame-mono text-[0.56rem] text-frame-orange tracking-wider uppercase font-semibold">
+                        <span className="font-frame-mono text-[0.64rem] text-frame-orange tracking-wider uppercase font-semibold">
                           {act.toolId}
                         </span>
-                        <div className="flex items-center gap-1 text-frame-gray-light text-[0.52rem] font-frame-mono shrink-0">
+                        <div className="flex items-center gap-1 text-frame-gray-light text-[0.62rem] font-frame-mono shrink-0">
                           <Clock className="w-2.5 h-2.5" />
                           {dateStr}
                         </div>
@@ -528,7 +528,7 @@ function DashboardContent() {
                       </p>
 
                       {act.projectName && (
-                        <div className="flex items-center gap-1 font-frame-mono text-[0.52rem] text-frame-gray-light mt-1 pt-1.5 border-t border-frame-gray-3/40">
+                        <div className="flex items-center gap-1 font-frame-mono text-[0.62rem] text-frame-gray-light mt-1 pt-1.5 border-t border-frame-gray-3/40">
                           <Folder className="w-2.5 h-2.5 text-frame-orange" />
                           <span className="truncate">{act.projectName}</span>
                         </div>
@@ -540,7 +540,7 @@ function DashboardContent() {
             )}
 
             {/* Quick Actions Panel */}
-            <div className="border border-frame-gray-3/40 bg-frame-gray-1/10 p-4 space-y-3 font-frame-mono text-[0.58rem]">
+            <div className="border border-frame-gray-3/40 bg-frame-gray-1/10 p-4 space-y-3 font-frame-mono text-[0.64rem]">
               <span className="block tracking-wider uppercase text-frame-gray-light font-bold">
                 // Atalhos Úteis
               </span>
@@ -573,7 +573,7 @@ function DashboardContent() {
 
           <form onSubmit={handleCreateSubmit} className="space-y-4 mt-2">
             <div className="space-y-1.5">
-              <label className="block font-frame-mono text-[0.58rem] tracking-[0.15em] text-frame-orange uppercase">
+              <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
                 Nome do Projeto *
               </label>
               <input
@@ -588,7 +588,7 @@ function DashboardContent() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="block font-frame-mono text-[0.58rem] tracking-[0.15em] text-frame-orange uppercase">
+              <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
                 Descrição do Projeto
               </label>
               <textarea
@@ -602,7 +602,7 @@ function DashboardContent() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="block font-frame-mono text-[0.58rem] tracking-[0.15em] text-frame-orange uppercase">
+                <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
                   Tipo
                 </label>
                 <select
@@ -620,7 +620,7 @@ function DashboardContent() {
                 </select>
               </div>
               <div className="space-y-1.5">
-                <label className="block font-frame-mono text-[0.58rem] tracking-[0.15em] text-frame-orange uppercase">
+                <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
                   Prazo alvo
                 </label>
                 <input
@@ -635,7 +635,7 @@ function DashboardContent() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="block font-frame-mono text-[0.58rem] tracking-[0.15em] text-frame-orange uppercase">
+                <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
                   Formato
                 </label>
                 <input
@@ -648,7 +648,7 @@ function DashboardContent() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="block font-frame-mono text-[0.58rem] tracking-[0.15em] text-frame-orange uppercase">
+                <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
                   Tom criativo
                 </label>
                 <input
@@ -663,7 +663,7 @@ function DashboardContent() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="block font-frame-mono text-[0.58rem] tracking-[0.15em] text-frame-orange uppercase">
+              <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
                 Objetivo
               </label>
               <textarea
@@ -676,7 +676,7 @@ function DashboardContent() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="block font-frame-mono text-[0.58rem] tracking-[0.15em] text-frame-orange uppercase">
+              <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
                 Cliente (Opcional)
               </label>
               <div className="relative">

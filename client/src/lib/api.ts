@@ -207,11 +207,25 @@ export const api = {
       request<{ id: string; isActive: boolean }>(`/admin/tools/${id}`, {
         method: "DELETE",
       }),
-    users: () => request<{ count: number; users: { id: number; email: string; role: string; name?: string; plan?: string }[] }>("/admin-users"),
+    users: () => request<{ count: number; users: { id: number; email: string; role: string; name?: string; plan_name?: string; generation_limit?: number | null; project_count?: number; file_count?: number; review_count?: number }[] }>("/admin/users"),
     createUser: (body: { name: string; email: string; password: string; role: "user" | "admin"; planId: "free" | "pro" | "studio" }) =>
       request<{ id: number; email: string; role: string; planId: string }>("/admin/users", {
         method: "POST",
         body: JSON.stringify(body),
+      }),
+    updateUserRole: (id: number, role: "user" | "admin") =>
+      request<{ id: number; role: string }>(`/admin/users/${id}/role`, {
+        method: "PUT",
+        body: JSON.stringify({ role }),
+      }),
+    updateUserPlan: (id: number, planId: "free" | "pro" | "studio") =>
+      request<{ id: number; planId: string }>(`/admin/users/${id}/plan`, {
+        method: "PUT",
+        body: JSON.stringify({ planId }),
+      }),
+    deleteUser: (id: number) =>
+      request<{ id: number; email: string; deleted: boolean; summary: Record<string, number> }>(`/admin/users/${id}`, {
+        method: "DELETE",
       }),
   },
   contact: {

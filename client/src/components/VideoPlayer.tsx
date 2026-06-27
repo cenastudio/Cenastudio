@@ -21,6 +21,7 @@ interface VideoPlayerProps {
   onReady?: () => void;
   commentMarkers?: CommentMarker[];
   onAddAnnotatedComment?: (annotation: Annotation[], timestamp: number, comment: string) => void;
+  pauseRequest?: number;
 }
 
 const PLAYBACK_SPEEDS = [0.5, 1, 1.5, 2];
@@ -49,8 +50,9 @@ export default function VideoPlayer({
   url, onProgress, onDuration, seekTo, onReady,
   commentMarkers = [],
   onAddAnnotatedComment,
+  pauseRequest = 0,
 }: VideoPlayerProps) {
-  const playerRef = useRef<any>(null);
+  const playerRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -69,20 +71,40 @@ export default function VideoPlayer({
   const [showCommentInput, setShowCommentInput] = useState(false);
   const [hoveredMarker, setHoveredMarker] = useState<CommentMarker | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [driveFallback, setDriveFallback] = useState(false);
 
   const controlsTimeoutRef = useRef<any>(null);
   const googleDrivePreviewUrl = getGoogleDrivePreviewUrl(url);
+  const googleDriveId = extractGoogleDriveId(url);
+  const playableUrl = googleDriveId
+    ? `https://drive.google.com/uc?export=download&id=${googleDriveId}`
+    : url;
+
+  const seekToSeconds = useCallback((seconds: number) => {
+    const player = playerRef.current;
+    if (!player) return;
+    player.currentTime = Math.max(0, Math.min(seconds, Number.isFinite(player.duration) ? player.duration : seconds));
+  }, []);
 
   useEffect(() => {
     if (seekTo != null && playerRef.current) {
-      playerRef.current.seekTo(seekTo, "seconds");
+      seekToSeconds(seekTo);
+      setCurrentTime(seekTo);
+      setPlayed(duration ? seekTo / duration : 0);
       setPlaying(false);
       setShowControls(true);
       setAnnotationMode(false);
       setShowCommentInput(false);
       setAnnotations([]);
     }
-  }, [seekTo]);
+  }, [seekTo, seekToSeconds, duration]);
+
+  useEffect(() => {
+    if (pauseRequest > 0) {
+      setPlaying(false);
+      setShowControls(true);
+    }
+  }, [pauseRequest]);
 
   useEffect(() => {
     if (!url) {
@@ -91,16 +113,25 @@ export default function VideoPlayer({
       setCurrentTime(0);
       setDuration(0);
       setAnnotationMode(false);
+      setDriveFallback(false);
     }
   }, [url]);
 
-  const handleProgress = (state: any) => {
-    setPlayed(state.played);
-    setCurrentTime(state.playedSeconds);
-    onProgress?.(state.playedSeconds);
+  const handleTimeUpdate = (event: any) => {
+    const seconds = Number(event?.currentTarget?.currentTime ?? playerRef.current?.currentTime ?? 0);
+    const nextDuration = Number(event?.currentTarget?.duration ?? playerRef.current?.duration ?? duration);
+    setCurrentTime(seconds);
+    setPlayed(nextDuration > 0 ? seconds / nextDuration : 0);
+    onProgress?.(seconds);
   };
 
-  const handleDuration = (dur: number) => {
+  const handleDuration = (eventOrDuration: any) => {
+    const dur = Number(
+      typeof eventOrDuration === "number"
+        ? eventOrDuration
+        : eventOrDuration?.currentTarget?.duration ?? playerRef.current?.duration ?? 0,
+    );
+    if (!Number.isFinite(dur) || dur <= 0) return;
     setDuration(dur);
     onDuration?.(dur);
   };
@@ -130,15 +161,18 @@ export default function VideoPlayer({
   const handleSkip = (seconds: number) => {
     if (playerRef.current) {
       const newTime = Math.max(0, Math.min(currentTime + seconds, duration));
-      playerRef.current.seekTo(newTime, "seconds");
+      seekToSeconds(newTime);
+      setCurrentTime(newTime);
+      setPlayed(duration ? newTime / duration : 0);
     }
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseFloat(e.target.value);
-    setPlayed(val);
+    setCurrentTime(val);
+    setPlayed(duration ? val / duration : 0);
     if (playerRef.current) {
-      playerRef.current.seekTo(val, "fraction");
+      seekToSeconds(val);
     }
   };
 
@@ -238,7 +272,7 @@ export default function VideoPlayer({
     );
   }
 
-  if (googleDrivePreviewUrl) {
+  if (googleDrivePreviewUrl && driveFallback) {
     return (
       <div
         ref={containerRef}
@@ -318,19 +352,19 @@ export default function VideoPlayer({
         <div className="relative" style={{ aspectRatio: "16/9" }}>
           <ReactPlayer
             ref={playerRef}
-            url={url}
+            src={playableUrl}
             width="100%"
             height="100%"
             playing={false}
             muted={muted}
             volume={volume}
             playbackRate={playbackRate}
-            onProgress={handleProgress}
-            onDuration={handleDuration}
+            onTimeUpdate={handleTimeUpdate}
+            onDurationChange={handleDuration}
             onReady={handleReady}
-            progressInterval={250}
             style={{ position: "absolute", top: 0, left: 0 }}
-            config={{ file: { attributes: { controlsList: "nodownload" } } } as any}
+            onError={() => googleDrivePreviewUrl && setDriveFallback(true)}
+            playsInline
           />
           {videoSize.width > 0 && (
             <div className="absolute inset-0 z-10">
@@ -384,19 +418,19 @@ export default function VideoPlayer({
         <>
           <ReactPlayer
             ref={playerRef}
-            url={url}
+            src={playableUrl}
             width="100%"
             height="100%"
             playing={playing}
             muted={muted}
             volume={volume}
             playbackRate={playbackRate}
-            onProgress={handleProgress}
-            onDuration={handleDuration}
+            onTimeUpdate={handleTimeUpdate}
+            onDurationChange={handleDuration}
             onReady={handleReady}
-            progressInterval={250}
             style={{ position: "absolute", top: 0, left: 0 }}
-            config={{ file: { attributes: { controlsList: "nodownload" } } } as any}
+            onError={() => googleDrivePreviewUrl && setDriveFallback(true)}
+            playsInline
           />
 
           <div
@@ -408,7 +442,7 @@ export default function VideoPlayer({
               <div className="absolute inset-0 flex items-center justify-center">
                 <button
                   onClick={handlePlayPause}
-                  className="w-16 h-16 rounded-full bg-frame-orange/90 hover:bg-frame-orange flex items-center justify-center transition-all hover:scale-110"
+                  className="w-16 h-16 rounded-full bg-frame-orange/90 hover:bg-frame-orange flex items-center justify-center transition-[background-color,transform] duration-200 ease-out hover:scale-105"
                 >
                   <Play className="w-7 h-7 text-frame-black ml-1" />
                 </button>
@@ -420,9 +454,9 @@ export default function VideoPlayer({
                 <input
                   type="range"
                   min={0}
-                  max={0.999999}
+                  max={Math.max(duration, 0.001)}
                   step="any"
-                  value={played}
+                  value={Math.min(currentTime, duration || 0)}
                   onChange={handleSeek}
                   onMouseDown={() => { if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current); }}
                   className="w-full h-1 appearance-none bg-frame-gray-4/50 rounded-full cursor-pointer accent-frame-orange
@@ -444,7 +478,7 @@ export default function VideoPlayer({
                     }}
                     onMouseLeave={() => setHoveredMarker(null)}
                     onClick={() => {
-                      playerRef.current?.seekTo(marker.timestampSeconds, "seconds");
+                      seekToSeconds(marker.timestampSeconds);
                       setCurrentTime(marker.timestampSeconds);
                       setPlayed(duration ? marker.timestampSeconds / duration : played);
                       setPlaying(false);

@@ -172,7 +172,7 @@ function ProjectHubContent() {
     <div className="min-h-screen bg-frame-black text-frame-white flex flex-col">
       <AppNavBar />
       <ProjectNav projectId={projectId} />
-      <main className="max-w-7xl w-full mx-auto px-6 py-8 flex-1">
+      <main id="main-content" className="max-w-7xl w-full mx-auto px-6 py-8 flex-1">
         {/* Header */}
         <div className="mb-8 pb-6 border-b border-frame-gray-3">
           <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
@@ -180,7 +180,7 @@ function ProjectHubContent() {
               <p className="frame-label mb-2">// Projeto #{project.id}</p>
               <div className="flex flex-wrap items-center gap-3 mb-3">
                 <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-frame-white">{project.name}</h1>
-                <span className="font-frame-mono text-[0.55rem] tracking-[0.14em] uppercase text-frame-orange border border-frame-orange/30 bg-frame-orange/[0.08] px-2 py-1">
+                <span className="font-frame-mono text-[0.64rem] tracking-[0.14em] uppercase text-frame-orange border border-frame-orange/30 bg-frame-orange/[0.08] px-2 py-1">
                   {metadata.projectType || project.status || "Ativo"}
                 </span>
               </div>
@@ -189,13 +189,13 @@ function ProjectHubContent() {
               )}
               {metadata.objective && (
                 <div className="mt-4 border-l-2 border-frame-orange pl-4 max-w-2xl">
-                  <span className="block font-frame-mono text-[0.52rem] tracking-[0.14em] uppercase text-frame-gray-light mb-1">
+                  <span className="block font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-gray-light mb-1">
                     Objetivo
                   </span>
                   <p className="text-sm text-frame-white leading-relaxed">{metadata.objective}</p>
                 </div>
               )}
-              <div className="flex flex-wrap items-center gap-4 mt-4 font-frame-mono text-[0.55rem] text-frame-gray-light tracking-wider">
+              <div className="flex flex-wrap items-center gap-4 mt-4 font-frame-mono text-[0.64rem] text-frame-gray-light tracking-wider">
                 <span className="flex items-center gap-1.5">
                   <Calendar className="w-3 h-3" />
                   Criado {new Date(createdAt).toLocaleDateString("pt-BR")}
@@ -215,13 +215,13 @@ function ProjectHubContent() {
 
             <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-4 w-full lg:w-[300px] shrink-0">
               <div className="flex items-center justify-between mb-3">
-                <span className="font-frame-mono text-[0.55rem] tracking-[0.15em] uppercase text-frame-gray-light">
+                <span className="font-frame-mono text-[0.64rem] tracking-[0.15em] uppercase text-frame-gray-light">
                   Progresso
                 </span>
                 <strong className="text-frame-white">{progress}%</strong>
               </div>
               <div className="h-2 bg-frame-gray-2 border border-frame-gray-3 overflow-hidden mb-4">
-                <div className="h-full bg-frame-orange transition-all" style={{ width: `${progress}%` }} />
+                <div className="h-full bg-frame-orange transition-[width] duration-300 ease-out" style={{ width: `${progress}%` }} />
               </div>
               <button
                 type="button"
@@ -237,19 +237,19 @@ function ProjectHubContent() {
 
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
           <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-4">
-            <span className="font-frame-mono text-[0.52rem] tracking-[0.14em] uppercase text-frame-gray-light">Arquivos</span>
+            <span className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-gray-light">Arquivos</span>
             <strong className="block text-2xl text-frame-white mt-2">{recentFiles.length}</strong>
           </div>
           <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-4">
-            <span className="font-frame-mono text-[0.52rem] tracking-[0.14em] uppercase text-frame-gray-light">Aprovações</span>
+            <span className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-gray-light">Aprovações</span>
             <strong className="block text-2xl text-frame-white mt-2">{recentReviews.length}</strong>
           </div>
           <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-4">
-            <span className="font-frame-mono text-[0.52rem] tracking-[0.14em] uppercase text-frame-gray-light">Pendências</span>
+            <span className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-gray-light">Pendências</span>
             <strong className="block text-2xl text-frame-white mt-2">{pendingReviews}</strong>
           </div>
           <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-4">
-            <span className="font-frame-mono text-[0.52rem] tracking-[0.14em] uppercase text-frame-gray-light">Equipe</span>
+            <span className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-gray-light">Equipe</span>
             <strong className="block text-2xl text-frame-white mt-2">{members.length}</strong>
           </div>
         </section>
@@ -264,7 +264,7 @@ function ProjectHubContent() {
                   <Gauge className="w-3.5 h-3.5 text-frame-orange" />
                   Fluxo do Projeto
                 </h2>
-                <span className="font-frame-mono text-[0.55rem] text-frame-gray-light tracking-wider">
+                <span className="font-frame-mono text-[0.64rem] text-frame-gray-light tracking-wider">
                   {completedSteps.length}/{WORKFLOW_STEPS.length} etapas
                 </span>
               </div>
@@ -296,7 +296,7 @@ function ProjectHubContent() {
                           </span>
                         </div>
                         {isNext && (
-                          <span className="font-frame-mono text-[0.48rem] tracking-[0.12em] uppercase text-frame-orange">
+                          <span className="font-frame-mono text-[0.6rem] tracking-[0.12em] uppercase text-frame-orange">
                             Próximo
                           </span>
                         )}
@@ -327,7 +327,7 @@ function ProjectHubContent() {
                       <span className="block text-xs font-medium text-frame-white group-hover:text-frame-orange transition">
                         {tool.name}
                       </span>
-                      <span className="block text-[0.5rem] font-frame-mono text-frame-gray-light tracking-wider mt-1">
+                      <span className="block text-[0.62rem] font-frame-mono text-frame-gray-light tracking-wider mt-1">
                         ABRIR →
                       </span>
                     </button>
@@ -349,12 +349,12 @@ function ProjectHubContent() {
               <div className="flex items-center justify-between border-b border-frame-gray-3 pb-2.5">
                 <h2 className="font-frame-mono text-sm tracking-[0.15em] uppercase text-frame-white font-semibold flex items-center gap-2">
                   <FileText className="w-3.5 h-3.5 text-frame-gray-light" />
-                  Arquivos Recentes
+                  Materiais recentes
                 </h2>
                 <button
                   type="button"
                   onClick={() => setLocation(`/project/${projectId}/files`)}
-                  className="text-[0.55rem] font-frame-mono text-frame-orange hover:text-frame-white transition tracking-wider"
+                  className="text-[0.64rem] font-frame-mono text-frame-orange hover:text-frame-white transition tracking-wider"
                 >
                   VER TODOS →
                 </button>
@@ -366,7 +366,7 @@ function ProjectHubContent() {
                   {recentFiles.map((f) => (
                     <div key={f.id} className="px-4 py-3 flex items-center gap-3 text-sm">
                       <span className="text-frame-gray-light">{f.name || f.original_name || "Arquivo sem nome"}</span>
-                      <span className="text-[0.5rem] font-frame-mono text-frame-gray-light uppercase ml-auto">
+                      <span className="text-[0.62rem] font-frame-mono text-frame-gray-light uppercase ml-auto">
                         {f.type || f.mime_type || "arquivo"} · {new Date(f.created_at).toLocaleDateString("pt-BR")}
                       </span>
                     </div>
@@ -385,7 +385,7 @@ function ProjectHubContent() {
                 <button
                   type="button"
                   onClick={() => setLocation(`/project/${projectId}/video-reviews`)}
-                  className="text-[0.55rem] font-frame-mono text-frame-orange hover:text-frame-white transition tracking-wider"
+                  className="text-[0.64rem] font-frame-mono text-frame-orange hover:text-frame-white transition tracking-wider"
                 >
                   VER TODOS →
                 </button>
@@ -397,7 +397,7 @@ function ProjectHubContent() {
                   {recentReviews.map((r) => (
                     <div key={r.id} className="px-4 py-3 flex items-center gap-3 text-sm">
                       <span className="text-frame-white">{r.title}</span>
-                      <span className={`text-[0.5rem] font-frame-mono uppercase ml-auto px-1.5 py-0.5 border ${
+                      <span className={`text-[0.62rem] font-frame-mono uppercase ml-auto px-1.5 py-0.5 border ${
                         r.status === "approved" ? "border-green-500/30 text-green-400" :
                         r.status === "rejected" ? "border-red-500/30 text-red-400" :
                         r.status === "pending_review" ? "border-yellow-500/30 text-yellow-400" :
@@ -424,20 +424,20 @@ function ProjectHubContent() {
               </h3>
               <div className="space-y-3 text-xs">
                 <div>
-                  <span className="block font-frame-mono text-[0.5rem] tracking-[0.12em] uppercase text-frame-gray-light mb-1">
+                  <span className="block font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase text-frame-gray-light mb-1">
                     Cliente
                   </span>
                   <p className="text-frame-white">{metadata.creativeGoals?.client || "Não definido"}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <span className="block font-frame-mono text-[0.5rem] tracking-[0.12em] uppercase text-frame-gray-light mb-1">
+                    <span className="block font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase text-frame-gray-light mb-1">
                       Formato
                     </span>
                     <p className="text-frame-white">{metadata.creativeGoals?.format || "Aberto"}</p>
                   </div>
                   <div>
-                    <span className="block font-frame-mono text-[0.5rem] tracking-[0.12em] uppercase text-frame-gray-light mb-1">
+                    <span className="block font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase text-frame-gray-light mb-1">
                       Tom
                     </span>
                     <p className="text-frame-white">{metadata.creativeGoals?.tone || "Aberto"}</p>
@@ -464,7 +464,7 @@ function ProjectHubContent() {
                 <button
                   type="button"
                   onClick={() => setLocation(`/project/${projectId}/collaborators`)}
-                  className="text-[0.5rem] font-frame-mono text-frame-orange hover:text-frame-white transition"
+                  className="text-[0.62rem] font-frame-mono text-frame-orange hover:text-frame-white transition"
                 >
                   GERENCIAR →
                 </button>
@@ -475,11 +475,11 @@ function ProjectHubContent() {
                 <div className="space-y-2">
                   {members.map((m) => (
                     <div key={m.id} className="flex items-center gap-2 text-xs">
-                      <div className="w-6 h-6 rounded-full bg-frame-gray-3 flex items-center justify-center text-[0.5rem] font-frame-mono">
+                      <div className="w-6 h-6 rounded-full bg-frame-gray-3 flex items-center justify-center text-[0.62rem] font-frame-mono">
                         {(m.name || m.email)[0].toUpperCase()}
                       </div>
                       <span className="truncate">{m.name || m.email}</span>
-                      {m.role === "admin" && <span className="text-frame-orange text-[0.4rem] font-frame-mono uppercase">Admin</span>}
+                      {m.role === "admin" && <span className="text-frame-orange text-[0.6rem] font-frame-mono uppercase">Admin</span>}
                     </div>
                   ))}
                 </div>

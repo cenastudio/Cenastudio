@@ -8,12 +8,12 @@ export default function BriefingForm({ data, onChange }: FormProps) {
     <div className="space-y-4">
       {/* Seção 1: Cliente */}
       <div>
-        <p className="font-frame-mono text-[0.54rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
+        <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
           // Cliente & Identidade
         </p>
         <div className="space-y-3">
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Nome do Cliente / Empresa
             </label>
             <input
@@ -26,7 +26,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
           </div>
 
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Segmento de Atuação
             </label>
             <input
@@ -39,7 +39,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
           </div>
 
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Tipo de Conteúdo/Vídeo
             </label>
             <select
@@ -61,12 +61,12 @@ export default function BriefingForm({ data, onChange }: FormProps) {
 
       {/* Seção 2: Contexto */}
       <div className="pt-2 border-t border-frame-gray-2">
-        <p className="font-frame-mono text-[0.54rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
+        <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
           // Contexto & Metas
         </p>
         <div className="space-y-3">
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Objetivo Principal
             </label>
             <textarea
@@ -79,7 +79,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
           </div>
 
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Público-Alvo
             </label>
             <input
@@ -92,7 +92,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
           </div>
 
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Canal de Veiculação principal
             </label>
             <input
@@ -106,7 +106,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+              <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
                 Duração Desejada
               </label>
               <input
@@ -118,7 +118,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
               />
             </div>
             <div>
-              <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+              <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
                 Prazo de Entrega
               </label>
               <input
@@ -132,7 +132,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
           </div>
 
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               Referências de Vídeos
             </label>
             <input
@@ -145,7 +145,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
           </div>
 
           <div>
-            <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+            <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
               O que NÃO deve aparecer/conter (Restrições)
             </label>
             <textarea

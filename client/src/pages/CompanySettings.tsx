@@ -43,7 +43,7 @@ function CompanySettingsContent() {
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body">
       <AppNavBar />
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-5">
+      <main id="main-content" className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-5">
         <section className="border border-frame-gray-3 bg-frame-gray-1/40 p-5">
           <p className="frame-label">// EMPRESA</p>
           <h1 className="frame-title text-[clamp(2rem,4vw,3.8rem)] leading-none mt-2">CONFIGURAR STUDIO</h1>

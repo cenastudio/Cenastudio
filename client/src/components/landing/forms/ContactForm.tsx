@@ -39,7 +39,7 @@ export function ContactForm({ type = "contact", onSuccess }: ContactFormProps) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {/* Name */}
       <div>
-        <Label htmlFor="name" className="font-frame-mono text-[0.56rem] tracking-[0.15em] uppercase text-frame-gray-light">
+        <Label htmlFor="name" className="font-frame-mono text-[0.64rem] tracking-[0.15em] uppercase text-frame-gray-light">
           Nome Completo *
         </Label>
         <Input
@@ -54,7 +54,7 @@ export function ContactForm({ type = "contact", onSuccess }: ContactFormProps) {
 
       {/* Email */}
       <div>
-        <Label htmlFor="email" className="font-frame-mono text-[0.56rem] tracking-[0.15em] uppercase text-frame-gray-light">
+        <Label htmlFor="email" className="font-frame-mono text-[0.64rem] tracking-[0.15em] uppercase text-frame-gray-light">
           Email *
         </Label>
         <Input
@@ -76,7 +76,7 @@ export function ContactForm({ type = "contact", onSuccess }: ContactFormProps) {
 
       {/* Phone */}
       <div>
-        <Label htmlFor="phone" className="font-frame-mono text-[0.56rem] tracking-[0.15em] uppercase text-frame-gray-light">
+        <Label htmlFor="phone" className="font-frame-mono text-[0.64rem] tracking-[0.15em] uppercase text-frame-gray-light">
           Telefone
         </Label>
         <Input
@@ -92,7 +92,7 @@ export function ContactForm({ type = "contact", onSuccess }: ContactFormProps) {
       <div>
         <Label
           htmlFor="message"
-          className="font-frame-mono text-[0.56rem] tracking-[0.15em] uppercase text-frame-gray-light"
+          className="font-frame-mono text-[0.64rem] tracking-[0.15em] uppercase text-frame-gray-light"
         >
           Mensagem *
         </Label>

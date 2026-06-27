@@ -51,7 +51,7 @@ export default function ToolsSection() {
               <span className="text-[1.7rem] mb-3.5 block grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-300">
                 {tool.icon}
               </span>
-              <p className="font-frame-mono text-[0.56rem] tracking-[0.2em] text-frame-orange mb-2">
+              <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] text-frame-orange mb-2">
                 {tool.number}
               </p>
               <h3 className="frame-title text-[1.45rem] text-frame-white mb-2">{tool.name}</h3>

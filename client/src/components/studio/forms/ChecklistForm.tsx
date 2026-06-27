@@ -187,7 +187,7 @@ export default function ChecklistForm({ data, onChange, onSetOutput }: Checklist
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 font-frame-mono text-[0.56rem] tracking-[0.1em] uppercase transition shrink-0 ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 font-frame-mono text-[0.64rem] tracking-[0.1em] uppercase transition shrink-0 ${
                 activeTab === tab
                   ? "bg-frame-orange text-frame-black font-medium"
                   : "text-frame-gray-light hover:text-frame-white"
@@ -202,12 +202,12 @@ export default function ChecklistForm({ data, onChange, onSetOutput }: Checklist
       {/* Checklist Content */}
       {activeTab === "ia" ? (
         <div className="space-y-4 pt-1">
-          <p className="font-frame-mono text-[0.54rem] tracking-[0.17em] uppercase text-frame-orange mb-2">
+          <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-2">
             // Checklist Customizado por IA
           </p>
           <div className="space-y-3">
             <div>
-              <label className="block font-frame-mono text-[0.53rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
+              <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
                 Tipo de Produção / Detalhes do Set
               </label>
               <input
@@ -269,21 +269,21 @@ export default function ChecklistForm({ data, onChange, onSetOutput }: Checklist
             <button
               type="button"
               onClick={() => handleMarkAll(true)}
-              className="py-1 font-frame-mono text-[0.52rem] uppercase border border-frame-gray-3 text-frame-gray-light bg-transparent hover:border-frame-gray-muted hover:text-frame-white transition"
+              className="py-1 font-frame-mono text-[0.62rem] uppercase border border-frame-gray-3 text-frame-gray-light bg-transparent hover:border-frame-gray-muted hover:text-frame-white transition"
             >
               Marcar todos
             </button>
             <button
               type="button"
               onClick={() => handleMarkAll(false)}
-              className="py-1 font-frame-mono text-[0.52rem] uppercase border border-frame-gray-3 text-frame-gray-light bg-transparent hover:border-frame-gray-muted hover:text-frame-white transition"
+              className="py-1 font-frame-mono text-[0.62rem] uppercase border border-frame-gray-3 text-frame-gray-light bg-transparent hover:border-frame-gray-muted hover:text-frame-white transition"
             >
               Desmarcar
             </button>
             <button
               type="button"
               onClick={handleCopyClipboard}
-              className="py-1 font-frame-mono text-[0.52rem] uppercase border border-frame-gray-3 text-frame-gray-light bg-transparent hover:border-frame-gray-muted hover:text-frame-white transition flex items-center justify-center gap-1"
+              className="py-1 font-frame-mono text-[0.62rem] uppercase border border-frame-gray-3 text-frame-gray-light bg-transparent hover:border-frame-gray-muted hover:text-frame-white transition flex items-center justify-center gap-1"
             >
               <Copy className="w-3 h-3" />
               Copiar
@@ -291,7 +291,7 @@ export default function ChecklistForm({ data, onChange, onSetOutput }: Checklist
             <button
               type="button"
               onClick={handleResetAll}
-              className="py-1 font-frame-mono text-[0.52rem] uppercase border border-frame-gray-3 text-frame-gray-light bg-transparent hover:border-frame-red/45 hover:text-frame-red transition flex items-center justify-center gap-1"
+              className="py-1 font-frame-mono text-[0.62rem] uppercase border border-frame-gray-3 text-frame-gray-light bg-transparent hover:border-frame-red/45 hover:text-frame-red transition flex items-center justify-center gap-1"
             >
               <Trash2 className="w-3 h-3" />
               Reset Geral

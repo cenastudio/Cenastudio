@@ -282,7 +282,7 @@ function InteractionsContent() {
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
       <AppNavBar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-10 space-y-8">
+      <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-6 py-10 space-y-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>

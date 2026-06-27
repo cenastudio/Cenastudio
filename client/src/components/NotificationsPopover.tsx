@@ -39,7 +39,7 @@ const typeIcons: Record<string, typeof Bell> = {
 };
 
 const typeColors: Record<string, string> = {
-  info: "text-frame-blue",
+  info: "text-frame-orange",
   success: "text-green-500",
   warning: "text-yellow-500",
 };
@@ -135,12 +135,13 @@ export default function NotificationsPopover() {
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="relative p-2 border border-frame-gray-3 text-frame-gray-light hover:text-frame-orange hover:border-frame-orange transition rounded-none"
+          className="relative flex h-9 w-9 items-center justify-center border border-frame-gray-3 text-frame-gray-light hover:text-frame-orange hover:border-frame-orange transition"
           title="Notificações"
+          aria-label={unreadCount > 0 ? `${unreadCount} notificações não lidas` : "Notificações"}
         >
           <Bell className="w-3.5 h-3.5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center w-4 h-4 text-[0.55rem] font-bold font-frame-mono bg-frame-red text-white rounded-full">
+            <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center w-4 h-4 text-[0.64rem] font-bold font-frame-mono bg-frame-red text-white rounded-full">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}
@@ -149,7 +150,7 @@ export default function NotificationsPopover() {
       <PopoverContent
         align="end"
         sideOffset={8}
-        className="w-[380px] p-0 bg-frame-black border border-frame-gray-3 shadow-xl"
+        className="w-[min(380px,calc(100vw-1rem))] p-0 bg-frame-black border border-frame-gray-3 shadow-2xl"
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-frame-gray-3">
           <span className="font-frame-mono text-[0.65rem] tracking-[0.08em] text-frame-white uppercase">
@@ -160,7 +161,7 @@ export default function NotificationsPopover() {
               variant="ghost"
               size="sm"
               onClick={handleMarkAllRead}
-              className="h-auto px-2 py-1 text-[0.55rem] text-frame-gray-light hover:text-frame-orange gap-1"
+              className="h-auto px-2 py-1 text-[0.64rem] text-frame-gray-light hover:text-frame-orange gap-1"
             >
               <CheckCheck className="w-3 h-3" />
               Marcar todas como lidas
@@ -210,11 +211,11 @@ export default function NotificationsPopover() {
                         >
                           {n.title}
                         </span>
-                        <span className="shrink-0 font-frame-mono text-[0.5rem] text-frame-gray-light whitespace-nowrap">
+                        <span className="shrink-0 font-frame-mono text-[0.62rem] text-frame-gray-light whitespace-nowrap">
                           {relativeTime(n.created_at)}
                         </span>
                       </div>
-                      <p className="font-frame-mono text-[0.55rem] text-frame-gray-light mt-0.5 line-clamp-2">
+                      <p className="font-frame-mono text-[0.64rem] text-frame-gray-light mt-0.5 line-clamp-2">
                         {n.message}
                       </p>
                     </div>

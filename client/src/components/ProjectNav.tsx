@@ -16,7 +16,7 @@ interface ProjectNavProps {
 const TABS = [
   { path: (id: number) => `/project/${id}`, label: "Visão Geral", icon: LayoutDashboard },
   { path: (id: number) => `/project/${id}/studio/01`, label: "Studio", icon: Film },
-  { path: (id: number) => `/project/${id}/files`, label: "Arquivos", icon: FileText },
+  { path: (id: number) => `/project/${id}/files`, label: "Materiais", icon: FileText },
   { path: (id: number) => `/project/${id}/video-reviews`, label: "Aprovação", icon: Video },
   { path: (id: number) => `/project/${id}/collaborators`, label: "Equipe", icon: Users },
 ];
@@ -36,20 +36,20 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
   }, [projectId]);
 
   return (
-    <div className="border-b border-frame-gray-3 bg-frame-black/90 backdrop-blur-sm sticky top-0 z-40">
+    <div className="border-b border-frame-gray-3 bg-frame-black/95 backdrop-blur-sm sticky top-16 z-40 shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
       <div className="max-w-7xl mx-auto px-4 md:px-6">
         <div className="flex items-center gap-3 py-2">
           <button
             type="button"
             onClick={() => setLocation("/dashboard")}
-            className="text-frame-gray-light hover:text-frame-orange transition p-1"
+            className="flex h-9 w-9 shrink-0 items-center justify-center text-frame-gray-light hover:text-frame-orange transition"
             title="Voltar ao painel"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <div className="h-4 w-px bg-frame-gray-3" />
           <div className="flex items-center gap-2 min-w-0">
-            <span className="font-frame-mono text-[0.55rem] text-frame-gray-light tracking-widest uppercase shrink-0">
+            <span className="font-frame-mono text-[0.64rem] text-frame-gray-light tracking-widest uppercase shrink-0">
               Projeto
             </span>
             <span className="text-sm font-semibold text-frame-white truncate max-w-[200px]">
@@ -67,11 +67,12 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
                   key={tab.label}
                   type="button"
                   onClick={() => setLocation(tab.path(projectId))}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-frame-mono tracking-wider transition whitespace-nowrap ${
+                  className={`flex min-h-10 items-center gap-1.5 px-3 py-1.5 text-xs font-frame-mono tracking-wider transition whitespace-nowrap ${
                     isActive
                       ? "text-frame-orange border-b-2 border-frame-orange"
                       : "text-frame-gray-light hover:text-frame-white border-b-2 border-transparent"
                   }`}
+                  aria-current={isActive ? "page" : undefined}
                 >
                   <tab.icon className="w-3.5 h-3.5" />
                   {tab.label}

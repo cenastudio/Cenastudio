@@ -122,7 +122,7 @@ function ProductProofSection() {
           >
             {["Criar briefing", "Gerar documentos", "Acompanhar entrega"].map((step, index) => (
               <div key={step} className="p-4 sm:p-5 border-r border-frame-gray-3 last:border-r-0">
-                <span className="block font-frame-mono text-[0.52rem] tracking-[0.16em] uppercase text-frame-orange mb-3">
+                <span className="block font-frame-mono text-[0.62rem] tracking-[0.16em] uppercase text-frame-orange mb-3">
                   0{index + 1}
                 </span>
                 <p className="text-xs sm:text-sm text-frame-white font-medium leading-snug">{step}</p>
@@ -142,7 +142,7 @@ function ProductProofSection() {
               className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6 lg:gap-10 items-center border border-frame-gray-3 bg-frame-gray-1/10 p-4 sm:p-6"
             >
               <div className="space-y-3">
-                <p className="font-frame-mono text-[0.55rem] tracking-[0.18em] uppercase text-frame-orange">
+                <p className="font-frame-mono text-[0.64rem] tracking-[0.18em] uppercase text-frame-orange">
                   {screen.label}
                 </p>
                 <h3 className="text-2xl font-semibold text-frame-white">{screen.title}</h3>
@@ -344,15 +344,15 @@ export default function Landing() {
             className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 text-left"
           >
             <div className="border border-frame-gray-3 p-5">
-              <p className="font-frame-mono text-[0.56rem] tracking-[0.2em] uppercase text-frame-orange mb-2">Email</p>
+              <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-2">Email</p>
               <p className="text-sm text-frame-gray-light">contato@cenastudio.com.br</p>
             </div>
             <div className="border border-frame-gray-3 p-5">
-              <p className="font-frame-mono text-[0.56rem] tracking-[0.2em] uppercase text-frame-orange mb-2">Suporte</p>
+              <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-2">Suporte</p>
               <p className="text-sm text-frame-gray-light">suporte@cenastudio.com.br</p>
             </div>
             <div className="border border-frame-gray-3 p-5">
-              <p className="font-frame-mono text-[0.56rem] tracking-[0.2em] uppercase text-frame-orange mb-2">Horário</p>
+              <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-2">Horário</p>
               <p className="text-sm text-frame-gray-light">Seg-Sex, 9h às 18h</p>
             </div>
           </motion.div>

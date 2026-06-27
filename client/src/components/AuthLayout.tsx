@@ -99,7 +99,7 @@ export function AuthField({
 }) {
   return (
     <div className="mb-4">
-      <label className="block font-frame-mono text-[0.56rem] tracking-[0.15em] uppercase text-frame-gray-light mb-1.5">
+      <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] uppercase text-frame-gray-light mb-1.5">
         {label}
       </label>
       {children}

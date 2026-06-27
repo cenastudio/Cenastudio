@@ -130,13 +130,13 @@ export default function ProjectMetadataModal({
         <form onSubmit={handleSubmit} className="space-y-4 mt-3">
           {/* Seção 1: Identificação Básica */}
           <div className="border-b border-frame-gray-2 pb-3 mb-2">
-            <span className="block font-frame-mono text-[0.52rem] tracking-[0.2em] text-frame-orange uppercase mb-3">
+            <span className="block font-frame-mono text-[0.62rem] tracking-[0.2em] text-frame-orange uppercase mb-3">
               // Identificação do Projeto
             </span>
 
             <div className="space-y-3">
               <div className="space-y-1">
-                <label className="block font-frame-mono text-[0.54rem] tracking-[0.1em] text-frame-white uppercase font-medium">
+                <label className="block font-frame-mono text-[0.62rem] tracking-[0.1em] text-frame-white uppercase font-medium">
                   Nome do Projeto *
                 </label>
                 <input
@@ -151,7 +151,7 @@ export default function ProjectMetadataModal({
               </div>
 
               <div className="space-y-1">
-                <label className="block font-frame-mono text-[0.54rem] tracking-[0.1em] text-frame-white uppercase font-medium">
+                <label className="block font-frame-mono text-[0.62rem] tracking-[0.1em] text-frame-white uppercase font-medium">
                   Descrição
                 </label>
                 <textarea
@@ -167,13 +167,13 @@ export default function ProjectMetadataModal({
 
           {/* Seção 2: Especificações de Produção */}
           <div className="space-y-3">
-            <span className="block font-frame-mono text-[0.52rem] tracking-[0.2em] text-frame-orange uppercase">
+            <span className="block font-frame-mono text-[0.62rem] tracking-[0.2em] text-frame-orange uppercase">
               // Especificações Cinematográficas
             </span>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="block font-frame-mono text-[0.54rem] tracking-[0.1em] text-frame-white uppercase font-medium">
+                <label className="block font-frame-mono text-[0.62rem] tracking-[0.1em] text-frame-white uppercase font-medium">
                   Formato Audiovisual
                 </label>
                 <input
@@ -187,7 +187,7 @@ export default function ProjectMetadataModal({
               </div>
 
               <div className="space-y-1">
-                <label className="block font-frame-mono text-[0.54rem] tracking-[0.1em] text-frame-white uppercase font-medium">
+                <label className="block font-frame-mono text-[0.62rem] tracking-[0.1em] text-frame-white uppercase font-medium">
                   Cliente / Marca
                 </label>
                 <input
@@ -203,7 +203,7 @@ export default function ProjectMetadataModal({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="block font-frame-mono text-[0.54rem] tracking-[0.1em] text-frame-white uppercase font-medium">
+                <label className="block font-frame-mono text-[0.62rem] tracking-[0.1em] text-frame-white uppercase font-medium">
                   Tom / Gênero Artístico
                 </label>
                 <input
@@ -217,7 +217,7 @@ export default function ProjectMetadataModal({
               </div>
 
               <div className="space-y-1">
-                <label className="block font-frame-mono text-[0.54rem] tracking-[0.1em] text-frame-white uppercase font-medium">
+                <label className="block font-frame-mono text-[0.62rem] tracking-[0.1em] text-frame-white uppercase font-medium">
                   Câmera / Lentes
                 </label>
                 <input
@@ -232,7 +232,7 @@ export default function ProjectMetadataModal({
             </div>
 
             <div className="space-y-1">
-              <label className="block font-frame-mono text-[0.54rem] tracking-[0.1em] text-frame-white uppercase font-medium">
+              <label className="block font-frame-mono text-[0.62rem] tracking-[0.1em] text-frame-white uppercase font-medium">
                 Orçamento Estimado
               </label>
               <input

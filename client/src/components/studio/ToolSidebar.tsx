@@ -38,8 +38,7 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
     <aside className="w-full lg:w-64 shrink-0 bg-frame-gray-1 border-b lg:border-b-0 lg:border-r border-frame-gray-2 flex flex-col overflow-x-auto lg:overflow-y-auto">
       {/* Brand Header (Hidden on Mobile) */}
       <div className="hidden lg:block px-[18px] py-5 border-b border-frame-gray-2">
-        <BrandLogo compact className="scale-90 origin-left" />
-        <p className="font-frame-mono text-[0.52rem] tracking-[0.15em] uppercase text-frame-gray-light mt-0.5">
+        <p className="font-frame-mono text-[0.62rem] tracking-[0.15em] uppercase text-frame-gray-light mt-0.5">
           Studio WORKSPACE
         </p>
       </div>
@@ -60,7 +59,7 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
           return (
             <div key={cat.name} className="flex lg:flex-col items-center lg:items-stretch shrink-0 lg:shrink">
               {/* Category label (Hidden on mobile or rendered as badge) */}
-              <p className="hidden lg:block font-frame-mono text-[0.52rem] tracking-[0.2em] uppercase text-frame-gray-muted px-[18px] pt-4 pb-1.5">
+              <p className="hidden lg:block font-frame-mono text-[0.62rem] tracking-[0.2em] uppercase text-frame-gray-muted px-[18px] pt-4 pb-1.5">
                 // {cat.name}
               </p>
               <div className="flex lg:flex-col gap-1 px-2 lg:px-0">

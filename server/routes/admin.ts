@@ -16,5 +16,6 @@ router.get("/users", adminController.listUsers);
 router.post("/users", validateBody(createManagedUserSchema), adminController.createManagedUser);
 router.put("/users/:id/role", adminController.updateUserRole);
 router.put("/users/:id/plan", adminController.updateUserPlan);
+router.delete("/users/:id", adminController.deleteManagedUser);
 
 export default router;

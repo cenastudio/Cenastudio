@@ -360,7 +360,7 @@ function ProposalsContent() {
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body">
       <AppNavBar />
-      <main className="px-4 sm:px-6 py-6 space-y-5">
+      <main id="main-content" className="px-4 sm:px-6 py-6 space-y-5">
         <section className="border border-frame-gray-3 bg-frame-gray-1/40 p-4 sm:p-5">
           <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-4">
             <div>
@@ -372,15 +372,15 @@ function ProposalsContent() {
             </div>
             <div className="grid grid-cols-3 gap-2 min-w-[320px]">
               <div className="border border-frame-gray-3 bg-frame-black/30 p-3">
-                <p className="text-[0.55rem] font-frame-mono uppercase text-frame-gray-light">Subtotal</p>
+                <p className="text-[0.64rem] font-frame-mono uppercase text-frame-gray-light">Subtotal</p>
                 <p className="text-sm font-bold">{formatCurrency(subtotal)}</p>
               </div>
               <div className="border border-frame-gray-3 bg-frame-black/30 p-3">
-                <p className="text-[0.55rem] font-frame-mono uppercase text-frame-gray-light">Desconto</p>
+                <p className="text-[0.64rem] font-frame-mono uppercase text-frame-gray-light">Desconto</p>
                 <p className="text-sm font-bold text-green-400">{formatCurrency(discountValue)}</p>
               </div>
               <div className="border border-frame-orange bg-frame-orange/10 p-3">
-                <p className="text-[0.55rem] font-frame-mono uppercase text-frame-orange">Total</p>
+                <p className="text-[0.64rem] font-frame-mono uppercase text-frame-orange">Total</p>
                 <p className="text-sm font-bold">{formatCurrency(total)}</p>
               </div>
             </div>

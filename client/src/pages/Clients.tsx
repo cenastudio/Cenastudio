@@ -97,7 +97,7 @@ function SortableClientCard({
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className={`border-l-2 ${stage.color} bg-frame-gray-2/30 p-3 mb-2 cursor-grab active:cursor-grabbing hover:border-l-frame-orange transition-all group`}
+      className={`border-l-2 ${stage.color} bg-frame-gray-2/30 p-3 mb-2 cursor-grab active:cursor-grabbing hover:border-l-frame-orange transition-[background-color,border-color,box-shadow,transform] duration-200 group`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
@@ -323,7 +323,7 @@ function ClientsContent() {
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
       <AppNavBar />
 
-      <main className="flex-1 max-w-[1600px] w-full mx-auto px-6 py-8 space-y-6">
+      <main id="main-content" className="flex-1 max-w-[1600px] w-full mx-auto px-6 py-8 space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -409,7 +409,7 @@ function ClientsContent() {
           {/* Sidebar */}
           <aside className="hidden lg:block w-56 shrink-0 space-y-4">
             <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-4">
-              <p className="font-frame-mono text-[0.55rem] tracking-[0.2em] uppercase text-frame-orange mb-3">Ações Rápidas</p>
+              <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-3">Ações Rápidas</p>
               <div className="space-y-2">
                  <button onClick={() => setLocation("/clients/new")} className="w-full text-left text-sm text-frame-gray-light hover:text-frame-white transition px-2 py-1.5 border border-frame-gray-3 hover:border-frame-orange/50">
                   + Novo Cliente
@@ -420,7 +420,7 @@ function ClientsContent() {
               </div>
             </div>
             <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-4">
-              <p className="font-frame-mono text-[0.55rem] tracking-[0.2em] uppercase text-frame-orange mb-3">Segmentos</p>
+              <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-3">Segmentos</p>
               <div className="space-y-1.5">
                 {[
                   { id: "", label: "Todos", color: "bg-frame-gray-3" },
@@ -442,7 +442,7 @@ function ClientsContent() {
               </div>
             </div>
             <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-4">
-              <p className="font-frame-mono text-[0.55rem] tracking-[0.2em] uppercase text-frame-orange mb-3">Status</p>
+              <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-3">Status</p>
               <div className="space-y-1.5">
                 {[
                   { id: "", label: "Todos", color: "bg-frame-gray-3" },
@@ -465,7 +465,7 @@ function ClientsContent() {
             </div>
             {stats && (
               <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-4">
-                <p className="font-frame-mono text-[0.55rem] tracking-[0.2em] uppercase text-frame-orange mb-3">Resumo</p>
+                <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-3">Resumo</p>
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between">
                     <span className="text-frame-gray-light">Total</span>

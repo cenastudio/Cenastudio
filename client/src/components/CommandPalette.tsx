@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   CommandDialog,
   CommandInput,
@@ -13,7 +14,7 @@ import {
   Users,
   GitBranch,
   MessageSquare,
-  FolderOpen,
+  FileText,
   Film,
   UserCheck,
   BarChart3,
@@ -30,11 +31,12 @@ interface CommandItem {
 }
 
 const commands: CommandItem[] = [
-  { label: "Ferramentas", path: "/tools", icon: Wrench },
+  { label: "Studio IA", path: "/tools", icon: Wrench },
   { label: "Clientes", path: "/clients", icon: Users },
   { label: "Pipeline", path: "/pipeline", icon: GitBranch },
   { label: "Intera\u00e7\u00f5es", path: "/interactions", icon: MessageSquare },
-  { label: "Arquivos", path: "/files", icon: FolderOpen },
+  { label: "Propostas", path: "/proposals", icon: FileText },
+  { label: "Documentos", path: "/documents", icon: FileText },
   { label: "Review de V\u00eddeos", path: "/video-reviews", icon: Film },
   { label: "Equipe", path: "/collaborators", icon: UserCheck },
   { label: "Analytics", path: "/analytics", icon: BarChart3 },
@@ -47,6 +49,7 @@ const commands: CommandItem[] = [
 export default function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [, setLocation] = useLocation();
+  const { isAdmin } = useAuth();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -55,8 +58,14 @@ export default function CommandPalette() {
         setOpen((prev) => !prev);
       }
     };
+    const handleOpen = () => setOpen(true);
+
     document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("cena:open-command-palette", handleOpen);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("cena:open-command-palette", handleOpen);
+    };
   }, []);
 
   const handleSelect = (path: string) => {
@@ -65,12 +74,12 @@ export default function CommandPalette() {
   };
 
   return (
-    <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Digite um comando ou busca..." />
+    <CommandDialog open={open} onOpenChange={setOpen} title="Busca rápida" description="Navegue pelas áreas da Cena Studio">
+      <CommandInput placeholder="Buscar uma área ou ação..." />
       <CommandList>
         <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
         <CommandGroup heading="Navegação">
-          {commands.map((cmd) => {
+          {commands.filter((cmd) => cmd.path !== "/admin" || isAdmin).map((cmd) => {
             const Icon = cmd.icon;
             return (
               <CommandItem

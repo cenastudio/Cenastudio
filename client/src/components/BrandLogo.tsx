@@ -32,7 +32,7 @@ export default function BrandLogo({ compact = false, className = "", useImage = 
           CENA
         </span>
         {!compact && (
-          <span className="-mt-0.5 font-frame-mono text-[0.48rem] tracking-[0.22em] uppercase text-frame-orange">
+          <span className="-mt-0.5 font-frame-mono text-[0.6rem] tracking-[0.22em] uppercase text-frame-orange">
             Studio
           </span>
         )}

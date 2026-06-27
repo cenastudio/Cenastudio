@@ -5,6 +5,7 @@ import AppNavBar from "@/components/AppNavBar";
 import ProjectNav from "@/components/ProjectNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import VideoPlayer from "@/components/VideoPlayer";
+import ReviewCommentComposer from "@/components/ReviewCommentComposer";
 import type { Annotation } from "@/components/AnnotationCanvas";
 import {
   AlertCircle,
@@ -22,7 +23,6 @@ import {
   PenLine,
   Plus,
   RefreshCw,
-  Send,
   Share2,
   Square,
   Trash2,
@@ -132,16 +132,18 @@ function VideoReviewsContent() {
   const [newComment, setNewComment] = useState("");
   const [newCommentTimestamp, setNewCommentTimestamp] = useState<number | null>(null);
   const [seekTo, setSeekTo] = useState<number | null>(null);
-  const [commentModalOpen, setCommentModalOpen] = useState(false);
+  const [commentAnchor, setCommentAnchor] = useState<number | null>(null);
+  const [pauseRequest, setPauseRequest] = useState(0);
+  const [isCommenting, setIsCommenting] = useState(false);
 
-  const loadReviewDetails = useCallback(async (reviewId: number) => {
+  const loadReviewDetails = useCallback(async (reviewId: number, preservePlayer = false) => {
     try {
       const response = await fetch(`/api/video-review?id=${reviewId}`, { credentials: "include" });
       const data = await response.json();
       if (data.success) {
         setSelectedReview(data.data);
         setComments(data.data.comments || []);
-        setSeekTo(null);
+        if (!preservePlayer) setSeekTo(null);
         return;
       }
       toast.error(data.error || "Erro ao carregar review");
@@ -196,6 +198,20 @@ function VideoReviewsContent() {
   useEffect(() => {
     loadProjectFiles();
   }, [loadProjectFiles]);
+
+  useEffect(() => {
+    if (!selectedReview?.id) return;
+    const reviewId = selectedReview.id;
+    const interval = window.setInterval(() => loadReviewDetails(reviewId, true), 5000);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") loadReviewDetails(reviewId, true);
+    };
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, [loadReviewDetails, selectedReview?.id]);
 
   const videoFiles = useMemo(
     () =>
@@ -338,6 +354,7 @@ function VideoReviewsContent() {
       toast.error("Comentário é obrigatório");
       return;
     }
+    setIsCommenting(true);
     try {
       const response = await fetch("/api/video-review-comment", {
         method: "POST",
@@ -353,16 +370,22 @@ function VideoReviewsContent() {
       });
       const data = await response.json();
       if (data.success) {
-      setNewComment("");
-      setNewCommentTimestamp(null);
-      setCommentModalOpen(false);
-      await loadReviewDetails(selectedReview.id);
+        setNewComment("");
+        setCommentAnchor(null);
+        await loadReviewDetails(selectedReview.id, true);
       } else {
         toast.error(data.error || "Erro ao comentar");
       }
     } catch {
       toast.error("Erro ao comentar");
+    } finally {
+      setIsCommenting(false);
     }
+  };
+
+  const captureCommentTime = () => {
+    setCommentAnchor(Math.floor(newCommentTimestamp ?? 0));
+    setPauseRequest((request) => request + 1);
   };
 
   const handleResolveComment = async (commentId: number, resolved: boolean) => {
@@ -421,7 +444,7 @@ function VideoReviewsContent() {
       <AppNavBar />
       {projectId && <ProjectNav projectId={parseInt(projectId)} />}
 
-      <main className="flex-1 flex flex-col min-h-0">
+      <main id="main-content" className="flex-1 flex flex-col min-h-0">
         <div className="border-b border-frame-gray-3 bg-frame-gray-1/20 px-4 sm:px-6 py-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="frame-label">// APROVAÇÃO</p>
@@ -473,7 +496,7 @@ function VideoReviewsContent() {
                   )}
                   {previewUrl && (
                     <div className="border border-frame-orange/30 bg-frame-orange/5 p-3">
-                      <p className="text-[0.58rem] font-frame-mono uppercase tracking-wider text-frame-orange mb-1">
+                      <p className="text-[0.64rem] font-frame-mono uppercase tracking-wider text-frame-orange mb-1">
                         Preview detectado
                       </p>
                       <p className="text-xs text-frame-gray-light break-all">
@@ -518,7 +541,7 @@ function VideoReviewsContent() {
                             <div className="min-w-0">
                               <p className="text-sm font-semibold truncate">{review.title}</p>
                               <p className="text-[0.62rem] text-frame-gray-light truncate">{review.original_name || "Vídeo externo"}</p>
-                              <p className="text-[0.55rem] text-frame-gray-light/60 font-frame-mono mt-1">
+                              <p className="text-[0.64rem] text-frame-gray-light/60 font-frame-mono mt-1">
                                 {new Date(review.created_at).toLocaleDateString("pt-BR")}
                               </p>
                             </div>
@@ -546,7 +569,7 @@ function VideoReviewsContent() {
                         key={action.value}
                         onClick={() => handleUpdateReviewStatus(action.value)}
                         disabled={selectedReview.status === action.value}
-                        className={`px-2.5 py-1.5 text-[0.55rem] font-frame-mono uppercase tracking-wider border transition ${action.color} disabled:opacity-45`}
+                        className={`px-2.5 py-1.5 text-[0.64rem] font-frame-mono uppercase tracking-wider border transition ${action.color} disabled:opacity-45`}
                       >
                         {action.label}
                       </button>
@@ -564,6 +587,7 @@ function VideoReviewsContent() {
                       seekTo={seekTo}
                       commentMarkers={commentMarkers}
                       onAddAnnotatedComment={handleAddAnnotatedComment}
+                      pauseRequest={pauseRequest}
                     />
                     <p className="mt-3 text-[0.6rem] font-frame-mono uppercase tracking-wider text-frame-gray-light">
                       Player de aprovação com comentários por timestamp e marcações no frame.
@@ -592,7 +616,7 @@ function VideoReviewsContent() {
                     <Share2 className="w-4 h-4 text-frame-orange" />
                     Sala do cliente
                   </h3>
-                  <span className="text-[0.55rem] font-frame-mono uppercase tracking-wider text-frame-gray-light">
+                  <span className="text-[0.64rem] font-frame-mono uppercase tracking-wider text-frame-gray-light">
                     {selectedReview ? (selectedReview.expires_at ? "link ativo" : "sem link") : "aguardando"}
                   </span>
                 </div>
@@ -615,8 +639,7 @@ function VideoReviewsContent() {
                       </button>
                       <a
                         href={selectedShareUrl}
-                        target="_blank"
-                        rel="noreferrer"
+                        target="_self"
                         className="frame-btn-primary flex items-center justify-center gap-2"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
@@ -659,24 +682,24 @@ function VideoReviewsContent() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-0.5">
                               <span className="text-xs font-semibold">{comment.author_name}</span>
-                              <button onClick={() => setSeekTo(comment.timestamp_seconds)} className="text-[0.55rem] text-frame-orange hover:underline font-mono ml-auto flex items-center gap-1">
+                              <button onClick={() => setSeekTo(comment.timestamp_seconds)} className="text-[0.64rem] text-frame-orange hover:underline font-mono ml-auto flex items-center gap-1">
                                 <Clock className="w-2.5 h-2.5" />
                                 {formatTimestamp(comment.timestamp_seconds)}
                               </button>
                             </div>
                             <p className="text-xs text-frame-gray-light leading-relaxed">{comment.comment}</p>
                             {comment.annotations?.length > 0 && (
-                              <div className="flex items-center gap-1 mt-1 text-[0.5rem] text-frame-gray-light/50">
+                              <div className="flex items-center gap-1 mt-1 text-[0.62rem] text-frame-gray-light/50">
                                 <PenLine className="w-2.5 h-2.5" />
                                 {comment.annotations.length} anotação{comment.annotations.length > 1 ? "ões" : ""} no frame
                               </div>
                             )}
                             <div className="flex items-center gap-2 mt-2">
-                              <button onClick={() => handleResolveComment(comment.id, !comment.resolved)} className="text-[0.55rem] text-frame-gray-light hover:text-frame-white flex items-center gap-1">
+                              <button onClick={() => handleResolveComment(comment.id, !comment.resolved)} className="text-[0.64rem] text-frame-gray-light hover:text-frame-white flex items-center gap-1">
                                 {comment.resolved ? <Square className="w-3 h-3" /> : <CheckSquare className="w-3 h-3 text-green-400" />}
                                 {comment.resolved ? "Reabrir" : "Resolver"}
                               </button>
-                              <button onClick={() => handleDeleteComment(comment.id)} className="text-[0.55rem] text-frame-gray-light hover:text-red-400 flex items-center gap-1">
+                              <button onClick={() => handleDeleteComment(comment.id)} className="text-[0.64rem] text-frame-gray-light hover:text-red-400 flex items-center gap-1">
                                 <Trash2 className="w-3 h-3" />
                                 Excluir
                               </button>
@@ -699,21 +722,18 @@ function VideoReviewsContent() {
                 )}
               </div>
 
-              <div className="border-t border-frame-gray-3 p-4">
-                <button
-                  type="button"
-                  disabled={!selectedReview}
-                  onClick={() => setCommentModalOpen(true)}
-                  className="frame-btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  Comentar no tempo
-                </button>
-                <div className="flex items-center gap-2 mt-2 text-[0.55rem] text-frame-gray-light/60">
-                  <Clock className="w-3 h-3" />
-                  Timestamp: {newCommentTimestamp !== null ? formatTimestamp(newCommentTimestamp) : "--:--"}
-                </div>
-              </div>
+              {selectedReview && (
+                <ReviewCommentComposer
+                  currentTimestamp={newCommentTimestamp ?? 0}
+                  anchorTimestamp={commentAnchor}
+                  comment={newComment}
+                  onCommentChange={setNewComment}
+                  onBegin={captureCommentTime}
+                  onRecapture={captureCommentTime}
+                  onSubmit={() => addComment(newComment, commentAnchor ?? newCommentTimestamp ?? 0)}
+                  submitting={isCommenting}
+                />
+              )}
             </aside>
           </div>
         )}
@@ -751,7 +771,7 @@ function VideoReviewsContent() {
                     <Copy className="w-4 h-4" />
                   </button>
                 </div>
-                <a href={shareUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-xs text-frame-orange hover:underline">
+                <a href={shareUrl} target="_self" className="flex items-center gap-2 text-xs text-frame-orange hover:underline">
                   <ExternalLink className="w-3.5 h-3.5" />
                   Abrir página pública
                 </a>
@@ -764,56 +784,6 @@ function VideoReviewsContent() {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {commentModalOpen && selectedReview && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 18 }}
-              className="w-full max-w-lg border border-frame-gray-3 bg-frame-black p-5 shadow-2xl"
-            >
-              <div className="mb-5 flex items-center justify-between">
-                <div>
-                  <p className="frame-label mb-1">// Comentário</p>
-                  <h3 className="text-xl font-bold text-frame-white">
-                    Ajuste em {formatTimestamp(newCommentTimestamp ?? 0)}
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setCommentModalOpen(false)}
-                  className="border border-frame-gray-3 p-2 text-frame-gray-light hover:border-frame-orange hover:text-frame-orange"
-                  aria-label="Fechar comentário"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              <textarea
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                className="frame-input h-32 w-full"
-                placeholder="Descreva o ajuste para este momento do vídeo..."
-                autoFocus
-              />
-              <button
-                type="button"
-                onClick={() => addComment(newComment, newCommentTimestamp ?? 0)}
-                disabled={!newComment.trim()}
-                className="frame-btn-primary mt-4 w-full flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                <Send className="w-4 h-4" />
-                Enviar comentário
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

@@ -98,7 +98,7 @@ export default function PricingSection() {
               }`}
             >
               <div className="p-8 md:p-10">
-                <div className="font-frame-mono text-[0.58rem] tracking-[0.2em] uppercase text-frame-orange mb-4">
+                <div className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-4">
                   {plan.tier}
                 </div>
 
@@ -135,7 +135,7 @@ export default function PricingSection() {
               </div>
 
               {plan.highlight && (
-                <div className="absolute top-0 right-0 bg-frame-orange text-frame-black px-4 py-2 font-frame-mono text-[0.56rem] uppercase tracking-[0.15em] font-semibold">
+                <div className="absolute top-0 right-0 bg-frame-orange text-frame-black px-4 py-2 font-frame-mono text-[0.64rem] uppercase tracking-[0.15em] font-semibold">
                   Popular
                 </div>
               )}

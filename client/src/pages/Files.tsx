@@ -294,18 +294,18 @@ function FilesContent() {
       <AppNavBar />
       {isProjectScoped && projectId && <ProjectNav projectId={projectId} />}
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-10 space-y-8">
+      <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-6 py-10 space-y-8">
         {/* Header com seletor de projeto */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <p className="frame-label mb-2">// ARQUIVOS</p>
+            <p className="frame-label mb-2">// MATERIAIS DO PROJETO</p>
             <h1 className="frame-title text-[clamp(2.1rem,4vw,3.5rem)]">
-              {currentProject ? currentProject.name : "BIBLIOTECA DO PROJETO"}
+              {currentProject ? currentProject.name : "MATERIAIS POR PROJETO"}
             </h1>
             <p className="text-frame-gray-light text-sm mt-2">
               {currentProject
-                ? `${files.length} arquivo${files.length !== 1 ? "s" : ""} no projeto`
-                : "Centralize links externos e referências sem pesar no sistema"}
+                ? `${files.length} ${files.length === 1 ? "material organizado" : "materiais organizados"} neste projeto`
+                : "Links, referências e anexos leves organizados no contexto de cada job"}
             </p>
           </div>
 
@@ -641,7 +641,7 @@ function FilesContent() {
                   {isUploading && (
                     <div className="mt-3">
                       <div className="w-full bg-frame-gray-3 rounded-full h-2">
-                        <div className="bg-frame-orange h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                        <div className="bg-frame-orange h-2 rounded-full transition-[width] duration-300 ease-out" style={{ width: `${uploadProgress}%` }} />
                       </div>
                       <p className="text-xs text-frame-gray-light mt-1 text-center">{uploadProgress}%</p>
                     </div>

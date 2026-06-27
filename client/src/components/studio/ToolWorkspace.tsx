@@ -27,7 +27,7 @@ export default function ToolWorkspace({
   const renderAutosaveStatus = () => {
     if (!activeProject) {
       return (
-        <span className="font-frame-mono text-[0.52rem] text-frame-gray-muted">
+        <span className="font-frame-mono text-[0.62rem] text-frame-gray-muted">
           Estúdio de Pré-produção
         </span>
       );
@@ -36,21 +36,21 @@ export default function ToolWorkspace({
     switch (autosaveStatus) {
       case "saving":
         return (
-          <span className="flex items-center gap-1.5 font-frame-mono text-[0.52rem] text-frame-orange animate-pulse">
+          <span className="flex items-center gap-1.5 font-frame-mono text-[0.62rem] text-frame-orange animate-pulse">
             <span className="w-1 h-1 rounded-full bg-frame-orange" />
             Salvando...
           </span>
         );
       case "saved":
         return (
-          <span className="flex items-center gap-1.5 font-frame-mono text-[0.52rem] text-[#00c864] transition-all duration-300">
+          <span className="flex items-center gap-1.5 font-frame-mono text-[0.62rem] text-[#00c864] transition-colors duration-200">
             <span className="w-1.5 h-1.5 rounded-full bg-[#00c864]" />
             Salvo
           </span>
         );
       case "error":
         return (
-          <span className="flex items-center gap-1.5 font-frame-mono text-[0.52rem] text-frame-red">
+          <span className="flex items-center gap-1.5 font-frame-mono text-[0.62rem] text-frame-red">
             <span className="w-1.5 h-1.5 rounded-full bg-frame-red animate-ping" />
             Erro ao salvar
           </span>
@@ -58,7 +58,7 @@ export default function ToolWorkspace({
       case "idle":
       default:
         return (
-          <span className="flex items-center gap-1.5 font-frame-mono text-[0.52rem] text-frame-gray-light">
+          <span className="flex items-center gap-1.5 font-frame-mono text-[0.62rem] text-frame-gray-light">
             <span className="w-1 h-1 rounded-full bg-frame-gray-muted" />
             Pronto
           </span>

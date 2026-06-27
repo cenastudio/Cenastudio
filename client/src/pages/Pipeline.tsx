@@ -310,7 +310,7 @@ function PipelineContent() {
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col overflow-x-hidden">
       <AppNavBar />
 
-      <main className="flex-1 w-full px-4 md:px-6 py-6 space-y-5">
+      <main id="main-content" className="flex-1 w-full px-4 md:px-6 py-6 space-y-5">
         <section className="flex flex-col xl:flex-row xl:items-end justify-between gap-5 border-b border-frame-gray-3 pb-5">
           <div className="max-w-3xl min-w-0">
             <p className="frame-label mb-2">// COMERCIAL</p>

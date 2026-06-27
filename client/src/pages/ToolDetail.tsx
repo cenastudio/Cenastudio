@@ -72,7 +72,7 @@ function ToolDetailContent() {
           </div>
 
           <div className="frame-card h-fit lg:sticky lg:top-24">
-            <p className="font-frame-mono text-[0.56rem] tracking-[0.14em] uppercase text-frame-gray-light mb-1">
+            <p className="font-frame-mono text-[0.64rem] tracking-[0.14em] uppercase text-frame-gray-light mb-1">
               Tempo estimado
             </p>
             <p className="frame-title text-2xl text-frame-white mb-6">{tool.processingTime}</p>

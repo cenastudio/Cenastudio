@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useRoute } from "wouter";
 import { api, ApiError, startCheckout, type ToolFromApi } from "@/lib/api";
+import { cleanGeneratedText, downloadGeneratedDocx, downloadGeneratedPdf } from "@/lib/documentFormatter";
 import { toast } from "sonner";
 import ToolSidebar from "./ToolSidebar";
 import ToolWorkspace from "./ToolWorkspace";
@@ -164,19 +165,18 @@ export default function StudioShell() {
 
   // Copy output to clipboard
   const handleCopy = () => {
-    navigator.clipboard.writeText(output);
-    toast.success("Copiado para a área de transferência!");
+    navigator.clipboard.writeText(cleanGeneratedText(output));
+    toast.success("Documento limpo copiado!");
   };
 
-  // Download output as text file
-  const handleDownload = () => {
-    const blob = new Blob([output], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `cena-studio-${tool.slug}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleDownload = async (format: "pdf" | "docx") => {
+    try {
+      if (format === "pdf") await downloadGeneratedPdf(output, tool.name);
+      else await downloadGeneratedDocx(output, tool.name);
+      toast.success(format === "pdf" ? "PDF gerado com sucesso" : "Documento Word gerado com sucesso");
+    } catch {
+      toast.error("Não foi possível gerar o documento");
+    }
   };
 
   // Clear current form and output
@@ -256,7 +256,7 @@ export default function StudioShell() {
                     <div className="flex gap-2">
                       <button
                         type="button"
-                        className="frame-btn-primary !py-1.5 !px-3 !text-[0.58rem]"
+                        className="frame-btn-primary !py-1.5 !px-3 !text-[0.64rem]"
                         onClick={async () => {
                           try {
                             await startCheckout("pro");
@@ -269,7 +269,7 @@ export default function StudioShell() {
                       </button>
                       <button
                         type="button"
-                        className="frame-btn-ghost !py-1.5 !px-3 !text-[0.58rem]"
+                        className="frame-btn-ghost !py-1.5 !px-3 !text-[0.64rem]"
                         onClick={() => {
                           window.location.hash = "pricing";
                         }}

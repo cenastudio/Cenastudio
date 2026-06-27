@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { type ToolFromApi } from "@/lib/api";
+import { cleanGeneratedText } from "@/lib/documentFormatter";
 import ActionToolbar from "./ActionToolbar";
 import RefineChatPanel from "./RefineChatPanel";
 
@@ -10,7 +11,7 @@ interface OutputPanelProps {
   onClearAll: () => void;
   onToggleHistory: () => void;
   onCopy: () => void;
-  onDownload: () => void;
+  onDownload: (format: "pdf" | "docx") => void;
 }
 
 export default function OutputPanel({
@@ -23,6 +24,7 @@ export default function OutputPanel({
   onDownload,
 }: OutputPanelProps) {
   const [activeTab, setActiveTab] = useState<"document" | "refine">("document");
+  const displayOutput = cleanGeneratedText(output);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-frame-black border-t lg:border-t-0 border-frame-gray-2">
@@ -49,7 +51,7 @@ export default function OutputPanel({
           <div className="flex-1 p-6 md:p-8 overflow-y-auto">
             {output ? (
               <pre className="whitespace-pre-wrap break-words font-frame-body text-[0.88rem] leading-[1.8] text-frame-cream selection:bg-frame-orange selection:text-frame-black">
-                {output}
+                {displayOutput}
               </pre>
             ) : (
               <div className="h-full min-h-[250px] flex flex-col items-center justify-center gap-4 opacity-25 select-none">

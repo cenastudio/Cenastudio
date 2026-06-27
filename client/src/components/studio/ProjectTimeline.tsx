@@ -73,7 +73,7 @@ export default function ProjectTimeline({ activeToolId }: ProjectTimelineProps) 
       <div className="flex items-center gap-6 min-w-max w-full">
         {/* Cinematic Pipeline Header Label (Hidden on small mobile) */}
         <div className="hidden xl:flex flex-col pr-5 border-r border-frame-gray-2 shrink-0 font-frame-mono select-none">
-          <span className="text-[0.5rem] tracking-[0.25em] text-frame-orange font-semibold uppercase">
+          <span className="text-[0.62rem] tracking-[0.25em] text-frame-orange font-semibold uppercase">
             Direção de Fluxo
           </span>
           <span className="text-[0.62rem] text-frame-white font-bold tracking-widest uppercase mt-0.5">
@@ -95,11 +95,11 @@ export default function ProjectTimeline({ activeToolId }: ProjectTimelineProps) 
                 key={step.id}
                 type="button"
                 onClick={() => handleNavigateStep(step.id)}
-                className="flex items-center gap-1.5 md:gap-2.5 z-10 bg-frame-gray-1 px-2 py-1 border border-transparent hover:border-frame-gray-3 transition-all duration-300 group rounded-none outline-none shrink-0"
+                className="flex items-center gap-1.5 md:gap-2.5 z-10 bg-frame-gray-1 px-2 py-1 border border-transparent hover:border-frame-gray-3 transition-[background-color,border-color,color,transform] duration-200 group rounded-none outline-none shrink-0"
               >
                 {/* Node circle state */}
                 <div
-                  className={`w-[18px] h-[18px] md:w-5 md:h-5 rounded-full flex items-center justify-center border font-frame-mono text-[0.55rem] font-bold transition duration-300 ${
+                  className={`w-[18px] h-[18px] md:w-5 md:h-5 rounded-full flex items-center justify-center border font-frame-mono text-[0.64rem] font-bold transition duration-300 ${
                     isActive
                       ? "border-frame-orange bg-frame-orange text-frame-black shadow-[0_0_12px_rgba(255,77,0,0.3)]"
                       : isFilled
@@ -125,7 +125,7 @@ export default function ProjectTimeline({ activeToolId }: ProjectTimelineProps) 
                   >
                     {step.name}
                   </span>
-                  <span className="hidden sm:inline font-frame-mono text-[0.45rem] tracking-wider text-frame-gray-muted -mt-0.5">
+                  <span className="hidden sm:inline font-frame-mono text-[0.6rem] tracking-wider text-frame-gray-muted -mt-0.5">
                     {step.category}
                   </span>
                 </div>

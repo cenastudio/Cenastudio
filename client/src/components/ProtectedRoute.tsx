@@ -1,6 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
 import { useLocation } from "wouter";
+import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -24,8 +25,9 @@ export default function ProtectedRoute({ children, adminOnly }: ProtectedRoutePr
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        Carregando...
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-3" role="status" aria-live="polite">
+        <Loader2 className="h-6 w-6 animate-spin text-frame-orange" />
+        <span className="font-frame-mono text-xs uppercase tracking-wider text-frame-gray-light">Carregando área de trabalho</span>
       </div>
     );
   }

@@ -103,7 +103,7 @@ function AnalyticsContent() {
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
       <AppNavBar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6 sm:space-y-8">
+      <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6">
           <div>
@@ -116,7 +116,7 @@ function AnalyticsContent() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 xl:grid-cols-5 gap-2 w-full xl:w-auto">
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-2 w-full xl:w-auto">
             <button onClick={() => setLocation("/pipeline")} className="frame-btn-ghost flex items-center justify-center gap-2">
               <TrendingUp className="w-4 h-4" />
               Pipeline
@@ -124,10 +124,6 @@ function AnalyticsContent() {
             <button onClick={() => setLocation("/dashboard")} className="frame-btn-ghost flex items-center justify-center gap-2">
               <FolderOpen className="w-4 h-4" />
               Projetos
-            </button>
-            <button onClick={() => setLocation("/files")} className="frame-btn-ghost flex items-center justify-center gap-2">
-              <Download className="w-4 h-4" />
-              Arquivos
             </button>
             <button onClick={() => exportPipeline("csv")} className="frame-btn-ghost flex items-center justify-center gap-2">
               <Download className="w-4 h-4" />

@@ -47,7 +47,7 @@ export default function FormDispatcher({ slug, data, onChange, onSetOutput }: Fo
     default:
       return (
         <div className="flex flex-col gap-3">
-          <label className="block font-frame-mono text-[0.58rem] tracking-[0.12em] uppercase text-frame-gray-light">
+          <label className="block font-frame-mono text-[0.64rem] tracking-[0.12em] uppercase text-frame-gray-light">
             Descrição / contexto geral
           </label>
           <textarea

@@ -306,7 +306,7 @@ function DocumentsContent() {
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body">
       <AppNavBar />
-      <main className="px-4 sm:px-6 py-6 space-y-5">
+      <main id="main-content" className="px-4 sm:px-6 py-6 space-y-5">
         <section className="border border-frame-gray-3 bg-frame-gray-1/40 p-4 sm:p-5">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
             <div>

@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useEffect, useId } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { X } from "lucide-react";
 
 interface AnimatedModalProps {
@@ -21,6 +21,9 @@ export default function AnimatedModal({
   footer,
   className = "",
 }: AnimatedModalProps) {
+  const titleId = useId();
+  const descriptionId = useId();
+  const reduceMotion = useReducedMotion();
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -49,9 +52,9 @@ export default function AnimatedModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: reduceMotion ? 0 : 0.18, ease: [0.16, 1, 0.3, 1] }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/85 backdrop-blur-md z-40"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40"
           />
 
           {/* Modal Container */}
@@ -61,25 +64,30 @@ export default function AnimatedModal({
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
+              transition={{ duration: reduceMotion ? 0 : 0.2, ease: [0.16, 1, 0.3, 1] }}
               className="bg-frame-black border border-frame-gray-3 text-frame-white w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={titleId}
+              aria-describedby={description ? descriptionId : undefined}
             >
               {/* Header */}
               <div className="flex items-start justify-between mb-6 pb-4 border-b border-frame-gray-3">
                 <div className="flex-1 min-w-0 pr-4">
-                  <h2 className="font-bold text-xl tracking-tight text-frame-white">
+                  <h2 id={titleId} className="font-bold text-xl tracking-tight text-frame-white">
                     {title}
                   </h2>
                   {description && (
-                    <p className="text-frame-gray-light text-sm mt-1">{description}</p>
+                    <p id={descriptionId} className="text-frame-gray-light text-sm mt-1">{description}</p>
                   )}
                 </div>
                 <button
                   type="button"
                   onClick={onClose}
                   className="text-frame-gray-light hover:text-frame-white transition-colors p-1 hover:bg-frame-gray-3 shrink-0"
-                  aria-label="Close"
+                  aria-label="Fechar"
+                  autoFocus
                 >
                   <X className="w-5 h-5" />
                 </button>

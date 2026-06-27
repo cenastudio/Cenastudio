@@ -58,7 +58,7 @@ export const updateUserRole: RequestHandler = (req, res, next) => {
   try {
     const userId = parseInt(req.params.id);
     const { role } = req.body;
-    authService.updateUserRole(userId, role);
+    authService.updateUserRole(userId, role, req.user?.id);
     res.json({ success: true, data: { id: userId, role } });
   } catch (e) {
     next(e);
@@ -71,6 +71,20 @@ export const updateUserPlan: RequestHandler = (req, res, next) => {
     const { planId } = req.body;
     authService.updateUserPlan(userId, planId);
     res.json({ success: true, data: { id: userId, planId } });
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const deleteManagedUser: RequestHandler = (req, res, next) => {
+  try {
+    const userId = parseInt(req.params.id);
+    if (!req.user?.id) {
+      res.status(401).json({ success: false, error: "Sessão expirada. Entre novamente para continuar." });
+      return;
+    }
+    const deleted = authService.deleteManagedUser(userId, req.user.id);
+    res.json({ success: true, data: deleted });
   } catch (e) {
     next(e);
   }

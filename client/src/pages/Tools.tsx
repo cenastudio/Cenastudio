@@ -49,7 +49,7 @@ function ToolsContent() {
                 onClick={() => setLocation(`/tools/${tool.id}`)}
               >
                 <Icon className="w-7 h-7 mb-3.5 text-frame-gray-light grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-300" />
-                <p className="font-frame-mono text-[0.56rem] tracking-[0.2em] text-frame-orange mb-2">
+                <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] text-frame-orange mb-2">
                   {tool.id}
                 </p>
                 <h3 className="frame-title text-[1.45rem] text-frame-white mb-2">{tool.name}</h3>
