@@ -64,6 +64,7 @@ const STAGES = [
   { id: "meeting", label: "Diagnóstico", description: "Reunião e briefing", color: "border-amber-400/40", dot: "bg-amber-400" },
   { id: "proposal", label: "Proposta", description: "Escopo enviado", color: "border-violet-400/40", dot: "bg-violet-400" },
   { id: "negotiation", label: "Negociação", description: "Ajustes finais", color: "border-orange-400/50", dot: "bg-frame-orange" },
+  { id: "paused", label: "Pausado", description: "Cliente em pausa", color: "border-gray-400/40", dot: "bg-gray-400" },
   { id: "won", label: "Ganho", description: "Virou projeto", color: "border-emerald-400/50", dot: "bg-emerald-400" },
   { id: "lost", label: "Perdido", description: "Encerrado", color: "border-red-400/45", dot: "bg-frame-red" },
 ];
