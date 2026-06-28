@@ -1,5 +1,6 @@
 import AuthLayout, { AuthError, AuthField, AuthLink } from "@/components/AuthLayout";
 import { api } from "@/lib/api";
+import { Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
@@ -82,9 +83,16 @@ export default function ResetPassword() {
         type="button"
         onClick={handleSubmit}
         disabled={submitting}
-        className="frame-btn-primary w-full"
+        className="frame-btn-primary w-full flex items-center justify-center gap-2"
       >
-        {submitting ? "Salvando..." : "Redefinir senha"}
+        {submitting ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Salvando...
+          </>
+        ) : (
+          "Redefinir senha"
+        )}
       </button>
       <AuthLink>
         <button

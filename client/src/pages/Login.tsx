@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
-import { Github } from "lucide-react";
+import { Github, Loader2 } from "lucide-react";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 export default function Login() {
@@ -80,9 +80,16 @@ export default function Login() {
         type="button"
         onClick={handleLogin}
         disabled={submitting}
-        className="frame-btn-primary w-full mt-1.5"
+        className="frame-btn-primary w-full mt-1.5 flex items-center justify-center gap-2"
       >
-        {submitting ? "Entrando..." : "Acessar estúdio"}
+        {submitting ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Entrando...
+          </>
+        ) : (
+          "Acessar estúdio"
+        )}
       </button>
 
       <div className="relative my-4">

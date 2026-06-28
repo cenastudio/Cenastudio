@@ -1,7 +1,7 @@
 import AuthLayout, { AuthError, AuthField, AuthLink } from "@/components/AuthLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError, startCheckout } from "@/lib/api";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
@@ -121,9 +121,16 @@ export default function Register() {
         type="button"
         onClick={handleRegister}
         disabled={submitting}
-        className="frame-btn-primary w-full mt-1.5"
+        className="frame-btn-primary w-full mt-1.5 flex items-center justify-center gap-2"
       >
-        {submitting ? "Criando conta..." : "Criar conta grátis"}
+        {submitting ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Criando conta...
+          </>
+        ) : (
+          "Criar conta grátis"
+        )}
       </button>
 
       <AuthLink>

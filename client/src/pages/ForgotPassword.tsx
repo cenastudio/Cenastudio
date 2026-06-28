@@ -1,5 +1,6 @@
 import AuthLayout, { AuthError, AuthField, AuthLink } from "@/components/AuthLayout";
 import { api } from "@/lib/api";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
 
@@ -59,9 +60,16 @@ export default function ForgotPassword() {
             type="button"
             onClick={handleSubmit}
             disabled={submitting}
-            className="frame-btn-primary w-full"
+            className="frame-btn-primary w-full flex items-center justify-center gap-2"
           >
-            {submitting ? "Enviando..." : "Enviar instruções"}
+            {submitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Enviando...
+              </>
+            ) : (
+              "Enviar instruções"
+            )}
           </button>
           <AuthLink>
             <button
