@@ -28,7 +28,10 @@ Inteligência artificial para produção audiovisual — roteiros, callsheets, d
 | `/clients/new` | **CRM** — criação de cliente |
 | `/clients/:id/editar` | **CRM** — edição de cliente |
 | `/pipeline` | **Pipeline** — Kanban de oportunidades de vendas |
+| `/proposals` | **Propostas** — gestão de propostas comerciais |
 | `/interactions` | **Interações** — histórico de contatos com clientes |
+| `/documents` | **Documentos** — gestão de documentos do projeto |
+| `/company` | **Empresa** — configurações da empresa |
 | `/files/:projectId` | **Arquivos** — upload e gestão de arquivos por projeto |
 | `/video-reviews/:projectId` | **Reviews** — reviews de vídeos com anotações no frame |
 | `/review/:token` | **Review Público** — link compartilhável para clientes |
@@ -43,10 +46,11 @@ Inteligência artificial para produção audiovisual — roteiros, callsheets, d
 | `/project/:id/collaborators` | **Equipe (projeto)** — membros do projeto |
 | `/studio/:id` | **Estúdio** — workspace completo da ferramenta |
 | `/profile` | **Perfil** — conta e preferências do usuário |
+| `/success` | **Sucesso** — página de confirmação após checkout |
 | `/admin` | **Admin Dashboard** — métricas do sistema |
 | `/admin/gerenciar` | **Admin Users** — gerenciar usuários, papéis e planos (admin only, não listado) |
 
-Rotas autenticadas: `/dashboard`, `/project/:id`, `/project/:id/*`, `/tools`, `/tools/:id`, `/studio/:id`, `/admin`, `/admin/gerenciar`, `/clients`, `/clients/new`, `/clients/:id/editar`, `/pipeline`, `/interactions`, `/files/:projectId`, `/video-reviews/:projectId`, `/collaborators`, `/analytics`, `/profile`.
+Rotas autenticadas: `/dashboard`, `/project/:id`, `/project/:id/*`, `/tools`, `/tools/:id`, `/studio/:id`, `/admin`, `/admin/gerenciar`, `/clients`, `/clients/new`, `/clients/:id/editar`, `/pipeline`, `/proposals`, `/interactions`, `/documents`, `/company`, `/files/:projectId`, `/video-reviews/:projectId`, `/collaborators`, `/analytics`, `/profile`, `/success`.
 
 ## 🛠️ Setup
 
@@ -77,6 +81,8 @@ Altere estas senhas imediatamente em produção.
 | `pnpm dev` | Servidor API + Vite dev (hot reload) |
 | `pnpm build` | Build client + bundle server |
 | `pnpm start` | Servidor produção (serve SPA + API) |
+| `pnpm preview` | Preview do build de produção |
+| `pnpm check` | TypeScript check (`tsc --noEmit`) |
 | `pnpm lint` | TypeScript check (`tsc --noEmit`) |
 | `pnpm format` | Prettier format |
 
@@ -172,6 +178,14 @@ Dark e Light mode com `next-themes` + `ThemeProvider`. CSS variables de tema em 
 | DELETE | `/api/collaborators/:id` | Yes | Exclui colaborador |
 | GET | `/api/collaborators/stats` | Yes | Estatísticas de equipe |
 
+### Membros do Projeto
+| Método | Path | Auth | Descrição |
+|--------|------|------|-----------|
+| GET | `/api/project-members/:projectId` | Yes | Lista membros do projeto |
+| POST | `/api/project-members` | Yes | Adiciona membro ao projeto |
+| PUT | `/api/project-members/:id` | Yes | Atualiza membro do projeto |
+| DELETE | `/api/project-members/:id` | Yes | Remove membro do projeto |
+
 ### Analytics
 | Método | Path | Auth | Descrição |
 |--------|------|------|-----------|
@@ -179,6 +193,20 @@ Dark e Light mode com `next-themes` + `ThemeProvider`. CSS variables de tema em 
 | GET | `/api/analytics/projects/:id` | Yes | Métricas por projeto |
 | GET | `/api/analytics/revenue` | Yes | Métricas de receita |
 | GET | `/api/analytics/activity` | Yes | Métricas de atividade |
+
+### Notificações
+| Método | Path | Auth | Descrição |
+|--------|------|------|-----------|
+| GET | `/api/notifications` | Yes | Lista notificações do usuário |
+| PUT | `/api/notifications/:id/read` | Yes | Marca notificação como lida |
+| PUT | `/api/notifications/read-all` | Yes | Marca todas como lidas |
+| GET | `/api/notifications/unread-count` | Yes | Contador de não lidas |
+
+### Studio Settings
+| Método | Path | Auth | Descrição |
+|--------|------|------|-----------|
+| GET | `/api/studio-settings` | Yes | Obtém configurações do studio |
+| PUT | `/api/studio-settings` | Yes | Atualiza configurações do studio |
 
 ### Export
 | Método | Path | Auth | Descrição |
@@ -228,13 +256,13 @@ Veja `.env.example`. O servidor **falha ao iniciar** se `JWT_SECRET` estiver fal
 
 | Pacote | Uso |
 |--------|-----|
-| React 19 + Vite 7 | Framework frontend |
+| React 19.2 + Vite 7.1 | Framework frontend |
 | Express + tsx | Servidor backend |
 | better-sqlite3 | Banco de dados SQLite |
 | tailwindcss v4 | Estilização utilitária |
 | framer-motion | Animações e transições |
 | next-themes | Dark/light mode |
-| @anthropic-studio/sdk | Geração IA via Anthropic quando configurado |
+| @anthropic-ai/sdk | Geração IA via Anthropic quando configurado |
 | stripe | Pagamentos e assinaturas legadas/API |
 | passport + passport-github2 | OAuth GitHub |
 | wouter | Roteamento SPA |
@@ -245,6 +273,13 @@ Veja `.env.example`. O servidor **falha ao iniciar** se `JWT_SECRET` estiver fal
 | @dnd-kit | Drag & drop (Kanban) |
 | Radix UI | Componentes acessíveis |
 | lucide-react | Ícones |
+| cmdk | Command palette |
+| docx | Geração de documentos Word |
+| jspdf | Geração de documentos PDF |
+| react-day-picker | Seleção de datas |
+| react-resizable-panels | Painéis redimensionáveis |
+| embla-carousel-react | Carrossel de imagens |
+| vaul | Drawer/Sheet component |
 
 ## 📚 Documentação Adicional
 
@@ -257,21 +292,26 @@ Veja `.env.example`. O servidor **falha ao iniciar** se `JWT_SECRET` estiver fal
 ## 🗄️ Banco de Dados
 
 SQLite local em `./data/frame.db`. Tabelas principais:
-- `users` — Usuários e autenticação
+- `users` — Usuários e autenticação (inclui name, avatar_url, email_verified, github_id, supabase_id, studio_name, studio_role, phone)
 - `tools` — Metadados das ferramentas IA
 - `generations` — Histórico de gerações IA
-- `projects` — Projetos dos usuários
+- `projects` — Projetos dos usuários (inclui client_id, status)
 - `project_states` — Estados de ferramentas por projeto
-- `clients` — Clientes do CRM
+- `clients` — Clientes do CRM (inclui workflow_stage, address, city, state, country, website, linkedin, instagram, industry, company_size, annual_revenue, contact_person, contact_role, billing_cycle, payment_method, tax_id)
 - `opportunities` — Oportunidades de vendas
 - `interactions` — Histórico de interações
-- `collaborators` — Membros da equipe
+- `collaborators` — Membros da equipe (inclui phone, skills, daily_rate, status, availability)
 - `project_members` — Membros por projeto
 - `files` — Arquivos organizados por projeto
-- `video_reviews` — Reviews de vídeos
-- `video_comments` — Comentários em vídeos
-- `subscriptions` — Assinaturas e plano ativo
+- `video_reviews` — Reviews de vídeos (inclui video_url)
+- `video_comments` — Comentários em vídeos (inclui annotations)
+- `notifications` — Notificações do usuário
+- `studio_settings` — Configurações do studio por usuário (studio_name, legal_name, document, email, phone, city, website, signature, primary_color)
+- `subscriptions` — Assinaturas e plano ativo (inclui stripe_customer_id, stripe_subscription_id)
 - `plans` — Planos de preços
+- `contacts` — Contatos do formulário de contato
+- `usage` — Controle de uso por usuário e ferramenta
+- `reset_tokens` — Tokens de reset de senha
 
 ## 🚀 Deployment
 
@@ -282,8 +322,22 @@ SQLite local em `./data/frame.db`. Tabelas principais:
 
 ### Variáveis de Ambiente Necessárias
 - `JWT_SECRET` — Obrigatório
-- `NVIDIA_API_KEY` ou `ANTHROPIC_API_KEY` — Para funcionalidades IA
+- `SUPABASE_URL` — URL do projeto Supabase
+- `SUPABASE_ANON_KEY` — Chave anônima do Supabase
+- `VITE_SUPABASE_URL` — URL do Supabase para cliente
+- `VITE_SUPABASE_ANON_KEY` — Chave anônima do Supabase para cliente
 - `AI_PROVIDER` — Define o provider de IA (`nvidia` ou `anthropic`)
+- `ANTHROPIC_API_KEY` — Para funcionalidades IA via Anthropic
+- `ANTHROPIC_MODEL` — Modelo Anthropic (padrão: claude-sonnet-4-20250514)
+- `NVIDIA_API_KEY` — Para funcionalidades IA via NVIDIA
+- `NVIDIA_MODEL` — Modelo NVIDIA (padrão: nvidia/nemotron-3-ultra-550b-a55b)
+- `NVIDIA_INVOKE_URL` — URL de invocação da API NVIDIA
+- `NVIDIA_MAX_TOKENS` — Máximo de tokens (padrão: 2048)
+- `NVIDIA_TEMPERATURE` — Temperatura de geração (padrão: 0.7)
+- `NVIDIA_TOP_P` — Top P sampling (padrão: 0.95)
+- `NVIDIA_ENABLE_THINKING` — Habilita modo thinking (padrão: true)
+- `NVIDIA_REASONING_BUDGET` — Budget de reasoning (padrão: 512)
+- `NVIDIA_TIMEOUT_MS` — Timeout em ms (padrão: 60000)
 - `STRIPE_SECRET_KEY` — Para checkout Stripe legado/API
 - `STRIPE_WEBHOOK_SECRET` — Para webhooks Stripe legado/API
 - `GITHUB_CLIENT_ID` — Para login GitHub

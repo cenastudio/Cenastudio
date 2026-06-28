@@ -120,9 +120,9 @@ export default function Footer() {
           viewport={{ once: true }}
           className="flex flex-col justify-between gap-5 font-frame-mono text-[0.64rem] tracking-[0.08em] text-[var(--landing-muted)] lg:flex-row"
         >
-          <div className="max-w-2xl leading-relaxed">
-            © {currentYear} {SITE_CONFIG.title}. Todos os direitos reservados. Plataforma em evolução contínua;
-            recursos, integrações e limites podem variar conforme o plano contratado.
+          <div className="max-w-2xl leading-relaxed space-y-2">
+            <div>© {currentYear} {SITE_CONFIG.title}. Todos os direitos reservados.</div>
+            <div>Licenciado sob MIT License. Plataforma em evolução contínua; recursos, integrações e limites podem variar conforme o plano contratado.</div>
           </div>
           <div className="flex items-center gap-2 text-[var(--landing-subtle)]">
             <BadgeCheck className="w-3.5 h-3.5 text-frame-orange" />

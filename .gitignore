@@ -81,6 +81,8 @@ coverage/
 data/
 dist/
 ehthumbs.db
+uploads/
+attached_assets/
 jspm_packages/
 lerna-debug.log*
 logs
