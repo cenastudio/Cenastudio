@@ -36,7 +36,7 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
   }, [projectId]);
 
   return (
-    <div className="border-b border-frame-gray-3 bg-frame-black/95 backdrop-blur-sm sticky top-16 z-40 shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
+    <div className="border-b border-frame-gray-3 bg-frame-black/95 dark:bg-frame-black/95 backdrop-blur-sm sticky top-16 z-40 shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
       <div className="max-w-7xl mx-auto px-4 md:px-6">
         <div className="flex items-center gap-3 py-2">
           <button

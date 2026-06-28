@@ -154,6 +154,9 @@
   border-color: #aaaaaa;
   background: rgba(0, 0, 0, 0.02);
 }
+:root:not(.dark) [class*="bg-frame-black\\/95"] {
+  background: rgba(249, 249, 249, 0.95) !important;
+}
 .cinematic-theme {
   --color-frame-black: #000000;
   --color-frame-white: #f9f9f9;
