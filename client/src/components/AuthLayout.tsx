@@ -13,41 +13,26 @@ export default function AuthLayout({ title, subtitle, children, mode }: AuthLayo
 
   return (
     <div className="cena-auth cinematic-theme dark min-h-screen flex flex-col lg:flex-row text-frame-white">
-      <div className="relative hidden overflow-hidden lg:flex lg:w-[52%] flex-col justify-end p-14">
+      <div className="relative hidden overflow-hidden lg:flex lg:w-[52%] items-center p-14 xl:p-20">
         <div className="landing-glow-orbit -left-36 top-12" />
-        <div className="absolute inset-10 border border-[var(--border)]/60 bg-[var(--frame-orange-bg)] backdrop-blur-sm" />
-        <div className="auth-panel absolute left-20 right-20 top-[42%] p-5">
-          <div className="mb-4 flex items-center justify-between border-b border-frame-gray-3 pb-3">
-            <span className="font-frame-mono text-[0.58rem] uppercase tracking-[0.18em] text-frame-orange">Operação ao vivo</span>
-            <span className="h-2 w-2 bg-frame-orange" />
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              ["08", "Jobs"],
-              ["12", "Docs"],
-              ["03", "Reviews"],
-            ].map(([value, label]) => (
-              <div key={label} className="border border-frame-gray-3 p-3">
-                <p className="font-frame-display text-3xl leading-none text-frame-white">{value}</p>
-                <p className="mt-1 font-frame-mono text-[0.52rem] uppercase tracking-[0.14em] text-frame-gray-light">{label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="relative z-10">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_42%_38%,rgba(232,80,2,0.2),transparent_34%)]" />
+        <div className="relative z-10 max-w-[520px]">
           <div className="flex items-baseline gap-3">
             <span className="text-3xl font-semibold leading-none text-frame-white">Cena</span>
             <span className="font-frame-mono text-[0.72rem] uppercase tracking-[0.22em] text-frame-orange">Studio</span>
           </div>
-          <p className="mt-2.5 text-sm text-frame-gray-light font-light max-w-[330px] leading-relaxed">
-            Plataforma operacional audiovisual feita por filmmakers, para filmmakers.
+          <h1 className="mt-10 max-w-[480px] font-frame-body text-[clamp(3.2rem,5vw,5.7rem)] font-light leading-[0.94] tracking-normal text-frame-white">
+            Seu estúdio pronto para operar.
+          </h1>
+          <p className="mt-6 max-w-[430px] text-base font-light leading-relaxed text-frame-gray-light">
+            Projetos, documentos, equipe, arquivos e aprovações entram no mesmo fluxo de produção.
           </p>
-          <div className="mt-7 grid gap-2">
-            {["IA aplicada ao fluxo de produção", "Trial Pro de 14 dias grátis", "Workflow profissional"].map(
+          <div className="mt-10 grid gap-4">
+            {["Feito por filmmakers, para filmmakers.", "IA aplicada ao fluxo de produção.", "Acesso seguro ao ambiente do estúdio."].map(
               (feat) => (
-                <div key={feat} className="landing-pill w-fit">
-                  <span className="h-1.5 w-1.5 bg-frame-orange" />
-                  {feat}
+                <div key={feat} className="flex items-center gap-3 text-sm font-light text-frame-gray-light">
+                  <span className="h-1.5 w-1.5 shrink-0 bg-frame-orange" />
+                  <span>{feat}</span>
                 </div>
               )
             )}

@@ -17,14 +17,14 @@ export const HERO = {
   tag: "Feito por filmmakers, para filmmakers",
   title: ["SISTEMA", "OPERACIONAL", "AUDIOVISUAL"],
   subtitle:
-    "Crie projetos com briefing, gere documentos com IA, organize arquivos, acompanhe aprovações e mantenha cliente, equipe e entrega dentro do mesmo hub.",
+    "Crie projetos com briefing, gere documentos com IA, organize arquivos, acompanhe aprovações e mantenha cliente, equipe e entrega dentro do mesmo fluxo.",
   cta: {
     primary: { label: "Entrar no Produto", href: "/login" },
     secondary: { label: "Ver fluxo real", href: "#" },
   },
   stats: [
-    { number: "12", label: "Ferramentas IA" },
-    { number: "1", label: "Hub por projeto" },
+    { number: "IA", label: "Documentos de produção" },
+    { number: "JOB", label: "Centro de operação" },
     { number: "BR", label: "Produto em evolução" },
   ],
 };
@@ -57,7 +57,7 @@ export const PRICING = [
     description: "Para produtoras e profissionais",
     features: [
       "50 gerações com IA/mês",
-      "Todas as 12 ferramentas",
+      "Fluxos principais de produção",
       "Histórico completo",
       "Export PDF e DOCX",
       "Review de vídeos com anotações",

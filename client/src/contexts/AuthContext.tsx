@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { ApiError, api, type AuthUser, type UserPlan } from "@/lib/api";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -92,7 +93,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const { user: loggedIn } = await api.auth.login(email, password);
+    let loggedIn: AuthUser;
+    try {
+      const response = await api.auth.login(email, password);
+      loggedIn = response.user;
+    } catch (error) {
+      if (!(error instanceof ApiError) || error.status !== 401 || !isSupabaseConfigured || !supabase) throw error;
+      const { data, error: supabaseError } = await supabase.auth.signInWithPassword({ email, password });
+      if (supabaseError || !data.session?.access_token) throw error;
+      const response = await api.auth.supabase(data.session.access_token);
+      loggedIn = response.user;
+      setPlan(response.plan);
+    }
     setUser(loggedIn);
     writeAuthSnapshot(loggedIn, plan);
     await refresh();

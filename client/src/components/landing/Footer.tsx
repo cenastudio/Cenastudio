@@ -60,7 +60,7 @@ export default function Footer() {
             viewport={{ once: true }}
           >
             <a href="/" className="mb-6 inline-block">
-              <BrandLogo className="h-14 w-auto" />
+              <BrandLogo tone="onDark" className="text-2xl" />
             </a>
             <p className="max-w-md text-[0.92rem] font-light leading-relaxed text-[var(--landing-muted)]">
               Central operacional audiovisual para produtoras, filmmakers e equipes criativas:

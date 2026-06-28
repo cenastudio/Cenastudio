@@ -3,16 +3,13 @@ import { db } from "../models/db.js";
 import { AppError } from "../middleware/errorHandler.js";
 import path from "path";
 import fs from "fs";
+import { ensureUploadsDirectory, safeStoredFilePath, UPLOADS_DIR } from "../utils/fileSafety.js";
 
 const MAX_UPLOAD_SIZE_MB = Number.parseInt(process.env.MAX_UPLOAD_SIZE_MB || "10", 10);
 const MAX_UPLOAD_SIZE = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
 
 // Ensure uploads directory exists
-const UPLOADS_DIR =
-  process.env.VERCEL === "1" ? path.join("/tmp", "uploads") : path.join(process.cwd(), "uploads");
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-}
+ensureUploadsDirectory();
 
 // List files for a project
 export const listFiles: RequestHandler = (req, res, next) => {
@@ -146,8 +143,9 @@ export const deleteFile: RequestHandler = (req, res, next) => {
     }
 
     // Delete physical file
-    if (file.mime_type !== "text/uri-list" && fs.existsSync(file.path)) {
-      fs.unlinkSync(file.path);
+    if (file.mime_type !== "text/uri-list") {
+      const storedPath = safeStoredFilePath(file.path);
+      if (fs.existsSync(storedPath)) fs.unlinkSync(storedPath);
     }
 
     // Delete from database
@@ -206,11 +204,12 @@ export const downloadFile: RequestHandler = (req, res, next) => {
       return;
     }
 
-    if (!fs.existsSync(file.path)) {
+    const storedPath = safeStoredFilePath(file.path);
+    if (!fs.existsSync(storedPath)) {
       throw new AppError("File not found on disk", 404);
     }
 
-    res.download(file.path, file.original_name);
+    res.download(storedPath, file.original_name);
   } catch (e) {
     next(e);
   }

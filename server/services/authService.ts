@@ -162,33 +162,42 @@ function roleForEmail(email: string): "user" | "admin" {
   return isAdminEmail(email) ? "admin" : "user";
 }
 
-export function upsertOAuthUser(email: string, name?: string | null): AuthUser {
+export function upsertOAuthUser(
+  email: string,
+  name?: string | null,
+  access?: { role?: "user" | "admin"; planId?: string; supabaseId?: string },
+): AuthUser {
   const normalized = email.toLowerCase().trim();
-  const role = roleForEmail(normalized);
+  const role = access?.role === "admin" || roleForEmail(normalized) === "admin" ? "admin" : "user";
   const existing = db
     .prepare("SELECT id, email, role, name FROM users WHERE email = ?")
     .get(normalized) as AuthUser | undefined;
 
   if (existing) {
-    if (role === "admin" && existing.role !== "admin") {
-      db.prepare("UPDATE users SET role = 'admin' WHERE id = ?").run(existing.id);
-      existing.role = "admin";
+    if (access?.supabaseId) {
+      db.prepare("UPDATE users SET supabase_id = ? WHERE id = ?").run(access.supabaseId, existing.id);
     }
+    if (existing.role !== role) {
+      db.prepare("UPDATE users SET role = ? WHERE id = ?").run(role, existing.id);
+      existing.role = role;
+    }
+    if (access?.planId) updateUserPlanInDatabase(existing.id, access.planId);
     return existing;
   }
 
   const hash = hashPassword(crypto.randomBytes(24).toString("hex"));
   const result = db
     .prepare(
-      "INSERT INTO users (name, email, password_hash, role, email_verified) VALUES (?, ?, ?, ?, ?)",
+      "INSERT INTO users (name, email, password_hash, role, email_verified, supabase_id) VALUES (?, ?, ?, ?, ?, ?)",
     )
-    .run(name ?? normalized.split("@")[0], normalized, hash, role, 1);
+    .run(name ?? normalized.split("@")[0], normalized, hash, role, 1, access?.supabaseId || null);
 
   const userId = Number(result.lastInsertRowid);
-  createTrialSubscription(userId);
+  if (access?.planId) ensureUserSubscription(userId, access.planId, "active");
+  else createTrialSubscription(userId);
   notifyAdmins(
-    "Nova conta via GitHub",
-    `${name || normalized} criou acesso na plataforma e recebeu trial Pro de 14 dias.`,
+    "Conta sincronizada",
+    `${name || normalized} entrou pela autenticacao persistente.`,
     "user",
     "/admin/gerenciar",
   );
@@ -228,7 +237,7 @@ export function registerUser(name: string, email: string, password: string) {
   return { id: userId, name, email: normalized, role: "user" as const };
 }
 
-export function createManagedUser(data: {
+export async function createManagedUser(data: {
   name: string;
   email: string;
   password: string;
@@ -242,12 +251,41 @@ export function createManagedUser(data: {
   }
 
   const role = data.role === "admin" || isAdminEmail(normalized) ? "admin" : "user";
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new AppError("Supabase Admin nao esta configurado para criar acessos persistentes.", 503);
+  }
+
+  const supabaseResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
+    method: "POST",
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: normalized,
+      password: data.password,
+      email_confirm: true,
+      user_metadata: { name: data.name.trim() },
+      app_metadata: { role, plan_id: data.planId },
+    }),
+  });
+
+  if (!supabaseResponse.ok) {
+    const detail = await supabaseResponse.json().catch(() => ({})) as { message?: string; error_description?: string };
+    const message = detail.message || detail.error_description || "Nao foi possivel criar o acesso no Supabase.";
+    throw new AppError(message, supabaseResponse.status === 422 ? 409 : 502);
+  }
+  const supabaseUser = await supabaseResponse.json() as { id?: string };
+
   const hash = hashPassword(data.password);
   const result = db
     .prepare(
-      "INSERT INTO users (name, email, password_hash, role, email_verified) VALUES (?, ?, ?, ?, ?)",
+      "INSERT INTO users (name, email, password_hash, role, email_verified, supabase_id) VALUES (?, ?, ?, ?, ?, ?)",
     )
-    .run(data.name.trim(), normalized, hash, role, 1);
+    .run(data.name.trim(), normalized, hash, role, 1, supabaseUser.id || null);
 
   const userId = Number(result.lastInsertRowid);
   ensureUserSubscription(userId, data.planId, "active");
@@ -420,7 +458,40 @@ export function listAllUsers(): Array<{
     .all() as any[];
 }
 
-export function updateUserRole(userId: number, role: string, actorId?: number) {
+function updateUserPlanInDatabase(userId: number, planId: string) {
+  const validPlans = db.prepare("SELECT id FROM plans").all() as { id: string }[];
+  if (!validPlans.some((p) => p.id === planId)) throw new AppError("Invalid plan ID", 400);
+  const existing = db.prepare("SELECT id FROM subscriptions WHERE user_id = ?").get(userId);
+  if (existing) {
+    db.prepare("UPDATE subscriptions SET plan_id = ?, status = 'active', trial_ends_at = NULL, current_period_end = datetime('now', '+1 month') WHERE user_id = ?").run(planId, userId);
+  } else {
+    db.prepare("INSERT INTO subscriptions (user_id, plan_id, status, current_period_end) VALUES (?, ?, 'active', datetime('now', '+1 month'))").run(userId, planId);
+  }
+}
+
+async function syncSupabaseAccess(userId: number) {
+  const access = db.prepare(
+    `SELECT u.supabase_id, u.role, s.plan_id
+     FROM users u LEFT JOIN subscriptions s ON s.user_id = u.id
+     WHERE u.id = ? ORDER BY s.id DESC LIMIT 1`,
+  ).get(userId) as { supabase_id?: string | null; role: string; plan_id?: string | null } | undefined;
+  if (!access?.supabase_id) return;
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceRoleKey) throw new AppError("Supabase Admin nao esta configurado.", 503);
+  const response = await fetch(`${supabaseUrl}/auth/v1/admin/users/${access.supabase_id}`, {
+    method: "PUT",
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ app_metadata: { role: access.role, plan_id: access.plan_id || "free" } }),
+  });
+  if (!response.ok) throw new AppError("Nao foi possivel sincronizar a permissao no Supabase.", 502);
+}
+
+export async function updateUserRole(userId: number, role: string, actorId?: number) {
   if (!["user", "admin"].includes(role)) {
     throw new AppError("Invalid role. Must be 'user' or 'admin'.", 400);
   }
@@ -445,29 +516,22 @@ export function updateUserRole(userId: number, role: string, actorId?: number) {
   if (result.changes === 0) {
     throw new AppError("User not found", 404);
   }
+  await syncSupabaseAccess(userId);
 }
 
-export function updateUserPlan(userId: number, planId: string) {
-  const validPlans = db.prepare("SELECT id FROM plans").all() as { id: string }[];
-  if (!validPlans.some((p) => p.id === planId)) {
-    throw new AppError("Invalid plan ID", 400);
-  }
-  const existing = db.prepare("SELECT id FROM subscriptions WHERE user_id = ?").get(userId);
-  if (existing) {
-    db.prepare("UPDATE subscriptions SET plan_id = ?, status = 'active', trial_ends_at = NULL, current_period_end = datetime('now', '+1 month') WHERE user_id = ?").run(planId, userId);
-  } else {
-    db.prepare("INSERT INTO subscriptions (user_id, plan_id, status, current_period_end) VALUES (?, ?, 'active', datetime('now', '+1 month'))").run(userId, planId);
-  }
+export async function updateUserPlan(userId: number, planId: string) {
+  updateUserPlanInDatabase(userId, planId);
+  await syncSupabaseAccess(userId);
 }
 
-export function deleteManagedUser(userId: number, actorId: number) {
+export async function deleteManagedUser(userId: number, actorId: number) {
   if (userId === actorId) {
     throw new AppError("Você não pode apagar a própria conta enquanto está logado.", 400);
   }
 
   const user = db
-    .prepare("SELECT id, email, role FROM users WHERE id = ?")
-    .get(userId) as { id: number; email: string; role: string } | undefined;
+    .prepare("SELECT id, email, role, supabase_id FROM users WHERE id = ?")
+    .get(userId) as { id: number; email: string; role: string; supabase_id?: string | null } | undefined;
   if (!user) {
     throw new AppError("User not found", 404);
   }
@@ -499,6 +563,19 @@ export function deleteManagedUser(userId: number, actorId: number) {
   const remove = db.transaction(() => {
     db.prepare("DELETE FROM users WHERE id = ?").run(userId);
   });
+
+  if (user.supabase_id) {
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !serviceRoleKey) throw new AppError("Supabase Admin nao esta configurado.", 503);
+    const response = await fetch(`${supabaseUrl}/auth/v1/admin/users/${user.supabase_id}`, {
+      method: "DELETE",
+      headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` },
+    });
+    if (!response.ok && response.status !== 404) {
+      throw new AppError("Nao foi possivel apagar a conta persistente no Supabase.", 502);
+    }
+  }
   remove();
 
   return {

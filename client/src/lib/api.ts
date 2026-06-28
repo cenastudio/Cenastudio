@@ -13,6 +13,15 @@ function resolveApiBase() {
 
 const API_BASE = resolveApiBase();
 
+export function redirectToStripe(url: string) {
+  const parsed = new URL(url);
+  const trustedHost = parsed.hostname === "stripe.com" || parsed.hostname.endsWith(".stripe.com");
+  if (parsed.protocol !== "https:" || !trustedHost) {
+    throw new ApiError("O checkout retornou um endereco invalido.", 502);
+  }
+  window.location.assign(parsed.toString());
+}
+
 interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -264,13 +273,13 @@ export const api = {
 /** Start Stripe Checkout — redirects to Stripe hosted page */
 export async function startCheckout(planId: string): Promise<void> {
   const data = await api.checkout.session(planId);
-  window.location.href = data.url;
+  redirectToStripe(data.url);
 }
 
 /** Open Stripe Customer Portal */
 export async function openBillingPortal(): Promise<void> {
   const data = await api.checkout.portal();
-  window.location.href = data.url;
+  redirectToStripe(data.url);
 }
 
 export interface ToolFromApi {

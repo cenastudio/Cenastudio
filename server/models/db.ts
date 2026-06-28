@@ -28,6 +28,7 @@ function ensureUserColumns() {
     db.prepare("ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0").run();
   }
   if (!userCols.includes("github_id")) db.prepare("ALTER TABLE users ADD COLUMN github_id TEXT").run();
+  if (!userCols.includes("supabase_id")) db.prepare("ALTER TABLE users ADD COLUMN supabase_id TEXT").run();
   if (!userCols.includes("studio_name")) db.prepare("ALTER TABLE users ADD COLUMN studio_name TEXT").run();
   if (!userCols.includes("studio_role")) db.prepare("ALTER TABLE users ADD COLUMN studio_role TEXT").run();
   if (!userCols.includes("phone")) db.prepare("ALTER TABLE users ADD COLUMN phone TEXT").run();
@@ -517,7 +518,7 @@ export function initDatabase() {
       50,
       JSON.stringify([
         "50 gerações/mês",
-        "Todas as 12 ferramentas",
+        "Fluxos principais de produção",
         "Export PDF e DOCX",
         "Histórico completo",
       ]),
@@ -529,12 +530,16 @@ export function initDatabase() {
       -1,
       JSON.stringify([
         "Gerações ilimitadas",
-        "Todas as 12 ferramentas",
+        "Fluxos principais de produção",
         "Projetos e pastas",
         "Suporte prioritário",
       ]),
     );
   }
+
+  db.prepare(
+    "UPDATE plans SET features = replace(features, 'Todas as 12 ferramentas', 'Fluxos principais de produção') WHERE features LIKE ?",
+  ).run("%Todas as 12 ferramentas%");
 
   const seedAdmin = db.prepare("SELECT id FROM users WHERE email = ?").get("admin@cenastudio.com.br") as
     | { id: number }

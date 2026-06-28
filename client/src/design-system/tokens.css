@@ -33,7 +33,7 @@
   --ds-gradient-primary: linear-gradient(135deg, #000000 0%, #c10801 42%, #f16001 72%, #d9c3ab 100%);
   --ds-gradient-hero: radial-gradient(circle at 68% 26%, rgba(241, 96, 1, 0.74) 0%, rgba(193, 8, 1, 0.32) 24%, rgba(0, 0, 0, 0) 58%), linear-gradient(135deg, #000000 0%, rgba(193, 8, 1, 0.42) 46%, rgba(0, 0, 0, 0.96) 100%);
   --ds-gradient-bg-dark: radial-gradient(circle at 74% 10%, rgba(232, 80, 2, 0.18), transparent 32%), radial-gradient(circle at 8% 84%, rgba(193, 8, 1, 0.16), transparent 34%), #000000;
-  --ds-gradient-bg-light: radial-gradient(circle at 5% 8%, rgba(232, 80, 2, 0.12), transparent 34%), radial-gradient(circle at 92% 86%, rgba(241, 96, 1, 0.12), transparent 36%), linear-gradient(180deg, #f9f9f9 0%, #f5f1ed 52%, #f9f9f9 100%);
+  --ds-gradient-bg-light: #f9f9f9;
   --ds-gradient-accent: linear-gradient(90deg, #e85002 0%, #f16001 52%, #d9c3ab 100%);
   --ds-gradient-glow: radial-gradient(circle, rgba(241, 96, 1, 0.5), rgba(193, 8, 1, 0.18) 42%, transparent 72%);
 

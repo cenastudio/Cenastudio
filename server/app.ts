@@ -31,7 +31,26 @@ export function createApp() {
   const app = express();
   const clientOrigin = process.env.CLIENT_ORIGIN || "http://localhost:5173";
 
-  app.use(helmet());
+  app.use(helmet({
+    crossOriginEmbedderPolicy: false,
+    frameguard: { action: "deny" },
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "blob:", "https:"],
+        fontSrc: ["'self'", "data:"],
+        connectSrc: ["'self'", "https://*.supabase.co", "wss://*.supabase.co"],
+        frameSrc: ["'self'", "https://drive.google.com", "https://*.stripe.com"],
+        mediaSrc: ["'self'", "blob:", "https:"],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'", "https://*.stripe.com"],
+        frameAncestors: ["'none'"],
+      },
+    },
+  }));
   app.use(cors({ origin: clientOrigin, credentials: true }));
   app.use(cookieParser());
   app.use(passport.initialize());

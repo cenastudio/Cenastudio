@@ -61,6 +61,156 @@ const DOC_TYPES: Array<{ id: DocType; label: string; icon: typeof FileText; acce
   { id: "entrega", label: "Entrega", icon: Download, accent: "#10b981", description: "Pacote final, links, formatos, aceite e observacoes." },
 ];
 
+type FieldKind = "input" | "textarea" | "date";
+
+interface DocumentField {
+  key: keyof DocumentForm;
+  label: string;
+  placeholder: string;
+  kind?: FieldKind;
+  span?: "full" | "half";
+}
+
+interface DocumentGroup {
+  title: string;
+  fields: DocumentField[];
+}
+
+const COMMON_FIELDS: DocumentGroup = {
+  title: "// IDENTIFICACAO",
+  fields: [
+    { key: "title", label: "Titulo", placeholder: "Ex: Campanha de lancamento", span: "full" },
+    { key: "client", label: "Cliente", placeholder: "Ex: Aurora Brand" },
+    { key: "project", label: "Projeto", placeholder: "Ex: Filme manifesto 2026" },
+  ],
+};
+
+const DOCUMENT_FORMS: Record<DocType, DocumentGroup[]> = {
+  briefing: [
+    COMMON_FIELDS,
+    {
+      title: "// ESTRATEGIA",
+      fields: [
+        { key: "objective", label: "Objetivo principal", placeholder: "O que este video precisa resolver?", kind: "textarea", span: "full" },
+        { key: "audience", label: "Publico e contexto", placeholder: "Quem assiste, onde e com qual expectativa?", kind: "textarea", span: "full" },
+        { key: "format", label: "Formato final", placeholder: "16:9 + cortes verticais" },
+        { key: "duration", label: "Duracao alvo", placeholder: "60-90s" },
+        { key: "deadline", label: "Prazo", placeholder: "Prazo", kind: "date" },
+        { key: "budget", label: "Investimento", placeholder: "R$ 12k-18k" },
+      ],
+    },
+    {
+      title: "// ESCOPO",
+      fields: [
+        { key: "scope", label: "Entregaveis", placeholder: "Um entregavel por linha", kind: "textarea", span: "full" },
+        { key: "notes", label: "Riscos e referencias", placeholder: "Restricoes, tom, referencias, aprovadores", kind: "textarea", span: "full" },
+      ],
+    },
+  ],
+  roteiro: [
+    COMMON_FIELDS,
+    {
+      title: "// NARRATIVA",
+      fields: [
+        { key: "objective", label: "Promessa narrativa", placeholder: "Qual ideia o roteiro precisa defender?", kind: "textarea", span: "full" },
+        { key: "audience", label: "Tom e publico", placeholder: "Premium, direto, emocional, institucional", kind: "textarea", span: "full" },
+        { key: "duration", label: "Duracao", placeholder: "45s" },
+        { key: "format", label: "Formato", placeholder: "Reels, YouTube, TV" },
+      ],
+    },
+    {
+      title: "// CENAS",
+      fields: [
+        { key: "scope", label: "Beat sheet / cenas", placeholder: "Gancho\nConflito\nProva visual\nCTA", kind: "textarea", span: "full" },
+        { key: "notes", label: "Locucao, falas ou CTA", placeholder: "Texto guia, falas obrigatorias e finalizacao", kind: "textarea", span: "full" },
+      ],
+    },
+  ],
+  callsheet: [
+    COMMON_FIELDS,
+    {
+      title: "// SET",
+      fields: [
+        { key: "deadline", label: "Data de gravacao", placeholder: "Data", kind: "date" },
+        { key: "location", label: "Locacao", placeholder: "Endereco, ponto de encontro, estacionamento", span: "full" },
+        { key: "schedule", label: "Agenda do dia", placeholder: "07:00 chegada equipe\n08:00 luz\n09:00 gravacao", kind: "textarea", span: "full" },
+      ],
+    },
+    {
+      title: "// PRODUCAO",
+      fields: [
+        { key: "crew", label: "Equipe e contatos", placeholder: "Direcao - Nome - telefone", kind: "textarea", span: "full" },
+        { key: "equipment", label: "Equipamentos", placeholder: "Camera, lentes, audio, luz, midias", kind: "textarea", span: "full" },
+        { key: "notes", label: "Observacoes de set", placeholder: "Figurino, alimentacao, riscos, autorizacoes", kind: "textarea", span: "full" },
+      ],
+    },
+  ],
+  decupagem: [
+    COMMON_FIELDS,
+    {
+      title: "// PLANEJAMENTO VISUAL",
+      fields: [
+        { key: "objective", label: "Direcao de cena", placeholder: "Qual sensacao a imagem deve passar?", kind: "textarea", span: "full" },
+        { key: "scope", label: "Lista de planos", placeholder: "Plano 01 - aberto - objetivo\nPlano 02 - close - detalhe", kind: "textarea", span: "full" },
+        { key: "equipment", label: "Lentes, camera e movimento", placeholder: "35mm handheld, slider, drone", kind: "textarea", span: "full" },
+        { key: "location", label: "Ambientes", placeholder: "Locacoes ou cenarios por bloco", span: "full" },
+      ],
+    },
+  ],
+  orcamento: [
+    COMMON_FIELDS,
+    {
+      title: "// COMERCIAL",
+      fields: [
+        { key: "budget", label: "Investimento base", placeholder: "R$ 18.000" },
+        { key: "deadline", label: "Validade", placeholder: "Data", kind: "date" },
+        { key: "scope", label: "Itens inclusos", placeholder: "Pre-producao\nCaptacao\nEdicao\nFinalizacao", kind: "textarea", span: "full" },
+        { key: "crew", label: "Equipe prevista", placeholder: "Equipe compacta, equipe completa, diaria extra", kind: "textarea", span: "full" },
+        { key: "equipment", label: "Equipamentos previstos", placeholder: "Camera, luz, audio, estudio, drone", kind: "textarea", span: "full" },
+        { key: "notes", label: "Condicoes comerciais", placeholder: "Pagamento, alteracoes, direitos de uso, deslocamento", kind: "textarea", span: "full" },
+      ],
+    },
+  ],
+  cronograma: [
+    COMMON_FIELDS,
+    {
+      title: "// FLUXO",
+      fields: [
+        { key: "deadline", label: "Entrega final", placeholder: "Data", kind: "date" },
+        { key: "schedule", label: "Marcos e datas", placeholder: "Briefing aprovado - 01/07\nGravacao - 05/07\nCorte 1 - 10/07", kind: "textarea", span: "full" },
+        { key: "scope", label: "Dependencias", placeholder: "Materiais do cliente, aprovadores, agenda de talentos", kind: "textarea", span: "full" },
+        { key: "notes", label: "Rodadas e regras", placeholder: "Prazo por rodada, responsavel pelo aceite", kind: "textarea", span: "full" },
+      ],
+    },
+  ],
+  checklist: [
+    COMMON_FIELDS,
+    {
+      title: "// PRE-SET",
+      fields: [
+        { key: "deadline", label: "Data do set", placeholder: "Data", kind: "date" },
+        { key: "location", label: "Locacao / base", placeholder: "Endereco e ponto de apoio", span: "full" },
+        { key: "equipment", label: "Checklist tecnico", placeholder: "Baterias\nCartoes\nAudio\nLuz\nBackup", kind: "textarea", span: "full" },
+        { key: "crew", label: "Responsaveis", placeholder: "Quem confere cada etapa?", kind: "textarea", span: "full" },
+        { key: "notes", label: "Fechamento", placeholder: "Backup duplo, pastas, envio ao editor", kind: "textarea", span: "full" },
+      ],
+    },
+  ],
+  entrega: [
+    COMMON_FIELDS,
+    {
+      title: "// PACOTE FINAL",
+      fields: [
+        { key: "scope", label: "Arquivos entregues", placeholder: "Master 4K\nVersao vertical\nLegenda\nThumbnail", kind: "textarea", span: "full" },
+        { key: "format", label: "Formatos", placeholder: "MP4 H.264, ProRes, JPG" },
+        { key: "deadline", label: "Data de envio", placeholder: "Data", kind: "date" },
+        { key: "location", label: "Link de entrega", placeholder: "Drive, Vimeo, WeTransfer", span: "full" },
+        { key: "notes", label: "Aceite e observacoes", placeholder: "Prazo de revisao final, aceite, proximos passos", kind: "textarea", span: "full" },
+      ],
+    },
+  ],
+};
+
 const initialForm: DocumentForm = {
   type: "briefing",
   title: "Documento de producao",
@@ -210,6 +360,32 @@ function buildDocumentHtml(form: DocumentForm, studio: StudioSettings) {
 </html>`;
 }
 
+function buildDocumentText(form: DocumentForm, studio: StudioSettings) {
+  const doc = DOC_TYPES.find((item) => item.id === form.type) || DOC_TYPES[0];
+  const metadata = [
+    ["Cliente", form.client || "A definir"],
+    ["Projeto", form.project || form.title],
+    ["Formato", form.format || "A definir"],
+    ["Duracao", form.duration || "A definir"],
+    ["Prazo", form.deadline || "A definir"],
+    ["Locacao", form.location || "A definir"],
+  ];
+  const sections = documentSections(form)
+    .map(([title, items]) => `${title.toUpperCase()}\n${items.map((item) => `- ${item}`).join("\n")}`)
+    .join("\n\n");
+
+  return [
+    studio.studioName,
+    doc.label.toUpperCase(),
+    form.title || doc.label,
+    "",
+    ...metadata.map(([label, value]) => `${label}: ${value}`),
+    "",
+    sections,
+    form.notes ? `\n\nNOTAS ADICIONAIS\n${lines(form.notes).map((item) => `- ${item}`).join("\n")}` : "",
+  ].join("\n");
+}
+
 function readSavedDocs(): StudioDocument[] {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]") as StudioDocument[];
@@ -251,11 +427,49 @@ function printHtmlDocument(docHtml: string) {
   iframe.srcdoc = docHtml;
 }
 
+function nextFormForType(current: DocumentForm, type: DocType): DocumentForm {
+  const doc = DOC_TYPES.find((item) => item.id === type) || DOC_TYPES[0];
+  const oldDefaultTitle = DOC_TYPES.some((item) => item.label === current.title) || current.title === initialForm.title;
+  return {
+    ...current,
+    type,
+    title: oldDefaultTitle ? doc.label : current.title,
+  };
+}
+
+function FormField({ field, value, onChange }: { field: DocumentField; value: string; onChange: (value: string) => void }) {
+  const className = "frame-input w-full bg-frame-gray-2/90 min-h-0";
+  return (
+    <label className={field.span === "full" ? "sm:col-span-2" : ""}>
+      <span className="block font-frame-mono text-[0.62rem] tracking-[0.13em] uppercase text-frame-gray-light mb-1.5">
+        {field.label}
+      </span>
+      {field.kind === "textarea" ? (
+        <textarea
+          className={`${className} min-h-[94px] resize-y leading-relaxed`}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={field.placeholder}
+        />
+      ) : (
+        <input
+          className={className}
+          type={field.kind === "date" ? "date" : "text"}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={field.placeholder}
+        />
+      )}
+    </label>
+  );
+}
+
 function DocumentsContent() {
   const [form, setForm] = useState<DocumentForm>(initialForm);
   const [savedDocs, setSavedDocs] = useState<StudioDocument[]>([]);
   const [studio, setStudio] = useState<StudioSettings>(() => readStudioSettings());
   const selectedDoc = DOC_TYPES.find((item) => item.id === form.type) || DOC_TYPES[0];
+  const activeGroups = DOCUMENT_FORMS[form.type];
   const html = useMemo(() => buildDocumentHtml(form, studio), [form, studio]);
 
   useEffect(() => {
@@ -292,9 +506,39 @@ function DocumentsContent() {
     printHtmlDocument(docHtml);
   };
 
-  const copyHtml = async () => {
-    await navigator.clipboard.writeText(html);
-    toast.success("HTML do documento copiado");
+  const copyText = async () => {
+    await navigator.clipboard.writeText(buildDocumentText(form, studio));
+    toast.success("Texto limpo copiado");
+  };
+
+  const exportDocx = async () => {
+    const { Document, HeadingLevel, Packer, Paragraph, TextRun } = await import("docx");
+    const docType = DOC_TYPES.find((item) => item.id === form.type) || DOC_TYPES[0];
+    const children = [
+      new Paragraph({ children: [new TextRun({ text: studio.studioName, bold: true, color: "E85002", size: 20 })] }),
+      new Paragraph({ text: form.title || docType.label, heading: HeadingLevel.TITLE }),
+      new Paragraph({ text: `${docType.label} - ${form.client || "Cliente a definir"} - ${form.project || "Projeto a definir"}` }),
+      new Paragraph({ text: "" }),
+      ...documentSections(form).flatMap(([title, items]) => [
+        new Paragraph({ text: title, heading: HeadingLevel.HEADING_2 }),
+        ...items.map((item) => new Paragraph({ text: item, bullet: { level: 0 } })),
+      ]),
+      ...(form.notes
+        ? [
+            new Paragraph({ text: "Notas adicionais", heading: HeadingLevel.HEADING_2 }),
+            ...lines(form.notes).map((item) => new Paragraph({ text: item, bullet: { level: 0 } })),
+          ]
+        : []),
+    ];
+    const documentFile = new Document({ sections: [{ children }] });
+    const blob = await Packer.toBlob(documentFile);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${(form.title || docType.label).replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.docx`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success("Documento Word gerado");
   };
 
   const removeDoc = (id: string) => {
@@ -306,14 +550,14 @@ function DocumentsContent() {
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body">
       <AppNavBar />
-      <main id="main-content" className="px-4 sm:px-6 py-6 space-y-5">
-        <section className="border border-frame-gray-3 bg-frame-gray-1/40 p-4 sm:p-5">
+      <main id="main-content" className="px-4 sm:px-6 py-5 sm:py-6 space-y-5 max-w-[1680px] mx-auto">
+        <section className="border border-frame-gray-3 bg-frame-gray-1/60 p-4 sm:p-5 shadow-[0_18px_70px_rgba(0,0,0,0.18)]">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
             <div>
               <p className="frame-label">// DOCUMENTOS STUDIO</p>
               <h1 className="frame-title text-[clamp(1.8rem,4vw,3.6rem)] leading-none mt-2">DOCUMENTOS OPERACIONAIS</h1>
               <p className="text-sm text-frame-gray-light max-w-2xl mt-3">
-                Gere briefing, callsheet, orcamento, cronograma e checklist sem depender da IA. Preencha, visualize, salve e exporte em PDF.
+                Cada documento tem formulario proprio, preview limpo e exportacao em PDF para cliente, set e producao.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -321,9 +565,13 @@ function DocumentsContent() {
                 <Save className="w-4 h-4" />
                 Salvar
               </button>
-              <button type="button" onClick={copyHtml} className="frame-btn-ghost flex items-center gap-2">
+              <button type="button" onClick={copyText} className="frame-btn-ghost flex items-center gap-2">
                 <Copy className="w-4 h-4" />
-                Copiar
+                Copiar texto
+              </button>
+              <button type="button" onClick={exportDocx} className="frame-btn-ghost flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Word
               </button>
               <button type="button" onClick={() => exportPdf()} className="frame-btn-primary flex items-center gap-2">
                 <Download className="w-4 h-4" />
@@ -333,11 +581,14 @@ function DocumentsContent() {
           </div>
         </section>
 
-        <section className="grid grid-cols-1 xl:grid-cols-[420px_minmax(0,1fr)] gap-5">
+        <section className="grid grid-cols-1 xl:grid-cols-[460px_minmax(0,1fr)] gap-5 items-start">
           <div className="space-y-4">
-            <div className="border border-frame-gray-3 bg-frame-gray-1/30 p-4">
-              <p className="frame-label mb-3">// TIPO</p>
-              <div className="grid grid-cols-2 gap-2">
+            <div className="border border-frame-gray-3 bg-frame-gray-1/50 p-4">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <p className="frame-label">// TIPO DE DOCUMENTO</p>
+                <span className="font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase text-frame-gray-muted">{selectedDoc.label}</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {DOC_TYPES.map((doc) => {
                   const Icon = doc.icon;
                   const active = form.type === doc.id;
@@ -345,8 +596,8 @@ function DocumentsContent() {
                     <button
                       key={doc.id}
                       type="button"
-                      onClick={() => setForm((current) => ({ ...current, type: doc.id, title: current.title === "Documento de producao" ? doc.label : current.title }))}
-                      className={`text-left border p-3 transition ${active ? "border-frame-orange bg-frame-orange/10" : "border-frame-gray-3 bg-frame-black/20 hover:border-frame-gray-4"}`}
+                      onClick={() => setForm((current) => nextFormForType(current, doc.id))}
+                      className={`text-left border p-3 transition min-h-[104px] ${active ? "border-frame-orange bg-frame-orange/10 shadow-[inset_3px_0_0_var(--color-frame-orange)]" : "border-frame-gray-3 bg-frame-black/20 hover:border-frame-gray-4 hover:bg-frame-gray-2/40"}`}
                     >
                       <Icon className="w-4 h-4 mb-2" style={{ color: doc.accent }} />
                       <div className="text-xs font-semibold uppercase tracking-wide">{doc.label}</div>
@@ -357,28 +608,37 @@ function DocumentsContent() {
               </div>
             </div>
 
-            <div className="border border-frame-gray-3 bg-frame-gray-1/30 p-4 space-y-3">
-              <p className="frame-label">// CAMPOS</p>
-              <input className="frame-input w-full" value={form.title} onChange={(event) => update("title", event.target.value)} placeholder="Titulo do documento" />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <input className="frame-input w-full" value={form.client} onChange={(event) => update("client", event.target.value)} placeholder="Cliente" />
-                <input className="frame-input w-full" value={form.project} onChange={(event) => update("project", event.target.value)} placeholder="Projeto" />
-                <input className="frame-input w-full" value={form.format} onChange={(event) => update("format", event.target.value)} placeholder="Formato" />
-                <input className="frame-input w-full" value={form.duration} onChange={(event) => update("duration", event.target.value)} placeholder="Duracao" />
-                <input className="frame-input w-full" type="date" value={form.deadline} onChange={(event) => update("deadline", event.target.value)} />
-                <input className="frame-input w-full" value={form.budget} onChange={(event) => update("budget", event.target.value)} placeholder="Orcamento" />
+            <div className="border border-frame-gray-3 bg-frame-gray-1/50">
+              <div className="px-4 py-3 border-b border-frame-gray-3 flex items-center justify-between gap-3 sticky top-[72px] bg-frame-gray-1/95 backdrop-blur z-10">
+                <div>
+                  <p className="frame-label">// FORMULARIO</p>
+                  <p className="text-xs text-frame-gray-light mt-1">Campos especificos para {selectedDoc.label.toLowerCase()}.</p>
+                </div>
+                <button type="button" onClick={saveCurrent} className="frame-btn-ghost flex items-center gap-2 px-3 py-2">
+                  <Save className="w-3.5 h-3.5" />
+                  Salvar
+                </button>
               </div>
-              <input className="frame-input w-full" value={form.location} onChange={(event) => update("location", event.target.value)} placeholder="Locacao" />
-              <textarea className="frame-input w-full min-h-[84px] resize-y" value={form.objective} onChange={(event) => update("objective", event.target.value)} placeholder="Objetivo / mensagem central" />
-              <textarea className="frame-input w-full min-h-[84px] resize-y" value={form.audience} onChange={(event) => update("audience", event.target.value)} placeholder="Publico / contexto do cliente" />
-              <textarea className="frame-input w-full min-h-[100px] resize-y" value={form.scope} onChange={(event) => update("scope", event.target.value)} placeholder="Escopo e entregaveis, um por linha" />
-              <textarea className="frame-input w-full min-h-[84px] resize-y" value={form.schedule} onChange={(event) => update("schedule", event.target.value)} placeholder="Agenda / marcos, um por linha" />
-              <textarea className="frame-input w-full min-h-[84px] resize-y" value={form.crew} onChange={(event) => update("crew", event.target.value)} placeholder="Equipe, um por linha" />
-              <textarea className="frame-input w-full min-h-[84px] resize-y" value={form.equipment} onChange={(event) => update("equipment", event.target.value)} placeholder="Equipamentos / tecnica, um por linha" />
-              <textarea className="frame-input w-full min-h-[84px] resize-y" value={form.notes} onChange={(event) => update("notes", event.target.value)} placeholder="Notas adicionais" />
+              <div className="p-4 space-y-5">
+                {activeGroups.map((group) => (
+                  <section key={group.title} className="border border-frame-gray-3 bg-frame-black/20 p-3 sm:p-4">
+                    <p className="font-frame-mono text-[0.64rem] tracking-[0.18em] uppercase text-frame-orange mb-3">{group.title}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {group.fields.map((field) => (
+                        <FormField
+                          key={`${group.title}-${field.key}`}
+                          field={field}
+                          value={String(form[field.key] ?? "")}
+                          onChange={(value) => update(field.key, value)}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </div>
             </div>
 
-            <div className="border border-frame-gray-3 bg-frame-gray-1/30 p-4">
+            <div className="border border-frame-gray-3 bg-frame-gray-1/50 p-4">
               <div className="flex items-center justify-between mb-3">
                 <p className="frame-label">// HISTORICO</p>
                 <span className="text-xs text-frame-gray-light">{savedDocs.length}</span>
@@ -410,12 +670,26 @@ function DocumentsContent() {
             </div>
           </div>
 
-          <aside className="border border-frame-gray-3 bg-frame-gray-1/30 overflow-hidden min-h-[760px] xl:sticky xl:top-24">
-            <div className="h-12 border-b border-frame-gray-3 px-4 flex items-center justify-between">
-              <span className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-orange">Preview PDF</span>
-              <span className="text-[0.62rem] text-frame-gray-light">{selectedDoc.label}</span>
+          <aside className="border border-frame-gray-3 bg-frame-gray-1/50 overflow-hidden min-h-[760px] xl:sticky xl:top-24 shadow-[0_24px_90px_rgba(0,0,0,0.22)]">
+            <div className="h-auto min-h-14 border-b border-frame-gray-3 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <span className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-orange">Preview PDF</span>
+                <p className="text-xs text-frame-gray-light mt-1">Saida limpa, sem markdown ou caracteres tecnicos.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={copyText} className="frame-btn-ghost flex items-center gap-2 px-3 py-2">
+                  <Copy className="w-3.5 h-3.5" />
+                  Copiar texto
+                </button>
+                <button type="button" onClick={() => exportPdf()} className="frame-btn-primary flex items-center gap-2 px-3 py-2">
+                  <Download className="w-3.5 h-3.5" />
+                  PDF
+                </button>
+              </div>
             </div>
-            <iframe title="Preview do documento" srcDoc={html} className="w-full h-[720px] bg-[#f8f4ed]" />
+            <div className="bg-frame-black/30 p-3 sm:p-5">
+              <iframe title="Preview do documento" srcDoc={html} className="w-full h-[720px] bg-[#f8f4ed] shadow-[0_18px_50px_rgba(0,0,0,0.26)]" />
+            </div>
           </aside>
         </section>
       </main>

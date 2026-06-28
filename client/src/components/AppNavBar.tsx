@@ -183,7 +183,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
           <button
             type="button"
             onClick={() => setLocation("/profile")}
-            className="flex items-center gap-2.5 group"
+            className="hidden sm:flex items-center gap-2.5 group"
             title="Abrir conta"
           >
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[0.75rem] font-bold shrink-0 transition group-hover:scale-105 ${
@@ -203,7 +203,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
           </button>
         )}
         {user && <NotificationsPopover />}
-        {user && <AccessibilityFontControls />}
+        {user && <div className="hidden sm:block"><AccessibilityFontControls /></div>}
         <button
           type="button"
           onClick={toggleTheme}
@@ -212,7 +212,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
         >
           {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
         </button>
-        <button type="button" onClick={handleBadgeClick} className="frame-badge">
+        <button type="button" onClick={handleBadgeClick} className="frame-badge hidden md:inline-flex">
           {planLabel}
         </button>
         <button
@@ -232,6 +232,25 @@ export default function AppNavBar({ children }: AppNavBarProps) {
               <span key={href} className="block">{navLink(href, label)}</span>
             ))}
           </nav>
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:hidden">
+            <button
+              type="button"
+              onClick={() => {
+                setLocation("/profile");
+                setMobileMenuOpen(false);
+              }}
+              className="min-h-10 border border-frame-gray-3 px-3 font-frame-mono text-[0.62rem] uppercase tracking-[0.1em] text-frame-gray-light"
+            >
+              Minha conta
+            </button>
+            <button
+              type="button"
+              onClick={handleBadgeClick}
+              className="min-h-10 border border-frame-orange/50 px-3 font-frame-mono text-[0.62rem] uppercase tracking-[0.1em] text-frame-orange"
+            >
+              Plano {planLabel}
+            </button>
+          </div>
           <button
             type="button"
             onClick={handleLogout}

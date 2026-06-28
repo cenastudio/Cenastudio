@@ -45,45 +45,45 @@ export const listUsers: RequestHandler = (_req, res, next) => {
   }
 };
 
-export const createManagedUser: RequestHandler = (req, res, next) => {
+export const createManagedUser: RequestHandler = async (req, res, next) => {
   try {
-    const user = authService.createManagedUser(req.body);
+    const user = await authService.createManagedUser(req.body);
     res.status(201).json({ success: true, data: user });
   } catch (e) {
     next(e);
   }
 };
 
-export const updateUserRole: RequestHandler = (req, res, next) => {
+export const updateUserRole: RequestHandler = async (req, res, next) => {
   try {
     const userId = parseInt(req.params.id);
     const { role } = req.body;
-    authService.updateUserRole(userId, role, req.user?.id);
+    await authService.updateUserRole(userId, role, req.user?.id);
     res.json({ success: true, data: { id: userId, role } });
   } catch (e) {
     next(e);
   }
 };
 
-export const updateUserPlan: RequestHandler = (req, res, next) => {
+export const updateUserPlan: RequestHandler = async (req, res, next) => {
   try {
     const userId = parseInt(req.params.id);
     const { planId } = req.body;
-    authService.updateUserPlan(userId, planId);
+    await authService.updateUserPlan(userId, planId);
     res.json({ success: true, data: { id: userId, planId } });
   } catch (e) {
     next(e);
   }
 };
 
-export const deleteManagedUser: RequestHandler = (req, res, next) => {
+export const deleteManagedUser: RequestHandler = async (req, res, next) => {
   try {
     const userId = parseInt(req.params.id);
     if (!req.user?.id) {
       res.status(401).json({ success: false, error: "Sessão expirada. Entre novamente para continuar." });
       return;
     }
-    const deleted = authService.deleteManagedUser(userId, req.user.id);
+    const deleted = await authService.deleteManagedUser(userId, req.user.id);
     res.json({ success: true, data: deleted });
   } catch (e) {
     next(e);

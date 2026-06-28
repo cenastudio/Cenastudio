@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Crown, Search, Trash2, User as UserIcon } from "lucide-react";
+import { AlertTriangle, Crown, KeyRound, Plus, Search, Trash2, User as UserIcon } from "lucide-react";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,6 +26,14 @@ const PLANS = [
   { id: "studio", name: "Studio", limit: -1 },
 ];
 
+const INITIAL_CREATE_FORM = {
+  name: "",
+  email: "",
+  password: "",
+  role: "user" as "user" | "admin",
+  planId: "pro" as "free" | "pro" | "studio",
+};
+
 function AdminUsersContent() {
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<ManagedUser[]>([]);
@@ -34,6 +42,8 @@ function AdminUsersContent() {
   const [deleteTarget, setDeleteTarget] = useState<ManagedUser | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [createForm, setCreateForm] = useState(INITIAL_CREATE_FORM);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     loadUsers();
@@ -68,6 +78,31 @@ function AdminUsersContent() {
       loadUsers();
     } catch (e) {
       toast.error(e instanceof ApiError ? e.message : "Erro ao alterar plano");
+    }
+  };
+
+  const createUser = async () => {
+    if (!createForm.name.trim() || !createForm.email.trim() || createForm.password.length < 6) {
+      toast.error("Preencha nome, e-mail e uma senha com pelo menos 6 caracteres.");
+      return;
+    }
+
+    setCreating(true);
+    try {
+      await api.admin.createUser({
+        name: createForm.name.trim(),
+        email: createForm.email.trim(),
+        password: createForm.password,
+        role: createForm.role,
+        planId: createForm.planId,
+      });
+      toast.success(`Conta criada para ${createForm.email.trim()}`);
+      setCreateForm(INITIAL_CREATE_FORM);
+      await loadUsers();
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : "Erro ao criar usuário");
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -119,6 +154,69 @@ function AdminUsersContent() {
             <p className="text-frame-gray-light text-sm mt-1">{users.length} usuários cadastrados</p>
           </div>
         </div>
+
+        <section className="border border-frame-gray-3 bg-frame-gray-1/35 p-4 sm:p-5 mb-6">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div>
+              <p className="font-frame-mono text-[0.64rem] tracking-[0.18em] uppercase text-frame-orange mb-1">// CRIAR ACESSO</p>
+              <h2 className="text-lg font-semibold">Conta personalizada para teste</h2>
+              <p className="text-sm text-frame-gray-light mt-1">Defina senha, plano e permissao antes de enviar para cliente, parceiro ou avaliador.</p>
+            </div>
+            <div className="hidden sm:flex h-10 w-10 items-center justify-center border border-frame-gray-3 text-frame-orange">
+              <KeyRound className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_150px_150px] gap-3">
+            <input
+              value={createForm.name}
+              onChange={(e) => setCreateForm((current) => ({ ...current, name: e.target.value }))}
+              placeholder="Nome"
+              className="bg-frame-gray-2 border border-frame-gray-3 px-3 py-2.5 text-sm outline-none focus:border-frame-orange"
+            />
+            <input
+              value={createForm.email}
+              onChange={(e) => setCreateForm((current) => ({ ...current, email: e.target.value }))}
+              placeholder="email@cliente.com"
+              type="email"
+              className="bg-frame-gray-2 border border-frame-gray-3 px-3 py-2.5 text-sm outline-none focus:border-frame-orange"
+            />
+            <select
+              value={createForm.planId}
+              onChange={(e) => setCreateForm((current) => ({ ...current, planId: e.target.value as "free" | "pro" | "studio" }))}
+              className="bg-frame-gray-2 border border-frame-gray-3 px-3 py-2.5 text-sm outline-none focus:border-frame-orange"
+            >
+              {PLANS.map((plan) => (
+                <option key={plan.id} value={plan.id}>{plan.name}</option>
+              ))}
+            </select>
+            <select
+              value={createForm.role}
+              onChange={(e) => setCreateForm((current) => ({ ...current, role: e.target.value as "user" | "admin" }))}
+              className="bg-frame-gray-2 border border-frame-gray-3 px-3 py-2.5 text-sm outline-none focus:border-frame-orange"
+            >
+              <option value="user">Usuário</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_220px] gap-3 mt-3">
+            <input
+              value={createForm.password}
+              onChange={(e) => setCreateForm((current) => ({ ...current, password: e.target.value }))}
+              placeholder="Senha temporaria (min. 6 caracteres)"
+              type="text"
+              className="bg-frame-gray-2 border border-frame-gray-3 px-3 py-2.5 text-sm outline-none focus:border-frame-orange"
+            />
+            <button
+              type="button"
+              onClick={createUser}
+              disabled={creating}
+              className="bg-frame-orange text-frame-black px-4 py-2.5 font-frame-mono text-[0.68rem] tracking-[0.14em] uppercase font-semibold hover:bg-frame-orange-dark disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition"
+            >
+              <Plus className="w-4 h-4" />
+              {creating ? "Criando..." : "Criar usuário"}
+            </button>
+          </div>
+        </section>
 
         <div className="relative mb-6">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />

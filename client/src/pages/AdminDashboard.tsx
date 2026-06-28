@@ -35,7 +35,7 @@ function AdminContent() {
   const [form, setForm] = useState({
     name: "Conta Teste",
     email: "",
-    password: "Teste12345",
+    password: "",
     role: "user" as "user" | "admin",
     planId: "pro" as PlanId,
   });
@@ -82,7 +82,7 @@ function AdminContent() {
         planId: form.planId,
       });
       toast.success("Conta criada e liberada");
-      setForm((current) => ({ ...current, email: "", password: "Teste12345" }));
+      setForm((current) => ({ ...current, email: "", password: "" }));
       await load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao criar usuário");

@@ -3,6 +3,7 @@ import { db } from "../models/db.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 import fs from "fs";
+import { safeStoredFilePath } from "../utils/fileSafety.js";
 import { notifyUser } from "../services/notificationService.js";
 
 interface StatelessReviewToken {
@@ -512,13 +513,14 @@ export const streamSharedReviewVideo: RequestHandler = (req, res, next) => {
       throw new AppError("Share link has expired", 410);
     }
 
-    if (!fs.existsSync(review.file_path)) {
+    const storedPath = safeStoredFilePath(review.file_path);
+    if (!fs.existsSync(storedPath)) {
       throw new AppError("Video file not found on disk", 404);
     }
 
     res.setHeader("Content-Type", review.mime_type || "video/mp4");
     res.setHeader("Content-Disposition", `inline; filename="${review.original_name || "review-video"}"`);
-    res.sendFile(review.file_path);
+    res.sendFile(storedPath);
   } catch (e) {
     next(e);
   }
@@ -599,21 +601,10 @@ export const addSharedComment: RequestHandler = (req, res, next) => {
       if (new Date(stateless.expiresAt) < new Date()) {
         throw new AppError("Share link has expired", 410);
       }
-      res.json({
-        success: true,
-        data: {
-          id: Date.now(),
-          review_id: stateless.id,
-          user_id: stateless.id,
-          author_name: authorName || "Cliente",
-          timestamp_seconds: timestampSeconds,
-          comment,
-          annotations: annotations || [],
-          resolved: 0,
-          created_at: new Date().toISOString(),
-        },
-      });
-      return;
+      throw new AppError(
+        "Este link esta em armazenamento temporario e nao pode salvar comentarios. Gere um novo link no Studio.",
+        503,
+      );
     }
 
     // Check if link has expired
@@ -679,36 +670,10 @@ export const updateSharedReviewStatus: RequestHandler = (req, res, next) => {
       if (new Date(stateless.expiresAt) < new Date()) {
         throw new AppError("Share link has expired", 410);
       }
-      res.json({
-        success: true,
-        data: {
-          id: stateless.id,
-          project_id: 0,
-          file_id: null,
-          title: stateless.title,
-          description: stateless.description,
-          status,
-          share_token: token,
-          expires_at: stateless.expiresAt,
-          original_name: "Vídeo externo",
-          file_path: null,
-          project_name: stateless.projectName,
-          video_url: stateless.videoUrl,
-          comments: [
-            {
-              id: Date.now(),
-              review_id: stateless.id,
-              author_name: authorName?.trim() || "Cliente",
-              timestamp_seconds: 0,
-              comment: `[${status}] ${comment?.trim() || status}`,
-              annotations: [],
-              resolved: 0,
-              created_at: new Date().toISOString(),
-            },
-          ],
-        },
-      });
-      return;
+      throw new AppError(
+        "Este link esta em armazenamento temporario e nao pode registrar a decisao. Gere um novo link no Studio.",
+        503,
+      );
     }
 
     if (review.expires_at && new Date(review.expires_at) < new Date()) {

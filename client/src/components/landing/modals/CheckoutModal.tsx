@@ -67,7 +67,7 @@ export function CheckoutModal() {
           <div className="border border-frame-orange/30 bg-frame-orange/[0.05] p-5 text-center space-y-3">
             <CreditCard className="w-9 h-9 text-frame-orange mx-auto" />
             <p className="text-sm text-frame-white font-medium">
-              Checkout seguro em modo teste pelo Stripe
+              Checkout seguro pelo Stripe
             </p>
             <button
               type="button"

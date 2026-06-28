@@ -8,7 +8,12 @@ import {
 import * as authService from "../services/authService.js";
 
 interface SupabaseUserResponse {
+  id?: string;
   email?: string;
+  app_metadata?: {
+    role?: "user" | "admin";
+    plan_id?: string;
+  };
   user_metadata?: {
     name?: string;
     full_name?: string;
@@ -94,7 +99,11 @@ export const supabaseLogin: RequestHandler = async (req, res, next) => {
       supabaseUser.user_metadata?.name ||
       supabaseUser.user_metadata?.full_name ||
       supabaseUser.user_metadata?.user_name;
-    const user = authService.upsertOAuthUser(supabaseUser.email, name);
+    const user = authService.upsertOAuthUser(supabaseUser.email, name, {
+      role: supabaseUser.app_metadata?.role,
+      planId: supabaseUser.app_metadata?.plan_id,
+      supabaseId: supabaseUser.id,
+    });
     const token = signToken(user);
     const plan = authService.formatUserPlan(authService.getUserPlan(user.id));
     res.cookie(COOKIE_NAME, token, cookieOptions);

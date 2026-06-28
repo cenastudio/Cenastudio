@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useState } from "react";
-import { api } from "@/lib/api";
+import { api, redirectToStripe } from "@/lib/api";
 import { toStripePlanId } from "@/lib/plans";
 import type { AppContextType, CheckoutFormData, ContactFormData } from "@/lib/types";
 import type { PlanTier } from "@shared/site";
@@ -52,7 +52,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
         const { url } = await api.checkout.session(stripePlanId);
         closeModal("checkout");
-        window.location.href = url;
+        redirectToStripe(url);
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Erro ao processar checkout");
         throw error;
