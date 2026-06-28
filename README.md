@@ -2,6 +2,8 @@
 
 Inteligência artificial para produção audiovisual — roteiros, callsheets, decupagem, orçamentos, CRM, reviews de vídeos e muito mais.
 
+**Última atualização:** 28 de Junho de 2026
+
 ## 🚀 Novidades Recentes
 
 - **Project Hub**: Página `/project/:id` com visão geral do projeto, ferramentas de acesso rápido, arquivos recentes e aprovações
