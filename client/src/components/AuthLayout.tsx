@@ -1,5 +1,4 @@
 import { useLocation } from "wouter";
-import BrandLogo from "@/components/BrandLogo";
 
 interface AuthLayoutProps {
   title: string;
@@ -13,35 +12,41 @@ export default function AuthLayout({ title, subtitle, children, mode }: AuthLayo
   const [, setLocation] = useLocation();
 
   return (
-    <div className="cinematic-theme min-h-screen flex flex-col lg:flex-row bg-frame-black text-frame-white">
-      {/* Left panel — cinematic reel */}
-      <div className="relative hidden lg:flex lg:w-[52%] flex-col justify-end p-14 overflow-hidden bg-gradient-to-br from-[#0d0d0d] via-[#1a0800] to-[#0d0d0d]">
-        <div className="absolute inset-0 flex flex-wrap gap-0.5 p-0.5 opacity-10">
-          {Array.from({ length: 48 }).map((_, i) => (
-            <div
-              key={i}
-              className="flex-1 min-w-[60px] h-20 bg-gradient-to-br from-[#222] to-[#111] border border-[#2a2a2a] rounded-sm animate-pulse"
-              style={{ animationDelay: `${(i % 8) * 0.3}s`, animationDuration: "3s" }}
-            />
-          ))}
+    <div className="cena-auth cinematic-theme dark min-h-screen flex flex-col lg:flex-row text-frame-white">
+      <div className="relative hidden overflow-hidden lg:flex lg:w-[52%] flex-col justify-end p-14">
+        <div className="landing-glow-orbit -left-36 top-12" />
+        <div className="absolute inset-10 border border-[var(--border)]/60 bg-[var(--frame-orange-bg)] backdrop-blur-sm" />
+        <div className="auth-panel absolute left-20 right-20 top-[42%] p-5">
+          <div className="mb-4 flex items-center justify-between border-b border-frame-gray-3 pb-3">
+            <span className="font-frame-mono text-[0.58rem] uppercase tracking-[0.18em] text-frame-orange">Operação ao vivo</span>
+            <span className="h-2 w-2 bg-frame-orange" />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              ["08", "Jobs"],
+              ["12", "Docs"],
+              ["03", "Reviews"],
+            ].map(([value, label]) => (
+              <div key={label} className="border border-frame-gray-3 p-3">
+                <p className="font-frame-display text-3xl leading-none text-frame-white">{value}</p>
+                <p className="mt-1 font-frame-mono text-[0.52rem] uppercase tracking-[0.14em] text-frame-gray-light">{label}</p>
+              </div>
+            ))}
+          </div>
         </div>
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              "repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(255,77,0,0.02) 4px, rgba(255,77,0,0.02) 5px)",
-          }}
-        />
         <div className="relative z-10">
-          <BrandLogo className="scale-[1.45] origin-left" />
-          <p className="mt-2.5 text-sm text-frame-gray-light font-light max-w-[310px] leading-relaxed">
+          <div className="flex items-baseline gap-3">
+            <span className="text-3xl font-semibold leading-none text-frame-white">Cena</span>
+            <span className="font-frame-mono text-[0.72rem] uppercase tracking-[0.22em] text-frame-orange">Studio</span>
+          </div>
+          <p className="mt-2.5 text-sm text-frame-gray-light font-light max-w-[330px] leading-relaxed">
             Plataforma operacional audiovisual feita por filmmakers, para filmmakers.
           </p>
-          <div className="mt-7 flex flex-col gap-2">
-            {["12 ferramentas IA especializadas", "Trial Pro de 14 dias grátis", "Workflow profissional"].map(
+          <div className="mt-7 grid gap-2">
+            {["IA aplicada ao fluxo de produção", "Trial Pro de 14 dias grátis", "Workflow profissional"].map(
               (feat) => (
-                <div key={feat} className="flex items-center gap-2 text-[0.78rem] text-frame-gray-light">
-                  <span className="text-frame-orange shrink-0">▸</span>
+                <div key={feat} className="landing-pill w-fit">
+                  <span className="h-1.5 w-1.5 bg-frame-orange" />
                   {feat}
                 </div>
               )
@@ -51,14 +56,14 @@ export default function AuthLayout({ title, subtitle, children, mode }: AuthLayo
       </div>
 
       {/* Right panel — form */}
-      <div className="flex-1 flex items-center justify-center px-5 sm:px-9 py-11 bg-frame-black">
-        <div className="w-full max-w-[430px] border border-frame-gray-3 bg-frame-gray-1/45 p-6 sm:p-8 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+      <div className="flex-1 flex items-center justify-center px-5 sm:px-9 py-11">
+        <div className="auth-panel w-full max-w-[430px] p-6 sm:p-8">
           {mode && (
-            <div className="flex mb-8 border border-frame-gray-3">
+            <div className="mb-8 flex border border-frame-gray-3 bg-frame-gray-1/30 p-1">
               <button
                 type="button"
                 onClick={() => setLocation("/login")}
-                className={`flex-1 py-2.5 font-frame-mono text-[0.63rem] tracking-[0.12em] uppercase transition-all ${
+                className={`flex-1 py-2.5 font-frame-mono text-[0.63rem] tracking-[0.12em] uppercase transition ${
                   mode === "login"
                     ? "bg-frame-orange text-frame-black"
                     : "bg-transparent text-frame-gray-light hover:text-frame-white"
@@ -69,7 +74,7 @@ export default function AuthLayout({ title, subtitle, children, mode }: AuthLayo
               <button
                 type="button"
                 onClick={() => setLocation("/register")}
-                className={`flex-1 py-2.5 font-frame-mono text-[0.63rem] tracking-[0.12em] uppercase transition-all ${
+                className={`flex-1 py-2.5 font-frame-mono text-[0.63rem] tracking-[0.12em] uppercase transition ${
                   mode === "register"
                     ? "bg-frame-orange text-frame-black"
                     : "bg-transparent text-frame-gray-light hover:text-frame-white"

@@ -90,7 +90,7 @@ export default function Login() {
           <div className="w-full border-t border-frame-gray-3" />
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-frame-black text-frame-gray-light">ou</span>
+          <span className="px-2 bg-transparent text-frame-gray-light">ou</span>
         </div>
       </div>
 

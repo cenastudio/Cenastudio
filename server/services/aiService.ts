@@ -56,19 +56,32 @@ async function generateWithNvidia(system: string, userText: string): Promise<str
     body.chat_template_kwargs = { enable_thinking: true };
   }
 
-  const response = await fetch(
-    process.env.NVIDIA_INVOKE_URL || "https://integrate.api.nvidia.com/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        Accept: "application/json",
-        "Content-Type": "application/json",
+  let response: Response;
+  try {
+    response = await fetch(
+      process.env.NVIDIA_INVOKE_URL || "https://integrate.api.nvidia.com/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
       },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    },
-  ).finally(() => clearTimeout(timeout));
+    );
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new AppError(
+        "A IA demorou mais que o esperado para responder. Tente novamente em alguns segundos.",
+        504,
+      );
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 
   const payload = (await response.json().catch(() => ({}))) as NvidiaChatResponse;
   if (!response.ok) {

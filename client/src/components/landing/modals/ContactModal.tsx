@@ -23,7 +23,7 @@ export function ContactModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeModal("contact")}>
-      <DialogContent className="sm:max-w-md bg-frame-gray-2 border border-frame-gray-3">
+      <DialogContent className="cinematic-theme sm:max-w-md bg-frame-gray-2 border border-frame-gray-3">
         <DialogHeader>
           <DialogTitle className="frame-title text-xl text-frame-white">{title}</DialogTitle>
           <DialogDescription className="text-frame-gray-light font-light">{description}</DialogDescription>

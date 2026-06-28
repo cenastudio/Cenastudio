@@ -1,117 +1,113 @@
-import { HERO } from "@shared/site";
 import { useLocation } from "wouter";
-import { motion } from "framer-motion";
-import { ChevronRight } from "lucide-react";
+import { ArrowRight, CircleDot, MonitorPlay, Play } from "lucide-react";
 
-/**
- * Hero Section Component
- * Design: Cinematográfico com efeito de reel de filme, gradiente radial
- * Animações: Fade-in sequencial, hover effects nos botões
- * Tipografia: Bebas Neue para títulos (display), DM Sans para corpo
- */
 export default function Hero() {
   const [, setLocation] = useLocation();
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.8 },
-    },
-  };
-
   return (
-    <section className="relative min-h-[96vh] flex flex-col justify-end pb-16 sm:pb-20 pt-32 px-6 sm:px-9 md:px-12 overflow-hidden border-b border-frame-gray-3">
-      <img
-        src="/landing/product/project-hub.png"
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 w-full h-full object-cover object-[62%_center] opacity-35"
-      />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,#000_0%,rgba(0,0,0,0.92)_34%,rgba(0,0,0,0.58)_72%,rgba(0,0,0,0.88)_100%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_55%_at_30%_62%,rgba(255,77,0,0.2)_0%,rgba(0,0,0,0)_55%)]" />
+    <section className="landing-hero landing-hero-clean relative min-h-[100svh] overflow-hidden">
+      <div className="landing-hero-light absolute inset-0" />
+      <div className="landing-hero-wordmark absolute bottom-[-7vw] left-4 hidden select-none lg:block" aria-hidden="true">
+        CENA
+      </div>
 
-      {/* Content */}
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="relative z-10 max-w-3xl"
-      >
-        {/* Tag */}
-        <motion.div
-          variants={itemVariants}
-          className="flex items-center gap-2 mb-6"
-        >
-          <span className="font-frame-mono text-[0.65rem] tracking-[0.2em] uppercase text-frame-orange animate-pulse">
-            ▶
-          </span>
-          <span className="font-frame-mono text-[0.65rem] tracking-[0.2em] uppercase text-frame-orange">
-            {(HERO as any).tag}
-          </span>
-        </motion.div>
-
-        {/* Title */}
-        <motion.div variants={itemVariants} className="mb-8">
-          <h1
-            className="frame-title text-[clamp(4.1rem,10vw,9rem)] leading-[0.88] tracking-[0.02em] max-w-[980px]"
-          >
-            {(HERO as any).title[0]}
-            <br />
-            <span className="text-frame-orange sm:ml-16">{(HERO as any).title[1]}</span>
-            <br />
-            <span
-              className="text-transparent"
-              style={{
-                WebkitTextStroke: "2px #f5f0e8",
-              }}
-            >
-              {(HERO as any).title[2]}
+      <div className="landing-shell relative z-10 grid min-h-[100svh] grid-cols-1 items-center gap-12 pb-12 pt-32 lg:grid-cols-[0.86fr_1.14fr] lg:pb-14 lg:pt-28">
+        <div className="max-w-[690px]">
+          <div className="mb-8 flex items-center gap-3">
+            <span className="grid h-9 w-9 place-items-center rounded-full border border-white/20 bg-black/20 backdrop-blur-xl">
+              <MonitorPlay className="h-4 w-4 text-white" />
             </span>
+            <p className="max-w-[220px] text-[0.68rem] leading-relaxed text-white/70">
+              Plataforma real para organizar produção, cliente, arquivos e aprovações.
+            </p>
+          </div>
+
+          <h1 className="landing-hero-title text-[clamp(3.15rem,7vw,7.35rem)]">
+            <span>Operação</span>
+            <span>audiovisual</span>
+            <span>em <em>Cena.</em></span>
           </h1>
-        </motion.div>
 
-        {/* Subtitle */}
-        <motion.p
-          variants={itemVariants}
-          className="text-[1rem] leading-relaxed text-frame-gray-light mb-10 max-w-xl font-light"
-        >
-          {(HERO as any).subtitle}
-        </motion.p>
+          <p className="mt-7 max-w-[470px] text-[0.94rem] leading-relaxed text-white/72 sm:text-base">
+            Um ambiente para produtora acompanhar briefing, documentos, equipe, arquivos e revisão sem espalhar a operação.
+          </p>
 
-        {/* CTA Buttons */}
-        <motion.div variants={itemVariants} className="flex gap-4 items-center flex-wrap">
-          <motion.button
-            onClick={() => setLocation("/login")}
-            className="frame-btn-primary"
-            whileHover={{ y: -2 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {(HERO as any).cta.primary.label}
-          </motion.button>
+          <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
+            <button
+              type="button"
+              onClick={() => setLocation("/login")}
+              className="landing-hero-cta group inline-flex min-h-12 items-center justify-between gap-8 bg-frame-orange px-5 text-sm font-medium text-black"
+            >
+              Entrar no estúdio
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-white transition-transform group-hover:translate-x-1">
+                <ArrowRight className="h-4 w-4" />
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => document.querySelector("#product-proof")?.scrollIntoView({ behavior: "smooth" })}
+              className="inline-flex min-h-12 items-center justify-center gap-2 border border-white/20 bg-black/20 px-5 text-sm text-white backdrop-blur-xl transition hover:border-white/40 hover:bg-white/10"
+            >
+              <Play className="h-3.5 w-3.5" />
+              Ver produto real
+            </button>
+          </div>
 
-          <motion.button
-            onClick={() => document.querySelector("#product-proof")?.scrollIntoView({ behavior: "smooth" })}
-            className="frame-btn-ghost flex items-center gap-2"
-            whileHover={{ x: 4 }}
-          >
-            {(HERO as any).cta.secondary.label}
-            <ChevronRight size={16} />
-          </motion.button>
-        </motion.div>
-      </motion.div>
+          <div className="mt-7 flex items-center gap-3">
+            <div className="flex -space-x-2" aria-hidden="true">
+              {["D", "P", "F"].map((letter, index) => (
+                <span
+                  key={letter}
+                  className="grid h-8 w-8 place-items-center rounded-full border border-white/30 text-[0.6rem] font-medium text-white"
+                  style={{ background: index === 1 ? "var(--color-frame-orange)" : "rgba(20, 12, 8, 0.82)" }}
+                >
+                  {letter}
+                </span>
+              ))}
+            </div>
+            <span className="text-xs text-white/66">Feito por filmmakers, para filmmakers.</span>
+          </div>
+        </div>
+
+        <div className="landing-system-stage relative">
+          <div className="landing-system-glow" aria-hidden="true" />
+          <div className="landing-system-preview landing-glass-strong">
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-frame-orange" />
+                <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
+                <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
+              </div>
+              <p className="font-frame-mono text-[0.56rem] uppercase tracking-[0.16em] text-white/48">
+                Produto real
+              </p>
+            </div>
+            <img
+              src="/landing/product/project-hub.png"
+              alt="Tela real do centro de projeto no Cena Studio"
+              className="block w-full object-cover object-top"
+              fetchPriority="high"
+            />
+          </div>
+
+          <div className="landing-system-card landing-glass hidden sm:block">
+            <p className="mb-3 font-frame-mono text-[0.54rem] uppercase tracking-[0.16em] text-frame-orange">
+              Revisão e produção
+            </p>
+            <img
+              src="/landing/product/studio.png"
+              alt="Tela real do Studio IA no Cena Studio"
+              className="block w-full object-cover object-top"
+              loading="lazy"
+            />
+          </div>
+        </div>
+
+        <div className="absolute bottom-10 right-0 hidden items-center gap-3 font-frame-mono text-[0.54rem] uppercase tracking-[0.16em] text-white/45 xl:flex">
+          <CircleDot className="h-3 w-3 text-frame-orange" />
+          Cena Studio / Production OS
+        </div>
+      </div>
     </section>
   );
 }

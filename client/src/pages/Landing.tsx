@@ -10,7 +10,7 @@ import { motion } from "framer-motion";
 import { useApp } from "@/contexts/AppContext";
 
 import {
-  FileText, Users, BarChart3, GitBranch, Film,
+  Users, BarChart3, GitBranch, Film,
   MessageSquare, FolderOpen, CheckCircle, ArrowRight,
 } from "lucide-react";
 
@@ -65,7 +65,7 @@ const PRODUCT_SCREENS = [
     image: "/landing/product/dashboard.png",
   },
   {
-    label: "Hub por projeto",
+    label: "Centro do job",
     title: "Cada job vira um centro de produção",
     description:
       "Objetivo, prazo, direção criativa, progresso, equipe e atalhos seguem conectados ao projeto.",
@@ -97,20 +97,20 @@ const USE_CASES = [
 
 function ProductProofSection() {
   return (
-    <section id="product-proof" className="py-24 px-6 sm:px-9 md:px-12 bg-frame-black border-t border-frame-gray-3">
-      <div className="max-w-7xl mx-auto space-y-16">
-        <div className="grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] gap-10 items-end">
+    <section id="product-proof" className="landing-section">
+      <div className="landing-shell space-y-16">
+        <div className="grid grid-cols-1 items-end gap-10 lg:grid-cols-[0.85fr_1.15fr]">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <p className="frame-label mb-3">// Produto real, não mockup</p>
-            <h2 className="frame-title text-[clamp(2.4rem,5vw,4.4rem)] text-frame-white leading-none mb-5">
-              A OPERAÇÃO APARECE <em className="not-italic text-transparent [-webkit-text-stroke:1px_#f5f0e8]">NA TELA</em>
+            <p className="landing-eyebrow mb-3">// Produto real, não mockup</p>
+            <h2 className="landing-heading mb-5 text-[clamp(2.8rem,6vw,5.7rem)]">
+              A OPERAÇÃO APARECE <span className="landing-outline-text">NA TELA</span>
             </h2>
-            <p className="text-frame-gray-light text-[0.95rem] leading-relaxed max-w-xl font-light">
-              Prints capturados da aplicação rodando localmente: painel, hub do projeto e studio de IA com um projeto demo real.
+              <p className="landing-copy max-w-xl">
+              Prints capturados da aplicação rodando localmente: painel, centro do job e studio de IA com um projeto demo real.
             </p>
           </motion.div>
 
@@ -118,14 +118,14 @@ function ProductProofSection() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="grid grid-cols-3 border border-frame-gray-3 bg-frame-gray-1/20"
+            className="landing-glass grid grid-cols-1 sm:grid-cols-3"
           >
             {["Criar briefing", "Gerar documentos", "Acompanhar entrega"].map((step, index) => (
-              <div key={step} className="p-4 sm:p-5 border-r border-frame-gray-3 last:border-r-0">
-                <span className="block font-frame-mono text-[0.62rem] tracking-[0.16em] uppercase text-frame-orange mb-3">
+              <div key={step} className="border-b border-[var(--landing-line)] p-5 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
+                <span className="mb-3 block font-frame-mono text-[0.62rem] uppercase tracking-[0.16em] text-frame-orange">
                   0{index + 1}
                 </span>
-                <p className="text-xs sm:text-sm text-frame-white font-medium leading-snug">{step}</p>
+                <p className="text-sm font-medium leading-snug text-[var(--landing-text)]">{step}</p>
               </div>
             ))}
           </motion.div>
@@ -139,17 +139,17 @@ function ProductProofSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-80px" }}
               transition={{ delay: index * 0.08 }}
-              className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6 lg:gap-10 items-center border border-frame-gray-3 bg-frame-gray-1/10 p-4 sm:p-6"
+              className="landing-card grid grid-cols-1 items-center gap-6 p-4 sm:p-6 lg:grid-cols-[340px_1fr] lg:gap-10"
             >
-              <div className="space-y-3">
-                <p className="font-frame-mono text-[0.64rem] tracking-[0.18em] uppercase text-frame-orange">
+              <div className="relative z-10 space-y-3">
+                <p className="font-frame-mono text-[0.64rem] uppercase tracking-[0.18em] text-frame-orange">
                   {screen.label}
                 </p>
-                <h3 className="text-2xl font-semibold text-frame-white">{screen.title}</h3>
-                <p className="text-sm text-frame-gray-light leading-relaxed">{screen.description}</p>
+                <h3 className="text-2xl font-semibold text-[var(--landing-text)]">{screen.title}</h3>
+                <p className="text-sm leading-relaxed text-[var(--landing-muted)]">{screen.description}</p>
               </div>
 
-              <div className="border border-frame-gray-3 bg-black overflow-hidden">
+              <div className="relative z-10 overflow-hidden border border-[var(--landing-line)] bg-[var(--landing-glass-soft)]">
                 <img
                   src={screen.image}
                   alt={`${screen.title} no Cena Studio`}
@@ -164,21 +164,21 @@ function ProductProofSection() {
         <div>
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
             <div>
-              <p className="frame-label mb-3">// Casos de uso</p>
-              <h2 className="frame-title text-[clamp(2rem,3.8vw,3.2rem)] text-frame-white">
-                PARA QUEM PRODUZ <em className="not-italic text-transparent [-webkit-text-stroke:1px_#f5f0e8]">AUDIOVISUAL</em>
+              <p className="landing-eyebrow mb-3">// Casos de uso</p>
+              <h2 className="landing-heading text-[clamp(2.4rem,4.5vw,4rem)]">
+                PARA QUEM PRODUZ <span className="landing-accent-text">AUDIOVISUAL</span>
               </h2>
             </div>
-            <p className="text-sm text-frame-gray-light leading-relaxed max-w-md">
+            <p className="max-w-md text-sm leading-relaxed text-[var(--landing-muted)]">
               O foco inicial é operação audiovisual real: planejamento, documentos, arquivos, revisão, cliente e equipe.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-0.5">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             {USE_CASES.map((useCase) => (
-              <div key={useCase.title} className="border border-frame-gray-3 bg-frame-gray-1/10 p-6">
-                <h3 className="text-lg font-semibold text-frame-white mb-2">{useCase.title}</h3>
-                <p className="text-sm text-frame-gray-light leading-relaxed">{useCase.description}</p>
+              <div key={useCase.title} className="landing-card p-6">
+                <h3 className="relative z-10 mb-2 text-lg font-semibold text-[var(--landing-text)]">{useCase.title}</h3>
+                <p className="relative z-10 text-sm leading-relaxed text-[var(--landing-muted)]">{useCase.description}</p>
               </div>
             ))}
           </div>
@@ -192,32 +192,32 @@ export default function Landing() {
   const { openModal, modals } = useApp();
 
   return (
-    <div className="cinematic-theme min-h-screen bg-frame-black text-frame-white overflow-x-hidden">
+    <div className="cena-landing min-h-screen overflow-x-hidden">
       <Navigation />
       <Hero />
       <ProductProofSection />
       <ToolsSection />
 
       {/* About Section */}
-      <section id="about" className="py-24 px-9 md:px-12 bg-frame-black border-t border-frame-gray-3">
-        <div className="max-w-7xl mx-auto">
+      <section id="about" className="landing-section">
+        <div className="landing-shell">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="mb-16"
           >
-            <p className="frame-label mb-3">// Plataforma</p>
-            <h2 className="frame-title text-[clamp(2.3rem,4.3vw,3.8rem)] text-frame-white mb-4">
-              MÓDULOS PARA OPERAR <em className="not-italic text-transparent [-webkit-text-stroke:1px_#f5f0e8]">CADA JOB</em>
+            <p className="landing-eyebrow mb-3">// Plataforma</p>
+            <h2 className="landing-heading mb-4 text-[clamp(2.8rem,5.5vw,5rem)]">
+              MÓDULOS PARA OPERAR <span className="landing-outline-text">CADA JOB</span>
             </h2>
-            <p className="text-frame-gray-light text-[0.93rem] font-light max-w-2xl leading-relaxed">
+            <p className="landing-copy max-w-2xl">
               A plataforma conecta as partes que mais se perdem na rotina: projeto, cliente,
               briefing, IA, arquivos, revisão, equipe e documentos.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0.5">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
             {PLATFORM_HIGHLIGHTS.map((section, idx) => {
               const Icon = section.icon;
               return (
@@ -227,17 +227,17 @@ export default function Landing() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: idx * 0.05 }}
-                  className="border border-frame-gray-3 bg-frame-gray-1/10 p-6 hover:border-frame-orange/50 transition group"
+                  className="landing-card group p-6"
                 >
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="p-2.5 bg-frame-gray-2 rounded-lg group-hover:bg-frame-orange/10 transition">
+                  <div className="relative z-10 mb-5 flex items-center gap-3">
+                    <div className="grid h-10 w-10 place-items-center border border-[var(--landing-line)] bg-[var(--landing-glass-soft)] transition group-hover:border-frame-orange/40">
                       <Icon className="w-5 h-5 text-frame-orange" />
                     </div>
-                    <h3 className="font-bold text-lg text-frame-white">{section.title}</h3>
+                    <h3 className="text-lg font-bold text-[var(--landing-text)]">{section.title}</h3>
                   </div>
-                  <ul className="space-y-2">
+                  <ul className="relative z-10 space-y-2">
                     {section.items.map((item) => (
-                      <li key={item} className="flex items-center gap-2 text-sm text-frame-gray-light">
+                      <li key={item} className="flex items-center gap-2 text-sm text-[var(--landing-muted)]">
                         <CheckCircle className="w-3.5 h-3.5 text-frame-orange shrink-0" />
                         {item}
                       </li>
@@ -251,24 +251,24 @@ export default function Landing() {
       </section>
 
       {/* Workflow Section */}
-      <section className="py-24 px-9 md:px-12 bg-frame-black border-t border-frame-gray-3">
-        <div className="max-w-7xl mx-auto">
+      <section className="landing-section">
+        <div className="landing-shell">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <p className="frame-label mb-3">// Fluxo de Trabalho</p>
-            <h2 className="frame-title text-[clamp(2.3rem,4.3vw,3.8rem)] text-frame-white mb-4">
-              DO CONCEITO À <em className="not-italic text-transparent [-webkit-text-stroke:1px_#f5f0e8]">ENTREGA</em>
+            <p className="landing-eyebrow mb-3">// Fluxo de Trabalho</p>
+            <h2 className="landing-heading mb-4 text-[clamp(2.8rem,5.5vw,5rem)]">
+              DO CONCEITO À <span className="landing-accent-text">ENTREGA</span>
             </h2>
-            <p className="text-frame-gray-light text-[0.93rem] font-light max-w-2xl mx-auto leading-relaxed">
+            <p className="landing-copy mx-auto max-w-2xl">
               Seis etapas que cobrem todo o ciclo de produção audiovisual, integradas em uma plataforma única.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0.5 max-w-5xl mx-auto">
+          <div className="mx-auto grid max-w-5xl grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
             {PLATFORM_FLOW.map((item, idx) => (
               <motion.div
                 key={item.step}
@@ -276,13 +276,13 @@ export default function Landing() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.08 }}
-                className="border border-frame-gray-3 p-6 hover:border-frame-orange/30 transition group"
+                className="landing-card group p-6"
               >
-                <span className="text-[2.5rem] font-bold text-frame-orange/20 group-hover:text-frame-orange/40 transition">
+                <span className="relative z-10 text-[2.5rem] font-bold text-frame-orange/40 transition group-hover:text-frame-orange">
                   {item.step}
                 </span>
-                <h3 className="text-lg font-bold text-frame-white mt-2 mb-1">{item.title}</h3>
-                <p className="text-sm text-frame-gray-light">{item.desc}</p>
+                <h3 className="relative z-10 mt-2 mb-1 text-lg font-bold text-[var(--landing-text)]">{item.title}</h3>
+                <p className="relative z-10 text-sm text-[var(--landing-muted)]">{item.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -306,18 +306,19 @@ export default function Landing() {
       <PricingSection />
 
       {/* Contact Section */}
-      <section id="contact" className="py-24 px-9 md:px-12 bg-frame-black border-t border-frame-gray-3">
-        <div className="max-w-4xl mx-auto text-center">
+      <section id="contact" className="landing-section">
+        <div className="landing-shell max-w-4xl text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            className="landing-glass-strong px-6 py-12 sm:px-10 sm:py-16"
           >
-            <p className="frame-label mb-3">// Contato</p>
-            <h2 className="frame-title text-[clamp(2.3rem,4.3vw,3.8rem)] text-frame-white mb-4">
-              VAMOS <em className="not-italic text-transparent [-webkit-text-stroke:1px_#f5f0e8]">CONVERSAR</em>
+            <p className="landing-eyebrow mb-3">// Contato</p>
+            <h2 className="landing-heading mb-4 text-[clamp(2.8rem,5.5vw,5rem)]">
+              VAMOS <span className="landing-outline-text">CONVERSAR</span>
             </h2>
-            <p className="text-frame-gray-light text-[0.93rem] font-light max-w-xl mx-auto leading-relaxed mb-10">
+            <p className="landing-copy mx-auto mb-10 max-w-xl">
               Quer saber mais sobre a plataforma, tirar dúvidas ou solicitar uma demonstração personalizada para sua produtora?
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -343,17 +344,17 @@ export default function Landing() {
             transition={{ delay: 0.2 }}
             className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 text-left"
           >
-            <div className="border border-frame-gray-3 p-5">
-              <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-2">Email</p>
-              <p className="text-sm text-frame-gray-light">contato@cenastudio.com.br</p>
+            <div className="landing-card p-5">
+              <p className="relative z-10 mb-2 font-frame-mono text-[0.64rem] uppercase tracking-[0.2em] text-frame-orange">Email</p>
+              <p className="relative z-10 text-sm text-[var(--landing-muted)]">contato@cenastudio.com.br</p>
             </div>
-            <div className="border border-frame-gray-3 p-5">
-              <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-2">Suporte</p>
-              <p className="text-sm text-frame-gray-light">suporte@cenastudio.com.br</p>
+            <div className="landing-card p-5">
+              <p className="relative z-10 mb-2 font-frame-mono text-[0.64rem] uppercase tracking-[0.2em] text-frame-orange">Suporte</p>
+              <p className="relative z-10 text-sm text-[var(--landing-muted)]">suporte@cenastudio.com.br</p>
             </div>
-            <div className="border border-frame-gray-3 p-5">
-              <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-2">Horário</p>
-              <p className="text-sm text-frame-gray-light">Seg-Sex, 9h às 18h</p>
+            <div className="landing-card p-5">
+              <p className="relative z-10 mb-2 font-frame-mono text-[0.64rem] uppercase tracking-[0.2em] text-frame-orange">Horário</p>
+              <p className="relative z-10 text-sm text-[var(--landing-muted)]">Seg-Sex, 9h às 18h</p>
             </div>
           </motion.div>
         </div>

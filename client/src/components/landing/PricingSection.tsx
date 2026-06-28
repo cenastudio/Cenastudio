@@ -62,19 +62,19 @@ export default function PricingSection() {
   };
 
   return (
-    <section id="pricing" className="py-24 px-9 md:px-12 bg-frame-black">
-      <div className="max-w-7xl mx-auto">
+    <section id="pricing" className="landing-section">
+      <div className="landing-shell">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <p className="frame-label mb-3">// Planos</p>
-          <h2 className="frame-title text-[clamp(2.3rem,4.3vw,3.8rem)] text-frame-white mb-4">
-            PLANOS <em className="not-italic text-transparent [-webkit-text-stroke:1px_#f5f0e8]">SIMPLES</em>
+          <p className="landing-eyebrow mb-3">// Planos</p>
+          <h2 className="landing-heading mb-4 text-[clamp(2.8rem,5.5vw,5rem)]">
+            PLANOS <span className="landing-outline-text">SIMPLES</span>
           </h2>
-          <p className="text-frame-gray-light text-[0.93rem] font-light max-w-2xl mx-auto leading-relaxed">
+          <p className="landing-copy mx-auto max-w-2xl">
             Escolha o plano perfeito para sua produção. Sem contratos, cancele quando quiser.
           </p>
         </motion.div>
@@ -84,32 +84,28 @@ export default function PricingSection() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+          className="grid grid-cols-1 gap-4 md:grid-cols-3"
         >
           {PRICING.map((plan, idx) => (
             <motion.div
               key={idx}
               variants={cardVariants}
               whileHover={{ y: -8 }}
-              className={`relative overflow-hidden transition-all duration-300 border ${
-                plan.highlight
-                  ? "md:scale-105 bg-frame-orange/10 border-frame-orange"
-                  : "bg-frame-gray-2 border-transparent hover:border-frame-gray-3"
-              }`}
+              className={`landing-card relative overflow-hidden ${plan.highlight ? "md:scale-[1.03] border-frame-orange/70" : ""}`}
             >
-              <div className="p-8 md:p-10">
-                <div className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-4">
+              <div className="relative z-10 p-8 md:p-10">
+                <div className="mb-4 font-frame-mono text-[0.64rem] uppercase tracking-[0.2em] text-frame-orange">
                   {plan.tier}
                 </div>
 
                 <div className="mb-2">
-                  <span className="frame-title text-[3rem] text-frame-white">
+                  <span className="landing-heading text-[3.2rem]">
                     {plan.price}
                   </span>
-                  <span className="text-frame-gray-light text-sm ml-2 font-light">{plan.period}</span>
+                  <span className="ml-2 text-sm font-light text-[var(--landing-muted)]">{plan.period}</span>
                 </div>
 
-                <p className="text-frame-gray-light text-sm mb-8 font-light leading-relaxed">
+                <p className="mb-8 text-sm font-light leading-relaxed text-[var(--landing-muted)]">
                   {plan.description}
                 </p>
 
@@ -128,14 +124,14 @@ export default function PricingSection() {
                   {plan.features.map((feature: string, fidx: number) => (
                     <li key={fidx} className="flex items-start gap-3">
                       <Check size={18} className="text-frame-orange flex-shrink-0 mt-0.5" />
-                      <span className="text-frame-cream text-sm font-light">{feature}</span>
+                      <span className="text-sm font-light text-[var(--landing-subtle)]">{feature}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
               {plan.highlight && (
-                <div className="absolute top-0 right-0 bg-frame-orange text-frame-black px-4 py-2 font-frame-mono text-[0.64rem] uppercase tracking-[0.15em] font-semibold">
+                <div className="absolute right-0 top-0 bg-frame-orange px-4 py-2 font-frame-mono text-[0.64rem] font-semibold uppercase tracking-[0.15em] text-black">
                   Popular
                 </div>
               )}
@@ -147,9 +143,9 @@ export default function PricingSection() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-center text-frame-gray-muted text-sm mt-12 font-light"
+          className="mt-12 text-center text-sm font-light text-[var(--landing-muted)]"
         >
-          O plano Free é para validação inicial. Pro e Studio liberam todas as 12 ferramentas, com diferenças em limite de uso, suporte e operação por projeto.
+          O plano Free é para validação inicial. Pro e Studio liberam os fluxos principais de produção, com diferenças em limite de uso, suporte e operação por projeto.
         </motion.p>
       </div>
     </section>

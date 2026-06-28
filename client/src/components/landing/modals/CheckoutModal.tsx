@@ -55,7 +55,7 @@ export function CheckoutModal() {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeModal("checkout")}>
-      <DialogContent className="sm:max-w-md bg-frame-gray-2 border border-frame-gray-3">
+      <DialogContent className="cinematic-theme sm:max-w-md bg-frame-gray-2 border border-frame-gray-3">
         <DialogHeader>
           <DialogTitle className="frame-title text-2xl text-frame-white">Adquirir plano {planLabel}</DialogTitle>
           <DialogDescription className="text-frame-gray-light font-light">

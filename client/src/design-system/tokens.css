@@ -10,20 +10,32 @@
 
   /* Color system */
   --ds-black: #000000;
-  --ds-white: #f5f0e8;
-  --ds-cream: #e8e0d0;
-  --ds-orange: #ff4d00;
-  --ds-orange-2: #cc3d00;
+  --ds-white: #f9f9f9;
+  --ds-cream: #d9c3ab;
+  --ds-orange: #e85002;
+  --ds-orange-2: #c10801;
+  --ds-orange-3: #f16001;
+  --ds-light-gray: #a7a7a7;
+  --ds-gray: #646464;
+  --ds-dark-gray: #333333;
 
   --ds-surface-0: #000000; /* app bg */
-  --ds-surface-1: #151515; /* chrome */
-  --ds-surface-2: #222222; /* cards */
-  --ds-surface-3: #3a3a3a; /* borders */
+  --ds-surface-1: #101010; /* chrome */
+  --ds-surface-2: #181818; /* cards */
+  --ds-surface-3: #333333; /* borders */
 
-  --ds-text-1: #f5f0e8;
-  --ds-text-2: #e8e0d0;
-  --ds-text-3: #b8b8b8;
-  --ds-text-4: #8a8a8a;
+  --ds-text-1: #f9f9f9;
+  --ds-text-2: #d9c3ab;
+  --ds-text-3: #a7a7a7;
+  --ds-text-4: #646464;
+
+  /* Brand gradients and lighting */
+  --ds-gradient-primary: linear-gradient(135deg, #000000 0%, #c10801 42%, #f16001 72%, #d9c3ab 100%);
+  --ds-gradient-hero: radial-gradient(circle at 68% 26%, rgba(241, 96, 1, 0.74) 0%, rgba(193, 8, 1, 0.32) 24%, rgba(0, 0, 0, 0) 58%), linear-gradient(135deg, #000000 0%, rgba(193, 8, 1, 0.42) 46%, rgba(0, 0, 0, 0.96) 100%);
+  --ds-gradient-bg-dark: radial-gradient(circle at 74% 10%, rgba(232, 80, 2, 0.18), transparent 32%), radial-gradient(circle at 8% 84%, rgba(193, 8, 1, 0.16), transparent 34%), #000000;
+  --ds-gradient-bg-light: radial-gradient(circle at 5% 8%, rgba(232, 80, 2, 0.12), transparent 34%), radial-gradient(circle at 92% 86%, rgba(241, 96, 1, 0.12), transparent 36%), linear-gradient(180deg, #f9f9f9 0%, #f5f1ed 52%, #f9f9f9 100%);
+  --ds-gradient-accent: linear-gradient(90deg, #e85002 0%, #f16001 52%, #d9c3ab 100%);
+  --ds-gradient-glow: radial-gradient(circle, rgba(241, 96, 1, 0.5), rgba(193, 8, 1, 0.18) 42%, transparent 72%);
 
   --ds-success: #00c864;
   --ds-danger: #ff3b3b;
@@ -57,8 +69,9 @@
 
   /* Shadows (subtle, premium) */
   --ds-shadow-1: 0 1px 0 rgba(0, 0, 0, 0.6);
-  --ds-shadow-2: 0 10px 30px rgba(0, 0, 0, 0.35);
-  --ds-shadow-glow: 0 0 0 1px rgba(255, 77, 0, 0.18), 0 0 40px rgba(255, 77, 0, 0.06);
+  --ds-shadow-2: 0 22px 70px rgba(0, 0, 0, 0.42);
+  --ds-shadow-glass: 0 24px 80px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(249, 249, 249, 0.08);
+  --ds-shadow-glow: 0 0 0 1px rgba(232, 80, 2, 0.2), 0 0 52px rgba(232, 80, 2, 0.16);
 
   /* Motion */
   --ds-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
