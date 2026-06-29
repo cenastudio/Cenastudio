@@ -53,15 +53,15 @@ interface Interaction {
 }
 
 const INTERACTION_TYPES = [
-  { id: "call", label: "Ligação", icon: Phone },
-  { id: "email", label: "Email", icon: Mail },
-  { id: "meeting", label: "Reunião", icon: User },
-  { id: "message", label: "Mensagem", icon: MessageSquare },
+  { id: "call", labelKey: "app.interactions.call", icon: Phone },
+  { id: "email", labelKey: "app.interactions.email", icon: Mail },
+  { id: "meeting", labelKey: "app.interactions.meeting", icon: User },
+  { id: "message", labelKey: "app.interactions.message", icon: MessageSquare },
 ];
 
 const DIRECTIONS = [
-  { id: "inbound", label: "Recebido" },
-  { id: "outbound", label: "Enviado" },
+  { id: "inbound", labelKey: "app.interactions.inbound" },
+  { id: "outbound", labelKey: "app.interactions.outbound" },
 ];
 
 function InteractionsContent() {
@@ -290,10 +290,10 @@ function InteractionsContent() {
           <div>
             <p className="frame-label mb-2">// CRM</p>
             <h1 className="frame-title text-[clamp(2.1rem,4vw,3.5rem)]">
-              INTERAÇÕES
+              {t("app.interactions.title") as string}
             </h1>
             <p className="text-frame-gray-light text-sm mt-2">
-              Histórico de comunicações com clientes
+              {t("app.interactions.subtitle") as string}
             </p>
           </div>
 
@@ -305,7 +305,7 @@ function InteractionsContent() {
             className="frame-btn-primary flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            Nova Interação
+            {t("app.interactions.newInteraction") as string}
           </button>
         </div>
 
@@ -313,7 +313,7 @@ function InteractionsContent() {
         <div className="flex flex-wrap gap-4 border border-frame-gray-3 bg-frame-gray-1/10 p-4">
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-frame-orange" />
-            <span className="font-frame-mono text-xs uppercase tracking-wider">Filtros:</span>
+            <span className="font-frame-mono text-xs uppercase tracking-wider">{t("app.interactions.filters") as string}</span>
           </div>
 
           <select
@@ -321,10 +321,10 @@ function InteractionsContent() {
             onChange={(e) => setFilterType(e.target.value)}
             className="bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
           >
-            <option value="">Todos os tipos</option>
+            <option value="">{t("app.interactions.allTypes") as string}</option>
             {INTERACTION_TYPES.map((type) => (
               <option key={type.id} value={type.id}>
-                {type.label}
+                {t(type.labelKey) as string}
               </option>
             ))}
           </select>
@@ -334,7 +334,7 @@ function InteractionsContent() {
             onChange={(e) => setFilterClient(e.target.value)}
             className="bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
           >
-            <option value="">Todos os clientes</option>
+            <option value="">{t("app.interactions.allClients") as string}</option>
             {clients.map((client) => (
               <option key={client.id} value={client.id}>
                 {client.company ? `${client.name} (${client.company})` : client.name}
@@ -350,7 +350,7 @@ function InteractionsContent() {
             }}
             className="frame-btn-ghost text-xs"
           >
-            Limpar Filtros
+            {t("app.interactions.clearFilters") as string}
           </button>
         </div>
 
@@ -387,7 +387,7 @@ function InteractionsContent() {
                         <div>
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-frame-mono text-xs uppercase tracking-wider text-frame-orange">
-                              {INTERACTION_TYPES.find((t) => t.id === interaction.type)?.label}
+                              {t(INTERACTION_TYPES.find((item) => item.id === interaction.type)?.labelKey || "app.interactions.other") as string}
                             </span>
                             <span className="text-xs text-frame-gray-light">
                               {interaction.direction === "inbound" ? "← " + t("app.interactions.inbound") : "→ " + t("app.interactions.outbound")}
@@ -422,7 +422,7 @@ function InteractionsContent() {
                       {interaction.outcome && (
                         <div className="bg-frame-gray-2 border-l-2 border-frame-orange p-3 mb-3">
                           <p className="text-xs text-frame-gray-light font-frame-mono uppercase tracking-wider mb-1">
-                            Resultado
+                            {t("app.interactions.outcome") as string}
                           </p>
                           <p className="text-sm">{interaction.outcome}</p>
                         </div>
@@ -448,7 +448,7 @@ function InteractionsContent() {
                           className="cursor-pointer"
                         >
                           <Edit className="w-4 h-4 mr-2" />
-                          Editar
+                          {t("app.common.edit") as string}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
@@ -458,7 +458,7 @@ function InteractionsContent() {
                           className="cursor-pointer text-frame-red"
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
-                          Excluir
+                          {t("app.common.delete") as string}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -474,9 +474,9 @@ function InteractionsContent() {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-md rounded-none p-6">
           <DialogHeader>
-            <DialogTitle className="frame-title text-2xl">NOVA INTERAÇÃO</DialogTitle>
+            <DialogTitle className="frame-title text-2xl">{t("app.interactions.newInteraction") as string}</DialogTitle>
             <DialogDescription className="text-frame-gray-light text-sm">
-              Registre uma nova comunicação com cliente
+              {t("app.interactions.createDescription") as string}
             </DialogDescription>
           </DialogHeader>
 
@@ -484,7 +484,7 @@ function InteractionsContent() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                  Tipo
+                  {t("app.interactions.type") as string}
                 </label>
                 <select
                   disabled={isSubmitting}
@@ -492,9 +492,9 @@ function InteractionsContent() {
                   onChange={(e) => setType(e.target.value)}
                   className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
                 >
-                  {INTERACTION_TYPES.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.label}
+                  {INTERACTION_TYPES.map((interactionType) => (
+                    <option key={interactionType.id} value={interactionType.id}>
+                      {t(interactionType.labelKey) as string}
                     </option>
                   ))}
                 </select>
@@ -502,7 +502,7 @@ function InteractionsContent() {
 
               <div className="space-y-2">
                 <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                  Direção
+                  {t("app.interactions.direction") as string}
                 </label>
                 <select
                   disabled={isSubmitting}
@@ -512,7 +512,7 @@ function InteractionsContent() {
                 >
                   {DIRECTIONS.map((d) => (
                     <option key={d.id} value={d.id}>
-                      {d.label}
+                      {t(d.labelKey) as string}
                     </option>
                   ))}
                 </select>
@@ -522,7 +522,7 @@ function InteractionsContent() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                  Cliente
+                  {t("app.interactions.client") as string}
                 </label>
                 <select
                   disabled={isSubmitting}
@@ -530,7 +530,7 @@ function InteractionsContent() {
                   onChange={(e) => setClientId(e.target.value)}
                   className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
                 >
-                  <option value="">Nenhum cliente</option>
+                  <option value="">{t("app.interactions.noClient") as string}</option>
                   {clients.map((client) => (
                     <option key={client.id} value={client.id}>
                       {client.company ? `${client.name} (${client.company})` : client.name}
@@ -541,7 +541,7 @@ function InteractionsContent() {
 
               <div className="space-y-2">
                 <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                  Oportunidade
+                  {t("app.interactions.opportunity") as string}
                 </label>
                 <select
                   disabled={isSubmitting}
@@ -549,7 +549,7 @@ function InteractionsContent() {
                   onChange={(e) => setOpportunityId(e.target.value)}
                   className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
                 >
-                  <option value="">Nenhuma oportunidade</option>
+                  <option value="">{t("app.interactions.noOpportunity") as string}</option>
                   {opportunities.map((opp) => (
                     <option key={opp.id} value={opp.id}>
                       {opp.title}
@@ -561,7 +561,7 @@ function InteractionsContent() {
 
             <div className="space-y-2">
               <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                Resumo *
+                {t("app.interactions.summary") as string} *
               </label>
               <textarea
                 required
@@ -575,7 +575,7 @@ function InteractionsContent() {
 
             <div className="space-y-2">
               <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                Resultado
+                {t("app.interactions.outcome") as string}
               </label>
               <textarea
                 disabled={isSubmitting}
@@ -588,7 +588,7 @@ function InteractionsContent() {
 
             <div className="space-y-2">
               <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                Próximo Follow-up
+                {t("app.interactions.nextFollowUp") as string}
               </label>
               <input
                 type="datetime-local"
@@ -606,7 +606,7 @@ function InteractionsContent() {
                 onClick={() => setIsCreateOpen(false)}
                 className="frame-btn-ghost"
               >
-                Cancelar
+                {t("app.common.cancel") as string}
               </button>
               <button
                 type="submit"
@@ -624,9 +624,9 @@ function InteractionsContent() {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-md rounded-none p-6">
           <DialogHeader>
-            <DialogTitle className="frame-title text-2xl">EDITAR INTERAÇÃO</DialogTitle>
+            <DialogTitle className="frame-title text-2xl">{t("app.interactions.editInteraction") as string}</DialogTitle>
             <DialogDescription className="text-frame-gray-light text-sm">
-              Atualize os detalhes da interação
+              {t("app.interactions.editDescription") as string}
             </DialogDescription>
           </DialogHeader>
 
@@ -634,7 +634,7 @@ function InteractionsContent() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                  Tipo
+                  {t("app.interactions.type") as string}
                 </label>
                 <select
                   disabled={isSubmitting}
@@ -642,9 +642,9 @@ function InteractionsContent() {
                   onChange={(e) => setType(e.target.value)}
                   className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
                 >
-                  {INTERACTION_TYPES.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.label}
+                  {INTERACTION_TYPES.map((interactionType) => (
+                    <option key={interactionType.id} value={interactionType.id}>
+                      {t(interactionType.labelKey) as string}
                     </option>
                   ))}
                 </select>
@@ -652,7 +652,7 @@ function InteractionsContent() {
 
               <div className="space-y-2">
                 <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                  Direção
+                  {t("app.interactions.direction") as string}
                 </label>
                 <select
                   disabled={isSubmitting}
@@ -662,7 +662,7 @@ function InteractionsContent() {
                 >
                   {DIRECTIONS.map((d) => (
                     <option key={d.id} value={d.id}>
-                      {d.label}
+                      {t(d.labelKey) as string}
                     </option>
                   ))}
                 </select>
@@ -671,7 +671,7 @@ function InteractionsContent() {
 
             <div className="space-y-2">
               <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                Resumo *
+                {t("app.interactions.summary") as string} *
               </label>
               <textarea
                 required
@@ -684,7 +684,7 @@ function InteractionsContent() {
 
             <div className="space-y-2">
               <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                Resultado
+                {t("app.interactions.outcome") as string}
               </label>
               <textarea
                 disabled={isSubmitting}
@@ -696,7 +696,7 @@ function InteractionsContent() {
 
             <div className="space-y-2">
               <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                Próximo Follow-up
+                {t("app.interactions.nextFollowUp") as string}
               </label>
               <input
                 type="datetime-local"
@@ -714,7 +714,7 @@ function InteractionsContent() {
                 onClick={() => setIsEditOpen(false)}
                 className="frame-btn-ghost"
               >
-                Cancelar
+                {t("app.common.cancel") as string}
               </button>
               <button
                 type="submit"
@@ -732,9 +732,9 @@ function InteractionsContent() {
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-sm rounded-none p-6">
           <DialogHeader>
-            <DialogTitle className="frame-title text-2xl text-frame-red">EXCLUIR INTERAÇÃO?</DialogTitle>
+            <DialogTitle className="frame-title text-2xl text-frame-red">{t("app.interactions.deleteTitle") as string}</DialogTitle>
             <DialogDescription className="text-frame-gray-light text-sm">
-              Esta ação é permanente.
+              {t("app.interactions.deleteDescription") as string}
             </DialogDescription>
           </DialogHeader>
 
@@ -745,7 +745,7 @@ function InteractionsContent() {
               onClick={() => setIsDeleteOpen(false)}
               className="frame-btn-ghost"
             >
-              Cancelar
+              {t("app.common.cancel") as string}
             </button>
             <button
               type="button"

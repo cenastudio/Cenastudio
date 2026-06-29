@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import ReactPlayer from "react-player";
 import {
-  Play, Pause, Volume2, VolumeX, Maximize, Minimize, SkipForward, SkipBack,
+  Play, Pause, Volume2, VolumeX, Maximize, Minimize, SkipForward, SkipBack, Monitor, Smartphone,
 } from "lucide-react";
 import AnnotationCanvas, { type Annotation } from "./AnnotationCanvas";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface CommentMarker {
   id: number;
@@ -52,6 +53,7 @@ export default function VideoPlayer({
   onAddAnnotatedComment,
   pauseRequest = 0,
 }: VideoPlayerProps) {
+  const { t } = useLanguage();
   const playerRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [playing, setPlaying] = useState(false);
@@ -72,6 +74,7 @@ export default function VideoPlayer({
   const [hoveredMarker, setHoveredMarker] = useState<CommentMarker | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [driveFallback, setDriveFallback] = useState(false);
+  const [orientation, setOrientation] = useState<"landscape" | "portrait">("landscape");
 
   const controlsTimeoutRef = useRef<any>(null);
   const googleDrivePreviewUrl = getGoogleDrivePreviewUrl(url);
@@ -79,6 +82,8 @@ export default function VideoPlayer({
   const playableUrl = googleDriveId
     ? `https://drive.google.com/uc?export=download&id=${googleDriveId}`
     : url;
+  const playerAspectRatio = orientation === "portrait" ? "9/16" : "16/9";
+  const playerMaxWidth = orientation === "portrait" && !isFullscreen ? "min(100%, 520px)" : "100%";
 
   const seekToSeconds = useCallback((seconds: number) => {
     const player = playerRef.current;
@@ -266,7 +271,7 @@ export default function VideoPlayer({
       <div className="aspect-video bg-frame-black rounded-lg flex items-center justify-center border border-frame-gray-3">
         <div className="text-center">
           <Play className="w-16 h-16 mx-auto mb-4 text-frame-gray-4" />
-          <p className="text-frame-gray-light text-sm">Nenhum vídeo carregado</p>
+          <p className="text-frame-gray-light text-sm">{t("app.videoReviews.noVideoLoaded") as string}</p>
         </div>
       </div>
     );
@@ -276,8 +281,8 @@ export default function VideoPlayer({
     return (
       <div
         ref={containerRef}
-        className="relative bg-black rounded-lg overflow-hidden border border-frame-gray-3"
-        style={{ aspectRatio: "16/9" }}
+        className="relative mx-auto w-full bg-black rounded-lg overflow-hidden border border-frame-gray-3"
+        style={{ aspectRatio: playerAspectRatio, maxWidth: playerMaxWidth }}
       >
         <iframe
           src={googleDrivePreviewUrl}
@@ -286,6 +291,26 @@ export default function VideoPlayer({
           allowFullScreen
           className="absolute inset-0 h-full w-full border-0 bg-black"
         />
+        <div className="absolute left-3 top-3 flex items-center border border-white/10 bg-black/75 p-1 backdrop-blur">
+          <button
+            type="button"
+            onClick={() => setOrientation("landscape")}
+            className={`flex h-8 items-center gap-1.5 px-2 font-mono text-[0.56rem] uppercase tracking-wider transition ${orientation === "landscape" ? "bg-frame-orange text-black" : "text-white/65 hover:text-white"}`}
+            title={t("app.videoReviews.horizontal") as string}
+          >
+            <Monitor className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t("app.videoReviews.horizontal") as string}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setOrientation("portrait")}
+            className={`flex h-8 items-center gap-1.5 px-2 font-mono text-[0.56rem] uppercase tracking-wider transition ${orientation === "portrait" ? "bg-frame-orange text-black" : "text-white/65 hover:text-white"}`}
+            title={t("app.videoReviews.vertical") as string}
+          >
+            <Smartphone className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t("app.videoReviews.vertical") as string}</span>
+          </button>
+        </div>
         <div className="absolute right-3 bottom-3 flex items-center gap-2 rounded-none border border-white/10 bg-black/70 px-3 py-2 text-[0.62rem] text-white/70 backdrop-blur">
           <a
             href={url}
@@ -293,7 +318,7 @@ export default function VideoPlayer({
             rel="noreferrer"
             className="ml-auto text-frame-orange hover:text-frame-white transition"
           >
-            Abrir origem
+            {t("app.videoReviews.openSource") as string}
           </a>
           <button type="button" onClick={toggleFullscreen} className="text-frame-orange hover:text-frame-white transition">
             {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
@@ -306,8 +331,8 @@ export default function VideoPlayer({
   return (
     <div
       ref={containerRef}
-      className="relative bg-black rounded-lg overflow-hidden border border-frame-gray-3 group"
-      style={{ aspectRatio: "16/9" }}
+      className="relative mx-auto w-full bg-black rounded-lg overflow-hidden border border-frame-gray-3 group"
+      style={{ aspectRatio: playerAspectRatio, maxWidth: playerMaxWidth }}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => {
         if (playing) setShowControls(false);
@@ -349,7 +374,7 @@ export default function VideoPlayer({
       }}
     >
       {annotationMode ? (
-        <div className="relative" style={{ aspectRatio: "16/9" }}>
+        <div className="relative" style={{ aspectRatio: playerAspectRatio }}>
           <ReactPlayer
             ref={playerRef}
             src={playableUrl}
@@ -383,7 +408,7 @@ export default function VideoPlayer({
                 type="text"
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                placeholder="Descreva seu feedback..."
+                placeholder={t("app.videoReviews.feedbackPlaceholder") as string}
                 className="flex-1 bg-black/60 border border-white/20 px-3 py-2 text-sm text-white outline-none focus:border-frame-orange"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
@@ -402,14 +427,14 @@ export default function VideoPlayer({
                 disabled={!commentText.trim()}
                 className="bg-frame-orange text-frame-black px-3 py-2 text-sm font-medium disabled:opacity-50 shrink-0"
               >
-                Enviar
+                {t("app.common.send") as string}
               </button>
               <button
                 type="button"
                 onClick={handleCancelAnnotation}
                 className="text-white/70 hover:text-white px-2 py-2 text-sm shrink-0"
               >
-                Cancelar
+                {t("app.common.cancel") as string}
               </button>
             </div>
           </div>
@@ -502,10 +527,10 @@ export default function VideoPlayer({
                   <button onClick={handlePlayPause} className="text-white hover:text-frame-orange transition">
                     {playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
                   </button>
-                  <button onClick={() => handleSkip(-10)} className="text-white/70 hover:text-white transition" title="Voltar 10s (J)">
+                  <button onClick={() => handleSkip(-10)} className="text-white/70 hover:text-white transition" title={t("app.videoReviews.backTenSeconds") as string}>
                     <SkipBack className="w-4 h-4" />
                   </button>
-                  <button onClick={() => handleSkip(10)} className="text-white/70 hover:text-white transition" title="Avançar 10s (L)">
+                  <button onClick={() => handleSkip(10)} className="text-white/70 hover:text-white transition" title={t("app.videoReviews.forwardTenSeconds") as string}>
                     <SkipForward className="w-4 h-4" />
                   </button>
                   <div className="flex items-center gap-1.5">
@@ -526,6 +551,24 @@ export default function VideoPlayer({
                 </div>
 
                 <div className="flex items-center gap-2">
+                  <div className="hidden sm:flex items-center border border-white/20 p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setOrientation("landscape")}
+                      className={`flex h-7 w-8 items-center justify-center transition ${orientation === "landscape" ? "bg-frame-orange text-black" : "text-white/65 hover:text-white"}`}
+                      title={t("app.videoReviews.horizontal") as string}
+                    >
+                      <Monitor className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOrientation("portrait")}
+                      className={`flex h-7 w-8 items-center justify-center transition ${orientation === "portrait" ? "bg-frame-orange text-black" : "text-white/65 hover:text-white"}`}
+                      title={t("app.videoReviews.vertical") as string}
+                    >
+                      <Smartphone className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                   <div className="relative">
                     <button
                       onClick={() => setShowSpeedMenu(!showSpeedMenu)}

@@ -31,15 +31,15 @@ export default function Navigation() {
   };
 
   return (
-    <nav className="fixed inset-x-0 top-0 z-50 px-4 py-5 sm:px-6 lg:py-7">
+    <nav className="landing-nav fixed inset-x-0 top-0 z-50 px-4 py-5 sm:px-6 lg:py-7">
       <div className="landing-shell flex min-h-12 items-center justify-between gap-4">
         <button
           type="button"
           onClick={() => setLocation("/")}
-          className="border-none bg-transparent"
+          className="landing-brand-button border-none bg-transparent"
           aria-label={SITE_CONFIG.title}
         >
-          <BrandLogo tone="onDark" />
+          <BrandLogo tone="onDark" className="landing-brand-wordmark" />
         </button>
 
         <div className="hidden items-center gap-1 rounded-md border border-white/15 bg-black/30 p-1 shadow-2xl backdrop-blur-2xl lg:flex">

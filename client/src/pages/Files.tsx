@@ -300,13 +300,13 @@ function FilesContent() {
         {/* Header com seletor de projeto */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <p className="frame-label mb-2">// MATERIAIS DO PROJETO</p>
+            <p className="frame-label mb-2">// {t("app.files.projectMaterials")}</p>
             <h1 className="frame-title text-[clamp(2.1rem,4vw,3.5rem)]">
               {currentProject ? currentProject.name : t("app.files.title")}
             </h1>
             <p className="text-frame-gray-light text-sm mt-2">
               {currentProject
-                ? `${files.length} ${files.length === 1 ? "material organizado" : "materiais organizados"} neste projeto`
+                ? `${files.length} ${files.length === 1 ? t("app.files.organizedMaterial") : t("app.files.organizedMaterials")} ${t("app.files.inThisProject")}`
                 : t("app.files.subtitle")}
             </p>
           </div>
@@ -319,7 +319,7 @@ function FilesContent() {
                   onChange={(e) => { const v = e.target.value; if (v) handleSelectProject(parseInt(v)); }}
                   className="bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange min-w-[180px]"
                 >
-                  <option value="">Selecione um projeto</option>
+                  <option value="">{t("app.files.selectProject")}</option>
                   {projects.map((p) => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
@@ -328,7 +328,7 @@ function FilesContent() {
                   onClick={() => setShowNewProject(true)}
                   className="frame-btn-ghost flex items-center gap-1.5 text-sm"
                 >
-                  <Plus className="w-4 h-4" /> Novo
+                  <Plus className="w-4 h-4" /> {t("app.common.new")}
                 </button>
               </div>
             ) : (
@@ -359,7 +359,7 @@ function FilesContent() {
               className="frame-btn-primary flex items-center gap-2"
             >
               <Upload className="w-4 h-4" />
-              Adicionar
+              {t("app.common.add")}
             </button>
           </div>
         </div>
@@ -370,39 +370,39 @@ function FilesContent() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-6 text-center hover:border-frame-orange/50 transition">
                 <Folder className="w-10 h-10 text-frame-orange mx-auto mb-3" />
-                <h3 className="font-semibold mb-1">Selecione um Projeto</h3>
+                <h3 className="font-semibold mb-1">{t("app.files.selectProjectTitle")}</h3>
                 <p className="text-sm text-frame-gray-light mb-4">
-                  Escolha um projeto no menu acima para ver os arquivos ou crie um novo.
+                  {t("app.files.selectProjectDescription")}
                 </p>
                 <button
                   onClick={() => setShowNewProject(true)}
                   className="frame-btn-primary text-sm"
                 >
-                  <Plus className="w-4 h-4 mr-1" /> Criar Projeto
+                  <Plus className="w-4 h-4 mr-1" /> {t("app.files.createProject")}
                 </button>
               </div>
               <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-6 text-center hover:border-frame-orange/50 transition">
                 <Link className="w-10 h-10 text-frame-orange mx-auto mb-3" />
-                <h3 className="font-semibold mb-1">Links Externos</h3>
+                <h3 className="font-semibold mb-1">{t("app.files.externalLinks")}</h3>
                 <p className="text-sm text-frame-gray-light mb-4">
-                  Salve Drive, Vimeo, YouTube, Dropbox e referências sem consumir armazenamento.
+                  {t("app.files.externalLinksDescription")}
                 </p>
-                <p className="text-xs text-frame-gray-light/60">Recomendado para vídeos grandes</p>
+                <p className="text-xs text-frame-gray-light/60">{t("app.files.recommendedForLargeVideos")}</p>
               </div>
               <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-6 text-center hover:border-frame-orange/50 transition">
                 <Upload className="w-10 h-10 text-frame-orange mx-auto mb-3" />
-                <h3 className="font-semibold mb-1">Upload Leve</h3>
+                <h3 className="font-semibold mb-1">{t("app.files.lightUpload")}</h3>
                 <p className="text-sm text-frame-gray-light mb-4">
-                  Envie imagens, PDFs e arquivos pequenos quando realmente precisar anexar algo.
+                  {t("app.files.lightUploadDescription")}
                 </p>
-                <p className="text-xs text-frame-gray-light/60">Limite atual: 10MB por arquivo</p>
+                <p className="text-xs text-frame-gray-light/60">{t("app.files.currentLimit") }</p>
               </div>
             </div>
 
             {projects.length > 0 && (
               <div>
                 <h3 className="text-sm font-frame-mono uppercase tracking-wider text-frame-gray-light mb-3">
-                  Projetos disponíveis
+                  {t("app.files.availableProjects")}
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {projects.map((p) => (
@@ -552,7 +552,7 @@ function FilesContent() {
                       <span className="text-xs text-frame-gray-light hidden sm:block">{formatDate(file.created_at)}</span>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
                         {!isLink && isPreviewableImage(file) && (
-                          <button onClick={() => openPreview(file)} className="p-1.5 hover:bg-frame-gray-3 transition" title="Visualizar">
+                          <button onClick={() => openPreview(file)} className="p-1.5 hover:bg-frame-gray-3 transition" title={t("app.common.preview")}>
                             <Eye className="w-4 h-4" />
                           </button>
                         )}
@@ -561,7 +561,7 @@ function FilesContent() {
                             <ExternalLink className="w-4 h-4" />
                           </a>
                         ) : (
-                          <button onClick={() => handleDownload(file)} className="p-1.5 hover:bg-frame-gray-3 transition" title="Baixar">
+                          <button onClick={() => handleDownload(file)} className="p-1.5 hover:bg-frame-gray-3 transition" title={t("app.common.download")}>
                             <Download className="w-4 h-4" />
                           </button>
                         )}
@@ -582,9 +582,9 @@ function FilesContent() {
       <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
         <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-md rounded-none p-6">
           <DialogHeader>
-            <DialogTitle className="frame-title text-2xl">ADICIONAR AO PROJETO</DialogTitle>
+            <DialogTitle className="frame-title text-2xl">{t("app.files.addToProject")}</DialogTitle>
             <DialogDescription className="text-frame-gray-light text-sm">
-              Salve links externos como padrão. Use upload apenas para arquivos leves.
+              {t("app.files.addToProjectDescription")}
             </DialogDescription>
           </DialogHeader>
 
@@ -603,7 +603,7 @@ function FilesContent() {
                 uploadTab === "file" ? "bg-frame-orange text-frame-black" : "text-frame-gray-light hover:text-frame-white"
               }`}
             >
-              <Upload className="w-3.5 h-3.5 inline mr-1" /> Upload leve
+              <Upload className="w-3.5 h-3.5 inline mr-1" /> {t("app.files.lightUpload")}
             </button>
           </div>
 
@@ -621,8 +621,8 @@ function FilesContent() {
                   <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" id="file-upload" />
                   <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center gap-3">
                     <Upload className={`w-8 h-8 ${dragOver ? "text-frame-orange" : "text-frame-gray-light"}`} />
-                    <p className="text-sm text-frame-gray-light">Clique ou arraste um arquivo aqui</p>
-                    <p className="text-xs text-frame-gray-light/60">Até 10MB. Para vídeos, prefira link externo.</p>
+                    <p className="text-sm text-frame-gray-light">{t("app.files.dropFileHere")}</p>
+                    <p className="text-xs text-frame-gray-light/60">{t("app.files.fileLimitHint")}</p>
                   </label>
                 </div>
               ) : (
@@ -654,7 +654,7 @@ function FilesContent() {
           ) : (
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="block font-frame-mono text-xs text-frame-orange uppercase">Nome do Link</label>
+                <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.files.linkName")}</label>
                 <input
                   type="text"
                   value={linkName}
@@ -675,14 +675,14 @@ function FilesContent() {
               </div>
               <div className="bg-frame-gray-2/30 p-3 text-xs text-frame-gray-light">
                 <Globe className="w-3.5 h-3.5 inline mr-1" />
-                Melhor fluxo: arquivos pesados ficam no Drive/Vimeo/YouTube; a plataforma organiza o link no projeto.
+                {t("app.files.heavyFilesHint")}
               </div>
             </div>
           )}
 
           <DialogFooter className="gap-2 pt-4 border-t border-frame-gray-3">
             <button type="button" disabled={isUploading} onClick={() => { setIsUploadOpen(false); setSelectedFileForUpload(null); setLinkUrl(""); setLinkName(""); }} className="frame-btn-ghost">
-              Cancelar
+              {t("app.common.cancel")}
             </button>
             {uploadTab === "file" ? (
               <button type="button" disabled={!selectedFileForUpload || isUploading} onClick={handleUpload} className="frame-btn-primary">
@@ -701,8 +701,8 @@ function FilesContent() {
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-sm rounded-none p-6">
           <DialogHeader>
-            <DialogTitle className="frame-title text-2xl text-frame-red">EXCLUIR?</DialogTitle>
-            <DialogDescription className="text-frame-gray-light text-sm">Ação permanente.</DialogDescription>
+            <DialogTitle className="frame-title text-2xl text-frame-red">{t("app.files.deleteQuestion")}</DialogTitle>
+            <DialogDescription className="text-frame-gray-light text-sm">{t("app.files.permanentAction")}</DialogDescription>
           </DialogHeader>
           {selectedFile && (
             <div className="flex items-center gap-3 p-3 border border-frame-gray-3 bg-frame-gray-1/10 my-2">
@@ -714,8 +714,8 @@ function FilesContent() {
             </div>
           )}
           <DialogFooter className="gap-2 pt-4 border-t border-frame-gray-3">
-            <button type="button" onClick={() => setIsDeleteOpen(false)} className="frame-btn-ghost">Cancelar</button>
-            <button type="button" onClick={handleDelete} className="bg-frame-red hover:bg-red-600 text-white px-4 py-2 text-sm font-frame-mono uppercase tracking-wider transition rounded-none">Excluir</button>
+            <button type="button" onClick={() => setIsDeleteOpen(false)} className="frame-btn-ghost">{t("app.common.cancel")}</button>
+            <button type="button" onClick={handleDelete} className="bg-frame-red hover:bg-red-600 text-white px-4 py-2 text-sm font-frame-mono uppercase tracking-wider transition rounded-none">{t("app.common.delete")}</button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -740,7 +740,7 @@ function FilesContent() {
             <span>{previewFile && formatFileSize(previewFile.size || 0)}</span>
             <span>{previewFile && formatDate(previewFile.created_at)}</span>
             <button onClick={() => previewFile && handleDownload(previewFile)} className="frame-btn-ghost text-xs">
-              <Download className="w-3.5 h-3.5 mr-1" /> Baixar
+              <Download className="w-3.5 h-3.5 mr-1" /> {t("app.common.download")}
             </button>
           </div>
         </DialogContent>
@@ -750,11 +750,11 @@ function FilesContent() {
       <Dialog open={showNewProject} onOpenChange={setShowNewProject}>
         <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-sm rounded-none p-6">
           <DialogHeader>
-            <DialogTitle className="frame-title text-2xl">NOVO PROJETO</DialogTitle>
-            <DialogDescription className="text-frame-gray-light text-sm">Crie um projeto para organizar seus arquivos</DialogDescription>
+            <DialogTitle className="frame-title text-2xl">{t("app.files.newProject")}</DialogTitle>
+            <DialogDescription className="text-frame-gray-light text-sm">{t("app.files.createProjectDescription")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-2 mt-2">
-            <label className="block font-frame-mono text-xs text-frame-orange uppercase">Nome do Projeto</label>
+            <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.files.projectName")}</label>
             <input
               type="text"
               value={newProjectName}
@@ -765,8 +765,8 @@ function FilesContent() {
             />
           </div>
           <DialogFooter className="gap-2 pt-4 border-t border-frame-gray-3">
-            <button type="button" onClick={() => setShowNewProject(false)} className="frame-btn-ghost">Cancelar</button>
-            <button type="button" disabled={!newProjectName.trim()} onClick={handleCreateProject} className="frame-btn-primary">Criar Projeto</button>
+            <button type="button" onClick={() => setShowNewProject(false)} className="frame-btn-ghost">{t("app.common.cancel")}</button>
+            <button type="button" disabled={!newProjectName.trim()} onClick={handleCreateProject} className="frame-btn-primary">{t("app.files.createProject")}</button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

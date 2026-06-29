@@ -577,20 +577,20 @@ function DocumentsContent() {
         <section className="border border-frame-gray-3 bg-frame-gray-1/60 p-4 sm:p-5 shadow-[0_18px_70px_rgba(0,0,0,0.18)]">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
             <div>
-              <p className="frame-label">// DOCUMENTOS STUDIO</p>
-              <h1 className="frame-title text-[clamp(1.8rem,4vw,3.6rem)] leading-none mt-2">DOCUMENTOS OPERACIONAIS</h1>
+              <p className="frame-label">// {t("app.documents.studioDocuments")}</p>
+              <h1 className="frame-title text-[clamp(1.8rem,4vw,3.6rem)] leading-none mt-2">{t("app.documents.operationalDocuments")}</h1>
               <p className="text-sm text-frame-gray-light max-w-2xl mt-3">
-                Cada documento tem formulario proprio, preview limpo e exportacao em PDF para cliente, set e producao.
+                {t("app.documents.pageDescription")}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={() => setIsEditorOpen(true)} className="frame-btn-ghost flex items-center gap-2">
                 <Pencil className="w-4 h-4" />
-                Editar conteúdo
+                {t("app.documents.editContent")}
               </button>
               <button type="button" onClick={copyText} className="frame-btn-ghost flex items-center gap-2">
                 <Copy className="w-4 h-4" />
-                Copiar texto
+                {t("app.documents.copyText")}
               </button>
               <button type="button" onClick={exportDocx} className="frame-btn-ghost flex items-center gap-2">
                 <FileText className="w-4 h-4" />
@@ -598,7 +598,7 @@ function DocumentsContent() {
               </button>
               <button type="button" onClick={() => exportPdf()} className="frame-btn-primary flex items-center gap-2">
                 <Download className="w-4 h-4" />
-                Exportar PDF
+                {t("app.documents.exportPdf")}
               </button>
             </div>
           </div>
@@ -607,8 +607,8 @@ function DocumentsContent() {
         <section className="app-panel p-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <p className="frame-label">// TIPO DE DOCUMENTO</p>
-              <p className="mt-1 text-xs text-frame-gray-light">Escolha a peça e edite somente quando precisar.</p>
+              <p className="frame-label">// {t("app.documents.documentType")}</p>
+              <p className="mt-1 text-xs text-frame-gray-light">{t("app.documents.chooseDocumentHint")}</p>
             </div>
             <span className="font-frame-mono text-[0.6rem] uppercase tracking-[0.12em]" style={{ color: selectedDoc.accent }}>
               {selectedDoc.label}
@@ -652,21 +652,21 @@ function DocumentsContent() {
               <div className="flex flex-wrap items-center gap-2">
                 <button type="button" onClick={() => setIsEditorOpen(true)} className="frame-btn-ghost flex items-center gap-2 px-3 py-2">
                   <Pencil className="h-3.5 w-3.5" />
-                  Editar
+                  {t("app.common.edit")}
                 </button>
                 <button type="button" onClick={copyText} className="frame-btn-ghost flex items-center gap-2 px-3 py-2">
                   <Copy className="h-3.5 w-3.5" />
-                  Copiar
+                  {t("app.common.copy")}
                 </button>
                 <button type="button" onClick={() => exportPdf()} className="frame-btn-primary flex items-center gap-2 px-3 py-2">
                   <Download className="h-3.5 w-3.5" />
-                  Exportar PDF
+                  {t("app.documents.exportPdf")}
                 </button>
               </div>
             </div>
             <div className="bg-frame-black/20 p-3 sm:p-6">
               <iframe
-                title="Preview do documento"
+                title={t("app.documents.documentPreview") as string}
                 srcDoc={html}
                 className="mx-auto h-[min(980px,calc(100vh-190px))] min-h-[680px] w-full max-w-[920px] bg-[#f8f4ed] shadow-[0_22px_70px_rgba(0,0,0,0.28)]"
               />
@@ -676,14 +676,14 @@ function DocumentsContent() {
           <aside className="app-panel p-4 xl:sticky xl:top-24">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <p className="frame-label">// HISTÓRICO</p>
-                <p className="mt-1 text-xs text-frame-gray-light">Versões salvas para reexportar.</p>
+                <p className="frame-label">// {t("app.documents.history")}</p>
+                <p className="mt-1 text-xs text-frame-gray-light">{t("app.documents.savedVersionsHint")}</p>
               </div>
               <span className="font-frame-mono text-[0.62rem] text-frame-gray-light">{savedDocs.length}</span>
             </div>
             {savedDocs.length === 0 ? (
               <div className="border border-dashed border-frame-gray-3 p-5 text-sm leading-relaxed text-frame-gray-light">
-                Edite o documento e use “Salvar e fechar” para criar a primeira versão.
+                {t("app.documents.emptyHistoryHint")}
               </div>
             ) : (
               <div className="max-h-[620px] space-y-2 overflow-y-auto pr-1">

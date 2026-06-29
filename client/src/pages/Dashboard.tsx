@@ -215,7 +215,8 @@ function DashboardContent() {
           <div>
             <p className="frame-label mb-2">// {t("app.dashboard.title") as string}</p>
             <h1 className="frame-title text-[clamp(2.1rem,4vw,3.5rem)] text-frame-white leading-none">
-              CENTRAL DO <em className="not-italic text-transparent [-webkit-text-stroke:1px_#f5f0e8]">DIRETOR</em>
+              {t("app.dashboard.headingLead") as string}{" "}
+              <em className="dashboard-title-outline not-italic">{t("app.dashboard.headingOutline") as string}</em>
             </h1>
             <p className="text-[0.82rem] text-frame-gray-light font-light mt-2 max-w-md">
               {t("app.dashboard.subtitle") as string}
@@ -304,18 +305,18 @@ function DashboardContent() {
               <CheckCircle2 className="w-4 h-4 text-frame-orange" />
             </div>
             <strong className="block text-3xl text-frame-white">{activeProjects.length}</strong>
-            <p className="text-xs text-frame-gray-light mt-2">Escopos em produção ou pré-produção.</p>
+            <p className="text-xs text-frame-gray-light mt-2">{t("app.dashboard.activeProjectsDesc") as string}</p>
           </div>
 
           <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-5">
             <div className="flex items-center justify-between mb-3">
               <span className="font-frame-mono text-[0.64rem] tracking-[0.15em] uppercase text-frame-gray-light">
-                Briefings pendentes
+                {t("app.dashboard.pendingBriefings") as string}
               </span>
               <AlertCircle className="w-4 h-4 text-frame-orange" />
             </div>
             <strong className="block text-3xl text-frame-white">{pendingBriefings.length}</strong>
-            <p className="text-xs text-frame-gray-light mt-2">Projetos que precisam de direção inicial.</p>
+            <p className="text-xs text-frame-gray-light mt-2">{t("app.dashboard.pendingBriefingsDesc") as string}</p>
           </div>
         </section>
 
@@ -613,12 +614,12 @@ function DashboardContent() {
                   onChange={(e) => setProjectType(e.target.value)}
                   className="w-full bg-[#111] border border-frame-gray-3 text-frame-white px-3 py-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none appearance-none cursor-pointer"
                 >
-                  <option>Comercial</option>
-                  <option>Institucional</option>
-                  <option>Videoclipe</option>
-                  <option>Social media</option>
-                  <option>Documentário</option>
-                  <option>Evento</option>
+                  <option value="Comercial">{t("app.dashboard.typeCommercial") as string}</option>
+                  <option value="Institucional">{t("app.dashboard.typeInstitutional") as string}</option>
+                  <option value="Videoclipe">{t("app.dashboard.typeMusicVideo") as string}</option>
+                  <option value="Social media">{t("app.dashboard.typeSocialMedia") as string}</option>
+                  <option value="Documentário">{t("app.dashboard.typeDocumentary") as string}</option>
+                  <option value="Evento">{t("app.dashboard.typeEvent") as string}</option>
                 </select>
               </div>
               <div className="space-y-1.5">

@@ -59,8 +59,8 @@ function formatTimestamp(seconds: number) {
     : `${minutes}:${secs.toString().padStart(2, "0")}`;
 }
 
-function formatDate(value: string) {
-  return new Date(value).toLocaleString("pt-BR", {
+function formatDate(value: string, locale: "pt" | "en") {
+  return new Date(value).toLocaleString(locale === "pt" ? "pt-BR" : "en-US", {
     day: "2-digit",
     month: "2-digit",
     hour: "2-digit",
@@ -69,7 +69,7 @@ function formatDate(value: string) {
 }
 
 export default function SharedReview() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const { token } = useParams<{ token: string }>();
   const composerRef = useRef<HTMLDivElement | null>(null);
   const commentsRef = useRef<HTMLDivElement | null>(null);
@@ -152,10 +152,10 @@ export default function SharedReview() {
   const shareText = useMemo(() => {
     if (!review) return "";
     return [
-      `Review Room - ${review.title}`,
+      `${t("app.videoReviews.reviewRoom")} - ${review.title}`,
       `${t("app.videoReviews.project")}: ${review.project_name}`,
       `${t("app.videoReviews.status")}: ${t(status.labelKey)}`,
-      `Link: ${window.location.href}`,
+      `${t("app.videoReviews.link")}: ${window.location.href}`,
       "",
       t("app.videoReviews.shareInstructions"),
     ].join("\n");
@@ -166,9 +166,9 @@ export default function SharedReview() {
     const lines = [
       t("app.videoReviews.studioReviewRoom"),
       review.title,
-      `Projeto: ${review.project_name}`,
-      `Status: ${t(status.labelKey)}`,
-      `${t("app.videoReviews.generatedAt")}: ${new Date().toLocaleString("pt-BR")}`,
+      `${t("app.videoReviews.project")}: ${review.project_name}`,
+      `${t("app.videoReviews.status")}: ${t(status.labelKey)}`,
+      `${t("app.videoReviews.generatedAt")}: ${new Date().toLocaleString(locale === "pt" ? "pt-BR" : "en-US")}`,
       "",
       t("app.videoReviews.comments"),
       comments.length ? "" : t("app.videoReviews.noCommentsSent"),
@@ -177,7 +177,7 @@ export default function SharedReview() {
       )),
     ];
     return lines.join("\n");
-  }, [comments, review, status.labelKey, t]);
+  }, [comments, locale, review, status.labelKey, t]);
 
   const focusComposer = () => {
     setCommentAnchor(Math.floor(newCommentTimestamp));
@@ -317,7 +317,7 @@ export default function SharedReview() {
           <div className="flex min-w-0 items-center gap-3">
             <BrandLogo compact tone="onDark" />
             <span className="hidden h-4 w-px bg-frame-gray-3 sm:block" />
-            <span className="truncate text-xs text-frame-gray-light sm:text-sm">Review Room</span>
+            <span className="truncate text-xs text-frame-gray-light sm:text-sm">{t("app.videoReviews.reviewRoom")}</span>
           </div>
           <div className="flex items-center gap-2">
             <button type="button" onClick={copyShareMessage} className="hidden items-center gap-2 border border-frame-gray-3 px-3 py-2 text-xs text-frame-gray-light transition hover:border-frame-orange hover:text-frame-white sm:inline-flex">
@@ -362,7 +362,7 @@ export default function SharedReview() {
             </span>
           </div>
 
-          <div className="border border-frame-gray-3 bg-frame-gray-1 p-2 sm:p-4">
+          <div className="border border-frame-gray-3 bg-[radial-gradient(circle_at_50%_38%,rgba(232,80,2,0.11),rgba(16,13,12,0.96)_50%,#050505_100%)] p-2 sm:p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
             <VideoPlayer
               url={resolveVideoUrl(review)}
               onProgress={handlePlayerProgress}
@@ -396,7 +396,7 @@ export default function SharedReview() {
               </div>
               {decisionComment && (
                 <div className="border border-frame-gray-3 bg-frame-black/35 px-3 py-2 text-xs text-frame-gray-light">
-                  {t("app.videoReviews.lastDecision")}: {decisionComment.author_name} · {formatDate(decisionComment.created_at)}
+                    {t("app.videoReviews.lastDecision")}: {decisionComment.author_name} · {formatDate(decisionComment.created_at, locale)}
                 </div>
               )}
             </div>
@@ -493,7 +493,7 @@ export default function SharedReview() {
                               {formatTimestamp(comment.timestamp_seconds)}
                             </span>
                           </div>
-                          <p className="mt-0.5 text-[0.68rem] text-frame-gray-muted">{formatDate(comment.created_at)}</p>
+                          <p className="mt-0.5 text-[0.68rem] text-frame-gray-muted">{formatDate(comment.created_at, locale)}</p>
                         </div>
                       </div>
                       <p className="pl-10 text-sm leading-relaxed text-frame-gray-light">{comment.comment}</p>

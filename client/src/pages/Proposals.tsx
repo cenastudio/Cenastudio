@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage, type Translate } from "@/contexts/LanguageContext";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { api } from "@/lib/api";
@@ -172,7 +172,7 @@ function printHtmlDocument(docHtml: string, preparationError: string) {
   iframe.srcdoc = docHtml;
 }
 
-function buildProposalHtml(form: ProposalForm, lines: ProposalLine[], studio: StudioSettings) {
+function buildProposalHtml(form: ProposalForm, lines: ProposalLine[], studio: StudioSettings, t: Translate, locale: "pt" | "en") {
   const subtotal = lines.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const discountValue = Math.round((subtotal * form.discount) / 100);
   const total = subtotal - discountValue;
@@ -190,7 +190,7 @@ function buildProposalHtml(form: ProposalForm, lines: ProposalLine[], studio: St
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Proposta - ${esc(form.clientName || form.company || "Cliente")}</title>
+  <title>${esc(t("app.proposals.documentTitle"))} - ${esc(form.clientName || form.company || t("app.proposals.clientFallback"))}</title>
   <style>
     @page{size:A4;margin:0}
     *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -217,41 +217,41 @@ function buildProposalHtml(form: ProposalForm, lines: ProposalLine[], studio: St
 <body>
   <main class="page">
     <header class="header">
-      <div><div class="brand">${esc(studio.studioName)}<span>.</span></div><div class="sub">${esc(studio.legalName || "Proposta comercial audiovisual")}</div></div>
-      <div class="doc"><small>Proposta</small><strong>#${docNumber}</strong><small>${new Date().toLocaleDateString("pt-BR")}</small></div>
+      <div><div class="brand">${esc(studio.studioName)}<span>.</span></div><div class="sub">${esc(studio.legalName || t("app.proposals.commercialProposal"))}</div></div>
+      <div class="doc"><small>${esc(t("app.proposals.documentTitle"))}</small><strong>#${docNumber}</strong><small>${new Date().toLocaleDateString(locale === "pt" ? "pt-BR" : "en-US")}</small></div>
     </header>
-    <h1>${esc(form.projectTitle || "Proposta audiovisual")}</h1>
-    <p class="muted">Escopo, investimento e condicoes comerciais para producao audiovisual.</p>
+    <h1>${esc(form.projectTitle || t("app.proposals.audiovisualProposal"))}</h1>
+    <p class="muted">${esc(t("app.proposals.documentDescription"))}</p>
     <div class="grid">
       ${[
-        ["Cliente", form.clientName || "A definir"],
-        ["Empresa", form.company || "A definir"],
-        ["Email", form.email || "A definir"],
-        ["WhatsApp", form.phone || "A definir"],
-        ["Cidade", form.city || studio.city || "A definir"],
-        ["Prazo", form.deadline || "A definir"],
-        ["Validade", `${form.validityDays || 15} dias`],
-        ["Pagamento", form.paymentTerms],
+        [t("app.proposals.clientLabel"), form.clientName || t("app.proposals.toDefine")],
+        [t("app.proposals.companyLabel"), form.company || t("app.proposals.toDefine")],
+        [t("app.proposals.emailLabel"), form.email || t("app.proposals.toDefine")],
+        ["WhatsApp", form.phone || t("app.proposals.toDefine")],
+        [t("app.proposals.cityLabel"), form.city || studio.city || t("app.proposals.toDefine")],
+        [t("app.proposals.deadlineLabel"), form.deadline || t("app.proposals.toDefine")],
+        [t("app.proposals.validityLabel"), `${form.validityDays || 15} ${t("app.proposals.days")}`],
+        [t("app.proposals.paymentLabel"), form.paymentTerms],
       ].map(([label, value]) => `<div class="field"><div class="label">${esc(label)}</div><div class="value">${esc(value)}</div></div>`).join("")}
     </div>
     <section class="section">
-      <div class="section-title">Escopo de servicos</div>
-      <table><thead><tr><th>Servico</th><th>Qtd.</th><th>Unitario</th><th>Total</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="section-title">${esc(t("app.proposals.servicesScope"))}</div>
+      <table><thead><tr><th>${esc(t("app.proposals.service"))}</th><th>${esc(t("app.proposals.quantityShort"))}</th><th>${esc(t("app.proposals.unitPrice"))}</th><th>${esc(t("app.proposals.total"))}</th></tr></thead><tbody>${rows}</tbody></table>
       <div class="totals">
-        <div class="total-row"><span>Subtotal</span><strong>${formatCurrency(subtotal)}</strong></div>
-        ${form.discount ? `<div class="total-row"><span>Desconto (${form.discount}%)</span><strong>-${formatCurrency(discountValue)}</strong></div>` : ""}
+        <div class="total-row"><span>${esc(t("app.proposals.subtotal"))}</span><strong>${formatCurrency(subtotal)}</strong></div>
+        ${form.discount ? `<div class="total-row"><span>${esc(t("app.proposals.discount"))} (${form.discount}%)</span><strong>-${formatCurrency(discountValue)}</strong></div>` : ""}
       </div>
-      <div class="final"><div><small>Valor total do projeto</small>${form.notes ? `<p class="muted">${esc(form.notes)}</p>` : ""}</div><strong>${formatCurrency(total)}</strong></div>
+      <div class="final"><div><small>${esc(t("app.proposals.projectTotal"))}</small>${form.notes ? `<p class="muted">${esc(form.notes)}</p>` : ""}</div><strong>${formatCurrency(total)}</strong></div>
     </section>
-    <div class="terms">Esta proposta tem validade de ${form.validityDays || 15} dias. Alteracoes fora do escopo podem gerar revisao de valores e prazos. Direitos, uso de imagem, entregaveis finais e pagamentos seguem as condicoes comerciais aprovadas pelas partes.</div>
-    <footer class="footer"><div class="sign">${esc(studio.studioName)}<br/>${esc(studio.signature || studio.email || "Responsavel comercial")}</div><div class="sign">${esc(form.clientName || "Cliente")}<br/>Aceite da proposta</div></footer>
+    <div class="terms">${esc(t("app.proposals.termsPrefix"))} ${form.validityDays || 15} ${esc(t("app.proposals.termsSuffix"))}</div>
+    <footer class="footer"><div class="sign">${esc(studio.studioName)}<br/>${esc(studio.signature || studio.email || t("app.proposals.commercialLead"))}</div><div class="sign">${esc(form.clientName || t("app.proposals.clientFallback"))}<br/>${esc(t("app.proposals.proposalAcceptance"))}</div></footer>
   </main>
 </body>
 </html>`;
 }
 
 function ProposalsContent() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const [catalog, setCatalog] = useState<ServiceItem[]>(DEFAULT_CATALOG);
   const [proposal, setProposal] = useState<ProposalForm>(initialProposal);
   const [selected, setSelected] = useState<ProposalLine[]>([]);
@@ -281,7 +281,7 @@ function ProposalsContent() {
   const subtotal = selected.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const discountValue = Math.round((subtotal * proposal.discount) / 100);
   const total = subtotal - discountValue;
-  const proposalHtml = useMemo(() => buildProposalHtml(proposal, selected, studio), [proposal, selected, studio]);
+  const proposalHtml = useMemo(() => buildProposalHtml(proposal, selected, studio, t, locale), [proposal, selected, studio, t, locale]);
 
   const persistCatalog = (items: ServiceItem[]) => {
     setCatalog(items);
@@ -349,8 +349,8 @@ function ProposalsContent() {
     }
     const item: SavedProposal = {
       id: crypto.randomUUID(),
-      title: proposal.projectTitle || "Proposta audiovisual",
-      clientName: proposal.clientName || proposal.company || "Cliente",
+      title: proposal.projectTitle || t("app.proposals.audiovisualProposal"),
+      clientName: proposal.clientName || proposal.company || t("app.proposals.clientFallback"),
       total,
       html: proposalHtml,
       createdAt: new Date().toISOString(),
@@ -360,7 +360,7 @@ function ProposalsContent() {
   };
 
   const copySummary = async () => {
-    const summary = `${proposal.projectTitle}\nCliente: ${proposal.clientName || proposal.company || "A definir"}\nTotal: ${formatCurrency(total)}\nServicos:\n${selected.map((item) => `- ${item.quantity}x ${item.name}: ${formatCurrency(item.price * item.quantity)}`).join("\n")}`;
+    const summary = `${proposal.projectTitle}\n${t("app.proposals.clientLabel")}: ${proposal.clientName || proposal.company || t("app.proposals.toDefine")}\n${t("app.proposals.total")}: ${formatCurrency(total)}\n${t("app.proposals.services")}:\n${selected.map((item) => `- ${item.quantity}x ${item.name}: ${formatCurrency(item.price * item.quantity)}`).join("\n")}`;
     await navigator.clipboard.writeText(summary);
     toast.success(t("app.common.copied") as string);
   };
@@ -523,7 +523,7 @@ function ProposalsContent() {
                       <BriefcaseBusiness className="w-4 h-4 text-frame-orange shrink-0" />
                       <button type="button" onClick={() => exportPdf(item.html, false)} className="flex-1 text-left min-w-0">
                         <div className="text-sm font-semibold truncate">{item.title}</div>
-                        <div className="text-[0.62rem] text-frame-gray-light truncate">{item.clientName} · {formatCurrency(item.total)} · {new Date(item.createdAt).toLocaleDateString("pt-BR")}</div>
+                        <div className="text-[0.62rem] text-frame-gray-light truncate">{item.clientName} · {formatCurrency(item.total)} · {new Date(item.createdAt).toLocaleDateString(locale === "pt" ? "pt-BR" : "en-US")}</div>
                       </button>
                       <button type="button" onClick={() => exportPdf(item.html, false)} className="text-frame-orange hover:text-frame-white" title={t("app.common.export") as string}>
                         <Download className="w-4 h-4" />
@@ -544,7 +544,7 @@ function ProposalsContent() {
               <span className="text-[0.62rem] text-frame-gray-light">{formatCurrency(total)}</span>
             </div>
             {selected.length ? (
-              <iframe title="Preview da proposta" srcDoc={proposalHtml} className="w-full h-[680px] bg-[#0d0d0d]" />
+              <iframe title={t("app.proposals.proposalPreview") as string} srcDoc={proposalHtml} className="w-full h-[680px] bg-[#0d0d0d]" />
             ) : (
               <div className="proposal-preview-empty h-[680px] flex items-center justify-center p-8 text-center text-frame-gray-light">
                 <div className="proposal-paper-ghost">
@@ -555,7 +555,7 @@ function ProposalsContent() {
                     <span />
                     <span />
                   </div>
-                  <p className="text-sm mt-8">Adicione servicos para gerar o preview da proposta.</p>
+                  <p className="text-sm mt-8">{t("app.proposals.addServicesPreview") as string}</p>
                 </div>
               </div>
             )}

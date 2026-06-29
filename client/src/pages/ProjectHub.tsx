@@ -131,7 +131,7 @@ function ProjectHubContent() {
         if (reviewsRes.success) setRecentReviews((reviewsRes.data || []).slice(0, 5));
         setPopulatedStates((statesRes || []).map((state) => state.toolId));
       })
-      .catch(() => toast.error("Erro ao carregar projeto"))
+      .catch(() => toast.error(t("app.errors.loadProject")))
       .finally(() => setLoading(false));
   }, [projectId]);
 
@@ -153,9 +153,9 @@ function ProjectHubContent() {
         <AppNavBar />
         <ProjectNav projectId={projectId} />
         <div className="flex-1 flex items-center justify-center flex-col gap-4">
-          <p className="frame-label">Projeto não encontrado</p>
+          <p className="frame-label">{t("app.projectHub.projectNotFound")}</p>
           <button type="button" onClick={() => setLocation("/dashboard")} className="frame-btn-ghost text-xs">
-            Voltar ao painel
+            {t("app.common.backToDashboard")}
           </button>
         </div>
       </div>
@@ -192,7 +192,7 @@ function ProjectHubContent() {
               {metadata.objective && (
                 <div className="mt-4 border-l-2 border-frame-orange pl-4 max-w-2xl">
                   <span className="block font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-gray-light mb-1">
-                    Objetivo
+                    {t("app.projectHub.objective")}
                   </span>
                   <p className="text-sm text-frame-white leading-relaxed">{metadata.objective}</p>
                 </div>
@@ -200,16 +200,16 @@ function ProjectHubContent() {
               <div className="flex flex-wrap items-center gap-4 mt-4 font-frame-mono text-[0.64rem] text-frame-gray-light tracking-wider">
                 <span className="flex items-center gap-1.5">
                   <Calendar className="w-3 h-3" />
-                  Criado {new Date(createdAt).toLocaleDateString("pt-BR")}
+                  {t("app.projectHub.created")} {new Date(createdAt).toLocaleDateString("pt-BR")}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Clock className="w-3 h-3" />
-                  Atualizado {new Date(updatedAt).toLocaleDateString("pt-BR")}
+                  {t("app.projectHub.updated")} {new Date(updatedAt).toLocaleDateString("pt-BR")}
                 </span>
                 {metadata.deadline && (
                   <span className="flex items-center gap-1.5 text-frame-orange">
                     <Target className="w-3 h-3" />
-                    Prazo {new Date(`${metadata.deadline}T00:00:00`).toLocaleDateString("pt-BR")}
+                    {t("app.projectHub.deadline")} {new Date(`${metadata.deadline}T00:00:00`).toLocaleDateString("pt-BR")}
                   </span>
                 )}
               </div>
@@ -218,7 +218,7 @@ function ProjectHubContent() {
             <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-4 w-full lg:w-[300px] shrink-0">
               <div className="flex items-center justify-between mb-3">
                 <span className="font-frame-mono text-[0.64rem] tracking-[0.15em] uppercase text-frame-gray-light">
-                  Progresso
+                  {t("app.projectHub.progress")}
                 </span>
                 <strong className="text-frame-white">{progress}%</strong>
               </div>
@@ -230,7 +230,7 @@ function ProjectHubContent() {
                 onClick={() => setLocation(`/project/${projectId}/studio/${nextStep.slug}`)}
                 className="w-full frame-btn-primary !py-2.5 !px-4 !text-[0.6rem] flex items-center justify-center gap-2"
               >
-                Continuar {nextStep.label}
+                {t("app.projectHub.continue")} {nextStep.label}
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -239,19 +239,19 @@ function ProjectHubContent() {
 
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
           <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-4">
-            <span className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-gray-light">Arquivos</span>
+            <span className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-gray-light">{t("app.projectHub.files")}</span>
             <strong className="block text-2xl text-frame-white mt-2">{recentFiles.length}</strong>
           </div>
           <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-4">
-            <span className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-gray-light">Aprovações</span>
+            <span className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-gray-light">{t("app.projectHub.approvals")}</span>
             <strong className="block text-2xl text-frame-white mt-2">{recentReviews.length}</strong>
           </div>
           <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-4">
-            <span className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-gray-light">Pendências</span>
+            <span className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-gray-light">{t("app.projectHub.pendingItems")}</span>
             <strong className="block text-2xl text-frame-white mt-2">{pendingReviews}</strong>
           </div>
           <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-4">
-            <span className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-gray-light">Equipe</span>
+            <span className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-gray-light">{t("app.projectHub.team")}</span>
             <strong className="block text-2xl text-frame-white mt-2">{members.length}</strong>
           </div>
         </section>
@@ -264,10 +264,10 @@ function ProjectHubContent() {
               <div className="flex items-center justify-between border-b border-frame-gray-3 pb-2.5">
                 <h2 className="font-frame-mono text-sm tracking-[0.15em] uppercase text-frame-white font-semibold flex items-center gap-2">
                   <Gauge className="w-3.5 h-3.5 text-frame-orange" />
-                  Fluxo do Projeto
+                  {t("app.projectHub.projectFlow")}
                 </h2>
                 <span className="font-frame-mono text-[0.64rem] text-frame-gray-light tracking-wider">
-                  {completedSteps.length}/{WORKFLOW_STEPS.length} etapas
+                  {completedSteps.length}/{WORKFLOW_STEPS.length} {t("app.projectHub.steps")}
                 </span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -299,7 +299,7 @@ function ProjectHubContent() {
                         </div>
                         {isNext && (
                           <span className="font-frame-mono text-[0.6rem] tracking-[0.12em] uppercase text-frame-orange">
-                            Próximo
+                            {t("app.projectHub.next")}
                           </span>
                         )}
                       </div>
@@ -312,7 +312,7 @@ function ProjectHubContent() {
             {/* Quick Access Tools */}
             <section className="space-y-4">
               <h2 className="font-frame-mono text-sm tracking-[0.15em] uppercase text-frame-white font-semibold">
-                Ferramentas
+                {t("app.projectHub.tools")}
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {QUICK_TOOLS.map((tool) => {
@@ -330,7 +330,7 @@ function ProjectHubContent() {
                         {tool.name}
                       </span>
                       <span className="block text-[0.62rem] font-frame-mono text-frame-gray-light tracking-wider mt-1">
-                        ABRIR →
+                        {t("app.projectHub.openAction")} →
                       </span>
                     </button>
                   );
@@ -342,7 +342,7 @@ function ProjectHubContent() {
                 className="text-xs text-frame-orange hover:text-frame-white transition font-frame-mono tracking-wider flex items-center gap-1"
               >
                 <Film className="w-3 h-3" />
-                ABRIR STUDIO COMPLETO →
+                {t("app.projectHub.openFullStudio")} →
               </button>
             </section>
 
@@ -351,18 +351,18 @@ function ProjectHubContent() {
               <div className="flex items-center justify-between border-b border-frame-gray-3 pb-2.5">
                 <h2 className="font-frame-mono text-sm tracking-[0.15em] uppercase text-frame-white font-semibold flex items-center gap-2">
                   <FileText className="w-3.5 h-3.5 text-frame-gray-light" />
-                  Materiais recentes
+                  {t("app.projectHub.recentMaterials")}
                 </h2>
                 <button
                   type="button"
                   onClick={() => setLocation(`/project/${projectId}/files`)}
                   className="text-[0.64rem] font-frame-mono text-frame-orange hover:text-frame-white transition tracking-wider"
                 >
-                  VER TODOS →
+                  {t("app.projectHub.viewAll")} →
                 </button>
               </div>
               {recentFiles.length === 0 ? (
-                <p className="text-xs text-frame-gray-light italic">Nenhum arquivo neste projeto.</p>
+                <p className="text-xs text-frame-gray-light italic">{t("app.projectHub.noFilesInThisProject")}</p>
               ) : (
                 <div className="border border-frame-gray-3 divide-y divide-frame-gray-3">
                   {recentFiles.map((f) => (
@@ -382,18 +382,18 @@ function ProjectHubContent() {
               <div className="flex items-center justify-between border-b border-frame-gray-3 pb-2.5">
                 <h2 className="font-frame-mono text-sm tracking-[0.15em] uppercase text-frame-white font-semibold flex items-center gap-2">
                   <Video className="w-3.5 h-3.5 text-frame-gray-light" />
-                  Aprovações de Vídeo
+                  {t("app.projectHub.videoApprovals")}
                 </h2>
                 <button
                   type="button"
                   onClick={() => setLocation(`/project/${projectId}/video-reviews`)}
                   className="text-[0.64rem] font-frame-mono text-frame-orange hover:text-frame-white transition tracking-wider"
                 >
-                  VER TODOS →
+                  {t("app.projectHub.viewAll")} →
                 </button>
               </div>
               {recentReviews.length === 0 ? (
-                <p className="text-xs text-frame-gray-light italic">Nenhuma aprovação neste projeto.</p>
+                <p className="text-xs text-frame-gray-light italic">{t("app.projectHub.noApprovalsInThisProject")}</p>
               ) : (
                 <div className="border border-frame-gray-3 divide-y divide-frame-gray-3">
                   {recentReviews.map((r) => (
@@ -422,25 +422,25 @@ function ProjectHubContent() {
             <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-4">
               <h3 className="font-frame-mono text-xs tracking-[0.15em] uppercase mb-3 flex items-center gap-2">
                 <Target className="w-3.5 h-3.5 text-frame-orange" />
-                Direção Criativa
+                {t("app.projectHub.creativeDirection")}
               </h3>
               <div className="space-y-3 text-xs">
                 <div>
                   <span className="block font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase text-frame-gray-light mb-1">
-                    Cliente
+                    {t("app.projectHub.client")}
                   </span>
                   <p className="text-frame-white">{metadata.creativeGoals?.client || t("app.projectHub.notDefined")}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <span className="block font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase text-frame-gray-light mb-1">
-                      Formato
+                      {t("app.projectHub.format")}
                     </span>
                     <p className="text-frame-white">{metadata.creativeGoals?.format || t("app.projectHub.open")}</p>
                   </div>
                   <div>
                     <span className="block font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase text-frame-gray-light mb-1">
-                      Tom
+                      {t("app.projectHub.tone")}
                     </span>
                     <p className="text-frame-white">{metadata.creativeGoals?.tone || t("app.projectHub.open")}</p>
                   </div>
@@ -452,7 +452,7 @@ function ProjectHubContent() {
                 className="w-full mt-4 text-xs font-frame-mono tracking-wider text-frame-gray-light hover:text-frame-white transition border border-dashed border-frame-gray-3 py-2 flex items-center justify-center gap-1"
               >
                 <FileText className="w-3 h-3" />
-                EDITAR BRIEFING
+                {t("app.projectHub.editBriefing")}
               </button>
             </div>
 
@@ -461,18 +461,18 @@ function ProjectHubContent() {
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-frame-mono text-xs tracking-[0.15em] uppercase flex items-center gap-2">
                   <Users className="w-3.5 h-3.5 text-frame-gray-light" />
-                  Equipe
+                  {t("app.projectHub.team")}
                 </h3>
                 <button
                   type="button"
                   onClick={() => setLocation(`/project/${projectId}/collaborators`)}
                   className="text-[0.62rem] font-frame-mono text-frame-orange hover:text-frame-white transition"
                 >
-                  GERENCIAR →
+                  {t("app.projectHub.manage")} →
                 </button>
               </div>
               {members.length === 0 ? (
-                <p className="text-xs text-frame-gray-light italic">Nenhum membro.</p>
+                <p className="text-xs text-frame-gray-light italic">{t("app.projectHub.noMembers")}</p>
               ) : (
                 <div className="space-y-2">
                   {members.map((m) => (
@@ -481,7 +481,7 @@ function ProjectHubContent() {
                         {(m.name || m.email)[0].toUpperCase()}
                       </div>
                       <span className="truncate">{m.name || m.email}</span>
-                      {m.role === "admin" && <span className="text-frame-orange text-[0.6rem] font-frame-mono uppercase">Admin</span>}
+                      {m.role === "admin" && <span className="text-frame-orange text-[0.6rem] font-frame-mono uppercase">{t("app.admin.adminTitle")}</span>}
                     </div>
                   ))}
                 </div>
@@ -492,14 +492,14 @@ function ProjectHubContent() {
                 className="w-full mt-3 text-xs font-frame-mono tracking-wider text-frame-gray-light hover:text-frame-white transition border border-dashed border-frame-gray-3 py-2 flex items-center justify-center gap-1"
               >
                 <Users className="w-3 h-3" />
-                CONVIDAR MEMBRO
+                {t("app.projectHub.inviteMember")}
               </button>
             </div>
 
             {/* Project Export */}
             <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-4">
-              <h3 className="font-frame-mono text-xs tracking-[0.15em] uppercase mb-3">Exportar Projeto</h3>
-              <p className="text-[0.6rem] text-frame-gray-light mb-3">Baixe todo o projeto em formato portátil.</p>
+              <h3 className="font-frame-mono text-xs tracking-[0.15em] uppercase mb-3">{t("app.projectHub.exportProject")}</h3>
+              <p className="text-[0.6rem] text-frame-gray-light mb-3">{t("app.projectHub.exportProjectDescription")}</p>
               <button
                 type="button"
                 onClick={() => {
@@ -510,7 +510,7 @@ function ProjectHubContent() {
                 className="w-full font-frame-mono text-xs tracking-wider text-frame-white border border-frame-gray-3 py-2 hover:bg-frame-gray-2 transition flex items-center justify-center gap-1"
               >
                 <ArrowRight className="w-3 h-3" />
-                EXPORTAR
+                {t("app.projectHub.export")}
               </button>
             </div>
           </div>

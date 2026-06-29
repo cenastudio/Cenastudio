@@ -14,7 +14,11 @@ import {
   Shield,
   User,
   MoreVertical,
-  Filter,
+  Briefcase,
+  CalendarDays,
+  CheckCircle2,
+  SlidersHorizontal,
+  Sparkles,
 } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import { toast } from "sonner";
@@ -58,18 +62,18 @@ interface CollaboratorStats {
 }
 
 const ROLES = [
-  { id: "admin", label: "Administrador" },
-  { id: "editor", label: "Editor" },
-  { id: "camera", label: "Cinegrafista" },
-  { id: "director", label: "Diretor" },
-  { id: "producer", label: "Produtor" },
-  { id: "member", label: "Membro" },
+  { id: "admin", labelKey: "app.collaborators.admin" },
+  { id: "editor", labelKey: "app.collaborators.editor" },
+  { id: "camera", labelKey: "app.collaborators.camera" },
+  { id: "director", labelKey: "app.collaborators.director" },
+  { id: "producer", labelKey: "app.collaborators.producer" },
+  { id: "member", labelKey: "app.collaborators.member" },
 ];
 
 const STATUS = [
-  { id: "active", label: "Ativo" },
-  { id: "inactive", label: "Inativo" },
-  { id: "pending", label: "Pendente" },
+  { id: "active", labelKey: "app.collaborators.active" },
+  { id: "inactive", labelKey: "app.collaborators.inactive" },
+  { id: "pending", labelKey: "app.collaborators.pending" },
 ];
 
 function CollaboratorsContent() {
@@ -273,35 +277,64 @@ function CollaboratorsContent() {
     return new Date(dateString).toLocaleDateString("pt-BR");
   };
 
+  const filteredCollaborators = getFilteredCollaborators();
+  const primaryRole = stats?.byRole?.[0];
+  const roleLabel = (roleId: string) => t(ROLES.find((r) => r.id === roleId)?.labelKey || "app.collaborators.member") as string;
+  const statusLabel = (statusId: string) => t(STATUS.find((s) => s.id === statusId)?.labelKey || "app.collaborators.pending") as string;
+
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
       <AppNavBar />
       {projectIdNumber && <ProjectNav projectId={projectIdNumber} />}
 
       <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-6 py-10 space-y-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <p className="frame-label mb-2">// EQUIPE</p>
-            <h1 className="frame-title text-[clamp(2.1rem,4vw,3.5rem)]">
-              COLABORADORES
-            </h1>
-            <p className="text-frame-gray-light text-sm mt-2">
-              Gerencie sua equipe de profissionais
-            </p>
-          </div>
+        <section className="relative overflow-hidden border border-frame-gray-3 bg-frame-gray-1/35 p-6 md:p-8">
+          <div className="absolute right-0 top-0 h-full w-1/2 bg-[radial-gradient(circle_at_top_right,rgba(232,80,2,0.14),transparent_52%)] pointer-events-none" />
+          <div className="relative grid gap-7 lg:grid-cols-[1fr_420px] lg:items-end">
+            <div>
+              <p className="frame-label mb-3">// {t("app.collaborators.teamOps") as string}</p>
+              <h1 className="frame-title text-[clamp(2.25rem,5vw,4.6rem)] leading-none">
+                {t("app.collaborators.title") as string}
+              </h1>
+              <p className="mt-4 max-w-2xl text-base text-frame-gray-light">
+                {t("app.collaborators.subtitle") as string}
+              </p>
+              <div className="mt-6 flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-2 border border-frame-gray-3 bg-frame-black/20 px-3 py-2 font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-gray-light">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-green-400" />
+                  {stats?.activeCollaborators ?? 0} {t("app.collaborators.active") as string}
+                </span>
+                <span className="inline-flex items-center gap-2 border border-frame-gray-3 bg-frame-black/20 px-3 py-2 font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-gray-light">
+                  <Briefcase className="h-3.5 w-3.5 text-frame-orange" />
+                  {stats?.totalProjects ?? 0} {t("app.collaborators.projectsCovered") as string}
+                </span>
+                <span className="inline-flex items-center gap-2 border border-frame-gray-3 bg-frame-black/20 px-3 py-2 font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-gray-light">
+                  <Sparkles className="h-3.5 w-3.5 text-frame-orange" />
+                  {primaryRole ? roleLabel(primaryRole.role) : t("app.collaborators.noRoleYet") as string}
+                </span>
+              </div>
+            </div>
 
-          <button
-            onClick={() => {
-              resetForm();
-              setIsCreateOpen(true);
-            }}
-            className="frame-btn-primary flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Novo Colaborador
-          </button>
-        </div>
+            <div className="border border-frame-gray-3 bg-frame-black/25 p-4">
+              <p className="font-frame-mono text-[0.6rem] uppercase tracking-[0.18em] text-frame-orange">
+                {t("app.collaborators.quickPanel") as string}
+              </p>
+              <p className="mt-2 text-sm text-frame-gray-light">
+                {t("app.collaborators.quickPanelDesc") as string}
+              </p>
+              <button
+                onClick={() => {
+                  resetForm();
+                  setIsCreateOpen(true);
+                }}
+                className="frame-btn-primary mt-5 flex w-full items-center justify-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                {t("app.collaborators.newCollaborator") as string}
+              </button>
+            </div>
+          </div>
+        </section>
 
         {/* Stats */}
         {stats && (
@@ -309,15 +342,15 @@ function CollaboratorsContent() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="border border-frame-gray-3 bg-frame-gray-1/30 p-4"
+              className="border border-frame-gray-3 bg-frame-gray-1/30 p-5"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-frame-orange/10 rounded-lg">
+                <div className="p-3 bg-frame-orange/10">
                   <Users className="w-5 h-5 text-frame-orange" />
                 </div>
                 <div>
                   <p className="text-[0.65rem] text-frame-gray-light font-frame-mono uppercase tracking-wider">
-                    Total Colaboradores
+                    {t("app.collaborators.totalCollaborators") as string}
                   </p>
                   <p className="text-2xl font-bold">{stats.totalCollaborators}</p>
                 </div>
@@ -328,15 +361,15 @@ function CollaboratorsContent() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="border border-frame-gray-3 bg-frame-gray-1/30 p-4"
+              className="border border-frame-gray-3 bg-frame-gray-1/30 p-5"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-500/10 rounded-lg">
+                <div className="p-3 bg-green-500/10">
                   <User className="w-5 h-5 text-green-400" />
                 </div>
                 <div>
                   <p className="text-[0.65rem] text-frame-gray-light font-frame-mono uppercase tracking-wider">
-                    Ativos
+                    {t("app.collaborators.activeCollaborators") as string}
                   </p>
                   <p className="text-2xl font-bold">{stats.activeCollaborators}</p>
                 </div>
@@ -347,15 +380,15 @@ function CollaboratorsContent() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="border border-frame-gray-3 bg-frame-gray-1/30 p-4"
+              className="border border-frame-gray-3 bg-frame-gray-1/30 p-5"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500/10 rounded-lg">
+                <div className="p-3 bg-blue-500/10">
                   <Shield className="w-5 h-5 text-blue-400" />
                 </div>
                 <div>
                   <p className="text-[0.65rem] text-frame-gray-light font-frame-mono uppercase tracking-wider">
-                    Projetos
+                    {t("app.collaborators.projects") as string}
                   </p>
                   <p className="text-2xl font-bold">{stats.totalProjects}</p>
                 </div>
@@ -365,10 +398,13 @@ function CollaboratorsContent() {
         )}
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-4 border border-frame-gray-3 bg-frame-gray-1/10 p-4">
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-frame-orange" />
-            <span className="font-frame-mono text-xs uppercase tracking-wider">Filtros:</span>
+        <div className="flex flex-wrap items-center gap-3 border border-frame-gray-3 bg-frame-gray-1/10 p-4">
+          <div className="mr-auto flex items-center gap-2">
+            <SlidersHorizontal className="w-4 h-4 text-frame-orange" />
+            <span className="font-frame-mono text-xs uppercase tracking-wider">{t("app.collaborators.filters") as string}</span>
+            <span className="text-xs text-frame-gray-light">
+              {filteredCollaborators.length}/{collaborators.length}
+            </span>
           </div>
 
           <select
@@ -376,10 +412,10 @@ function CollaboratorsContent() {
             onChange={(e) => setFilterRole(e.target.value)}
             className="bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
           >
-            <option value="">Todos os cargos</option>
+            <option value="">{t("app.collaborators.allRoles") as string}</option>
             {ROLES.map((role) => (
               <option key={role.id} value={role.id}>
-                {role.label}
+                {t(role.labelKey) as string}
               </option>
             ))}
           </select>
@@ -389,10 +425,10 @@ function CollaboratorsContent() {
             onChange={(e) => setFilterStatus(e.target.value)}
             className="bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
           >
-            <option value="">Todos os status</option>
+            <option value="">{t("app.collaborators.allStatus") as string}</option>
             {STATUS.map((status) => (
               <option key={status.id} value={status.id}>
-                {status.label}
+                {t(status.labelKey) as string}
               </option>
             ))}
           </select>
@@ -404,7 +440,7 @@ function CollaboratorsContent() {
             }}
             className="frame-btn-ghost text-xs"
           >
-            Limpar Filtros
+            {t("app.collaborators.clearFilters") as string}
           </button>
         </div>
 
@@ -413,11 +449,11 @@ function CollaboratorsContent() {
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-frame-orange" />
           </div>
-        ) : getFilteredCollaborators().length === 0 ? (
+        ) : filteredCollaborators.length === 0 ? (
           <EmptyState icon={Users} title={t("app.collaborators.noCollaborators")} />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {getFilteredCollaborators().map((collaborator) => (
+            {filteredCollaborators.map((collaborator) => (
               (() => {
                 const dayRate = collaborator.daily_rate ?? collaborator.hourly_rate ?? 0;
                 return (
@@ -425,19 +461,19 @@ function CollaboratorsContent() {
                 key={collaborator.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="border border-frame-gray-3 bg-frame-gray-1/10 p-4 hover:border-frame-orange/50 transition group"
+                className="border border-frame-gray-3 bg-frame-gray-1/10 p-5 hover:-translate-y-0.5 hover:border-frame-orange/50 hover:bg-frame-gray-1/20 transition group"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="p-3 bg-frame-gray-2 rounded-lg">
+                    <div className="flex h-12 w-12 items-center justify-center border border-frame-gray-3 bg-frame-gray-2 text-frame-orange">
                       <User className="w-6 h-6 text-frame-orange" />
                     </div>
                     <div>
                       <h3 className="text-sm font-semibold text-frame-white">
                         {collaborator.name}
                       </h3>
-                      <p className="text-xs text-frame-gray-light">
-                        {ROLES.find((r) => r.id === collaborator.role)?.label}
+                      <p className="font-frame-mono text-[0.62rem] uppercase tracking-[0.12em] text-frame-gray-light">
+                        {roleLabel(collaborator.role)}
                       </p>
                     </div>
                   </div>
@@ -454,7 +490,7 @@ function CollaboratorsContent() {
                         className="cursor-pointer"
                       >
                         <Edit className="w-4 h-4 mr-2" />
-                        Editar
+                        {t("app.common.edit") as string}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
@@ -464,7 +500,7 @@ function CollaboratorsContent() {
                         className="cursor-pointer text-frame-red"
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
-                        Excluir
+                        {t("app.common.delete") as string}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -488,14 +524,14 @@ function CollaboratorsContent() {
                   {dayRate > 0 && (
                     <div className="flex items-center gap-2 text-frame-orange">
                       <DollarSign className="w-3 h-3" />
-                      <span>{formatCurrency(dayRate)}/diária</span>
+                      <span>{formatCurrency(dayRate)} / {t("app.collaborators.dailyRate") as string}</span>
                     </div>
                   )}
 
                   {collaborator.skills && (
                     <div className="text-frame-gray-light mt-2">
                       <span className="font-frame-mono uppercase tracking-wider text-[0.6rem]">
-                        Skills:
+                        {t("app.collaborators.skills") as string}
                       </span>
                       <p className="truncate">{collaborator.skills}</p>
                     </div>
@@ -511,9 +547,10 @@ function CollaboratorsContent() {
                           : "bg-yellow-500/10 text-yellow-400"
                       }`}
                     >
-                      {STATUS.find((s) => s.id === collaborator.status)?.label}
+                      {statusLabel(collaborator.status)}
                     </span>
-                    <span className="text-frame-gray-light">
+                    <span className="inline-flex items-center gap-1 text-frame-gray-light">
+                      <CalendarDays className="h-3 w-3" />
                       {formatDate(collaborator.created_at)}
                     </span>
                   </div>
@@ -530,16 +567,16 @@ function CollaboratorsContent() {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-md rounded-none p-6">
           <DialogHeader>
-            <DialogTitle className="frame-title text-2xl">NOVO COLABORADOR</DialogTitle>
+            <DialogTitle className="frame-title text-2xl">{t("app.collaborators.newCollaborator") as string}</DialogTitle>
             <DialogDescription className="text-frame-gray-light text-sm">
-              Adicione um novo membro à equipe
+              {t("app.collaborators.createDescription") as string}
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleCreate} className="space-y-4 mt-4">
             <div className="space-y-2">
               <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                Nome *
+                {t("app.collaborators.name") as string} *
               </label>
               <input
                 type="text"
@@ -554,7 +591,7 @@ function CollaboratorsContent() {
 
             <div className="space-y-2">
               <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                Email *
+                {t("app.collaborators.email") as string} *
               </label>
               <input
                 type="email"
@@ -570,7 +607,7 @@ function CollaboratorsContent() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                  Cargo
+                  {t("app.collaborators.function") as string}
                 </label>
                 <select
                   disabled={isSubmitting}
@@ -580,7 +617,7 @@ function CollaboratorsContent() {
                 >
                   {ROLES.map((r) => (
                     <option key={r.id} value={r.id}>
-                      {r.label}
+                      {t(r.labelKey) as string}
                     </option>
                   ))}
                 </select>
@@ -588,7 +625,7 @@ function CollaboratorsContent() {
 
               <div className="space-y-2">
                 <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                  Taxa Hora
+                  {t("app.collaborators.dailyRate") as string}
                 </label>
                 <input
                   type="number"
@@ -603,7 +640,7 @@ function CollaboratorsContent() {
 
             <div className="space-y-2">
               <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                Telefone
+                {t("app.collaborators.phone") as string}
               </label>
               <input
                 type="tel"
@@ -617,7 +654,7 @@ function CollaboratorsContent() {
 
             <div className="space-y-2">
               <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                Skills
+                {t("app.collaborators.skills") as string}
               </label>
               <input
                 type="text"
@@ -636,7 +673,7 @@ function CollaboratorsContent() {
                 onClick={() => setIsCreateOpen(false)}
                 className="frame-btn-ghost"
               >
-                Cancelar
+                {t("app.common.cancel") as string}
               </button>
               <button
                 type="submit"
@@ -654,16 +691,16 @@ function CollaboratorsContent() {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-md rounded-none p-6">
           <DialogHeader>
-            <DialogTitle className="frame-title text-2xl">EDITAR COLABORADOR</DialogTitle>
+            <DialogTitle className="frame-title text-2xl">{t("app.collaborators.editCollaborator") as string}</DialogTitle>
             <DialogDescription className="text-frame-gray-light text-sm">
-              Atualize as informações do colaborador
+              {t("app.collaborators.editDescription") as string}
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleUpdate} className="space-y-4 mt-4">
             <div className="space-y-2">
               <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                Nome *
+                {t("app.collaborators.name") as string} *
               </label>
               <input
                 type="text"
@@ -677,7 +714,7 @@ function CollaboratorsContent() {
 
             <div className="space-y-2">
               <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                Email *
+                {t("app.collaborators.email") as string} *
               </label>
               <input
                 type="email"
@@ -692,7 +729,7 @@ function CollaboratorsContent() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                  Cargo
+                  {t("app.collaborators.function") as string}
                 </label>
                 <select
                   disabled={isSubmitting}
@@ -702,7 +739,7 @@ function CollaboratorsContent() {
                 >
                   {ROLES.map((r) => (
                     <option key={r.id} value={r.id}>
-                      {r.label}
+                      {t(r.labelKey) as string}
                     </option>
                   ))}
                 </select>
@@ -710,7 +747,7 @@ function CollaboratorsContent() {
 
               <div className="space-y-2">
                 <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                  Status
+                  {t("app.collaborators.status") as string}
                 </label>
                 <select
                   disabled={isSubmitting}
@@ -720,7 +757,7 @@ function CollaboratorsContent() {
                 >
                   {STATUS.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.label}
+                      {t(s.labelKey) as string}
                     </option>
                   ))}
                 </select>
@@ -730,7 +767,7 @@ function CollaboratorsContent() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                  Taxa Hora
+                  {t("app.collaborators.dailyRate") as string}
                 </label>
                 <input
                   type="number"
@@ -743,7 +780,7 @@ function CollaboratorsContent() {
 
               <div className="space-y-2">
                 <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                  Telefone
+                  {t("app.collaborators.phone") as string}
                 </label>
                 <input
                   type="tel"
@@ -757,7 +794,7 @@ function CollaboratorsContent() {
 
             <div className="space-y-2">
               <label className="block font-frame-mono text-xs text-frame-orange uppercase">
-                Skills
+                {t("app.collaborators.skills") as string}
               </label>
               <input
                 type="text"
@@ -775,7 +812,7 @@ function CollaboratorsContent() {
                 onClick={() => setIsEditOpen(false)}
                 className="frame-btn-ghost"
               >
-                Cancelar
+                {t("app.common.cancel") as string}
               </button>
               <button
                 type="submit"
@@ -794,10 +831,10 @@ function CollaboratorsContent() {
         <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-sm rounded-none p-6">
           <DialogHeader>
             <DialogTitle className="frame-title text-2xl text-frame-red">
-              EXCLUIR COLABORADOR?
+              {t("app.collaborators.deleteTitle") as string}
             </DialogTitle>
             <DialogDescription className="text-frame-gray-light text-sm">
-              Esta ação é permanente e removerá o colaborador de todos os projetos.
+              {t("app.collaborators.deleteDescription") as string}
             </DialogDescription>
           </DialogHeader>
 
@@ -808,7 +845,7 @@ function CollaboratorsContent() {
               onClick={() => setIsDeleteOpen(false)}
               className="frame-btn-ghost"
             >
-              Cancelar
+              {t("app.common.cancel") as string}
             </button>
             <button
               type="button"

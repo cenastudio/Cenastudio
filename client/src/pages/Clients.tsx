@@ -613,9 +613,9 @@ function ClientsContent() {
             className="bg-frame-gray-2 border border-frame-gray-3 px-4 py-2 text-sm outline-none focus:border-frame-orange"
           >
             <option value="">{t("app.common.all") as string}</option>
-            <option value="direct">Direto</option>
-            <option value="agency">Agência</option>
-            <option value="brand">Marca</option>
+            <option value="direct">{t("app.common.segmentDirect") as string}</option>
+            <option value="agency">{t("app.common.segmentAgency") as string}</option>
+            <option value="brand">{t("app.common.segmentBrand") as string}</option>
           </select>
         </div>
 

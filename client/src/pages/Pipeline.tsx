@@ -675,7 +675,7 @@ function OpportunityCard({
             </p>
           </div>
           <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-2">
-            <p className="text-frame-gray-light">Ponderado</p>
+            <p className="text-frame-gray-light">{t("app.pipeline.weighted") as string}</p>
             <p className="font-semibold mt-0.5">{formatCurrency(weighted)}</p>
           </div>
         </div>

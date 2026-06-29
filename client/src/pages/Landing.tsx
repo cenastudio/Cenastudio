@@ -359,55 +359,85 @@ export default function Landing() {
 
       {/* Contact Section */}
       <section id="contact" className="landing-section">
-        <div className="landing-shell max-w-4xl text-center">
+        <div className="landing-shell">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="landing-glass-strong px-6 py-12 sm:px-10 sm:py-16"
+            className="relative overflow-hidden border border-[var(--landing-line)] bg-[rgba(10,7,6,0.78)] px-5 py-6 shadow-[0_28px_120px_rgba(0,0,0,0.42)] sm:px-8 sm:py-8 lg:px-10"
           >
-            <p className="landing-eyebrow mb-3">// {t("landing.contact.eyebrow") as string}</p>
-            <h2
-              className="landing-heading mb-4 text-[clamp(2.8rem,5.5vw,5rem)]"
-              dangerouslySetInnerHTML={{
-                __html: t("landing.contact.heading") as string,
-              }}
-            />
-            <p className="landing-copy mx-auto mb-10 max-w-xl">{t("landing.contact.copy") as string}</p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button
-                onClick={() => openModal("contact")}
-                className="frame-btn-primary inline-flex items-center gap-2"
-              >
-                {t("landing.contact.sendMessage") as string}
-              </button>
-              <button
-                onClick={() => openModal("demo")}
-                className="frame-btn-ghost inline-flex items-center gap-2"
-              >
-                {t("landing.contact.scheduleDemo") as string} <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </motion.div>
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(255,78,0,0.18),transparent_32%),radial-gradient(circle_at_86%_80%,rgba(255,78,0,0.10),transparent_34%)]" aria-hidden="true" />
+            <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-frame-orange/50 to-transparent" aria-hidden="true" />
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 text-left"
-          >
-            <div className="landing-card p-5">
-              <p className="relative z-10 mb-2 font-frame-mono text-[0.64rem] uppercase tracking-[0.2em] text-frame-orange">Email</p>
-              <p className="relative z-10 text-sm text-[var(--landing-muted)]">contato@cenastudio.com.br</p>
-            </div>
-            <div className="landing-card p-5">
-              <p className="relative z-10 mb-2 font-frame-mono text-[0.64rem] uppercase tracking-[0.2em] text-frame-orange">Suporte</p>
-              <p className="relative z-10 text-sm text-[var(--landing-muted)]">suporte@cenastudio.com.br</p>
-            </div>
-            <div className="landing-card p-5">
-              <p className="relative z-10 mb-2 font-frame-mono text-[0.64rem] uppercase tracking-[0.2em] text-frame-orange">Horário</p>
-              <p className="relative z-10 text-sm text-[var(--landing-muted)]">Seg-Sex, 9h às 18h</p>
+            <div className="relative grid grid-cols-1 gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch">
+              <div className="flex min-h-[360px] flex-col justify-between border border-[var(--landing-line)] bg-black/20 p-6 sm:p-8">
+                <div>
+                  <p className="landing-eyebrow mb-5">{t("landing.contact.eyebrow") as string}</p>
+                  <h2
+                    className="landing-heading max-w-3xl text-[clamp(3.1rem,6.5vw,6.8rem)] leading-[0.9]"
+                    dangerouslySetInnerHTML={{ __html: t("landing.contact.heading") as string }}
+                  />
+                  <p className="landing-copy mt-6 max-w-2xl text-[1.05rem] leading-relaxed">
+                    {t("landing.contact.copy") as string}
+                  </p>
+                </div>
+
+                <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  {[
+                    ["01", t("landing.contact.badgeDemo") as string],
+                    ["02", t("landing.contact.badgeOps") as string],
+                    ["03", t("landing.contact.badgeReply") as string],
+                  ].map(([number, label]) => (
+                    <div key={number} className="border border-[var(--landing-line)] bg-black/20 p-3">
+                      <p className="font-frame-mono text-[0.58rem] tracking-[0.18em] text-frame-orange">{number}</p>
+                      <p className="mt-2 text-xs leading-relaxed text-[var(--landing-muted)]">{label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                <div className="border border-frame-orange/35 bg-frame-orange/[0.08] p-5 sm:p-6">
+                  <p className="font-frame-mono text-[0.62rem] uppercase tracking-[0.2em] text-frame-orange">
+                    {t("landing.contact.ctaLabel") as string}
+                  </p>
+                  <p className="mt-3 text-2xl font-light leading-tight text-[var(--landing-text)]">
+                    {t("landing.contact.ctaTitle") as string}
+                  </p>
+                  <div className="mt-6 flex flex-col gap-3">
+                    <button
+                      onClick={() => openModal("contact")}
+                      className="frame-btn-primary inline-flex w-full items-center justify-center gap-2"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      {t("landing.contact.sendMessage") as string}
+                    </button>
+                    <button
+                      onClick={() => openModal("demo")}
+                      className="frame-btn-ghost inline-flex w-full items-center justify-center gap-2"
+                    >
+                      {t("landing.contact.scheduleDemo") as string} <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {[
+                  [t("landing.contact.emailLabel") as string, "contato@cenastudio.com.br", t("landing.contact.emailHint") as string],
+                  [t("landing.contact.supportLabel") as string, "suporte@cenastudio.com.br", t("landing.contact.supportHint") as string],
+                  [t("landing.contact.hoursLabel") as string, t("landing.contact.hoursValue") as string, t("landing.contact.hoursHint") as string],
+                ].map(([label, value, hint]) => (
+                  <div key={label} className="group border border-[var(--landing-line)] bg-black/18 p-5 transition hover:border-frame-orange/45 hover:bg-frame-orange/[0.04]">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="font-frame-mono text-[0.62rem] uppercase tracking-[0.2em] text-frame-orange">{label}</p>
+                        <p className="mt-3 text-base text-[var(--landing-text)]">{value}</p>
+                        <p className="mt-1 text-xs leading-relaxed text-[var(--landing-muted)]">{hint}</p>
+                      </div>
+                      <CheckCircle className="mt-1 h-4 w-4 shrink-0 text-frame-orange opacity-60 transition group-hover:opacity-100" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </motion.div>
         </div>

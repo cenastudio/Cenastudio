@@ -166,30 +166,15 @@ export default function AppNavBar({ children }: AppNavBarProps) {
             </div>
           )}
         </div>
+      </nav>
+
+      <div className="flex items-center gap-2.5">
+        {children}
         {user && (
           <button
             type="button"
             onClick={handleOpenCommandPalette}
             className="command-palette-trigger inline-flex"
-            title={t("app.nav.search") as string}
-            aria-label={t("app.nav.openSearch") as string}
-          >
-            <Search className="h-3.5 w-3.5" />
-            <kbd>⌘K</kbd>
-          </button>
-        )}
-      </nav>
-
-      <div className="flex items-center gap-2.5">
-        {children}
-        <div className="hidden sm:flex items-center border border-frame-gray-3 bg-frame-black/40 px-1">
-          <LanguageSwitcher compact />
-        </div>
-        {user && (
-          <button
-            type="button"
-            onClick={handleOpenCommandPalette}
-            className="command-palette-trigger inline-flex xl:hidden"
             title={t("app.nav.search") as string}
             aria-label={t("app.nav.openSearch") as string}
           >
@@ -220,6 +205,9 @@ export default function AppNavBar({ children }: AppNavBarProps) {
             <ChevronDown className="w-3 h-3 text-frame-gray-light opacity-0 group-hover:opacity-100 transition-opacity" />
           </button>
         )}
+        <div className="hidden sm:flex items-center">
+          <LanguageSwitcher compact />
+        </div>
         {user && <NotificationsPopover />}
         {user && <div className="hidden sm:block"><AccessibilityFontControls /></div>}
         <button

@@ -450,7 +450,7 @@ function VideoReviewsContent() {
         <div className="border-b border-frame-gray-3 bg-frame-gray-1/20 px-4 sm:px-6 py-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="frame-label">// {t("app.videoReviews.approval")}</p>
-            <h1 className="frame-title text-[clamp(1.6rem,3vw,2.4rem)] leading-none mt-1">REVIEW ROOM</h1>
+            <h1 className="frame-title text-[clamp(1.6rem,3vw,2.4rem)] leading-none mt-1">{t("app.videoReviews.reviewRoom")}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {selectedReview && currentStatus && (
@@ -556,31 +556,41 @@ function VideoReviewsContent() {
               </div>
             </aside>
 
-            <section className="bg-black min-h-[420px] xl:min-h-0 flex flex-col">
-              <div className="border-b border-frame-gray-3 px-4 py-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <section className="relative overflow-hidden bg-[radial-gradient(circle_at_50%_38%,rgba(232,80,2,0.12),rgba(16,13,12,0.94)_46%,#050505_100%)] min-h-[420px] xl:min-h-0 flex flex-col">
+              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.025),transparent_38%,rgba(232,80,2,0.035))]" />
+              <div className="relative border-b border-frame-gray-3 px-4 py-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold truncate">{selectedReview?.title || title || t("app.videoReviews.reviewPreview")}</p>
                   <p className="text-xs text-frame-gray-light truncate">
                     {selectedReview?.description || description || t("app.videoReviews.linkHint")}
                   </p>
                 </div>
-                {selectedReview && (
+              </div>
+
+              {selectedReview && (
+                <div className="relative flex flex-col gap-3 border-b border-frame-gray-3 bg-black/25 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-orange">
+                      // {t("app.videoReviews.finalDecision")}
+                    </p>
+                    <p className="mt-1 text-xs text-frame-gray-light">{t("app.videoReviews.decisionInstructions")}</p>
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {STATUS_ACTIONS.map((action) => (
                       <button
                         key={action.value}
                         onClick={() => handleUpdateReviewStatus(action.value)}
                         disabled={selectedReview.status === action.value}
-                        className={`px-2.5 py-1.5 text-[0.64rem] font-frame-mono uppercase tracking-wider border transition ${action.color} disabled:opacity-45`}
+                        className={`px-3 py-2 text-[0.62rem] font-frame-mono uppercase tracking-wider border bg-black/20 transition ${action.color} disabled:opacity-45`}
                       >
                         {t(action.labelKey)}
                       </button>
                     ))}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
-              <div className="flex-1 flex items-center justify-center p-4">
+              <div className="relative flex-1 flex items-center justify-center p-4">
                 {selectedReview ? (
                   <div className="w-full max-w-5xl">
                     <VideoPlayer
@@ -597,7 +607,7 @@ function VideoReviewsContent() {
                   </div>
                 ) : previewUrl ? (
                   <div className="w-full max-w-5xl aspect-video border border-frame-gray-3 bg-frame-gray-1">
-                    <iframe src={previewUrl} title="Preview do vídeo" className="w-full h-full" allow="autoplay; fullscreen" />
+                    <iframe src={previewUrl} title={t("app.videoReviews.videoPreview") as string} className="w-full h-full" allow="autoplay; fullscreen" />
                   </div>
                 ) : (
                   <div className="text-center max-w-md border border-dashed border-frame-gray-3 p-10">

@@ -165,6 +165,23 @@ function AnalyticsContent() {
     loadAnalytics();
   }, [loadAnalytics]);
 
+  useEffect(() => {
+    if (!showEntryForm) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setShowEntryForm(false);
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showEntryForm]);
+
   const maxCashflow = useMemo(() => {
     if (!finance?.monthlyCashflow.length) return 1;
     return Math.max(
@@ -215,11 +232,11 @@ function AnalyticsContent() {
         body: JSON.stringify({ status: "settled" }),
       });
       const result = await response.json();
-      if (!result.success) throw new Error(result.error || "Erro ao atualizar lançamento");
+      if (!result.success) throw new Error(result.error || t("app.errors.updateEntry"));
       toast.success(t("app.analytics.paymentConfirmed"));
       await loadAnalytics();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao atualizar lançamento");
+      toast.error(error instanceof Error ? error.message : t("app.errors.updateEntry"));
     }
   };
 
@@ -231,11 +248,11 @@ function AnalyticsContent() {
         credentials: "include",
       });
       const result = await response.json();
-      if (!result.success) throw new Error(result.error || "Erro ao excluir lançamento");
+      if (!result.success) throw new Error(result.error || t("app.errors.deleteEntry"));
       toast.success(t("app.analytics.entryDeleted"));
       await loadAnalytics();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao excluir lançamento");
+      toast.error(error instanceof Error ? error.message : t("app.errors.deleteEntry"));
     }
   };
 
@@ -252,10 +269,10 @@ function AnalyticsContent() {
       <main id="main-content" className="mx-auto w-full max-w-[1500px] space-y-6 px-4 py-6 sm:px-6 sm:py-9">
         <header className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
-            <p className="frame-label mb-2">// CAIXA E PERFORMANCE</p>
-            <h1 className="frame-title text-[clamp(2.3rem,4.4vw,4.2rem)]">FINANCEIRO & ANALYTICS</h1>
+            <p className="frame-label mb-2">// {t("app.analytics.eyebrow")}</p>
+            <h1 className="frame-title text-[clamp(2.3rem,4.4vw,4.2rem)]">{t("app.analytics.financeTitle")}</h1>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-frame-gray-light">
-              Saiba o que entrou, o que saiu, o que está por receber e quais clientes sustentam a operação.
+              {t("app.analytics.financeDescription")}
             </p>
           </div>
 
@@ -275,122 +292,190 @@ function AnalyticsContent() {
               className="frame-btn-ghost inline-flex items-center gap-2"
             >
               <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-              Atualizar
+              {t("app.common.refresh")}
             </button>
             <button
               type="button"
-              onClick={() => setShowEntryForm((value) => !value)}
+              onClick={() => setShowEntryForm(true)}
               className="frame-btn-primary inline-flex items-center gap-2"
             >
-              {showEntryForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-              {showEntryForm ? t("app.common.close") : t("app.analytics.newEntry")}
+              <Plus className="h-4 w-4" />
+              {t("app.analytics.newEntry")}
             </button>
           </div>
         </header>
 
         {showEntryForm && (
-          <form onSubmit={submitEntry} className="app-panel p-4 sm:p-5">
-            <div className="mb-4 flex flex-col gap-1">
-              <p className="frame-label">// REGISTRAR MOVIMENTO</p>
-              <p className="text-sm text-frame-gray-light">Use para recebimentos, custos, assinaturas e despesas fixas.</p>
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <button
+              type="button"
+              aria-label={t("app.common.close")}
+              className="fixed inset-0 bg-black/75 backdrop-blur-sm"
+              onClick={() => setShowEntryForm(false)}
+            />
+
+            <div className="relative mx-auto flex min-h-full w-full max-w-5xl items-center px-4 py-6 sm:py-10">
+              <form
+                onSubmit={submitEntry}
+                className="relative w-full overflow-hidden border border-frame-gray-3 bg-[rgba(12,8,7,0.97)] p-5 shadow-[0_26px_120px_rgba(0,0,0,0.68)] sm:p-7"
+              >
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,78,0,0.18),transparent_38%)]" aria-hidden="true" />
+
+                <div className="relative space-y-6">
+                  <div className="flex flex-col gap-4 border-b border-frame-gray-3 pb-5 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="frame-label">// {t("app.analytics.registerMovement")}</p>
+                      <h2 className="frame-title mt-2 text-[clamp(2rem,4vw,3.8rem)] leading-none">{t("app.analytics.newEntry")}</h2>
+                      <p className="mt-3 max-w-2xl text-sm leading-relaxed text-frame-gray-light">
+                        {t("app.analytics.newEntryDescription")}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowEntryForm(false)}
+                      className="frame-btn-ghost inline-flex items-center justify-center gap-2 self-start"
+                    >
+                      <X className="h-4 w-4" />
+                      {t("app.common.close")}
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <label className="space-y-2 md:col-span-2">
+                      <span className="frame-label text-frame-gray-light">{t("app.analytics.movementType")}</span>
+                      <div className="grid grid-cols-2 border border-frame-gray-3 bg-frame-gray-1/50">
+                        {(["income", "expense"] as const).map((kind) => (
+                          <button
+                            key={kind}
+                            type="button"
+                            onClick={() => setEntry((current) => ({ ...current, kind }))}
+                            className={`min-h-12 px-3 text-xs font-semibold transition ${
+                              entry.kind === kind
+                                ? kind === "income"
+                                  ? "bg-green-500/14 text-green-400"
+                                  : "bg-red-500/14 text-red-400"
+                                : "text-frame-gray-light hover:text-frame-white"
+                            }`}
+                          >
+                            {kind === "income" ? t("app.analytics.income") : t("app.analytics.expense")}
+                          </button>
+                        ))}
+                      </div>
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="frame-label text-frame-gray-light">{t("app.common.description")}</span>
+                      <input
+                        className="frame-input w-full"
+                        value={entry.description}
+                        onChange={(event) => setEntry((current) => ({ ...current, description: event.target.value }))}
+                        placeholder={t("app.analytics.descriptionPlaceholder")}
+                      />
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="frame-label text-frame-gray-light">{t("app.common.value")}</span>
+                      <input
+                        className="frame-input w-full"
+                        type="number"
+                        min="1"
+                        step="0.01"
+                        value={entry.amount}
+                        onChange={(event) => setEntry((current) => ({ ...current, amount: event.target.value }))}
+                        placeholder={t("app.analytics.amountPlaceholder")}
+                      />
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="frame-label text-frame-gray-light">{t("app.analytics.category")}</span>
+                      <select
+                        className="frame-input w-full"
+                        value={entry.category}
+                        onChange={(event) => setEntry((current) => ({ ...current, category: event.target.value }))}
+                      >
+                        <option value="projeto">{t("app.analytics.categoryProject")}</option>
+                        <option value="mensalidade">{t("app.analytics.categorySubscription")}</option>
+                        <option value="equipe">{t("app.analytics.categoryCrew")}</option>
+                        <option value="equipamento">{t("app.analytics.categoryEquipment")}</option>
+                        <option value="software">{t("app.analytics.categorySoftware")}</option>
+                        <option value="impostos">{t("app.analytics.categoryTaxes")}</option>
+                        <option value="estrutura">{t("app.analytics.categoryStructure")}</option>
+                        <option value="outros">{t("app.analytics.categoryOther")}</option>
+                      </select>
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="frame-label text-frame-gray-light">{t("app.analytics.client")}</span>
+                      <select
+                        className="frame-input w-full"
+                        value={entry.clientId}
+                        onChange={(event) => setEntry((current) => ({ ...current, clientId: event.target.value }))}
+                      >
+                        <option value="">{t("app.analytics.noClientLinked")}</option>
+                        {clients.map((client) => (
+                          <option key={client.id} value={client.id}>
+                            {client.name}{client.company ? ` · ${client.company}` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="frame-label text-frame-gray-light">{t("app.analytics.dueDate")}</span>
+                      <input
+                        className="frame-input w-full"
+                        type="date"
+                        value={entry.dueDate}
+                        onChange={(event) => setEntry((current) => ({ ...current, dueDate: event.target.value }))}
+                      />
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="frame-label text-frame-gray-light">{t("app.analytics.status")}</span>
+                      <select
+                        className="frame-input w-full"
+                        value={entry.status}
+                        onChange={(event) => setEntry((current) => ({ ...current, status: event.target.value as EntryForm["status"] }))}
+                      >
+                        <option value="pending">{t("app.common.pending")}</option>
+                        <option value="settled">{entry.kind === "income" ? t("app.analytics.received") : t("app.analytics.paid")}</option>
+                      </select>
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className="frame-label text-frame-gray-light">{t("app.analytics.recurrence")}</span>
+                      <select
+                        className="frame-input w-full"
+                        value={entry.recurrence}
+                        onChange={(event) => setEntry((current) => ({ ...current, recurrence: event.target.value as EntryForm["recurrence"] }))}
+                      >
+                        <option value="once">{t("app.analytics.once")}</option>
+                        <option value="monthly">{t("app.analytics.monthly")}</option>
+                      </select>
+                    </label>
+
+                    <label className="flex min-h-12 items-center gap-3 border border-frame-gray-3 bg-frame-gray-1/50 px-4 text-sm text-frame-gray-light">
+                      <input
+                        type="checkbox"
+                        checked={entry.isFixed}
+                        onChange={(event) => setEntry((current) => ({ ...current, isFixed: event.target.checked }))}
+                      />
+                      {t("app.analytics.fixedValue")}
+                    </label>
+                  </div>
+
+                  <div className="flex flex-col gap-3 border-t border-frame-gray-3 pt-5 sm:flex-row sm:items-center sm:justify-end">
+                    <button type="button" onClick={() => setShowEntryForm(false)} className="frame-btn-ghost">
+                      {t("app.common.cancel")}
+                    </button>
+                    <button type="submit" disabled={isSaving} className="frame-btn-primary">
+                      {isSaving ? t("app.common.saving") : t("app.analytics.saveEntry")}
+                    </button>
+                  </div>
+                </div>
+              </form>
             </div>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <div className="grid grid-cols-2 border border-frame-gray-3">
-                {(["income", "expense"] as const).map((kind) => (
-                  <button
-                    key={kind}
-                    type="button"
-                    onClick={() => setEntry((current) => ({ ...current, kind }))}
-                    className={`min-h-11 px-3 text-xs font-medium transition ${
-                      entry.kind === kind
-                        ? kind === "income"
-                          ? "bg-green-500/12 text-green-500"
-                          : "bg-red-500/12 text-red-500"
-                        : "text-frame-gray-light"
-                    }`}
-                  >
-                    {kind === "income" ? t("app.analytics.income") : t("app.analytics.expense")}
-                  </button>
-                ))}
-              </div>
-              <input
-                className="frame-input"
-                value={entry.description}
-                onChange={(event) => setEntry((current) => ({ ...current, description: event.target.value }))}
-                placeholder={t("app.analytics.descriptionPlaceholder")}
-              />
-              <input
-                className="frame-input"
-                type="number"
-                min="1"
-                step="0.01"
-                value={entry.amount}
-                onChange={(event) => setEntry((current) => ({ ...current, amount: event.target.value }))}
-                placeholder={t("app.analytics.amountPlaceholder")}
-              />
-              <select
-                className="frame-input"
-                value={entry.category}
-                onChange={(event) => setEntry((current) => ({ ...current, category: event.target.value }))}
-              >
-                <option value="projeto">Projeto</option>
-                <option value="mensalidade">Mensalidade</option>
-                <option value="equipe">Equipe</option>
-                <option value="equipamento">Equipamento</option>
-                <option value="software">Software</option>
-                <option value="impostos">Impostos</option>
-                <option value="estrutura">Estrutura</option>
-                <option value="outros">Outros</option>
-              </select>
-              <select
-                className="frame-input"
-                value={entry.clientId}
-                onChange={(event) => setEntry((current) => ({ ...current, clientId: event.target.value }))}
-              >
-                <option value="">Sem cliente vinculado</option>
-                {clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.name}{client.company ? ` · ${client.company}` : ""}
-                  </option>
-                ))}
-              </select>
-              <input
-                className="frame-input"
-                type="date"
-                value={entry.dueDate}
-                onChange={(event) => setEntry((current) => ({ ...current, dueDate: event.target.value }))}
-              />
-              <select
-                className="frame-input"
-                value={entry.status}
-                onChange={(event) => setEntry((current) => ({ ...current, status: event.target.value as EntryForm["status"] }))}
-              >
-                <option value="pending">Pendente</option>
-                <option value="settled">{entry.kind === "income" ? t("app.analytics.received") : t("app.analytics.paid")}</option>
-              </select>
-              <select
-                className="frame-input"
-                value={entry.recurrence}
-                onChange={(event) => setEntry((current) => ({ ...current, recurrence: event.target.value as EntryForm["recurrence"] }))}
-              >
-                <option value="once">Uma vez</option>
-                <option value="monthly">Mensal</option>
-              </select>
-            </div>
-            <div className="mt-4 flex flex-col gap-3 border-t border-frame-gray-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
-              <label className="inline-flex items-center gap-2 text-sm text-frame-gray-light">
-                <input
-                  type="checkbox"
-                  checked={entry.isFixed}
-                  onChange={(event) => setEntry((current) => ({ ...current, isFixed: event.target.checked }))}
-                />
-                Valor fixo da operação
-              </label>
-              <button type="submit" disabled={isSaving} className="frame-btn-primary">
-                {isSaving ? t("app.common.saving") : t("app.analytics.saveEntry")}
-              </button>
-            </div>
-          </form>
+          </div>
         )}
 
         {isLoading || !summary ? (
@@ -414,11 +499,11 @@ function AnalyticsContent() {
               <div className="app-panel p-5 sm:p-6">
                 <div className="mb-6 flex items-start justify-between gap-4">
                   <div>
-                    <p className="frame-label">// FLUXO DE CAIXA</p>
-                    <h2 className="mt-1 text-xl font-semibold">Entradas e saídas por mês</h2>
+                    <p className="frame-label">// {t("app.analytics.cashflow")}</p>
+                    <h2 className="mt-1 text-xl font-semibold">{t("app.analytics.cashflowByMonth")}</h2>
                   </div>
                   <span className="font-frame-mono text-[0.58rem] uppercase tracking-[0.12em] text-frame-gray-light">
-                    Últimos 6 meses
+                    {t("app.analytics.lastSixMonths")}
                   </span>
                 </div>
 
@@ -430,12 +515,12 @@ function AnalyticsContent() {
                           <div
                             className="flex-1 bg-green-500/75"
                             style={{ height: `${Math.max(4, (item.income / maxCashflow) * 100)}%` }}
-                            title={`Entradas: ${formatCurrency(item.income)}`}
+                            title={`${t("app.analytics.inflows")}: ${formatCurrency(item.income)}`}
                           />
                           <div
                             className="flex-1 bg-red-500/65"
                             style={{ height: `${Math.max(4, (item.expenses / maxCashflow) * 100)}%` }}
-                            title={`Saídas: ${formatCurrency(item.expenses)}`}
+                            title={`${t("app.analytics.outflows")}: ${formatCurrency(item.expenses)}`}
                           />
                         </div>
                         <div className="mt-3 border-t border-frame-gray-3 pt-3">
@@ -457,8 +542,8 @@ function AnalyticsContent() {
               <div className="app-panel flex flex-col p-5 sm:p-6">
                 <div className="mb-5 flex items-start justify-between gap-4">
                   <div>
-                    <p className="frame-label">// CONTAS EM ABERTO</p>
-                    <h2 className="mt-1 text-xl font-semibold">Próximos movimentos</h2>
+                    <p className="frame-label">// {t("app.analytics.openAccounts")}</p>
+                    <h2 className="mt-1 text-xl font-semibold">{t("app.analytics.upcomingMovements")}</h2>
                   </div>
                   <span className="font-frame-mono text-[0.58rem] text-frame-orange">
                     {finance.pendingEntries.length}
@@ -490,7 +575,7 @@ function AnalyticsContent() {
                     </div>
                   )) : (
                     <p className="border border-dashed border-frame-gray-3 p-5 text-sm text-frame-gray-light">
-                      Nenhuma conta pendente.
+                      {t("app.analytics.noPendingAccounts")}
                     </p>
                   )}
                 </div>
@@ -502,33 +587,33 @@ function AnalyticsContent() {
                 icon={WalletCards}
                 label={t("app.analytics.monthlyPredictability")}
                 value={formatCurrency(summary.recurringRevenue)}
-                detail={`${summary.recurringClients} cliente(s) recorrente(s) · ${formatCurrency(summary.fixedMonthly)} em custos fixos`}
+                detail={`${summary.recurringClients} ${t("app.analytics.recurringClientsDetail")} · ${formatCurrency(summary.fixedMonthly)} ${t("app.analytics.fixedCostsDetail")}`}
               />
               <InsightCard
                 icon={TrendingUp}
                 label={t("app.analytics.commercialPipeline")}
                 value={formatCurrency(summary.openPipeline)}
-                detail={`${formatCurrency(summary.weightedPipeline)} ponderado pela probabilidade`}
+                detail={`${formatCurrency(summary.weightedPipeline)} ${t("app.analytics.weightedByProbability")}`}
                 onClick={() => setLocation("/pipeline")}
               />
               <InsightCard
                 icon={Users}
                 label={t("app.analytics.clientsNegotiation")}
                 value={formatCurrency(summary.crmOpenValue)}
-                detail={`${formatCurrency(summary.crmWeightedValue)} ponderado pelas etapas do CRM`}
+                detail={`${formatCurrency(summary.crmWeightedValue)} ${t("app.analytics.weightedByCrmStages")}`}
                 onClick={() => setLocation("/clients")}
               />
               <InsightCard
                 icon={Receipt}
                 label={t("app.analytics.cashRisk")}
                 value={formatCurrency(summary.overdueReceivables)}
-                detail={`${formatCurrency(summary.toPay)} ainda a pagar`}
+                detail={`${formatCurrency(summary.toPay)} ${t("app.analytics.stillToPay")}`}
               />
             </section>
 
             <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               <div className="app-panel p-5 sm:p-6">
-                <p className="frame-label">// CLIENTES QUE GERAM RECEITA</p>
+                <p className="frame-label">// {t("app.analytics.revenueClients")}</p>
                 <div className="mt-5 space-y-3">
                   {finance.topClients.length ? finance.topClients.map((client, index) => (
                     <button
@@ -547,13 +632,13 @@ function AnalyticsContent() {
                       <strong className="text-sm">{formatCurrency(client.revenue)}</strong>
                     </button>
                   )) : (
-                    <p className="text-sm text-frame-gray-light">Vincule entradas a clientes para criar este ranking.</p>
+                    <p className="text-sm text-frame-gray-light">{t("app.analytics.linkEntriesRanking")}</p>
                   )}
                 </div>
               </div>
 
               <div className="app-panel p-5 sm:p-6">
-                <p className="frame-label">// DE ONDE VEM O DINHEIRO</p>
+                <p className="frame-label">// {t("app.analytics.revenueSourcesTitle")}</p>
                 <div className="mt-5 space-y-4">
                   {finance.revenueSources.length ? finance.revenueSources.map((source) => {
                     const max = Math.max(...finance.revenueSources.map((item) => item.amount), 1);
@@ -569,7 +654,7 @@ function AnalyticsContent() {
                       </div>
                     );
                   }) : (
-                    <p className="text-sm text-frame-gray-light">As categorias aparecem após os primeiros recebimentos.</p>
+                    <p className="text-sm text-frame-gray-light">{t("app.analytics.categoriesAfterReceipts")}</p>
                   )}
                 </div>
               </div>
@@ -578,10 +663,10 @@ function AnalyticsContent() {
             <section className="app-panel overflow-hidden">
               <div className="flex flex-col gap-2 border-b border-frame-gray-3 p-5 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="frame-label">// LIVRO-CAIXA</p>
-                  <h2 className="mt-1 text-xl font-semibold">Lançamentos recentes</h2>
+                  <p className="frame-label">// {t("app.analytics.cashbook")}</p>
+                  <h2 className="mt-1 text-xl font-semibold">{t("app.analytics.recentEntries")}</h2>
                 </div>
-                <p className="text-xs text-frame-gray-light">Entradas, saídas, recorrências e pendências em um histórico único.</p>
+                <p className="text-xs text-frame-gray-light">{t("app.analytics.recentEntriesDescription")}</p>
               </div>
 
               <div className="divide-y divide-frame-gray-3">

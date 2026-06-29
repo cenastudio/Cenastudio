@@ -36,7 +36,7 @@ const INITIAL_CREATE_FORM = {
 };
 
 function AdminUsersContent() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,7 +69,7 @@ function AdminUsersContent() {
       toast.success(`${managedUser.email} ${newRole === "admin" ? t("app.admin.nowAdmin") : t("app.admin.nowUser")}`);
       loadUsers();
     } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : "Erro ao alterar permissão");
+      toast.error(e instanceof ApiError ? e.message : t("app.admin.roleUpdateError"));
     }
   };
 
@@ -79,7 +79,7 @@ function AdminUsersContent() {
       toast.success(`${managedUser.email} ${t("app.admin.nowPlan")} ${planId}`);
       loadUsers();
     } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : "Erro ao alterar plano");
+      toast.error(e instanceof ApiError ? e.message : t("app.admin.planUpdateError"));
     }
   };
 
@@ -102,7 +102,7 @@ function AdminUsersContent() {
       setCreateForm(INITIAL_CREATE_FORM);
       await loadUsers();
     } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : "Erro ao criar usuário");
+      toast.error(e instanceof ApiError ? e.message : t("app.admin.createUserError"));
     } finally {
       setCreating(false);
     }
@@ -129,7 +129,7 @@ function AdminUsersContent() {
       setDeleteConfirm("");
       await loadUsers();
     } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : "Erro ao apagar conta");
+      toast.error(e instanceof ApiError ? e.message : t("app.admin.deleteUserError"));
     } finally {
       setDeletingId(null);
     }
@@ -151,18 +151,18 @@ function AdminUsersContent() {
       <main id="main-content" className="max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 flex-1">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 sm:mb-8">
           <div>
-            <p className="text-frame-orange font-frame-mono text-xs tracking-[0.2em] uppercase mb-2">// ACESSOS E CONTAS</p>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">GERENCIAR USUÁRIOS</h1>
-            <p className="text-frame-gray-light text-sm mt-1">{users.length} usuários cadastrados</p>
+            <p className="text-frame-orange font-frame-mono text-xs tracking-[0.2em] uppercase mb-2">// {t("app.admin.accessAndAccounts")}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t("app.admin.manageUsers")}</h1>
+            <p className="text-frame-gray-light text-sm mt-1">{users.length} {t("app.admin.registeredUsers")}</p>
           </div>
         </div>
 
         <section className="border border-frame-gray-3 bg-frame-gray-1/35 p-4 sm:p-5 mb-6">
           <div className="flex items-start justify-between gap-4 mb-4">
             <div>
-              <p className="font-frame-mono text-[0.64rem] tracking-[0.18em] uppercase text-frame-orange mb-1">// CRIAR ACESSO</p>
-              <h2 className="text-lg font-semibold">Conta personalizada para teste</h2>
-              <p className="text-sm text-frame-gray-light mt-1">Defina senha, plano e permissao antes de enviar para cliente, parceiro ou avaliador.</p>
+              <p className="font-frame-mono text-[0.64rem] tracking-[0.18em] uppercase text-frame-orange mb-1">// {t("app.admin.createAccess")}</p>
+              <h2 className="text-lg font-semibold">{t("app.admin.customTestAccount")}</h2>
+              <p className="text-sm text-frame-gray-light mt-1">{t("app.admin.customTestAccountDesc")}</p>
             </div>
             <div className="hidden sm:flex h-10 w-10 items-center justify-center border border-frame-gray-3 text-frame-orange">
               <KeyRound className="w-4 h-4" />
@@ -196,8 +196,8 @@ function AdminUsersContent() {
               onChange={(e) => setCreateForm((current) => ({ ...current, role: e.target.value as "user" | "admin" }))}
               className="bg-frame-gray-2 border border-frame-gray-3 px-3 py-2.5 text-sm outline-none focus:border-frame-orange"
             >
-              <option value="user">Usuário</option>
-              <option value="admin">Admin</option>
+              <option value="user">{t("app.admin.userRole")}</option>
+              <option value="admin">{t("app.admin.adminTitle")}</option>
             </select>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-[1fr_220px] gap-3 mt-3">
@@ -232,7 +232,7 @@ function AdminUsersContent() {
         </div>
 
         {loading ? (
-          <div className="text-center py-20 text-frame-gray-light font-frame-mono text-xs">CARREGANDO...</div>
+          <div className="text-center py-20 text-frame-gray-light font-frame-mono text-xs">{t("app.common.loading")}</div>
         ) : (
           <div className="space-y-2">
             {filtered.map((managedUser) => {
@@ -250,10 +250,10 @@ function AdminUsersContent() {
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-semibold truncate max-w-full">{managedUser.name || t("app.admin.noName")}</span>
                         {managedUser.role === "admin" && (
-                          <span className="text-[0.62rem] font-frame-mono uppercase tracking-wider text-frame-orange border border-frame-orange/30 px-1.5 py-0.5">Admin</span>
+                          <span className="text-[0.62rem] font-frame-mono uppercase tracking-wider text-frame-orange border border-frame-orange/30 px-1.5 py-0.5">{t("app.admin.adminTitle")}</span>
                         )}
                         {isCurrentUser && (
-                          <span className="text-[0.62rem] font-frame-mono uppercase tracking-wider text-frame-gold border border-frame-gold/30 px-1.5 py-0.5">Você</span>
+                          <span className="text-[0.62rem] font-frame-mono uppercase tracking-wider text-frame-gold border border-frame-gold/30 px-1.5 py-0.5">{t("app.admin.you")}</span>
                         )}
                         {managedUser.github_id && (
                           <span className="text-[0.62rem] text-frame-gray-light border border-frame-gray-3 px-1.5 py-0.5" title="Login via GitHub">GH</span>
@@ -261,13 +261,13 @@ function AdminUsersContent() {
                       </div>
                       <p className="text-sm text-frame-gray-light truncate">{managedUser.email}</p>
                       <p className="text-[0.64rem] text-frame-gray-muted font-frame-mono mt-0.5 leading-relaxed">
-                        Criado em {new Date(managedUser.created_at).toLocaleDateString("pt-BR")}
-                        {managedUser.plan_name && ` · ${managedUser.plan_name}${managedUser.generation_limit && managedUser.generation_limit > 0 ? ` (${managedUser.generation_limit}/mês)` : managedUser.generation_limit === -1 ? " (ilimitado)" : ""}`}
+                        {t("app.admin.createdAt")} {new Date(managedUser.created_at).toLocaleDateString(locale === "pt" ? "pt-BR" : "en-US")}
+                        {managedUser.plan_name && ` · ${managedUser.plan_name}${managedUser.generation_limit && managedUser.generation_limit > 0 ? ` (${managedUser.generation_limit}/${t("app.admin.monthShort")})` : managedUser.generation_limit === -1 ? ` (${t("app.admin.unlimited")})` : ""}`}
                       </p>
                       <div className="flex flex-wrap gap-2 mt-2 text-[0.64rem] font-frame-mono uppercase tracking-[0.12em] text-frame-gray-light">
-                        <span className="border border-frame-gray-3 px-2 py-1">{managedUser.project_count || 0} projetos</span>
-                        <span className="border border-frame-gray-3 px-2 py-1">{managedUser.file_count || 0} arquivos</span>
-                        <span className="border border-frame-gray-3 px-2 py-1">{managedUser.review_count || 0} reviews</span>
+                        <span className="border border-frame-gray-3 px-2 py-1">{managedUser.project_count || 0} {t("app.admin.projects")}</span>
+                        <span className="border border-frame-gray-3 px-2 py-1">{managedUser.file_count || 0} {t("app.admin.files")}</span>
+                        <span className="border border-frame-gray-3 px-2 py-1">{managedUser.review_count || 0} {t("app.admin.reviews")}</span>
                       </div>
                     </div>
                   </div>
@@ -307,7 +307,7 @@ function AdminUsersContent() {
               );
             })}
             {filtered.length === 0 && (
-              <div className="text-center py-20 text-frame-gray-light font-frame-mono text-xs">NENHUM USUÁRIO ENCONTRADO</div>
+              <div className="text-center py-20 text-frame-gray-light font-frame-mono text-xs">{t("app.admin.noUsersFound")}</div>
             )}
           </div>
         )}
@@ -321,10 +321,10 @@ function AdminUsersContent() {
                 <AlertTriangle className="w-5 h-5" />
               </div>
               <div>
-                <p className="font-frame-mono text-[0.65rem] uppercase tracking-[0.18em] text-red-300">Ação destrutiva</p>
-                <h2 className="text-xl font-semibold mt-1">Apagar conta de usuário</h2>
+                <p className="font-frame-mono text-[0.65rem] uppercase tracking-[0.18em] text-red-300">{t("app.admin.destructiveAction")}</p>
+                <h2 className="text-xl font-semibold mt-1">{t("app.admin.deleteUserAccount")}</h2>
                 <p className="text-sm text-frame-gray-light mt-2 leading-relaxed">
-                  Isso remove a conta e os dados vinculados por cascade: projetos, clientes, arquivos, reviews, comentários, notificações, cota e histórico de IA.
+                  {t("app.admin.deleteUserAccountDesc")}
                 </p>
               </div>
             </div>
@@ -333,12 +333,12 @@ function AdminUsersContent() {
               <p className="font-semibold">{deleteTarget.name || t("app.admin.noName")}</p>
               <p className="text-frame-gray-light">{deleteTarget.email}</p>
               <p className="text-[0.6rem] font-frame-mono uppercase tracking-[0.12em] text-frame-gray-muted mt-2">
-                {deleteTarget.project_count || 0} projetos · {deleteTarget.file_count || 0} arquivos · {deleteTarget.review_count || 0} reviews
+                {deleteTarget.project_count || 0} {t("app.admin.projects")} · {deleteTarget.file_count || 0} {t("app.admin.files")} · {deleteTarget.review_count || 0} {t("app.admin.reviews")}
               </p>
             </div>
 
             <label className="block mt-5 text-xs font-frame-mono uppercase tracking-[0.16em] text-frame-gray-light">
-              Digite o e-mail para confirmar
+              {t("app.admin.typeEmailToConfirm")}
             </label>
             <input
               value={deleteConfirm}
@@ -349,7 +349,7 @@ function AdminUsersContent() {
 
             <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-2">
               <button type="button" onClick={closeDelete} className="border border-frame-gray-3 px-4 py-2.5 text-sm text-frame-gray-light hover:border-frame-gray-2" disabled={!!deletingId}>
-                Cancelar
+                {t("app.common.cancel")}
               </button>
               <button
                 type="button"
