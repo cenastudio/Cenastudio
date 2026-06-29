@@ -1,3 +1,5 @@
+import { SITE_CONFIG } from "@shared/site";
+
 const stripInlineMarkdown = (value: string) =>
   value
     .replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1")
@@ -141,7 +143,7 @@ export async function downloadGeneratedDocx(raw: string, title: string) {
           children: [new Paragraph({
             alignment: AlignmentType.RIGHT,
             children: [
-              new TextRun({ text: "Cena Studio  ·  ", color: "777777", size: 16 }),
+              new TextRun({ text: `${SITE_CONFIG.title}  ·  `, color: "777777", size: 16 }),
               new TextRun({ children: [PageNumber.CURRENT], color: "777777", size: 16 }),
             ],
           })],
@@ -150,7 +152,7 @@ export async function downloadGeneratedDocx(raw: string, title: string) {
     }],
   });
 
-  downloadBlob(await Packer.toBlob(doc), `cena-studio-${safeFilename(title)}.docx`);
+  downloadBlob(await Packer.toBlob(doc), `${SITE_CONFIG.title.toLowerCase().replace(/\s+/g, "-")}-${safeFilename(title)}.docx`);
 }
 
 export async function downloadGeneratedPdf(raw: string, title: string) {
@@ -171,7 +173,7 @@ export async function downloadGeneratedPdf(raw: string, title: string) {
   pdf.setTextColor(255, 77, 0);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(9);
-  pdf.text("CENA STUDIO", margin, y);
+  pdf.text(SITE_CONFIG.title.toUpperCase(), margin, y);
   y += 5;
   pdf.setDrawColor(255, 77, 0);
   pdf.setLineWidth(0.6);
@@ -215,8 +217,8 @@ export async function downloadGeneratedPdf(raw: string, title: string) {
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(8);
     pdf.setTextColor(125, 125, 125);
-    pdf.text(`Cena Studio  ·  ${page}/${totalPages}`, pageWidth - margin, pageHeight - 10, { align: "right" });
+    pdf.text(`${SITE_CONFIG.title}  ·  ${page}/${totalPages}`, pageWidth - margin, pageHeight - 10, { align: "right" });
   }
 
-  pdf.save(`cena-studio-${safeFilename(title)}.pdf`);
+  pdf.save(`${SITE_CONFIG.title.toLowerCase().replace(/\s+/g, "-")}-${safeFilename(title)}.pdf`);
 }

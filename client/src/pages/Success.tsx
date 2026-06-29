@@ -1,5 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { api, openBillingPortal } from "@/lib/api";
+import { SITE_CONFIG } from "@shared/site";
 import { motion } from "framer-motion";
 import { CheckCircle, CreditCard } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -61,7 +62,7 @@ export default function Success() {
   }, [loading, sessionId, planParam, setLocation]);
 
   const planName =
-    plan?.planName ?? (planParam ? (PLAN_NAMES[planParam] ?? planParam) : "Cena Studio");
+    plan?.planName ?? (planParam ? (PLAN_NAMES[planParam] ?? planParam) : SITE_CONFIG.title);
 
   const title = sessionId
     ? `Assinatura ativada! Bem-vindo ao plano ${planName}.`

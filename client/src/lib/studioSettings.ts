@@ -1,3 +1,5 @@
+import { SITE_CONFIG } from "@shared/site";
+
 export interface StudioSettings {
   studioName: string;
   legalName: string;
@@ -13,7 +15,7 @@ export interface StudioSettings {
 export const STUDIO_SETTINGS_KEY = "frame.studio.settings.v1";
 
 export const DEFAULT_STUDIO_SETTINGS: StudioSettings = {
-  studioName: "Cena Studio",
+  studioName: SITE_CONFIG.title,
   legalName: "",
   document: "",
   email: "",

@@ -1,4 +1,4 @@
-import { NAVIGATION } from "@shared/site";
+import { NAVIGATION, SITE_CONFIG } from "@shared/site";
 import { useApp } from "@/contexts/AppContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
@@ -37,7 +37,7 @@ export default function Navigation() {
           type="button"
           onClick={() => setLocation("/")}
           className="border-none bg-transparent"
-          aria-label="Cena Studio"
+          aria-label={SITE_CONFIG.title}
         >
           <BrandLogo tone="onDark" />
         </button>

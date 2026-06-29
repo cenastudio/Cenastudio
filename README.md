@@ -65,7 +65,7 @@ Rotas autenticadas: `/dashboard`, `/project/:id`, `/project/:id/*`, `/tools`, `/
 ## 🛠️ Setup
 
 ```bash
-cd cena-studio
+cd cenastudio
 npm install
 cp .env.example .env
 # Edite .env — JWT_SECRET é obrigatório, ANTHROPIC_API_KEY para IA, GITHUB_CLIENT_ID/SECRET para login GitHub
@@ -328,7 +328,7 @@ SQLite local em `./data/frame.db`. Tabelas principais:
 ### Vercel
 1. Configure as variáveis de ambiente no painel Vercel
 2. Deploy automático via push para branch `main`
-3. URL: https://cena-studio.vercel.app
+3. URL: https://cenastudio.vercel.app
 
 ### Variáveis de Ambiente Necessárias
 - `JWT_SECRET` — Obrigatório
