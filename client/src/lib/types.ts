@@ -1,6 +1,7 @@
 import type { PlanTier } from "@shared/site";
 
 export type { PlanTier };
+export type Language = "pt" | "en";
 
 export interface ContactFormData {
   name: string;
@@ -40,3 +41,72 @@ export interface AppContextType {
   submitCheckout: (data: CheckoutFormData) => Promise<void>;
   submitDemo: (data: { email: string; name: string }) => Promise<void>;
 }
+
+export interface LandingTranslations {
+  navigation: {
+    product: string;
+    tools: string;
+    about: string;
+    pricing: string;
+    contact: string;
+  };
+  hero: {
+    tag: string;
+    title: [string, string, string];
+    subtitle: string;
+    cta: {
+      primary: string;
+      secondary: string;
+    };
+    stats: Array<{ number: string; label: string }>;
+  };
+  login: string;
+  start: string;
+  openMenu: string;
+  closeMenu: string;
+  proof: {
+    eyebrow: string;
+    heading: string;
+    copy: string;
+  };
+  useCases: {
+    eyebrow: string;
+    heading: string;
+    copy: string;
+  };
+  workflow: {
+    eyebrow: string;
+    heading: string;
+    copy: string;
+  };
+  seePlatform: string;
+  contact: {
+    eyebrow: string;
+    heading: string;
+    copy: string;
+    sendMessage: string;
+    scheduleDemo: string;
+  };
+  footer: {
+    platform: string;
+    operation: string;
+    legal: string;
+    support: string;
+    realProduct: string;
+    studioIA: string;
+    files: string;
+    videoReview: string;
+    about: string;
+    flow: string;
+    plans: string;
+    contact: string;
+    terms: string;
+    privacy: string;
+    cookies: string;
+    scheduleDemo: string;
+    productCenter: string;
+    login: string;
+  };
+}
+
+export type Translations = LandingTranslations;

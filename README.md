@@ -2,7 +2,15 @@
 
 Inteligência artificial para produção audiovisual — roteiros, callsheets, decupagem, orçamentos, CRM, reviews de vídeos e muito mais.
 
-**Última atualização:** 28 de Junho de 2026
+**Última atualização:** 29 de Junho de 2026
+
+## 🌍 Internacionalização (i18n)
+
+- **Idioma PT/EN**: Botão discreto na landing page para alternar entre Português e Inglês
+- **Context centralizado**: `client/src/contexts/LanguageContext.tsx` gerencia estado e persisted no `localStorage`
+- **Traduções em memória**: `pt` e `en` com chaves por seção (nav, hero, workflow, pricing, footer)
+- **Switcher reutilizável**: `LanguageSwitcher.tsx` para uso em qualquer componente
+- **Tipos compartilhados**: `Language` exportado em `shared/site.ts` + tipos em `client/src/lib/types.ts`
 
 ## 🚀 Novidades Recentes
 

@@ -8,94 +8,137 @@ import { ContactModal } from "@/components/landing/modals/ContactModal";
 import { DemoModal } from "@/components/landing/modals/DemoModal";
 import { motion } from "framer-motion";
 import { useApp } from "@/contexts/AppContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 import {
   Users, BarChart3, GitBranch, Film,
   MessageSquare, FolderOpen, CheckCircle, ArrowRight,
 } from "lucide-react";
 
-const PLATFORM_HIGHLIGHTS = [
-  {
-    icon: Film,
-    title: "Estúdio IA",
-    items: ["Roteiro por projeto", "Callsheet inteligente", "Decupagem técnica", "Orçamento estruturado", "Briefing, contrato, proposta"],
-  },
-  {
-    icon: FolderOpen,
-    title: "Gestão de Arquivos",
-    items: ["Upload por projeto", "Organização de materiais", "Preview quando disponível", "Filtros por tipo", "Download direto"],
-  },
-  {
-    icon: MessageSquare,
-    title: "Review de Vídeo",
-    items: ["Review por projeto", "Comentários com timestamp", "Status de aprovação", "Links compartilháveis", "Histórico de revisão"],
-  },
-  {
-    icon: Users,
-    title: "CRM de Clientes",
-    items: ["Cadastro de clientes", "Pipeline comercial", "Segmentação por perfil", "Histórico de interações", "Dados comerciais"],
-  },
-  {
-    icon: BarChart3,
-    title: "Operação",
-    items: ["Projetos ativos", "Briefings pendentes", "Atividades recentes", "Plano e cota", "Indicadores do estúdio"],
-  },
-  {
-    icon: GitBranch,
-    title: "Pipeline & Colaboração",
-    items: ["Fluxo por etapa", "Convite de colaboradores", "Compartilhamento externo", "Aprovação de vídeo", "Equipe por projeto"],
-  },
-];
+function useLandingContent() {
+  const { t } = useLanguage();
 
-const PLATFORM_FLOW = [
-  { step: "01", title: "Projeto", desc: "Crie um projeto e cadastre o cliente" },
-  { step: "02", title: "Pré-produção", desc: "Roteiro, briefing, decupagem e callsheet com IA" },
-  { step: "03", title: "Orçamento", desc: "Proposta, contrato e orçamento automático" },
-  { step: "04", title: "Produção", desc: "Checklist, cronograma e gestão de arquivos" },
-  { step: "05", title: "Revisão", desc: "Review de vídeo com anotações e aprovação" },
-  { step: "06", title: "Entrega", desc: "Relatório final e faturamento" },
-];
+  const PLATFORM_HIGHLIGHTS = [
+    {
+      icon: Film,
+      title: t("landing.highlights.iaStudio.title") as string,
+      items: [
+        t("landing.highlights.iaStudio.item1") as string,
+        t("landing.highlights.iaStudio.item2") as string,
+        t("landing.highlights.iaStudio.item3") as string,
+        t("landing.highlights.iaStudio.item4") as string,
+        t("landing.highlights.iaStudio.item5") as string,
+      ],
+    },
+    {
+      icon: FolderOpen,
+      title: t("landing.highlights.files.title") as string,
+      items: [
+        t("landing.highlights.files.item1") as string,
+        t("landing.highlights.files.item2") as string,
+        t("landing.highlights.files.item3") as string,
+        t("landing.highlights.files.item4") as string,
+        t("landing.highlights.files.item5") as string,
+      ],
+    },
+    {
+      icon: MessageSquare,
+      title: t("landing.highlights.videoReview.title") as string,
+      items: [
+        t("landing.highlights.videoReview.item1") as string,
+        t("landing.highlights.videoReview.item2") as string,
+        t("landing.highlights.videoReview.item3") as string,
+        t("landing.highlights.videoReview.item4") as string,
+        t("landing.highlights.videoReview.item5") as string,
+      ],
+    },
+    {
+      icon: Users,
+      title: t("landing.highlights.crm.title") as string,
+      items: [
+        t("landing.highlights.crm.item1") as string,
+        t("landing.highlights.crm.item2") as string,
+        t("landing.highlights.crm.item3") as string,
+        t("landing.highlights.crm.item4") as string,
+        t("landing.highlights.crm.item5") as string,
+      ],
+    },
+    {
+      icon: BarChart3,
+      title: t("landing.highlights.operation.title") as string,
+      items: [
+        t("landing.highlights.operation.item1") as string,
+        t("landing.highlights.operation.item2") as string,
+        t("landing.highlights.operation.item3") as string,
+        t("landing.highlights.operation.item4") as string,
+        t("landing.highlights.operation.item5") as string,
+      ],
+    },
+    {
+      icon: GitBranch,
+      title: t("landing.highlights.pipeline.title") as string,
+      items: [
+        t("landing.highlights.pipeline.item1") as string,
+        t("landing.highlights.pipeline.item2") as string,
+        t("landing.highlights.pipeline.item3") as string,
+        t("landing.highlights.pipeline.item4") as string,
+        t("landing.highlights.pipeline.item5") as string,
+      ],
+    },
+  ];
 
-const PRODUCT_SCREENS = [
-  {
-    label: "Painel operacional",
-    title: "O que precisa de atenção aparece primeiro",
-    description:
-      "Projetos ativos, briefing pendente, plano atual e próximo passo ficam na entrada do app.",
-    image: "/landing/product/dashboard.png",
-  },
-  {
-    label: "Centro do job",
-    title: "Cada job vira um centro de produção",
-    description:
-      "Objetivo, prazo, direção criativa, progresso, equipe e atalhos seguem conectados ao projeto.",
-    image: "/landing/product/project-hub.png",
-  },
-  {
-    label: "Studio IA",
-    title: "IA sem perder o contexto do projeto",
-    description:
-      "Roteiro, decupagem, callsheet, briefing e documentos operam dentro do job selecionado.",
-    image: "/landing/product/studio.png",
-  },
-];
+  const PLATFORM_FLOW = [
+    { step: "01", title: t("landing.flow.step1.title") as string, desc: t("landing.flow.step1.desc") as string },
+    { step: "02", title: t("landing.flow.step2.title") as string, desc: t("landing.flow.step2.desc") as string },
+    { step: "03", title: t("landing.flow.step3.title") as string, desc: t("landing.flow.step3.desc") as string },
+    { step: "04", title: t("landing.flow.step4.title") as string, desc: t("landing.flow.step4.desc") as string },
+    { step: "05", title: t("landing.flow.step5.title") as string, desc: t("landing.flow.step5.desc") as string },
+    { step: "06", title: t("landing.flow.step6.title") as string, desc: t("landing.flow.step6.desc") as string },
+  ];
 
-const USE_CASES = [
-  {
-    title: "Freelas e creators",
-    description: "Sair do improviso: briefing, roteiro, arquivos e entrega em um fluxo simples por projeto.",
-  },
-  {
-    title: "Produtoras pequenas",
-    description: "Organizar jobs simultâneos com cliente, IA, arquivos, aprovações e equipe conectados.",
-  },
-  {
-    title: "Agências e social teams",
-    description: "Produzir campanhas com múltiplos formatos, histórico por cliente e revisão centralizada.",
-  },
-];
+  const PRODUCT_SCREENS = [
+    {
+      label: t("landing.screens.dashboard.label") as string,
+      title: t("landing.screens.dashboard.title") as string,
+      description: t("landing.screens.dashboard.desc") as string,
+      image: "/landing/product/dashboard.png",
+    },
+    {
+      label: t("landing.screens.projectHub.label") as string,
+      title: t("landing.screens.projectHub.title") as string,
+      description: t("landing.screens.projectHub.desc") as string,
+      image: "/landing/product/project-hub.png",
+    },
+    {
+      label: t("landing.screens.studio.label") as string,
+      title: t("landing.screens.studio.title") as string,
+      description: t("landing.screens.studio.desc") as string,
+      image: "/landing/product/studio.png",
+    },
+  ];
+
+  const USE_CASES = [
+    {
+      title: t("landing.useCases.freelancers.title") as string,
+      description: t("landing.useCases.freelancers.desc") as string,
+    },
+    {
+      title: t("landing.useCases.smallStudios.title") as string,
+      description: t("landing.useCases.smallStudios.desc") as string,
+    },
+    {
+      title: t("landing.useCases.agencies.title") as string,
+      description: t("landing.useCases.agencies.desc") as string,
+    },
+  ];
+
+  return { PLATFORM_HIGHLIGHTS, PLATFORM_FLOW, PRODUCT_SCREENS, USE_CASES };
+}
 
 function ProductProofSection() {
+  const { t } = useLanguage();
+  const { PRODUCT_SCREENS, USE_CASES } = useLandingContent();
+
   return (
     <section id="product-proof" className="landing-section">
       <div className="landing-shell space-y-16">
@@ -105,13 +148,14 @@ function ProductProofSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <p className="landing-eyebrow mb-3">// Produto real, não mockup</p>
-            <h2 className="landing-heading mb-5 text-[clamp(2.8rem,6vw,5.7rem)]">
-              A OPERAÇÃO APARECE <span className="landing-outline-text">NA TELA</span>
-            </h2>
-              <p className="landing-copy max-w-xl">
-              Prints capturados da aplicação rodando localmente: painel, centro do job e studio de IA com um projeto demo real.
-            </p>
+            <p className="landing-eyebrow mb-3">// {t("landing.proof.eyebrow") as string}</p>
+            <h2
+              className="landing-heading mb-5 text-[clamp(2.8rem,6vw,5.7rem)]"
+              dangerouslySetInnerHTML={{
+                __html: t("landing.proof.heading") as string,
+              }}
+            />
+            <p className="landing-copy max-w-xl">{t("landing.proof.copy") as string}</p>
           </motion.div>
 
           <motion.div
@@ -120,7 +164,11 @@ function ProductProofSection() {
             viewport={{ once: true }}
             className="landing-glass grid grid-cols-1 sm:grid-cols-3"
           >
-            {["Criar briefing", "Gerar documentos", "Acompanhar entrega"].map((step, index) => (
+            {[
+              t("landing.proof.step1") as string,
+              t("landing.proof.step2") as string,
+              t("landing.proof.step3") as string,
+            ].map((step, index) => (
               <div key={step} className="border-b border-[var(--landing-line)] p-5 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
                 <span className="mb-3 block font-frame-mono text-[0.62rem] uppercase tracking-[0.16em] text-frame-orange">
                   0{index + 1}
@@ -164,13 +212,16 @@ function ProductProofSection() {
         <div>
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
             <div>
-              <p className="landing-eyebrow mb-3">// Casos de uso</p>
-              <h2 className="landing-heading text-[clamp(2.4rem,4.5vw,4rem)]">
-                PARA QUEM PRODUZ <span className="landing-accent-text">AUDIOVISUAL</span>
-              </h2>
+              <p className="landing-eyebrow mb-3">// {t("landing.useCases.eyebrow") as string}</p>
+              <h2
+                className="landing-heading text-[clamp(2.4rem,4.5vw,4rem)]"
+                dangerouslySetInnerHTML={{
+                  __html: t("landing.useCases.heading") as string,
+                }}
+              />
             </div>
             <p className="max-w-md text-sm leading-relaxed text-[var(--landing-muted)]">
-              O foco inicial é operação audiovisual real: planejamento, documentos, arquivos, revisão, cliente e equipe.
+              {t("landing.useCases.copy") as string}
             </p>
           </div>
 
@@ -190,6 +241,8 @@ function ProductProofSection() {
 
 export default function Landing() {
   const { openModal, modals } = useApp();
+  const { t } = useLanguage();
+  const { PLATFORM_HIGHLIGHTS, PLATFORM_FLOW } = useLandingContent();
 
   return (
     <div className="cena-landing min-h-screen overflow-x-hidden">
@@ -207,14 +260,12 @@ export default function Landing() {
             viewport={{ once: true }}
             className="mb-16"
           >
-            <p className="landing-eyebrow mb-3">// Plataforma</p>
+            <p className="landing-eyebrow mb-3">// {t("landing.about.eyebrow") as string}</p>
             <h2 className="landing-heading mb-4 text-[clamp(2.8rem,5.5vw,5rem)]">
-              MÓDULOS PARA OPERAR <span className="landing-outline-text">CADA JOB</span>
+              {t("landing.about.title.part1") as string}{" "}
+              <span className="landing-outline-text">{t("landing.about.title.highlight") as string}</span>
             </h2>
-            <p className="landing-copy max-w-2xl">
-              A plataforma conecta as partes que mais se perdem na rotina: projeto, cliente,
-              briefing, IA, arquivos, revisão, equipe e documentos.
-            </p>
+            <p className="landing-copy max-w-2xl">{t("landing.about.copy") as string}</p>
           </motion.div>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -259,13 +310,14 @@ export default function Landing() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <p className="landing-eyebrow mb-3">// Fluxo de Trabalho</p>
-            <h2 className="landing-heading mb-4 text-[clamp(2.8rem,5.5vw,5rem)]">
-              DO CONCEITO À <span className="landing-accent-text">ENTREGA</span>
-            </h2>
-            <p className="landing-copy mx-auto max-w-2xl">
-              Seis etapas que cobrem todo o ciclo de produção audiovisual, integradas em uma plataforma única.
-            </p>
+            <p className="landing-eyebrow mb-3">// {t("landing.workflow.eyebrow") as string}</p>
+            <h2
+              className="landing-heading mb-4 text-[clamp(2.8rem,5.5vw,5rem)]"
+              dangerouslySetInnerHTML={{
+                __html: t("landing.workflow.heading") as string,
+              }}
+            />
+            <p className="landing-copy mx-auto max-w-2xl">{t("landing.workflow.copy") as string}</p>
           </motion.div>
 
           <div className="mx-auto grid max-w-5xl grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -297,7 +349,7 @@ export default function Landing() {
               onClick={() => openModal("demo")}
               className="frame-btn-primary inline-flex items-center gap-2"
             >
-              Ver plataforma completa <ArrowRight className="w-4 h-4" />
+              {t("landing.seePlatform") as string} <ArrowRight className="w-4 h-4" />
             </button>
           </motion.div>
         </div>
@@ -314,25 +366,26 @@ export default function Landing() {
             viewport={{ once: true }}
             className="landing-glass-strong px-6 py-12 sm:px-10 sm:py-16"
           >
-            <p className="landing-eyebrow mb-3">// Contato</p>
-            <h2 className="landing-heading mb-4 text-[clamp(2.8rem,5.5vw,5rem)]">
-              VAMOS <span className="landing-outline-text">CONVERSAR</span>
-            </h2>
-            <p className="landing-copy mx-auto mb-10 max-w-xl">
-              Quer saber mais sobre a plataforma, tirar dúvidas ou solicitar uma demonstração personalizada para sua produtora?
-            </p>
+            <p className="landing-eyebrow mb-3">// {t("landing.contact.eyebrow") as string}</p>
+            <h2
+              className="landing-heading mb-4 text-[clamp(2.8rem,5.5vw,5rem)]"
+              dangerouslySetInnerHTML={{
+                __html: t("landing.contact.heading") as string,
+              }}
+            />
+            <p className="landing-copy mx-auto mb-10 max-w-xl">{t("landing.contact.copy") as string}</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <button
                 onClick={() => openModal("contact")}
                 className="frame-btn-primary inline-flex items-center gap-2"
               >
-                Enviar Mensagem
+                {t("landing.contact.sendMessage") as string}
               </button>
               <button
                 onClick={() => openModal("demo")}
                 className="frame-btn-ghost inline-flex items-center gap-2"
               >
-                Agendar Demonstração <ArrowRight className="w-4 h-4" />
+                {t("landing.contact.scheduleDemo") as string} <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </motion.div>

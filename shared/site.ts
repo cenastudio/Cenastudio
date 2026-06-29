@@ -6,11 +6,11 @@ export const SITE_CONFIG = {
 };
 
 export const NAVIGATION = [
-  { label: "Produto", href: "#product-proof" },
-  { label: "Ferramentas", href: "#tools" },
-  { label: "Sobre", href: "#about" },
-  { label: "Preços", href: "#pricing" },
-  { label: "Contato", href: "#contact" },
+  { label: "navigation.product", href: "#product-proof" },
+  { label: "navigation.tools", href: "#tools" },
+  { label: "navigation.about", href: "#about" },
+  { label: "navigation.pricing", href: "#pricing" },
+  { label: "navigation.contact", href: "#contact" },
 ];
 
 export const HERO = {
