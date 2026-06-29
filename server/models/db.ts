@@ -264,6 +264,9 @@ function createIndexes() {
     "CREATE INDEX IF NOT EXISTS idx_collaborators_user_id ON collaborators(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_project_members_project_id ON project_members(project_id)",
     "CREATE INDEX IF NOT EXISTS idx_project_members_collaborator_id ON project_members(collaborator_id)",
+    "CREATE INDEX IF NOT EXISTS idx_financial_entries_user_id ON financial_entries(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_financial_entries_due_date ON financial_entries(due_date)",
+    "CREATE INDEX IF NOT EXISTS idx_financial_entries_status ON financial_entries(status)",
     "CREATE INDEX IF NOT EXISTS idx_reset_tokens_token ON reset_tokens(token)",
     "CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_studio_settings_user_id ON studio_settings(user_id)",
@@ -487,6 +490,25 @@ export function initDatabase() {
       read INTEGER DEFAULT 0,
       link TEXT,
       created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS financial_entries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL,
+      opportunity_id INTEGER REFERENCES opportunities(id) ON DELETE SET NULL,
+      kind TEXT NOT NULL CHECK(kind IN ('income', 'expense')),
+      description TEXT NOT NULL,
+      category TEXT NOT NULL DEFAULT 'geral',
+      amount INTEGER NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'settled', 'canceled')),
+      due_date TEXT,
+      paid_at TEXT,
+      recurrence TEXT NOT NULL DEFAULT 'once' CHECK(recurrence IN ('once', 'monthly')),
+      is_fixed INTEGER NOT NULL DEFAULT 0,
+      notes TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
     );
   `);
 

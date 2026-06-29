@@ -5,7 +5,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AnimatedModal from "@/components/AnimatedModal";
 import {
   Users, Plus, Search, Phone, Mail, MoreVertical,
-  Edit, Trash2, TrendingUp, DollarSign, GripVertical,
+  Edit, Trash2, TrendingUp, DollarSign, GripVertical, Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -17,7 +17,7 @@ import {
 import { useDebounce } from "@/hooks/useDebounce";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  DndContext, DragOverlay, PointerSensor, useSensor, useSensors, DragStartEvent, DragEndEvent,
+  DndContext, DragOverlay, PointerSensor, useDroppable, useSensor, useSensors, DragStartEvent, DragEndEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext, useSortable, verticalListSortingStrategy,
@@ -69,6 +69,106 @@ const WORKFLOW_STAGES = [
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 
+const normalizeKey = (value?: unknown) =>
+  String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\D/g, "")
+    .trim()
+    .toLowerCase();
+
+const normalizeTextKey = (value?: unknown) =>
+  String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+
+const parseMoney = (value: unknown) => {
+  if (typeof value === "number") return Number.isFinite(value) ? Math.round(value) : 0;
+  const raw = String(value ?? "").replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", ".");
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? Math.round(parsed) : 0;
+};
+
+const mapImportedWorkflowStage = (value: unknown, relationshipType?: unknown) => {
+  const status = normalizeTextKey(value);
+  const relation = normalizeTextKey(relationshipType);
+  if (relation.includes("recorrente")) return "recurrent";
+  if (status.includes("proposta")) return "proposal";
+  if (status.includes("negocia")) return "negotiation";
+  if (status.includes("ganho") || status.includes("fechado") || status.includes("aprovado")) return "won";
+  if (status.includes("perdido") || status.includes("cancelado")) return "lost";
+  if (status.includes("contat")) return "contacted";
+  if (status.includes("qualific")) return "qualified";
+  return "prospect";
+};
+
+const mapImportedStatus = (value: unknown, relationshipType?: unknown) => {
+  const status = normalizeTextKey(value);
+  const relation = normalizeTextKey(relationshipType);
+  if (status.includes("perdido") || status.includes("cancelado")) return "inactive";
+  if (status.includes("ganho") || status.includes("fechado") || relation.includes("recorrente")) return "active";
+  return "lead";
+};
+
+const buildImportedNotes = (client: Record<string, unknown>) => {
+  const lines = [
+    ["Servico", client.service],
+    ["Pagamento", client.payment],
+    ["Temperatura do lead", client.leadTemp],
+    ["Origem", client.leadSource],
+    ["Proxima reuniao", client.nextMeeting],
+    ["Proxima acao", client.nextAction],
+    ["Follow-up", client.followUpDate],
+    ["Tipo de relacionamento", client.relationshipType],
+    ["PIX", client.pix],
+    ["Portfolio", client.portfolio],
+    ["Contrato", client.contract],
+    ["Disponibilidade", client.availability],
+    ["Termos de parceria", client.partnerTerms],
+    ["Permuta", client.barterDetails],
+    ["Observacoes", client.notes],
+    ["ID original", client.id],
+  ]
+    .filter(([, value]) => String(value ?? "").trim())
+    .map(([label, value]) => `${label}: ${String(value).trim()}`);
+
+  return lines.join("\n");
+};
+
+const normalizeImportedClient = (client: Record<string, unknown>) => {
+  const name = String(client.name ?? client.title ?? client.company ?? "").trim();
+  const totalSpent = parseMoney(client.monthlyValue || client.value || client.total_spent);
+  return {
+    name,
+    company: String(client.company ?? "").trim() || undefined,
+    email: String(client.email ?? "").trim() || undefined,
+    phone: String(client.phone ?? "").trim() || undefined,
+    segment: "direct",
+    status: mapImportedStatus(client.status, client.relationshipType),
+    workflow_stage: mapImportedWorkflowStage(client.status, client.relationshipType),
+    notes: buildImportedNotes(client),
+    total_spent: totalSpent,
+    website: String(client.portfolio ?? "").trim().startsWith("http")
+      ? String(client.portfolio).trim()
+      : undefined,
+    billing_cycle: String(client.relationshipType ?? "").trim() || undefined,
+    payment_method: String(client.payment ?? "").trim() || undefined,
+  };
+};
+
+const extractImportedClients = (payload: unknown) => {
+  if (Array.isArray(payload)) return payload;
+  if (payload && typeof payload === "object") {
+    const record = payload as Record<string, unknown>;
+    if (Array.isArray(record.clients)) return record.clients;
+    if (Array.isArray(record.data)) return record.data;
+    if (Array.isArray(record.customers)) return record.customers;
+  }
+  return [];
+};
+
 function SortableClientCard({
   client,
   onEdit,
@@ -97,6 +197,7 @@ function SortableClientCard({
       ref={setNodeRef}
       style={style}
       {...attributes}
+      {...listeners}
       className={`border-l-2 ${stage.color} bg-frame-gray-2/30 p-3 mb-2 cursor-grab active:cursor-grabbing hover:border-l-frame-orange transition-[background-color,border-color,box-shadow,transform] duration-200 group`}
     >
       <div className="flex items-start justify-between gap-2">
@@ -106,7 +207,7 @@ function SortableClientCard({
             <p className="text-xs text-frame-gray-light truncate">{client.company}</p>
           )}
         </div>
-        <div {...listeners} className="cursor-grab shrink-0 opacity-0 group-hover:opacity-100 transition">
+        <div className="cursor-grab shrink-0 opacity-45 group-hover:opacity-100 transition" aria-hidden="true">
           <GripVertical className="w-3.5 h-3.5 text-frame-gray-light" />
         </div>
       </div>
@@ -120,7 +221,12 @@ function SortableClientCard({
         <span className="text-xs text-frame-gray-light font-mono">{formatCurrency(client.total_spent)}</span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="p-1 hover:bg-frame-gray-3 rounded transition-colors opacity-0 group-hover:opacity-100">
+            <button
+              type="button"
+              onPointerDown={(event) => event.stopPropagation()}
+              className="p-1 hover:bg-frame-gray-3 rounded transition-colors opacity-0 group-hover:opacity-100"
+              aria-label={`Ações de ${client.name}`}
+            >
               <MoreVertical className="w-3.5 h-3.5 text-frame-gray-light" />
             </button>
           </DropdownMenuTrigger>
@@ -162,6 +268,26 @@ function ColumnHeader({ stage, count }: { stage: typeof WORKFLOW_STAGES[0]; coun
   );
 }
 
+function DroppableStageColumn({
+  stage,
+  children,
+}: {
+  stage: typeof WORKFLOW_STAGES[0];
+  children: React.ReactNode;
+}) {
+  const { isOver, setNodeRef } = useDroppable({ id: stage.id });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`clients-stage-column flex-shrink-0 w-[260px] border ${stage.color} bg-frame-black/50 flex flex-col transition-[border-color,box-shadow,background] duration-200 ${isOver ? "is-over border-frame-orange shadow-[0_0_0_1px_rgba(232,80,2,0.38),0_18px_60px_rgba(232,80,2,0.12)]" : ""}`}
+      style={{ maxHeight: "calc(100vh - 320px)" }}
+    >
+      {children}
+    </div>
+  );
+}
+
 interface ClientStats {
   totalClients: number;
   activeClients: number;
@@ -186,6 +312,7 @@ function ClientsContent() {
   const debouncedSearch = useDebounce(searchTerm, 300);
   const [filterStatus, setFilterStatus] = useState("");
   const [filterSegment, setFilterSegment] = useState("");
+  const [isImporting, setIsImporting] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -297,6 +424,75 @@ function ClientsContent() {
     }
   };
 
+  const handleImportFile = async (file?: File | null) => {
+    if (!file || isImporting) return;
+
+    setIsImporting(true);
+    try {
+      const payload = JSON.parse(await file.text());
+      const imported = extractImportedClients(payload)
+        .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
+        .map(normalizeImportedClient)
+        .filter((client) => client.name);
+
+      if (imported.length === 0) {
+        toast.error("Não encontrei clientes válidos nesse arquivo.");
+        return;
+      }
+
+      const existingResponse = await fetch("/api/clients");
+      const existingData = await existingResponse.json();
+      const existingClients: Client[] = existingData.success ? existingData.data : clients;
+      const existingKeys = new Set(
+        existingClients.map((client) =>
+          [
+            normalizeTextKey(client.name),
+            normalizeTextKey(client.email),
+            normalizeKey(client.phone),
+          ].filter(Boolean).join("|"),
+        ),
+      );
+
+      let created = 0;
+      let skipped = 0;
+
+      for (const client of imported) {
+        const key = [
+          normalizeTextKey(client.name),
+          normalizeTextKey(client.email),
+          normalizeKey(client.phone),
+        ].filter(Boolean).join("|");
+
+        if (existingKeys.has(key)) {
+          skipped += 1;
+          continue;
+        }
+
+        const response = await fetch("/api/clients", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(client),
+        });
+        const result = await response.json();
+        if (result.success) {
+          created += 1;
+          existingKeys.add(key);
+        } else {
+          skipped += 1;
+        }
+      }
+
+      await loadClients();
+      await loadStats();
+      toast.success(`${created} cliente(s) importado(s). ${skipped} ignorado(s).`);
+    } catch (error) {
+      console.error("Import error:", error);
+      toast.error("Arquivo inválido ou fora do formato esperado.");
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active": return "text-green-400 bg-green-400/10 border-green-400/20";
@@ -331,13 +527,29 @@ function ClientsContent() {
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight">CLIENTES</h1>
             <p className="text-frame-gray-light text-sm mt-2">Gerencie seu portfólio de clientes e oportunidades</p>
           </div>
-          <button
-            onClick={() => setLocation("/clients/new")}
-            className="frame-btn-primary flex items-center gap-2 shrink-0"
-          >
-            <Plus className="w-4 h-4" />
-            Novo Cliente
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <label className="frame-btn-ghost flex items-center justify-center gap-2 shrink-0">
+              <Upload className="w-4 h-4" />
+              {isImporting ? "Importando..." : "Importar JSON"}
+              <input
+                type="file"
+                accept="application/json,.json"
+                className="sr-only"
+                disabled={isImporting}
+                onChange={(event) => {
+                  void handleImportFile(event.target.files?.[0]);
+                  event.currentTarget.value = "";
+                }}
+              />
+            </label>
+            <button
+              onClick={() => setLocation("/clients/new")}
+              className="frame-btn-primary flex items-center justify-center gap-2 shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              Novo Cliente
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -414,9 +626,19 @@ function ClientsContent() {
                  <button onClick={() => setLocation("/clients/new")} className="w-full text-left text-sm text-frame-gray-light hover:text-frame-white transition px-2 py-1.5 border border-frame-gray-3 hover:border-frame-orange/50">
                   + Novo Cliente
                 </button>
-                <button className="w-full text-left text-sm text-frame-gray-light hover:text-frame-white transition px-2 py-1.5 border border-frame-gray-3 hover:border-frame-orange/50">
-                  📋 Exportar
-                </button>
+                <label className="block w-full text-left text-sm text-frame-gray-light hover:text-frame-white transition px-2 py-1.5 border border-frame-gray-3 hover:border-frame-orange/50 cursor-pointer">
+                  Importar JSON
+                  <input
+                    type="file"
+                    accept="application/json,.json"
+                    className="sr-only"
+                    disabled={isImporting}
+                    onChange={(event) => {
+                      void handleImportFile(event.target.files?.[0]);
+                      event.currentTarget.value = "";
+                    }}
+                  />
+                </label>
               </div>
             </div>
             <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-4">
@@ -506,11 +728,7 @@ function ClientsContent() {
             {WORKFLOW_STAGES.map((stage) => {
               const stageClients = clients.filter((c) => c.workflow_stage === stage.id);
               return (
-                <div
-                  key={stage.id}
-                  className={`flex-shrink-0 w-[260px] border ${stage.color} bg-frame-black/50 flex flex-col`}
-                  style={{ maxHeight: "calc(100vh - 320px)" }}
-                >
+                <DroppableStageColumn key={stage.id} stage={stage}>
                   <ColumnHeader stage={stage} count={stageClients.length} />
                   <SortableContext
                     items={stageClients.map((c) => `client-${c.id}`)}
@@ -537,7 +755,7 @@ function ClientsContent() {
                       </AnimatePresence>
                     </div>
                   </SortableContext>
-                </div>
+                </DroppableStageColumn>
               );
             })}
           </div>

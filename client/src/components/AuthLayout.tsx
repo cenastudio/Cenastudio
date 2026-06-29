@@ -108,3 +108,40 @@ export function AuthError({ message }: { message: string }) {
 export function AuthLink({ children }: { children: React.ReactNode }) {
   return <p className="text-[0.8rem] text-frame-gray-light text-center mt-4">{children}</p>;
 }
+
+export function AuthLoadingAnimation({
+  message = "Finalizando login...",
+}: {
+  message?: string;
+}) {
+  return (
+    <div className="auth-loading" role="status" aria-live="polite">
+      <div className="auth-loading-stage" aria-hidden="true">
+        <div className="auth-loading-orbit auth-loading-orbit-outer" />
+        <div className="auth-loading-orbit auth-loading-orbit-inner" />
+        <div className="auth-loading-core">
+          <span />
+          <span />
+          <span />
+        </div>
+        <div className="auth-loading-scan" />
+      </div>
+
+      <div className="space-y-1">
+        <p className="font-frame-mono text-[0.62rem] uppercase tracking-[0.18em] text-frame-orange">
+          Autenticando
+        </p>
+        <p className="text-sm font-light text-frame-cream/75">{message}</p>
+      </div>
+
+      <div className="auth-loading-track" aria-hidden="true">
+        <div className="auth-loading-runner" />
+        <div className="auth-loading-sparks">
+          <span />
+          <span />
+          <span />
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -211,11 +211,11 @@ export default function StudioShell() {
   };
 
   return (
-    <div className="min-h-screen bg-frame-black text-frame-white flex flex-col h-screen overflow-hidden">
+    <div className="studio-app min-h-screen bg-frame-black text-frame-white flex flex-col h-screen overflow-hidden">
       <AppNavBar />
       <ProjectTimeline activeToolId={tool.id} />
 
-      <div className="flex flex-1 overflow-hidden flex-col lg:flex-row">
+      <div className="studio-workbench flex flex-1 overflow-hidden flex-col lg:flex-row">
         {/* Tool Sidebar */}
         <ToolSidebar
           tools={tools}
@@ -224,7 +224,7 @@ export default function StudioShell() {
         />
 
         {/* Studio Shell Body Container */}
-        <div className="flex-1 flex overflow-hidden flex-col md:flex-row relative">
+        <div className="studio-main flex-1 flex overflow-hidden flex-col md:flex-row relative">
           {tool.slug === "assistente" ? (
             <AssistantChatWorkspace tool={tool} projectId={activeProject?.id} />
           ) : (

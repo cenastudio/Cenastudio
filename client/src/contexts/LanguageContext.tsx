@@ -374,13 +374,18 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocale] = useState<Language>(() => {
-    const saved = localStorage.getItem("language") as Language | null;
-    return saved || "pt";
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("language") as Language | null;
+      if (saved === "pt" || saved === "en") return saved;
+    }
+    return "pt";
   });
 
   const setLocaleCallback = useCallback((lang: Language) => {
     setLocale(lang);
-    localStorage.setItem("language", lang);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("language", lang);
+    }
   }, []);
 
   const t = (key: string): string | Record<string, unknown> => {

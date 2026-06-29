@@ -93,8 +93,8 @@ export default function AssistantChatWorkspace({ tool, projectId }: AssistantCha
   };
 
   return (
-    <div className="flex-1 min-w-0 flex flex-col bg-frame-black border-t lg:border-t-0 border-frame-gray-2">
-      <div className="px-4 sm:px-6 py-4 border-b border-frame-gray-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="studio-chat-panel flex-1 min-w-0 flex flex-col border-t lg:border-t-0 border-[var(--ds-border)]">
+      <div className="px-4 sm:px-6 py-4 border-b border-[var(--ds-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <p className="frame-label mb-1">// ASSISTENTE LIVRE</p>
           <h2 className="frame-title text-[clamp(1.6rem,3vw,2.5rem)] leading-none">CHAT DE PRODUÇÃO</h2>
@@ -122,35 +122,35 @@ export default function AssistantChatWorkspace({ tool, projectId }: AssistantCha
         {messages.map((message, index) => (
           <div key={`${message.role}-${index}`} className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
             {message.role === "assistant" && (
-              <div className="w-9 h-9 border border-frame-orange/40 bg-frame-orange/10 text-frame-orange flex items-center justify-center shrink-0">
+              <div className="frame-chat-avatar frame-chat-avatar--assistant">
                 <Bot className="w-4 h-4" />
               </div>
             )}
             <div
-              className={`max-w-[min(760px,86vw)] border px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
-                message.role === "user"
-                  ? "border-frame-orange/40 bg-frame-orange text-frame-black"
-                  : "border-frame-gray-3 bg-frame-gray-1/40 text-frame-cream"
-              }`}
+              className={`frame-chat-bubble ${message.role === "user" ? "frame-chat-bubble--user" : "frame-chat-bubble--assistant"}`}
             >
               {message.content}
             </div>
             {message.role === "user" && (
-              <div className="w-9 h-9 border border-frame-gray-3 bg-frame-gray-2 text-frame-white flex items-center justify-center shrink-0">
+              <div className="frame-chat-avatar frame-chat-avatar--user">
                 <UserRound className="w-4 h-4" />
               </div>
             )}
           </div>
         ))}
         {isSending && (
-          <div className="flex items-center gap-3 text-frame-gray-light text-sm">
-            <Loader2 className="w-4 h-4 animate-spin text-frame-orange" />
-            Pensando...
+          <div className="frame-chat-loading">
+            <span>Pensando...</span>
+            <div className="flex gap-1">
+              <span />
+              <span />
+              <span />
+            </div>
           </div>
         )}
       </div>
 
-      <div className="border-t border-frame-gray-2 p-4 sm:p-5">
+      <div className="border-t border-[var(--ds-border)] p-4 sm:p-5">
         <div className="flex flex-wrap gap-2 mb-3">
           {starterPrompts.map((prompt) => (
             <button
@@ -158,7 +158,7 @@ export default function AssistantChatWorkspace({ tool, projectId }: AssistantCha
               type="button"
               onClick={() => sendMessage(prompt)}
               disabled={isSending}
-              className="px-3 py-2 border border-frame-gray-3 text-frame-gray-light hover:border-frame-orange hover:text-frame-orange text-[0.68rem] font-frame-mono uppercase tracking-wider transition disabled:opacity-50"
+              className="frame-btn-ghost text-[0.62rem] px-3 py-2"
             >
               {prompt}
             </button>
@@ -176,7 +176,7 @@ export default function AssistantChatWorkspace({ tool, projectId }: AssistantCha
             }}
             placeholder="Escreva sua dúvida livremente..."
             rows={2}
-            className="flex-1 bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-4 py-3 text-sm rounded-none outline-none resize-none"
+            className="frame-input flex-1 resize-none min-h-[44px] max-h-[120px]"
           />
           <button
             type="button"

@@ -191,8 +191,13 @@ function buildProposalHtml(form: ProposalForm, lines: ProposalLine[], studio: St
   <meta charset="utf-8" />
   <title>Proposta - ${esc(form.clientName || form.company || "Cliente")}</title>
   <style>
-    *{box-sizing:border-box} body{margin:0;background:#0d0d0d;color:#e8e8e8;font-family:Arial,sans-serif;padding:46px}
-    .page{max-width:900px;margin:0 auto}.header{display:flex;justify-content:space-between;gap:32px;padding-bottom:28px;border-bottom:3px solid ${studio.primaryColor}}
+    @page{size:A4;margin:0}
+    *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    html,body{margin:0;min-height:100%;background:#0d0d0d;color:#e8e8e8;font-family:Arial,sans-serif}
+    body{background:radial-gradient(circle at 88% 5%,${studio.primaryColor}2e,transparent 34%),linear-gradient(135deg,#15100d 0%,#0d0d0d 42%,#050505 100%)}
+    .page{width:210mm;min-height:297mm;margin:0 auto;padding:18mm;background:radial-gradient(circle at 92% 4%,${studio.primaryColor}30,transparent 33%),linear-gradient(180deg,#111 0%,#0d0d0d 100%);position:relative;overflow:hidden}
+    .page:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(232,80,2,.08),transparent 32%),radial-gradient(circle at 10% 92%,rgba(217,195,171,.08),transparent 32%);pointer-events:none}
+    .page>*{position:relative;z-index:1}.header{display:flex;justify-content:space-between;gap:32px;padding-bottom:28px;border-bottom:3px solid ${studio.primaryColor}}
     .brand{font-size:34px;font-weight:900;letter-spacing:.06em;color:#fff}.brand span{color:${studio.primaryColor}}.sub{font-size:11px;color:${studio.primaryColor};font-weight:900;letter-spacing:.18em;text-transform:uppercase;margin-top:5px}
     .doc{text-align:right}.doc small{display:block;color:#777;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.doc strong{display:block;color:${studio.primaryColor};font-size:28px;margin-top:4px}
     h1{font-size:42px;line-height:1;margin:38px 0 10px;color:#fff}.muted{color:#999;line-height:1.55}
@@ -204,7 +209,8 @@ function buildProposalHtml(form: ProposalForm, lines: ProposalLine[], studio: St
     .final{margin-top:16px;display:flex;justify-content:space-between;align-items:center;gap:20px;padding:22px 24px;border:1px solid ${studio.primaryColor}77;background:linear-gradient(135deg,${studio.primaryColor}29,rgba(0,0,0,0))}
     .final small{display:block;color:${studio.primaryColor};font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.12em}.final strong{font-size:40px;color:#fff}
     .terms{background:#111;border:1px solid #242424;padding:20px;margin-top:28px;color:#aaa;font-size:12px;line-height:1.7}.footer{display:flex;justify-content:space-between;gap:40px;margin-top:56px}.sign{width:240px;border-top:1px solid #333;padding-top:8px;text-align:center;color:#777;font-size:10px}
-    @media print{body{padding:28px;background:#0d0d0d}.section{break-inside:avoid}}
+    @media screen{.page{box-shadow:0 22px 70px rgba(0,0,0,.34)}}
+    @media print{html,body{width:210mm;min-height:297mm;background:#0d0d0d}.page{width:210mm;min-height:297mm;margin:0;padding:18mm;box-shadow:none}.section{break-inside:avoid}}
   </style>
 </head>
 <body>
@@ -358,28 +364,28 @@ function ProposalsContent() {
   };
 
   return (
-    <div className="min-h-screen bg-frame-black text-frame-white font-frame-body">
+    <div className="proposal-machine min-h-screen bg-frame-black text-frame-white font-frame-body">
       <AppNavBar />
-      <main id="main-content" className="px-4 sm:px-6 py-6 space-y-5">
-        <section className="border border-frame-gray-3 bg-frame-gray-1/40 p-4 sm:p-5">
+      <main id="main-content" className="px-4 sm:px-8 py-8 space-y-6">
+        <section className="proposal-hero p-5 sm:p-7">
           <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-4">
             <div>
               <p className="frame-label">// PROPOSTAS & PACOTES</p>
-              <h1 className="frame-title text-[clamp(1.8rem,4vw,3.6rem)] leading-none mt-2">MAQUINA COMERCIAL DA PRODUTORA</h1>
-              <p className="text-sm text-frame-gray-light max-w-3xl mt-3">
+              <h1 className="proposal-title frame-title text-[clamp(2rem,4vw,3.8rem)] leading-none mt-3">Maquina comercial da produtora</h1>
+              <p className="proposal-subtitle text-sm max-w-3xl mt-3">
                 Configure servicos, monte pacotes, ajuste valores, aplique desconto e gere proposta PDF pronta para enviar.
               </p>
             </div>
-            <div className="grid grid-cols-3 gap-2 min-w-[320px]">
-              <div className="border border-frame-gray-3 bg-frame-black/30 p-3">
+            <div className="proposal-totals grid grid-cols-3 gap-2 min-w-[320px]">
+              <div className="proposal-total-card p-3">
                 <p className="text-[0.64rem] font-frame-mono uppercase text-frame-gray-light">Subtotal</p>
                 <p className="text-sm font-bold">{formatCurrency(subtotal)}</p>
               </div>
-              <div className="border border-frame-gray-3 bg-frame-black/30 p-3">
+              <div className="proposal-total-card p-3">
                 <p className="text-[0.64rem] font-frame-mono uppercase text-frame-gray-light">Desconto</p>
                 <p className="text-sm font-bold text-green-400">{formatCurrency(discountValue)}</p>
               </div>
-              <div className="border border-frame-orange bg-frame-orange/10 p-3">
+              <div className="proposal-total-card proposal-total-card-accent p-3">
                 <p className="text-[0.64rem] font-frame-mono uppercase text-frame-orange">Total</p>
                 <p className="text-sm font-bold">{formatCurrency(total)}</p>
               </div>
@@ -387,9 +393,9 @@ function ProposalsContent() {
           </div>
         </section>
 
-        <section className="grid grid-cols-1 2xl:grid-cols-[380px_minmax(0,1fr)_460px] gap-5">
+        <section className="grid grid-cols-1 2xl:grid-cols-[360px_minmax(0,1fr)_440px] gap-6 items-start">
           <aside className="space-y-4">
-            <div className="border border-frame-gray-3 bg-frame-gray-1/30 p-4">
+            <div className="proposal-panel p-5">
               <div className="flex items-center justify-between gap-3 mb-3">
                 <p className="frame-label">// CATALOGO</p>
                 <button type="button" onClick={saveService} className="frame-btn-ghost flex items-center gap-2">
@@ -405,11 +411,11 @@ function ProposalsContent() {
               </div>
             </div>
 
-            <div className="border border-frame-gray-3 bg-frame-gray-1/30 p-4">
+            <div className="proposal-panel p-5">
               <p className="frame-label mb-3">// SERVICOS SALVOS</p>
-              <div className="space-y-2 max-h-[560px] overflow-y-auto pr-1">
+              <div className="space-y-3 max-h-[620px] overflow-y-auto pr-1">
                 {catalog.map((service) => (
-                  <div key={service.id} className="border border-frame-gray-3 bg-frame-black/30 p-3">
+                  <div key={service.id} className="proposal-service-card p-4">
                     <div className="flex items-start justify-between gap-3">
                       <button type="button" onClick={() => addLine(service)} className="text-left flex-1 min-w-0">
                         <div className="text-sm font-semibold">{service.name}</div>
@@ -436,9 +442,9 @@ function ProposalsContent() {
           </aside>
 
           <section className="space-y-4">
-            <div className="border border-frame-gray-3 bg-frame-gray-1/30 p-4">
+            <div className="proposal-panel p-5 sm:p-6">
               <p className="frame-label mb-3">// DADOS DA PROPOSTA</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input className="frame-input w-full" value={proposal.projectTitle} onChange={(event) => updateProposal("projectTitle", event.target.value)} placeholder="Titulo da proposta" />
                 <input className="frame-input w-full" value={proposal.clientName} onChange={(event) => updateProposal("clientName", event.target.value)} placeholder="Responsavel" />
                 <input className="frame-input w-full" value={proposal.company} onChange={(event) => updateProposal("company", event.target.value)} placeholder="Empresa" />
@@ -448,26 +454,26 @@ function ProposalsContent() {
                 <input className="frame-input w-full" type="date" value={proposal.deadline} onChange={(event) => updateProposal("deadline", event.target.value)} />
                 <input className="frame-input w-full" type="number" value={proposal.validityDays} onChange={(event) => updateProposal("validityDays", Number(event.target.value))} placeholder="Validade em dias" />
               </div>
-              <div className="mt-3 grid grid-cols-1 md:grid-cols-[1fr_180px] gap-3">
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-[1fr_180px] gap-4">
                 <input className="frame-input w-full" value={proposal.paymentTerms} onChange={(event) => updateProposal("paymentTerms", event.target.value)} placeholder="Condicoes de pagamento" />
                 <input className="frame-input w-full" type="number" min={0} max={70} value={proposal.discount} onChange={(event) => updateProposal("discount", Number(event.target.value))} placeholder="Desconto %" />
               </div>
-              <textarea className="frame-input w-full min-h-[88px] resize-y mt-3" value={proposal.notes} onChange={(event) => updateProposal("notes", event.target.value)} placeholder="Observacoes comerciais, escopo especial ou premissas" />
+              <textarea className="frame-input w-full min-h-[108px] resize-y mt-4" value={proposal.notes} onChange={(event) => updateProposal("notes", event.target.value)} placeholder="Observacoes comerciais, escopo especial ou premissas" />
             </div>
 
-            <div className="border border-frame-gray-3 bg-frame-gray-1/30 p-4">
+            <div className="proposal-panel p-5 sm:p-6">
               <div className="flex items-center justify-between gap-3 mb-3">
                 <p className="frame-label">// ITENS DA PROPOSTA</p>
                 <span className="text-xs text-frame-gray-light">{selected.length} item(ns)</span>
               </div>
               {selected.length === 0 ? (
-                <div className="border border-dashed border-frame-gray-3 p-8 text-center text-sm text-frame-gray-light">
+                <div className="proposal-empty p-10 text-center text-sm text-frame-gray-light">
                   Selecione servicos do catalogo para montar a proposta.
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {selected.map((line) => (
-                    <div key={line.id} className="grid grid-cols-1 lg:grid-cols-[1fr_90px_140px_120px_auto] gap-2 items-center border border-frame-gray-3 bg-frame-black/30 p-3">
+                    <div key={line.id} className="proposal-line grid grid-cols-1 lg:grid-cols-[1fr_90px_140px_120px_auto] gap-3 items-center p-4">
                       <div className="min-w-0">
                         <div className="text-sm font-semibold">{line.name}</div>
                         <div className="text-xs text-frame-gray-light truncate">{line.description}</div>
@@ -484,7 +490,7 @@ function ProposalsContent() {
               )}
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+            <div className="proposal-actions grid grid-cols-2 lg:grid-cols-4 gap-3">
               <button type="button" onClick={saveProposal} className="frame-btn-ghost flex items-center justify-center gap-2">
                 <Save className="w-4 h-4" />
                 Salvar
@@ -499,19 +505,19 @@ function ProposalsContent() {
               </button>
             </div>
 
-            <div className="border border-frame-gray-3 bg-frame-gray-1/30 p-4">
+            <div className="proposal-panel p-5">
               <div className="flex items-center justify-between mb-3">
                 <p className="frame-label">// HISTORICO</p>
                 <span className="text-xs text-frame-gray-light">{history.length}</span>
               </div>
               {history.length === 0 ? (
-                <div className="border border-dashed border-frame-gray-3 p-4 text-sm text-frame-gray-light">
+                <div className="proposal-empty p-4 text-sm text-frame-gray-light">
                   Nenhuma proposta salva ainda.
                 </div>
               ) : (
                 <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
                   {history.map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 border border-frame-gray-3 bg-frame-black/30 p-3">
+                    <div key={item.id} className="proposal-line flex items-center gap-3 p-3">
                       <BriefcaseBusiness className="w-4 h-4 text-frame-orange shrink-0" />
                       <button type="button" onClick={() => exportPdf(item.html, false)} className="flex-1 text-left min-w-0">
                         <div className="text-sm font-semibold truncate">{item.title}</div>
@@ -530,18 +536,24 @@ function ProposalsContent() {
             </div>
           </section>
 
-          <aside className="border border-frame-gray-3 bg-frame-gray-1/30 overflow-hidden min-h-[720px] 2xl:sticky 2xl:top-24">
-            <div className="h-12 border-b border-frame-gray-3 px-4 flex items-center justify-between">
+          <aside className="proposal-preview overflow-hidden min-h-[720px] 2xl:sticky 2xl:top-24">
+            <div className="h-14 border-b border-frame-gray-3 px-5 flex items-center justify-between">
               <span className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-orange">Preview proposta</span>
               <span className="text-[0.62rem] text-frame-gray-light">{formatCurrency(total)}</span>
             </div>
             {selected.length ? (
               <iframe title="Preview da proposta" srcDoc={proposalHtml} className="w-full h-[680px] bg-[#0d0d0d]" />
             ) : (
-              <div className="h-[680px] flex items-center justify-center p-8 text-center text-frame-gray-light">
-                <div>
-                  <FileSignature className="w-14 h-14 mx-auto mb-4 text-frame-orange" />
-                  <p className="text-sm">Adicione servicos para gerar o preview da proposta.</p>
+              <div className="proposal-preview-empty h-[680px] flex items-center justify-center p-8 text-center text-frame-gray-light">
+                <div className="proposal-paper-ghost">
+                  <div className="proposal-paper-top" />
+                  <FileSignature className="w-12 h-12 mx-auto my-8 text-frame-orange" />
+                  <div className="space-y-3">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                  <p className="text-sm mt-8">Adicione servicos para gerar o preview da proposta.</p>
                 </div>
               </div>
             )}

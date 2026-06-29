@@ -54,7 +54,7 @@ export default function FormDispatcher({ slug, data, onChange, onSetOutput }: Fo
             value={data.prompt || ""}
             onChange={(e) => onChange("prompt", e.target.value)}
             placeholder="Descreva as instruções para a ferramenta..."
-            className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition resize-y min-h-[150px] focus:border-frame-orange rounded-none"
+            className="frame-input min-h-[150px] resize-y"
           />
         </div>
       );

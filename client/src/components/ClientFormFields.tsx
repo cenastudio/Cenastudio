@@ -69,6 +69,7 @@ interface ClientFormData {
   billingCycle: string;
   paymentMethod: string;
   taxId: string;
+  totalSpent: string;
 }
 
 interface ClientFormFieldsProps {
@@ -86,7 +87,7 @@ export const defaultClientData: ClientFormData = {
   website: "", linkedin: "", instagram: "",
   industry: "", companySize: "", annualRevenue: "",
   contactPerson: "", contactRole: "",
-  billingCycle: "", paymentMethod: "", taxId: "",
+  billingCycle: "", paymentMethod: "", taxId: "", totalSpent: "",
 };
 
 function StyledInput({ value, onChange, placeholder, disabled, type = "text" }: {
@@ -228,7 +229,11 @@ export default function ClientFormFields({ data, onChange, disabled }: ClientFor
         </div>
       </CollapsibleSection>
       <CollapsibleSection title="Financeiro" sectionKey="financeiro" expanded={expandedSections.financeiro} onToggle={toggleSection}>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="space-y-2 md:col-span-2">
+            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">Valor contratado / acumulado (R$)</label>
+            <StyledInput value={data.totalSpent} onChange={f("totalSpent")} placeholder="Ex: 800" disabled={disabled} type="number" />
+          </div>
           <div className="space-y-2">
             <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">Ciclo de Cobrança</label>
             <StyledSelect value={data.billingCycle} onChange={f("billingCycle")} disabled={disabled}>

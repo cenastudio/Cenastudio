@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AnimatedModal from "@/components/AnimatedModal";
 import { api } from "@/lib/api";
 import {
   CalendarDays,
@@ -11,6 +12,7 @@ import {
   FileText,
   Film,
   ListChecks,
+  Pencil,
   Save,
   Trash2,
 } from "lucide-react";
@@ -300,7 +302,9 @@ function documentSections(form: DocumentForm) {
 
 function buildDocumentHtml(form: DocumentForm, studio: StudioSettings) {
   const doc = DOC_TYPES.find((item) => item.id === form.type) || DOC_TYPES[0];
-  const accent = studio.primaryColor || doc.accent;
+  const accent = doc.accent;
+  const accentSoft = `${accent}14`;
+  const accentTint = `${accent}22`;
   const metadata = [
     ["Cliente", form.client || "A definir"],
     ["Projeto", form.project || form.title],
@@ -323,22 +327,28 @@ function buildDocumentHtml(form: DocumentForm, studio: StudioSettings) {
   <meta charset="utf-8" />
   <title>${esc(doc.label)} - ${esc(form.title)}</title>
   <style>
-    *{box-sizing:border-box} body{margin:0;background:#f4f0e8;color:#141414;font-family:Arial,sans-serif}
-    .doc-page{max-width:880px;min-height:100vh;margin:0 auto;background:#f8f4ed;padding:48px}
+    @page{size:A4;margin:0}
+    *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    html,body{margin:0;min-height:100%;background:#f2ede4;color:#141414;font-family:Arial,sans-serif}
+    body{background:linear-gradient(135deg,${accentSoft},#f7f1e8 38%,#eee6da 100%)}
+    .doc-page{width:210mm;min-height:297mm;margin:0 auto;background:linear-gradient(180deg,#fbf7f0 0%,#f5eee4 100%);padding:18mm;position:relative;overflow:hidden}
+    .doc-page:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 12% 4%,${accentTint},transparent 34%),radial-gradient(circle at 92% 92%,rgba(217,195,171,.32),transparent 34%);pointer-events:none}
+    .doc-page>*{position:relative;z-index:1}
     .doc-kicker{font-size:10px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:${accent}}
     .doc-title{font-size:44px;line-height:.95;margin:10px 0 10px;font-weight:900;color:#111}
     .doc-muted{color:#666;line-height:1.5;font-size:14px}
     .doc-header{display:flex;justify-content:space-between;gap:24px;border-bottom:3px solid ${accent};padding-bottom:22px}
     .doc-brand{text-align:right;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#666}
     .doc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:24px}
-    .doc-field{border:1px solid #ddd4c7;background:#fffdf8;padding:11px}
+    .doc-field{border:1px solid #ddd4c7;background:rgba(255,253,248,.88);padding:11px}
     .doc-field-label{font-size:9px;color:#777;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
     .doc-field-value{font-size:12px;color:#1a1a1a;font-weight:700;line-height:1.45}
     .doc-section{margin-top:26px;padding-top:15px;border-top:1px solid #d8d0c3}
     .doc-section h2{font-size:11px;text-transform:uppercase;letter-spacing:.16em;margin:0 0 10px}
-    .doc-list{display:grid;gap:7px}.doc-item{font-size:12px;line-height:1.48;padding:9px 11px;border-left:3px solid;background:#fffdf8}
+    .doc-list{display:grid;gap:7px}.doc-item{font-size:12px;line-height:1.48;padding:9px 11px;border-left:3px solid;background:rgba(255,253,248,.9)}
     .doc-footer{margin-top:42px;padding-top:18px;border-top:1px solid #d8d0c3;display:flex;justify-content:space-between;gap:20px;color:#777;font-size:11px}
-    @media print{body{background:#fff}.doc-page{max-width:none;padding:32px}.doc-section{break-inside:avoid}.doc-grid{grid-template-columns:1fr 1fr}}
+    @media screen{html,body{width:100%}.doc-page{width:100%;margin:0;box-shadow:0 22px 70px rgba(0,0,0,.16)}}
+    @media print{html,body{width:210mm;min-height:297mm;background:#f2ede4}.doc-page{width:210mm;min-height:297mm;margin:0;padding:18mm;box-shadow:none}.doc-section{break-inside:avoid}.doc-grid{grid-template-columns:1fr 1fr}}
   </style>
 </head>
 <body>
@@ -468,6 +478,7 @@ function DocumentsContent() {
   const [form, setForm] = useState<DocumentForm>(initialForm);
   const [savedDocs, setSavedDocs] = useState<StudioDocument[]>([]);
   const [studio, setStudio] = useState<StudioSettings>(() => readStudioSettings());
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const selectedDoc = DOC_TYPES.find((item) => item.id === form.type) || DOC_TYPES[0];
   const activeGroups = DOCUMENT_FORMS[form.type];
   const html = useMemo(() => buildDocumentHtml(form, studio), [form, studio]);
@@ -502,6 +513,11 @@ function DocumentsContent() {
     toast.success("Documento salvo no Studio");
   };
 
+  const saveAndClose = () => {
+    saveCurrent();
+    setIsEditorOpen(false);
+  };
+
   const exportPdf = (docHtml = html) => {
     printHtmlDocument(docHtml);
   };
@@ -514,8 +530,9 @@ function DocumentsContent() {
   const exportDocx = async () => {
     const { Document, HeadingLevel, Packer, Paragraph, TextRun } = await import("docx");
     const docType = DOC_TYPES.find((item) => item.id === form.type) || DOC_TYPES[0];
+    const docColor = docType.accent.replace("#", "").toUpperCase();
     const children = [
-      new Paragraph({ children: [new TextRun({ text: studio.studioName, bold: true, color: "E85002", size: 20 })] }),
+      new Paragraph({ children: [new TextRun({ text: studio.studioName, bold: true, color: docColor, size: 20 })] }),
       new Paragraph({ text: form.title || docType.label, heading: HeadingLevel.TITLE }),
       new Paragraph({ text: `${docType.label} - ${form.client || "Cliente a definir"} - ${form.project || "Projeto a definir"}` }),
       new Paragraph({ text: "" }),
@@ -561,9 +578,9 @@ function DocumentsContent() {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={saveCurrent} className="frame-btn-ghost flex items-center gap-2">
-                <Save className="w-4 h-4" />
-                Salvar
+              <button type="button" onClick={() => setIsEditorOpen(true)} className="frame-btn-ghost flex items-center gap-2">
+                <Pencil className="w-4 h-4" />
+                Editar conteúdo
               </button>
               <button type="button" onClick={copyText} className="frame-btn-ghost flex items-center gap-2">
                 <Copy className="w-4 h-4" />
@@ -581,118 +598,157 @@ function DocumentsContent() {
           </div>
         </section>
 
-        <section className="grid grid-cols-1 xl:grid-cols-[460px_minmax(0,1fr)] gap-5 items-start">
-          <div className="space-y-4">
-            <div className="border border-frame-gray-3 bg-frame-gray-1/50 p-4">
-              <div className="flex items-center justify-between gap-3 mb-3">
-                <p className="frame-label">// TIPO DE DOCUMENTO</p>
-                <span className="font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase text-frame-gray-muted">{selectedDoc.label}</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {DOC_TYPES.map((doc) => {
-                  const Icon = doc.icon;
-                  const active = form.type === doc.id;
-                  return (
-                    <button
-                      key={doc.id}
-                      type="button"
-                      onClick={() => setForm((current) => nextFormForType(current, doc.id))}
-                      className={`text-left border p-3 transition min-h-[104px] ${active ? "border-frame-orange bg-frame-orange/10 shadow-[inset_3px_0_0_var(--color-frame-orange)]" : "border-frame-gray-3 bg-frame-black/20 hover:border-frame-gray-4 hover:bg-frame-gray-2/40"}`}
-                    >
-                      <Icon className="w-4 h-4 mb-2" style={{ color: doc.accent }} />
-                      <div className="text-xs font-semibold uppercase tracking-wide">{doc.label}</div>
-                      <div className="text-[0.6rem] text-frame-gray-light mt-1 leading-relaxed">{doc.description}</div>
-                    </button>
-                  );
-                })}
-              </div>
+        <section className="app-panel p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="frame-label">// TIPO DE DOCUMENTO</p>
+              <p className="mt-1 text-xs text-frame-gray-light">Escolha a peça e edite somente quando precisar.</p>
             </div>
+            <span className="font-frame-mono text-[0.6rem] uppercase tracking-[0.12em]" style={{ color: selectedDoc.accent }}>
+              {selectedDoc.label}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-8">
+            {DOC_TYPES.map((doc) => {
+              const Icon = doc.icon;
+              const active = form.type === doc.id;
+              return (
+                <button
+                  key={doc.id}
+                  type="button"
+                  onClick={() => setForm((current) => nextFormForType(current, doc.id))}
+                  className={`min-h-[86px] border p-3 text-left transition ${
+                    active
+                      ? "bg-frame-orange/8 shadow-[inset_0_-3px_0_var(--color-frame-orange)]"
+                      : "border-frame-gray-3 bg-frame-black/10 hover:bg-frame-gray-2/30"
+                  }`}
+                  style={{ borderColor: active ? doc.accent : undefined }}
+                >
+                  <Icon className="mb-3 h-4 w-4" style={{ color: doc.accent }} />
+                  <span className="block text-xs font-semibold uppercase tracking-wide">{doc.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
-            <div className="border border-frame-gray-3 bg-frame-gray-1/50">
-              <div className="px-4 py-3 border-b border-frame-gray-3 flex items-center justify-between gap-3 sticky top-[72px] bg-frame-gray-1/95 backdrop-blur z-10">
-                <div>
-                  <p className="frame-label">// FORMULARIO</p>
-                  <p className="text-xs text-frame-gray-light mt-1">Campos especificos para {selectedDoc.label.toLowerCase()}.</p>
-                </div>
-                <button type="button" onClick={saveCurrent} className="frame-btn-ghost flex items-center gap-2 px-3 py-2">
-                  <Save className="w-3.5 h-3.5" />
-                  Salvar
+        <section className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="app-panel overflow-hidden shadow-[0_26px_100px_rgba(0,0,0,0.24)]">
+            <div className="flex flex-col gap-3 border-b border-frame-gray-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <span className="font-frame-mono text-[0.62rem] uppercase tracking-[0.14em]" style={{ color: selectedDoc.accent }}>
+                  Preview {selectedDoc.label}
+                </span>
+                <p className="mt-1 text-xs text-frame-gray-light">
+                  O PDF exportado preserva esta cor e ocupa a folha inteira.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button type="button" onClick={() => setIsEditorOpen(true)} className="frame-btn-ghost flex items-center gap-2 px-3 py-2">
+                  <Pencil className="h-3.5 w-3.5" />
+                  Editar
+                </button>
+                <button type="button" onClick={copyText} className="frame-btn-ghost flex items-center gap-2 px-3 py-2">
+                  <Copy className="h-3.5 w-3.5" />
+                  Copiar
+                </button>
+                <button type="button" onClick={() => exportPdf()} className="frame-btn-primary flex items-center gap-2 px-3 py-2">
+                  <Download className="h-3.5 w-3.5" />
+                  Exportar PDF
                 </button>
               </div>
-              <div className="p-4 space-y-5">
-                {activeGroups.map((group) => (
-                  <section key={group.title} className="border border-frame-gray-3 bg-frame-black/20 p-3 sm:p-4">
-                    <p className="font-frame-mono text-[0.64rem] tracking-[0.18em] uppercase text-frame-orange mb-3">{group.title}</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {group.fields.map((field) => (
-                        <FormField
-                          key={`${group.title}-${field.key}`}
-                          field={field}
-                          value={String(form[field.key] ?? "")}
-                          onChange={(value) => update(field.key, value)}
-                        />
-                      ))}
-                    </div>
-                  </section>
-                ))}
-              </div>
             </div>
-
-            <div className="border border-frame-gray-3 bg-frame-gray-1/50 p-4">
-              <div className="flex items-center justify-between mb-3">
-                <p className="frame-label">// HISTORICO</p>
-                <span className="text-xs text-frame-gray-light">{savedDocs.length}</span>
-              </div>
-              {savedDocs.length === 0 ? (
-                <div className="border border-dashed border-frame-gray-3 p-4 text-sm text-frame-gray-light">
-                  Nenhum documento salvo ainda.
-                </div>
-              ) : (
-                <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
-                  {savedDocs.map((doc) => (
-                    <div key={doc.id} className="border border-frame-gray-3 bg-frame-black/30 p-3 flex gap-3 items-center">
-                      <button type="button" onClick={() => exportPdf(doc.html)} className="flex-1 text-left min-w-0">
-                        <div className="text-sm font-semibold truncate">{doc.title}</div>
-                        <div className="text-[0.62rem] text-frame-gray-light truncate">
-                          {DOC_TYPES.find((item) => item.id === doc.type)?.label} · {doc.client || "sem cliente"} · {new Date(doc.createdAt).toLocaleDateString("pt-BR")}
-                        </div>
-                      </button>
-                      <button type="button" onClick={() => exportPdf(doc.html)} className="text-frame-orange hover:text-frame-white transition" title="Exportar PDF">
-                        <Download className="w-4 h-4" />
-                      </button>
-                      <button type="button" onClick={() => removeDoc(doc.id)} className="text-frame-gray-light hover:text-red-400 transition" title="Excluir">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <div className="bg-frame-black/20 p-3 sm:p-6">
+              <iframe
+                title="Preview do documento"
+                srcDoc={html}
+                className="mx-auto h-[min(980px,calc(100vh-190px))] min-h-[680px] w-full max-w-[920px] bg-[#f8f4ed] shadow-[0_22px_70px_rgba(0,0,0,0.28)]"
+              />
             </div>
           </div>
 
-          <aside className="border border-frame-gray-3 bg-frame-gray-1/50 overflow-hidden min-h-[760px] xl:sticky xl:top-24 shadow-[0_24px_90px_rgba(0,0,0,0.22)]">
-            <div className="h-auto min-h-14 border-b border-frame-gray-3 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <aside className="app-panel p-4 xl:sticky xl:top-24">
+            <div className="mb-4 flex items-center justify-between">
               <div>
-                <span className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-orange">Preview PDF</span>
-                <p className="text-xs text-frame-gray-light mt-1">Saida limpa, sem markdown ou caracteres tecnicos.</p>
+                <p className="frame-label">// HISTÓRICO</p>
+                <p className="mt-1 text-xs text-frame-gray-light">Versões salvas para reexportar.</p>
               </div>
-              <div className="flex items-center gap-2">
-                <button type="button" onClick={copyText} className="frame-btn-ghost flex items-center gap-2 px-3 py-2">
-                  <Copy className="w-3.5 h-3.5" />
-                  Copiar texto
-                </button>
-                <button type="button" onClick={() => exportPdf()} className="frame-btn-primary flex items-center gap-2 px-3 py-2">
-                  <Download className="w-3.5 h-3.5" />
-                  PDF
-                </button>
+              <span className="font-frame-mono text-[0.62rem] text-frame-gray-light">{savedDocs.length}</span>
+            </div>
+            {savedDocs.length === 0 ? (
+              <div className="border border-dashed border-frame-gray-3 p-5 text-sm leading-relaxed text-frame-gray-light">
+                Edite o documento e use “Salvar e fechar” para criar a primeira versão.
               </div>
-            </div>
-            <div className="bg-frame-black/30 p-3 sm:p-5">
-              <iframe title="Preview do documento" srcDoc={html} className="w-full h-[720px] bg-[#f8f4ed] shadow-[0_18px_50px_rgba(0,0,0,0.26)]" />
-            </div>
+            ) : (
+              <div className="max-h-[620px] space-y-2 overflow-y-auto pr-1">
+                {savedDocs.map((doc) => {
+                  const docType = DOC_TYPES.find((item) => item.id === doc.type);
+                  return (
+                    <div key={doc.id} className="border border-frame-gray-3 bg-frame-black/15 p-3">
+                      <button type="button" onClick={() => exportPdf(doc.html)} className="w-full text-left">
+                        <span className="block font-frame-mono text-[0.54rem] uppercase tracking-[0.1em]" style={{ color: docType?.accent }}>
+                          {docType?.label}
+                        </span>
+                        <span className="mt-1 block truncate text-sm font-semibold">{doc.title}</span>
+                        <span className="mt-1 block truncate text-[0.62rem] text-frame-gray-light">
+                          {doc.client || "Sem cliente"} · {new Date(doc.createdAt).toLocaleDateString("pt-BR")}
+                        </span>
+                      </button>
+                      <div className="mt-3 flex items-center justify-end gap-2 border-t border-frame-gray-3 pt-2">
+                        <button type="button" onClick={() => exportPdf(doc.html)} className="text-frame-orange transition hover:text-frame-white" title="Exportar PDF">
+                          <Download className="h-4 w-4" />
+                        </button>
+                        <button type="button" onClick={() => removeDoc(doc.id)} className="text-frame-gray-light transition hover:text-red-400" title="Excluir">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </aside>
         </section>
       </main>
+
+      <AnimatedModal
+        isOpen={isEditorOpen}
+        onClose={() => setIsEditorOpen(false)}
+        title={`Editar ${selectedDoc.label}`}
+        description="Preencha os dados, salve a versão e volte ao preview para exportar."
+        className="max-w-5xl"
+        footer={
+          <>
+            <button type="button" onClick={() => setIsEditorOpen(false)} className="frame-btn-ghost">
+              Fechar sem salvar
+            </button>
+            <button type="button" onClick={saveAndClose} className="frame-btn-primary flex items-center gap-2">
+              <Save className="h-4 w-4" />
+              Salvar e fechar
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          {activeGroups.map((group) => (
+            <section key={group.title} className="border border-frame-gray-3 bg-frame-gray-1/30 p-4">
+              <p className="mb-3 font-frame-mono text-[0.64rem] uppercase tracking-[0.18em]" style={{ color: selectedDoc.accent }}>
+                {group.title}
+              </p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {group.fields.map((field) => (
+                  <FormField
+                    key={`${group.title}-${field.key}`}
+                    field={field}
+                    value={String(form[field.key] ?? "")}
+                    onChange={(value) => update(field.key, value)}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </AnimatedModal>
     </div>
   );
 }
