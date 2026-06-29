@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { ArrowLeft } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ClientFormFields, { type ClientFormData, defaultClientData } from "@/components/ClientFormFields";
@@ -8,6 +9,7 @@ import { toast } from "sonner";
 
 function NewClientContent() {
   const [, setLocation] = useLocation();
+  const { t } = useLanguage();
   const [data, setData] = useState<ClientFormData>({ ...defaultClientData });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -43,13 +45,13 @@ function NewClientContent() {
       });
       const result = await response.json();
       if (result.success) {
-        toast.success("Cliente criado com sucesso!");
+        toast.success(t("app.clients.clientCreated") as string);
         setLocation("/clients");
       } else {
-        toast.error(result.error || "Erro ao criar cliente");
+        toast.error(result.error || t("app.errors.generic") as string);
       }
     } catch {
-      toast.error("Erro ao criar cliente");
+      toast.error(t("app.errors.generic") as string);
     } finally {
       setIsSubmitting(false);
     }
@@ -65,18 +67,18 @@ function NewClientContent() {
           className="flex items-center gap-2 font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase text-frame-gray-light hover:text-frame-white transition bg-transparent border-none mb-6"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          Voltar para clientes
+          {t("app.common.goBack") as string}
         </button>
-        <p className="frame-label mb-2">// NOVO CLIENTE</p>
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-8">Novo Cliente</h1>
+        <p className="frame-label mb-2">// {t("app.clients.newClient") as string}</p>
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-8">{t("app.clients.newClient") as string}</h1>
         <form onSubmit={handleSubmit} className="border border-frame-gray-3 bg-frame-gray-1/10 p-6">
           <ClientFormFields data={data} onChange={handleChange} disabled={isSubmitting} />
           <div className="flex gap-3 mt-6 pt-4 border-t border-frame-gray-3">
             <button type="button" onClick={() => setLocation("/clients")} disabled={isSubmitting} className="frame-btn-ghost flex-1">
-              Cancelar
+              {t("app.common.cancel") as string}
             </button>
             <button type="submit" disabled={isSubmitting || !data.name.trim()} className="frame-btn-primary flex-1">
-              {isSubmitting ? "Criando..." : "Criar Cliente"}
+              {isSubmitting ? t("app.studio.projectSelector.creating") as string : t("app.clients.newClient") as string}
             </button>
           </div>
         </form>

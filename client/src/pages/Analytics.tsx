@@ -22,6 +22,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface OverallAnalytics {
   projects: { total: number; active: number };
@@ -108,7 +109,7 @@ const formatCurrency = (value: number) =>
   }).format(Number(value) || 0);
 
 const formatDate = (value: string | null) => {
-  if (!value) return "Sem vencimento";
+  if (!value) return t("app.analytics.noDueDate");
   return new Date(`${value.slice(0, 10)}T12:00:00`).toLocaleDateString("pt-BR");
 };
 
@@ -121,6 +122,7 @@ const monthLabel = (value: string) => {
 };
 
 function AnalyticsContent() {
+  const { t } = useLanguage();
   const [, setLocation] = useLocation();
   const [overall, setOverall] = useState<OverallAnalytics | null>(null);
   const [finance, setFinance] = useState<FinanceOverview | null>(null);
@@ -152,7 +154,7 @@ function AnalyticsContent() {
       if (!financeData.success) throw new Error(financeData.error || "Erro ao carregar financeiro");
     } catch (error) {
       console.error(error);
-      toast.error("Erro ao carregar a central financeira");
+      toast.error(t("app.errors.loadFinance"));
     } finally {
       setIsLoading(false);
       setRefreshing(false);
@@ -174,7 +176,7 @@ function AnalyticsContent() {
   const submitEntry = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!entry.description.trim() || !Number(entry.amount)) {
-      toast.error("Informe descrição e valor");
+      toast.error(t("app.errors.fillDescriptionAndAmount"));
       return;
     }
 
@@ -192,13 +194,13 @@ function AnalyticsContent() {
         }),
       });
       const result = await response.json();
-      if (!result.success) throw new Error(result.error || "Erro ao salvar lançamento");
+      if (!result.success) throw new Error(result.error || t("app.errors.saveEntry"));
       setEntry(initialEntry);
       setShowEntryForm(false);
-      toast.success("Lançamento registrado");
+      toast.success(t("app.analytics.entryRegistered"));
       await loadAnalytics();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao salvar lançamento");
+      toast.error(error instanceof Error ? error.message : t("app.errors.saveEntry"));
     } finally {
       setIsSaving(false);
     }
@@ -214,7 +216,7 @@ function AnalyticsContent() {
       });
       const result = await response.json();
       if (!result.success) throw new Error(result.error || "Erro ao atualizar lançamento");
-      toast.success("Pagamento confirmado");
+      toast.success(t("app.analytics.paymentConfirmed"));
       await loadAnalytics();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao atualizar lançamento");
@@ -222,7 +224,7 @@ function AnalyticsContent() {
   };
 
   const deleteEntry = async (id: number) => {
-    if (!window.confirm("Excluir este lançamento financeiro?")) return;
+    if (!window.confirm(t("app.analytics.confirmDeleteEntry"))) return;
     try {
       const response = await fetch(`/api/analytics/finance/entries/${id}`, {
         method: "DELETE",
@@ -230,7 +232,7 @@ function AnalyticsContent() {
       });
       const result = await response.json();
       if (!result.success) throw new Error(result.error || "Erro ao excluir lançamento");
-      toast.success("Lançamento excluído");
+      toast.success(t("app.analytics.entryDeleted"));
       await loadAnalytics();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao excluir lançamento");
@@ -281,7 +283,7 @@ function AnalyticsContent() {
               className="frame-btn-primary inline-flex items-center gap-2"
             >
               {showEntryForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-              {showEntryForm ? "Fechar" : "Novo lançamento"}
+              {showEntryForm ? t("app.common.close") : t("app.analytics.newEntry")}
             </button>
           </div>
         </header>
@@ -307,7 +309,7 @@ function AnalyticsContent() {
                         : "text-frame-gray-light"
                     }`}
                   >
-                    {kind === "income" ? "Entrada" : "Saída"}
+                    {kind === "income" ? t("app.analytics.income") : t("app.analytics.expense")}
                   </button>
                 ))}
               </div>
@@ -315,7 +317,7 @@ function AnalyticsContent() {
                 className="frame-input"
                 value={entry.description}
                 onChange={(event) => setEntry((current) => ({ ...current, description: event.target.value }))}
-                placeholder="Descrição do lançamento"
+                placeholder={t("app.analytics.descriptionPlaceholder")}
               />
               <input
                 className="frame-input"
@@ -324,7 +326,7 @@ function AnalyticsContent() {
                 step="0.01"
                 value={entry.amount}
                 onChange={(event) => setEntry((current) => ({ ...current, amount: event.target.value }))}
-                placeholder="Valor em R$"
+                placeholder={t("app.analytics.amountPlaceholder")}
               />
               <select
                 className="frame-input"
@@ -364,7 +366,7 @@ function AnalyticsContent() {
                 onChange={(event) => setEntry((current) => ({ ...current, status: event.target.value as EntryForm["status"] }))}
               >
                 <option value="pending">Pendente</option>
-                <option value="settled">{entry.kind === "income" ? "Recebido" : "Pago"}</option>
+                <option value="settled">{entry.kind === "income" ? t("app.analytics.received") : t("app.analytics.paid")}</option>
               </select>
               <select
                 className="frame-input"
@@ -385,7 +387,7 @@ function AnalyticsContent() {
                 Valor fixo da operação
               </label>
               <button type="submit" disabled={isSaving} className="frame-btn-primary">
-                {isSaving ? "Salvando..." : "Salvar lançamento"}
+                {isSaving ? t("app.common.saving") : t("app.analytics.saveEntry")}
               </button>
             </div>
           </form>
@@ -398,14 +400,14 @@ function AnalyticsContent() {
         ) : (
           <>
             <section className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
-              <MetricCard label="Recebido no mês" value={formatCurrency(summary.receivedMonth)} icon={ArrowUpRight} tone="positive" />
-              <MetricCard label="Custos no mês" value={formatCurrency(summary.expensesMonth)} icon={ArrowDownRight} tone="negative" />
-              <MetricCard label="Lucro do mês" value={formatCurrency(summary.profitMonth)} icon={CircleDollarSign} tone={summary.profitMonth >= 0 ? "positive" : "negative"} />
-              <MetricCard label="A receber" value={formatCurrency(summary.toReceive)} icon={CalendarClock} tone="warning" />
-              <MetricCard label="Receita recorrente" value={formatCurrency(summary.recurringRevenue)} icon={RefreshCw} tone="accent" />
-              <MetricCard label="Clientes cadastrados" value={String(overall?.clients.total ?? 0)} icon={Users} tone="accent" />
-              <MetricCard label="Carteira CRM" value={formatCurrency(overall?.clients.totalValue ?? 0)} icon={WalletCards} tone="positive" />
-              <MetricCard label="Perdas no mês" value={formatCurrency(summary.lossesMonth)} icon={TrendingDown} tone="negative" />
+              <MetricCard label={t("app.analytics.receivedMonth")} value={formatCurrency(summary.receivedMonth)} icon={ArrowUpRight} tone="positive" />
+              <MetricCard label={t("app.analytics.expensesMonth")} value={formatCurrency(summary.expensesMonth)} icon={ArrowDownRight} tone="negative" />
+              <MetricCard label={t("app.analytics.profitMonth")} value={formatCurrency(summary.profitMonth)} icon={CircleDollarSign} tone={summary.profitMonth >= 0 ? "positive" : "negative"} />
+              <MetricCard label={t("app.analytics.toReceive")} value={formatCurrency(summary.toReceive)} icon={CalendarClock} tone="warning" />
+              <MetricCard label={t("app.analytics.recurringRevenue")} value={formatCurrency(summary.recurringRevenue)} icon={RefreshCw} tone="accent" />
+              <MetricCard label={t("app.analytics.registeredClients")} value={String(overall?.clients.total ?? 0)} icon={Users} tone="accent" />
+              <MetricCard label={t("app.analytics.crmWallet")} value={formatCurrency(overall?.clients.totalValue ?? 0)} icon={WalletCards} tone="positive" />
+              <MetricCard label={t("app.analytics.lossesMonth")} value={formatCurrency(summary.lossesMonth)} icon={TrendingDown} tone="negative" />
             </section>
 
             <section className="grid grid-cols-1 gap-4 xl:grid-cols-[1.35fr_0.65fr]">
@@ -445,8 +447,8 @@ function AnalyticsContent() {
                   </div>
                 ) : (
                   <FinanceEmpty
-                    title="Seu fluxo começa no primeiro lançamento"
-                    description="Registre uma entrada recebida ou uma despesa paga para formar o histórico mensal."
+                    title={t("app.analytics.flowStartsFirstEntry")}
+                    description={t("app.analytics.flowStartHint")}
                     onClick={() => setShowEntryForm(true)}
                   />
                 )}
@@ -483,7 +485,7 @@ function AnalyticsContent() {
                         className="mt-3 inline-flex min-h-8 items-center gap-1.5 border border-frame-gray-3 px-2.5 font-frame-mono text-[0.56rem] uppercase tracking-[0.1em] text-frame-gray-light transition hover:border-frame-orange hover:text-frame-orange"
                       >
                         <Check className="h-3 w-3" />
-                        {item.kind === "income" ? "Confirmar recebimento" : "Confirmar pagamento"}
+                        {item.kind === "income" ? t("app.analytics.confirmReceipt") : t("app.analytics.confirmPayment")}
                       </button>
                     </div>
                   )) : (
@@ -498,27 +500,27 @@ function AnalyticsContent() {
             <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
               <InsightCard
                 icon={WalletCards}
-                label="Previsibilidade mensal"
+                label={t("app.analytics.monthlyPredictability")}
                 value={formatCurrency(summary.recurringRevenue)}
                 detail={`${summary.recurringClients} cliente(s) recorrente(s) · ${formatCurrency(summary.fixedMonthly)} em custos fixos`}
               />
               <InsightCard
                 icon={TrendingUp}
-                label="Pipeline comercial"
+                label={t("app.analytics.commercialPipeline")}
                 value={formatCurrency(summary.openPipeline)}
                 detail={`${formatCurrency(summary.weightedPipeline)} ponderado pela probabilidade`}
                 onClick={() => setLocation("/pipeline")}
               />
               <InsightCard
                 icon={Users}
-                label="Clientes em negociação"
+                label={t("app.analytics.clientsNegotiation")}
                 value={formatCurrency(summary.crmOpenValue)}
                 detail={`${formatCurrency(summary.crmWeightedValue)} ponderado pelas etapas do CRM`}
                 onClick={() => setLocation("/clients")}
               />
               <InsightCard
                 icon={Receipt}
-                label="Risco de caixa"
+                label={t("app.analytics.cashRisk")}
                 value={formatCurrency(summary.overdueReceivables)}
                 detail={`${formatCurrency(summary.toPay)} ainda a pagar`}
               />
@@ -540,7 +542,7 @@ function AnalyticsContent() {
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-semibold">{client.name}</span>
-                        <span className="block truncate text-xs text-frame-gray-light">{client.company || "Cliente direto"}</span>
+                        <span className="block truncate text-xs text-frame-gray-light">{client.company || t("app.analytics.directClient")}</span>
                       </span>
                       <strong className="text-sm">{formatCurrency(client.revenue)}</strong>
                     </button>
@@ -597,7 +599,7 @@ function AnalyticsContent() {
                       <span className={`font-frame-mono text-[0.54rem] uppercase tracking-[0.1em] ${
                         item.status === "settled" ? "text-green-500" : "text-frame-orange"
                       }`}>
-                        {item.status === "settled" ? "Liquidado" : "Pendente"}
+                        {item.status === "settled" ? t("app.analytics.settled") : t("app.common.pending")}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -608,7 +610,7 @@ function AnalyticsContent() {
                         type="button"
                         onClick={() => deleteEntry(item.id)}
                         className="grid h-8 w-8 place-items-center text-frame-gray-light transition hover:text-frame-red"
-                        aria-label={`Excluir ${item.description}`}
+                        aria-label={`${t("app.common.delete")} ${item.description}`}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -616,8 +618,8 @@ function AnalyticsContent() {
                   </div>
                 )) : (
                   <FinanceEmpty
-                    title="Nenhum lançamento registrado"
-                    description="A central financeira passa a trabalhar assim que você registrar entradas e saídas."
+                    title={t("app.analytics.noEntries")}
+                    description={t("app.analytics.noEntriesHint")}
                     onClick={() => setShowEntryForm(true)}
                   />
                 )}
@@ -626,10 +628,10 @@ function AnalyticsContent() {
 
             {overall && (
               <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                <OperationalMetric label="Clientes" value={overall.clients.total} icon={Users} />
-                <OperationalMetric label="Projetos ativos" value={overall.projects.active} icon={Banknote} />
-                <OperationalMetric label="Oportunidades" value={overall.pipeline.totalOpportunities} icon={TrendingUp} />
-                <OperationalMetric label="Valor histórico CRM" value={formatCurrency(overall.clients.totalValue)} icon={CircleDollarSign} />
+                <OperationalMetric label={t("app.analytics.clients")} value={overall.clients.total} icon={Users} />
+                <OperationalMetric label={t("app.analytics.activeProjects")} value={overall.projects.active} icon={Banknote} />
+                <OperationalMetric label={t("app.analytics.opportunities")} value={overall.pipeline.totalOpportunities} icon={TrendingUp} />
+                <OperationalMetric label={t("app.analytics.crmHistoricalValue")} value={formatCurrency(overall.clients.totalValue)} icon={CircleDollarSign} />
               </section>
             )}
           </>

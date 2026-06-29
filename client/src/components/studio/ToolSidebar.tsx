@@ -2,6 +2,7 @@ import { getToolIcon } from "@/lib/toolIcons";
 import { type ToolFromApi } from "@/lib/api";
 import ContextPanel from "./ContextPanel";
 import ProjectSelector from "./ProjectSelector";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ToolSidebarProps {
   tools: ToolFromApi[];
@@ -10,28 +11,34 @@ interface ToolSidebarProps {
 }
 
 interface CategoryGroup {
-  name: string;
+  key: string;
   slugs: string[];
 }
 
 const CATEGORIES: CategoryGroup[] = [
   {
-    name: "Pré-Produção",
+    key: "preProduction",
     slugs: ["roteiro", "decupagem", "callsheet", "checklist", "cronograma"],
   },
   {
-    name: "Comercial & Vendas",
+    key: "commercial",
     slugs: ["briefing", "orcamento", "proposta", "contrato"],
   },
   {
-    name: "Estética & Entrega",
+    key: "aesthetic",
     slugs: ["moodboard", "entrega", "assistente"],
   },
 ];
 
 export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolSidebarProps) {
+  const { t } = useLanguage();
   // Helper to find tool by slug
   const getToolBySlug = (slug: string) => tools.find((t) => t.slug === slug);
+  const categoryLabels: Record<string, string> = {
+    preProduction: t("app.studio.preProduction") as string,
+    commercial: t("app.studio.commercial") as string,
+    aesthetic: t("app.studio.aesthetic") as string,
+  };
 
   return (
     <aside className="studio-sidebar w-full lg:w-[280px] shrink-0 border-b lg:border-b-0 lg:border-r border-frame-gray-2 flex flex-col overflow-x-auto lg:overflow-y-auto">
@@ -39,7 +46,7 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
       <div className="hidden lg:block px-5 py-5 border-b border-frame-gray-2">
         <p className="frame-label mb-1">// Studio</p>
         <p className="font-frame-mono text-[0.62rem] tracking-[0.15em] uppercase text-frame-gray-light">
-          Workspace operacional
+          {t("app.studio.workspace") as string}
         </p>
       </div>
 
@@ -57,10 +64,10 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
           if (categoryTools.length === 0) return null;
 
           return (
-            <div key={cat.name} className="flex lg:flex-col items-center lg:items-stretch shrink-0 lg:shrink">
+            <div key={cat.key} className="flex lg:flex-col items-center lg:items-stretch shrink-0 lg:shrink">
               {/* Category label (Hidden on mobile or rendered as badge) */}
               <p className="hidden lg:block font-frame-mono text-[0.62rem] tracking-[0.2em] uppercase text-frame-gray-muted px-[18px] pt-4 pb-1.5">
-                // {cat.name}
+                // {categoryLabels[cat.key]}
               </p>
               <div className="flex lg:flex-col gap-2 px-2 lg:px-3">
                 {categoryTools.map((t) => {

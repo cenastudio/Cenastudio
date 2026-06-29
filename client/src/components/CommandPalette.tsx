@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   CommandDialog,
   CommandInput,
@@ -25,28 +26,29 @@ import {
 } from "lucide-react";
 
 interface CommandItem {
-  label: string;
+  labelKey: string;
   path: string;
   icon: React.ComponentType<{ className?: string }>;
 }
 
-const commands: CommandItem[] = [
-  { label: "Studio IA", path: "/tools", icon: Wrench },
-  { label: "Clientes", path: "/clients", icon: Users },
-  { label: "Pipeline", path: "/pipeline", icon: GitBranch },
-  { label: "Intera\u00e7\u00f5es", path: "/interactions", icon: MessageSquare },
-  { label: "Propostas", path: "/proposals", icon: FileText },
-  { label: "Documentos", path: "/documents", icon: FileText },
-  { label: "Review de V\u00eddeos", path: "/video-reviews", icon: Film },
-  { label: "Equipe", path: "/collaborators", icon: UserCheck },
-  { label: "Analytics", path: "/analytics", icon: BarChart3 },
-  { label: "Perfil", path: "/profile", icon: User },
-  { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-  { label: "Admin", path: "/admin", icon: Shield },
-  { label: "Novo Cliente", path: "/clients/new", icon: UserPlus },
+const COMMAND_DEFS: CommandItem[] = [
+  { labelKey: "app.commandPalette.cmd.studioIa", path: "/tools", icon: Wrench },
+  { labelKey: "app.commandPalette.cmd.clients", path: "/clients", icon: Users },
+  { labelKey: "app.commandPalette.cmd.pipeline", path: "/pipeline", icon: GitBranch },
+  { labelKey: "app.commandPalette.cmd.interactions", path: "/interactions", icon: MessageSquare },
+  { labelKey: "app.commandPalette.cmd.proposals", path: "/proposals", icon: FileText },
+  { labelKey: "app.commandPalette.cmd.documents", path: "/documents", icon: FileText },
+  { labelKey: "app.commandPalette.cmd.videoReviews", path: "/video-reviews", icon: Film },
+  { labelKey: "app.commandPalette.cmd.team", path: "/collaborators", icon: UserCheck },
+  { labelKey: "app.commandPalette.cmd.analytics", path: "/analytics", icon: BarChart3 },
+  { labelKey: "app.commandPalette.cmd.profile", path: "/profile", icon: User },
+  { labelKey: "app.commandPalette.cmd.dashboard", path: "/dashboard", icon: LayoutDashboard },
+  { labelKey: "app.commandPalette.cmd.admin", path: "/admin", icon: Shield },
+  { labelKey: "app.commandPalette.cmd.newClient", path: "/clients/new", icon: UserPlus },
 ];
 
 export default function CommandPalette() {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [, setLocation] = useLocation();
   const { isAdmin } = useAuth();
@@ -74,21 +76,21 @@ export default function CommandPalette() {
   };
 
   return (
-    <CommandDialog open={open} onOpenChange={setOpen} title="Busca rápida" description="Navegue pelas áreas da Cena Studio">
-      <CommandInput placeholder="Buscar uma área ou ação..." />
+    <CommandDialog open={open} onOpenChange={setOpen} title={t("app.commandPalette.title") as string} description={t("app.commandPalette.description") as string}>
+      <CommandInput placeholder={t("app.commandPalette.placeholder") as string} />
       <CommandList>
-        <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
-        <CommandGroup heading="Navegação">
-          {commands.filter((cmd) => cmd.path !== "/admin" || isAdmin).map((cmd) => {
+        <CommandEmpty>{t("app.commandPalette.noResults") as string}</CommandEmpty>
+        <CommandGroup heading={t("app.commandPalette.navigation") as string}>
+          {COMMAND_DEFS.filter((cmd) => cmd.path !== "/admin" || isAdmin).map((cmd) => {
             const Icon = cmd.icon;
             return (
               <CommandItem
                 key={cmd.path}
-                value={cmd.label}
+                value={t(cmd.labelKey) as string}
                 onSelect={() => handleSelect(cmd.path)}
               >
                 <Icon className="mr-2 h-4 w-4" />
-                <span>{cmd.label}</span>
+                <span>{t(cmd.labelKey) as string}</span>
               </CommandItem>
             );
           })}

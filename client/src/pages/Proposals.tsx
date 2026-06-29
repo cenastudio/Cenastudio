@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { api } from "@/lib/api";
@@ -157,7 +158,7 @@ function printHtmlDocument(docHtml: string) {
     const frameWindow = iframe.contentWindow;
     if (!frameWindow) {
       cleanup();
-      toast.error("Não foi possível preparar o PDF");
+      toast.error(t("app.errors.couldNotPreparePdf") as string);
       return;
     }
     frameWindow.focus();
@@ -250,6 +251,7 @@ function buildProposalHtml(form: ProposalForm, lines: ProposalLine[], studio: St
 }
 
 function ProposalsContent() {
+  const { t } = useLanguage();
   const [catalog, setCatalog] = useState<ServiceItem[]>(DEFAULT_CATALOG);
   const [proposal, setProposal] = useState<ProposalForm>(initialProposal);
   const [selected, setSelected] = useState<ProposalLine[]>([]);
@@ -311,7 +313,7 @@ function ProposalsContent() {
 
   const saveService = () => {
     if (!editingService.name.trim()) {
-      toast.error("Nome do servico e obrigatorio");
+      toast.error(t("app.errors.requiredServiceName") as string);
       return;
     }
     const service = {
@@ -324,7 +326,7 @@ function ProposalsContent() {
       : [service, ...catalog];
     persistCatalog(next);
     setEditingService({ id: "", name: "", description: "", price: 0, category: "Personalizado" });
-    toast.success("Servico salvo no catalogo");
+    toast.success(t("app.proposals.serviceSaved") as string);
   };
 
   const removeService = (id: string) => {
@@ -334,7 +336,7 @@ function ProposalsContent() {
 
   const exportPdf = (html = proposalHtml, requireSelection = true) => {
     if (requireSelection && !selected.length) {
-      toast.error("Selecione pelo menos um servico");
+      toast.error(t("app.errors.selectAtLeastOneService") as string);
       return;
     }
     printHtmlDocument(html);
@@ -342,7 +344,7 @@ function ProposalsContent() {
 
   const saveProposal = () => {
     if (!selected.length) {
-      toast.error("Selecione pelo menos um servico");
+      toast.error(t("app.errors.selectAtLeastOneService") as string);
       return;
     }
     const item: SavedProposal = {
@@ -354,13 +356,13 @@ function ProposalsContent() {
       createdAt: new Date().toISOString(),
     };
     persistHistory([item, ...history].slice(0, 40));
-    toast.success("Proposta salva no historico");
+    toast.success(t("app.proposals.savedToHistory") as string);
   };
 
   const copySummary = async () => {
     const summary = `${proposal.projectTitle}\nCliente: ${proposal.clientName || proposal.company || "A definir"}\nTotal: ${formatCurrency(total)}\nServicos:\n${selected.map((item) => `- ${item.quantity}x ${item.name}: ${formatCurrency(item.price * item.quantity)}`).join("\n")}`;
     await navigator.clipboard.writeText(summary);
-    toast.success("Resumo copiado");
+    toast.success(t("app.common.copied") as string);
   };
 
   return (
@@ -370,23 +372,23 @@ function ProposalsContent() {
         <section className="proposal-hero p-5 sm:p-7">
           <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-4">
             <div>
-              <p className="frame-label">// PROPOSTAS & PACOTES</p>
-              <h1 className="proposal-title frame-title text-[clamp(2rem,4vw,3.8rem)] leading-none mt-3">Maquina comercial da produtora</h1>
+              <p className="frame-label">{t("app.proposals.label") as string}</p>
+              <h1 className="proposal-title frame-title text-[clamp(2rem,4vw,3.8rem)] leading-none mt-3">{t("app.proposals.title") as string}</h1>
               <p className="proposal-subtitle text-sm max-w-3xl mt-3">
-                Configure servicos, monte pacotes, ajuste valores, aplique desconto e gere proposta PDF pronta para enviar.
+                {t("app.proposals.subtitle") as string}
               </p>
             </div>
             <div className="proposal-totals grid grid-cols-3 gap-2 min-w-[320px]">
               <div className="proposal-total-card p-3">
-                <p className="text-[0.64rem] font-frame-mono uppercase text-frame-gray-light">Subtotal</p>
+                <p className="text-[0.64rem] font-frame-mono uppercase text-frame-gray-light">{t("app.common.subtotal") as string}</p>
                 <p className="text-sm font-bold">{formatCurrency(subtotal)}</p>
               </div>
               <div className="proposal-total-card p-3">
-                <p className="text-[0.64rem] font-frame-mono uppercase text-frame-gray-light">Desconto</p>
+                <p className="text-[0.64rem] font-frame-mono uppercase text-frame-gray-light">{t("app.common.discount") as string}</p>
                 <p className="text-sm font-bold text-green-400">{formatCurrency(discountValue)}</p>
               </div>
               <div className="proposal-total-card proposal-total-card-accent p-3">
-                <p className="text-[0.64rem] font-frame-mono uppercase text-frame-orange">Total</p>
+                <p className="text-[0.64rem] font-frame-mono uppercase text-frame-orange">{t("app.common.total") as string}</p>
                 <p className="text-sm font-bold">{formatCurrency(total)}</p>
               </div>
             </div>
@@ -397,22 +399,22 @@ function ProposalsContent() {
           <aside className="space-y-4">
             <div className="proposal-panel p-5">
               <div className="flex items-center justify-between gap-3 mb-3">
-                <p className="frame-label">// CATALOGO</p>
+                <p className="frame-label">{t("app.proposals.catalog") as string}</p>
                 <button type="button" onClick={saveService} className="frame-btn-ghost flex items-center gap-2">
                   <PackagePlus className="w-4 h-4" />
-                  Salvar servico
+                  {t("app.proposals.saveService") as string}
                 </button>
               </div>
               <div className="space-y-3">
-                <input className="frame-input w-full" value={editingService.name} onChange={(event) => setEditingService((current) => ({ ...current, name: event.target.value }))} placeholder="Nome do servico ou pacote" />
-                <input className="frame-input w-full" value={editingService.category} onChange={(event) => setEditingService((current) => ({ ...current, category: event.target.value }))} placeholder="Categoria" />
-                <input className="frame-input w-full" type="number" value={editingService.price || ""} onChange={(event) => setEditingService((current) => ({ ...current, price: Number(event.target.value) }))} placeholder="Valor base" />
-                <textarea className="frame-input w-full min-h-[78px] resize-y" value={editingService.description} onChange={(event) => setEditingService((current) => ({ ...current, description: event.target.value }))} placeholder="Descricao comercial" />
+                <input className="frame-input w-full" value={editingService.name} onChange={(event) => setEditingService((current) => ({ ...current, name: event.target.value }))} placeholder={t("app.proposals.serviceNamePlaceholder") as string} />
+                <input className="frame-input w-full" value={editingService.category} onChange={(event) => setEditingService((current) => ({ ...current, category: event.target.value }))} placeholder={t("app.proposals.categoryPlaceholder") as string} />
+                <input className="frame-input w-full" type="number" value={editingService.price || ""} onChange={(event) => setEditingService((current) => ({ ...current, price: Number(event.target.value) }))} placeholder={t("app.proposals.baseValuePlaceholder") as string} />
+                <textarea className="frame-input w-full min-h-[78px] resize-y" value={editingService.description} onChange={(event) => setEditingService((current) => ({ ...current, description: event.target.value }))} placeholder={t("app.proposals.descriptionPlaceholder") as string} />
               </div>
             </div>
 
             <div className="proposal-panel p-5">
-              <p className="frame-label mb-3">// SERVICOS SALVOS</p>
+              <p className="frame-label mb-3">{t("app.proposals.savedServices") as string}</p>
               <div className="space-y-3 max-h-[620px] overflow-y-auto pr-1">
                 {catalog.map((service) => (
                   <div key={service.id} className="proposal-service-card p-4">
@@ -423,17 +425,17 @@ function ProposalsContent() {
                         <p className="text-xs text-frame-gray-light/70 mt-2 leading-relaxed">{service.description}</p>
                       </button>
                       <div className="flex gap-1">
-                        <button type="button" onClick={() => setEditingService(service)} className="text-frame-orange hover:text-frame-white p-1" title="Editar">
+                        <button type="button" onClick={() => setEditingService(service)} className="text-frame-orange hover:text-frame-white p-1" title={t("app.common.edit") as string}>
                           <FileSignature className="w-4 h-4" />
                         </button>
-                        <button type="button" onClick={() => removeService(service.id)} className="text-frame-gray-light hover:text-red-400 p-1" title="Excluir">
+                        <button type="button" onClick={() => removeService(service.id)} className="text-frame-gray-light hover:text-red-400 p-1" title={t("app.common.delete") as string}>
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
                     <button type="button" onClick={() => addLine(service)} className="mt-3 frame-btn-ghost w-full flex items-center justify-center gap-2">
                       <Plus className="w-3.5 h-3.5" />
-                      Adicionar
+                      {t("app.common.add") as string}
                     </button>
                   </div>
                 ))}
@@ -443,32 +445,32 @@ function ProposalsContent() {
 
           <section className="space-y-4">
             <div className="proposal-panel p-5 sm:p-6">
-              <p className="frame-label mb-3">// DADOS DA PROPOSTA</p>
+              <p className="frame-label mb-3">{t("app.proposals.proposalData") as string}</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input className="frame-input w-full" value={proposal.projectTitle} onChange={(event) => updateProposal("projectTitle", event.target.value)} placeholder="Titulo da proposta" />
-                <input className="frame-input w-full" value={proposal.clientName} onChange={(event) => updateProposal("clientName", event.target.value)} placeholder="Responsavel" />
-                <input className="frame-input w-full" value={proposal.company} onChange={(event) => updateProposal("company", event.target.value)} placeholder="Empresa" />
-                <input className="frame-input w-full" value={proposal.email} onChange={(event) => updateProposal("email", event.target.value)} placeholder="Email" />
-                <input className="frame-input w-full" value={proposal.phone} onChange={(event) => updateProposal("phone", event.target.value)} placeholder="WhatsApp" />
-                <input className="frame-input w-full" value={proposal.city} onChange={(event) => updateProposal("city", event.target.value)} placeholder="Cidade" />
+                <input className="frame-input w-full" value={proposal.projectTitle} onChange={(event) => updateProposal("projectTitle", event.target.value)} placeholder={t("app.proposals.proposalTitlePlaceholder") as string} />
+                <input className="frame-input w-full" value={proposal.clientName} onChange={(event) => updateProposal("clientName", event.target.value)} placeholder={t("app.proposals.clientNamePlaceholder") as string} />
+                <input className="frame-input w-full" value={proposal.company} onChange={(event) => updateProposal("company", event.target.value)} placeholder={t("app.proposals.companyPlaceholder") as string} />
+                <input className="frame-input w-full" value={proposal.email} onChange={(event) => updateProposal("email", event.target.value)} placeholder={t("app.common.email") as string} />
+                <input className="frame-input w-full" value={proposal.phone} onChange={(event) => updateProposal("phone", event.target.value)} placeholder={t("app.common.whatsapp") as string} />
+                <input className="frame-input w-full" value={proposal.city} onChange={(event) => updateProposal("city", event.target.value)} placeholder={t("app.common.city") as string} />
                 <input className="frame-input w-full" type="date" value={proposal.deadline} onChange={(event) => updateProposal("deadline", event.target.value)} />
-                <input className="frame-input w-full" type="number" value={proposal.validityDays} onChange={(event) => updateProposal("validityDays", Number(event.target.value))} placeholder="Validade em dias" />
+                <input className="frame-input w-full" type="number" value={proposal.validityDays} onChange={(event) => updateProposal("validityDays", Number(event.target.value))} placeholder={t("app.proposals.validityDaysPlaceholder") as string} />
               </div>
               <div className="mt-4 grid grid-cols-1 md:grid-cols-[1fr_180px] gap-4">
-                <input className="frame-input w-full" value={proposal.paymentTerms} onChange={(event) => updateProposal("paymentTerms", event.target.value)} placeholder="Condicoes de pagamento" />
-                <input className="frame-input w-full" type="number" min={0} max={70} value={proposal.discount} onChange={(event) => updateProposal("discount", Number(event.target.value))} placeholder="Desconto %" />
+                <input className="frame-input w-full" value={proposal.paymentTerms} onChange={(event) => updateProposal("paymentTerms", event.target.value)} placeholder={t("app.proposals.paymentTermsPlaceholder") as string} />
+                <input className="frame-input w-full" type="number" min={0} max={70} value={proposal.discount} onChange={(event) => updateProposal("discount", Number(event.target.value))} placeholder={t("app.proposals.discountPlaceholder") as string} />
               </div>
-              <textarea className="frame-input w-full min-h-[108px] resize-y mt-4" value={proposal.notes} onChange={(event) => updateProposal("notes", event.target.value)} placeholder="Observacoes comerciais, escopo especial ou premissas" />
+              <textarea className="frame-input w-full min-h-[108px] resize-y mt-4" value={proposal.notes} onChange={(event) => updateProposal("notes", event.target.value)} placeholder={t("app.proposals.notesPlaceholder") as string} />
             </div>
 
             <div className="proposal-panel p-5 sm:p-6">
               <div className="flex items-center justify-between gap-3 mb-3">
-                <p className="frame-label">// ITENS DA PROPOSTA</p>
-                <span className="text-xs text-frame-gray-light">{selected.length} item(ns)</span>
+                <p className="frame-label">{t("app.proposals.proposalItems") as string}</p>
+                <span className="text-xs text-frame-gray-light">{selected.length} {t("app.proposals.items") as string}</span>
               </div>
               {selected.length === 0 ? (
                 <div className="proposal-empty p-10 text-center text-sm text-frame-gray-light">
-                  Selecione servicos do catalogo para montar a proposta.
+                  {t("app.proposals.emptySelection") as string}
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -493,26 +495,26 @@ function ProposalsContent() {
             <div className="proposal-actions grid grid-cols-2 lg:grid-cols-4 gap-3">
               <button type="button" onClick={saveProposal} className="frame-btn-ghost flex items-center justify-center gap-2">
                 <Save className="w-4 h-4" />
-                Salvar
+                {t("app.common.save") as string}
               </button>
               <button type="button" onClick={copySummary} className="frame-btn-ghost flex items-center justify-center gap-2">
                 <Copy className="w-4 h-4" />
-                Copiar
+                {t("app.common.copy") as string}
               </button>
               <button type="button" onClick={() => exportPdf()} className="frame-btn-primary flex items-center justify-center gap-2 col-span-2">
                 <Download className="w-4 h-4" />
-                Exportar PDF
+                {t("app.common.exportPdf") as string}
               </button>
             </div>
 
             <div className="proposal-panel p-5">
               <div className="flex items-center justify-between mb-3">
-                <p className="frame-label">// HISTORICO</p>
+                <p className="frame-label">{t("app.common.history") as string}</p>
                 <span className="text-xs text-frame-gray-light">{history.length}</span>
               </div>
               {history.length === 0 ? (
                 <div className="proposal-empty p-4 text-sm text-frame-gray-light">
-                  Nenhuma proposta salva ainda.
+                  {t("app.proposals.noSavedProposals") as string}
                 </div>
               ) : (
                 <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
@@ -523,10 +525,10 @@ function ProposalsContent() {
                         <div className="text-sm font-semibold truncate">{item.title}</div>
                         <div className="text-[0.62rem] text-frame-gray-light truncate">{item.clientName} · {formatCurrency(item.total)} · {new Date(item.createdAt).toLocaleDateString("pt-BR")}</div>
                       </button>
-                      <button type="button" onClick={() => exportPdf(item.html, false)} className="text-frame-orange hover:text-frame-white" title="Exportar">
+                      <button type="button" onClick={() => exportPdf(item.html, false)} className="text-frame-orange hover:text-frame-white" title={t("app.common.export") as string}>
                         <Download className="w-4 h-4" />
                       </button>
-                      <button type="button" onClick={() => persistHistory(history.filter((saved) => saved.id !== item.id))} className="text-frame-gray-light hover:text-red-400" title="Excluir">
+                      <button type="button" onClick={() => persistHistory(history.filter((saved) => saved.id !== item.id))} className="text-frame-gray-light hover:text-red-400" title={t("app.common.delete") as string}>
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -538,7 +540,7 @@ function ProposalsContent() {
 
           <aside className="proposal-preview overflow-hidden min-h-[720px] 2xl:sticky 2xl:top-24">
             <div className="h-14 border-b border-frame-gray-3 px-5 flex items-center justify-between">
-              <span className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-orange">Preview proposta</span>
+              <span className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-orange">{t("app.proposals.preview") as string}</span>
               <span className="text-[0.62rem] text-frame-gray-light">{formatCurrency(total)}</span>
             </div>
             {selected.length ? (

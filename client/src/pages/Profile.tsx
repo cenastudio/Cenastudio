@@ -8,9 +8,10 @@ import { CalendarClock, Crown, LogOut, ShieldCheck, UserRound, Zap, Settings, Us
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 function formatDate(value: string | null | undefined) {
-  if (!value) return "Sem data definida";
+  if (!value) return t("app.errors.noDateSet");
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "long",
@@ -19,6 +20,7 @@ function formatDate(value: string | null | undefined) {
 }
 
 function ProfileContent() {
+  const { t } = useLanguage();
   const { user, plan, logout, refresh } = useAuth();
   const { openModal, selectPlan } = useApp();
   const [, setLocation] = useLocation();
@@ -37,7 +39,7 @@ function ProfileContent() {
 
   const planLabel = plan
     ? planDisplayLabel(plan.planId, plan.planName, plan.status, plan.trialEndsAt)
-    : "Plano não carregado";
+    : t("app.errors.planNotLoaded");
 
   const handlePlanAction = async () => {
     if (!plan || plan.planId === "free" || plan.status === "trial") {
@@ -54,7 +56,7 @@ function ProfileContent() {
           ? error.message
           : error instanceof Error
             ? error.message
-            : "Erro ao abrir portal";
+            : t("app.errors.openPortal");
       toast.error(msg);
     }
   };
@@ -69,9 +71,9 @@ function ProfileContent() {
     try {
       await api.auth.updateProfile({ name, studioName, studioRole, phone });
       await refresh();
-      toast.success("Perfil atualizado");
+      toast.success(t("app.profile.profileUpdated"));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao atualizar perfil");
+      toast.error(error instanceof Error ? error.message : t("app.errors.updateProfile"));
     } finally {
       setSavingProfile(false);
     }
@@ -109,7 +111,7 @@ function ProfileContent() {
                   Usuario ativo
                 </p>
                 <h2 className="frame-title text-[2rem] mt-1 truncate">
-                  {user?.name || "Conta Cena Studio"}
+                  {user?.name || t("app.profile.defaultAccountName")}
                 </h2>
                 <p className="text-frame-gray-light text-sm break-all">{user?.email}</p>
               </div>
@@ -122,7 +124,7 @@ function ProfileContent() {
                   Tipo de conta
                 </p>
                 <p className="text-lg font-semibold mt-1">
-                  {user?.role === "admin" ? "Administrador" : "Usuario"}
+                  {user?.role === "admin" ? t("app.profile.admin") : t("app.profile.user")}
                 </p>
               </div>
               <div className="border border-frame-gray-3 bg-frame-gray-1 p-4">
@@ -131,7 +133,7 @@ function ProfileContent() {
                   Acesso
                 </p>
                 <p className="text-lg font-semibold mt-1">
-                  {user?.role === "admin" ? "Total" : "Workspace"}
+                  {user?.role === "admin" ? t("app.profile.fullAccess") : "Workspace"}
                 </p>
               </div>
             </div>
@@ -167,32 +169,32 @@ function ProfileContent() {
                 <span className="frame-label text-frame-gray-light">Nome do usuário</span>
                 <div className="relative">
                   <UserRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
-                  <input value={name} onChange={(e) => setName(e.target.value)} className="frame-input w-full pl-10" placeholder="Seu nome" />
+                  <input value={name} onChange={(e) => setName(e.target.value)} className="frame-input w-full pl-10" placeholder={t("app.profile.namePlaceholder")} />
                 </div>
               </label>
               <label className="space-y-2">
                 <span className="frame-label text-frame-gray-light">Telefone</span>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
-                  <input value={phone} onChange={(e) => setPhone(e.target.value)} className="frame-input w-full pl-10" placeholder="(00) 00000-0000" />
+                  <input value={phone} onChange={(e) => setPhone(e.target.value)} className="frame-input w-full pl-10" placeholder={t("app.profile.phonePlaceholder")} />
                 </div>
               </label>
               <label className="space-y-2">
                 <span className="frame-label text-frame-gray-light">Nome do studio</span>
                 <div className="relative">
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
-                  <input value={studioName} onChange={(e) => setStudioName(e.target.value)} className="frame-input w-full pl-10" placeholder="Nome da produtora/studio" />
+                  <input value={studioName} onChange={(e) => setStudioName(e.target.value)} className="frame-input w-full pl-10" placeholder={t("app.profile.studioNamePlaceholder")} />
                 </div>
               </label>
               <label className="space-y-2">
                 <span className="frame-label text-frame-gray-light">Função no studio</span>
-                <input value={studioRole} onChange={(e) => setStudioRole(e.target.value)} className="frame-input w-full" placeholder="Diretor, produtor, editor..." />
+                <input value={studioRole} onChange={(e) => setStudioRole(e.target.value)} className="frame-input w-full" placeholder={t("app.profile.studioRolePlaceholder")} />
               </label>
             </div>
 
             <button type="button" onClick={handleSaveProfile} disabled={savingProfile} className="frame-btn-primary flex items-center justify-center gap-2 w-full md:w-auto">
               <Save className="w-4 h-4" />
-              {savingProfile ? "Salvando..." : "Salvar perfil"}
+              {savingProfile ? t("app.common.saving") : t("app.profile.saveProfile")}
             </button>
           </div>
 

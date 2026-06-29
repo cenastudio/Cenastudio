@@ -9,9 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useApp } from "@/contexts/AppContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Loader2 } from "lucide-react";
 
 export function DemoModal() {
+  const { t } = useLanguage();
   const { modals, closeModal, submitDemo, isLoading } = useApp();
   const isOpen = modals.demo;
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
@@ -35,9 +37,9 @@ export function DemoModal() {
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeModal("demo")}>
       <DialogContent className="cinematic-theme sm:max-w-md bg-frame-gray-2 border border-frame-gray-3">
         <DialogHeader>
-          <DialogTitle className="frame-title text-xl text-frame-white">Agendar demo</DialogTitle>
+          <DialogTitle className="frame-title text-xl text-frame-white">{t("app.landing.modals.scheduleDemo") as string}</DialogTitle>
           <DialogDescription className="text-frame-gray-light font-light">
-            Preencha seus dados e agende uma demonstração personalizada com nosso time.
+            {t("app.landing.modals.demoDescription") as string}
           </DialogDescription>
         </DialogHeader>
 
@@ -45,12 +47,12 @@ export function DemoModal() {
           {/* Name */}
           <div>
             <Label htmlFor="demo-name" className="text-sm font-medium">
-              Nome Completo *
+              {t("app.landing.modals.fullName") as string} *
             </Label>
             <Input
               id="demo-name"
-              placeholder="Seu nome"
-              {...register("name", { required: "Nome é obrigatório" })}
+              placeholder={t("app.landing.modals.yourName") as string}
+              {...register("name", { required: t("app.landing.modals.nameRequired") as string })}
               className="mt-1"
               disabled={isLoading}
             />
@@ -60,17 +62,17 @@ export function DemoModal() {
           {/* Email */}
           <div>
             <Label htmlFor="demo-email" className="text-sm font-medium">
-              Email *
+              {t("app.landing.modals.email") as string} *
             </Label>
             <Input
               id="demo-email"
               type="email"
-              placeholder="seu@email.com"
+              placeholder={t("app.landing.modals.emailPlaceholder") as string}
               {...register("email", {
-                required: "Email é obrigatório",
+                required: t("app.landing.modals.emailRequired") as string,
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: "Email inválido",
+                  message: t("app.landing.modals.invalidEmail") as string,
                 },
               })}
               className="mt-1"
@@ -82,13 +84,13 @@ export function DemoModal() {
           {/* Info */}
           <div className="bg-frame-gray-1 p-4 border border-frame-gray-3 text-sm text-frame-gray-light">
             <p className="font-frame-mono text-[0.6rem] tracking-[0.12em] uppercase text-frame-orange mb-2">
-              O que esperar
+              {t("app.landing.modals.whatToExpect") as string}
             </p>
             <ul className="space-y-1 text-xs">
-              <li>• Demo ao vivo de 30 minutos</li>
-              <li>• Apresentação personalizada</li>
-              <li>• Resposta a todas as suas dúvidas</li>
-              <li>• Próximos passos para começar</li>
+              <li>{t("app.landing.modals.liveDemo30") as string}</li>
+              <li>{t("app.landing.modals.personalizedPresentation") as string}</li>
+              <li>{t("app.landing.modals.answerQuestions") as string}</li>
+              <li>{t("app.landing.modals.nextSteps") as string}</li>
             </ul>
           </div>
 
@@ -101,10 +103,10 @@ export function DemoModal() {
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Agendando...
+                {t("app.landing.modals.scheduling") as string}
               </>
             ) : (
-              "Agendar Demo"
+              t("app.landing.modals.scheduleDemoCta") as string
             )}
           </Button>
         </form>

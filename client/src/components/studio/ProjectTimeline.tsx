@@ -3,21 +3,22 @@ import { useLocation } from "wouter";
 import { useProject } from "@/contexts/ProjectContext";
 import { api } from "@/lib/api";
 import { Check, Flame } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TimelineStep {
   id: string;
   name: string;
-  category: string;
+  categoryKey: string;
 }
 
 const TIMELINE_STEPS: TimelineStep[] = [
-  { id: "briefing", name: "Briefing", category: "Comercial" },
-  { id: "roteiro", name: "Roteiro", category: "Pré-Prod" },
-  { id: "decupagem", name: "Decupagem", category: "Pré-Prod" },
-  { id: "callsheet", name: "Callsheet", category: "Pré-Prod" },
-  { id: "cronograma", name: "Cronograma", category: "Pré-Prod" },
-  { id: "checklist", name: "Checklist", category: "Pré-Prod" },
-  { id: "entrega", name: "Entrega", category: "Pós-Prod" },
+  { id: "briefing", name: "Briefing", categoryKey: "commercial" },
+  { id: "roteiro", name: "Roteiro", categoryKey: "preProd" },
+  { id: "decupagem", name: "Decupagem", categoryKey: "preProd" },
+  { id: "callsheet", name: "Callsheet", categoryKey: "preProd" },
+  { id: "cronograma", name: "Cronograma", categoryKey: "preProd" },
+  { id: "checklist", name: "Checklist", categoryKey: "preProd" },
+  { id: "entrega", name: "Entrega", categoryKey: "posProd" },
 ];
 
 interface ProjectTimelineProps {
@@ -25,8 +26,14 @@ interface ProjectTimelineProps {
 }
 
 export default function ProjectTimeline({ activeToolId }: ProjectTimelineProps) {
+  const { t } = useLanguage();
   const [, setLocation] = useLocation();
   const { activeProject, toolStates } = useProject();
+  const timelineCategories: Record<string, string> = {
+    commercial: t("app.studio.timeline.commercial") as string,
+    preProd: t("app.studio.timeline.preProd") as string,
+    posProd: t("app.studio.timeline.posProd") as string,
+  };
   const [populatedSteps, setPopulatedSteps] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -74,10 +81,10 @@ export default function ProjectTimeline({ activeToolId }: ProjectTimelineProps) 
         {/* Cinematic Pipeline Header Label (Hidden on small mobile) */}
         <div className="hidden xl:flex flex-col pr-5 border-r border-frame-gray-2 shrink-0 font-frame-mono select-none">
           <span className="text-[0.62rem] tracking-[0.25em] text-frame-orange font-semibold uppercase">
-            Direção de Fluxo
+            {t("app.studio.timeline.flowDirection") as string}
           </span>
           <span className="text-[0.62rem] text-frame-white font-bold tracking-widest uppercase mt-0.5">
-            PIPELINE IA
+            {t("app.studio.timeline.pipeline") as string}
           </span>
         </div>
 
@@ -126,7 +133,7 @@ export default function ProjectTimeline({ activeToolId }: ProjectTimelineProps) 
                     {step.name}
                   </span>
                   <span className="hidden sm:inline font-frame-mono text-[0.6rem] tracking-wider text-frame-gray-muted -mt-0.5">
-                    {step.category}
+                    {timelineCategories[step.categoryKey]}
                   </span>
                 </div>
               </button>

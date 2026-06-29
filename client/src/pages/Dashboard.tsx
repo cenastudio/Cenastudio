@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProject } from "@/contexts/ProjectContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { api, type Project, type RecentActivity } from "@/lib/api";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -57,6 +58,7 @@ const getMetadata = (p: Project): ProjectMetadata => {
 function DashboardContent() {
   const [, setLocation] = useLocation();
   const { user, plan } = useAuth();
+  const { t } = useLanguage();
   const {
     projects,
     isLoading: isProjectsLoading,
@@ -138,10 +140,10 @@ function DashboardContent() {
         metadataJson: JSON.stringify(updatedMeta),
       });
       toast.success(
-        updatedMeta.isPinned ? "Projeto fixado no topo!" : "Projeto removido dos fixados.",
+        updatedMeta.isPinned ? t("app.dashboard.projectUpdated") as string : t("app.dashboard.projectUpdated") as string,
       );
     } catch {
-      toast.error("Erro ao atualizar o projeto.");
+      toast.error(t("app.errors.generic") as string);
     }
   };
 
@@ -177,7 +179,7 @@ function DashboardContent() {
       );
       setIsCreateOpen(false);
       resetCreateForm();
-      toast.success("Projeto criado com briefing inicial!");
+      toast.success(t("app.dashboard.projectCreated") as string);
       setLocation(`/project/${newProj.id}/studio/briefing`);
     } catch {
       // Toast handled by context
@@ -195,7 +197,7 @@ function DashboardContent() {
       await deleteProject(projectToDelete.id);
       setIsDeleteOpen(false);
       setProjectToDelete(null);
-      toast.success("Projeto excluído com sucesso!");
+      toast.success(t("app.dashboard.projectDeleted") as string);
     } catch {
       // Toast handled by context
     } finally {
@@ -211,12 +213,12 @@ function DashboardContent() {
         {/* Cinematic Header Block */}
         <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-frame-gray-3 pb-6 gap-6">
           <div>
-            <p className="frame-label mb-2">// Painel de Controle</p>
+            <p className="frame-label mb-2">// {t("app.dashboard.title") as string}</p>
             <h1 className="frame-title text-[clamp(2.1rem,4vw,3.5rem)] text-frame-white leading-none">
               CENTRAL DO <em className="not-italic text-transparent [-webkit-text-stroke:1px_#f5f0e8]">DIRETOR</em>
             </h1>
             <p className="text-[0.82rem] text-frame-gray-light font-light mt-2 max-w-md">
-              Monitore sua cota de IA, gerencie múltiplos escopos cinematográficos e acesse o estúdio de roteirização.
+              {t("app.dashboard.subtitle") as string}
             </p>
           </div>
 
@@ -224,13 +226,13 @@ function DashboardContent() {
           <div className="flex flex-wrap gap-4 shrink-0 font-frame-mono">
             <div className="px-4 py-3 border border-frame-gray-3 bg-frame-gray-1/30 min-w-[120px]">
               <span className="block text-[0.62rem] text-frame-gray-light tracking-widest uppercase mb-1">
-                Projetos
+                {t("app.dashboard.activeProjects") as string}
               </span>
               <span className="text-xl font-bold text-frame-white">{projects.length}</span>
             </div>
             <div className="px-4 py-3 border border-frame-gray-3 bg-frame-gray-1/30 min-w-[140px]">
               <span className="block text-[0.62rem] text-frame-gray-light tracking-widest uppercase mb-1">
-                Plano Atual
+                {t("app.profile.currentPlan") as string}
               </span>
               <span className="text-sm font-semibold text-frame-orange block truncate">
                 {plan?.planName || "Free Plan"}
@@ -244,7 +246,7 @@ function DashboardContent() {
               className="frame-btn-primary !py-3 !px-5 !text-[0.62rem] flex items-center justify-center gap-2 cursor-pointer h-full self-stretch"
             >
               <Plus className="w-3.5 h-3.5" />
-              Novo Projeto
+              {t("app.dashboard.newProject") as string}
             </button>
           </div>
         </div>
@@ -253,9 +255,9 @@ function DashboardContent() {
           <div className="lg:col-span-2 border border-frame-gray-3 bg-frame-gray-1/20 p-5">
             <div className="flex items-center justify-between gap-4 mb-4">
               <div>
-                <p className="frame-label mb-1">// Próxima ação</p>
+                <p className="frame-label mb-1">// {t("app.common.next") as string}</p>
                 <h2 className="text-frame-white font-semibold tracking-tight">
-                  {recentProject ? "Continuar operação audiovisual" : "Começar um projeto estruturado"}
+                  {recentProject ? t("app.dashboard.projectHub") as string : t("app.dashboard.createFirstProject") as string}
                 </h2>
               </div>
               <Sparkles className="w-4 h-4 text-frame-orange shrink-0" />
@@ -263,7 +265,7 @@ function DashboardContent() {
             <p className="text-sm text-frame-gray-light leading-relaxed mb-4">
               {recentProject
                 ? `Último projeto: ${recentProject.name}. Abra o hub para ver briefing, arquivos, aprovações e equipe no mesmo fluxo.`
-                : "Crie o primeiro projeto com contexto suficiente para alimentar briefing, roteiro, arquivos e aprovações."}
+                : t("app.dashboard.createFirstProjectDesc") as string}
             </p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -278,7 +280,7 @@ function DashboardContent() {
                 }}
                 className="frame-btn-primary !py-2.5 !px-4 !text-[0.6rem] flex items-center gap-2"
               >
-                {recentProject ? "Abrir Hub" : "Criar Projeto"}
+                {recentProject ? t("app.dashboard.projectHub") as string : t("app.dashboard.createProject") as string}
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
               {recentProject && (
@@ -287,7 +289,7 @@ function DashboardContent() {
                   onClick={() => setLocation(`/project/${recentProject.id}/studio/briefing`)}
                   className="frame-btn-ghost !py-2.5 !px-4 !text-[0.6rem] flex items-center gap-2"
                 >
-                  Continuar Briefing
+                  {t("app.studio.timeline.briefing") as string}
                   <Target className="w-3.5 h-3.5" />
                 </button>
               )}
@@ -297,7 +299,7 @@ function DashboardContent() {
           <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-5">
             <div className="flex items-center justify-between mb-3">
               <span className="font-frame-mono text-[0.64rem] tracking-[0.15em] uppercase text-frame-gray-light">
-                Projetos ativos
+                {t("app.dashboard.activeProjects") as string}
               </span>
               <CheckCircle2 className="w-4 h-4 text-frame-orange" />
             </div>
@@ -327,7 +329,7 @@ function DashboardContent() {
                 <div className="flex items-center gap-2 border-b border-frame-gray-3 pb-2.5">
                   <Pin className="w-3.5 h-3.5 text-frame-orange rotate-45" />
                   <h3 className="font-frame-mono text-[0.68rem] tracking-[0.18em] uppercase text-frame-orange font-semibold">
-                    Projetos Fixados
+                    {t("app.dashboard.pinned") as string}
                   </h3>
                 </div>
 
@@ -343,20 +345,20 @@ function DashboardContent() {
                         <button
                           onClick={(e) => handleTogglePin(p, e)}
                           className="absolute top-4 right-4 text-frame-orange hover:text-frame-white transition-colors cursor-pointer"
-                          title="Desafixar projeto"
+                          title={t("app.dashboard.unpin") as string}
                         >
                           <Pin className="w-3.5 h-3.5" />
                         </button>
 
                         <div className="space-y-2 pr-6">
                           <span className="font-frame-mono text-[0.62rem] tracking-wider text-frame-gray-light block">
-                            PROJETO ID: #{p.id}
+                            ID: #{p.id}
                           </span>
                           <h4 className="frame-title text-[1.4rem] text-frame-white group-hover:text-frame-orange transition-colors">
                             {p.name}
                           </h4>
                           <p className="text-[0.76rem] leading-relaxed text-frame-gray-light line-clamp-2 font-light">
-                            {p.description || "Sem descrição disponível."}
+                            {p.description || t("app.common.noData") as string}
                           </p>
                         </div>
 
@@ -388,7 +390,7 @@ function DashboardContent() {
                 <div className="flex items-center gap-2">
                   <Folder className="w-3.5 h-3.5 text-frame-gray-light" />
                   <h3 className="font-frame-mono text-[0.68rem] tracking-[0.18em] uppercase text-frame-white font-semibold">
-                    Todos os Projetos
+                    {t("app.common.all") as string}
                   </h3>
                 </div>
                 <span className="font-frame-mono text-[0.64rem] text-frame-gray-light">
@@ -400,13 +402,13 @@ function DashboardContent() {
                 <div className="flex flex-col items-center justify-center py-16 gap-3 border border-dashed border-frame-gray-3">
                   <Loader2 className="w-6 h-6 animate-spin text-frame-orange" />
                   <p className="font-frame-mono text-[0.62rem] tracking-widest text-frame-gray-light uppercase">
-                    Carregando Projetos...
+                    {t("app.dashboard.loadingProjects") as string}
                   </p>
                 </div>
               ) : projects.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 px-4 text-center border border-dashed border-frame-gray-3 space-y-4">
                   <p className="text-sm text-frame-gray-light font-light max-w-sm">
-                    Você ainda não criou nenhum projeto de pré-produção no Cena Studio.
+                    {t("app.dashboard.createFirstProjectDesc") as string}
                   </p>
                   <button
                     onClick={() => {
@@ -415,7 +417,7 @@ function DashboardContent() {
                     }}
                     className="frame-btn-ghost !py-2 !px-4 !text-[0.62rem] flex items-center gap-1.5"
                   >
-                    <Plus className="w-3.5 h-3.5" /> Criar Primeiro Projeto
+                    <Plus className="w-3.5 h-3.5" /> {t("app.dashboard.createFirstProject") as string}
                   </button>
                 </div>
               ) : (
@@ -440,7 +442,7 @@ function DashboardContent() {
                             )}
                           </div>
                           <p className="text-[0.76rem] text-frame-gray-light line-clamp-1 font-light max-w-xl">
-                            {p.description || "Sem descrição disponível."}
+                            {p.description || t("app.common.noData") as string}
                           </p>
                         </div>
 
@@ -449,7 +451,7 @@ function DashboardContent() {
                           <button
                             onClick={(e) => handleTogglePin(p, e)}
                             className="p-2 text-frame-gray-light hover:text-frame-orange hover:bg-frame-gray-2 transition rounded-none cursor-pointer outline-none"
-                            title="Fixar no topo"
+                            title={t("app.dashboard.pinned") as string}
                           >
                             <Pin className="w-3.5 h-3.5 rotate-45" />
                           </button>
@@ -460,7 +462,7 @@ function DashboardContent() {
                               setIsDeleteOpen(true);
                             }}
                             className="p-2 text-frame-gray-light hover:text-frame-red hover:bg-frame-gray-2 transition rounded-none cursor-pointer outline-none"
-                            title="Excluir projeto"
+                            title={t("app.dashboard.deleteProject") as string}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -479,7 +481,7 @@ function DashboardContent() {
             <div className="flex items-center gap-2 border-b border-frame-gray-3 pb-2.5">
               <Activity className="w-3.5 h-3.5 text-frame-orange" />
               <h3 className="font-frame-mono text-[0.68rem] tracking-[0.18em] uppercase text-frame-white font-semibold">
-                Atividades Recentes
+                {t("app.dashboard.recentActivities") as string}
               </h3>
             </div>
 
@@ -487,12 +489,12 @@ function DashboardContent() {
               <div className="flex flex-col items-center justify-center py-10 gap-2 border border-frame-gray-3/40 bg-frame-gray-1/10 min-h-[200px]">
                 <Loader2 className="w-4 h-4 animate-spin text-frame-orange" />
                 <span className="font-frame-mono text-[0.62rem] text-frame-gray-light tracking-wider">
-                  Carregando atividades...
+                  {t("app.common.loading") as string}
                 </span>
               </div>
             ) : activities.length === 0 ? (
               <div className="p-6 text-center border border-frame-gray-3/40 bg-frame-gray-1/10 font-frame-body text-xs text-frame-gray-light italic">
-                Nenhuma geração de IA registrada recentemente.
+                {t("app.dashboard.noActivities") as string}
               </div>
             ) : (
               <div className="border border-frame-gray-3/40 bg-frame-gray-1/10 p-4 space-y-4 max-h-[480px] overflow-y-auto">
@@ -524,7 +526,7 @@ function DashboardContent() {
                       </div>
 
                       <p className="text-[0.76rem] font-medium text-frame-white leading-normal group-hover:text-frame-orange transition-colors">
-                        Geração IA concluída.
+                        {t("app.studio.generationComplete") as string}
                       </p>
 
                       {act.projectName && (
@@ -542,7 +544,7 @@ function DashboardContent() {
             {/* Quick Actions Panel */}
             <div className="border border-frame-gray-3/40 bg-frame-gray-1/10 p-4 space-y-3 font-frame-mono text-[0.64rem]">
               <span className="block tracking-wider uppercase text-frame-gray-light font-bold">
-                // Atalhos Úteis
+                // {t("app.common.filter") as string}
               </span>
               <button
                 onClick={() => setLocation("/tools")}
@@ -550,7 +552,7 @@ function DashboardContent() {
               >
                 <span className="flex items-center gap-2 font-medium tracking-wide">
                   <Compass className="w-3.5 h-3.5 text-frame-orange" />
-                  Catálogo de Ferramentas
+                  {t("app.tools.allTools") as string}
                 </span>
                 <ChevronRight className="w-3 h-3" />
               </button>
@@ -564,23 +566,23 @@ function DashboardContent() {
         <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-2xl rounded-none p-6">
           <DialogHeader>
             <DialogTitle className="font-frame-display text-2xl tracking-wider text-frame-white">
-              CRIAR NOVO PROJETO
+              {t("app.studio.projectSelector.createTitle") as string}
             </DialogTitle>
             <DialogDescription className="font-frame-body text-xs text-frame-gray-light">
-              Projetos mantêm históricos, metas, e o estado persistido das ferramentas.
+              {t("app.studio.projectSelector.createDesc") as string}
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleCreateSubmit} className="space-y-4 mt-2">
             <div className="space-y-1.5">
               <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
-                Nome do Projeto *
+                {t("app.studio.projectSelector.projectName") as string}
               </label>
               <input
                 type="text"
                 required
                 disabled={isSubmitting}
-                placeholder="ex: Videoclipe Retrofuturista"
+                placeholder={t("app.studio.projectSelector.projectNamePlaceholder") as string}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full bg-[#111] border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none"
@@ -589,10 +591,10 @@ function DashboardContent() {
 
             <div className="space-y-1.5">
               <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
-                Descrição do Projeto
+                {t("app.studio.projectSelector.projectDesc") as string}
               </label>
               <textarea
-                placeholder="Descreva brevemente o escopo, cliente ou metas do audiovisual..."
+                placeholder={t("app.studio.projectSelector.projectDescPlaceholder") as string}
                 disabled={isSubmitting}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -603,7 +605,7 @@ function DashboardContent() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
-                  Tipo
+                  {t("app.dashboard.projectType") as string}
                 </label>
                 <select
                   disabled={isSubmitting}
@@ -621,7 +623,7 @@ function DashboardContent() {
               </div>
               <div className="space-y-1.5">
                 <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
-                  Prazo alvo
+                  {t("app.dashboard.deadline") as string}
                 </label>
                 <input
                   type="date"
@@ -636,7 +638,7 @@ function DashboardContent() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
-                  Formato
+                  {t("app.studio.metadataModal.format") as string}
                 </label>
                 <input
                   type="text"
@@ -649,7 +651,7 @@ function DashboardContent() {
               </div>
               <div className="space-y-1.5">
                 <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
-                  Tom criativo
+                  {t("app.studio.metadataModal.tone") as string}
                 </label>
                 <input
                   type="text"
@@ -664,7 +666,7 @@ function DashboardContent() {
 
             <div className="space-y-1.5">
               <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
-                Objetivo
+                {t("app.dashboard.objective") as string}
               </label>
               <textarea
                 placeholder="O que esse projeto precisa resolver para o cliente?"
@@ -677,7 +679,7 @@ function DashboardContent() {
 
             <div className="space-y-1.5">
               <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
-                Cliente (Opcional)
+                {t("app.dashboard.client") as string} ({t("app.common.optional") as string})
               </label>
               <div className="relative">
                 <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
@@ -687,7 +689,7 @@ function DashboardContent() {
                   onChange={(e) => setClientId(e.target.value)}
                   className="w-full bg-[#111] border border-frame-gray-3 text-frame-white pl-10 pr-4 py-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none appearance-none cursor-pointer"
                 >
-                  <option value="">Nenhum cliente selecionado</option>
+                  <option value="">{t("app.common.none") as string}</option>
                   {clients.map((client) => (
                     <option key={client.id} value={client.id}>
                       {client.company ? `${client.name} (${client.company})` : client.name}
@@ -704,7 +706,7 @@ function DashboardContent() {
                 onClick={() => setIsCreateOpen(false)}
                 className="frame-btn-ghost !py-2 !px-4 !text-[0.62rem]"
               >
-                Cancelar
+                {t("app.common.cancel") as string}
               </button>
               <button
                 type="submit"
@@ -714,10 +716,10 @@ function DashboardContent() {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-3 h-3 animate-spin" />
-                    Criando...
+                    {t("app.studio.projectSelector.creating") as string}
                   </>
                 ) : (
-                  "Criar Projeto"
+                  t("app.dashboard.createProject") as string
                 )}
               </button>
             </DialogFooter>
@@ -730,11 +732,11 @@ function DashboardContent() {
         <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-sm rounded-none p-6">
           <DialogHeader>
             <DialogTitle className="font-frame-display text-2xl tracking-wider text-frame-red">
-              EXCLUIR PROJETO?
+              {t("app.studio.projectSelector.deleteTitle") as string}
             </DialogTitle>
             <DialogDescription className="font-frame-body text-xs text-frame-gray-light leading-relaxed">
-              Esta ação é permanente. Todos os históricos de IA, estados persistidos de formulários e metadados associados ao projeto{" "}
-              <strong className="text-frame-white">"{projectToDelete?.name}"</strong> serão apagados imediatamente.
+              {t("app.studio.projectSelector.deleteDesc") as string}{" "}
+              <strong className="text-frame-white">"{projectToDelete?.name}"</strong>
             </DialogDescription>
           </DialogHeader>
 
@@ -745,7 +747,7 @@ function DashboardContent() {
               onClick={() => setIsDeleteOpen(false)}
               className="frame-btn-ghost !py-2 !px-4 !text-[0.62rem]"
             >
-              Cancelar
+              {t("app.common.cancel") as string}
             </button>
             <button
               type="button"
@@ -756,10 +758,10 @@ function DashboardContent() {
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-3 h-3 animate-spin" />
-                  Excluindo...
+                  {t("app.studio.projectSelector.excluding") as string}
                 </>
               ) : (
-                "Excluir Definitivamente"
+                t("app.studio.projectSelector.exclude") as string
               )}
             </button>
           </DialogFooter>

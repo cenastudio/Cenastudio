@@ -1,4 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { Loader2 } from "lucide-react";
@@ -9,6 +10,7 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children, adminOnly }: ProtectedRouteProps) {
+  const { t } = useLanguage();
   const { isAuthenticated, isAdmin, isLoading } = useAuth();
   const [, setLocation] = useLocation();
 
@@ -27,7 +29,7 @@ export default function ProtectedRoute({ children, adminOnly }: ProtectedRoutePr
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-3" role="status" aria-live="polite">
         <Loader2 className="h-6 w-6 animate-spin text-frame-orange" />
-        <span className="font-frame-mono text-xs uppercase tracking-wider text-frame-gray-light">Carregando área de trabalho</span>
+        <span className="font-frame-mono text-xs uppercase tracking-wider text-frame-gray-light">{t("app.common.loadingWorkspace") as string}</span>
       </div>
     );
   }

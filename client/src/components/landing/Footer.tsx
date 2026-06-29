@@ -1,4 +1,5 @@
 import { FOOTER_LINKS, SITE_CONFIG } from "@shared/site";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 import { ArrowUpRight, BadgeCheck, LockKeyhole, Receipt, ShieldCheck } from "lucide-react";
 import BrandLogo from "@/components/BrandLogo";
@@ -8,11 +9,12 @@ import BrandLogo from "@/components/BrandLogo";
  * Design: Simples e elegante com links organizados em colunas
  */
 export default function Footer() {
+  const { t } = useLanguage();
   const currentYear = new Date().getFullYear();
   const trustItems = [
-    { icon: LockKeyhole, label: "Checkout seguro" },
-    { icon: ShieldCheck, label: "Dados protegidos" },
-    { icon: Receipt, label: "Planos claros" },
+    { icon: LockKeyhole, labelKey: "app.landing.footer.secureCheckout" },
+    { icon: ShieldCheck, labelKey: "app.landing.footer.dataProtected" },
+    { icon: Receipt, labelKey: "app.landing.footer.clearPlans" },
   ];
 
   return (
@@ -25,26 +27,24 @@ export default function Footer() {
           className="landing-glass-strong grid grid-cols-1 gap-8 p-6 sm:p-8 lg:grid-cols-[1.1fr_0.9fr]"
         >
           <div>
-            <p className="landing-eyebrow mb-4">// Operação audiovisual</p>
+            <p className="landing-eyebrow mb-4">{t("app.landing.footer.eyebrow") as string}</p>
             <h2 className="landing-heading max-w-3xl text-[clamp(2.8rem,6vw,6rem)]">
-              Feito por filmmakers,
-              <br />
-              <span className="landing-accent-text">para filmmakers.</span>
+              {t("app.landing.footer.heading") as string}
             </h2>
           </div>
 
           <div className="flex flex-col justify-between gap-6 lg:items-end lg:text-right">
             <p className="landing-copy max-w-md">
-              Projetos, IA, clientes, arquivos, aprovações e documentos no mesmo fluxo de produção.
+              {t("app.landing.footer.copy") as string}
             </p>
             <div className="flex flex-wrap gap-2 lg:justify-end">
-              {trustItems.map(({ icon: Icon, label }) => (
+              {trustItems.map(({ icon: Icon, labelKey }) => (
                 <span
-                  key={label}
+                  key={labelKey}
                   className="landing-pill"
                 >
                   <Icon className="h-3.5 w-3.5 text-frame-orange" />
-                  {label}
+                  {t(labelKey) as string}
                 </span>
               ))}
             </div>
@@ -63,22 +63,21 @@ export default function Footer() {
               <BrandLogo tone="onDark" className="text-2xl" />
             </a>
             <p className="max-w-md text-[0.92rem] font-light leading-relaxed text-[var(--landing-muted)]">
-              Central operacional audiovisual para produtoras, filmmakers e equipes criativas:
-              projetos, IA, clientes, arquivos, aprovações, documentos e equipe por job.
+              {t("app.landing.footer.description") as string}
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <a
                 href="/login"
                 className="inline-flex items-center gap-2 border border-frame-orange bg-frame-orange px-4 py-2.5 font-frame-mono text-[0.64rem] uppercase tracking-[0.14em] text-black transition hover:bg-frame-orange-dark"
               >
-                Entrar no produto
+                {t("app.landing.footer.enterProduct") as string}
                 <ArrowUpRight className="h-3.5 w-3.5" />
               </a>
               <a
                 href="#contact"
                 className="inline-flex items-center gap-2 border border-[var(--landing-line)] px-4 py-2.5 font-frame-mono text-[0.64rem] uppercase tracking-[0.14em] text-[var(--landing-muted)] transition hover:border-frame-orange/40 hover:text-[var(--landing-text)]"
               >
-                Agendar demo
+                {t("app.landing.footer.scheduleDemo") as string}
               </a>
             </div>
           </motion.div>
@@ -121,12 +120,12 @@ export default function Footer() {
           className="flex flex-col justify-between gap-5 font-frame-mono text-[0.64rem] tracking-[0.08em] text-[var(--landing-muted)] lg:flex-row"
         >
           <div className="max-w-2xl leading-relaxed space-y-2">
-            <div>© {currentYear} {SITE_CONFIG.title}. Todos os direitos reservados.</div>
-            <div>Licenciado sob MIT License. Plataforma em evolução contínua; recursos, integrações e limites podem variar conforme o plano contratado.</div>
+            <div>© {currentYear} {SITE_CONFIG.title}. {t("app.landing.footer.allRightsReserved") as string}</div>
+            <div>{t("app.landing.footer.license") as string}</div>
           </div>
           <div className="flex items-center gap-2 text-[var(--landing-subtle)]">
             <BadgeCheck className="w-3.5 h-3.5 text-frame-orange" />
-            Feito por filmmakers, para filmmakers.
+            {t("app.landing.footer.madeBy") as string}
           </div>
         </motion.div>
       </div>

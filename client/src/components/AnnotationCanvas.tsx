@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { ArrowUpRight, Square, Circle, Pencil, Type, Undo2, RotateCcw } from "lucide-react";
 
 export type AnnotationTool = "arrow" | "rect" | "circle" | "draw" | "text";
@@ -33,6 +34,7 @@ export default function AnnotationCanvas({
   onAnnotationsChange,
   active = true,
 }: AnnotationCanvasProps) {
+  const { t } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [tool, setTool] = useState<AnnotationTool>("arrow");
   const [color, setColor] = useState(COLORS[0]);
@@ -154,7 +156,7 @@ export default function AnnotationCanvas({
     setStartPoint(pos);
 
     if (tool === "text") {
-      const text = prompt("Texto da anotação:");
+      const text = prompt(t("app.videoReviews.annotationText") as string);
       if (text?.trim()) {
         const newAnn: Annotation = {
           id: crypto.randomUUID(),
@@ -223,12 +225,12 @@ export default function AnnotationCanvas({
     onAnnotationsChange([]);
   };
 
-  const tools: { key: AnnotationTool; icon: typeof ArrowUpRight; label: string }[] = [
-    { key: "arrow", icon: ArrowUpRight, label: "Seta" },
-    { key: "rect", icon: Square, label: "Retângulo" },
-    { key: "circle", icon: Circle, label: "Círculo" },
-    { key: "draw", icon: Pencil, label: "Desenhar" },
-    { key: "text", icon: Type, label: "Texto" },
+  const tools: { key: AnnotationTool; icon: typeof ArrowUpRight; labelKey: string }[] = [
+    { key: "arrow", icon: ArrowUpRight, labelKey: "app.videoReviews.arrow" },
+    { key: "rect", icon: Square, labelKey: "app.videoReviews.rect" },
+    { key: "circle", icon: Circle, labelKey: "app.videoReviews.circle" },
+    { key: "draw", icon: Pencil, labelKey: "app.videoReviews.draw" },
+    { key: "text", icon: Type, labelKey: "app.videoReviews.text" },
   ];
 
   return (
@@ -255,7 +257,7 @@ export default function AnnotationCanvas({
                 className={`p-1.5 rounded transition ${
                   tool === t.key ? "bg-frame-orange text-frame-black" : "text-white/70 hover:text-white hover:bg-white/10"
                 }`}
-                title={t.label}
+                title={t(t.labelKey) as string}
               >
                 <Icon className="w-3.5 h-3.5" />
               </button>
@@ -279,7 +281,7 @@ export default function AnnotationCanvas({
             onClick={handleUndo}
             disabled={annotations.length === 0}
             className="p-1.5 rounded text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
-            title="Desfazer"
+            title={t("app.videoReviews.undo") as string}
           >
             <Undo2 className="w-3.5 h-3.5" />
           </button>
@@ -288,7 +290,7 @@ export default function AnnotationCanvas({
             onClick={handleClear}
             disabled={annotations.length === 0}
             className="p-1.5 rounded text-white/70 hover:text-red-400 hover:bg-red-400/10 disabled:opacity-30 disabled:cursor-not-allowed"
-            title="Limpar tudo"
+            title={t("app.videoReviews.clearAll") as string}
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>

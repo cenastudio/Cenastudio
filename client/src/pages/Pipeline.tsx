@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AnimatedModal from "@/components/AnimatedModal";
@@ -60,13 +61,13 @@ interface ClientOption {
 }
 
 const STAGES = [
-  { id: "prospect", label: "Lead", description: "Entrou no radar", color: "border-sky-400/40", dot: "bg-sky-400" },
+  { id: "prospect", label: t("app.pipeline.lead") as string, description: "Entrou no radar", color: "border-sky-400/40", dot: "bg-sky-400" },
   { id: "meeting", label: "Diagnóstico", description: "Reunião e briefing", color: "border-amber-400/40", dot: "bg-amber-400" },
-  { id: "proposal", label: "Proposta", description: "Escopo enviado", color: "border-violet-400/40", dot: "bg-violet-400" },
-  { id: "negotiation", label: "Negociação", description: "Ajustes finais", color: "border-orange-400/50", dot: "bg-frame-orange" },
+  { id: "proposal", label: t("app.pipeline.proposal") as string, description: "Escopo enviado", color: "border-violet-400/40", dot: "bg-violet-400" },
+  { id: "negotiation", label: t("app.pipeline.negotiation") as string, description: "Ajustes finais", color: "border-orange-400/50", dot: "bg-frame-orange" },
   { id: "paused", label: "Pausado", description: "Cliente em pausa", color: "border-gray-400/40", dot: "bg-gray-400" },
-  { id: "won", label: "Ganho", description: "Virou projeto", color: "border-emerald-400/50", dot: "bg-emerald-400" },
-  { id: "lost", label: "Perdido", description: "Encerrado", color: "border-red-400/45", dot: "bg-frame-red" },
+  { id: "won", label: t("app.pipeline.closedWon") as string, description: "Virou projeto", color: "border-emerald-400/50", dot: "bg-emerald-400" },
+  { id: "lost", label: t("app.pipeline.closedLost") as string, description: "Encerrado", color: "border-red-400/45", dot: "bg-frame-red" },
 ];
 
 const STAGE_ORDER = STAGES.map((stage) => stage.id);
@@ -82,6 +83,7 @@ const emptyForm = {
 };
 
 function PipelineContent() {
+  const { t } = useLanguage();
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [stats, setStats] = useState<PipelineStats | null>(null);
   const [clients, setClients] = useState<ClientOption[]>([]);
@@ -116,7 +118,7 @@ function PipelineContent() {
       if (statsData.success) setStats(statsData.data);
       if (clientsData.success) setClients(clientsData.data || []);
     } catch {
-      toast.error("Erro ao carregar pipeline");
+      toast.error(t("app.errors.generic") as string);
     } finally {
       setIsLoading(false);
     }
@@ -159,7 +161,7 @@ function PipelineContent() {
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value || 0);
 
   const formatDate = (value?: string | null) => {
-    if (!value) return "Sem data";
+    if (!value) return t("app.common.noData") as string;
     return new Date(value).toLocaleDateString("pt-BR", { timeZone: "UTC" });
   };
 
@@ -243,12 +245,12 @@ function PipelineContent() {
       const data = await response.json();
       if (!data.success) throw new Error(data.error || "Erro ao salvar oportunidade");
 
-      toast.success(isEdit ? "Oportunidade atualizada" : "Oportunidade criada");
+      toast.success(isEdit ? t("app.pipeline.opportunityUpdated") as string : t("app.pipeline.opportunityCreated") as string);
       closeModal();
       resetForm();
       await loadPipeline();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao salvar oportunidade");
+      toast.error(error instanceof Error ? error.message : t("app.errors.generic") as string);
     } finally {
       setIsSubmitting(false);
     }
@@ -270,7 +272,7 @@ function PipelineContent() {
       );
       void loadPipeline();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao mover oportunidade");
+      toast.error(error instanceof Error ? error.message : t("app.errors.generic") as string);
     }
   };
 
@@ -284,11 +286,11 @@ function PipelineContent() {
       });
       const data = await response.json();
       if (!data.success) throw new Error(data.error || "Erro ao excluir oportunidade");
-      toast.success("Oportunidade removida");
+      toast.success(t("app.pipeline.opportunityDeleted") as string);
       closeModal();
       await loadPipeline();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao excluir oportunidade");
+      toast.error(error instanceof Error ? error.message : t("app.errors.generic") as string);
     } finally {
       setIsSubmitting(false);
     }
@@ -313,10 +315,10 @@ function PipelineContent() {
       <main id="main-content" className="flex-1 w-full px-4 md:px-6 py-6 space-y-5">
         <section className="flex flex-col xl:flex-row xl:items-end justify-between gap-5 border-b border-frame-gray-3 pb-5">
           <div className="max-w-3xl min-w-0">
-            <p className="frame-label mb-2">// COMERCIAL</p>
-            <h1 className="frame-title text-[clamp(2rem,4vw,3.4rem)]">PIPELINE</h1>
+            <p className="frame-label mb-2">// {t("app.pipeline.title") as string}</p>
+            <h1 className="frame-title text-[clamp(2rem,4vw,3.4rem)]">{t("app.pipeline.title") as string}</h1>
             <p className="text-frame-gray-light text-sm mt-2 max-w-2xl leading-relaxed">
-              Funil de vendas com próximos passos, valor ponderado e tomada de decisão rápida.
+              {t("app.pipeline.noOpportunitiesDesc") as string}
             </p>
           </div>
 
@@ -327,7 +329,7 @@ function PipelineContent() {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 className="w-full bg-frame-gray-1 border border-frame-gray-3 pl-9 pr-3 py-2.5 text-sm outline-none focus:border-frame-orange"
-                placeholder="Buscar oportunidade ou cliente"
+                placeholder={t("app.common.search") as string}
               />
             </div>
             <div className="relative min-w-0">
@@ -337,7 +339,7 @@ function PipelineContent() {
                 onChange={(event) => setStageFilter(event.target.value)}
                 className="w-full bg-frame-gray-1 border border-frame-gray-3 pl-9 pr-3 py-2.5 text-sm outline-none focus:border-frame-orange appearance-none"
               >
-                <option value="all">Todas etapas</option>
+                <option value="all">{t("app.common.all") as string}</option>
                 {STAGES.map((stage) => (
                   <option key={stage.id} value={stage.id}>
                     {stage.label}
@@ -347,19 +349,19 @@ function PipelineContent() {
             </div>
             <button onClick={openCreateModal} className="frame-btn-primary flex items-center justify-center gap-2 whitespace-nowrap">
               <Plus className="w-4 h-4" />
-              Nova oportunidade
+              {t("app.pipeline.newOpportunity") as string}
             </button>
           </div>
         </section>
 
         <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-          <Metric icon={DollarSign} label="Pipeline aberto" value={formatCurrency(stats?.totalPipelineValue || 0)} />
-          <Metric icon={Target} label="Valor ponderado" value={formatCurrency(weightedValue)} />
-          <Metric icon={TrendingUp} label="Ganho no mês" value={formatCurrency(stats?.wonThisMonth.value || 0)} />
+          <Metric icon={DollarSign} label={t("app.pipeline.totalValue") as string} value={formatCurrency(stats?.totalPipelineValue || 0)} />
+          <Metric icon={Target} label={t("app.pipeline.conversionRate") as string} value={formatCurrency(weightedValue)} />
+          <Metric icon={TrendingUp} label={t("app.pipeline.closedWon") as string} value={formatCurrency(stats?.wonThisMonth.value || 0)} />
           <Metric
             icon={Clock}
-            label="Próximo fechamento"
-            value={nextClosing ? formatDate(nextClosing.expected_close_date) : "Sem data"}
+            label={t("app.pipeline.expectedClose") as string}
+            value={nextClosing ? formatDate(nextClosing.expected_close_date) : t("app.common.noData") as string}
           />
         </section>
 
@@ -369,7 +371,7 @@ function PipelineContent() {
           </div>
         ) : filteredOpportunities.length === 0 ? (
           <div className="border border-frame-gray-3 bg-frame-gray-1/20 py-16">
-            <EmptyState icon={Inbox} title="Nenhuma oportunidade no filtro" />
+            <EmptyState icon={Inbox} title={t("app.pipeline.noOpportunities") as string} />
           </div>
         ) : (
           <section className="flex gap-3 overflow-x-auto pb-4">
@@ -416,7 +418,7 @@ function PipelineContent() {
                         onClick={openCreateModal}
                         className="w-full border border-dashed border-frame-gray-3 p-4 text-left text-xs text-frame-gray-light hover:border-frame-orange/60 hover:text-frame-orange transition"
                       >
-                        Adicionar oportunidade aqui
+                        {t("app.pipeline.newOpportunity") as string}
                       </button>
                     )}
                   </div>
@@ -430,13 +432,13 @@ function PipelineContent() {
       <AnimatedModal
         isOpen={modalMode === "create" || modalMode === "edit"}
         onClose={closeModal}
-        title={modalMode === "edit" ? "EDITAR OPORTUNIDADE" : "NOVA OPORTUNIDADE"}
-        description="Defina cliente, valor, probabilidade e próximo fechamento."
+        title={modalMode === "edit" ? t("app.pipeline.editOpportunity") as string : t("app.pipeline.newOpportunity") as string}
+        description={t("app.pipeline.noOpportunitiesDesc") as string}
         className="max-w-3xl"
         footer={
           <>
             <button type="button" disabled={isSubmitting} onClick={closeModal} className="frame-btn-ghost">
-              Cancelar
+              {t("app.common.cancel") as string}
             </button>
             <button
               type="submit"
@@ -444,7 +446,7 @@ function PipelineContent() {
               disabled={isSubmitting || !form.title.trim()}
               className="frame-btn-primary"
             >
-              {isSubmitting ? "Salvando..." : modalMode === "edit" ? "Salvar" : "Criar"}
+              {isSubmitting ? t("app.common.loading") as string : t("app.common.save") as string}
             </button>
           </>
         }
@@ -461,21 +463,21 @@ function PipelineContent() {
       <AnimatedModal
         isOpen={modalMode === "detail"}
         onClose={closeModal}
-        title="DETALHE DA OPORTUNIDADE"
+        title={t("app.pipeline.editOpportunity") as string}
         description={selectedOpportunity ? stageById(selectedOpportunity.stage).description : ""}
         className="max-w-3xl"
         footer={
           selectedOpportunity && (
             <>
               <button onClick={() => openEditModal(selectedOpportunity)} className="frame-btn-ghost">
-                Editar
+                {t("app.common.edit") as string}
               </button>
               {previousStage(selectedOpportunity) && (
                 <button
                   onClick={() => moveOpportunity(selectedOpportunity, previousStage(selectedOpportunity)!.id)}
                   className="frame-btn-ghost"
                 >
-                  Voltar etapa
+                  {t("app.common.back") as string}
                 </button>
               )}
               {nextStage(selectedOpportunity) && (
@@ -483,7 +485,7 @@ function PipelineContent() {
                   onClick={() => moveOpportunity(selectedOpportunity, nextStage(selectedOpportunity)!.id)}
                   className="frame-btn-primary"
                 >
-                  Avançar etapa
+                  {t("app.common.next") as string}
                 </button>
               )}
             </>
@@ -509,17 +511,17 @@ function PipelineContent() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <DetailStat label="Probabilidade" value={`${selectedOpportunity.probability || 0}%`} />
+              <DetailStat label={t("app.pipeline.probability") as string} value={`${selectedOpportunity.probability || 0}%`} />
               <DetailStat
-                label="Valor ponderado"
+                label={t("app.pipeline.conversionRate") as string}
                 value={formatCurrency(((selectedOpportunity.estimated_value || 0) * (selectedOpportunity.probability || 0)) / 100)}
               />
-              <DetailStat label="Fechamento" value={formatDate(selectedOpportunity.expected_close_date)} />
+              <DetailStat label={t("app.pipeline.expectedClose") as string} value={formatDate(selectedOpportunity.expected_close_date)} />
             </div>
 
             {selectedOpportunity.lost_reason && (
               <div className="border border-frame-red/30 bg-frame-red/5 p-4">
-                <p className="frame-label text-frame-red mb-2">Motivo da perda</p>
+                <p className="frame-label text-frame-red mb-2">{t("app.pipeline.closedLost") as string}</p>
                 <p className="text-sm text-frame-gray-light">{selectedOpportunity.lost_reason}</p>
               </div>
             )}
@@ -530,12 +532,12 @@ function PipelineContent() {
       <AnimatedModal
         isOpen={modalMode === "delete"}
         onClose={closeModal}
-        title="EXCLUIR OPORTUNIDADE?"
-        description="Esta ação é permanente."
+        title={t("app.common.delete") as string}
+        description={t("app.studio.projectSelector.deleteDesc") as string}
         footer={
           <>
             <button type="button" disabled={isSubmitting} onClick={closeModal} className="frame-btn-ghost">
-              Cancelar
+              {t("app.common.cancel") as string}
             </button>
             <button
               type="button"
@@ -543,14 +545,14 @@ function PipelineContent() {
               onClick={deleteOpportunity}
               className="bg-frame-red hover:bg-red-600 text-white px-4 py-2 text-sm font-frame-mono uppercase tracking-wider transition"
             >
-              {isSubmitting ? "Excluindo..." : "Excluir"}
+              {isSubmitting ? t("app.common.loading") as string : t("app.common.delete") as string}
             </button>
           </>
         }
       >
         <div className="border border-frame-red/30 bg-frame-red/5 p-4">
           <p className="font-semibold">{selectedOpportunity?.title}</p>
-          <p className="text-sm text-frame-gray-light mt-1">{selectedOpportunity?.client_name || "Sem cliente"}</p>
+          <p className="text-sm text-frame-gray-light mt-1">{selectedOpportunity?.client_name || t("app.common.none") as string}</p>
         </div>
       </AnimatedModal>
     </div>
@@ -594,6 +596,7 @@ function OpportunityCard({
   previousStage?: (typeof STAGES)[number];
   nextStage?: (typeof STAGES)[number];
 }) {
+  const { t } = useLanguage();
   const weighted = ((opportunity.estimated_value || 0) * (opportunity.probability || 0)) / 100;
 
   return (
@@ -619,15 +622,15 @@ function OpportunityCard({
             <DropdownMenuContent align="end" className="bg-frame-black border-frame-gray-3">
               <DropdownMenuItem onClick={onOpen} className="cursor-pointer">
                 <Eye className="w-4 h-4 mr-2" />
-                Abrir
+                {t("app.common.preview") as string}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onEdit} className="cursor-pointer">
                 <Edit className="w-4 h-4 mr-2" />
-                Editar
+                {t("app.common.edit") as string}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onDelete} className="cursor-pointer text-frame-red">
                 <Trash2 className="w-4 h-4 mr-2" />
-                Excluir
+                {t("app.common.delete") as string}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -635,12 +638,12 @@ function OpportunityCard({
 
         <div className="flex items-center gap-2 text-xs text-frame-gray-light">
           <Building2 className="w-3.5 h-3.5" />
-          <span className="truncate">{opportunity.client_name || "Sem cliente"}</span>
+          <span className="truncate">{opportunity.client_name || t("app.common.none") as string}</span>
         </div>
 
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-2">
-            <p className="text-frame-gray-light">Valor</p>
+            <p className="text-frame-gray-light">{t("app.pipeline.value") as string}</p>
             <p className="font-semibold text-frame-orange mt-0.5">
               {formatCurrency(opportunity.estimated_value || 0)}
             </p>
@@ -653,7 +656,7 @@ function OpportunityCard({
 
         <div>
           <div className="flex items-center justify-between text-[0.68rem] text-frame-gray-light mb-1">
-            <span>Probabilidade</span>
+            <span>{t("app.pipeline.probability") as string}</span>
             <span>{opportunity.probability || 0}%</span>
           </div>
           <div className="h-1.5 bg-frame-gray-3">
@@ -674,14 +677,14 @@ function OpportunityCard({
           className="flex items-center justify-center gap-1.5 py-2 text-xs text-frame-gray-light hover:text-frame-white disabled:opacity-30 disabled:hover:text-frame-gray-light"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          Voltar
+          {t("app.common.back") as string}
         </button>
         <button
           disabled={!nextStage}
           onClick={() => nextStage && onMove(opportunity, nextStage.id)}
           className="flex items-center justify-center gap-1.5 py-2 text-xs text-frame-orange hover:bg-frame-orange/10 disabled:opacity-30 disabled:hover:bg-transparent"
         >
-          Avançar
+          {t("app.common.next") as string}
           <ArrowRight className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -702,10 +705,11 @@ function PipelineForm({
   updateForm: (key: keyof typeof emptyForm, value: string) => void;
   onSubmit: (event: React.FormEvent) => void;
 }) {
+  const { t } = useLanguage();
   return (
     <form id="pipeline-form" onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
-        <label className="block font-frame-mono text-xs text-frame-orange uppercase">Título *</label>
+        <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.pipeline.opportunityTitle") as string} *</label>
         <input
           required
           disabled={isSubmitting}
@@ -718,14 +722,14 @@ function PipelineForm({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="block font-frame-mono text-xs text-frame-orange uppercase">Cliente</label>
+          <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.pipeline.clientName") as string}</label>
           <select
             disabled={isSubmitting}
             value={form.clientId}
             onChange={(event) => updateForm("clientId", event.target.value)}
             className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange"
           >
-            <option value="">Sem cliente vinculado</option>
+            <option value="">{t("app.common.none") as string}</option>
             {clients.map((client) => (
               <option key={client.id} value={client.id}>
                 {client.company ? `${client.name} / ${client.company}` : client.name}
@@ -735,7 +739,7 @@ function PipelineForm({
         </div>
 
         <div className="space-y-2">
-          <label className="block font-frame-mono text-xs text-frame-orange uppercase">Etapa</label>
+          <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.pipeline.stage") as string}</label>
           <select
             disabled={isSubmitting}
             value={form.stage}
@@ -753,7 +757,7 @@ function PipelineForm({
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="space-y-2">
-          <label className="block font-frame-mono text-xs text-frame-orange uppercase">Valor</label>
+          <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.pipeline.value") as string}</label>
           <input
             type="number"
             min="0"
@@ -766,7 +770,7 @@ function PipelineForm({
         </div>
 
         <div className="space-y-2">
-          <label className="block font-frame-mono text-xs text-frame-orange uppercase">Probabilidade</label>
+          <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.pipeline.probability") as string}</label>
           <input
             type="number"
             min="0"
@@ -779,7 +783,7 @@ function PipelineForm({
         </div>
 
         <div className="space-y-2">
-          <label className="block font-frame-mono text-xs text-frame-orange uppercase">Fechamento</label>
+          <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.pipeline.expectedClose") as string}</label>
           <input
             type="date"
             disabled={isSubmitting}
@@ -792,7 +796,7 @@ function PipelineForm({
 
       {form.stage === "lost" && (
         <div className="space-y-2">
-          <label className="block font-frame-mono text-xs text-frame-red uppercase">Motivo da perda</label>
+          <label className="block font-frame-mono text-xs text-frame-red uppercase">{t("app.pipeline.closedLost") as string}</label>
           <textarea
             disabled={isSubmitting}
             value={form.lostReason}

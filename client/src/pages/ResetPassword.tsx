@@ -4,11 +4,14 @@ import { Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 function getTokenFromUrl(): string | null {
   if (typeof window === "undefined") return null;
   return new URLSearchParams(window.location.search).get("token");
 }
+
+const { t } = useLanguage();
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
@@ -20,25 +23,25 @@ export default function ResetPassword() {
 
   const handleSubmit = async () => {
     if (!token) {
-      setError("Link inválido. Solicite um novo token de recuperação.");
+      setError(t("app.errors.invalidToken"));
       return;
     }
     if (password.length < 8) {
-      setError("A senha deve ter pelo menos 8 caracteres.");
+      setError(t("app.errors.passwordMinChars"));
       return;
     }
     if (password !== confirmPassword) {
-      setError("As senhas não coincidem.");
+      setError(t("app.errors.passwordsDontMatch"));
       return;
     }
     setSubmitting(true);
     setError(null);
     try {
       await api.auth.resetPassword(token, password);
-      toast.success("Senha redefinida com sucesso!");
+      toast.success(t("app.auth.passwordResetSuccess"));
       setLocation("/login");
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Erro ao redefinir senha";
+      const msg = e instanceof Error ? e.message : t("app.auth.passwordResetError");
       setError(msg);
     } finally {
       setSubmitting(false);
@@ -47,8 +50,8 @@ export default function ResetPassword() {
 
   if (!token) {
     return (
-      <AuthLayout title="Link inválido" subtitle="O token de recuperação está ausente ou expirou.">
-        <AuthError message="Token inválido ou ausente." />
+      <AuthLayout title={t("app.auth.invalidLink")} subtitle={t("app.auth.invalidLinkSubtitle")}>
+        <AuthError message={t("app.errors.invalidTokenMessage")} />
         <button
           type="button"
           onClick={() => setLocation("/forgot-password")}
@@ -61,9 +64,9 @@ export default function ResetPassword() {
   }
 
   return (
-    <AuthLayout title="Nova senha" subtitle="Defina uma nova senha para sua conta.">
+    <AuthLayout title={t("app.auth.newPassword")} subtitle={t("app.auth.newPasswordSubtitle")}>
       {error && <AuthError message={error} />}
-      <AuthField label="Nova senha">
+      <AuthField label={t("app.auth.newPassword")}>
         <input
           type="password"
           value={password}
@@ -71,7 +74,7 @@ export default function ResetPassword() {
           className="frame-input"
         />
       </AuthField>
-      <AuthField label="Confirmar senha">
+      <AuthField label={t("app.auth.confirmPassword")}>
         <input
           type="password"
           value={confirmPassword}
@@ -91,7 +94,7 @@ export default function ResetPassword() {
             Salvando...
           </>
         ) : (
-          "Redefinir senha"
+          t("app.auth.resetPassword")
         )}
       </button>
       <AuthLink>

@@ -2,6 +2,7 @@ import { type ToolFromApi } from "@/lib/api";
 import FormDispatcher from "./forms/FormDispatcher";
 import { Loader2 } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ToolWorkspaceProps {
   tool: ToolFromApi;
@@ -23,12 +24,13 @@ export default function ToolWorkspace({
   onSetOutput,
 }: ToolWorkspaceProps) {
   const { autosaveStatus, activeProject } = useProject();
+  const { t } = useLanguage();
 
   const renderAutosaveStatus = () => {
     if (!activeProject) {
       return (
         <span className="font-frame-mono text-[0.62rem] text-[var(--ds-text-muted)]">
-          Estúdio de Pré-produção
+          {t("app.studio.preProduction") as string}
         </span>
       );
     }
@@ -38,21 +40,21 @@ export default function ToolWorkspace({
         return (
           <span className="flex items-center gap-1.5 font-frame-mono text-[0.62rem] text-[var(--ds-primary)] animate-pulse">
             <span className="w-1 h-1 rounded-full bg-[var(--ds-primary)]" />
-            Salvando...
+            {t("app.studio.saving") as string}
           </span>
         );
       case "saved":
         return (
           <span className="flex items-center gap-1.5 font-frame-mono text-[0.62rem] text-[var(--ds-success)] transition-colors duration-200">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--ds-success)]" />
-            Salvo
+            {t("app.studio.saved") as string}
           </span>
         );
       case "error":
         return (
           <span className="flex items-center gap-1.5 font-frame-mono text-[0.62rem] text-[var(--ds-danger)]">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--ds-danger)] animate-ping" />
-            Erro ao salvar
+            {t("app.common.error") as string}
           </span>
         );
       case "idle":
@@ -60,7 +62,7 @@ export default function ToolWorkspace({
         return (
           <span className="flex items-center gap-1.5 font-frame-mono text-[0.62rem] text-[var(--ds-text-muted)]">
             <span className="w-1 h-1 rounded-full bg-[var(--ds-text-muted)]" />
-            Pronto
+            {t("app.studio.ready") as string}
           </span>
         );
     }
@@ -73,10 +75,10 @@ export default function ToolWorkspace({
         <div className="studio-panel-header flex justify-between items-center border-b border-[var(--ds-border)] pb-3 mb-3">
           <div>
             <span className="font-frame-mono text-[0.62rem] tracking-[0.18em] uppercase text-[var(--ds-primary)] font-semibold">
-              Input Params
+              {t("app.studio.inputParams") as string}
             </span>
             <p className="mt-1 text-[0.75rem] leading-relaxed text-[var(--ds-text-muted)]">
-              Preencha somente o necessário para gerar um documento limpo.
+              {t("app.studio.inputHint") as string}
             </p>
           </div>
           {renderAutosaveStatus()}
@@ -112,10 +114,10 @@ export default function ToolWorkspace({
             {isProcessing ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Processando IA...
+                {t("app.studio.processing") as string}
               </>
             ) : (
-              <>▶ Executar motor IA</>
+              <>▶ {t("app.studio.runAI") as string}</>
             )}
           </button>
         </div>

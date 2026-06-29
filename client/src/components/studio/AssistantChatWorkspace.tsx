@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { ApiError, api, type ToolFromApi } from "@/lib/api";
 import { Bot, Copy, Loader2, Send, Trash2, UserRound } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -13,18 +14,19 @@ interface AssistantChatWorkspaceProps {
   projectId?: number | null;
 }
 
-const starterPrompts = [
-  "Me ajude a estruturar o workflow de aprovação com cliente.",
-  "Crie um checklist de filmagem para externa com risco de chuva.",
-  "Como eu organizo orçamento, cronograma e equipe para um job comercial?",
-];
+const starterPrompts: string[] = [];
 
 export default function AssistantChatWorkspace({ tool, projectId }: AssistantChatWorkspaceProps) {
+  const { t } = useLanguage();
+  const starterPrompts = [
+    t("app.studio.assistant.starter1") as string,
+    t("app.studio.assistant.starter2") as string,
+    t("app.studio.assistant.starter3") as string,
+  ];
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
-      content:
-        "Olá. Sou seu assistente de produção audiovisual. Pode falar comigo como em um chat: briefing, orçamento, roteiro, set, pós, contrato, cliente ou dúvidas rápidas.",
+      content: t("app.studio.assistant.greeting") as string,
     },
   ]);
   const [input, setInput] = useState("");
@@ -34,7 +36,7 @@ export default function AssistantChatWorkspace({ tool, projectId }: AssistantCha
   const conversationPrompt = useMemo(
     () =>
       messages
-        .map((message) => `${message.role === "user" ? "Usuário" : "Assistente"}: ${message.content}`)
+        .map((message) => `${message.role === "user" ? t("app.studio.assistant.user") as string : t("app.studio.assistant.assistant") as string}: ${message.content}`)
         .join("\n\n"),
     [messages],
   );
@@ -66,15 +68,15 @@ export default function AssistantChatWorkspace({ tool, projectId }: AssistantCha
           ? error.message
           : error instanceof Error
             ? error.message
-            : "Erro ao falar com a IA";
+            : t("app.studio.assistant.chatError") as string;
       toast.error(message);
       setMessages((current) => [
         ...current,
         {
           role: "assistant",
           content: message.toLowerCase().includes("atingiu") || message.toLowerCase().includes("plano")
-            ? `Sua mensagem foi recebida, mas a conta está sem cota IA agora.\n\n${message}\n\nO administrador pode liberar plano/cota na aba Admin > Gerenciar usuários.`
-            : `Não consegui responder agora.\n\nErro recebido: ${message}\n\nSeu texto ficou preservado. Tente novamente em alguns segundos.`,
+            ? `${t("app.studio.assistant.noQuota") as string}\n\n${message}\n\n${t("app.studio.assistant.adminHint") as string}`
+            : `${t("app.studio.assistant.failedResponse") as string}\n\n${t("app.studio.assistant.errorPrefix") as string} ${message}\n\n${t("app.studio.assistant.retryHint") as string}`,
         },
       ]);
     } finally {
@@ -86,8 +88,7 @@ export default function AssistantChatWorkspace({ tool, projectId }: AssistantCha
     setMessages([
       {
         role: "assistant",
-        content:
-          "Chat limpo. Me diga o que você quer resolver agora: produção, roteiro, cliente, orçamento, aprovação ou operação do studio.",
+        content: t("app.studio.assistant.chatCleared") as string,
       },
     ]);
   };
@@ -96,24 +97,24 @@ export default function AssistantChatWorkspace({ tool, projectId }: AssistantCha
     <div className="studio-chat-panel flex-1 min-w-0 flex flex-col border-t lg:border-t-0 border-[var(--ds-border)]">
       <div className="px-4 sm:px-6 py-4 border-b border-[var(--ds-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <p className="frame-label mb-1">// ASSISTENTE LIVRE</p>
-          <h2 className="frame-title text-[clamp(1.6rem,3vw,2.5rem)] leading-none">CHAT DE PRODUÇÃO</h2>
+          <p className="frame-label mb-1">{t("app.studio.assistant.headerLabel") as string}</p>
+          <h2 className="frame-title text-[clamp(1.6rem,3vw,2.5rem)] leading-none">{t("app.studio.assistant.headerTitle") as string}</h2>
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => {
               navigator.clipboard.writeText(messages.map((m) => `${m.role}: ${m.content}`).join("\n\n"));
-              toast.success("Conversa copiada");
+              toast.success(t("app.studio.assistant.chatCopied") as string);
             }}
             className="frame-btn-ghost flex items-center gap-2"
           >
             <Copy className="w-4 h-4" />
-            Copiar
+            {t("app.studio.copy") as string}
           </button>
           <button type="button" onClick={clearChat} className="frame-btn-ghost flex items-center gap-2">
             <Trash2 className="w-4 h-4" />
-            Limpar
+            {t("app.studio.clear") as string}
           </button>
         </div>
       </div>
@@ -140,7 +141,7 @@ export default function AssistantChatWorkspace({ tool, projectId }: AssistantCha
         ))}
         {isSending && (
           <div className="frame-chat-loading">
-            <span>Pensando...</span>
+            <span>{t("app.studio.assistant.thinking") as string}</span>
             <div className="flex gap-1">
               <span />
               <span />
@@ -174,7 +175,7 @@ export default function AssistantChatWorkspace({ tool, projectId }: AssistantCha
                 sendMessage();
               }
             }}
-            placeholder="Escreva sua dúvida livremente..."
+            placeholder={t("app.studio.assistant.inputPlaceholder") as string}
             rows={2}
             className="frame-input flex-1 resize-none min-h-[44px] max-h-[120px]"
           />

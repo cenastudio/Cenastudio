@@ -1,8 +1,10 @@
 import { LANDING_TOOLS } from "@/shared/tools";
 import { MARQUEE_ITEMS } from "@shared/site";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 
 export default function ToolsSection() {
+  const { t } = useLanguage();
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -34,12 +36,12 @@ export default function ToolsSection() {
 
       <div className="landing-shell">
         <div className="mb-14 max-w-3xl">
-          <p className="landing-eyebrow mb-3">// Ferramentas</p>
+          <p className="landing-eyebrow mb-3">{t("app.landing.toolsSection.eyebrow") as string}</p>
           <h2 className="landing-heading text-[clamp(2.8rem,5.5vw,5rem)]">
-            IA PARA <span className="landing-outline-text">PRODUÇÃO</span>
+            {t("app.landing.toolsSection.heading") as string} <span className="landing-outline-text">{t("app.landing.toolsSection.outlineText") as string}</span>
           </h2>
           <p className="landing-copy mt-4 max-w-2xl">
-            Documentos e decisões de produção com saída limpa, pronta para PDF, DOCX e conversa com cliente.
+            {t("app.landing.toolsSection.description") as string}
           </p>
         </div>
 

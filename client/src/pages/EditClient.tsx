@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useRoute } from "wouter";
 import { ArrowLeft, Loader2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ClientFormFields, { type ClientFormData, defaultClientData } from "@/components/ClientFormFields";
@@ -8,6 +9,7 @@ import { toast } from "sonner";
 
 function EditClientContent() {
   const [, setLocation] = useLocation();
+  const { t } = useLanguage();
   const [, params] = useRoute("/clients/:id/editar");
   const clientId = params?.id;
   const [data, setData] = useState<ClientFormData>({ ...defaultClientData });
@@ -48,10 +50,10 @@ function EditClientContent() {
             totalSpent: c.total_spent?.toString() || "",
           });
         } else {
-          setError(result.error || "Cliente não encontrado");
+          setError(result.error || t("app.errors.notFound") as string);
         }
       })
-      .catch(() => setError("Erro ao carregar cliente"))
+      .catch(() => setError(t("app.errors.generic") as string))
       .finally(() => setIsLoading(false));
   }, [clientId]);
 
@@ -87,13 +89,13 @@ function EditClientContent() {
       });
       const result = await response.json();
       if (result.success) {
-        toast.success("Cliente atualizado com sucesso!");
+        toast.success(t("app.clients.clientUpdated") as string);
         setLocation("/clients");
       } else {
-        toast.error(result.error || "Erro ao atualizar cliente");
+        toast.error(result.error || t("app.errors.generic") as string);
       }
     } catch {
-      toast.error("Erro ao atualizar cliente");
+      toast.error(t("app.errors.generic") as string);
     } finally {
       setIsSubmitting(false);
     }
@@ -101,19 +103,19 @@ function EditClientContent() {
 
   const handleDelete = async () => {
     if (!clientId) return;
-    if (!confirm("Tem certeza que deseja excluir este cliente?")) return;
+    if (!confirm(t("app.common.confirmDelete") as string)) return;
     setIsSubmitting(true);
     try {
       const response = await fetch(`/api/clients/${clientId}`, { method: "DELETE" });
       const result = await response.json();
       if (result.success) {
-        toast.success("Cliente excluído com sucesso!");
+        toast.success(t("app.clients.clientDeleted") as string);
         setLocation("/clients");
       } else {
-        toast.error(result.error || "Erro ao excluir cliente");
+        toast.error(result.error || t("app.errors.generic") as string);
       }
     } catch {
-      toast.error("Erro ao excluir cliente");
+      toast.error(t("app.errors.generic") as string);
     } finally {
       setIsSubmitting(false);
     }
@@ -131,7 +133,7 @@ function EditClientContent() {
     return (
       <div className="min-h-screen bg-frame-black text-frame-white flex flex-col items-center justify-center gap-4">
         <p className="text-frame-red font-frame-mono text-sm">{error}</p>
-        <button type="button" onClick={() => setLocation("/clients")} className="frame-btn-ghost">Voltar</button>
+        <button type="button" onClick={() => setLocation("/clients")} className="frame-btn-ghost">{t("app.common.goBack") as string}</button>
       </div>
     );
   }
@@ -146,18 +148,18 @@ function EditClientContent() {
           className="flex items-center gap-2 font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase text-frame-gray-light hover:text-frame-white transition bg-transparent border-none mb-6"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          Voltar para clientes
+          {t("app.common.goBack") as string}
         </button>
-        <p className="frame-label mb-2">// EDITAR CLIENTE</p>
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-8">Editar Cliente</h1>
+        <p className="frame-label mb-2">// {t("app.clients.editClient") as string}</p>
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-8">{t("app.clients.editClient") as string}</h1>
         <form onSubmit={handleSubmit} className="border border-frame-gray-3 bg-frame-gray-1/10 p-6">
           <ClientFormFields data={data} onChange={handleChange} disabled={isSubmitting} />
           <div className="flex gap-3 mt-6 pt-4 border-t border-frame-gray-3">
             <button type="button" onClick={() => setLocation("/clients")} disabled={isSubmitting} className="frame-btn-ghost flex-1">
-              Cancelar
+              {t("app.common.cancel") as string}
             </button>
             <button type="submit" disabled={isSubmitting || !data.name.trim()} className="frame-btn-primary flex-1">
-              {isSubmitting ? "Atualizando..." : "Atualizar"}
+              {isSubmitting ? t("app.common.loading") as string : t("app.common.saveChanges") as string}
             </button>
           </div>
         </form>
@@ -168,7 +170,7 @@ function EditClientContent() {
             disabled={isSubmitting}
             className="frame-btn-ghost text-frame-red border-frame-red/30 hover:border-frame-red hover:text-frame-red flex items-center gap-2"
           >
-            Excluir este cliente
+            {t("app.common.delete") as string}
           </button>
         </div>
       </div>

@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ContactFormData } from "@/lib/types";
 import { useApp } from "@/contexts/AppContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Loader2 } from "lucide-react";
 
 interface ContactFormProps {
@@ -18,6 +19,7 @@ interface ContactFormProps {
 }
 
 export function ContactForm({ type = "contact", onSuccess }: ContactFormProps) {
+  const { t } = useLanguage();
   const { submitContact, isLoading } = useApp();
   const { register, handleSubmit, formState: { errors }, reset } = useForm<ContactFormData>({
     defaultValues: {
@@ -40,12 +42,12 @@ export function ContactForm({ type = "contact", onSuccess }: ContactFormProps) {
       {/* Name */}
       <div>
         <Label htmlFor="name" className="font-frame-mono text-[0.64rem] tracking-[0.15em] uppercase text-frame-gray-light">
-          Nome Completo *
+          {t("app.landing.modals.fullName") as string} *
         </Label>
         <Input
           id="name"
-          placeholder="Seu nome"
-          {...register("name", { required: "Nome é obrigatório" })}
+          placeholder={t("app.landing.modals.yourName") as string}
+          {...register("name", { required: t("app.landing.modals.nameRequired") as string })}
           className="mt-1 frame-input"
           disabled={isLoading}
         />
@@ -55,17 +57,17 @@ export function ContactForm({ type = "contact", onSuccess }: ContactFormProps) {
       {/* Email */}
       <div>
         <Label htmlFor="email" className="font-frame-mono text-[0.64rem] tracking-[0.15em] uppercase text-frame-gray-light">
-          Email *
+          {t("app.landing.modals.email") as string} *
         </Label>
         <Input
           id="email"
           type="email"
-          placeholder="seu@email.com"
+          placeholder={t("app.landing.modals.emailPlaceholder") as string}
           {...register("email", {
-            required: "Email é obrigatório",
+            required: t("app.landing.modals.emailRequired") as string,
             pattern: {
               value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-              message: "Email inválido",
+              message: t("app.landing.modals.invalidEmail") as string,
             },
           })}
           className="mt-1 frame-input"
@@ -77,11 +79,11 @@ export function ContactForm({ type = "contact", onSuccess }: ContactFormProps) {
       {/* Phone */}
       <div>
         <Label htmlFor="phone" className="font-frame-mono text-[0.64rem] tracking-[0.15em] uppercase text-frame-gray-light">
-          Telefone
+          {t("app.landing.modals.phone") as string}
         </Label>
         <Input
           id="phone"
-          placeholder="(11) 99999-9999"
+          placeholder={t("app.landing.modals.phonePlaceholder") as string}
           {...register("phone")}
           className="mt-1 frame-input"
           disabled={isLoading}
@@ -94,12 +96,12 @@ export function ContactForm({ type = "contact", onSuccess }: ContactFormProps) {
           htmlFor="message"
           className="font-frame-mono text-[0.64rem] tracking-[0.15em] uppercase text-frame-gray-light"
         >
-          Mensagem *
+          {t("app.landing.modals.message") as string} *
         </Label>
         <Textarea
           id="message"
-          placeholder="Conte-nos mais sobre sua necessidade..."
-          {...register("message", { required: "Mensagem é obrigatória" })}
+          placeholder={t("app.landing.modals.messagePlaceholder") as string}
+          {...register("message", { required: t("app.landing.modals.messageRequired") as string })}
           className="mt-1 min-h-24 frame-input"
           disabled={isLoading}
         />
@@ -115,10 +117,10 @@ export function ContactForm({ type = "contact", onSuccess }: ContactFormProps) {
         {isLoading ? (
           <>
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Enviando...
+            {t("app.landing.modals.sending") as string}
           </>
         ) : (
-          "Enviar Mensagem"
+          t("app.landing.modals.sendMessage") as string
         )}
       </Button>
     </form>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -111,6 +112,7 @@ function StyledSelect({ value, onChange, disabled, children }: {
 }
 
 export default function ClientFormFields({ data, onChange, disabled }: ClientFormFieldsProps) {
+  const { t } = useLanguage();
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     endereco: false, social: false, empresa: false, contato: false, financeiro: false,
   });
@@ -122,148 +124,148 @@ export default function ClientFormFields({ data, onChange, disabled }: ClientFor
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <label className="block font-frame-mono text-xs text-frame-orange uppercase">Nome *</label>
-        <StyledInput value={data.name} onChange={f("name")} placeholder="Nome do cliente" disabled={disabled} />
+        <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.common.name") as string} *</label>
+        <StyledInput value={data.name} onChange={f("name")} placeholder={t("app.common.clientNamePlaceholder") as string} disabled={disabled} />
       </div>
       <div className="space-y-2">
-        <label className="block font-frame-mono text-xs text-frame-orange uppercase">Empresa</label>
-        <StyledInput value={data.company} onChange={f("company")} placeholder="Nome da empresa" disabled={disabled} />
+        <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.common.company") as string}</label>
+        <StyledInput value={data.company} onChange={f("company")} placeholder={t("app.common.companyNamePlaceholder") as string} disabled={disabled} />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="block font-frame-mono text-xs text-frame-orange uppercase">Email</label>
-          <StyledInput value={data.email} onChange={f("email")} placeholder="email@exemplo.com" disabled={disabled} />
+          <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.common.email") as string}</label>
+          <StyledInput value={data.email} onChange={f("email")} placeholder={t("app.common.emailPlaceholder") as string} disabled={disabled} />
         </div>
         <div className="space-y-2">
-          <label className="block font-frame-mono text-xs text-frame-orange uppercase">Telefone</label>
-          <StyledInput value={data.phone} onChange={f("phone")} placeholder="+55 11 99999-9999" disabled={disabled} />
+          <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.common.phone") as string}</label>
+          <StyledInput value={data.phone} onChange={f("phone")} placeholder={t("app.common.phonePlaceholder") as string} disabled={disabled} />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="block font-frame-mono text-xs text-frame-orange uppercase">Segmento</label>
+          <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.common.segment") as string}</label>
           <StyledSelect value={data.segment} onChange={f("segment")} disabled={disabled}>
-            <option value="direct">Direto</option>
-            <option value="agency">Agência</option>
-            <option value="brand">Marca</option>
+            <option value="direct">{t("app.common.segmentDirect") as string}</option>
+            <option value="agency">{t("app.common.segmentAgency") as string}</option>
+            <option value="brand">{t("app.common.segmentBrand") as string}</option>
           </StyledSelect>
         </div>
         <div className="space-y-2">
-          <label className="block font-frame-mono text-xs text-frame-orange uppercase">Status</label>
+          <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.common.status") as string}</label>
           <StyledSelect value={data.status} onChange={f("status")} disabled={disabled}>
-            <option value="lead">Lead</option>
-            <option value="active">Ativo</option>
-            <option value="inactive">Inativo</option>
+            <option value="lead">{t("app.common.statusLead") as string}</option>
+            <option value="active">{t("app.common.statusActive") as string}</option>
+            <option value="inactive">{t("app.common.statusInactive") as string}</option>
           </StyledSelect>
         </div>
       </div>
-      <CollapsibleSection title="Endereço" sectionKey="endereco" expanded={expandedSections.endereco} onToggle={toggleSection}>
+      <CollapsibleSection title={t("app.common.address") as string} sectionKey="endereco" expanded={expandedSections.endereco} onToggle={toggleSection}>
         <div className="space-y-2">
-          <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">Endereço</label>
-          <StyledInput value={data.address} onChange={f("address")} placeholder="Rua, número, complemento" disabled={disabled} />
+          <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.address") as string}</label>
+          <StyledInput value={data.address} onChange={f("address")} placeholder={t("app.common.addressPlaceholder") as string} disabled={disabled} />
         </div>
         <div className="grid grid-cols-3 gap-4 mt-4">
           <div className="space-y-2">
-            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">Cidade</label>
+            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.city") as string}</label>
             <StyledInput value={data.city} onChange={f("city")} disabled={disabled} />
           </div>
           <div className="space-y-2">
-            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">Estado</label>
+            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.state") as string}</label>
             <StyledInput value={data.state} onChange={f("state")} disabled={disabled} />
           </div>
           <div className="space-y-2">
-            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">País</label>
+            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.country") as string}</label>
             <StyledInput value={data.country} onChange={f("country")} disabled={disabled} />
           </div>
         </div>
       </CollapsibleSection>
-      <CollapsibleSection title="Redes Sociais" sectionKey="social" expanded={expandedSections.social} onToggle={toggleSection}>
+      <CollapsibleSection title={t("app.common.socialMedia") as string} sectionKey="social" expanded={expandedSections.social} onToggle={toggleSection}>
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2">
-            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">Website</label>
+            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.website") as string}</label>
             <StyledInput value={data.website} onChange={f("website")} placeholder="https://" disabled={disabled} />
           </div>
           <div className="space-y-2">
-            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">LinkedIn</label>
+            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.linkedin") as string}</label>
             <StyledInput value={data.linkedin} onChange={f("linkedin")} placeholder="https://linkedin.com/" disabled={disabled} />
           </div>
           <div className="space-y-2">
-            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">Instagram</label>
+            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.instagram") as string}</label>
             <StyledInput value={data.instagram} onChange={f("instagram")} placeholder="https://instagram.com/" disabled={disabled} />
           </div>
         </div>
       </CollapsibleSection>
-      <CollapsibleSection title="Informações da Empresa" sectionKey="empresa" expanded={expandedSections.empresa} onToggle={toggleSection}>
+      <CollapsibleSection title={t("app.common.companyInfo") as string} sectionKey="empresa" expanded={expandedSections.empresa} onToggle={toggleSection}>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">Indústria</label>
-            <StyledInput value={data.industry} onChange={f("industry")} placeholder="Ex: Produção de Vídeo" disabled={disabled} />
+            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.industry") as string}</label>
+            <StyledInput value={data.industry} onChange={f("industry")} placeholder={t("app.common.industryPlaceholder") as string} disabled={disabled} />
           </div>
           <div className="space-y-2">
-            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">Tamanho</label>
+            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.companySize") as string}</label>
             <StyledSelect value={data.companySize} onChange={f("companySize")} disabled={disabled}>
-              <option value="">Selecione</option>
-              <option value="1-10">1-10 funcionários</option>
-              <option value="11-50">11-50 funcionários</option>
-              <option value="51-200">51-200 funcionários</option>
-              <option value="201-500">201-500 funcionários</option>
-              <option value="500+">500+ funcionários</option>
+              <option value="">{t("app.common.select") as string}</option>
+              <option value="1-10">{t("app.common.size1to10") as string}</option>
+              <option value="11-50">{t("app.common.size11to50") as string}</option>
+              <option value="51-200">{t("app.common.size51to200") as string}</option>
+              <option value="201-500">{t("app.common.size201to500") as string}</option>
+              <option value="500+">{t("app.common.size500plus") as string}</option>
             </StyledSelect>
           </div>
           <div className="space-y-2">
-            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">Receita Anual (R$)</label>
+            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.annualRevenue") as string}</label>
             <StyledInput value={data.annualRevenue} onChange={f("annualRevenue")} placeholder="0.00" disabled={disabled} type="number" />
           </div>
         </div>
       </CollapsibleSection>
-      <CollapsibleSection title="Contato Principal" sectionKey="contato" expanded={expandedSections.contato} onToggle={toggleSection}>
+      <CollapsibleSection title={t("app.common.mainContact") as string} sectionKey="contato" expanded={expandedSections.contato} onToggle={toggleSection}>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">Pessoa de Contato</label>
+            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.contactPerson") as string}</label>
             <StyledInput value={data.contactPerson} onChange={f("contactPerson")} disabled={disabled} />
           </div>
           <div className="space-y-2">
-            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">Cargo</label>
-            <StyledInput value={data.contactRole} onChange={f("contactRole")} placeholder="Ex: Diretor de Marketing" disabled={disabled} />
+            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.role") as string}</label>
+            <StyledInput value={data.contactRole} onChange={f("contactRole")} placeholder={t("app.common.rolePlaceholder") as string} disabled={disabled} />
           </div>
         </div>
       </CollapsibleSection>
-      <CollapsibleSection title="Financeiro" sectionKey="financeiro" expanded={expandedSections.financeiro} onToggle={toggleSection}>
+      <CollapsibleSection title={t("app.common.financial") as string} sectionKey="financeiro" expanded={expandedSections.financeiro} onToggle={toggleSection}>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="space-y-2 md:col-span-2">
-            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">Valor contratado / acumulado (R$)</label>
-            <StyledInput value={data.totalSpent} onChange={f("totalSpent")} placeholder="Ex: 800" disabled={disabled} type="number" />
+            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.contractedValue") as string}</label>
+            <StyledInput value={data.totalSpent} onChange={f("totalSpent")} placeholder={t("app.common.contractedValuePlaceholder") as string} disabled={disabled} type="number" />
           </div>
           <div className="space-y-2">
-            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">Ciclo de Cobrança</label>
+            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.billingCycle") as string}</label>
             <StyledSelect value={data.billingCycle} onChange={f("billingCycle")} disabled={disabled}>
-              <option value="">Selecione</option>
-              <option value="monthly">Mensal</option>
-              <option value="quarterly">Trimestral</option>
-              <option value="annual">Anual</option>
-              <option value="project">Por Projeto</option>
+              <option value="">{t("app.common.select") as string}</option>
+              <option value="monthly">{t("app.common.billingMonthly") as string}</option>
+              <option value="quarterly">{t("app.common.billingQuarterly") as string}</option>
+              <option value="annual">{t("app.common.billingAnnual") as string}</option>
+              <option value="project">{t("app.common.billingPerProject") as string}</option>
             </StyledSelect>
           </div>
           <div className="space-y-2">
-            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">Método de Pagamento</label>
+            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.paymentMethod") as string}</label>
             <StyledSelect value={data.paymentMethod} onChange={f("paymentMethod")} disabled={disabled}>
-              <option value="">Selecione</option>
-              <option value="pix">PIX</option>
-              <option value="bank_transfer">Transferência</option>
-              <option value="credit_card">Cartão</option>
-              <option value="boleto">Boleto</option>
+              <option value="">{t("app.common.select") as string}</option>
+              <option value="pix">{t("app.common.paymentPix") as string}</option>
+              <option value="bank_transfer">{t("app.common.paymentTransfer") as string}</option>
+              <option value="credit_card">{t("app.common.paymentCard") as string}</option>
+              <option value="boleto">{t("app.common.paymentBoleto") as string}</option>
             </StyledSelect>
           </div>
           <div className="space-y-2">
-            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">CNPJ/CPF</label>
-            <StyledInput value={data.taxId} onChange={f("taxId")} placeholder="00.000.000/0000-00" disabled={disabled} />
+            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.taxId") as string}</label>
+            <StyledInput value={data.taxId} onChange={f("taxId")} placeholder={t("app.common.taxIdPlaceholder") as string} disabled={disabled} />
           </div>
         </div>
       </CollapsibleSection>
       <div className="space-y-2 pt-4 border-t border-frame-gray-3">
-        <label className="block font-frame-mono text-xs text-frame-orange uppercase">Notas</label>
+        <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.common.notes") as string}</label>
         <textarea disabled={disabled} value={data.notes} onChange={(e) => onChange("notes", e.target.value)}
-          className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange resize-none" rows={3} placeholder="Observações sobre o cliente..." />
+          className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange resize-none" rows={3} placeholder={t("app.common.notesPlaceholder") as string} />
       </div>
     </div>
   );

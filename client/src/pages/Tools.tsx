@@ -6,8 +6,10 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import type { ToolFromApi } from "@/lib/api";
 import { useProject } from "@/contexts/ProjectContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 function ToolsContent() {
+  const { t } = useLanguage();
   const [, setLocation] = useLocation();
   const [tools, setTools] = useState<ToolFromApi[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +20,7 @@ function ToolsContent() {
     api.tools
       .list()
       .then(setTools)
-      .catch((e) => setError(e instanceof Error ? e.message : "Erro ao carregar ferramentas"))
+      .catch((e) => setError(e instanceof Error ? e.message : t("app.errors.loadTools")))
       .finally(() => setLoading(false));
   }, []);
 

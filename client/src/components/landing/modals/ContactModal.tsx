@@ -6,6 +6,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ContactForm } from "@/components/landing/forms/ContactForm";
 import { useApp } from "@/contexts/AppContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ContactModalProps {
   type?: "contact" | "demo" | "support";
@@ -15,9 +16,10 @@ interface ContactModalProps {
 
 export function ContactModal({
   type = "contact",
-  title = "Entre em Contato",
-  description = "Preencha o formulário abaixo e entraremos em contato em breve.",
+  title,
+  description,
 }: ContactModalProps) {
+  const { t } = useLanguage();
   const { modals, closeModal } = useApp();
   const isOpen = modals.contact;
 
@@ -25,8 +27,8 @@ export function ContactModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeModal("contact")}>
       <DialogContent className="cinematic-theme sm:max-w-md bg-frame-gray-2 border border-frame-gray-3">
         <DialogHeader>
-          <DialogTitle className="frame-title text-xl text-frame-white">{title}</DialogTitle>
-          <DialogDescription className="text-frame-gray-light font-light">{description}</DialogDescription>
+          <DialogTitle className="frame-title text-xl text-frame-white">{title || t("app.landing.modals.contactTitle") as string}</DialogTitle>
+          <DialogDescription className="text-frame-gray-light font-light">{description || t("app.landing.modals.contactDescription") as string}</DialogDescription>
         </DialogHeader>
         <ContactForm type={type} onSuccess={() => closeModal("contact")} />
       </DialogContent>

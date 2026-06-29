@@ -1,4 +1,5 @@
 import { useProject } from "@/contexts/ProjectContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { Project } from "@/lib/api";
 import { FolderKanban, Loader2, Plus } from "lucide-react";
 import { useState } from "react";
@@ -20,6 +21,7 @@ export default function ProjectGateway({
   actionLabel,
   routeBase,
 }: ProjectGatewayProps) {
+  const { t } = useLanguage();
   const [, setLocation] = useLocation();
   const { projects, isLoading, createProject } = useProject();
   const [name, setName] = useState("");
@@ -31,7 +33,7 @@ export default function ProjectGateway({
 
   const handleCreate = async () => {
     if (!name.trim()) {
-      toast.error("Dê um nome para o projeto antes de continuar.");
+      toast.error(t("app.common.projectNameRequired") as string);
       return;
     }
 
@@ -58,10 +60,10 @@ export default function ProjectGateway({
           <div className="flex items-center justify-between gap-4 mb-5">
             <div>
               <h2 className="font-frame-mono text-[0.72rem] tracking-[0.18em] uppercase">
-                Escolha um projeto
+                {t("app.common.chooseProject") as string}
               </h2>
               <p className="text-frame-gray-light text-sm mt-1">
-                Cada arquivo e review precisa pertencer a um projeto.
+                {t("app.common.projectRequiredInfo") as string}
               </p>
             </div>
             {isLoading && <Loader2 className="w-5 h-5 animate-spin text-frame-orange" />}
@@ -71,7 +73,7 @@ export default function ProjectGateway({
             <div className="border border-dashed border-frame-gray-3 p-10 text-center">
               <FolderKanban className="w-10 h-10 text-frame-orange mx-auto mb-3" />
               <p className="text-frame-gray-light text-sm">
-                Nenhum projeto criado ainda. Crie um projeto para começar este workflow.
+                {t("app.common.noProjects") as string}
               </p>
             </div>
           ) : (
@@ -88,7 +90,7 @@ export default function ProjectGateway({
                   </span>
                   <h3 className="frame-title text-[1.45rem] mt-2">{project.name}</h3>
                   <p className="text-frame-gray-light text-xs line-clamp-2 mt-1">
-                    {project.description || "Sem descrição"}
+                    {project.description || t("app.common.noDescription") as string}
                   </p>
                 </button>
               ))}
@@ -99,10 +101,10 @@ export default function ProjectGateway({
         <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-6 space-y-4">
           <div>
             <h2 className="font-frame-mono text-[0.72rem] tracking-[0.18em] uppercase">
-              Novo projeto rapido
+              {t("app.common.newProjectQuick") as string}
             </h2>
             <p className="text-frame-gray-light text-sm mt-1">
-              Cria o projeto e já abre a área certa.
+              {t("app.common.quickCreateInfo") as string}
             </p>
           </div>
           <input
@@ -111,7 +113,7 @@ export default function ProjectGateway({
             onKeyDown={(event) => {
               if (event.key === "Enter") void handleCreate();
             }}
-            placeholder="Ex: Campanha institucional"
+            placeholder={t("app.common.projectPlaceholder") as string}
             className="frame-input w-full"
           />
           <button

@@ -33,6 +33,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { motion } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Collaborator {
   id: number;
@@ -72,6 +73,7 @@ const STATUS = [
 ];
 
 function CollaboratorsContent() {
+  const { t } = useLanguage();
   const { projectId } = useParams<{ projectId?: string }>();
   const projectIdNumber = projectId ? parseInt(projectId) : null;
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
@@ -149,16 +151,16 @@ function CollaboratorsContent() {
 
       const data = await response.json();
       if (data.success) {
-        toast.success("Colaborador adicionado com sucesso!");
+        toast.success(t("app.collaborators.collaboratorCreated"));
         setIsCreateOpen(false);
         resetForm();
         loadCollaborators();
         loadStats();
       } else {
-        toast.error(data.error || "Erro ao adicionar colaborador");
+        toast.error(data.error || t("app.errors.addCollaborator"));
       }
     } catch (error) {
-      toast.error("Erro ao adicionar colaborador");
+      toast.error(t("app.errors.addCollaborator"));
     } finally {
       setIsSubmitting(false);
     }
@@ -187,16 +189,16 @@ function CollaboratorsContent() {
 
       const data = await response.json();
       if (data.success) {
-        toast.success("Colaborador atualizado com sucesso!");
+        toast.success(t("app.collaborators.collaboratorUpdated"));
         setIsEditOpen(false);
         resetForm();
         loadCollaborators();
         loadStats();
       } else {
-        toast.error(data.error || "Erro ao atualizar colaborador");
+        toast.error(data.error || t("app.errors.updateCollaborator"));
       }
     } catch (error) {
-      toast.error("Erro ao atualizar colaborador");
+      toast.error(t("app.errors.updateCollaborator"));
     } finally {
       setIsSubmitting(false);
     }
@@ -214,16 +216,16 @@ function CollaboratorsContent() {
 
       const data = await response.json();
       if (data.success) {
-        toast.success("Colaborador excluído com sucesso!");
+        toast.success(t("app.collaborators.collaboratorDeleted"));
         setIsDeleteOpen(false);
         setSelectedCollaborator(null);
         loadCollaborators();
         loadStats();
       } else {
-        toast.error(data.error || "Erro ao excluir colaborador");
+        toast.error(data.error || t("app.errors.deleteCollaborator"));
       }
     } catch (error) {
-      toast.error("Erro ao excluir colaborador");
+      toast.error(t("app.errors.deleteCollaborator"));
     } finally {
       setIsSubmitting(false);
     }
@@ -412,7 +414,7 @@ function CollaboratorsContent() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-frame-orange" />
           </div>
         ) : getFilteredCollaborators().length === 0 ? (
-          <EmptyState icon={Users} title="Nenhum colaborador encontrado" />
+          <EmptyState icon={Users} title={t("app.collaborators.noCollaborators")} />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {getFilteredCollaborators().map((collaborator) => (
@@ -546,7 +548,7 @@ function CollaboratorsContent() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
-                placeholder="Nome completo"
+                placeholder={t("app.collaborators.namePlaceholder")}
               />
             </div>
 
@@ -561,7 +563,7 @@ function CollaboratorsContent() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
-                placeholder="email@exemplo.com"
+                placeholder={t("app.collaborators.emailPlaceholder")}
               />
             </div>
 
@@ -623,7 +625,7 @@ function CollaboratorsContent() {
                 value={skills}
                 onChange={(e) => setSkills(e.target.value)}
                 className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
-                placeholder="Edição, Câmera, Design, etc."
+                placeholder={t("app.collaborators.skillsPlaceholder")}
               />
             </div>
 
@@ -641,7 +643,7 @@ function CollaboratorsContent() {
                 disabled={isSubmitting || !name.trim() || !email.trim()}
                 className="frame-btn-primary"
               >
-                {isSubmitting ? "Adicionando..." : "Adicionar Colaborador"}
+                {isSubmitting ? t("app.collaborators.adding") : t("app.collaborators.addCollaborator")}
               </button>
             </DialogFooter>
           </form>
@@ -780,7 +782,7 @@ function CollaboratorsContent() {
                 disabled={isSubmitting || !name.trim() || !email.trim()}
                 className="frame-btn-primary"
               >
-                {isSubmitting ? "Atualizando..." : "Atualizar Colaborador"}
+                {isSubmitting ? t("app.collaborators.updating") : t("app.collaborators.updateCollaborator")}
               </button>
             </DialogFooter>
           </form>
@@ -814,7 +816,7 @@ function CollaboratorsContent() {
               onClick={handleDelete}
               className="bg-frame-red hover:bg-red-600 text-white px-4 py-2 text-sm font-frame-mono uppercase tracking-wider transition rounded-none"
             >
-              {isSubmitting ? "Excluindo..." : "Excluir"}
+              {isSubmitting ? t("app.collaborators.deleting") : t("app.common.delete")}
             </button>
           </DialogFooter>
         </DialogContent>

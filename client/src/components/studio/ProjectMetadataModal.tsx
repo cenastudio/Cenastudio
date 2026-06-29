@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useProject } from "@/contexts/ProjectContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +38,7 @@ export default function ProjectMetadataModal({
   project,
 }: ProjectMetadataModalProps) {
   const { updateProject } = useProject();
+  const { t } = useLanguage();
 
   // Basic Form States
   const [name, setName] = useState(project.name);
@@ -106,10 +108,10 @@ export default function ProjectMetadataModal({
         metadataJson: JSON.stringify(updatedMeta),
       });
 
-      toast.success("Escopo do projeto atualizado com sucesso!");
+      toast.success(t("app.studio.metadataModal.updated") as string);
       onOpenChange(false);
     } catch {
-      toast.error("Ocorreu um erro ao atualizar os metadados do projeto.");
+      toast.error(t("app.studio.metadataModal.updateError") as string);
     } finally {
       setIsSubmitting(false);
     }
@@ -120,10 +122,10 @@ export default function ProjectMetadataModal({
       <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-md rounded-none p-6 overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="font-frame-display text-2xl tracking-wider text-frame-white">
-            METAS CRIATIVAS DO DIRETOR
+            {t("app.studio.metadataModal.title") as string}
           </DialogTitle>
           <DialogDescription className="font-frame-body text-xs text-frame-gray-light leading-relaxed">
-            Configure as metas de produção e o perfil artístico deste projeto. Estas informações servirão como contexto global na Etapa 4.
+            {t("app.studio.metadataModal.description") as string}
           </DialogDescription>
         </DialogHeader>
 
@@ -131,19 +133,19 @@ export default function ProjectMetadataModal({
           {/* Seção 1: Identificação Básica */}
           <div className="border-b border-frame-gray-2 pb-3 mb-2">
             <span className="block font-frame-mono text-[0.62rem] tracking-[0.2em] text-frame-orange uppercase mb-3">
-              // Identificação do Projeto
+              {t("app.studio.metadataModal.projectId") as string}
             </span>
 
             <div className="space-y-3">
               <div className="space-y-1">
                 <label className="block font-frame-mono text-[0.62rem] tracking-[0.1em] text-frame-white uppercase font-medium">
-                  Nome do Projeto *
+                  {t("app.studio.metadataModal.projectName") as string}
                 </label>
                 <input
                   type="text"
                   required
                   disabled={isSubmitting}
-                  placeholder="ex: Videoclipe Retrofuturista"
+                  placeholder={t("app.studio.metadataModal.namePlaceholder") as string}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2 md:p-2.5 font-frame-body text-[0.8rem] outline-none transition focus:border-frame-orange rounded-none"
@@ -152,10 +154,10 @@ export default function ProjectMetadataModal({
 
               <div className="space-y-1">
                 <label className="block font-frame-mono text-[0.62rem] tracking-[0.1em] text-frame-white uppercase font-medium">
-                  Descrição
+                  {t("app.studio.metadataModal.description") as string}
                 </label>
                 <textarea
-                  placeholder="Sinopse, resumo criativo ou considerações gerais da produtora..."
+                  placeholder={t("app.studio.metadataModal.descPlaceholder") as string}
                   disabled={isSubmitting}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -168,18 +170,18 @@ export default function ProjectMetadataModal({
           {/* Seção 2: Especificações de Produção */}
           <div className="space-y-3">
             <span className="block font-frame-mono text-[0.62rem] tracking-[0.2em] text-frame-orange uppercase">
-              // Especificações Cinematográficas
+              {t("app.studio.metadataModal.cinematicSpecs") as string}
             </span>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="block font-frame-mono text-[0.62rem] tracking-[0.1em] text-frame-white uppercase font-medium">
-                  Formato Audiovisual
+                  {t("app.studio.metadataModal.audiovisualFormat") as string}
                 </label>
                 <input
                   type="text"
                   disabled={isSubmitting}
-                  placeholder="ex: Curta-Metragem, Comercial"
+                  placeholder={t("app.studio.metadataModal.formatPlaceholder") as string}
                   value={format}
                   onChange={(e) => setFormat(e.target.value)}
                   className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2 font-frame-body text-[0.8rem] outline-none transition focus:border-frame-orange rounded-none"
@@ -188,12 +190,12 @@ export default function ProjectMetadataModal({
 
               <div className="space-y-1">
                 <label className="block font-frame-mono text-[0.62rem] tracking-[0.1em] text-frame-white uppercase font-medium">
-                  Cliente / Marca
+                  {t("app.studio.metadataModal.clientBrand") as string}
                 </label>
                 <input
                   type="text"
                   disabled={isSubmitting}
-                  placeholder="ex: Universal Music, Coca-Cola"
+                  placeholder={t("app.studio.metadataModal.clientPlaceholder") as string}
                   value={client}
                   onChange={(e) => setClient(e.target.value)}
                   className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2 font-frame-body text-[0.8rem] outline-none transition focus:border-frame-orange rounded-none"
@@ -204,12 +206,12 @@ export default function ProjectMetadataModal({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="block font-frame-mono text-[0.62rem] tracking-[0.1em] text-frame-white uppercase font-medium">
-                  Tom / Gênero Artístico
+                  {t("app.studio.metadataModal.toneGenre") as string}
                 </label>
                 <input
                   type="text"
                   disabled={isSubmitting}
-                  placeholder="ex: Sci-Fi Noir, Cyberpunk"
+                  placeholder={t("app.studio.metadataModal.tonePlaceholder") as string}
                   value={tone}
                   onChange={(e) => setTone(e.target.value)}
                   className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2 font-frame-body text-[0.8rem] outline-none transition focus:border-frame-orange rounded-none"
@@ -218,12 +220,12 @@ export default function ProjectMetadataModal({
 
               <div className="space-y-1">
                 <label className="block font-frame-mono text-[0.62rem] tracking-[0.1em] text-frame-white uppercase font-medium">
-                  Câmera / Lentes
+                  {t("app.studio.metadataModal.cameraLens") as string}
                 </label>
                 <input
                   type="text"
                   disabled={isSubmitting}
-                  placeholder="ex: Arri Alexa, Anamórficas"
+                  placeholder={t("app.studio.metadataModal.cameraPlaceholder") as string}
                   value={cameraModel}
                   onChange={(e) => setCameraModel(e.target.value)}
                   className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2 font-frame-body text-[0.8rem] outline-none transition focus:border-frame-orange rounded-none"
@@ -233,12 +235,12 @@ export default function ProjectMetadataModal({
 
             <div className="space-y-1">
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.1em] text-frame-white uppercase font-medium">
-                Orçamento Estimado
+                {t("app.studio.metadataModal.estimatedBudget") as string}
               </label>
               <input
                 type="text"
                 disabled={isSubmitting}
-                placeholder="ex: R$ 50.000, US$ 10,000"
+                placeholder={t("app.studio.metadataModal.budgetPlaceholder") as string}
                 value={budget}
                 onChange={(e) => setBudget(e.target.value)}
                 className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2 font-frame-body text-[0.8rem] outline-none transition focus:border-frame-orange rounded-none"
@@ -253,7 +255,7 @@ export default function ProjectMetadataModal({
               onClick={() => onOpenChange(false)}
               className="frame-btn-ghost !py-2 !px-4 !text-[0.62rem]"
             >
-              Cancelar
+                {t("app.common.cancel") as string}
             </button>
             <button
               type="submit"
@@ -263,10 +265,10 @@ export default function ProjectMetadataModal({
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-3 h-3 animate-spin" />
-                  Salvando...
+                  {t("app.studio.saving") as string}
                 </>
               ) : (
-                "Confirmar Metas"
+                t("app.studio.metadataModal.confirmGoals") as string
               )}
             </button>
           </DialogFooter>

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { api } from "@/lib/api";
 import { Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Message {
   role: "user" | "ai";
@@ -19,11 +20,11 @@ export default function RefineChatPanel({
   currentOutput,
   onRefineComplete,
 }: RefineChatPanelProps) {
+  const { t } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",
-      content:
-        "Geração concluída! Use este chat para pedir ajustes, expansões ou correções específicas no documento ao lado.",
+      content: t("app.studio.refineChat.generationComplete") as string,
     },
   ]);
   const [input, setInput] = useState("");
@@ -38,7 +39,7 @@ export default function RefineChatPanel({
   const handleSend = async () => {
     if (!input.trim()) return;
     if (!currentOutput) {
-      toast.error("Gere um documento no formulário antes de refinar!");
+      toast.error(t("app.studio.refineChat.generateFirst") as string);
       return;
     }
 
@@ -62,18 +63,18 @@ ${userMessage}`;
         ...prev,
         {
           role: "ai",
-          content: "Ajuste aplicado com sucesso! O documento ao lado foi atualizado.",
+          content: t("app.studio.refineChat.adjustApplied") as string,
         },
       ]);
       onRefineComplete(result.output);
-      toast.success("Ajuste aplicado!");
+      toast.success(t("app.studio.refineChat.adjustSuccess") as string);
     } catch (e) {
-      const errMsg = e instanceof Error ? e.message : "Erro ao aplicar refinamento";
+      const errMsg = e instanceof Error ? e.message : t("app.studio.refineChat.adjustError") as string;
       setMessages((prev) => [
         ...prev,
         {
           role: "ai",
-          content: `Falha ao processar o ajuste: ${errMsg}`,
+          content: `${t("app.studio.refineChat.adjustFailed") as string} ${errMsg}`,
         },
       ]);
       toast.error(errMsg);
@@ -126,7 +127,7 @@ ${userMessage}`;
         {/* AI Loading State */}
         {isProcessing && (
           <div className="frame-chat-loading">
-            <span>Orquestrando refinamento IA</span>
+            <span>{t("app.studio.refineChat.orchestrating") as string}</span>
             <div className="flex gap-1">
               <span />
               <span />
@@ -144,7 +145,7 @@ ${userMessage}`;
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ex: reescreva a cena 2 com mais tensão dramática..."
+          placeholder={t("app.studio.refineChat.inputPlaceholder") as string}
           rows={2}
           className="frame-input flex-1 resize-none min-h-[44px] max-h-[120px]"
         />

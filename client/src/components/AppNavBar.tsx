@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { planDisplayLabel } from "@/lib/plans";
 import { WHATSAPP_NUMBER } from "@/lib/constants";
@@ -19,6 +20,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
   const { logout, user, plan } = useAuth();
   const { openModal, selectPlan } = useApp();
   const { theme, toggleTheme } = useTheme();
+  const { t } = useLanguage();
   const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
@@ -87,20 +89,20 @@ export default function AppNavBar({ children }: AppNavBarProps) {
   };
 
   const primaryNavItems = [
-    ["/dashboard", "Painel"],
-    ["/tools", "Studio IA"],
-    ["/clients", "Clientes"],
-    ["/pipeline", "Pipeline"],
-    ["/video-reviews", "Aprovação"],
+    ["/dashboard", t("app.nav.dashboard") as string],
+    ["/tools", t("app.nav.studioIA") as string],
+    ["/clients", t("app.nav.clients") as string],
+    ["/pipeline", t("app.nav.pipeline") as string],
+    ["/video-reviews", t("app.nav.approval") as string],
   ] as const;
 
   const secondaryNavItems = [
-    ["/proposals", "Propostas"],
-    ["/documents", "Docs"],
-    ["/collaborators", "Equipe"],
-    ["/analytics", "Analytics"],
-    ["/company", "Empresa"],
-    ...(isAdmin ? [["/admin", "Admin"]] as const : []),
+    ["/proposals", t("app.nav.proposals") as string],
+    ["/documents", t("app.nav.docs") as string],
+    ["/collaborators", t("app.nav.team") as string],
+    ["/analytics", t("app.nav.analytics") as string],
+    ["/company", t("app.nav.company") as string],
+    ...(isAdmin ? [["/admin", t("app.nav.admin") as string]] as const : []),
   ] as const;
 
   return (
@@ -110,7 +112,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
           type="button"
           onClick={() => setMobileMenuOpen((open) => !open)}
           className="xl:hidden flex h-9 w-9 items-center justify-center border border-frame-gray-3 text-frame-gray-light hover:text-frame-orange hover:border-frame-orange transition"
-          aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
+          aria-label={mobileMenuOpen ? t("app.nav.closeMenu") as string : t("app.nav.openMenu") as string}
           aria-expanded={mobileMenuOpen}
         >
           {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -123,7 +125,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
             setMobileMenuOpen(false);
           }}
           className="bg-transparent border-none"
-          aria-label="Voltar ao painel"
+          aria-label={t("app.nav.backToDashboard") as string}
         >
           <BrandLogo compact className="scale-90 origin-left" />
         </button>
@@ -140,7 +142,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
             className={`frame-nav-link flex items-center gap-1.5 ${secondaryNavItems.some(([href]) => location === href || location.startsWith(href + "/")) ? "active" : ""}`}
             aria-expanded={moreMenuOpen}
           >
-            Mais
+            {t("app.nav.more") as string}
             <ChevronDown className={`h-3 w-3 transition ${moreMenuOpen ? "rotate-180" : ""}`} />
           </button>
           {moreMenuOpen && (
@@ -168,8 +170,8 @@ export default function AppNavBar({ children }: AppNavBarProps) {
             type="button"
             onClick={handleOpenCommandPalette}
             className="command-palette-trigger inline-flex"
-            title="Buscar e navegar com Command + K"
-            aria-label="Abrir busca"
+            title={t("app.nav.search") as string}
+            aria-label={t("app.nav.openSearch") as string}
           >
             <Search className="h-3.5 w-3.5" />
             <kbd>⌘K</kbd>
@@ -184,8 +186,8 @@ export default function AppNavBar({ children }: AppNavBarProps) {
             type="button"
             onClick={handleOpenCommandPalette}
             className="command-palette-trigger inline-flex xl:hidden"
-            title="Buscar e navegar com Command + K"
-            aria-label="Abrir busca"
+            title={t("app.nav.search") as string}
+            aria-label={t("app.nav.openSearch") as string}
           >
             <Search className="h-3.5 w-3.5" />
             <kbd className="hidden lg:inline">⌘K</kbd>
@@ -220,7 +222,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
           type="button"
           onClick={toggleTheme}
           className="p-2 border border-frame-gray-3 text-frame-gray-light hover:text-frame-orange hover:border-frame-orange transition rounded-none"
-          title={theme === "dark" ? "Modo claro" : "Modo escuro"}
+          title={theme === "dark" ? t("app.nav.darkMode") as string : t("app.nav.lightMode") as string}
         >
           {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
         </button>
@@ -233,7 +235,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
           className="hidden sm:flex font-frame-mono text-[0.64rem] tracking-[0.09em] uppercase bg-transparent border border-frame-gray-3 text-frame-gray-light px-2.5 py-1.5 transition hover:border-frame-red hover:text-frame-red items-center gap-1.5"
         >
           <LogOut className="w-3 h-3" />
-          Sair
+          {t("app.nav.logout") as string}
         </button>
       </div>
 
@@ -253,14 +255,14 @@ export default function AppNavBar({ children }: AppNavBarProps) {
               }}
               className="min-h-10 border border-frame-gray-3 px-3 font-frame-mono text-[0.62rem] uppercase tracking-[0.1em] text-frame-gray-light"
             >
-              Minha conta
+              {t("app.nav.myAccount") as string}
             </button>
             <button
               type="button"
               onClick={handleBadgeClick}
               className="min-h-10 border border-frame-orange/50 px-3 font-frame-mono text-[0.62rem] uppercase tracking-[0.1em] text-frame-orange"
             >
-              Plano {planLabel}
+              {t("app.nav.plan") as string} {planLabel}
             </button>
           </div>
           <button
@@ -269,7 +271,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
             className="mt-3 w-full font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase bg-transparent border border-frame-gray-3 text-frame-gray-light px-3 py-2.5 transition hover:border-frame-red hover:text-frame-red flex items-center justify-center gap-2"
           >
             <LogOut className="w-3.5 h-3.5" />
-            Sair
+            {t("app.nav.logout") as string}
           </button>
         </div>
       )}

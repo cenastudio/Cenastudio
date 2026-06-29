@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Copy, Download, FileText, History, MessageSquare, RefreshCw } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ActionToolbarProps {
   onCopy: () => void;
@@ -20,6 +21,7 @@ export default function ActionToolbar({
   onChangeTab,
   hasOutput,
 }: ActionToolbarProps) {
+  const { t } = useLanguage();
   const [downloadOpen, setDownloadOpen] = useState(false);
   const downloadRef = useRef<HTMLDivElement>(null);
 
@@ -46,7 +48,7 @@ export default function ActionToolbar({
           }`}
         >
           <FileText className="w-3.5 h-3.5" />
-          Documento
+          {t("app.studio.document") as string}
         </button>
         <button
           type="button"
@@ -58,7 +60,7 @@ export default function ActionToolbar({
           }`}
         >
           <MessageSquare className="w-3.5 h-3.5" />
-          Refinar com IA
+          {t("app.studio.refineWithAI") as string}
         </button>
       </div>
 
@@ -69,22 +71,22 @@ export default function ActionToolbar({
             <button
               type="button"
               onClick={onCopy}
-              title="Copiar para clipboard"
+              title={t("app.studio.copyToClipboard") as string}
               className="font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase px-3 py-2 border border-frame-gray-3 text-frame-gray-light bg-transparent transition hover:border-frame-gray-muted hover:text-frame-white flex items-center gap-1.5"
             >
               <Copy className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Copiar</span>
+              <span className="hidden sm:inline">{t("app.studio.copy") as string}</span>
             </button>
             <div ref={downloadRef} className="relative">
               <button
                 type="button"
                 onClick={() => setDownloadOpen((open) => !open)}
-                title="Exportar documento"
+                title={t("app.studio.export") as string}
                 className="font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase px-3 py-2 border border-frame-gray-3 text-frame-gray-light bg-transparent transition hover:border-frame-gray-muted hover:text-frame-white flex items-center gap-1.5"
                 aria-expanded={downloadOpen}
               >
                 <Download className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Exportar</span>
+                <span className="hidden sm:inline">{t("app.studio.export") as string}</span>
                 <ChevronDown className="h-3 w-3" />
               </button>
               {downloadOpen && (
@@ -94,14 +96,14 @@ export default function ActionToolbar({
                     onClick={() => { onDownload("pdf"); setDownloadOpen(false); }}
                     className="flex min-h-10 w-full items-center px-3 font-frame-mono text-[0.6rem] uppercase text-frame-gray-light hover:bg-frame-gray-2 hover:text-frame-white"
                   >
-                    PDF pronto para enviar
+                    {t("app.studio.exportPdf") as string}
                   </button>
                   <button
                     type="button"
                     onClick={() => { onDownload("docx"); setDownloadOpen(false); }}
                     className="flex min-h-10 w-full items-center px-3 font-frame-mono text-[0.6rem] uppercase text-frame-gray-light hover:bg-frame-gray-2 hover:text-frame-white"
                   >
-                    Word editável (.docx)
+                    {t("app.studio.exportDocx") as string}
                   </button>
                 </div>
               )}
@@ -112,21 +114,21 @@ export default function ActionToolbar({
         <button
           type="button"
           onClick={onClear}
-          title="Limpar todos os campos"
+          title={t("app.studio.clearFields") as string}
           className="font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase px-3 py-2 border border-frame-gray-3 text-frame-gray-light bg-transparent transition hover:border-frame-red/40 hover:text-frame-red flex items-center gap-1.5"
         >
           <RefreshCw className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Limpar</span>
+          <span className="hidden sm:inline">{t("app.studio.clear") as string}</span>
         </button>
 
         <button
           type="button"
           onClick={onToggleHistory}
-          title="Ver histórico de gerações"
+          title={t("app.studio.viewHistory") as string}
           className="font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase px-3 py-2 border border-frame-gray-3 text-frame-gray-light bg-transparent transition hover:border-frame-gold/40 hover:text-frame-gold flex items-center gap-1.5"
         >
           <History className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Histórico</span>
+          <span className="hidden sm:inline">{t("app.studio.history") as string}</span>
         </button>
       </div>
     </div>

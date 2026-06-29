@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
 import {
   LayoutDashboard,
@@ -14,14 +15,15 @@ interface ProjectNavProps {
 }
 
 const TABS = [
-  { path: (id: number) => `/project/${id}`, label: "Visão Geral", icon: LayoutDashboard },
-  { path: (id: number) => `/project/${id}/studio/01`, label: "Studio", icon: Film },
-  { path: (id: number) => `/project/${id}/files`, label: "Materiais", icon: FileText },
-  { path: (id: number) => `/project/${id}/video-reviews`, label: "Aprovação", icon: Video },
-  { path: (id: number) => `/project/${id}/collaborators`, label: "Equipe", icon: Users },
+  { path: (id: number) => `/project/${id}`, labelKey: "app.common.overview", icon: LayoutDashboard },
+  { path: (id: number) => `/project/${id}/studio/01`, labelKey: "app.common.studio", icon: Film },
+  { path: (id: number) => `/project/${id}/files`, labelKey: "app.common.materials", icon: FileText },
+  { path: (id: number) => `/project/${id}/video-reviews`, labelKey: "app.common.approval", icon: Video },
+  { path: (id: number) => `/project/${id}/collaborators`, labelKey: "app.common.team", icon: Users },
 ];
 
 export default function ProjectNav({ projectId }: ProjectNavProps) {
+  const { t } = useLanguage();
   const [location, setLocation] = useLocation();
   const [projectName, setProjectName] = useState("");
   const currentSection = location.replace(`/project/${projectId}/`, "").split("/")[0] || "";
@@ -43,14 +45,14 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
             type="button"
             onClick={() => setLocation("/dashboard")}
             className="flex h-9 w-9 shrink-0 items-center justify-center text-frame-gray-light hover:text-frame-orange transition"
-            title="Voltar ao painel"
+            title={t("app.common.backToDashboard") as string}
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <div className="h-4 w-px bg-frame-gray-3" />
           <div className="flex items-center gap-2 min-w-0">
             <span className="font-frame-mono text-[0.64rem] text-frame-gray-light tracking-widest uppercase shrink-0">
-              Projeto
+              {t("app.common.project") as string}
             </span>
             <span className="text-sm font-semibold text-frame-white truncate max-w-[200px]">
               {projectName || `#${projectId}`}
@@ -64,7 +66,7 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
                 (currentSection && tab.path(projectId).includes(`/project/${projectId}/${currentSection}`));
               return (
                 <button
-                  key={tab.label}
+                  key={tab.labelKey}
                   type="button"
                   onClick={() => setLocation(tab.path(projectId))}
                   className={`flex min-h-10 items-center gap-1.5 px-3 py-1.5 text-xs font-frame-mono tracking-wider transition whitespace-nowrap ${
@@ -75,7 +77,7 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
                   aria-current={isActive ? "page" : undefined}
                 >
                   <tab.icon className="w-3.5 h-3.5" />
-                  {tab.label}
+                  {t(tab.labelKey) as string}
                 </button>
               );
             })}

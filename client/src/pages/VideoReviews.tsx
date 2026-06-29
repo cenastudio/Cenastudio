@@ -31,6 +31,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 function parseVideoLink(url: string): string | null {
   const trimmed = url.trim();
@@ -97,20 +98,21 @@ interface ProjectFile {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; icon: any; color: string; bg: string }> = {
-  draft: { label: "Rascunho", icon: HelpCircle, color: "text-frame-gray-light", bg: "bg-frame-gray-3" },
-  pending_review: { label: "Pendente", icon: AlertCircle, color: "text-yellow-400", bg: "bg-yellow-500/10" },
-  changes_requested: { label: "Alterações", icon: AlertCircle, color: "text-orange-400", bg: "bg-orange-500/10" },
-  approved: { label: "Aprovado", icon: CheckCircle2, color: "text-green-400", bg: "bg-green-500/10" },
-  rejected: { label: "Rejeitado", icon: XCircle, color: "text-red-400", bg: "bg-red-500/10" },
+  draft: { label: t("app.videoReviews.draft"), icon: HelpCircle, color: "text-frame-gray-light", bg: "bg-frame-gray-3" },
+  pending_review: { label: t("app.videoReviews.pending"), icon: AlertCircle, color: "text-yellow-400", bg: "bg-yellow-500/10" },
+  changes_requested: { label: t("app.videoReviews.changes"), icon: AlertCircle, color: "text-orange-400", bg: "bg-orange-500/10" },
+  approved: { label: t("app.videoReviews.approved"), icon: CheckCircle2, color: "text-green-400", bg: "bg-green-500/10" },
+  rejected: { label: t("app.videoReviews.rejected"), icon: XCircle, color: "text-red-400", bg: "bg-red-500/10" },
 };
 
 const STATUS_ACTIONS = [
-  { value: "approved", label: "Aprovar", color: "border-green-500/30 text-green-400 hover:bg-green-500/10" },
-  { value: "changes_requested", label: "Solicitar alterações", color: "border-orange-500/30 text-orange-400 hover:bg-orange-500/10" },
-  { value: "rejected", label: "Rejeitar", color: "border-red-500/30 text-red-400 hover:bg-red-500/10" },
+  { value: "approved", label: t("app.videoReviews.approve"), color: "border-green-500/30 text-green-400 hover:bg-green-500/10" },
+  { value: "changes_requested", label: t("app.videoReviews.requestChanges"), color: "border-orange-500/30 text-orange-400 hover:bg-orange-500/10" },
+  { value: "rejected", label: t("app.videoReviews.reject"), color: "border-red-500/30 text-red-400 hover:bg-red-500/10" },
 ];
 
 function VideoReviewsContent() {
+  const { t } = useLanguage();
   const { projectId } = useParams<{ projectId: string }>();
   const targetReviewId = useMemo(() => {
     if (typeof window === "undefined") return null;
@@ -146,9 +148,9 @@ function VideoReviewsContent() {
         if (!preservePlayer) setSeekTo(null);
         return;
       }
-      toast.error(data.error || "Erro ao carregar review");
+      toast.error(data.error || t("app.errors.loadReview"));
     } catch {
-      toast.error("Erro ao carregar review");
+      toast.error(t("app.errors.loadReview"));
     }
   }, []);
 
@@ -159,7 +161,7 @@ function VideoReviewsContent() {
       const response = await fetch(endpoint, { credentials: "include" });
       const data = await response.json();
       if (!data.success) {
-        toast.error(data.error || "Erro ao carregar reviews");
+        toast.error(data.error || t("app.errors.loadReviews"));
         return;
       }
       const nextReviews = data.data || [];
@@ -174,7 +176,7 @@ function VideoReviewsContent() {
         setComments([]);
       }
     } catch {
-      toast.error("Erro ao carregar reviews");
+      toast.error(t("app.errors.loadReviews"));
     } finally {
       setLoading(false);
     }
@@ -187,7 +189,7 @@ function VideoReviewsContent() {
       const data = await response.json();
       if (data.success) setProjectFiles(data.data);
     } catch {
-      toast.error("Erro ao carregar arquivos do projeto");
+      toast.error(t("app.errors.loadProjectFiles"));
     }
   }, [projectId]);
 
@@ -243,12 +245,12 @@ function VideoReviewsContent() {
 
   const handleCreateReview = async () => {
     if (!title.trim()) {
-      toast.error("Dê um título para o review");
+      toast.error(t("app.errors.provideReviewTitle"));
       return;
     }
     const rawLink = driveLink.trim();
     if (!selectedFileId && !rawLink) {
-      toast.error("Cole um link ou escolha um vídeo do projeto");
+      toast.error(t("app.errors.provideLinkOrVideo"));
       return;
     }
 
@@ -269,7 +271,7 @@ function VideoReviewsContent() {
       });
       const data = await response.json();
       if (!data.success) {
-        toast.error(data.error || "Erro ao criar review");
+        toast.error(data.error || t("app.errors.createReview"));
         return;
       }
 
@@ -290,12 +292,12 @@ function VideoReviewsContent() {
         }
       }
 
-      toast.success("Review criado e link gerado");
+      toast.success(t("app.videoReviews.reviewCreated"));
       resetCreator();
       await loadAllReviews();
       await loadReviewDetails(data.data.id);
     } catch {
-      toast.error("Erro ao criar review");
+      toast.error(t("app.errors.createReview"));
     } finally {
       setIsCreating(false);
     }
@@ -315,10 +317,10 @@ function VideoReviewsContent() {
         setShareUrl(normalizeShareUrl(data.data.shareUrl, selectedReview.share_token));
         setShowShareModal(true);
       } else {
-        toast.error(data.error || "Erro ao gerar link");
+        toast.error(data.error || t("app.errors.generateLink"));
       }
     } catch {
-      toast.error("Erro ao gerar link");
+      toast.error(t("app.errors.generateLink"));
     }
   };
 
@@ -333,14 +335,14 @@ function VideoReviewsContent() {
       });
       const data = await response.json();
       if (data.success) {
-        toast.success("Status atualizado");
+        toast.success(t("app.videoReviews.statusUpdated"));
         setSelectedReview(data.data);
         loadAllReviews();
       } else {
-        toast.error(data.error || "Erro ao atualizar status");
+        toast.error(data.error || t("app.errors.updateStatus"));
       }
     } catch {
-      toast.error("Erro ao atualizar status");
+      toast.error(t("app.errors.updateStatus"));
     }
   };
 
@@ -351,7 +353,7 @@ function VideoReviewsContent() {
 
   const addComment = async (commentText: string, timestamp: number, annotations: Annotation[] = []) => {
     if (!selectedReview || !commentText.trim()) {
-      toast.error("Comentário é obrigatório");
+      toast.error(t("app.errors.commentRequired"));
       return;
     }
     setIsCommenting(true);
@@ -364,7 +366,7 @@ function VideoReviewsContent() {
           reviewId: selectedReview.id,
           timestampSeconds: timestamp,
           comment: commentText.trim(),
-          authorName: "Você",
+          authorName: t("app.common.you"),
           annotations,
         }),
       });
@@ -374,10 +376,10 @@ function VideoReviewsContent() {
         setCommentAnchor(null);
         await loadReviewDetails(selectedReview.id, true);
       } else {
-        toast.error(data.error || "Erro ao comentar");
+        toast.error(data.error || t("app.errors.addComment"));
       }
     } catch {
-      toast.error("Erro ao comentar");
+      toast.error(t("app.errors.addComment"));
     } finally {
       setIsCommenting(false);
     }
@@ -398,14 +400,14 @@ function VideoReviewsContent() {
       });
       const data = await response.json();
       if (data.success && selectedReview) loadReviewDetails(selectedReview.id);
-      else toast.error(data.error || "Erro ao atualizar comentário");
+      else toast.error(data.error || t("app.errors.updateComment"));
     } catch {
-      toast.error("Erro ao atualizar comentário");
+      toast.error(t("app.errors.updateComment"));
     }
   };
 
   const handleDeleteComment = async (commentId: number) => {
-    if (!confirm("Excluir comentário?")) return;
+    if (!confirm(t("app.videoReviews.confirmDeleteComment"))) return;
     try {
       const response = await fetch(`/api/video-review-comment?commentId=${commentId}`, {
         method: "DELETE",
@@ -413,9 +415,9 @@ function VideoReviewsContent() {
       });
       const data = await response.json();
       if (data.success && selectedReview) loadReviewDetails(selectedReview.id);
-      else toast.error(data.error || "Erro ao excluir comentário");
+      else toast.error(data.error || t("app.errors.deleteComment"));
     } catch {
-      toast.error("Erro ao excluir comentário");
+      toast.error(t("app.errors.deleteComment"));
     }
   };
 
@@ -464,7 +466,7 @@ function VideoReviewsContent() {
             {selectedReview && (
               <button onClick={handleGenerateShareLink} className="frame-btn-primary flex items-center gap-2">
                 <Share2 className="w-4 h-4" />
-                {selectedShareUrl ? "Atualizar link" : "Gerar link"}
+                {selectedShareUrl ? t("app.videoReviews.updateLink") : t("app.videoReviews.generateLink")}
               </button>
             )}
           </div>
@@ -480,11 +482,11 @@ function VideoReviewsContent() {
               <div className="p-4 border-b border-frame-gray-3">
                 <p className="frame-label mb-3">// CRIAR SALA</p>
                 <div className="space-y-3">
-                  <input value={title} onChange={(e) => setTitle(e.target.value)} className="frame-input w-full" placeholder="Título do review" />
-                  <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="frame-input w-full h-20 resize-none" placeholder="Contexto para o cliente" />
+                  <input value={title} onChange={(e) => setTitle(e.target.value)} className="frame-input w-full" placeholder={t("app.videoReviews.reviewTitlePlaceholder")} />
+                  <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="frame-input w-full h-20 resize-none" placeholder={t("app.videoReviews.contextPlaceholder")} />
                   <div className="relative">
                     <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
-                    <input value={driveLink} onChange={(e) => setDriveLink(e.target.value)} className="frame-input w-full pl-10" placeholder="Google Drive, YouTube, Vimeo..." />
+                    <input value={driveLink} onChange={(e) => setDriveLink(e.target.value)} className="frame-input w-full pl-10" placeholder={t("app.videoReviews.drivePlaceholder")} />
                   </div>
                   {videoFiles.length > 0 && (
                     <select value={selectedFileId} onChange={(e) => setSelectedFileId(e.target.value)} className="frame-input w-full">
@@ -506,7 +508,7 @@ function VideoReviewsContent() {
                   )}
                   <button onClick={handleCreateReview} disabled={isCreating} className="frame-btn-primary w-full flex items-center justify-center gap-2">
                     <Plus className="w-4 h-4" />
-                    {isCreating ? "Criando..." : "Criar sala de aprovação"}
+                    {isCreating ? t("app.videoReviews.creating") : t("app.videoReviews.createApprovalRoom")}
                   </button>
                   <p className="text-[0.62rem] text-frame-gray-light leading-relaxed">
                     O cliente recebe um link com player, comentários por tempo e ações de aprovação.
@@ -540,7 +542,7 @@ function VideoReviewsContent() {
                             </div>
                             <div className="min-w-0">
                               <p className="text-sm font-semibold truncate">{review.title}</p>
-                              <p className="text-[0.62rem] text-frame-gray-light truncate">{review.original_name || "Vídeo externo"}</p>
+                              <p className="text-[0.62rem] text-frame-gray-light truncate">{review.original_name || t("app.videoReviews.externalVideo")}</p>
                               <p className="text-[0.64rem] text-frame-gray-light/60 font-frame-mono mt-1">
                                 {new Date(review.created_at).toLocaleDateString("pt-BR")}
                               </p>
@@ -557,9 +559,9 @@ function VideoReviewsContent() {
             <section className="bg-black min-h-[420px] xl:min-h-0 flex flex-col">
               <div className="border-b border-frame-gray-3 px-4 py-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold truncate">{selectedReview?.title || title || "Preview do review"}</p>
+                  <p className="text-sm font-semibold truncate">{selectedReview?.title || title || t("app.videoReviews.reviewPreview")}</p>
                   <p className="text-xs text-frame-gray-light truncate">
-                    {selectedReview?.description || description || "Cole um link para validar o player e gerar a sala do cliente."}
+                    {selectedReview?.description || description || t("app.videoReviews.linkHint")}
                   </p>
                 </div>
                 {selectedReview && (
@@ -617,7 +619,7 @@ function VideoReviewsContent() {
                     Sala do cliente
                   </h3>
                   <span className="text-[0.64rem] font-frame-mono uppercase tracking-wider text-frame-gray-light">
-                    {selectedReview ? (selectedReview.expires_at ? "link ativo" : "sem link") : "aguardando"}
+                    {selectedReview ? (selectedReview.expires_at ? t("app.videoReviews.linkActive") : t("app.videoReviews.noLink")) : t("app.videoReviews.waiting")}
                   </span>
                 </div>
                 {selectedReview && selectedShareUrl ? (
@@ -630,7 +632,7 @@ function VideoReviewsContent() {
                         type="button"
                         onClick={() => {
                           navigator.clipboard.writeText(selectedShareUrl);
-                          toast.success("Link copiado");
+                          toast.success(t("app.common.copied"));
                         }}
                         className="frame-btn-ghost flex items-center justify-center gap-2"
                       >
@@ -691,13 +693,13 @@ function VideoReviewsContent() {
                             {comment.annotations?.length > 0 && (
                               <div className="flex items-center gap-1 mt-1 text-[0.62rem] text-frame-gray-light/50">
                                 <PenLine className="w-2.5 h-2.5" />
-                                {comment.annotations.length} anotação{comment.annotations.length > 1 ? "ões" : ""} no frame
+                                {comment.annotations.length} {t("app.videoReviews.annotation")}{comment.annotations.length > 1 ? "ões" : ""} {t("app.videoReviews.onFrame")}
                               </div>
                             )}
                             <div className="flex items-center gap-2 mt-2">
                               <button onClick={() => handleResolveComment(comment.id, !comment.resolved)} className="text-[0.64rem] text-frame-gray-light hover:text-frame-white flex items-center gap-1">
                                 {comment.resolved ? <Square className="w-3 h-3" /> : <CheckSquare className="w-3 h-3 text-green-400" />}
-                                {comment.resolved ? "Reabrir" : "Resolver"}
+                                {comment.resolved ? t("app.videoReviews.reopen") : t("app.videoReviews.resolve")}
                               </button>
                               <button onClick={() => handleDeleteComment(comment.id)} className="text-[0.64rem] text-frame-gray-light hover:text-red-400 flex items-center gap-1">
                                 <Trash2 className="w-3 h-3" />
@@ -767,7 +769,7 @@ function VideoReviewsContent() {
               <div className="p-6 space-y-4">
                 <div className="flex gap-2">
                   <input type="text" value={shareUrl} readOnly className="frame-input flex-1 text-xs" />
-                  <button onClick={() => { navigator.clipboard.writeText(shareUrl); toast.success("Link copiado"); }} className="frame-btn-ghost">
+                  <button onClick={() => { navigator.clipboard.writeText(shareUrl); toast.success(t("app.common.copied")); }} className="frame-btn-ghost">
                     <Copy className="w-4 h-4" />
                   </button>
                 </div>

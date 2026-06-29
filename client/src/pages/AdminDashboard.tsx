@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import BrandLogo from "@/components/BrandLogo";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AdminUser {
   id: number;
@@ -21,10 +22,11 @@ type PlanId = "free" | "pro" | "studio";
 const PLANS: Array<{ id: PlanId; label: string; detail: string }> = [
   { id: "pro", label: "Pro", detail: "50 geracoes + ferramentas pagas" },
   { id: "studio", label: "Studio", detail: "Ilimitado + acesso total" },
-  { id: "free", label: "Free", detail: "Teste limitado" },
+  { id: "free", label: "Free", detail: t("app.admin.limitedTest") },
 ];
 
 function AdminContent() {
+  const { t } = useLanguage();
   const { logout } = useAuth();
   const [, setLocation] = useLocation();
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -48,7 +50,7 @@ function AdminContent() {
       setActiveToolCount(toolList.filter((tool) => tool.isActive).length);
       setUsers((userData.users || []) as AdminUser[]);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro ao carregar admin");
+      toast.error(e instanceof Error ? e.message : t("app.errors.loadAdmin"));
     } finally {
       setLoading(false);
     }
@@ -81,11 +83,11 @@ function AdminContent() {
         role: form.role,
         planId: form.planId,
       });
-      toast.success("Conta criada e liberada");
+      toast.success(t("app.admin.accountCreated"));
       setForm((current) => ({ ...current, email: "", password: "" }));
       await load();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro ao criar usuário");
+      toast.error(e instanceof Error ? e.message : t("app.errors.createUser"));
     } finally {
       setCreating(false);
     }
@@ -149,10 +151,10 @@ function AdminContent() {
       <div className="px-4 sm:px-9 py-7">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-7">
           {[
-            { label: "Usuarios", value: users.length, icon: Users, accent: "border-b-frame-orange" },
-            { label: "Contas pagas", value: stats.paid, icon: Sparkles, accent: "border-b-frame-green" },
-            { label: "Admins", value: stats.admins, icon: Crown, accent: "border-b-[#4d9fff]" },
-            { label: "Ferramentas ativas", value: `${activeToolCount}/${toolCount}`, icon: ShieldCheck, accent: "border-b-frame-gold" },
+            { label: t("app.admin.users"), value: users.length, icon: Users, accent: "border-b-frame-orange" },
+            { label: t("app.admin.paidAccounts"), value: stats.paid, icon: Sparkles, accent: "border-b-frame-green" },
+            { label: t("app.admin.admins"), value: stats.admins, icon: Crown, accent: "border-b-[#4d9fff]" },
+            { label: t("app.admin.activeTools"), value: `${activeToolCount}/${toolCount}`, icon: ShieldCheck, accent: "border-b-frame-gold" },
           ].map((stat) => {
             const Icon = stat.icon;
             return (
@@ -179,13 +181,13 @@ function AdminContent() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               <input
-                placeholder="Nome"
+                placeholder={t("app.admin.namePlaceholder")}
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 className="frame-input"
               />
               <input
-                placeholder="email@cliente.com"
+                placeholder={t("app.admin.emailPlaceholder")}
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 className="frame-input"
@@ -193,7 +195,7 @@ function AdminContent() {
               <div className="relative">
                 <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
                 <input
-                  placeholder="Senha provisoria"
+                  placeholder={t("app.admin.temporaryPassword")}
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   className="frame-input pl-10"
@@ -235,7 +237,7 @@ function AdminContent() {
               disabled={creating}
               className="frame-btn-primary mt-5 disabled:opacity-60"
             >
-              {creating ? "Criando..." : "Criar conta e liberar acesso"}
+              {creating ? t("app.admin.creating") : t("app.admin.createAndRelease")}
             </button>
           </div>
 
@@ -250,14 +252,14 @@ function AdminContent() {
                 {users.slice(0, 6).map((user) => (
                   <div key={user.id} className="border border-frame-gray-3 p-3 bg-frame-black/25">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="font-medium truncate">{user.name || "Sem nome"}</p>
+                      <p className="font-medium truncate">{user.name || t("app.admin.noName")}</p>
                       <span className="font-frame-mono text-[0.62rem] uppercase text-frame-orange">
-                        {user.plan_name || "Sem plano"}
+                        {user.plan_name || t("app.admin.noPlan")}
                       </span>
                     </div>
                     <p className="text-xs text-frame-gray-light truncate mt-1">{user.email}</p>
                     <p className="text-[0.64rem] text-frame-gray-muted font-frame-mono uppercase mt-1">
-                      {user.role === "admin" ? "Admin" : "Usuario"}
+                      {user.role === "admin" ? t("app.admin.label") : "Usuario"}
                     </p>
                   </div>
                 ))}

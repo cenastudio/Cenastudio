@@ -17,6 +17,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SharedReview {
   id: number;
@@ -41,11 +42,11 @@ interface VideoComment {
 }
 
 const STATUS_COPY: Record<string, { label: string; className: string }> = {
-  approved: { label: "Aprovado", className: "border-green-500/30 bg-green-500/10 text-green-400" },
-  changes_requested: { label: "Ajustes solicitados", className: "border-orange-500/30 bg-orange-500/10 text-orange-400" },
-  rejected: { label: "Rejeitado", className: "border-red-500/30 bg-red-500/10 text-red-400" },
-  pending_review: { label: "Pendente", className: "border-frame-gray-3 bg-frame-gray-2 text-frame-gray-light" },
-  draft: { label: "Pendente", className: "border-frame-gray-3 bg-frame-gray-2 text-frame-gray-light" },
+  approved: { label: t("app.videoReviews.approved"), className: "border-green-500/30 bg-green-500/10 text-green-400" },
+  changes_requested: { label: t("app.videoReviews.changesRequested"), className: "border-orange-500/30 bg-orange-500/10 text-orange-400" },
+  rejected: { label: t("app.videoReviews.rejected"), className: "border-red-500/30 bg-red-500/10 text-red-400" },
+  pending_review: { label: t("app.videoReviews.pending"), className: "border-frame-gray-3 bg-frame-gray-2 text-frame-gray-light" },
+  draft: { label: t("app.videoReviews.pending"), className: "border-frame-gray-3 bg-frame-gray-2 text-frame-gray-light" },
 };
 
 function formatTimestamp(seconds: number) {
@@ -66,6 +67,8 @@ function formatDate(value: string) {
     minute: "2-digit",
   });
 }
+
+const { t } = useLanguage();
 
 export default function SharedReview() {
   const { token } = useParams<{ token: string }>();
@@ -95,10 +98,10 @@ export default function SharedReview() {
         setComments(data.data.comments || []);
         setError(null);
       } else {
-        setError(data.error || "Erro ao carregar review");
+        setError(data.error || t("app.errors.loadReview"));
       }
     } catch {
-      setError("Erro ao carregar review");
+      setError(t("app.errors.loadReview"));
     } finally {
       if (!silent) setLoading(false);
     }
@@ -151,25 +154,25 @@ export default function SharedReview() {
     if (!review) return "";
     return [
       `Review Room - ${review.title}`,
-      `Projeto: ${review.project_name}`,
-      `Status: ${status.label}`,
+      `${t("app.videoReviews.project")}: ${review.project_name}`,
+      `${t("app.videoReviews.status")}: ${status.label}`,
       `Link: ${window.location.href}`,
       "",
-      "Use o link para assistir, comentar no tempo certo do vídeo e enviar a decisão final.",
+      t("app.videoReviews.shareInstructions"),
     ].join("\n");
   }, [review, status.label]);
 
   const summaryText = useMemo(() => {
     if (!review) return "";
     const lines = [
-      "CENA STUDIO - REVIEW ROOM",
+      t("app.videoReviews.studioReviewRoom"),
       review.title,
       `Projeto: ${review.project_name}`,
       `Status: ${status.label}`,
-      `Gerado em: ${new Date().toLocaleString("pt-BR")}`,
+      `${t("app.videoReviews.generatedAt")}: ${new Date().toLocaleString("pt-BR")}`,
       "",
-      "COMENTÁRIOS",
-      comments.length ? "" : "Nenhum comentário enviado.",
+      t("app.videoReviews.comments"),
+      comments.length ? "" : t("app.videoReviews.noCommentsSent"),
       ...comments.map((comment) => (
         `[${formatTimestamp(comment.timestamp_seconds)}] ${comment.author_name} - ${comment.comment}`
       )),
@@ -194,7 +197,7 @@ export default function SharedReview() {
 
   const handleAddComment = async () => {
     if (!newComment.trim() || !authorName.trim()) {
-      toast.error("Nome e comentário são obrigatórios");
+      toast.error(t("app.errors.nameAndCommentRequired"));
       return;
     }
     setIsCommenting(true);
@@ -211,16 +214,16 @@ export default function SharedReview() {
       });
       const data = await response.json();
       if (data.success) {
-        toast.success("Comentário enviado para a equipe");
+        toast.success(t("app.videoReviews.commentSent"));
         setNewComment("");
         setCommentAnchor(null);
         await loadSharedReview(true);
         window.setTimeout(() => commentsRef.current?.scrollTo({ top: commentsRef.current.scrollHeight, behavior: "smooth" }), 100);
       } else {
-        toast.error(data.error || "Erro ao adicionar comentário");
+        toast.error(data.error || t("app.errors.addComment"));
       }
     } catch {
-      toast.error("Erro ao adicionar comentário");
+      toast.error(t("app.errors.addComment"));
     } finally {
       setIsCommenting(false);
     }
@@ -228,7 +231,7 @@ export default function SharedReview() {
 
   const handleDecision = async (nextStatus: "approved" | "changes_requested" | "rejected") => {
     if (!authorName.trim()) {
-      toast.error("Digite seu nome antes de enviar a decisão");
+      toast.error(t("app.errors.nameRequiredForDecision"));
       return;
     }
 
@@ -251,16 +254,16 @@ export default function SharedReview() {
         setDecisionNote("");
         toast.success(
           nextStatus === "approved"
-            ? "Vídeo aprovado!"
+            ? t("app.videoReviews.videoApproved")
             : nextStatus === "changes_requested"
-              ? "Ajustes enviados para a equipe!"
-              : "Review rejeitado.",
+              ? t("app.videoReviews.changesSent")
+              : t("app.videoReviews.reviewRejected"),
         );
       } else {
-        toast.error(data.error || "Erro ao enviar decisão");
+        toast.error(data.error || t("app.errors.sendDecision"));
       }
     } catch {
-      toast.error("Erro ao enviar decisão");
+      toast.error(t("app.errors.sendDecision"));
     } finally {
       setIsDeciding(false);
     }
@@ -268,7 +271,7 @@ export default function SharedReview() {
 
   const copyShareMessage = async () => {
     await navigator.clipboard.writeText(shareText);
-    toast.success("Mensagem copiada");
+    toast.success(t("app.common.copied"));
   };
 
   const openWhatsapp = () => {
@@ -301,7 +304,7 @@ export default function SharedReview() {
           <AlertCircle className="mx-auto mb-4 h-16 w-16 text-frame-red" />
           <h2 className="mb-2 text-2xl font-bold text-frame-white">Review não encontrado</h2>
           <p className="mb-4 text-frame-gray-light">
-            {error || "Este link pode ter expirado ou não existe."}
+            {error || t("app.videoReviews.linkExpired")}
           </p>
         </div>
       </div>
@@ -402,7 +405,7 @@ export default function SharedReview() {
               value={decisionNote}
               onChange={(event) => setDecisionNote(event.target.value)}
               className="frame-input mb-3 h-24 w-full resize-none"
-              placeholder="Observação opcional para aprovação ou ajustes..."
+              placeholder={t("app.videoReviews.optionalNotePlaceholder")}
             />
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <button
@@ -455,7 +458,7 @@ export default function SharedReview() {
               </div>
               <div className="mt-3 flex items-center gap-2 text-xs text-frame-gray-light">
                 <Sparkles className="h-3.5 w-3.5 text-frame-orange" />
-                {openComments.length} ponto{openComments.length === 1 ? "" : "s"} de feedback no vídeo
+                {openComments.length} {t("app.videoReviews.feedbackPoints")} {t("app.videoReviews.onVideo")}
               </div>
             </div>
 

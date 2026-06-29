@@ -16,6 +16,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface FileData {
   id: number;
@@ -39,6 +40,7 @@ type FileFilter = "all" | "images" | "videos" | "documents" | "audio";
 type UploadTab = "file" | "link";
 
 function FilesContent() {
+  const { t } = useLanguage();
   const params = useParams();
   const [location, setLocation] = useLocation();
   const projectId = params.projectId ? parseInt(params.projectId) : null;
@@ -94,7 +96,7 @@ function FilesContent() {
       const data = await response.json();
       if (data.success) setFiles(data.data);
     } catch {
-      toast.error("Erro ao carregar arquivos");
+      toast.error(t("app.errors.loadFiles"));
     } finally {
       setIsLoading(false);
     }
@@ -111,14 +113,14 @@ function FilesContent() {
       });
       const data = await response.json();
       if (data.success) {
-        toast.success("Projeto criado!");
+        toast.success(t("app.files.projectCreated"));
         setShowNewProject(false);
         setNewProjectName("");
         loadProjects();
         setLocation(isProjectScoped ? `/project/${data.data.id}/files` : `/files/${data.data.id}`);
       }
     } catch {
-      toast.error("Erro ao criar projeto");
+      toast.error(t("app.errors.createProject"));
     }
   };
 
@@ -185,20 +187,20 @@ function FilesContent() {
         setUploadProgress(100);
         const data = await response.json();
         if (data.success) {
-          toast.success("Arquivo enviado!");
+          toast.success(t("app.files.fileUploaded"));
           setIsUploadOpen(false);
           setSelectedFileForUpload(null);
           loadFiles();
-        } else toast.error(data.error || "Erro ao enviar");
+        } else toast.error(data.error || t("app.errors.uploadFile"));
       };
-      reader.onerror = () => { toast.error("Erro ao ler arquivo"); setIsUploading(false); };
+      reader.onerror = () => { toast.error(t("app.errors.readFile")); setIsUploading(false); };
       reader.readAsDataURL(selectedFileForUpload);
-    } catch { toast.error("Erro ao enviar"); } finally { setIsUploading(false); setUploadProgress(0); }
+    } catch { toast.error(t("app.errors.uploadFile")); } finally { setIsUploading(false); setUploadProgress(0); }
   };
 
   const handleLinkSubmit = async () => {
     if (!linkUrl.trim() || !projectId) return;
-    if (!linkName.trim()) { toast.error("Dê um nome ao link"); return; }
+    if (!linkName.trim()) { toast.error(t("app.files.nameLinkRequired")); return; }
     setIsUploading(true);
     try {
       const response = await fetch("/api/files/upload", {
@@ -215,13 +217,13 @@ function FilesContent() {
       });
       const data = await response.json();
       if (data.success) {
-        toast.success("Link salvo!");
+        toast.success(t("app.files.linkSaved"));
         setIsUploadOpen(false);
         setLinkUrl("");
         setLinkName("");
         loadFiles();
-      } else toast.error(data.error || "Erro ao salvar link");
-    } catch { toast.error("Erro ao salvar link"); } finally { setIsUploading(false); }
+      } else toast.error(data.error || t("app.errors.saveLink"));
+    } catch { toast.error(t("app.errors.saveLink")); } finally { setIsUploading(false); }
   };
 
   const handleDelete = async () => {
@@ -230,12 +232,12 @@ function FilesContent() {
       const response = await fetch(`/api/files/${selectedFile.id}`, { method: "DELETE", credentials: "include" });
       const data = await response.json();
       if (data.success) {
-        toast.success("Arquivo excluído!");
+        toast.success(t("app.files.fileDeleted"));
         setIsDeleteOpen(false);
         setSelectedFile(null);
         loadFiles();
-      } else toast.error(data.error || "Erro ao excluir");
-    } catch { toast.error("Erro ao excluir"); }
+      } else toast.error(data.error || t("app.errors.deleteFile"));
+    } catch { toast.error(t("app.errors.deleteFile")); }
   };
 
   const handleDownload = (file: FileData) => window.open(`/api/files/${file.id}/download`, "_blank");
@@ -252,14 +254,14 @@ function FilesContent() {
   };
 
   const getFileTypeLabel = (fileType: string) => {
-    if (fileType === "text/uri-list") return "Link";
-    if (fileType.startsWith("image/")) return "Imagem";
-    if (fileType.startsWith("video/")) return "Vídeo";
-    if (fileType.startsWith("audio/")) return "Áudio";
+    if (fileType === "text/uri-list") return t("app.files.link");
+    if (fileType.startsWith("image/")) return t("app.files.image");
+    if (fileType.startsWith("video/")) return t("app.files.video");
+    if (fileType.startsWith("audio/")) return t("app.files.audio");
     if (fileType.includes("pdf")) return "PDF";
-    if (fileType.includes("document")) return "Documento";
-    if (fileType.includes("spreadsheet")) return "Planilha";
-    return "Arquivo";
+    if (fileType.includes("document")) return t("app.files.document");
+    if (fileType.includes("spreadsheet")) return t("app.files.spreadsheet");
+    return t("app.files.file");
   };
 
   const isLinkFile = (file: FileData) => file.mime_type === "text/uri-list";
@@ -280,11 +282,11 @@ function FilesContent() {
   const isPreviewableImage = (file: FileData) => (file.mime_type || "").startsWith("image/");
 
   const filterTabs: { key: FileFilter; label: string }[] = [
-    { key: "all", label: "Todos" },
-    { key: "images", label: "Imagens" },
-    { key: "videos", label: "Vídeos" },
-    { key: "documents", label: "Documentos" },
-    { key: "audio", label: "Áudio" },
+    { key: "all", label: t("app.common.all") },
+    { key: "images", label: t("app.files.images") },
+    { key: "videos", label: t("app.files.videos") },
+    { key: "documents", label: t("app.files.documents") },
+    { key: "audio", label: t("app.files.audio") },
   ];
 
   const currentProject = projects.find((p) => p.id === projectId);
@@ -300,12 +302,12 @@ function FilesContent() {
           <div>
             <p className="frame-label mb-2">// MATERIAIS DO PROJETO</p>
             <h1 className="frame-title text-[clamp(2.1rem,4vw,3.5rem)]">
-              {currentProject ? currentProject.name : "MATERIAIS POR PROJETO"}
+              {currentProject ? currentProject.name : t("app.files.title")}
             </h1>
             <p className="text-frame-gray-light text-sm mt-2">
               {currentProject
                 ? `${files.length} ${files.length === 1 ? "material organizado" : "materiais organizados"} neste projeto`
-                : "Links, referências e anexos leves organizados no contexto de cada job"}
+                : t("app.files.subtitle")}
             </p>
           </div>
 
@@ -344,13 +346,13 @@ function FilesContent() {
                   onClick={() => setLocation(isProjectScoped ? `/project/${projectId}` : "/files")}
                   className="text-xs text-frame-gray-light hover:text-frame-white transition"
                 >
-                  {isProjectScoped ? "Visão geral" : "Sair do projeto"}
+                  {isProjectScoped ? t("app.files.overview") : t("app.files.leaveProject")}
                 </button>
               </div>
             )}
             <button
               onClick={() => {
-                if (!projectId) { toast.error("Selecione um projeto primeiro"); return; }
+                if (!projectId) { toast.error(t("app.files.selectProjectFirst")); return; }
                 setUploadTab("link");
                 setIsUploadOpen(true);
               }}
@@ -443,7 +445,7 @@ function FilesContent() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
                   <input
                     type="text"
-                    placeholder="Buscar arquivo..."
+                    placeholder={t("app.files.searchPlaceholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full bg-frame-gray-2 border border-frame-gray-3 pl-10 pr-4 py-2 text-sm outline-none focus:border-frame-orange"
@@ -474,9 +476,9 @@ function FilesContent() {
             ) : filteredFiles.length === 0 ? (
               <EmptyState
                 icon={Folder}
-                title={searchQuery || filter !== "all" ? "Nenhum arquivo para esses filtros" : "Nenhum arquivo neste projeto"}
-                description={searchQuery || filter !== "all" ? "Tente outros filtros" : "Salve um link externo ou envie um arquivo leve"}
-                action={{ label: "Adicionar link", onClick: () => { setUploadTab("link"); setIsUploadOpen(true); } }}
+                title={searchQuery || filter !== "all" ? t("app.files.noFilesForFilter") : t("app.files.noFilesInProject")}
+                description={searchQuery || filter !== "all" ? t("app.files.tryOtherFilters") : t("app.files.saveLinkOrUpload")}
+                action={{ label: t("app.files.addLink"), onClick: () => { setUploadTab("link"); setIsUploadOpen(true); } }}
               />
             ) : viewMode === "grid" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -502,27 +504,27 @@ function FilesContent() {
                           </div>
                           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
                             {!isLink && isPreviewableImage(file) && (
-                              <button onClick={() => openPreview(file)} className="p-2 hover:bg-frame-gray-3 transition" title="Visualizar">
+                              <button onClick={() => openPreview(file)} className="p-2 hover:bg-frame-gray-3 transition" title={t("app.common.preview")}>
                                 <Eye className="w-4 h-4" />
                               </button>
                             )}
                             {isLink ? (
-                              <a href={file.path} target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-frame-gray-3 transition" title="Abrir link">
+                              <a href={file.path} target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-frame-gray-3 transition" title={t("app.files.openLink")}>
                                 <ExternalLink className="w-4 h-4" />
                               </a>
                             ) : (
-                              <button onClick={() => handleDownload(file)} className="p-2 hover:bg-frame-gray-3 transition" title="Baixar">
+                              <button onClick={() => handleDownload(file)} className="p-2 hover:bg-frame-gray-3 transition" title={t("app.common.download")}>
                                 <Download className="w-4 h-4" />
                               </button>
                             )}
-                            <button onClick={() => { setSelectedFile(file); setIsDeleteOpen(true); }} className="p-2 hover:bg-frame-red/20 hover:text-frame-red transition" title="Excluir">
+                            <button onClick={() => { setSelectedFile(file); setIsDeleteOpen(true); }} className="p-2 hover:bg-frame-red/20 hover:text-frame-red transition" title={t("app.common.delete")}>
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
                         <h3 className="text-sm font-semibold text-frame-white mb-1 truncate flex-1">{file.original_name}</h3>
                         <div className="flex items-center gap-2 text-xs text-frame-gray-light mt-2 pt-2 border-t border-frame-gray-3">
-                          <span className="bg-frame-gray-2 px-1.5 py-0.5">{isLink ? "Link" : getFileTypeLabel(file.mime_type || "")}</span>
+                          <span className="bg-frame-gray-2 px-1.5 py-0.5">{isLink ? t("app.files.link") : getFileTypeLabel(file.mime_type || "")}</span>
                           <span>{isLink ? "—" : formatFileSize(file.size || 0)}</span>
                           <span className="ml-auto">{formatDate(file.created_at)}</span>
                         </div>
@@ -544,7 +546,7 @@ function FilesContent() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{file.original_name}</p>
                         <p className="text-xs text-frame-gray-light">
-                          {isLink ? "Link" : getFileTypeLabel(file.mime_type || "")} — {isLink ? "URL externa" : formatFileSize(file.size || 0)}
+                          {isLink ? t("app.files.link") : getFileTypeLabel(file.mime_type || "")} — {isLink ? t("app.files.externalUrl") : formatFileSize(file.size || 0)}
                         </p>
                       </div>
                       <span className="text-xs text-frame-gray-light hidden sm:block">{formatDate(file.created_at)}</span>
@@ -555,7 +557,7 @@ function FilesContent() {
                           </button>
                         )}
                         {isLink ? (
-                          <a href={file.path} target="_blank" rel="noopener noreferrer" className="p-1.5 hover:bg-frame-gray-3 transition" title="Abrir link">
+                          <a href={file.path} target="_blank" rel="noopener noreferrer" className="p-1.5 hover:bg-frame-gray-3 transition" title={t("app.files.openLink")}>
                             <ExternalLink className="w-4 h-4" />
                           </a>
                         ) : (
@@ -563,7 +565,7 @@ function FilesContent() {
                             <Download className="w-4 h-4" />
                           </button>
                         )}
-                        <button onClick={() => { setSelectedFile(file); setIsDeleteOpen(true); }} className="p-1.5 hover:bg-frame-red/20 hover:text-frame-red transition" title="Excluir">
+                        <button onClick={() => { setSelectedFile(file); setIsDeleteOpen(true); }} className="p-1.5 hover:bg-frame-red/20 hover:text-frame-red transition" title={t("app.common.delete")}>
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -636,7 +638,7 @@ function FilesContent() {
                   </div>
                   <div className="flex items-center justify-between text-xs text-frame-gray-light">
                     <span>{formatFileSize(selectedFileForUpload.size)}</span>
-                    <span>{selectedFileForUpload.type || "Arquivo"}</span>
+                    <span>{selectedFileForUpload.type || t("app.files.file")}</span>
                   </div>
                   {isUploading && (
                     <div className="mt-3">
@@ -657,7 +659,7 @@ function FilesContent() {
                   type="text"
                   value={linkName}
                   onChange={(e) => setLinkName(e.target.value)}
-                  placeholder="Ex: Referência de cor, Video do cliente..."
+                  placeholder={t("app.files.linkNamePlaceholder")}
                   className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange"
                 />
               </div>
@@ -667,7 +669,7 @@ function FilesContent() {
                   type="url"
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
-                  placeholder="https://drive.google.com/... ou https://youtube.com/..."
+                  placeholder={t("app.files.urlPlaceholder")}
                   className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange"
                 />
               </div>
@@ -684,11 +686,11 @@ function FilesContent() {
             </button>
             {uploadTab === "file" ? (
               <button type="button" disabled={!selectedFileForUpload || isUploading} onClick={handleUpload} className="frame-btn-primary">
-                {isUploading ? "Enviando..." : "Enviar arquivo leve"}
+                {isUploading ? t("app.files.uploading") : t("app.files.uploadFile")}
               </button>
             ) : (
               <button type="button" disabled={!linkUrl.trim() || !linkName.trim() || isUploading} onClick={handleLinkSubmit} className="frame-btn-primary">
-                {isUploading ? "Salvando..." : "Salvar Link"}
+                {isUploading ? t("app.common.saving") : t("app.files.saveLink")}
               </button>
             )}
           </DialogFooter>
@@ -757,7 +759,7 @@ function FilesContent() {
               type="text"
               value={newProjectName}
               onChange={(e) => setNewProjectName(e.target.value)}
-              placeholder="Ex: Documentário Amazônia"
+              placeholder={t("app.files.projectNamePlaceholder")}
               className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange"
               onKeyDown={(e) => { if (e.key === "Enter") handleCreateProject(); }}
             />

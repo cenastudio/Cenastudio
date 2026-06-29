@@ -5,6 +5,9 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
+
+const { t } = useLanguage();
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -20,21 +23,21 @@ export default function Register() {
   const handleRegister = async () => {
     setInlineError(null);
     if (!name.trim() || !email.trim() || !password.trim()) {
-      setInlineError("Preencha todos os campos.");
+      setInlineError(t("app.errors.fillAllFields"));
       return;
     }
     if (password.length < 8) {
-      setInlineError("A senha deve ter pelo menos 8 caracteres.");
+      setInlineError(t("app.errors.passwordMinChars"));
       return;
     }
     if (password !== confirmPassword) {
-      setInlineError("As senhas não coincidem.");
+      setInlineError(t("app.errors.passwordsDontMatch"));
       return;
     }
     setSubmitting(true);
     try {
       await register(name.trim(), email.trim(), password);
-      toast.success("Conta criada com sucesso! Trial Pro de 14 dias ativado.");
+      toast.success(t("app.auth.accountCreatedWithTrial"));
 
       const params = new URLSearchParams(window.location.search);
       const plan = params.get("plan");
@@ -49,7 +52,7 @@ export default function Register() {
           ? error.message
           : error instanceof Error
             ? error.message
-            : "Erro ao criar conta";
+            : t("app.errors.createAccount");
       setInlineError(msg);
       toast.error(msg);
     } finally {
@@ -62,31 +65,31 @@ export default function Register() {
   };
 
   return (
-    <AuthLayout mode="register" title="Criar conta" subtitle="Trial Pro de 14 dias incluído.">
+    <AuthLayout mode="register" title={t("app.auth.createAccount")} subtitle={t("app.auth.trialIncluded")}>
       {inlineError && <AuthError message={inlineError} />}
 
-      <AuthField label="Nome">
+      <AuthField label={t("app.auth.name")}>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={handleKeyPress}
           className="frame-input"
-          placeholder="Seu nome"
+          placeholder={t("app.auth.namePlaceholder")}
         />
       </AuthField>
 
-      <AuthField label="Email">
+      <AuthField label={t("app.auth.email")}>
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           onKeyDown={handleKeyPress}
           className="frame-input"
-          placeholder="seu@email.com"
+          placeholder={t("app.auth.emailPlaceholder")}
         />
       </AuthField>
 
-      <AuthField label="Senha">
+      <AuthField label={t("app.auth.password")}>
         <div className="relative">
           <input
             type={showPassword ? "text" : "password"}
@@ -94,7 +97,7 @@ export default function Register() {
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={handleKeyPress}
             className="frame-input pr-10"
-            placeholder="Mínimo 8 caracteres"
+            placeholder={t("app.auth.passwordMinChars")}
           />
           <button
             type="button"
@@ -106,14 +109,14 @@ export default function Register() {
         </div>
       </AuthField>
 
-      <AuthField label="Confirmar senha">
+      <AuthField label={t("app.auth.confirmPassword")}>
         <input
           type={showPassword ? "text" : "password"}
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           onKeyDown={handleKeyPress}
           className="frame-input"
-          placeholder="Repita a senha"
+          placeholder={t("app.auth.repeatPassword")}
         />
       </AuthField>
 
@@ -129,7 +132,7 @@ export default function Register() {
             Criando conta...
           </>
         ) : (
-          "Criar conta grátis"
+          t("app.auth.createFreeAccount")
         )}
       </button>
 

@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ProjectDetail {
   id: number;
@@ -99,6 +100,7 @@ const parseProjectMetadata = (project: ProjectDetail | null): ProjectMetadata =>
 };
 
 function ProjectHubContent() {
+  const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const projectId = parseInt(id || "0");
@@ -123,7 +125,7 @@ function ProjectHubContent() {
     ])
       .then(([projRes, colRes, filesRes, reviewsRes, statesRes]) => {
         if (projRes.success) setProject(projRes.data);
-        else toast.error("Projeto não encontrado");
+        else toast.error(t("app.errors.projectNotFound"));
         if (colRes.success) setMembers(colRes.data || []);
         if (filesRes.success) setRecentFiles((filesRes.data?.files || filesRes.data || []).slice(0, 5));
         if (reviewsRes.success) setRecentReviews((reviewsRes.data || []).slice(0, 5));
@@ -181,7 +183,7 @@ function ProjectHubContent() {
               <div className="flex flex-wrap items-center gap-3 mb-3">
                 <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-frame-white">{project.name}</h1>
                 <span className="font-frame-mono text-[0.64rem] tracking-[0.14em] uppercase text-frame-orange border border-frame-orange/30 bg-frame-orange/[0.08] px-2 py-1">
-                  {metadata.projectType || project.status || "Ativo"}
+                  {metadata.projectType || project.status || t("app.projectHub.active")}
                 </span>
               </div>
               {project.description && (
@@ -365,7 +367,7 @@ function ProjectHubContent() {
                 <div className="border border-frame-gray-3 divide-y divide-frame-gray-3">
                   {recentFiles.map((f) => (
                     <div key={f.id} className="px-4 py-3 flex items-center gap-3 text-sm">
-                      <span className="text-frame-gray-light">{f.name || f.original_name || "Arquivo sem nome"}</span>
+                      <span className="text-frame-gray-light">{f.name || f.original_name || t("app.projectHub.fileWithoutName")}</span>
                       <span className="text-[0.62rem] font-frame-mono text-frame-gray-light uppercase ml-auto">
                         {f.type || f.mime_type || "arquivo"} · {new Date(f.created_at).toLocaleDateString("pt-BR")}
                       </span>
@@ -403,9 +405,9 @@ function ProjectHubContent() {
                         r.status === "pending_review" ? "border-yellow-500/30 text-yellow-400" :
                         "border-frame-gray-3 text-frame-gray-light"
                       }`}>
-                        {r.status === "approved" ? "Aprovado" :
-                         r.status === "rejected" ? "Rejeitado" :
-                         r.status === "pending_review" ? "Pendente" : r.status}
+                        {r.status === "approved" ? t("app.projectHub.approved") :
+                         r.status === "rejected" ? t("app.projectHub.rejected") :
+                         r.status === "pending_review" ? t("app.projectHub.pending") : r.status}
                       </span>
                     </div>
                   ))}
@@ -427,20 +429,20 @@ function ProjectHubContent() {
                   <span className="block font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase text-frame-gray-light mb-1">
                     Cliente
                   </span>
-                  <p className="text-frame-white">{metadata.creativeGoals?.client || "Não definido"}</p>
+                  <p className="text-frame-white">{metadata.creativeGoals?.client || t("app.projectHub.notDefined")}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <span className="block font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase text-frame-gray-light mb-1">
                       Formato
                     </span>
-                    <p className="text-frame-white">{metadata.creativeGoals?.format || "Aberto"}</p>
+                    <p className="text-frame-white">{metadata.creativeGoals?.format || t("app.projectHub.open")}</p>
                   </div>
                   <div>
                     <span className="block font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase text-frame-gray-light mb-1">
                       Tom
                     </span>
-                    <p className="text-frame-white">{metadata.creativeGoals?.tone || "Aberto"}</p>
+                    <p className="text-frame-white">{metadata.creativeGoals?.tone || t("app.projectHub.open")}</p>
                   </div>
                 </div>
               </div>

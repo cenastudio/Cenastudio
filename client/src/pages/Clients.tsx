@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useLocation } from "wouter";
+import { useLanguage } from "@/contexts/LanguageContext";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AnimatedModal from "@/components/AnimatedModal";
@@ -232,10 +233,10 @@ function SortableClientCard({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => onEdit(client)}>
-              <Edit className="w-4 h-4 mr-2" /> Editar
+              <Edit className="w-4 h-4 mr-2" /> {t("app.common.edit") as string}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onDelete(client)} className="text-red-400">
-              <Trash2 className="w-4 h-4 mr-2" /> Excluir
+              <Trash2 className="w-4 h-4 mr-2" /> {t("app.common.delete") as string}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -299,6 +300,7 @@ interface ClientStats {
 
 function ClientsContent() {
   const [, setLocation] = useLocation();
+  const { t } = useLanguage();
 
   const [clients, setClients] = useState<Client[]>([]);
   const [stats, setStats] = useState<ClientStats | null>(null);
@@ -409,16 +411,16 @@ function ClientsContent() {
       const response = await fetch(`/api/clients/${selectedClient.id}`, { method: "DELETE" });
       const data = await response.json();
       if (data.success) {
-        toast.success("Cliente excluído com sucesso!");
+        toast.success(t("app.clients.clientDeleted") as string);
         setIsDeleteOpen(false);
         setSelectedClient(null);
         loadClients();
         loadStats();
       } else {
-        toast.error(data.error || "Erro ao excluir cliente");
+        toast.error(data.error || t("app.errors.generic") as string);
       }
     } catch {
-      toast.error("Erro ao excluir cliente");
+      toast.error(t("app.errors.generic") as string);
     } finally {
       setIsSubmitting(false);
     }
@@ -436,7 +438,7 @@ function ClientsContent() {
         .filter((client) => client.name);
 
       if (imported.length === 0) {
-        toast.error("Não encontrei clientes válidos nesse arquivo.");
+        toast.error(t("app.errors.generic") as string);
         return;
       }
 
@@ -487,7 +489,7 @@ function ClientsContent() {
       toast.success(`${created} cliente(s) importado(s). ${skipped} ignorado(s).`);
     } catch (error) {
       console.error("Import error:", error);
-      toast.error("Arquivo inválido ou fora do formato esperado.");
+      toast.error(t("app.errors.generic") as string);
     } finally {
       setIsImporting(false);
     }
@@ -504,9 +506,9 @@ function ClientsContent() {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case "active": return "Ativo";
-      case "lead": return "Lead";
-      case "inactive": return "Inativo";
+      case "active": return t("app.collaborators.active") as string;
+      case "lead": return t("app.pipeline.lead") as string;
+      case "inactive": return t("app.collaborators.inactive") as string;
       default: return status;
     }
   };
@@ -523,14 +525,14 @@ function ClientsContent() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <p className="text-frame-orange font-frame-mono text-xs tracking-[0.2em] uppercase mb-2">// CLIENTES</p>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">CLIENTES</h1>
-            <p className="text-frame-gray-light text-sm mt-2">Gerencie seu portfólio de clientes e oportunidades</p>
+            <p className="text-frame-orange font-frame-mono text-xs tracking-[0.2em] uppercase mb-2">// {t("app.clients.title") as string}</p>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{t("app.clients.title") as string}</h1>
+            <p className="text-frame-gray-light text-sm mt-2">{t("app.clients.noClientsDesc") as string}</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <label className="frame-btn-ghost flex items-center justify-center gap-2 shrink-0">
               <Upload className="w-4 h-4" />
-              {isImporting ? "Importando..." : "Importar JSON"}
+              {isImporting ? t("app.common.loading") as string : t("app.common.import") as string}
               <input
                 type="file"
                 accept="application/json,.json"
@@ -547,7 +549,7 @@ function ClientsContent() {
               className="frame-btn-primary flex items-center justify-center gap-2 shrink-0"
             >
               <Plus className="w-4 h-4" />
-              Novo Cliente
+              {t("app.clients.newClient") as string}
             </button>
           </div>
         </div>
@@ -556,10 +558,10 @@ function ClientsContent() {
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
-              { label: "Total", value: stats.totalClients, icon: Users, color: "text-frame-orange bg-frame-orange/10" },
-              { label: "Ativos", value: stats.activeClients, icon: TrendingUp, color: "text-green-400 bg-green-500/10" },
+              { label: t("app.common.all") as string, value: stats.totalClients, icon: Users, color: "text-frame-orange bg-frame-orange/10" },
+              { label: t("app.clients.activeClients") as string, value: stats.activeClients, icon: TrendingUp, color: "text-green-400 bg-green-500/10" },
               { label: "Leads", value: stats.leadClients, icon: Users, color: "text-blue-400 bg-blue-500/10" },
-              { label: "Receita", value: formatCurrency(stats.totalRevenue), icon: DollarSign, color: "text-green-400 bg-green-500/10" },
+              { label: t("app.clients.totalSpent") as string, value: formatCurrency(stats.totalRevenue), icon: DollarSign, color: "text-green-400 bg-green-500/10" },
             ].map((item, i) => (
               <motion.div
                 key={item.label}
@@ -588,7 +590,7 @@ function ClientsContent() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
             <input
               type="text"
-              placeholder="Buscar cliente..."
+              placeholder={t("app.clients.search") as string}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-frame-gray-2 border border-frame-gray-3 pl-10 pr-4 py-2 text-sm outline-none focus:border-frame-orange"
@@ -599,17 +601,17 @@ function ClientsContent() {
             onChange={(e) => setFilterStatus(e.target.value)}
             className="bg-frame-gray-2 border border-frame-gray-3 px-4 py-2 text-sm outline-none focus:border-frame-orange"
           >
-            <option value="">Todos Status</option>
-            <option value="active">Ativo</option>
-            <option value="lead">Lead</option>
-            <option value="inactive">Inativo</option>
+            <option value="">{t("app.common.all") as string}</option>
+            <option value="active">{t("app.collaborators.active") as string}</option>
+            <option value="lead">{t("app.pipeline.lead") as string}</option>
+            <option value="inactive">{t("app.collaborators.inactive") as string}</option>
           </select>
           <select
             value={filterSegment}
             onChange={(e) => setFilterSegment(e.target.value)}
             className="bg-frame-gray-2 border border-frame-gray-3 px-4 py-2 text-sm outline-none focus:border-frame-orange"
           >
-            <option value="">Todos Segmentos</option>
+            <option value="">{t("app.common.all") as string}</option>
             <option value="direct">Direto</option>
             <option value="agency">Agência</option>
             <option value="brand">Marca</option>
@@ -621,13 +623,13 @@ function ClientsContent() {
           {/* Sidebar */}
           <aside className="hidden lg:block w-56 shrink-0 space-y-4">
             <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-4">
-              <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-3">Ações Rápidas</p>
+              <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-3">{t("app.common.filter") as string}</p>
               <div className="space-y-2">
                  <button onClick={() => setLocation("/clients/new")} className="w-full text-left text-sm text-frame-gray-light hover:text-frame-white transition px-2 py-1.5 border border-frame-gray-3 hover:border-frame-orange/50">
-                  + Novo Cliente
+                  + {t("app.clients.newClient") as string}
                 </button>
                 <label className="block w-full text-left text-sm text-frame-gray-light hover:text-frame-white transition px-2 py-1.5 border border-frame-gray-3 hover:border-frame-orange/50 cursor-pointer">
-                  Importar JSON
+                  {t("app.common.import") as string}
                   <input
                     type="file"
                     accept="application/json,.json"
@@ -642,10 +644,10 @@ function ClientsContent() {
               </div>
             </div>
             <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-4">
-              <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-3">Segmentos</p>
+              <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-3">{t("app.clients.segment") as string}</p>
               <div className="space-y-1.5">
                 {[
-                  { id: "", label: "Todos", color: "bg-frame-gray-3" },
+                  { id: "", label: t("app.common.all") as string, color: "bg-frame-gray-3" },
                   { id: "direct", label: "Direto", color: "bg-blue-400" },
                   { id: "agency", label: "Agência", color: "bg-purple-400" },
                   { id: "brand", label: "Marca", color: "bg-green-400" },
@@ -664,13 +666,13 @@ function ClientsContent() {
               </div>
             </div>
             <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-4">
-              <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-3">Status</p>
+              <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-3">{t("app.clients.workflowStage") as string}</p>
               <div className="space-y-1.5">
                 {[
-                  { id: "", label: "Todos", color: "bg-frame-gray-3" },
-                  { id: "active", label: "Ativo", color: "bg-green-400" },
-                  { id: "lead", label: "Lead", color: "bg-blue-400" },
-                  { id: "inactive", label: "Inativo", color: "bg-red-400" },
+                  { id: "", label: t("app.common.all") as string, color: "bg-frame-gray-3" },
+                  { id: "active", label: t("app.collaborators.active") as string, color: "bg-green-400" },
+                  { id: "lead", label: t("app.pipeline.lead") as string, color: "bg-blue-400" },
+                  { id: "inactive", label: t("app.collaborators.inactive") as string, color: "bg-red-400" },
                 ].map((st) => (
                   <button
                     key={st.id}
@@ -687,18 +689,18 @@ function ClientsContent() {
             </div>
             {stats && (
               <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-4">
-                <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-3">Resumo</p>
+                <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-3">{t("app.clients.stats") as string}</p>
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between">
-                    <span className="text-frame-gray-light">Total</span>
+                    <span className="text-frame-gray-light">{t("app.common.all") as string}</span>
                     <span className="font-semibold">{stats.totalClients}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-green-400">Ativos</span>
+                    <span className="text-green-400">{t("app.clients.activeClients") as string}</span>
                     <span className="font-semibold">{stats.activeClients}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-blue-400">Leads</span>
+                    <span className="text-blue-400">{t("app.pipeline.lead") as string}</span>
                     <span className="font-semibold">{stats.leadClients}</span>
                   </div>
                   {stats.bySegment.length > 0 && (
@@ -706,7 +708,7 @@ function ClientsContent() {
                       <div className="border-t border-frame-gray-3 my-1" />
                       {stats.bySegment.map((s) => (
                         <div key={s.segment} className="flex justify-between">
-                          <span className="text-frame-gray-light">{s.segment || "Sem segmento"}</span>
+                          <span className="text-frame-gray-light">{s.segment || t("app.common.none") as string}</span>
                           <span className="font-semibold">{s.count}</span>
                         </div>
                       ))}
@@ -776,13 +778,13 @@ function ClientsContent() {
         {!isLoading && clients.length === 0 && (
           <div className="border border-dashed border-frame-gray-3 p-12 text-center">
             <Users className="w-12 h-12 text-frame-gray-light mx-auto mb-4" />
-            <p className="text-frame-gray-light mb-4">Nenhum cliente encontrado</p>
+            <p className="text-frame-gray-light mb-4">{t("app.clients.noClients") as string}</p>
             <button
               onClick={() => setLocation("/clients/new")}
               className="frame-btn-primary inline-flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
-              Adicionar Cliente
+              {t("app.clients.newClient") as string}
             </button>
           </div>
         )}
@@ -796,16 +798,16 @@ function ClientsContent() {
       <AnimatedModal
         isOpen={isDeleteOpen}
         onClose={() => setIsDeleteOpen(false)}
-        title="EXCLUIR CLIENTE"
-        description="Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita."
+        title={`${t("app.common.delete") as string} ${t("app.clients.title") as string}`}
+        description={t("app.common.confirmDelete") as string}
         className="max-w-md"
         footer={
           <div className="flex gap-3 w-full">
             <button type="button" onClick={() => setIsDeleteOpen(false)} disabled={isSubmitting} className="frame-btn-ghost flex-1">
-              Cancelar
+              {t("app.common.cancel") as string}
             </button>
             <button type="button" onClick={handleDelete} disabled={isSubmitting} className="frame-btn-danger flex-1">
-              {isSubmitting ? "Excluindo..." : "Excluir"}
+              {isSubmitting ? t("app.common.loading") as string : t("app.common.delete") as string}
             </button>
           </div>
         }

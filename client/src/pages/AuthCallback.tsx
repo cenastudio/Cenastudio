@@ -4,6 +4,9 @@ import { api } from "@/lib/api";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { useLanguage } from "@/contexts/LanguageContext";
+
+const { t } = useLanguage();
 
 export default function AuthCallback() {
   const [, setLocation] = useLocation();
@@ -16,14 +19,14 @@ export default function AuthCallback() {
     async function finishLogin() {
       try {
         if (!isSupabaseConfigured || !supabase) {
-          throw new Error("Supabase não está configurado no frontend.");
+          throw new Error(t("app.errors.supabaseFrontend"));
         }
 
         const { data, error } = await supabase.auth.getSession();
         if (error) throw error;
         const accessToken = data.session?.access_token;
         if (!accessToken) {
-          throw new Error("Sessão do GitHub não encontrada.");
+          throw new Error(t("app.errors.githubSessionNotFound"));
         }
 
         const session = await api.auth.supabase(accessToken);
@@ -32,7 +35,7 @@ export default function AuthCallback() {
         if (mounted) setLocation("/tools");
       } catch (error) {
         if (mounted) {
-          setMessage(error instanceof Error ? error.message : "Falha ao finalizar login.");
+          setMessage(error instanceof Error ? error.message : t("app.errors.finalizeLoginFailed"));
           window.setTimeout(() => setLocation("/login"), 2500);
         }
       }
@@ -46,7 +49,7 @@ export default function AuthCallback() {
   }, [refresh, setLocation]);
 
   return (
-    <AuthLayout mode="login" title="Entrando" subtitle={message}>
+    <AuthLayout mode="login" title={t("app.auth.loggingIn")} subtitle={message}>
       <AuthLoadingAnimation message={message} />
     </AuthLayout>
   );

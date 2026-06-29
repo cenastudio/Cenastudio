@@ -3,6 +3,9 @@ import { api } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useLanguage } from "@/contexts/LanguageContext";
+
+const { t } = useLanguage();
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -13,7 +16,7 @@ export default function ForgotPassword() {
 
   const handleSubmit = async () => {
     if (!email.trim()) {
-      setError("Informe seu e-mail.");
+      setError(t("app.errors.provideEmail"));
       return;
     }
     setSubmitting(true);
@@ -22,14 +25,14 @@ export default function ForgotPassword() {
       await api.auth.forgotPassword(email.trim());
       setSent(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro ao enviar solicitação");
+      setError(e instanceof Error ? e.message : t("app.errors.sendRequest"));
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <AuthLayout title="Recuperar senha" subtitle="Enviaremos instruções para redefinir sua senha.">
+    <AuthLayout title={t("app.auth.recoverPassword")} subtitle={t("app.auth.recoverPasswordSubtitle")}>
       {sent ? (
         <div className="text-center space-y-4">
           <p className="text-frame-white">Verifique seu e-mail</p>
@@ -47,13 +50,13 @@ export default function ForgotPassword() {
       ) : (
         <>
           {error && <AuthError message={error} />}
-          <AuthField label="Email">
+          <AuthField label={t("app.auth.email")}>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="frame-input"
-              placeholder="seu@email.com"
+              placeholder={t("app.auth.emailPlaceholder")}
             />
           </AuthField>
           <button
@@ -68,7 +71,7 @@ export default function ForgotPassword() {
                 Enviando...
               </>
             ) : (
-              "Enviar instruções"
+              t("app.auth.sendInstructions")
             )}
           </button>
           <AuthLink>

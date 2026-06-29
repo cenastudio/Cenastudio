@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Bell, CheckCheck, CheckCircle, AlertTriangle, Inbox, Trash2 } from "lucide-react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
@@ -20,10 +21,10 @@ interface Notification {
   created_at: string;
 }
 
-function relativeTime(dateStr: string): string {
+function relativeTime(dateStr: string, t: (key: string) => string): string {
   const diff = Date.now() - new Date(dateStr + "Z").getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "agora";
+  if (mins < 1) return t("app.notifications.justNow") as string;
   if (mins < 60) return `${mins}min`;
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours}h`;
@@ -45,6 +46,7 @@ const typeColors: Record<string, string> = {
 };
 
 export default function NotificationsPopover() {
+  const { t } = useLanguage();
   const [, setLocation] = useLocation();
   const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -78,7 +80,7 @@ export default function NotificationsPopover() {
       const json = await res.json();
       if (json.success) setNotifications(json.data);
     } catch {
-      toast.error("Erro ao carregar notificações");
+      toast.error(t("app.notifications.errorLoad") as string);
     } finally {
       setLoading(false);
     }
@@ -102,7 +104,7 @@ export default function NotificationsPopover() {
         setUnreadCount(0);
       }
     } catch {
-      toast.error("Erro ao marcar como lidas");
+      toast.error(t("app.notifications.errorMarkAllRead") as string);
     }
   };
 
@@ -117,15 +119,15 @@ export default function NotificationsPopover() {
       if (json.success) {
         const removed = json.data?.removed ?? 0;
         setNotifications((prev) => prev.filter((n) => !n.read));
-        toast.success(removed > 0 ? `${removed} notificação(ões) removida(s)` : "Nada para limpar");
+        toast.success(removed > 0 ? `${removed} ${t("app.notifications.removed") as string}` : t("app.notifications.nothingToClear") as string);
       }
     } catch {
-      toast.error("Erro ao limpar notificações");
+      toast.error(t("app.notifications.errorClear") as string);
     }
   };
 
   const handleClearAll = async () => {
-    if (!window.confirm("Apagar todas as notificações, incluindo as não lidas?")) return;
+    if (!window.confirm(t("app.notifications.confirmClearAll") as string)) return;
 
     try {
       const res = await fetch(`${API_BASE}/api/notifications/all`, {
@@ -138,10 +140,10 @@ export default function NotificationsPopover() {
         const removed = json.data?.removed ?? 0;
         setNotifications([]);
         setUnreadCount(0);
-        toast.success(removed > 0 ? `${removed} notificação(ões) removida(s)` : "Nada para limpar");
+        toast.success(removed > 0 ? `${removed} ${t("app.notifications.removed") as string}` : t("app.notifications.nothingToClear") as string);
       }
     } catch {
-      toast.error("Erro ao limpar todas as notificações");
+      toast.error(t("app.notifications.errorClearAll") as string);
     }
   };
 
@@ -165,7 +167,7 @@ export default function NotificationsPopover() {
         if (notification.link) setLocation(notification.link);
       }
     } catch {
-      toast.error("Erro ao marcar notificação como lida");
+      toast.error(t("app.notifications.errorMarkRead") as string);
     }
   };
 
@@ -175,8 +177,8 @@ export default function NotificationsPopover() {
         <button
           type="button"
           className="notification-trigger relative flex h-9 w-9 items-center justify-center border border-frame-gray-3 text-frame-gray-light hover:text-frame-orange hover:border-frame-orange transition"
-          title="Notificações"
-          aria-label={unreadCount > 0 ? `${unreadCount} notificações não lidas` : "Notificações"}
+          title={t("app.notifications.title") as string}
+          aria-label={unreadCount > 0 ? `${unreadCount} ${t("app.notifications.unread") as string}` : t("app.notifications.title") as string}
         >
           <Bell className="w-3.5 h-3.5" />
           {unreadCount > 0 && (
@@ -194,13 +196,13 @@ export default function NotificationsPopover() {
         <div className="notification-header flex items-start justify-between gap-3 px-4 py-4 border-b border-frame-gray-3">
           <div>
             <span className="font-frame-mono text-[0.62rem] tracking-[0.18em] text-frame-orange uppercase">
-              Central
+              {t("app.notifications.central") as string}
             </span>
             <div className="mt-1 flex items-center gap-2">
-              <h2 className="font-frame-body text-sm font-semibold text-frame-white">Notificações</h2>
+              <h2 className="font-frame-body text-sm font-semibold text-frame-white">{t("app.notifications.title") as string}</h2>
               {unreadCount > 0 && (
                 <span className="rounded-full border border-frame-orange/35 bg-frame-orange/10 px-2 py-0.5 font-frame-mono text-[0.58rem] text-frame-orange">
-                  {unreadCount > 9 ? "9+" : unreadCount} novas
+                  {unreadCount > 9 ? "9+" : unreadCount} {t("app.notifications.new") as string}
                 </span>
               )}
             </div>
@@ -213,7 +215,7 @@ export default function NotificationsPopover() {
               className="notification-read-all h-8 shrink-0 px-2.5 py-1 text-[0.58rem] text-frame-gray-light hover:text-frame-orange gap-1 border border-frame-gray-3"
             >
               <CheckCheck className="w-3 h-3" />
-              Marcar lidas
+              {t("app.notifications.markAllRead") as string}
             </Button>
           )}
         </div>
@@ -222,7 +224,7 @@ export default function NotificationsPopover() {
           {loading && notifications.length === 0 ? (
             <div className="flex items-center justify-center py-10">
               <span className="font-frame-mono text-[0.6rem] text-frame-gray-light">
-                Carregando...
+                {t("app.notifications.loading") as string}
               </span>
             </div>
           ) : notifications.length === 0 ? (
@@ -231,7 +233,7 @@ export default function NotificationsPopover() {
                 <Inbox className="w-5 h-5" />
               </div>
               <span className="font-frame-mono text-[0.62rem] uppercase tracking-[0.12em] text-frame-gray-light">
-                Nenhuma notificação
+                {t("app.notifications.empty") as string}
               </span>
             </div>
           ) : (
@@ -263,7 +265,7 @@ export default function NotificationsPopover() {
                           {n.title}
                         </span>
                         <span className="shrink-0 font-frame-mono text-[0.62rem] text-frame-gray-light whitespace-nowrap">
-                          {relativeTime(n.created_at)}
+                          {relativeTime(n.created_at, t)}
                         </span>
                       </div>
                       <p className="font-frame-mono text-[0.64rem] text-frame-gray-light mt-0.5 line-clamp-2">
@@ -283,7 +285,7 @@ export default function NotificationsPopover() {
         {notifications.length > 0 && (
           <div className="notification-footer flex items-center justify-between gap-3 border-t border-frame-gray-3 px-3 py-2.5">
             <span className="font-frame-mono text-[0.58rem] uppercase tracking-[0.12em] text-frame-gray-light">
-              {notifications.filter((n) => !n.read).length} pendente(s)
+              {notifications.filter((n) => !n.read).length} {t("app.notifications.pending") as string}
             </span>
             <div className="flex items-center gap-2">
               {notifications.some((n) => n.read) && (
@@ -292,7 +294,7 @@ export default function NotificationsPopover() {
                   onClick={handleClearRead}
                   className="notification-clear-button inline-flex min-h-8 items-center gap-1.5 border border-frame-gray-3 px-2.5 font-frame-mono text-[0.58rem] uppercase tracking-[0.1em] text-frame-gray-light transition hover:border-frame-orange hover:text-frame-orange"
                 >
-                  Limpar lidas
+                  {t("app.notifications.clearRead") as string}
                 </button>
               )}
               <button
@@ -301,7 +303,7 @@ export default function NotificationsPopover() {
                 className="notification-clear-button inline-flex min-h-8 items-center gap-1.5 border border-frame-gray-3 px-2.5 font-frame-mono text-[0.58rem] uppercase tracking-[0.1em] text-frame-gray-light transition hover:border-frame-red hover:text-frame-red"
               >
                 <Trash2 className="h-3 w-3" />
-                Limpar todas
+                {t("app.notifications.clearAll") as string}
               </button>
             </div>
           </div>

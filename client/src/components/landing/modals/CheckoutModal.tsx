@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useApp } from "@/contexts/AppContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { startCheckout } from "@/lib/api";
 import { WHATSAPP_NUMBER, WHATSAPP_MESSAGE } from "@/lib/constants";
 import { toStripePlanId } from "@/lib/plans";
@@ -10,6 +11,7 @@ import { toast } from "sonner";
 import { useLocation } from "wouter";
 
 export function CheckoutModal() {
+  const { t } = useLanguage();
   const { modals, closeModal, selectedPlan } = useApp();
   const { isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
@@ -27,20 +29,20 @@ export function CheckoutModal() {
   const handleCopy = () => {
     navigator.clipboard.writeText(`https://wa.me/${WHATSAPP_NUMBER}`);
     setCopied(true);
-    toast.success("Número copiado!");
+    toast.success(t("app.landing.modals.copied") as string);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleStripeCheckout = async () => {
     if (!stripePlanId) {
-      toast.error("Plano inválido.");
+      toast.error(t("app.landing.modals.invalidPlan") as string);
       return;
     }
 
     if (!isAuthenticated) {
       closeModal("checkout");
       setLocation("/login");
-      toast.message("Entre na sua conta para assinar com segurança.");
+      toast.message(t("app.landing.modals.loginPrompt") as string);
       return;
     }
 
@@ -48,7 +50,7 @@ export function CheckoutModal() {
     try {
       await startCheckout(stripePlanId);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao iniciar checkout");
+      toast.error(error instanceof Error ? error.message : t("app.landing.modals.checkoutError") as string);
       setIsCheckingOut(false);
     }
   };
@@ -57,9 +59,9 @@ export function CheckoutModal() {
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeModal("checkout")}>
       <DialogContent className="cinematic-theme sm:max-w-md bg-frame-gray-2 border border-frame-gray-3">
         <DialogHeader>
-          <DialogTitle className="frame-title text-2xl text-frame-white">Adquirir plano {planLabel}</DialogTitle>
+          <DialogTitle className="frame-title text-2xl text-frame-white">{t("app.landing.modals.acquirePlan") as string} {planLabel}</DialogTitle>
           <DialogDescription className="text-frame-gray-light font-light">
-            Assine com cartão pelo Stripe ou fale com o time comercial para PIX, transferência ou boleto.
+            {t("app.landing.modals.checkoutDescription") as string}
           </DialogDescription>
         </DialogHeader>
 
@@ -67,7 +69,7 @@ export function CheckoutModal() {
           <div className="border border-frame-orange/30 bg-frame-orange/[0.05] p-5 text-center space-y-3">
             <CreditCard className="w-9 h-9 text-frame-orange mx-auto" />
             <p className="text-sm text-frame-white font-medium">
-              Checkout seguro pelo Stripe
+              {t("app.landing.modals.stripeCheckout") as string}
             </p>
             <button
               type="button"
@@ -76,17 +78,17 @@ export function CheckoutModal() {
               className="inline-flex items-center justify-center gap-2 bg-frame-orange hover:bg-frame-orange/90 disabled:opacity-60 text-frame-black font-semibold px-6 py-3 text-sm transition mt-2 w-full"
             >
               {isCheckingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-              {isAuthenticated ? "Assinar com Stripe" : "Entrar para assinar"}
+              {isAuthenticated ? t("app.landing.modals.subscribeStripe") as string : t("app.landing.modals.loginToSubscribe") as string}
             </button>
           </div>
 
           <div className="border border-frame-orange/20 bg-frame-orange/[0.03] p-6 text-center space-y-3">
             <MessageCircle className="w-10 h-10 text-frame-orange mx-auto" />
             <p className="text-sm text-frame-white font-medium">
-              Prefere PIX, transferência ou boleto?
+              {t("app.landing.modals.prefersAlternative") as string}
             </p>
             <p className="text-xs text-frame-gray-light">
-              Respondemos em até 2 horas em dias úteis.
+              {t("app.landing.modals.responseTime") as string}
             </p>
             <a
               href={whatsappUrl}
@@ -95,7 +97,7 @@ export function CheckoutModal() {
               className="inline-flex items-center gap-2 bg-frame-orange hover:bg-frame-orange/90 text-frame-black font-semibold px-6 py-3 text-sm transition mt-2"
             >
               <MessageCircle className="w-4 h-4" />
-              Falar no WhatsApp
+              {t("app.landing.modals.whatsappContact") as string}
             </a>
           </div>
 
@@ -111,7 +113,7 @@ export function CheckoutModal() {
           </div>
 
           <p className="text-xs text-frame-gray-muted text-center font-light">
-            Aceitamos PIX, transferência bancária e boleto. Pagamento 100% seguro.
+            {t("app.landing.modals.acceptedPayments") as string}
           </p>
         </div>
       </DialogContent>

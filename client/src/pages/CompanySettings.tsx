@@ -5,8 +5,10 @@ import { api } from "@/lib/api";
 import { DEFAULT_STUDIO_SETTINGS, readStudioSettings, saveStudioSettings, type StudioSettings } from "@/lib/studioSettings";
 import { Building2, Mail, Palette, Phone, Save } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 function CompanySettingsContent() {
+  const { t } = useLanguage();
   const [settings, setSettings] = useState<StudioSettings>(DEFAULT_STUDIO_SETTINGS);
   const [saving, setSaving] = useState(false);
 
@@ -31,10 +33,10 @@ function CompanySettingsContent() {
       const saved = await api.studioSettings.update(settings);
       setSettings(saved);
       saveStudioSettings(saved);
-      toast.success("Dados da empresa salvos");
+      toast.success(t("app.company.saved"));
     } catch (error) {
       saveStudioSettings(settings);
-      toast.error(error instanceof Error ? error.message : "Salvo apenas neste navegador");
+      toast.error(error instanceof Error ? error.message : t("app.company.savedLocally"));
     } finally {
       setSaving(false);
     }
@@ -64,33 +66,33 @@ function CompanySettingsContent() {
               </label>
               <label className="space-y-2">
                 <span className="frame-label text-frame-gray-light">Razão social</span>
-                <input className="frame-input w-full" value={settings.legalName} onChange={(event) => update("legalName", event.target.value)} placeholder="Nome legal da empresa" />
+                <input className="frame-input w-full" value={settings.legalName} onChange={(event) => update("legalName", event.target.value)} placeholder={t("app.company.legalNamePlaceholder")} />
               </label>
               <label className="space-y-2">
                 <span className="frame-label text-frame-gray-light">CNPJ / CPF</span>
-                <input className="frame-input w-full" value={settings.document} onChange={(event) => update("document", event.target.value)} placeholder="00.000.000/0001-00" />
+                <input className="frame-input w-full" value={settings.document} onChange={(event) => update("document", event.target.value)} placeholder={t("app.company.documentPlaceholder")} />
               </label>
               <label className="space-y-2">
                 <span className="frame-label text-frame-gray-light">Cidade</span>
-                <input className="frame-input w-full" value={settings.city} onChange={(event) => update("city", event.target.value)} placeholder="Florianopolis, SC" />
+                <input className="frame-input w-full" value={settings.city} onChange={(event) => update("city", event.target.value)} placeholder={t("app.company.cityPlaceholder")} />
               </label>
               <label className="space-y-2">
                 <span className="frame-label text-frame-gray-light">E-mail comercial</span>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
-                  <input className="frame-input w-full pl-10" value={settings.email} onChange={(event) => update("email", event.target.value)} placeholder="contato@produtora.com" />
+                  <input className="frame-input w-full pl-10" value={settings.email} onChange={(event) => update("email", event.target.value)} placeholder={t("app.company.emailPlaceholder")} />
                 </div>
               </label>
               <label className="space-y-2">
                 <span className="frame-label text-frame-gray-light">WhatsApp</span>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
-                  <input className="frame-input w-full pl-10" value={settings.phone} onChange={(event) => update("phone", event.target.value)} placeholder="(00) 00000-0000" />
+                  <input className="frame-input w-full pl-10" value={settings.phone} onChange={(event) => update("phone", event.target.value)} placeholder={t("app.company.phonePlaceholder")} />
                 </div>
               </label>
               <label className="space-y-2">
                 <span className="frame-label text-frame-gray-light">Site / Instagram</span>
-                <input className="frame-input w-full" value={settings.website} onChange={(event) => update("website", event.target.value)} placeholder="https://..." />
+                <input className="frame-input w-full" value={settings.website} onChange={(event) => update("website", event.target.value)} placeholder={t("app.company.websitePlaceholder")} />
               </label>
               <label className="space-y-2">
                 <span className="frame-label text-frame-gray-light">Cor principal</span>
@@ -105,11 +107,11 @@ function CompanySettingsContent() {
             </div>
             <label className="space-y-2 block">
               <span className="frame-label text-frame-gray-light">Assinatura nos documentos</span>
-              <input className="frame-input w-full" value={settings.signature} onChange={(event) => update("signature", event.target.value)} placeholder="Responsável comercial / produtor executivo" />
+              <input className="frame-input w-full" value={settings.signature} onChange={(event) => update("signature", event.target.value)} placeholder={t("app.company.signaturePlaceholder")} />
             </label>
             <button type="button" onClick={handleSave} disabled={saving} className="frame-btn-primary flex items-center justify-center gap-2 disabled:opacity-60">
               <Save className="w-4 h-4" />
-              {saving ? "Salvando..." : "Salvar empresa"}
+              {saving ? t("app.common.saving") : t("app.company.saveCompany")}
             </button>
           </div>
 
@@ -119,16 +121,16 @@ function CompanySettingsContent() {
               <div className="text-[0.62rem] font-frame-mono uppercase tracking-[0.18em]" style={{ color: settings.primaryColor }}>
                 Studio configurado
               </div>
-              <h2 className="frame-title text-[2.2rem] mt-2">{settings.studioName || "Sua produtora"}</h2>
+              <h2 className="frame-title text-[2.2rem] mt-2">{settings.studioName || t("app.company.yourStudio")}</h2>
               <div className="mt-5 space-y-2 text-sm text-frame-gray-light">
-                <p>{settings.legalName || "Razão social"}</p>
-                <p>{settings.document || "CNPJ / CPF"}</p>
-                <p>{settings.email || "email comercial"}</p>
-                <p>{settings.phone || "WhatsApp"}</p>
-                <p>{settings.city || "Cidade"}</p>
+                <p>{settings.legalName || t("app.company.legalName")}</p>
+                <p>{settings.document || t("app.company.document")}</p>
+                <p>{settings.email || t("app.company.email")}</p>
+                <p>{settings.phone || t("app.company.whatsapp")}</p>
+                <p>{settings.city || t("app.company.city")}</p>
               </div>
               <div className="mt-6 border-t border-frame-gray-3 pt-4 text-xs text-frame-gray-light">
-                Assinatura: {settings.signature || "Responsável"}
+                Assinatura: {settings.signature || t("app.company.signatureDefault")}
               </div>
             </div>
           </aside>

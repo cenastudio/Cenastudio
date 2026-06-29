@@ -1,5 +1,6 @@
 import { PRICING } from "@shared/site";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { startCheckout } from "@/lib/api";
 import { toStripePlanId } from "@/lib/plans";
 import { motion } from "framer-motion";
@@ -8,6 +9,7 @@ import { useLocation } from "wouter";
 import { toast } from "sonner";
 
 export default function PricingSection() {
+  const { t } = useLanguage();
   const [, setLocation] = useLocation();
   const { isAuthenticated } = useAuth();
 
@@ -19,26 +21,26 @@ export default function PricingSection() {
 
     if (!isAuthenticated) {
       setLocation("/login");
-      toast.message("Entre na sua conta para assinar com segurança.");
+      toast.message(t("app.landing.pricing.loginPrompt") as string);
       return;
     }
 
     const stripePlanId = toStripePlanId(planId);
     if (!stripePlanId) {
-      toast.error("Plano inválido.");
+      toast.error(t("app.landing.pricing.invalidPlan") as string);
       return;
     }
 
     try {
       await startCheckout(stripePlanId);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao iniciar checkout");
+      toast.error(error instanceof Error ? error.message : t("app.landing.pricing.checkoutError") as string);
     }
   };
 
   const ctaLabel = (planId: string) => {
-    if (planId === "iniciante") return "Começar grátis";
-    return isAuthenticated ? "Assinar com Stripe" : "Entrar para assinar";
+    if (planId === "iniciante") return t("app.landing.pricing.freeCta") as string;
+    return isAuthenticated ? t("app.landing.pricing.stripeCta") as string : t("app.landing.pricing.loginCta") as string;
   };
 
   const containerVariants = {
@@ -70,12 +72,12 @@ export default function PricingSection() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <p className="landing-eyebrow mb-3">// Planos</p>
+          <p className="landing-eyebrow mb-3">{t("app.landing.pricing.eyebrow") as string}</p>
           <h2 className="landing-heading mb-4 text-[clamp(2.8rem,5.5vw,5rem)]">
-            PLANOS <span className="landing-outline-text">SIMPLES</span>
+            {t("app.landing.pricing.heading") as string} <span className="landing-outline-text">{t("app.landing.pricing.outlineText") as string}</span>
           </h2>
           <p className="landing-copy mx-auto max-w-2xl">
-            Escolha o plano perfeito para sua produção. Sem contratos, cancele quando quiser.
+            {t("app.landing.pricing.description") as string}
           </p>
         </motion.div>
 
@@ -132,7 +134,7 @@ export default function PricingSection() {
 
               {plan.highlight && (
                 <div className="absolute right-0 top-0 bg-frame-orange px-4 py-2 font-frame-mono text-[0.64rem] font-semibold uppercase tracking-[0.15em] text-black">
-                  Popular
+                  {t("app.landing.pricing.popular") as string}
                 </div>
               )}
             </motion.div>
@@ -145,7 +147,7 @@ export default function PricingSection() {
           viewport={{ once: true }}
           className="mt-12 text-center text-sm font-light text-[var(--landing-muted)]"
         >
-          O plano Free é para validação inicial. Pro e Studio liberam os fluxos principais de produção, com diferenças em limite de uso, suporte e operação por projeto.
+          {t("app.landing.pricing.footnote") as string}
         </motion.p>
       </div>
     </section>

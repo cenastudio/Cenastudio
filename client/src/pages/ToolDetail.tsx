@@ -1,3 +1,4 @@
+import { useLanguage } from "@/contexts/LanguageContext";
 import AppNavBar from "@/components/AppNavBar";
 import { getToolById } from "@/shared/tools";
 import { getToolIcon } from "@/lib/toolIcons";
@@ -6,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 
 function ToolDetailContent() {
+  const { t } = useLanguage();
   const [, setLocation] = useLocation();
   const [, params] = useRoute("/tools/:id");
   const toolId = params?.id;
@@ -14,9 +16,9 @@ function ToolDetailContent() {
   if (!tool) {
     return (
       <div className="min-h-screen bg-frame-black text-frame-white flex flex-col items-center justify-center gap-4">
-        <p className="frame-label">Ferramenta não encontrada</p>
+        <p className="frame-label">{t("app.tools.toolNotFound") as string}</p>
         <button type="button" onClick={() => setLocation("/tools")} className="frame-btn-ghost">
-          Voltar
+          {t("app.common.back") as string}
         </button>
       </div>
     );
@@ -35,7 +37,7 @@ function ToolDetailContent() {
           className="flex items-center gap-2 font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase text-frame-gray-light hover:text-frame-white transition bg-transparent border-none"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          Voltar para ferramentas
+          {t("app.tools.backToTools") as string}
         </button>
       </div>
 
@@ -64,7 +66,7 @@ function ToolDetailContent() {
             </div>
 
             <div>
-              <p className="frame-label mb-3">// Sobre</p>
+              <p className="frame-label mb-3">{t("app.tools.about") as string}</p>
               <p className="text-[0.88rem] text-frame-gray-light font-light leading-relaxed">
                 {tool.description}
               </p>
@@ -73,7 +75,7 @@ function ToolDetailContent() {
 
           <div className="frame-card h-fit lg:sticky lg:top-24">
             <p className="font-frame-mono text-[0.64rem] tracking-[0.14em] uppercase text-frame-gray-light mb-1">
-              Tempo estimado
+              {t("app.tools.estimatedTime") as string}
             </p>
             <p className="frame-title text-2xl text-frame-white mb-6">{tool.processingTime}</p>
             <button
@@ -81,10 +83,10 @@ function ToolDetailContent() {
               className="frame-btn-primary w-full mb-3"
               onClick={() => setLocation(`/studio/${tool.id}`)}
             >
-              Abrir no studio
+              {t("app.tools.openInStudio") as string}
             </button>
             <button type="button" className="frame-btn-ghost w-full" onClick={() => setLocation("/tools")}>
-              Voltar
+              {t("app.common.back") as string}
             </button>
           </div>
         </div>

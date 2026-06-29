@@ -10,6 +10,7 @@ import HistoryPanel from "./HistoryPanel";
 import AppNavBar from "../AppNavBar";
 import { Loader2 } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import ProjectTimeline from "./ProjectTimeline";
 import AssistantChatWorkspace from "./AssistantChatWorkspace";
 
@@ -41,6 +42,7 @@ export default function StudioShell() {
   const [historyOpen, setHistoryOpen] = useState(false);
 
   const tool = tools.find((t) => t.id === activeToolId || t.slug === activeToolId);
+  const { t } = useLanguage();
 
   // Sync active project state from URL parameters
   useEffect(() => {
@@ -95,7 +97,7 @@ export default function StudioShell() {
     return (
       <div className="min-h-screen bg-frame-black text-frame-white flex flex-col items-center justify-center gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-frame-orange" />
-        <p className="font-frame-mono text-xs tracking-widest text-frame-gray-light">// Carregando Studio...</p>
+        <p className="font-frame-mono text-xs tracking-widest text-frame-gray-light">{t("app.studio.loading") as string}</p>
       </div>
     );
   }
@@ -103,13 +105,13 @@ export default function StudioShell() {
   if (!tool) {
     return (
       <div className="min-h-screen bg-frame-black text-frame-white flex flex-col items-center justify-center gap-4">
-        <p className="frame-label">// Ferramenta não localizada</p>
+        <p className="frame-label">{t("app.studio.toolNotFound") as string}</p>
         <button
           type="button"
           onClick={() => setLocation("/tools")}
           className="frame-btn-ghost font-frame-mono text-xs"
         >
-          Voltar às ferramentas
+          {t("app.studio.backToTools") as string}
         </button>
       </div>
     );
@@ -133,7 +135,7 @@ export default function StudioShell() {
     // Check if we have at least some input
     const values = Object.values(formData).filter(Boolean);
     if (values.length === 0) {
-      toast.error("Por favor, preencha pelo menos um campo do formulário");
+      toast.error(t("app.studio.fillRequiredFields") as string);
       return;
     }
 
@@ -144,12 +146,12 @@ export default function StudioShell() {
     try {
       const result = await api.ai.generate(tool.id, formData, activeProject?.id);
       setOutput(result.output);
-      toast.success("Geração IA concluída com sucesso!");
+      toast.success(t("app.studio.generationComplete") as string);
       if (activeProject) {
         saveToolStateImmediately(tool.id, formData, result.output);
       }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Erro ao processar dados";
+      const msg = e instanceof Error ? e.message : t("app.studio.generationError") as string;
       const isLimit =
         (e instanceof ApiError && e.status === 403) || msg.toLowerCase().includes("limite");
       
@@ -166,16 +168,16 @@ export default function StudioShell() {
   // Copy output to clipboard
   const handleCopy = () => {
     navigator.clipboard.writeText(cleanGeneratedText(output));
-    toast.success("Documento limpo copiado!");
+    toast.success(t("app.studio.cleanCopied") as string);
   };
 
   const handleDownload = async (format: "pdf" | "docx") => {
     try {
       if (format === "pdf") await downloadGeneratedPdf(output, tool.name);
       else await downloadGeneratedDocx(output, tool.name);
-      toast.success(format === "pdf" ? "PDF gerado com sucesso" : "Documento Word gerado com sucesso");
+      toast.success(format === "pdf" ? t("app.studio.pdfGenerated") as string : t("app.studio.wordGenerated") as string);
     } catch {
-      toast.error("Não foi possível gerar o documento");
+      toast.error(t("app.studio.documentError") as string);
     }
   };
 
@@ -188,7 +190,7 @@ export default function StudioShell() {
     if (activeProject && tool) {
       saveToolStateImmediately(tool.id, {}, "");
     }
-    toast.success("Área de trabalho limpa!");
+    toast.success(t("app.studio.workspaceCleared") as string);
   };
 
   // Restore previous generation state from history panel
@@ -251,7 +253,7 @@ export default function StudioShell() {
                 {limitReached && (
                   <div className="mx-6 mt-4 px-4 py-3 border border-frame-orange/40 bg-[rgba(255,77,0,0.08)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0 rounded-none">
                     <p className="font-frame-mono text-[0.63rem] tracking-[0.1em] text-frame-orange">
-                      Limite de gerações atingido — faça upgrade do seu plano para continuar
+                      {t("app.studio.limitReached") as string}
                     </p>
                     <div className="flex gap-2">
                       <button
@@ -261,11 +263,11 @@ export default function StudioShell() {
                           try {
                             await startCheckout("pro");
                           } catch (e) {
-                            toast.error(e instanceof Error ? e.message : "Erro ao iniciar checkout");
+                            toast.error(e instanceof Error ? e.message : t("app.studio.checkoutError") as string);
                           }
                         }}
                       >
-                        Upgrade Pro
+                        {t("app.studio.upgradePro") as string}
                       </button>
                       <button
                         type="button"
@@ -274,7 +276,7 @@ export default function StudioShell() {
                           window.location.hash = "pricing";
                         }}
                       >
-                        Ver Planos
+                        {t("app.studio.viewPlans") as string}
                       </button>
                     </div>
                   </div>

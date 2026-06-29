@@ -5,6 +5,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError, api } from "@/lib/api";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ManagedUser {
   id: number;
@@ -35,6 +36,7 @@ const INITIAL_CREATE_FORM = {
 };
 
 function AdminUsersContent() {
+  const { t } = useLanguage();
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +56,7 @@ function AdminUsersContent() {
       const data = await api.admin.users();
       setUsers((data.users || []) as ManagedUser[]);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro ao carregar usuários");
+      toast.error(e instanceof Error ? e.message : t("app.errors.loadUsers"));
     } finally {
       setLoading(false);
     }
@@ -64,7 +66,7 @@ function AdminUsersContent() {
     const newRole = managedUser.role === "admin" ? "user" : "admin";
     try {
       await api.admin.updateUserRole(managedUser.id, newRole);
-      toast.success(`${managedUser.email} agora é ${newRole === "admin" ? "admin" : "usuário"}`);
+      toast.success(`${managedUser.email} ${newRole === "admin" ? t("app.admin.nowAdmin") : t("app.admin.nowUser")}`);
       loadUsers();
     } catch (e) {
       toast.error(e instanceof ApiError ? e.message : "Erro ao alterar permissão");
@@ -74,7 +76,7 @@ function AdminUsersContent() {
   const changePlan = async (managedUser: ManagedUser, planId: string) => {
     try {
       await api.admin.updateUserPlan(managedUser.id, planId as "free" | "pro" | "studio");
-      toast.success(`${managedUser.email} agora é ${planId}`);
+      toast.success(`${managedUser.email} ${t("app.admin.nowPlan")} ${planId}`);
       loadUsers();
     } catch (e) {
       toast.error(e instanceof ApiError ? e.message : "Erro ao alterar plano");
@@ -83,7 +85,7 @@ function AdminUsersContent() {
 
   const createUser = async () => {
     if (!createForm.name.trim() || !createForm.email.trim() || createForm.password.length < 6) {
-      toast.error("Preencha nome, e-mail e uma senha com pelo menos 6 caracteres.");
+      toast.error(t("app.errors.fillNameEmailPassword"));
       return;
     }
 
@@ -96,7 +98,7 @@ function AdminUsersContent() {
         role: createForm.role,
         planId: createForm.planId,
       });
-      toast.success(`Conta criada para ${createForm.email.trim()}`);
+      toast.success(t("app.admin.accountCreatedFor") + " " + createForm.email.trim());
       setCreateForm(INITIAL_CREATE_FORM);
       await loadUsers();
     } catch (e) {
@@ -122,7 +124,7 @@ function AdminUsersContent() {
     setDeletingId(deleteTarget.id);
     try {
       await api.admin.deleteUser(deleteTarget.id);
-      toast.success(`Conta ${deleteTarget.email} apagada`);
+      toast.success(t("app.admin.accountDeleted") + " " + deleteTarget.email);
       setDeleteTarget(null);
       setDeleteConfirm("");
       await loadUsers();
@@ -170,13 +172,13 @@ function AdminUsersContent() {
             <input
               value={createForm.name}
               onChange={(e) => setCreateForm((current) => ({ ...current, name: e.target.value }))}
-              placeholder="Nome"
+              placeholder={t("app.admin.namePlaceholder")}
               className="bg-frame-gray-2 border border-frame-gray-3 px-3 py-2.5 text-sm outline-none focus:border-frame-orange"
             />
             <input
               value={createForm.email}
               onChange={(e) => setCreateForm((current) => ({ ...current, email: e.target.value }))}
-              placeholder="email@cliente.com"
+              placeholder={t("app.admin.emailPlaceholder")}
               type="email"
               className="bg-frame-gray-2 border border-frame-gray-3 px-3 py-2.5 text-sm outline-none focus:border-frame-orange"
             />
@@ -202,7 +204,7 @@ function AdminUsersContent() {
             <input
               value={createForm.password}
               onChange={(e) => setCreateForm((current) => ({ ...current, password: e.target.value }))}
-              placeholder="Senha temporaria (min. 6 caracteres)"
+              placeholder={t("app.admin.tempPasswordPlaceholder")}
               type="text"
               className="bg-frame-gray-2 border border-frame-gray-3 px-3 py-2.5 text-sm outline-none focus:border-frame-orange"
             />
@@ -213,7 +215,7 @@ function AdminUsersContent() {
               className="bg-frame-orange text-frame-black px-4 py-2.5 font-frame-mono text-[0.68rem] tracking-[0.14em] uppercase font-semibold hover:bg-frame-orange-dark disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition"
             >
               <Plus className="w-4 h-4" />
-              {creating ? "Criando..." : "Criar usuário"}
+              {creating ? t("app.admin.creating") : t("app.admin.createUser")}
             </button>
           </div>
         </section>
@@ -222,7 +224,7 @@ function AdminUsersContent() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
           <input
             type="text"
-            placeholder="Buscar por email ou nome..."
+            placeholder={t("app.admin.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-frame-gray-2 border border-frame-gray-3 pl-10 pr-4 py-2.5 text-sm outline-none focus:border-frame-orange"
@@ -246,7 +248,7 @@ function AdminUsersContent() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-semibold truncate max-w-full">{managedUser.name || "Sem nome"}</span>
+                        <span className="font-semibold truncate max-w-full">{managedUser.name || t("app.admin.noName")}</span>
                         {managedUser.role === "admin" && (
                           <span className="text-[0.62rem] font-frame-mono uppercase tracking-wider text-frame-orange border border-frame-orange/30 px-1.5 py-0.5">Admin</span>
                         )}
@@ -289,13 +291,13 @@ function AdminUsersContent() {
                           : "border-frame-gray-3 text-frame-gray-light hover:border-frame-orange/50"
                       }`}
                     >
-                      {managedUser.role === "admin" ? "Rebaixar" : "Promover"}
+                      {managedUser.role === "admin" ? t("app.admin.demote") : t("app.admin.promote")}
                     </button>
                     <button
                       type="button"
                       onClick={() => openDelete(managedUser)}
                       disabled={isCurrentUser}
-                      title={isCurrentUser ? "Você não pode apagar a conta logada" : "Apagar conta"}
+                      title={isCurrentUser ? t("app.admin.cannotDeleteSelf") : t("app.admin.deleteAccount")}
                       className="h-10 lg:h-8 border border-red-500/30 text-red-300 hover:bg-red-500/10 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -328,7 +330,7 @@ function AdminUsersContent() {
             </div>
 
             <div className="mt-5 border border-frame-gray-3 bg-frame-gray-1/40 p-3 text-sm">
-              <p className="font-semibold">{deleteTarget.name || "Sem nome"}</p>
+              <p className="font-semibold">{deleteTarget.name || t("app.admin.noName")}</p>
               <p className="text-frame-gray-light">{deleteTarget.email}</p>
               <p className="text-[0.6rem] font-frame-mono uppercase tracking-[0.12em] text-frame-gray-muted mt-2">
                 {deleteTarget.project_count || 0} projetos · {deleteTarget.file_count || 0} arquivos · {deleteTarget.review_count || 0} reviews
@@ -355,7 +357,7 @@ function AdminUsersContent() {
                 disabled={deleteConfirm.trim().toLowerCase() !== deleteTarget.email.toLowerCase() || deletingId === deleteTarget.id}
                 className="bg-red-500 text-white px-4 py-2.5 text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-red-400"
               >
-                {deletingId === deleteTarget.id ? "Apagando..." : "Apagar conta definitivamente"}
+                {deletingId === deleteTarget.id ? t("app.admin.deleting") : t("app.admin.deletePermanently")}
               </button>
             </div>
           </div>

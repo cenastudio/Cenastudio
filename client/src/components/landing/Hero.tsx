@@ -1,7 +1,9 @@
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
 import { ArrowRight, CircleDot, MonitorPlay, Play } from "lucide-react";
 
 export default function Hero() {
+  const { t } = useLanguage();
   const [, setLocation] = useLocation();
 
   return (
@@ -18,18 +20,18 @@ export default function Hero() {
               <MonitorPlay className="h-4 w-4 text-white" />
             </span>
             <p className="max-w-[220px] text-[0.68rem] leading-relaxed text-white/70">
-              Plataforma real para organizar produção, cliente, arquivos e aprovações.
+              {t("app.landing.hero.subtitle") as string}
             </p>
           </div>
 
           <h1 className="landing-hero-title text-[clamp(3.15rem,7vw,7.35rem)]">
-            <span>Operação</span>
-            <span>audiovisual</span>
-            <span>em <em>Cena.</em></span>
+            <span>{t("app.landing.hero.titleLine1") as string}</span>
+            <span>{t("app.landing.hero.titleLine2") as string}</span>
+            <span>{t("app.landing.hero.titleLine3") as string}</span>
           </h1>
 
           <p className="mt-7 max-w-[470px] text-[0.94rem] leading-relaxed text-white/72 sm:text-base">
-            Um ambiente para produtora acompanhar briefing, documentos, equipe, arquivos e revisão sem espalhar a operação.
+            {t("app.landing.hero.description") as string}
           </p>
 
           <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -38,7 +40,7 @@ export default function Hero() {
               onClick={() => setLocation("/login")}
               className="landing-hero-cta group inline-flex min-h-12 items-center justify-between gap-8 bg-frame-orange px-5 text-sm font-medium text-black"
             >
-              Entrar no estúdio
+              {t("app.landing.hero.cta") as string}
               <span className="grid h-8 w-8 place-items-center rounded-full bg-white transition-transform group-hover:translate-x-1">
                 <ArrowRight className="h-4 w-4" />
               </span>
@@ -49,7 +51,7 @@ export default function Hero() {
               className="inline-flex min-h-12 items-center justify-center gap-2 border border-white/20 bg-black/20 px-5 text-sm text-white backdrop-blur-xl transition hover:border-white/40 hover:bg-white/10"
             >
               <Play className="h-3.5 w-3.5" />
-              Ver produto real
+              {t("app.landing.hero.watchProduct") as string}
             </button>
           </div>
 
@@ -65,7 +67,7 @@ export default function Hero() {
                 </span>
               ))}
             </div>
-            <span className="text-xs text-white/66">Feito por filmmakers, para filmmakers.</span>
+            <span className="text-xs text-white/66">{t("app.landing.hero.filmmakers") as string}</span>
           </div>
         </div>
 
@@ -79,7 +81,7 @@ export default function Hero() {
                 <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
               </div>
               <p className="font-frame-mono text-[0.56rem] uppercase tracking-[0.16em] text-white/48">
-                Produto real
+                {t("app.landing.hero.realProduct") as string}
               </p>
             </div>
             <img
@@ -92,7 +94,7 @@ export default function Hero() {
 
           <div className="landing-system-card landing-glass hidden sm:block">
             <p className="mb-3 font-frame-mono text-[0.54rem] uppercase tracking-[0.16em] text-frame-orange">
-              Revisão e produção
+              {t("app.landing.hero.reviewProduction") as string}
             </p>
             <img
               src="/landing/product/studio.png"
@@ -105,7 +107,7 @@ export default function Hero() {
 
         <div className="absolute bottom-10 right-0 hidden items-center gap-3 font-frame-mono text-[0.54rem] uppercase tracking-[0.16em] text-white/45 xl:flex">
           <CircleDot className="h-3 w-3 text-frame-orange" />
-          Cena Studio / Production OS
+          {t("app.landing.hero.branding") as string}
         </div>
       </div>
     </section>

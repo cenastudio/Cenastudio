@@ -34,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { motion } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Interaction {
   id: number;
@@ -64,6 +65,7 @@ const DIRECTIONS = [
 ];
 
 function InteractionsContent() {
+  const { t } = useLanguage();
   const [, setLocation] = useLocation();
 
   const [interactions, setInteractions] = useState<Interaction[]>([]);
@@ -160,15 +162,15 @@ function InteractionsContent() {
 
       const data = await response.json();
       if (data.success) {
-        toast.success("Interação registrada com sucesso!");
+        toast.success(t("app.interactions.interactionCreated"));
         setIsCreateOpen(false);
         resetForm();
         loadInteractions();
       } else {
-        toast.error(data.error || "Erro ao registrar interação");
+        toast.error(data.error || t("app.errors.registerInteraction"));
       }
     } catch (error) {
-      toast.error("Erro ao registrar interação");
+      toast.error(t("app.errors.registerInteraction"));
     } finally {
       setIsSubmitting(false);
     }
@@ -194,15 +196,15 @@ function InteractionsContent() {
 
       const data = await response.json();
       if (data.success) {
-        toast.success("Interação atualizada com sucesso!");
+        toast.success(t("app.interactions.interactionUpdated"));
         setIsEditOpen(false);
         resetForm();
         loadInteractions();
       } else {
-        toast.error(data.error || "Erro ao atualizar interação");
+        toast.error(data.error || t("app.errors.updateInteraction"));
       }
     } catch (error) {
-      toast.error("Erro ao atualizar interação");
+      toast.error(t("app.errors.updateInteraction"));
     } finally {
       setIsSubmitting(false);
     }
@@ -219,15 +221,15 @@ function InteractionsContent() {
 
       const data = await response.json();
       if (data.success) {
-        toast.success("Interação excluída com sucesso!");
+        toast.success(t("app.interactions.interactionDeleted"));
         setIsDeleteOpen(false);
         setSelectedInteraction(null);
         loadInteractions();
       } else {
-        toast.error(data.error || "Erro ao excluir interação");
+        toast.error(data.error || t("app.errors.deleteInteraction"));
       }
     } catch (error) {
-      toast.error("Erro ao excluir interação");
+      toast.error(t("app.errors.deleteInteraction"));
     } finally {
       setIsSubmitting(false);
     }
@@ -358,7 +360,7 @@ function InteractionsContent() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-frame-orange" />
           </div>
         ) : getFilteredInteractions().length === 0 ? (
-          <EmptyState icon={MessageSquare} title="Nenhuma interação encontrada" />
+          <EmptyState icon={MessageSquare} title={t("app.interactions.noInteractions")} />
         ) : (
           <div className="space-y-4">
             {getFilteredInteractions().map((interaction) => {
@@ -388,7 +390,7 @@ function InteractionsContent() {
                               {INTERACTION_TYPES.find((t) => t.id === interaction.type)?.label}
                             </span>
                             <span className="text-xs text-frame-gray-light">
-                              {interaction.direction === "inbound" ? "← Recebido" : "→ Enviado"}
+                              {interaction.direction === "inbound" ? "← " + t("app.interactions.inbound") : "→ " + t("app.interactions.outbound")}
                             </span>
                           </div>
 
@@ -404,7 +406,7 @@ function InteractionsContent() {
 
                           {interaction.opportunity_title && (
                             <div className="text-xs text-frame-gray-light mt-1">
-                              Oportunidade: {interaction.opportunity_title}
+                              {t("app.interactions.opportunity")}: {interaction.opportunity_title}
                             </div>
                           )}
                         </div>
@@ -567,7 +569,7 @@ function InteractionsContent() {
                 value={summary}
                 onChange={(e) => setSummary(e.target.value)}
                 className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none resize-none h-24"
-                placeholder="Descreva o que foi discutido..."
+                placeholder={t("app.interactions.summaryPlaceholder")}
               />
             </div>
 
@@ -580,7 +582,7 @@ function InteractionsContent() {
                 value={outcome}
                 onChange={(e) => setOutcome(e.target.value)}
                 className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none resize-none h-20"
-                placeholder="Qual foi o resultado da interação?"
+                placeholder={t("app.interactions.outcomePlaceholder")}
               />
             </div>
 
@@ -611,7 +613,7 @@ function InteractionsContent() {
                 disabled={isSubmitting || !summary.trim()}
                 className="frame-btn-primary"
               >
-                {isSubmitting ? "Registrando..." : "Registrar Interação"}
+                {isSubmitting ? t("app.interactions.registering") : t("app.interactions.registerInteraction")}
               </button>
             </DialogFooter>
           </form>
@@ -719,7 +721,7 @@ function InteractionsContent() {
                 disabled={isSubmitting || !summary.trim()}
                 className="frame-btn-primary"
               >
-                {isSubmitting ? "Atualizando..." : "Atualizar Interação"}
+                {isSubmitting ? t("app.interactions.updating") : t("app.interactions.updateInteraction")}
               </button>
             </DialogFooter>
           </form>
@@ -751,7 +753,7 @@ function InteractionsContent() {
               onClick={handleDelete}
               className="bg-frame-red hover:bg-red-600 text-white px-4 py-2 text-sm font-frame-mono uppercase tracking-wider transition rounded-none"
             >
-              {isSubmitting ? "Excluindo..." : "Excluir"}
+              {isSubmitting ? t("app.interactions.deleting") : t("app.common.delete")}
             </button>
           </DialogFooter>
         </DialogContent>

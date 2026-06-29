@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import CustomCursor from "@/components/landing/CustomCursor";
 
 interface FrameShellProps {
@@ -9,13 +10,14 @@ interface FrameShellProps {
 
 /** Global shell with optional custom cursor. */
 const FrameShell = memo(function FrameShell({ children, cursor = false }: FrameShellProps) {
+  const { t } = useLanguage();
   return (
     <div className="frame-shell min-h-screen text-frame-white font-frame-body">
       <a
         href="#main-content"
         className="fixed left-3 top-3 z-[1000] -translate-y-20 bg-frame-orange px-4 py-2 font-frame-mono text-xs uppercase text-black transition-transform focus:translate-y-0"
       >
-        Pular para o conteúdo
+        {t("app.common.skipToContent") as string}
       </a>
       {cursor && <CustomCursor />}
       {children}

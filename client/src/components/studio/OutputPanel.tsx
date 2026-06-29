@@ -3,6 +3,7 @@ import { type ToolFromApi } from "@/lib/api";
 import { cleanGeneratedText } from "@/lib/documentFormatter";
 import ActionToolbar from "./ActionToolbar";
 import RefineChatPanel from "./RefineChatPanel";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface OutputPanelProps {
   tool: ToolFromApi;
@@ -23,6 +24,7 @@ export default function OutputPanel({
   onCopy,
   onDownload,
 }: OutputPanelProps) {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<"document" | "refine">("document");
   const displayOutput = cleanGeneratedText(output);
 
@@ -57,11 +59,11 @@ export default function OutputPanel({
               <div className="h-full min-h-[250px] flex flex-col items-center justify-center gap-4 opacity-25 select-none">
                 <span className="text-[3.2rem] grayscale">{tool.icon}</span>
                 <p className="font-frame-mono text-[0.63rem] tracking-[0.18em] uppercase text-frame-gray-light text-center leading-relaxed">
-                  Preencha os campos à esquerda
+                  {t("app.studio.emptyOutput") as string}
                   <br />
-                  e execute o motor IA para
+                  {t("app.studio.emptyOutput2") as string}
                   <br />
-                  gerar este documento
+                  {t("app.studio.emptyOutput3") as string}
                 </p>
               </div>
             )}

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { Loader2, X, RefreshCw, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface HistoryItem {
   id: number;
@@ -19,6 +20,7 @@ interface HistoryPanelProps {
 }
 
 export default function HistoryPanel({ isOpen, onClose, toolId, onRestore }: HistoryPanelProps) {
+  const { t } = useLanguage();
   const [items, setItems] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -31,7 +33,7 @@ export default function HistoryPanel({ isOpen, onClose, toolId, onRestore }: His
         const historyData = await api.ai.history(toolId);
         setItems(historyData);
       } catch (e) {
-        toast.error("Erro ao carregar o histórico de gerações");
+        toast.error(t("app.studio.historyLoading") as string);
       } finally {
         setLoading(false);
       }
@@ -49,7 +51,7 @@ export default function HistoryPanel({ isOpen, onClose, toolId, onRestore }: His
         <div className="flex items-center gap-2">
           <RefreshCw className="w-4 h-4 text-frame-gold animate-spin-slow" />
           <span className="font-frame-mono text-[0.68rem] tracking-[0.15em] uppercase text-frame-gold font-medium">
-            Histórico de IA
+            {t("app.studio.historyTitle") as string}
           </span>
         </div>
         <button
@@ -67,16 +69,16 @@ export default function HistoryPanel({ isOpen, onClose, toolId, onRestore }: His
           <div className="flex flex-col items-center justify-center py-12 gap-3 opacity-60">
             <Loader2 className="w-6 h-6 animate-spin text-frame-orange" />
             <span className="font-frame-mono text-[0.64rem] uppercase tracking-wider text-frame-gray-light">
-              Carregando histórico...
+              {t("app.studio.historyLoading") as string}
             </span>
           </div>
         ) : items.length === 0 ? (
           <div className="text-center py-12 opacity-30 flex flex-col items-center justify-center gap-2">
             <span className="text-3xl">📁</span>
             <p className="font-frame-mono text-[0.64rem] uppercase tracking-widest text-frame-gray-light leading-relaxed">
-              Nenhuma geração
+              {t("app.studio.historyEmpty") as string}
               <br />
-              encontrada
+              {t("app.studio.historyEmpty2") as string}
             </p>
           </div>
         ) : (
@@ -95,7 +97,7 @@ export default function HistoryPanel({ isOpen, onClose, toolId, onRestore }: His
               parsedInput.cena ||
               parsedInput.prompt ||
               Object.values(parsedInput)[0] ||
-              "Geração Sem Título";
+              t("app.studio.generationUntitled") as string;
 
             const formattedDate = new Date(item.createdAt).toLocaleString("pt-BR", {
               day: "2-digit",
@@ -130,12 +132,12 @@ export default function HistoryPanel({ isOpen, onClose, toolId, onRestore }: His
                   type="button"
                   onClick={() => {
                     onRestore(parsedInput, item.output);
-                    toast.success(`Geração #${item.id} restaurada!`);
+                    toast.success(`${t("app.studio.generationRestored") as string} #${item.id}`);
                   }}
                   className="w-full py-1.5 font-frame-mono text-[0.64rem] tracking-[0.1em] uppercase border border-frame-gray-3 text-frame-gray-light bg-transparent transition hover:border-frame-gold hover:text-frame-gold hover:bg-frame-gold/5 flex items-center justify-center gap-1.5"
                 >
                   <Eye className="w-3.5 h-3.5" />
-                  Visualizar / Restaurar
+                  {t("app.studio.viewRestore") as string}
                 </button>
               </div>
             );

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { readStudioSettings, saveStudioSettings, type StudioSettings } from "@/lib/studioSettings";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type DocType = "briefing" | "roteiro" | "callsheet" | "decupagem" | "orcamento" | "cronograma" | "checklist" | "entrega";
 
@@ -79,11 +80,11 @@ interface DocumentGroup {
 }
 
 const COMMON_FIELDS: DocumentGroup = {
-  title: "// IDENTIFICACAO",
+  title: t("app.documents.identificationSection"),
   fields: [
-    { key: "title", label: "Titulo", placeholder: "Ex: Campanha de lancamento", span: "full" },
-    { key: "client", label: "Cliente", placeholder: "Ex: Aurora Brand" },
-    { key: "project", label: "Projeto", placeholder: "Ex: Filme manifesto 2026" },
+    { key: "title", label: t("app.documents.titleField"), placeholder: t("app.documents.titlePlaceholder"), span: "full" },
+    { key: "client", label: t("app.common.client"), placeholder: t("app.documents.clientPlaceholder") },
+    { key: "project", label: t("app.common.project"), placeholder: t("app.documents.projectPlaceholder") },
   ],
 };
 
@@ -91,123 +92,123 @@ const DOCUMENT_FORMS: Record<DocType, DocumentGroup[]> = {
   briefing: [
     COMMON_FIELDS,
     {
-      title: "// ESTRATEGIA",
+      title: t("app.documents.strategySection"),
       fields: [
-        { key: "objective", label: "Objetivo principal", placeholder: "O que este video precisa resolver?", kind: "textarea", span: "full" },
-        { key: "audience", label: "Publico e contexto", placeholder: "Quem assiste, onde e com qual expectativa?", kind: "textarea", span: "full" },
-        { key: "format", label: "Formato final", placeholder: "16:9 + cortes verticais" },
-        { key: "duration", label: "Duracao alvo", placeholder: "60-90s" },
-        { key: "deadline", label: "Prazo", placeholder: "Prazo", kind: "date" },
-        { key: "budget", label: "Investimento", placeholder: "R$ 12k-18k" },
+        { key: "objective", label: t("app.documents.mainObjective"), placeholder: t("app.documents.objectivePlaceholder"), kind: "textarea", span: "full" },
+        { key: "audience", label: t("app.documents.audienceContext"), placeholder: t("app.documents.audiencePlaceholder"), kind: "textarea", span: "full" },
+        { key: "format", label: t("app.documents.finalFormat"), placeholder: t("app.documents.formatPlaceholder") },
+        { key: "duration", label: t("app.documents.targetDuration"), placeholder: t("app.documents.durationPlaceholder") },
+        { key: "deadline", label: t("app.common.deadline"), placeholder: t("app.common.deadline"), kind: "date" },
+        { key: "budget", label: t("app.common.budget"), placeholder: t("app.documents.budgetPlaceholder") },
       ],
     },
     {
-      title: "// ESCOPO",
+      title: t("app.documents.scopeSection"),
       fields: [
-        { key: "scope", label: "Entregaveis", placeholder: "Um entregavel por linha", kind: "textarea", span: "full" },
-        { key: "notes", label: "Riscos e referencias", placeholder: "Restricoes, tom, referencias, aprovadores", kind: "textarea", span: "full" },
+        { key: "scope", label: t("app.documents.deliverables"), placeholder: t("app.documents.deliverablePlaceholder"), kind: "textarea", span: "full" },
+        { key: "notes", label: t("app.documents.risksReferences"), placeholder: t("app.documents.notesPlaceholder"), kind: "textarea", span: "full" },
       ],
     },
   ],
   roteiro: [
     COMMON_FIELDS,
     {
-      title: "// NARRATIVA",
+      title: t("app.documents.narrativeSection"),
       fields: [
-        { key: "objective", label: "Promessa narrativa", placeholder: "Qual ideia o roteiro precisa defender?", kind: "textarea", span: "full" },
-        { key: "audience", label: "Tom e publico", placeholder: "Premium, direto, emocional, institucional", kind: "textarea", span: "full" },
-        { key: "duration", label: "Duracao", placeholder: "45s" },
-        { key: "format", label: "Formato", placeholder: "Reels, YouTube, TV" },
+        { key: "objective", label: t("app.documents.narrativePromise"), placeholder: t("app.documents.scriptIdeaPlaceholder"), kind: "textarea", span: "full" },
+        { key: "audience", label: t("app.documents.toneAudience"), placeholder: t("app.documents.scriptTonePlaceholder"), kind: "textarea", span: "full" },
+        { key: "duration", label: t("app.common.duration"), placeholder: t("app.documents.scriptDurationPlaceholder") },
+        { key: "format", label: "Formato", placeholder: t("app.documents.scriptFormatPlaceholder") },
       ],
     },
     {
-      title: "// CENAS",
+      title: t("app.documents.scenesSection"),
       fields: [
-        { key: "scope", label: "Beat sheet / cenas", placeholder: "Gancho\nConflito\nProva visual\nCTA", kind: "textarea", span: "full" },
-        { key: "notes", label: "Locucao, falas ou CTA", placeholder: "Texto guia, falas obrigatorias e finalizacao", kind: "textarea", span: "full" },
+        { key: "scope", label: "Beat sheet / cenas", placeholder: t("app.documents.beatSheetPlaceholder"), kind: "textarea", span: "full" },
+        { key: "notes", label: "Locucao, falas ou CTA", placeholder: t("app.documents.scriptNotesPlaceholder"), kind: "textarea", span: "full" },
       ],
     },
   ],
   callsheet: [
     COMMON_FIELDS,
     {
-      title: "// SET",
+      title: t("app.documents.setSection"),
       fields: [
-        { key: "deadline", label: "Data de gravacao", placeholder: "Data", kind: "date" },
-        { key: "location", label: "Locacao", placeholder: "Endereco, ponto de encontro, estacionamento", span: "full" },
-        { key: "schedule", label: "Agenda do dia", placeholder: "07:00 chegada equipe\n08:00 luz\n09:00 gravacao", kind: "textarea", span: "full" },
+        { key: "deadline", label: t("app.documents.shootDate"), placeholder: t("app.documents.datePlaceholder"), kind: "date" },
+        { key: "location", label: t("app.documents.location"), placeholder: t("app.documents.addressPlaceholder"), span: "full" },
+        { key: "schedule", label: t("app.documents.daySchedule"), placeholder: t("app.documents.schedulePlaceholder"), kind: "textarea", span: "full" },
       ],
     },
     {
-      title: "// PRODUCAO",
+      title: t("app.documents.productionSection"),
       fields: [
-        { key: "crew", label: "Equipe e contatos", placeholder: "Direcao - Nome - telefone", kind: "textarea", span: "full" },
-        { key: "equipment", label: "Equipamentos", placeholder: "Camera, lentes, audio, luz, midias", kind: "textarea", span: "full" },
-        { key: "notes", label: "Observacoes de set", placeholder: "Figurino, alimentacao, riscos, autorizacoes", kind: "textarea", span: "full" },
+        { key: "crew", label: t("app.documents.teamContacts"), placeholder: t("app.documents.teamPlaceholder"), kind: "textarea", span: "full" },
+        { key: "equipment", label: t("app.documents.equipment"), placeholder: t("app.documents.equipmentPlaceholder"), kind: "textarea", span: "full" },
+        { key: "notes", label: t("app.documents.setNotes"), placeholder: t("app.documents.setNotesPlaceholder"), kind: "textarea", span: "full" },
       ],
     },
   ],
   decupagem: [
     COMMON_FIELDS,
     {
-      title: "// PLANEJAMENTO VISUAL",
+      title: t("app.documents.visualPlanningSection"),
       fields: [
-        { key: "objective", label: "Direcao de cena", placeholder: "Qual sensacao a imagem deve passar?", kind: "textarea", span: "full" },
-        { key: "scope", label: "Lista de planos", placeholder: "Plano 01 - aberto - objetivo\nPlano 02 - close - detalhe", kind: "textarea", span: "full" },
-        { key: "equipment", label: "Lentes, camera e movimento", placeholder: "35mm handheld, slider, drone", kind: "textarea", span: "full" },
-        { key: "location", label: "Ambientes", placeholder: "Locacoes ou cenarios por bloco", span: "full" },
+        { key: "objective", label: t("app.documents.sceneDirection"), placeholder: t("app.documents.sceneDirectionPlaceholder"), kind: "textarea", span: "full" },
+        { key: "scope", label: t("app.documents.shotList"), placeholder: t("app.documents.shotListPlaceholder"), kind: "textarea", span: "full" },
+        { key: "equipment", label: t("app.documents.lensesCameraMovement"), placeholder: t("app.documents.lensesPlaceholder"), kind: "textarea", span: "full" },
+        { key: "location", label: t("app.documents.environments"), placeholder: t("app.documents.environmentsPlaceholder"), span: "full" },
       ],
     },
   ],
   orcamento: [
     COMMON_FIELDS,
     {
-      title: "// COMERCIAL",
+      title: t("app.documents.commercialSection"),
       fields: [
-        { key: "budget", label: "Investimento base", placeholder: "R$ 18.000" },
-        { key: "deadline", label: "Validade", placeholder: "Data", kind: "date" },
-        { key: "scope", label: "Itens inclusos", placeholder: "Pre-producao\nCaptacao\nEdicao\nFinalizacao", kind: "textarea", span: "full" },
-        { key: "crew", label: "Equipe prevista", placeholder: "Equipe compacta, equipe completa, diaria extra", kind: "textarea", span: "full" },
-        { key: "equipment", label: "Equipamentos previstos", placeholder: "Camera, luz, audio, estudio, drone", kind: "textarea", span: "full" },
-        { key: "notes", label: "Condicoes comerciais", placeholder: "Pagamento, alteracoes, direitos de uso, deslocamento", kind: "textarea", span: "full" },
+        { key: "budget", label: t("app.documents.baseInvestment"), placeholder: t("app.documents.budgetValuePlaceholder") },
+        { key: "deadline", label: t("app.common.validity"), placeholder: t("app.documents.datePlaceholder"), kind: "date" },
+        { key: "scope", label: t("app.documents.includedItems"), placeholder: t("app.documents.includedItemsPlaceholder"), kind: "textarea", span: "full" },
+        { key: "crew", label: t("app.documents.plannedTeam"), placeholder: t("app.documents.plannedTeamPlaceholder"), kind: "textarea", span: "full" },
+        { key: "equipment", label: t("app.documents.plannedEquipment"), placeholder: t("app.documents.plannedEquipmentPlaceholder"), kind: "textarea", span: "full" },
+        { key: "notes", label: t("app.documents.commercialConditions"), placeholder: t("app.documents.commercialConditionsPlaceholder"), kind: "textarea", span: "full" },
       ],
     },
   ],
   cronograma: [
     COMMON_FIELDS,
     {
-      title: "// FLUXO",
+      title: t("app.documents.flowSection"),
       fields: [
-        { key: "deadline", label: "Entrega final", placeholder: "Data", kind: "date" },
-        { key: "schedule", label: "Marcos e datas", placeholder: "Briefing aprovado - 01/07\nGravacao - 05/07\nCorte 1 - 10/07", kind: "textarea", span: "full" },
-        { key: "scope", label: "Dependencias", placeholder: "Materiais do cliente, aprovadores, agenda de talentos", kind: "textarea", span: "full" },
-        { key: "notes", label: "Rodadas e regras", placeholder: "Prazo por rodada, responsavel pelo aceite", kind: "textarea", span: "full" },
+        { key: "deadline", label: t("app.documents.finalDelivery"), placeholder: t("app.documents.datePlaceholder"), kind: "date" },
+        { key: "schedule", label: t("app.documents.milestonesDates"), placeholder: t("app.documents.milestonesPlaceholder"), kind: "textarea", span: "full" },
+        { key: "scope", label: t("app.documents.dependencies"), placeholder: t("app.documents.dependenciesPlaceholder"), kind: "textarea", span: "full" },
+        { key: "notes", label: t("app.documents.roundsRules"), placeholder: t("app.documents.roundsPlaceholder"), kind: "textarea", span: "full" },
       ],
     },
   ],
   checklist: [
     COMMON_FIELDS,
     {
-      title: "// PRE-SET",
+      title: t("app.documents.presetSection"),
       fields: [
-        { key: "deadline", label: "Data do set", placeholder: "Data", kind: "date" },
-        { key: "location", label: "Locacao / base", placeholder: "Endereco e ponto de apoio", span: "full" },
-        { key: "equipment", label: "Checklist tecnico", placeholder: "Baterias\nCartoes\nAudio\nLuz\nBackup", kind: "textarea", span: "full" },
-        { key: "crew", label: "Responsaveis", placeholder: "Quem confere cada etapa?", kind: "textarea", span: "full" },
-        { key: "notes", label: "Fechamento", placeholder: "Backup duplo, pastas, envio ao editor", kind: "textarea", span: "full" },
+        { key: "deadline", label: t("app.documents.setDate"), placeholder: t("app.documents.datePlaceholder"), kind: "date" },
+        { key: "location", label: t("app.documents.locationBase"), placeholder: "Endereco e ponto de apoio", span: "full" },
+        { key: "equipment", label: t("app.documents.technicalChecklist"), placeholder: t("app.documents.checklistTechPlaceholder"), kind: "textarea", span: "full" },
+        { key: "crew", label: t("app.documents.responsibles"), placeholder: t("app.documents.responsiblesPlaceholder"), kind: "textarea", span: "full" },
+        { key: "notes", label: t("app.documents.closing"), placeholder: t("app.documents.closingPlaceholder"), kind: "textarea", span: "full" },
       ],
     },
   ],
   entrega: [
     COMMON_FIELDS,
     {
-      title: "// PACOTE FINAL",
+      title: t("app.documents.finalPackageSection"),
       fields: [
-        { key: "scope", label: "Arquivos entregues", placeholder: "Master 4K\nVersao vertical\nLegenda\nThumbnail", kind: "textarea", span: "full" },
-        { key: "format", label: "Formatos", placeholder: "MP4 H.264, ProRes, JPG" },
-        { key: "deadline", label: "Data de envio", placeholder: "Data", kind: "date" },
-        { key: "location", label: "Link de entrega", placeholder: "Drive, Vimeo, WeTransfer", span: "full" },
-        { key: "notes", label: "Aceite e observacoes", placeholder: "Prazo de revisao final, aceite, proximos passos", kind: "textarea", span: "full" },
+        { key: "scope", label: t("app.documents.deliveredFiles"), placeholder: t("app.documents.deliveredFilesPlaceholder"), kind: "textarea", span: "full" },
+        { key: "format", label: t("app.common.formats"), placeholder: t("app.documents.formatsPlaceholder") },
+        { key: "deadline", label: t("app.documents.shipDate"), placeholder: t("app.documents.datePlaceholder"), kind: "date" },
+        { key: "location", label: t("app.documents.deliveryLink"), placeholder: t("app.documents.deliveryLinkPlaceholder"), span: "full" },
+        { key: "notes", label: t("app.documents.acceptanceNotes"), placeholder: t("app.documents.acceptancePlaceholder"), kind: "textarea", span: "full" },
       ],
     },
   ],
@@ -264,36 +265,36 @@ function documentSections(form: DocumentForm) {
   const defaults = {
     briefing: [
       ["Objetivo e Publico", [form.objective || "Objetivo do projeto a definir", form.audience && `Publico: ${form.audience}`].filter(Boolean)],
-      ["Escopo e Entregaveis", baseScope.length ? baseScope : ["Video principal", "Versoes para redes sociais", "Arquivos finais organizados"]],
+      ["Escopo e Entregaveis", baseScope.length ? baseScope : [t("app.documents.mainVideo"), "Versoes para redes sociais", "Arquivos finais organizados"]],
       ["Riscos e Cuidados", ["Alinhar aprovadores antes da primeira versao", "Confirmar autorizacoes de imagem", "Definir prazo de feedback"]],
     ],
     roteiro: [
-      ["Estrutura Narrativa", baseScope.length ? baseScope : ["Gancho inicial", "Desenvolvimento da promessa", "Prova visual", "CTA final"]],
+      ["Estrutura Narrativa", baseScope.length ? baseScope : [t("app.documents.initialHook"), "Desenvolvimento da promessa", t("app.documents.visualProof"), "CTA final"]],
       ["Direcao de Cena", ["Priorizar acoes filmaveis", "Prever respiros para B-roll", "Manter ritmo compativel com o canal"]],
     ],
     callsheet: [
       ["Agenda do Dia", baseSchedule.length ? baseSchedule : ["Call time geral", "Montagem de equipamento", "Gravacao", "Backup e desmobilizacao"]],
       ["Equipe", baseCrew.length ? baseCrew : ["Direcao", "Camera", "Som", "Producao"]],
-      ["Equipamentos", baseEquipment.length ? baseEquipment : ["Camera principal", "Audio dedicado", "Kit de luz", "Midias e backup"]],
+      [t("app.documents.equipment"), baseEquipment.length ? baseEquipment : [t("app.documents.mainCamera"), t("app.documents.dedicatedAudio"), "Kit de luz", "Midias e backup"]],
     ],
     decupagem: [
       ["Lista de Planos", baseScope.length ? baseScope : ["Plano aberto de contexto", "Plano medio de acao", "Close de detalhe", "B-roll de apoio"]],
-      ["Tecnica", baseEquipment.length ? baseEquipment : ["Lentes definidas por cena", "Movimentos planejados", "Audio sincronizado"]],
+      ["Tecnica", baseEquipment.length ? baseEquipment : ["Lentes definidas por cena", t("app.documents.plannedMovements"), t("app.documents.syncedAudio")]],
     ],
     orcamento: [
-      ["Composicao do Investimento", [`Orcamento base: ${form.budget || "a definir"}`, "Equipe", "Equipamentos", "Pos-producao"]],
+      ["Composicao do Investimento", [`Orcamento base: ${form.budget || "a definir"}`, "Equipe", t("app.documents.equipment"), "Pos-producao"]],
       ["Condicoes", ["Alteracoes fora do escopo geram novo ajuste", "Direitos e uso comercial devem estar no contrato", "Pagamento conforme combinado"]],
     ],
     cronograma: [
-      ["Marcos", baseSchedule.length ? baseSchedule : ["Briefing aprovado", "Captacao", "Primeiro corte", "Revisao", "Entrega final"]],
+      ["Marcos", baseSchedule.length ? baseSchedule : [t("app.documents.briefingApproved"), "Captacao", t("app.documents.firstCut"), "Revisao", t("app.documents.finalDelivery")]],
       ["Aprovacao", ["Definir responsavel pelo aceite", "Centralizar comentarios por link", "Registrar rodada final"]],
     ],
     checklist: [
-      ["Pre-set", ["Baterias carregadas", "Cartoes formatados", "Backup preparado", "Contatos confirmados"]],
-      ["Fechamento", ["Backup duplo", "Conferencia de audio", "Material organizado por pasta", "Proxima etapa enviada ao cliente"]],
+      ["Pre-set", [t("app.documents.batteriesCharged"), t("app.documents.cardsFormatted"), t("app.documents.backupReady"), t("app.documents.contactsConfirmed")]],
+      [t("app.documents.closing"), [t("app.documents.doubleBackup"), "Conferencia de audio", "Material organizado por pasta", "Proxima etapa enviada ao cliente"]],
     ],
     entrega: [
-      ["Pacote Final", baseScope.length ? baseScope : ["MP4 final", "Versoes sociais", "Legenda quando aplicavel", "Link de download"]],
+      ["Pacote Final", baseScope.length ? baseScope : ["MP4 final", t("app.documents.socialVersions"), "Legenda quando aplicavel", "Link de download"]],
       ["Aceite", ["Cliente recebeu materiais", "Prazo de revisao final confirmado", "Novas alteracoes entram como novo escopo"]],
     ],
   } satisfies Record<DocType, Array<[string, string[]]>>;
@@ -306,15 +307,15 @@ function buildDocumentHtml(form: DocumentForm, studio: StudioSettings) {
   const accentSoft = `${accent}14`;
   const accentTint = `${accent}22`;
   const metadata = [
-    ["Cliente", form.client || "A definir"],
-    ["Projeto", form.project || form.title],
+    [t("app.common.client"), form.client || t("app.common.toBeDefined")],
+    [t("app.common.project"), form.project || form.title],
     ["Formato", form.format],
-    ["Duracao", form.duration],
-    ["Prazo", form.deadline || "A definir"],
-    ["Locacao", form.location || "A definir"],
+    [t("app.common.duration"), form.duration],
+    [t("app.common.deadline"), form.deadline || t("app.common.toBeDefined")],
+    [t("app.documents.location"), form.location || t("app.common.toBeDefined")],
     ["Produtora", studio.studioName],
-    ["Contato", studio.email || studio.phone || "A definir"],
-    ["Cidade", studio.city || "A definir"],
+    ["Contato", studio.email || studio.phone || t("app.common.toBeDefined")],
+    ["Cidade", studio.city || t("app.common.toBeDefined")],
   ];
 
   const content = documentSections(form)
@@ -359,11 +360,11 @@ function buildDocumentHtml(form: DocumentForm, studio: StudioSettings) {
         <h1 class="doc-title">${esc(form.title || doc.label)}</h1>
         <div class="doc-muted">${esc(doc.description)}</div>
       </div>
-      <div class="doc-brand">${esc(studio.studioName)}<br/>${esc(studio.email || studio.phone || "Documento operacional")}<br/>${new Date().toLocaleDateString("pt-BR")}</div>
+      <div class="doc-brand">${esc(studio.studioName)}<br/>${esc(studio.email || studio.phone || t("app.documents.operationalDocument"))}<br/>${new Date().toLocaleDateString("pt-BR")}</div>
     </header>
     <div class="doc-grid">${metadata.map(([key, value]) => `<div class="doc-field"><div class="doc-field-label">${esc(key)}</div><div class="doc-field-value">${esc(value)}</div></div>`).join("")}</div>
     ${content}
-    ${form.notes ? renderList("Notas adicionais", lines(form.notes), accent) : ""}
+    ${form.notes ? renderList(t("app.documents.additionalNotes"), lines(form.notes), accent) : ""}
     <footer class="doc-footer"><div>${esc(studio.studioName)} · ${esc(studio.signature)}</div><div>Gerado em ${new Date().toLocaleString("pt-BR")}</div></footer>
   </main>
 </body>
@@ -373,12 +374,12 @@ function buildDocumentHtml(form: DocumentForm, studio: StudioSettings) {
 function buildDocumentText(form: DocumentForm, studio: StudioSettings) {
   const doc = DOC_TYPES.find((item) => item.id === form.type) || DOC_TYPES[0];
   const metadata = [
-    ["Cliente", form.client || "A definir"],
-    ["Projeto", form.project || form.title],
-    ["Formato", form.format || "A definir"],
-    ["Duracao", form.duration || "A definir"],
-    ["Prazo", form.deadline || "A definir"],
-    ["Locacao", form.location || "A definir"],
+    [t("app.common.client"), form.client || t("app.common.toBeDefined")],
+    [t("app.common.project"), form.project || form.title],
+    ["Formato", form.format || t("app.common.toBeDefined")],
+    [t("app.common.duration"), form.duration || t("app.common.toBeDefined")],
+    [t("app.common.deadline"), form.deadline || t("app.common.toBeDefined")],
+    [t("app.documents.location"), form.location || t("app.common.toBeDefined")],
   ];
   const sections = documentSections(form)
     .map(([title, items]) => `${title.toUpperCase()}\n${items.map((item) => `- ${item}`).join("\n")}`)
@@ -475,6 +476,7 @@ function FormField({ field, value, onChange }: { field: DocumentField; value: st
 }
 
 function DocumentsContent() {
+  const { t } = useLanguage();
   const [form, setForm] = useState<DocumentForm>(initialForm);
   const [savedDocs, setSavedDocs] = useState<StudioDocument[]>([]);
   const [studio, setStudio] = useState<StudioSettings>(() => readStudioSettings());
@@ -510,7 +512,7 @@ function DocumentsContent() {
     const docs = [next, ...savedDocs].slice(0, 30);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(docs));
     setSavedDocs(docs);
-    toast.success("Documento salvo no Studio");
+    toast.success(t("app.documents.documentSaved"));
   };
 
   const saveAndClose = () => {
@@ -524,7 +526,7 @@ function DocumentsContent() {
 
   const copyText = async () => {
     await navigator.clipboard.writeText(buildDocumentText(form, studio));
-    toast.success("Texto limpo copiado");
+    toast.success(t("app.documents.textCopied"));
   };
 
   const exportDocx = async () => {
@@ -542,7 +544,7 @@ function DocumentsContent() {
       ]),
       ...(form.notes
         ? [
-            new Paragraph({ text: "Notas adicionais", heading: HeadingLevel.HEADING_2 }),
+            new Paragraph({ text: t("app.documents.additionalNotes"), heading: HeadingLevel.HEADING_2 }),
             ...lines(form.notes).map((item) => new Paragraph({ text: item, bullet: { level: 0 } })),
           ]
         : []),
@@ -555,7 +557,7 @@ function DocumentsContent() {
     link.download = `${(form.title || docType.label).replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.docx`;
     link.click();
     URL.revokeObjectURL(url);
-    toast.success("Documento Word gerado");
+    toast.success(t("app.documents.wordGenerated"));
   };
 
   const removeDoc = (id: string) => {
@@ -637,10 +639,10 @@ function DocumentsContent() {
             <div className="flex flex-col gap-3 border-b border-frame-gray-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <span className="font-frame-mono text-[0.62rem] uppercase tracking-[0.14em]" style={{ color: selectedDoc.accent }}>
-                  Preview {selectedDoc.label}
+                  {t("app.documents.preview") + " " + selectedDoc.label}
                 </span>
                 <p className="mt-1 text-xs text-frame-gray-light">
-                  O PDF exportado preserva esta cor e ocupa a folha inteira.
+                  t("app.documents.pdfInfo")
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -691,14 +693,14 @@ function DocumentsContent() {
                         </span>
                         <span className="mt-1 block truncate text-sm font-semibold">{doc.title}</span>
                         <span className="mt-1 block truncate text-[0.62rem] text-frame-gray-light">
-                          {doc.client || "Sem cliente"} · {new Date(doc.createdAt).toLocaleDateString("pt-BR")}
+                          {doc.client || t("app.documents.withoutClient")} · {new Date(doc.createdAt).toLocaleDateString("pt-BR")}
                         </span>
                       </button>
                       <div className="mt-3 flex items-center justify-end gap-2 border-t border-frame-gray-3 pt-2">
-                        <button type="button" onClick={() => exportPdf(doc.html)} className="text-frame-orange transition hover:text-frame-white" title="Exportar PDF">
+                        <button type="button" onClick={() => exportPdf(doc.html)} className="text-frame-orange transition hover:text-frame-white" title={t("app.common.exportPdf")}>
                           <Download className="h-4 w-4" />
                         </button>
-                        <button type="button" onClick={() => removeDoc(doc.id)} className="text-frame-gray-light transition hover:text-red-400" title="Excluir">
+                        <button type="button" onClick={() => removeDoc(doc.id)} className="text-frame-gray-light transition hover:text-red-400" title={t("app.common.delete")}>
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
@@ -714,8 +716,8 @@ function DocumentsContent() {
       <AnimatedModal
         isOpen={isEditorOpen}
         onClose={() => setIsEditorOpen(false)}
-        title={`Editar ${selectedDoc.label}`}
-        description="Preencha os dados, salve a versão e volte ao preview para exportar."
+        title={`${t("app.common.edit")} ${selectedDoc.label}`}
+        description={t("app.documents.editModalDescription")}
         className="max-w-5xl"
         footer={
           <>

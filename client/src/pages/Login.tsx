@@ -5,6 +5,9 @@ import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { Github, Loader2 } from "lucide-react";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { useLanguage } from "@/contexts/LanguageContext";
+
+const { t } = useLanguage();
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -15,16 +18,16 @@ export default function Login() {
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      toast.error("Preencha email e senha");
+      toast.error(t("app.errors.fillEmailPassword"));
       return;
     }
     setSubmitting(true);
     try {
       const user = await login(email.trim(), password);
-      toast.success("Login efetuado com sucesso!");
+      toast.success(t("app.auth.loginSuccess"));
       setLocation(user.role === "admin" ? "/admin" : "/tools");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Falha no login");
+      toast.error(error instanceof Error ? error.message : t("app.errors.loginFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -36,7 +39,7 @@ export default function Login() {
 
   const handleGitHubLogin = async () => {
     if (!isSupabaseConfigured || !supabase) {
-      toast.error("Supabase não está configurado para login GitHub.");
+      toast.error(t("app.errors.supabaseNotConfigured"));
       return;
     }
 
@@ -53,15 +56,15 @@ export default function Login() {
   };
 
   return (
-    <AuthLayout mode="login" title="Entrar" subtitle="Acesse seu estúdio e ferramentas IA.">
+    <AuthLayout mode="login" title={t("app.common.login")} subtitle={t("app.auth.loginSubtitle")}>
       {submitting ? (
-        <AuthLoadingAnimation message="Validando acesso e abrindo seu estúdio..." />
+        <AuthLoadingAnimation message={t("app.auth.validatingAccess")} />
       ) : (
         <>
-          <AuthField label="Email">
+          <AuthField label={t("app.auth.email")}>
             <input
               type="email"
-              placeholder="seu@email.com"
+              placeholder={t("app.auth.emailPlaceholder")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={handleKeyPress}
@@ -69,10 +72,10 @@ export default function Login() {
             />
           </AuthField>
 
-          <AuthField label="Senha">
+          <AuthField label={t("app.auth.password")}>
             <input
               type="password"
-              placeholder="••••••••"
+              placeholder={t("app.auth.passwordPlaceholder")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={handleKeyPress}
@@ -92,7 +95,7 @@ export default function Login() {
                 Entrando...
               </>
             ) : (
-              "Acessar estúdio"
+              t("app.auth.accessStudio")
             )}
           </button>
 
