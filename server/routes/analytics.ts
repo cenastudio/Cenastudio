@@ -5,6 +5,10 @@ import {
   getProjectAnalytics,
   getRevenueAnalytics,
   getActivityAnalytics,
+  getFinancialOverview,
+  createFinancialEntry,
+  updateFinancialEntry,
+  deleteFinancialEntry,
 } from "../controllers/analyticsController.js";
 
 const router = Router();
@@ -20,6 +24,10 @@ router.get("/projects/:id", getProjectAnalytics);
 
 // Get revenue analytics
 router.get("/revenue", getRevenueAnalytics);
+router.get("/finance", getFinancialOverview);
+router.post("/finance/entries", createFinancialEntry);
+router.patch("/finance/entries/:id", updateFinancialEntry);
+router.delete("/finance/entries/:id", deleteFinancialEntry);
 
 // Get activity analytics
 router.get("/activity", getActivityAnalytics);

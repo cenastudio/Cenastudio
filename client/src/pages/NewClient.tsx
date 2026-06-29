@@ -38,6 +38,7 @@ function NewClientContent() {
           billing_cycle: data.billingCycle.trim() || undefined,
           payment_method: data.paymentMethod.trim() || undefined,
           tax_id: data.taxId.trim() || undefined,
+          total_spent: data.totalSpent ? Number(data.totalSpent) : undefined,
         }),
       });
       const result = await response.json();

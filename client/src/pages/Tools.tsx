@@ -23,10 +23,10 @@ function ToolsContent() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-frame-black text-frame-white">
+    <div className="app-glass-surface tools-glass-page min-h-screen text-frame-white">
       <AppNavBar />
 
-      <section className="px-9 md:px-12 py-16 md:py-24">
+      <section className="px-6 md:px-12 py-14 md:py-20">
         <p className="frame-label mb-3">// Ferramentas</p>
         <h1 className="frame-title text-[clamp(2.3rem,4.3vw,3.8rem)] text-frame-white mb-14">
           ESTÚDIO <em className="not-italic text-transparent [-webkit-text-stroke:1px_#f5f0e8]">IA</em>
@@ -39,7 +39,7 @@ function ToolsContent() {
         )}
         {error && <p className="text-frame-red font-frame-mono text-sm">{error}</p>}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 xl:gap-4">
           {tools.map((tool) => {
             const Icon = getToolIcon(tool.slug);
             return (
@@ -65,7 +65,7 @@ function ToolsContent() {
                 </div>
                 <button
                   type="button"
-                  className="w-full font-frame-mono text-[0.6rem] tracking-[0.11em] uppercase bg-transparent border border-frame-gray-3 text-frame-gray-light py-1.5 px-3.5 transition hover:bg-frame-orange hover:text-frame-black hover:border-frame-orange"
+                  className="frame-btn-ghost w-full !min-h-10 !py-2 !px-3.5 text-center transition group-hover:border-frame-orange/60 group-hover:text-frame-white"
                   onClick={(e) => {
                     e.stopPropagation();
                     setLocation(

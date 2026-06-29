@@ -23,7 +23,7 @@ export default function RefineChatPanel({
     {
       role: "ai",
       content:
-        "Geração concluída! Use este chat para pedir ajustes, expansões ou correções específicas no documento ao lado. 🎬",
+        "Geração concluída! Use este chat para pedir ajustes, expansões ou correções específicas no documento ao lado.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -90,7 +90,7 @@ ${userMessage}`;
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-frame-black select-none">
+    <div className="studio-chat-panel flex-1 flex flex-col overflow-hidden select-none">
       {/* Chat Area */}
       <div className="flex-1 p-5 overflow-y-auto space-y-4">
         {messages.map((msg, i) => {
@@ -104,10 +104,10 @@ ${userMessage}`;
             >
               {/* Avatar */}
               <div
-                className={`w-6 h-6 rounded-full flex items-center justify-center font-frame-mono text-[0.6rem] font-semibold shrink-0 select-none ${
+                className={`frame-chat-avatar ${
                   isUser
-                    ? "bg-frame-gray-3 text-frame-white border border-frame-gray-3"
-                    : "bg-frame-orange text-frame-black"
+                    ? "frame-chat-avatar--user"
+                    : "frame-chat-avatar--assistant"
                 }`}
               >
                 {isUser ? "U" : "F"}
@@ -115,11 +115,7 @@ ${userMessage}`;
 
               {/* Bubble */}
               <div
-                className={`p-3 font-frame-body text-[0.8rem] leading-relaxed rounded-[2px] ${
-                  isUser
-                    ? "bg-frame-gray-2 border-r-2 border-frame-gray-3 text-frame-white"
-                    : "bg-frame-gray-1 border-l-2 border-frame-orange text-frame-cream"
-                }`}
+                className={`frame-chat-bubble ${isUser ? "frame-chat-bubble--user" : "frame-chat-bubble--assistant"}`}
               >
                 {msg.content}
               </div>
@@ -129,12 +125,12 @@ ${userMessage}`;
 
         {/* AI Loading State */}
         {isProcessing && (
-          <div className="flex items-center gap-2.5 px-4 font-frame-mono text-[0.6rem] text-frame-orange py-1">
+          <div className="frame-chat-loading">
             <span>Orquestrando refinamento IA</span>
             <div className="flex gap-1">
-              <span className="w-1 h-1 rounded-full bg-frame-orange animate-bounce delay-100" />
-              <span className="w-1 h-1 rounded-full bg-frame-orange animate-bounce delay-200" />
-              <span className="w-1 h-1 rounded-full bg-frame-orange animate-bounce delay-300" />
+              <span />
+              <span />
+              <span />
             </div>
           </div>
         )}
@@ -143,20 +139,20 @@ ${userMessage}`;
       </div>
 
       {/* Input Row */}
-      <div className="p-4 border-t border-frame-gray-2 bg-frame-gray-1 flex gap-2 shrink-0">
+      <div className="p-4 border-t border-[var(--ds-border)] bg-[var(--ds-surface-1)] flex gap-2 shrink-0">
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ex: reescreva a cena 2 com mais tensão dramática..."
           rows={2}
-          className="flex-1 bg-frame-gray-1 border border-frame-gray-3 text-frame-white px-3 py-2 font-frame-body text-[0.8rem] outline-none transition resize-none focus:border-frame-orange rounded-none min-h-[44px] max-h-[120px]"
+          className="frame-input flex-1 resize-none min-h-[44px] max-h-[120px]"
         />
         <button
           type="button"
           onClick={handleSend}
           disabled={isProcessing || !input.trim()}
-          className="bg-frame-orange text-frame-black border-none px-4 flex items-center justify-center font-frame-mono text-[0.62rem] tracking-[0.1em] uppercase font-medium transition hover:bg-frame-orange-dark disabled:opacity-40 self-end py-3 cursor-pointer shrink-0"
+          className="frame-btn-primary px-4 flex items-center justify-center shrink-0 self-end py-3 cursor-pointer"
         >
           <Send className="w-4 h-4" />
         </button>

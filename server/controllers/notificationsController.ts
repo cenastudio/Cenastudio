@@ -57,6 +57,34 @@ export const markAllAsRead: RequestHandler = (req, res, next) => {
   }
 };
 
+export const clearReadNotifications: RequestHandler = (req, res, next) => {
+  try {
+    const userId = req.user!.id;
+
+    const result = db
+      .prepare("DELETE FROM notifications WHERE user_id = ? AND read = 1")
+      .run(userId);
+
+    res.json({ success: true, data: { removed: result.changes } });
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const clearAllNotifications: RequestHandler = (req, res, next) => {
+  try {
+    const userId = req.user!.id;
+
+    const result = db
+      .prepare("DELETE FROM notifications WHERE user_id = ?")
+      .run(userId);
+
+    res.json({ success: true, data: { removed: result.changes } });
+  } catch (e) {
+    next(e);
+  }
+};
+
 export const getUnreadCount: RequestHandler = (req, res, next) => {
   try {
     const userId = req.user!.id;

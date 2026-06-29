@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Bell, CheckCheck, CheckCircle, AlertTriangle } from "lucide-react";
+import { Bell, CheckCheck, CheckCircle, AlertTriangle, Inbox, Trash2 } from "lucide-react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -106,6 +106,45 @@ export default function NotificationsPopover() {
     }
   };
 
+  const handleClearRead = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/notifications/read`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+      const json = await res.json();
+      if (json.success) {
+        const removed = json.data?.removed ?? 0;
+        setNotifications((prev) => prev.filter((n) => !n.read));
+        toast.success(removed > 0 ? `${removed} notificação(ões) removida(s)` : "Nada para limpar");
+      }
+    } catch {
+      toast.error("Erro ao limpar notificações");
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (!window.confirm("Apagar todas as notificações, incluindo as não lidas?")) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/api/notifications/all`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+      const json = await res.json();
+      if (json.success) {
+        const removed = json.data?.removed ?? 0;
+        setNotifications([]);
+        setUnreadCount(0);
+        toast.success(removed > 0 ? `${removed} notificação(ões) removida(s)` : "Nada para limpar");
+      }
+    } catch {
+      toast.error("Erro ao limpar todas as notificações");
+    }
+  };
+
   const handleMarkRead = async (notification: Notification) => {
     if (notification.read) {
       if (notification.link) setLocation(notification.link);
@@ -135,13 +174,13 @@ export default function NotificationsPopover() {
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="relative flex h-9 w-9 items-center justify-center border border-frame-gray-3 text-frame-gray-light hover:text-frame-orange hover:border-frame-orange transition"
+          className="notification-trigger relative flex h-9 w-9 items-center justify-center border border-frame-gray-3 text-frame-gray-light hover:text-frame-orange hover:border-frame-orange transition"
           title="Notificações"
           aria-label={unreadCount > 0 ? `${unreadCount} notificações não lidas` : "Notificações"}
         >
           <Bell className="w-3.5 h-3.5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center w-4 h-4 text-[0.64rem] font-bold font-frame-mono bg-frame-red text-white rounded-full">
+            <span className="notification-count absolute -top-1 -right-1 flex min-w-4 h-4 items-center justify-center rounded-full px-1 text-[0.58rem] font-bold font-frame-mono bg-frame-orange text-black shadow-[0_0_0_2px_var(--app-surface-strong)]">
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}
@@ -149,42 +188,54 @@ export default function NotificationsPopover() {
       </PopoverTrigger>
       <PopoverContent
         align="end"
-        sideOffset={8}
-        className="w-[min(380px,calc(100vw-1rem))] p-0 bg-frame-black border border-frame-gray-3 shadow-2xl"
+        sideOffset={10}
+        className="notification-panel w-[min(420px,calc(100vw-1rem))] overflow-hidden p-0"
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-frame-gray-3">
-          <span className="font-frame-mono text-[0.65rem] tracking-[0.08em] text-frame-white uppercase">
-            Notificações
-          </span>
+        <div className="notification-header flex items-start justify-between gap-3 px-4 py-4 border-b border-frame-gray-3">
+          <div>
+            <span className="font-frame-mono text-[0.62rem] tracking-[0.18em] text-frame-orange uppercase">
+              Central
+            </span>
+            <div className="mt-1 flex items-center gap-2">
+              <h2 className="font-frame-body text-sm font-semibold text-frame-white">Notificações</h2>
+              {unreadCount > 0 && (
+                <span className="rounded-full border border-frame-orange/35 bg-frame-orange/10 px-2 py-0.5 font-frame-mono text-[0.58rem] text-frame-orange">
+                  {unreadCount > 9 ? "9+" : unreadCount} novas
+                </span>
+              )}
+            </div>
+          </div>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
               size="sm"
               onClick={handleMarkAllRead}
-              className="h-auto px-2 py-1 text-[0.64rem] text-frame-gray-light hover:text-frame-orange gap-1"
+              className="notification-read-all h-8 shrink-0 px-2.5 py-1 text-[0.58rem] text-frame-gray-light hover:text-frame-orange gap-1 border border-frame-gray-3"
             >
               <CheckCheck className="w-3 h-3" />
-              Marcar todas como lidas
+              Marcar lidas
             </Button>
           )}
         </div>
 
-        <ScrollArea className="max-h-[400px]">
+        <ScrollArea className="notification-list h-[min(520px,calc(100vh-260px))] min-h-[260px]">
           {loading && notifications.length === 0 ? (
-            <div className="flex items-center justify-center py-8">
+            <div className="flex items-center justify-center py-10">
               <span className="font-frame-mono text-[0.6rem] text-frame-gray-light">
                 Carregando...
               </span>
             </div>
           ) : notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 gap-2">
-              <Bell className="w-8 h-8 text-frame-gray-3" />
-              <span className="font-frame-mono text-[0.6rem] text-frame-gray-light">
+            <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
+              <div className="flex h-11 w-11 items-center justify-center border border-frame-gray-3 text-frame-gray-light">
+                <Inbox className="w-5 h-5" />
+              </div>
+              <span className="font-frame-mono text-[0.62rem] uppercase tracking-[0.12em] text-frame-gray-light">
                 Nenhuma notificação
               </span>
             </div>
           ) : (
-            <div className="divide-y divide-frame-gray-3">
+            <div className="notification-items p-2">
               {notifications.map((n) => {
                 const Icon = typeIcons[n.type] || Bell;
                 const color = typeColors[n.type] || "text-frame-gray-light";
@@ -194,18 +245,18 @@ export default function NotificationsPopover() {
                     type="button"
                     onClick={() => handleMarkRead(n)}
                     className={cn(
-                      "w-full text-left px-4 py-3 transition hover:bg-frame-gray-3/30 flex gap-3",
-                      !n.read && "bg-frame-gray-3/10",
+                      "notification-item group w-full text-left px-3.5 py-3 transition flex gap-3",
+                      !n.read && "is-unread",
                     )}
                   >
-                    <div className={cn("mt-0.5 shrink-0", color)}>
+                    <div className={cn("notification-icon mt-0.5 shrink-0", color)}>
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <span
                           className={cn(
-                            "font-frame-mono text-[0.6rem] tracking-[0.04em] truncate",
+                            "font-frame-mono text-[0.62rem] tracking-[0.04em] truncate",
                             n.read ? "text-frame-gray-light" : "text-frame-white font-bold",
                           )}
                         >
@@ -220,7 +271,7 @@ export default function NotificationsPopover() {
                       </p>
                     </div>
                     {!n.read && (
-                      <span className="w-1.5 h-1.5 mt-1.5 shrink-0 rounded-full bg-frame-orange" />
+                      <span className="notification-dot w-1.5 h-1.5 mt-1.5 shrink-0 rounded-full bg-frame-orange" />
                     )}
                   </button>
                 );
@@ -228,6 +279,33 @@ export default function NotificationsPopover() {
             </div>
           )}
         </ScrollArea>
+
+        {notifications.length > 0 && (
+          <div className="notification-footer flex items-center justify-between gap-3 border-t border-frame-gray-3 px-3 py-2.5">
+            <span className="font-frame-mono text-[0.58rem] uppercase tracking-[0.12em] text-frame-gray-light">
+              {notifications.filter((n) => !n.read).length} pendente(s)
+            </span>
+            <div className="flex items-center gap-2">
+              {notifications.some((n) => n.read) && (
+                <button
+                  type="button"
+                  onClick={handleClearRead}
+                  className="notification-clear-button inline-flex min-h-8 items-center gap-1.5 border border-frame-gray-3 px-2.5 font-frame-mono text-[0.58rem] uppercase tracking-[0.1em] text-frame-gray-light transition hover:border-frame-orange hover:text-frame-orange"
+                >
+                  Limpar lidas
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleClearAll}
+                className="notification-clear-button inline-flex min-h-8 items-center gap-1.5 border border-frame-gray-3 px-2.5 font-frame-mono text-[0.58rem] uppercase tracking-[0.1em] text-frame-gray-light transition hover:border-frame-red hover:text-frame-red"
+              >
+                <Trash2 className="h-3 w-3" />
+                Limpar todas
+              </button>
+            </div>
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   );
