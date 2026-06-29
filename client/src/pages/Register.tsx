@@ -7,9 +7,8 @@ import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const { t } = useLanguage();
-
 export default function Register() {
+  const { t } = useLanguage();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -129,7 +128,7 @@ export default function Register() {
         {submitting ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />
-            Criando conta...
+            {t("app.auth.creatingAccount")}
           </>
         ) : (
           t("app.auth.createFreeAccount")
@@ -137,13 +136,13 @@ export default function Register() {
       </button>
 
       <AuthLink>
-        Já tem conta?{" "}
+        {t("app.auth.haveAccount")} {" "}
         <button
           type="button"
           onClick={() => setLocation("/login")}
           className="text-frame-orange bg-transparent border-none font-inherit"
         >
-          Entrar
+          {t("app.auth.loginTab")}
         </button>
       </AuthLink>
     </AuthLayout>

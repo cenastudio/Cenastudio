@@ -6,12 +6,11 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const { t } = useLanguage();
-
 export default function AuthCallback() {
+  const { t } = useLanguage();
   const [, setLocation] = useLocation();
   const { refresh, setSession } = useAuth();
-  const [message, setMessage] = useState("Finalizando login...");
+  const [message, setMessage] = useState(() => t("app.auth.finalizingLogin"));
 
   useEffect(() => {
     let mounted = true;

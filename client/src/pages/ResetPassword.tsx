@@ -11,9 +11,8 @@ function getTokenFromUrl(): string | null {
   return new URLSearchParams(window.location.search).get("token");
 }
 
-const { t } = useLanguage();
-
 export default function ResetPassword() {
+  const { t } = useLanguage();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -57,7 +56,7 @@ export default function ResetPassword() {
           onClick={() => setLocation("/forgot-password")}
           className="frame-btn-primary w-full"
         >
-          Solicitar novo link
+          {t("app.auth.requestNewLink")}
         </button>
       </AuthLayout>
     );
@@ -91,7 +90,7 @@ export default function ResetPassword() {
         {submitting ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />
-            Salvando...
+            {t("app.auth.saving")}
           </>
         ) : (
           t("app.auth.resetPassword")
@@ -103,7 +102,7 @@ export default function ResetPassword() {
           onClick={() => setLocation("/login")}
           className="text-frame-orange bg-transparent border-none font-inherit"
         >
-          Voltar ao login
+          {t("app.auth.backToLogin")}
         </button>
       </AuthLink>
     </AuthLayout>

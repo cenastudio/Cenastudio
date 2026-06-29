@@ -1,4 +1,5 @@
 import { useLocation } from "wouter";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AuthLayoutProps {
   title: string;
@@ -10,6 +11,7 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ title, subtitle, children, mode }: AuthLayoutProps) {
   const [, setLocation] = useLocation();
+  const { t } = useLanguage();
 
   return (
     <div className="cena-auth cinematic-theme dark min-h-screen flex flex-col lg:flex-row text-frame-white">
@@ -22,17 +24,17 @@ export default function AuthLayout({ title, subtitle, children, mode }: AuthLayo
             <span className="font-frame-mono text-[0.72rem] uppercase tracking-[0.22em] text-frame-orange">Studio</span>
           </div>
           <h1 className="mt-10 max-w-[480px] font-frame-body text-[clamp(3.2rem,5vw,5.7rem)] font-light leading-[0.94] tracking-normal text-frame-white">
-            Seu estúdio pronto para operar.
+            {t("app.auth.studioReadyTitle")}
           </h1>
           <p className="mt-6 max-w-[430px] text-base font-light leading-relaxed text-frame-gray-light">
-            Projetos, documentos, equipe, arquivos e aprovações entram no mesmo fluxo de produção.
+            {t("app.auth.studioReadyDescription")}
           </p>
           <div className="mt-10 grid gap-4">
-            {["Feito por filmmakers, para filmmakers.", "IA aplicada ao fluxo de produção.", "Acesso seguro ao ambiente do estúdio."].map(
-              (feat) => (
-                <div key={feat} className="flex items-center gap-3 text-sm font-light text-frame-gray-light">
+            {["app.auth.featureFilmmakers", "app.auth.featureAI", "app.auth.featureSecure"].map(
+              (featureKey) => (
+                <div key={featureKey} className="flex items-center gap-3 text-sm font-light text-frame-gray-light">
                   <span className="h-1.5 w-1.5 shrink-0 bg-frame-orange" />
-                  <span>{feat}</span>
+                  <span>{t(featureKey)}</span>
                 </div>
               )
             )}
@@ -54,7 +56,7 @@ export default function AuthLayout({ title, subtitle, children, mode }: AuthLayo
                     : "bg-transparent text-frame-gray-light hover:text-frame-white"
                 }`}
               >
-                Entrar
+                {t("app.auth.loginTab")}
               </button>
               <button
                 type="button"
@@ -65,7 +67,7 @@ export default function AuthLayout({ title, subtitle, children, mode }: AuthLayo
                     : "bg-transparent text-frame-gray-light hover:text-frame-white"
                 }`}
               >
-                Criar conta
+                {t("app.auth.registerTab")}
               </button>
             </div>
           )}
@@ -110,37 +112,39 @@ export function AuthLink({ children }: { children: React.ReactNode }) {
 }
 
 export function AuthLoadingAnimation({
-  message = "Finalizando login...",
+  message,
 }: {
   message?: string;
 }) {
+  const { t } = useLanguage();
+  const statusMessage = message || t("app.auth.finalizingLogin");
+
   return (
     <div className="auth-loading" role="status" aria-live="polite">
       <div className="auth-loading-stage" aria-hidden="true">
-        <div className="auth-loading-orbit auth-loading-orbit-outer" />
-        <div className="auth-loading-orbit auth-loading-orbit-inner" />
-        <div className="auth-loading-core">
+        <div className="auth-loading-halo" />
+        <div className="auth-loading-orbit">
           <span />
           <span />
           <span />
         </div>
-        <div className="auth-loading-scan" />
+        <div className="auth-loading-mark">
+          <span className="auth-loading-mark-line" />
+          <span className="auth-loading-mark-line" />
+          <span className="auth-loading-mark-line" />
+        </div>
       </div>
 
       <div className="space-y-1">
-        <p className="font-frame-mono text-[0.62rem] uppercase tracking-[0.18em] text-frame-orange">
-          Autenticando
+        <p className="auth-loading-label font-frame-mono text-[0.62rem] uppercase tracking-[0.18em] text-frame-orange">
+          <span className="auth-loading-live-dot" aria-hidden="true" />
+          {t("app.auth.authenticating")}
         </p>
-        <p className="text-sm font-light text-frame-cream/75">{message}</p>
+        <p className="text-sm font-light text-frame-cream/75">{statusMessage}</p>
       </div>
 
       <div className="auth-loading-track" aria-hidden="true">
         <div className="auth-loading-runner" />
-        <div className="auth-loading-sparks">
-          <span />
-          <span />
-          <span />
-        </div>
       </div>
     </div>
   );

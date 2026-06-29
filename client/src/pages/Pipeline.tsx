@@ -30,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { motion } from "framer-motion";
+import type { Translate } from "@/contexts/LanguageContext";
 
 interface Opportunity {
   id: number;
@@ -60,17 +61,41 @@ interface ClientOption {
   company?: string | null;
 }
 
-const STAGES = [
-  { id: "prospect", label: t("app.pipeline.lead") as string, description: "Entrou no radar", color: "border-sky-400/40", dot: "bg-sky-400" },
+type StageDefinition = {
+  id: string;
+  description: string;
+  color: string;
+  dot: string;
+} & ({ labelKey: string; label?: never } | { label: string; labelKey?: never });
+
+const STAGE_DEFINITIONS: StageDefinition[] = [
+  { id: "prospect", labelKey: "app.pipeline.lead", description: "Entrou no radar", color: "border-sky-400/40", dot: "bg-sky-400" },
   { id: "meeting", label: "Diagnóstico", description: "Reunião e briefing", color: "border-amber-400/40", dot: "bg-amber-400" },
-  { id: "proposal", label: t("app.pipeline.proposal") as string, description: "Escopo enviado", color: "border-violet-400/40", dot: "bg-violet-400" },
-  { id: "negotiation", label: t("app.pipeline.negotiation") as string, description: "Ajustes finais", color: "border-orange-400/50", dot: "bg-frame-orange" },
+  { id: "proposal", labelKey: "app.pipeline.proposal", description: "Escopo enviado", color: "border-violet-400/40", dot: "bg-violet-400" },
+  { id: "negotiation", labelKey: "app.pipeline.negotiation", description: "Ajustes finais", color: "border-orange-400/50", dot: "bg-frame-orange" },
   { id: "paused", label: "Pausado", description: "Cliente em pausa", color: "border-gray-400/40", dot: "bg-gray-400" },
-  { id: "won", label: t("app.pipeline.closedWon") as string, description: "Virou projeto", color: "border-emerald-400/50", dot: "bg-emerald-400" },
-  { id: "lost", label: t("app.pipeline.closedLost") as string, description: "Encerrado", color: "border-red-400/45", dot: "bg-frame-red" },
+  { id: "won", labelKey: "app.pipeline.closedWon", description: "Virou projeto", color: "border-emerald-400/50", dot: "bg-emerald-400" },
+  { id: "lost", labelKey: "app.pipeline.closedLost", description: "Encerrado", color: "border-red-400/45", dot: "bg-frame-red" },
 ];
 
-const STAGE_ORDER = STAGES.map((stage) => stage.id);
+interface PipelineStage {
+  id: string;
+  label: string;
+  description: string;
+  color: string;
+  dot: string;
+}
+
+const getStages = (t: Translate): PipelineStage[] =>
+  STAGE_DEFINITIONS.map((stage) => ({
+    id: stage.id,
+    description: stage.description,
+    color: stage.color,
+    dot: stage.dot,
+    label: stage.labelKey !== undefined ? t(stage.labelKey) : stage.label,
+  }));
+
+const STAGE_ORDER = STAGE_DEFINITIONS.map((stage) => stage.id);
 
 const emptyForm = {
   title: "",
@@ -84,6 +109,7 @@ const emptyForm = {
 
 function PipelineContent() {
   const { t } = useLanguage();
+  const stages = useMemo(() => getStages(t), [t]);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [stats, setStats] = useState<PipelineStats | null>(null);
   const [clients, setClients] = useState<ClientOption[]>([]);
@@ -298,15 +324,15 @@ function PipelineContent() {
 
   const nextStage = (opportunity: Opportunity) => {
     const index = STAGE_ORDER.indexOf(opportunity.stage);
-    return STAGES[index + 1];
+    return stages[index + 1];
   };
 
   const previousStage = (opportunity: Opportunity) => {
     const index = STAGE_ORDER.indexOf(opportunity.stage);
-    return STAGES[index - 1];
+    return stages[index - 1];
   };
 
-  const stageById = (id: string) => STAGES.find((stage) => stage.id === id) || STAGES[0];
+  const stageById = (id: string) => stages.find((stage) => stage.id === id) || stages[0];
 
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col overflow-x-hidden">
@@ -340,7 +366,7 @@ function PipelineContent() {
                 className="w-full bg-frame-gray-1 border border-frame-gray-3 pl-9 pr-3 py-2.5 text-sm outline-none focus:border-frame-orange appearance-none"
               >
                 <option value="all">{t("app.common.all") as string}</option>
-                {STAGES.map((stage) => (
+                {stages.map((stage) => (
                   <option key={stage.id} value={stage.id}>
                     {stage.label}
                   </option>
@@ -375,7 +401,7 @@ function PipelineContent() {
           </div>
         ) : (
           <section className="flex gap-3 overflow-x-auto pb-4">
-            {STAGES.map((stage) => {
+            {stages.map((stage) => {
               const stageOpps = getOpportunitiesByStage(stage.id);
               return (
                 <div key={stage.id} className={`w-[310px] shrink-0 border ${stage.color} bg-frame-gray-1/10`}>
@@ -593,8 +619,8 @@ function OpportunityCard({
   onEdit: () => void;
   onDelete: () => void;
   onMove: (opportunity: Opportunity, stage: string) => void;
-  previousStage?: (typeof STAGES)[number];
-  nextStage?: (typeof STAGES)[number];
+  previousStage?: PipelineStage;
+  nextStage?: PipelineStage;
 }) {
   const { t } = useLanguage();
   const weighted = ((opportunity.estimated_value || 0) * (opportunity.probability || 0)) / 100;
@@ -706,6 +732,7 @@ function PipelineForm({
   onSubmit: (event: React.FormEvent) => void;
 }) {
   const { t } = useLanguage();
+  const stages = useMemo(() => getStages(t), [t]);
   return (
     <form id="pipeline-form" onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
@@ -746,7 +773,7 @@ function PipelineForm({
             onChange={(event) => updateForm("stage", event.target.value)}
             className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange"
           >
-            {STAGES.map((stage) => (
+            {stages.map((stage) => (
               <option key={stage.id} value={stage.id}>
                 {stage.label}
               </option>

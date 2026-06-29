@@ -45,7 +45,7 @@ export default function Navigation() {
         <div className="hidden items-center gap-1 rounded-md border border-white/15 bg-black/30 p-1 shadow-2xl backdrop-blur-2xl lg:flex">
           {NAVIGATION.map((link) => (
             <button
-              key={link.href}
+              key={`${link.href}-${link.label}`}
               type="button"
               onClick={() => {
                 if (link.href === "#contact") handleContact();
@@ -95,7 +95,7 @@ export default function Navigation() {
         >
           {NAVIGATION.map((link) => (
             <button
-              key={link.href}
+              key={`${link.href}-${link.label}`}
               type="button"
               onClick={() => {
                 if (link.href === "#contact") handleContact();

@@ -1,10 +1,22 @@
 import { LANDING_TOOLS } from "@/shared/tools";
 import { MARQUEE_ITEMS } from "@shared/site";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { localizeTools } from "@/lib/toolTranslations";
 import { motion } from "framer-motion";
 
 export default function ToolsSection() {
-  const { t } = useLanguage();
+  const { locale, t } = useLanguage();
+  const tools = localizeTools(
+    LANDING_TOOLS.map((tool) => ({
+      ...tool,
+      id: tool.number,
+      slug: tool.number,
+      isActive: true,
+      category: "",
+      processingTime: "",
+    })),
+    locale,
+  );
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -52,7 +64,7 @@ export default function ToolsSection() {
           viewport={{ once: true, margin: "-80px" }}
           className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3"
         >
-          {LANDING_TOOLS.map((tool) => (
+          {tools.map((tool) => (
             <motion.div key={tool.number} variants={cardVariants} className="landing-card group p-7">
               <span className="relative z-10 mb-3.5 block text-[1.7rem] grayscale brightness-75 transition-all duration-300 group-hover:grayscale-0 group-hover:brightness-100">
                 {tool.icon}

@@ -9,8 +9,10 @@ export class AppError extends Error {
 }
 
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
-  console.error(err);
   const status = err.status ?? 500;
+  if (!(err instanceof AppError) || status >= 500) {
+    console.error(err);
+  }
   const message =
     process.env.NODE_ENV === "production" && status === 500
       ? "Internal server error"

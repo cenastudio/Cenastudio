@@ -1,9 +1,10 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
-  const { locale, setLocale } = useLanguage();
+  const { locale, setLocale, t } = useLanguage();
 
   const label = locale === "pt" ? "PT" : "EN";
+  const ariaLabel = t("language.label");
 
   const base =
     "min-h-8 px-2 text-[0.62rem] font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-frame-orange/50";
@@ -16,7 +17,7 @@ export default function LanguageSwitcher({ compact = false }: { compact?: boolea
 
   if (compact) {
     return (
-      <span className="inline-flex items-center gap-1" role="group" aria-label="Language">
+      <span className="inline-flex items-center gap-1" role="group" aria-label={ariaLabel}>
         <button
           type="button"
           onClick={() => setLocale("pt")}
@@ -37,7 +38,7 @@ export default function LanguageSwitcher({ compact = false }: { compact?: boolea
   }
 
   return (
-    <span className="inline-flex items-center gap-1" role="group" aria-label="Language">
+    <span className="inline-flex items-center gap-1" role="group" aria-label={ariaLabel}>
       <button
         type="button"
         onClick={() => setLocale("pt")}

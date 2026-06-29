@@ -87,27 +87,27 @@ function Router() {
 
 function App() {
   return (
-    <ErrorBoundary>
-      <ThemeProvider defaultTheme="dark" switchable={true}>
-        <AuthProvider>
-          <ProjectProvider>
-            <AppProvider>
-              <LanguageProvider>
+    <LanguageProvider>
+      <ErrorBoundary>
+        <ThemeProvider defaultTheme="dark" switchable={true}>
+          <AuthProvider>
+            <ProjectProvider>
+              <AppProvider>
                 <TooltipProvider>
                   <FrameShell>
-                  <Toaster />
-                  <CommandPalette />
-                  <Router />
-                  <CheckoutModal />
-                  <DemoModal />
-                </FrameShell>
-              </TooltipProvider>
-              </LanguageProvider>
-            </AppProvider>
-          </ProjectProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </ErrorBoundary>
+                    <Toaster />
+                    <CommandPalette />
+                    <Router />
+                    <CheckoutModal />
+                    <DemoModal />
+                  </FrameShell>
+                </TooltipProvider>
+              </AppProvider>
+            </ProjectProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </ErrorBoundary>
+    </LanguageProvider>
   );
 }
 

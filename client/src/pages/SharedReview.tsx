@@ -41,12 +41,12 @@ interface VideoComment {
   resolved?: number;
 }
 
-const STATUS_COPY: Record<string, { label: string; className: string }> = {
-  approved: { label: t("app.videoReviews.approved"), className: "border-green-500/30 bg-green-500/10 text-green-400" },
-  changes_requested: { label: t("app.videoReviews.changesRequested"), className: "border-orange-500/30 bg-orange-500/10 text-orange-400" },
-  rejected: { label: t("app.videoReviews.rejected"), className: "border-red-500/30 bg-red-500/10 text-red-400" },
-  pending_review: { label: t("app.videoReviews.pending"), className: "border-frame-gray-3 bg-frame-gray-2 text-frame-gray-light" },
-  draft: { label: t("app.videoReviews.pending"), className: "border-frame-gray-3 bg-frame-gray-2 text-frame-gray-light" },
+const STATUS_COPY: Record<string, { labelKey: string; className: string }> = {
+  approved: { labelKey: "app.videoReviews.approved", className: "border-green-500/30 bg-green-500/10 text-green-400" },
+  changes_requested: { labelKey: "app.videoReviews.changesRequested", className: "border-orange-500/30 bg-orange-500/10 text-orange-400" },
+  rejected: { labelKey: "app.videoReviews.rejected", className: "border-red-500/30 bg-red-500/10 text-red-400" },
+  pending_review: { labelKey: "app.videoReviews.pending", className: "border-frame-gray-3 bg-frame-gray-2 text-frame-gray-light" },
+  draft: { labelKey: "app.videoReviews.pending", className: "border-frame-gray-3 bg-frame-gray-2 text-frame-gray-light" },
 };
 
 function formatTimestamp(seconds: number) {
@@ -68,9 +68,8 @@ function formatDate(value: string) {
   });
 }
 
-const { t } = useLanguage();
-
 export default function SharedReview() {
+  const { t } = useLanguage();
   const { token } = useParams<{ token: string }>();
   const composerRef = useRef<HTMLDivElement | null>(null);
   const commentsRef = useRef<HTMLDivElement | null>(null);
@@ -155,12 +154,12 @@ export default function SharedReview() {
     return [
       `Review Room - ${review.title}`,
       `${t("app.videoReviews.project")}: ${review.project_name}`,
-      `${t("app.videoReviews.status")}: ${status.label}`,
+      `${t("app.videoReviews.status")}: ${t(status.labelKey)}`,
       `Link: ${window.location.href}`,
       "",
       t("app.videoReviews.shareInstructions"),
     ].join("\n");
-  }, [review, status.label]);
+  }, [review, status.labelKey, t]);
 
   const summaryText = useMemo(() => {
     if (!review) return "";
@@ -168,7 +167,7 @@ export default function SharedReview() {
       t("app.videoReviews.studioReviewRoom"),
       review.title,
       `Projeto: ${review.project_name}`,
-      `Status: ${status.label}`,
+      `Status: ${t(status.labelKey)}`,
       `${t("app.videoReviews.generatedAt")}: ${new Date().toLocaleString("pt-BR")}`,
       "",
       t("app.videoReviews.comments"),
@@ -178,7 +177,7 @@ export default function SharedReview() {
       )),
     ];
     return lines.join("\n");
-  }, [comments, review, status.label]);
+  }, [comments, review, status.labelKey, t]);
 
   const focusComposer = () => {
     setCommentAnchor(Math.floor(newCommentTimestamp));
@@ -302,7 +301,7 @@ export default function SharedReview() {
       <div className="min-h-screen bg-frame-black flex items-center justify-center p-8">
         <div className="max-w-md border border-frame-gray-3 bg-frame-gray-1 p-8 text-center">
           <AlertCircle className="mx-auto mb-4 h-16 w-16 text-frame-red" />
-          <h2 className="mb-2 text-2xl font-bold text-frame-white">Review não encontrado</h2>
+          <h2 className="mb-2 text-2xl font-bold text-frame-white">{t("app.videoReviews.reviewNotFound")}</h2>
           <p className="mb-4 text-frame-gray-light">
             {error || t("app.videoReviews.linkExpired")}
           </p>
@@ -323,7 +322,7 @@ export default function SharedReview() {
           <div className="flex items-center gap-2">
             <button type="button" onClick={copyShareMessage} className="hidden items-center gap-2 border border-frame-gray-3 px-3 py-2 text-xs text-frame-gray-light transition hover:border-frame-orange hover:text-frame-white sm:inline-flex">
               <Copy className="h-3.5 w-3.5" />
-              Copiar mensagem
+              {t("app.videoReviews.copyMessage")}
             </button>
             <button type="button" onClick={openWhatsapp} className="border border-frame-orange bg-frame-orange px-3 py-2 text-xs font-medium text-black transition hover:bg-frame-orange-dark">
               WhatsApp
@@ -340,7 +339,7 @@ export default function SharedReview() {
         <section className="min-w-0 space-y-5">
           <div className="flex flex-col gap-4 border border-frame-gray-3 bg-frame-gray-1/40 p-4 sm:p-5 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
-              <p className="frame-label mb-3">// Aprovação do cliente</p>
+              <p className="frame-label mb-3">// {t("app.videoReviews.clientApproval")}</p>
               <h1 className="text-[clamp(1.8rem,4vw,3.8rem)] font-light leading-none tracking-normal text-frame-white">
                 {review.title}
               </h1>
@@ -348,18 +347,18 @@ export default function SharedReview() {
                 <p className="mt-3 max-w-3xl text-sm leading-relaxed text-frame-gray-light">{review.description}</p>
               )}
               <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-frame-gray-light">
-                <span>Projeto: {review.project_name}</span>
+                <span>{t("app.videoReviews.project")}: {review.project_name}</span>
                 {review.expires_at && (
                   <span className="inline-flex items-center gap-1.5">
                     <Clock className="h-3.5 w-3.5" />
-                    Expira em {new Date(review.expires_at).toLocaleDateString("pt-BR")}
+                    {t("app.videoReviews.expiresAt")} {new Date(review.expires_at).toLocaleDateString("pt-BR")}
                   </span>
                 )}
               </div>
             </div>
             <span className={`inline-flex w-fit items-center gap-2 border px-3 py-2 font-frame-mono text-[0.64rem] uppercase tracking-[0.14em] ${status.className}`}>
               {review.status === "approved" ? <CheckCircle2 className="h-3.5 w-3.5" /> : review.status === "rejected" ? <XCircle className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
-              {status.label}
+              {t(status.labelKey)}
             </span>
           </div>
 
@@ -373,7 +372,7 @@ export default function SharedReview() {
             />
             <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
               <p className="text-xs leading-relaxed text-frame-gray-light">
-                Clique em um marcador laranja na timeline ou em qualquer comentário para voltar ao tempo exato.
+                {t("app.videoReviews.markerHint")}
               </p>
               <button
                 type="button"
@@ -381,7 +380,7 @@ export default function SharedReview() {
                 className="inline-flex min-h-11 items-center justify-center gap-2 bg-frame-orange px-4 font-frame-mono text-[0.66rem] uppercase tracking-[0.12em] text-black transition hover:bg-frame-orange-dark"
               >
                 <MessageSquare className="h-4 w-4" />
-                Comentar em {formatTimestamp(newCommentTimestamp)}
+                {t("app.videoReviews.commentAt")} {formatTimestamp(newCommentTimestamp)}
               </button>
             </div>
           </div>
@@ -389,15 +388,15 @@ export default function SharedReview() {
           <section className="border border-frame-gray-3 bg-frame-gray-1/60 p-4 sm:p-5">
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="frame-label mb-2">// Decisão final</p>
-                <h2 className="text-xl font-semibold">Enviar resposta para a equipe</h2>
+                <p className="frame-label mb-2">// {t("app.videoReviews.finalDecision")}</p>
+                <h2 className="text-xl font-semibold">{t("app.videoReviews.sendResponseToTeam")}</h2>
                 <p className="mt-1 text-sm text-frame-gray-light">
-                  Quando terminar de assistir, aprove ou solicite ajustes. A equipe será notificada.
+                  {t("app.videoReviews.decisionInstructions")}
                 </p>
               </div>
               {decisionComment && (
                 <div className="border border-frame-gray-3 bg-frame-black/35 px-3 py-2 text-xs text-frame-gray-light">
-                  Última decisão: {decisionComment.author_name} · {formatDate(decisionComment.created_at)}
+                  {t("app.videoReviews.lastDecision")}: {decisionComment.author_name} · {formatDate(decisionComment.created_at)}
                 </div>
               )}
             </div>
@@ -415,7 +414,7 @@ export default function SharedReview() {
                 className="inline-flex min-h-11 items-center justify-center gap-2 border border-green-500/30 bg-green-500/10 px-3 font-frame-mono text-[0.66rem] uppercase tracking-[0.12em] text-green-400 transition hover:bg-green-500/20 disabled:opacity-50"
               >
                 <CheckCircle2 className="h-4 w-4" />
-                Aprovar
+                {t("app.videoReviews.approve")}
               </button>
               <button
                 type="button"
@@ -424,7 +423,7 @@ export default function SharedReview() {
                 className="inline-flex min-h-11 items-center justify-center gap-2 border border-orange-500/30 bg-orange-500/10 px-3 font-frame-mono text-[0.66rem] uppercase tracking-[0.12em] text-orange-400 transition hover:bg-orange-500/20 disabled:opacity-50"
               >
                 <Send className="h-4 w-4" />
-                Pedir ajustes
+                {t("app.videoReviews.requestChanges")}
               </button>
               <button
                 type="button"
@@ -433,7 +432,7 @@ export default function SharedReview() {
                 className="inline-flex min-h-11 items-center justify-center gap-2 border border-red-500/30 bg-red-500/10 px-3 font-frame-mono text-[0.66rem] uppercase tracking-[0.12em] text-red-400 transition hover:bg-red-500/20 disabled:opacity-50"
               >
                 <XCircle className="h-4 w-4" />
-                Rejeitar
+                {t("app.videoReviews.reject")}
               </button>
             </div>
           </section>
@@ -444,8 +443,8 @@ export default function SharedReview() {
             <div className="border-b border-frame-gray-3 p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="frame-label mb-1">// Ajustes</p>
-                  <h2 className="text-lg font-semibold">Comentários ({comments.length})</h2>
+                  <p className="frame-label mb-1">// {t("app.videoReviews.adjustments")}</p>
+                  <h2 className="text-lg font-semibold">{t("app.videoReviews.comments")} ({comments.length})</h2>
                 </div>
                 <button
                   type="button"
@@ -453,7 +452,7 @@ export default function SharedReview() {
                   className="inline-flex items-center gap-2 border border-frame-gray-3 px-3 py-2 text-xs text-frame-gray-light transition hover:border-frame-orange hover:text-frame-white"
                 >
                   <Download className="h-3.5 w-3.5" />
-                  Resumo
+                  {t("app.videoReviews.summary")}
                 </button>
               </div>
               <div className="mt-3 flex items-center gap-2 text-xs text-frame-gray-light">
@@ -466,8 +465,8 @@ export default function SharedReview() {
               {comments.length === 0 ? (
                 <div className="flex h-full min-h-52 flex-col items-center justify-center text-center text-frame-gray-light">
                   <MessageSquare className="mb-4 h-12 w-12 text-frame-gray-4" />
-                  <p>Nenhum comentário ainda</p>
-                  <p className="mt-1 text-sm">Pause o vídeo e envie o primeiro ajuste.</p>
+                  <p>{t("app.videoReviews.noCommentsYet")}</p>
+                  <p className="mt-1 text-sm">{t("app.videoReviews.pauseAndComment")}</p>
                 </div>
               ) : (
                 comments.map((comment) => {

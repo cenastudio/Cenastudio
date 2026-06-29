@@ -79,6 +79,7 @@ vi.mock('@/lib/api', () => ({
     },
     projects: {
       list: vi.fn(),
+      activity: vi.fn(),
       create: vi.fn(),
       get: vi.fn(),
       update: vi.fn(),

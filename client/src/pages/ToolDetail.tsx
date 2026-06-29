@@ -2,16 +2,20 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import AppNavBar from "@/components/AppNavBar";
 import { getToolById } from "@/shared/tools";
 import { getToolIcon } from "@/lib/toolIcons";
+import { localizeTool } from "@/lib/toolTranslations";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ArrowLeft } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 
 function ToolDetailContent() {
-  const { t } = useLanguage();
+  const { locale, t } = useLanguage();
   const [, setLocation] = useLocation();
   const [, params] = useRoute("/tools/:id");
   const toolId = params?.id;
-  const tool = toolId ? getToolById(toolId) : undefined;
+  const toolDefinition = toolId ? getToolById(toolId) : undefined;
+  const tool = toolDefinition
+    ? localizeTool({ ...toolDefinition, isActive: true, number: toolDefinition.id }, locale)
+    : undefined;
 
   if (!tool) {
     return (

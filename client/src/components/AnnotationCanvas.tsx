@@ -247,17 +247,17 @@ export default function AnnotationCanvas({
       />
       {active && (
         <div className="absolute top-2 left-2 z-20 flex items-center gap-1 bg-black/80 p-1.5 rounded">
-          {tools.map((t) => {
-            const Icon = t.icon;
+          {tools.map((toolOption) => {
+            const Icon = toolOption.icon;
             return (
               <button
-                key={t.key}
+                key={toolOption.key}
                 type="button"
-                onClick={() => setTool(t.key)}
+                onClick={() => setTool(toolOption.key)}
                 className={`p-1.5 rounded transition ${
-                  tool === t.key ? "bg-frame-orange text-frame-black" : "text-white/70 hover:text-white hover:bg-white/10"
+                  tool === toolOption.key ? "bg-frame-orange text-frame-black" : "text-white/70 hover:text-white hover:bg-white/10"
                 }`}
-                title={t(t.labelKey) as string}
+                title={t(toolOption.labelKey)}
               >
                 <Icon className="w-3.5 h-3.5" />
               </button>

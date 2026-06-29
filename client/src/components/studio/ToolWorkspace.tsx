@@ -3,6 +3,7 @@ import FormDispatcher from "./forms/FormDispatcher";
 import { Loader2 } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import StudioTextLocalizer from "./StudioTextLocalizer";
 
 interface ToolWorkspaceProps {
   tool: ToolFromApi;
@@ -86,12 +87,14 @@ export default function ToolWorkspace({
 
         {/* Specialized Form Dispatcher */}
         <div className="studio-form-stack space-y-4">
-          <FormDispatcher
-            slug={tool.slug}
-            data={formData}
-            onChange={onChangeField}
-            onSetOutput={onSetOutput}
-          />
+          <StudioTextLocalizer>
+            <FormDispatcher
+              slug={tool.slug}
+              data={formData}
+              onChange={onChangeField}
+              onSetOutput={onSetOutput}
+            />
+          </StudioTextLocalizer>
         </div>
 
         {/* Error Notice */}

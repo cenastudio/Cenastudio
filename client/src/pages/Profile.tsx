@@ -10,8 +10,8 @@ import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-function formatDate(value: string | null | undefined) {
-  if (!value) return t("app.errors.noDateSet");
+function formatDate(value: string | null | undefined, noDateLabel: string) {
+  if (!value) return noDateLabel;
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "long",
@@ -284,7 +284,7 @@ function ProfileContent() {
                 <p className="font-frame-mono text-[0.64rem] tracking-[0.16em] uppercase text-frame-gray-light">
                   Trial ate
                 </p>
-                <p className="text-sm font-semibold mt-1">{formatDate(plan?.trialEndsAt)}</p>
+                <p className="text-sm font-semibold mt-1">{formatDate(plan?.trialEndsAt, t("app.errors.noDateSet"))}</p>
               </div>
             </div>
 

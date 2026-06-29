@@ -2,6 +2,21 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
 import { ArrowRight, CircleDot, MonitorPlay, Play } from "lucide-react";
 
+function HeroTitleLine({ children }: { children: string }) {
+  const match = children.match(/(.*?)(Cena|Scene)([.!?]?)$/i);
+
+  if (!match) return <span>{children}</span>;
+
+  const [, before, accent, punctuation] = match;
+  return (
+    <span>
+      {before}
+      <em>{accent}</em>
+      {punctuation}
+    </span>
+  );
+}
+
 export default function Hero() {
   const { t } = useLanguage();
   const [, setLocation] = useLocation();
@@ -25,9 +40,9 @@ export default function Hero() {
           </div>
 
           <h1 className="landing-hero-title text-[clamp(3.15rem,7vw,7.35rem)]">
-            <span>{t("app.landing.hero.titleLine1") as string}</span>
-            <span>{t("app.landing.hero.titleLine2") as string}</span>
-            <span>{t("app.landing.hero.titleLine3") as string}</span>
+            <HeroTitleLine>{t("app.landing.hero.titleLine1")}</HeroTitleLine>
+            <HeroTitleLine>{t("app.landing.hero.titleLine2")}</HeroTitleLine>
+            <HeroTitleLine>{t("app.landing.hero.titleLine3")}</HeroTitleLine>
           </h1>
 
           <p className="mt-7 max-w-[470px] text-[0.94rem] leading-relaxed text-white/72 sm:text-base">

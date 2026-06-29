@@ -139,7 +139,7 @@ function readJson<T>(key: string, fallback: T): T {
   }
 }
 
-function printHtmlDocument(docHtml: string) {
+function printHtmlDocument(docHtml: string, preparationError: string) {
   const iframe = document.createElement("iframe");
   iframe.style.position = "fixed";
   iframe.style.right = "0";
@@ -158,7 +158,7 @@ function printHtmlDocument(docHtml: string) {
     const frameWindow = iframe.contentWindow;
     if (!frameWindow) {
       cleanup();
-      toast.error(t("app.errors.couldNotPreparePdf") as string);
+      toast.error(preparationError);
       return;
     }
     frameWindow.focus();
@@ -339,7 +339,7 @@ function ProposalsContent() {
       toast.error(t("app.errors.selectAtLeastOneService") as string);
       return;
     }
-    printHtmlDocument(html);
+    printHtmlDocument(html, t("app.errors.couldNotPreparePdf"));
   };
 
   const saveProposal = () => {

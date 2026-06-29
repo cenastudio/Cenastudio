@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { readStudioSettings, saveStudioSettings, type StudioSettings } from "@/lib/studioSettings";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage, type Translate } from "@/contexts/LanguageContext";
 
 type DocType = "briefing" | "roteiro" | "callsheet" | "decupagem" | "orcamento" | "cronograma" | "checklist" | "entrega";
 
@@ -79,6 +79,7 @@ interface DocumentGroup {
   fields: DocumentField[];
 }
 
+function createDocumentForms(t: Translate): Record<DocType, DocumentGroup[]> {
 const COMMON_FIELDS: DocumentGroup = {
   title: t("app.documents.identificationSection"),
   fields: [
@@ -213,6 +214,8 @@ const DOCUMENT_FORMS: Record<DocType, DocumentGroup[]> = {
     },
   ],
 };
+return DOCUMENT_FORMS;
+}
 
 const initialForm: DocumentForm = {
   type: "briefing",
@@ -257,7 +260,7 @@ function renderList(title: string, items: string[], accent: string) {
     .join("")}</div></section>`;
 }
 
-function documentSections(form: DocumentForm) {
+function documentSections(form: DocumentForm, t: Translate) {
   const baseScope = lines(form.scope);
   const baseSchedule = lines(form.schedule);
   const baseCrew = lines(form.crew);
@@ -301,7 +304,7 @@ function documentSections(form: DocumentForm) {
   return defaults[form.type];
 }
 
-function buildDocumentHtml(form: DocumentForm, studio: StudioSettings) {
+function buildDocumentHtml(form: DocumentForm, studio: StudioSettings, t: Translate) {
   const doc = DOC_TYPES.find((item) => item.id === form.type) || DOC_TYPES[0];
   const accent = doc.accent;
   const accentSoft = `${accent}14`;
@@ -318,7 +321,7 @@ function buildDocumentHtml(form: DocumentForm, studio: StudioSettings) {
     ["Cidade", studio.city || t("app.common.toBeDefined")],
   ];
 
-  const content = documentSections(form)
+  const content = documentSections(form, t)
     .map(([title, items]) => renderList(title, items, accent))
     .join("");
 
@@ -371,7 +374,7 @@ function buildDocumentHtml(form: DocumentForm, studio: StudioSettings) {
 </html>`;
 }
 
-function buildDocumentText(form: DocumentForm, studio: StudioSettings) {
+function buildDocumentText(form: DocumentForm, studio: StudioSettings, t: Translate) {
   const doc = DOC_TYPES.find((item) => item.id === form.type) || DOC_TYPES[0];
   const metadata = [
     [t("app.common.client"), form.client || t("app.common.toBeDefined")],
@@ -381,7 +384,7 @@ function buildDocumentText(form: DocumentForm, studio: StudioSettings) {
     [t("app.common.deadline"), form.deadline || t("app.common.toBeDefined")],
     [t("app.documents.location"), form.location || t("app.common.toBeDefined")],
   ];
-  const sections = documentSections(form)
+  const sections = documentSections(form, t)
     .map(([title, items]) => `${title.toUpperCase()}\n${items.map((item) => `- ${item}`).join("\n")}`)
     .join("\n\n");
 
@@ -482,8 +485,9 @@ function DocumentsContent() {
   const [studio, setStudio] = useState<StudioSettings>(() => readStudioSettings());
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const selectedDoc = DOC_TYPES.find((item) => item.id === form.type) || DOC_TYPES[0];
-  const activeGroups = DOCUMENT_FORMS[form.type];
-  const html = useMemo(() => buildDocumentHtml(form, studio), [form, studio]);
+  const documentForms = useMemo(() => createDocumentForms(t), [t]);
+  const activeGroups = documentForms[form.type];
+  const html = useMemo(() => buildDocumentHtml(form, studio, t), [form, studio, t]);
 
   useEffect(() => {
     setSavedDocs(readSavedDocs());
@@ -525,7 +529,7 @@ function DocumentsContent() {
   };
 
   const copyText = async () => {
-    await navigator.clipboard.writeText(buildDocumentText(form, studio));
+    await navigator.clipboard.writeText(buildDocumentText(form, studio, t));
     toast.success(t("app.documents.textCopied"));
   };
 
@@ -538,7 +542,7 @@ function DocumentsContent() {
       new Paragraph({ text: form.title || docType.label, heading: HeadingLevel.TITLE }),
       new Paragraph({ text: `${docType.label} - ${form.client || "Cliente a definir"} - ${form.project || "Projeto a definir"}` }),
       new Paragraph({ text: "" }),
-      ...documentSections(form).flatMap(([title, items]) => [
+      ...documentSections(form, t).flatMap(([title, items]) => [
         new Paragraph({ text: title, heading: HeadingLevel.HEADING_2 }),
         ...items.map((item) => new Paragraph({ text: item, bullet: { level: 0 } })),
       ]),

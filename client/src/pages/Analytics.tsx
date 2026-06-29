@@ -108,8 +108,8 @@ const formatCurrency = (value: number) =>
     maximumFractionDigits: 2,
   }).format(Number(value) || 0);
 
-const formatDate = (value: string | null) => {
-  if (!value) return t("app.analytics.noDueDate");
+const formatDate = (value: string | null, noDateLabel: string) => {
+  if (!value) return noDateLabel;
   return new Date(`${value.slice(0, 10)}T12:00:00`).toLocaleDateString("pt-BR");
 };
 
@@ -472,7 +472,7 @@ function AnalyticsContent() {
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold">{item.description}</p>
                           <p className="mt-1 text-xs text-frame-gray-light">
-                            {item.client_name || item.category} · {formatDate(item.due_date)}
+                            {item.client_name || item.category} · {formatDate(item.due_date, t("app.analytics.noDueDate"))}
                           </p>
                         </div>
                         <p className={item.kind === "income" ? "text-green-500" : "text-red-500"}>
@@ -594,7 +594,7 @@ function AnalyticsContent() {
                       <p className="truncate text-sm font-semibold">{item.description}</p>
                       <p className="truncate text-xs text-frame-gray-light">{item.client_name || item.category}</p>
                     </div>
-                    <p className="hidden text-xs text-frame-gray-light sm:block">{formatDate(item.due_date || item.paid_at)}</p>
+                    <p className="hidden text-xs text-frame-gray-light sm:block">{formatDate(item.due_date || item.paid_at, t("app.analytics.noDueDate"))}</p>
                     <div className="hidden sm:block">
                       <span className={`font-frame-mono text-[0.54rem] uppercase tracking-[0.1em] ${
                         item.status === "settled" ? "text-green-500" : "text-frame-orange"

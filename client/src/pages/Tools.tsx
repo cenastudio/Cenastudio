@@ -1,6 +1,7 @@
 import AppNavBar from "@/components/AppNavBar";
 import { api } from "@/lib/api";
 import { getToolIcon } from "@/lib/toolIcons";
+import { localizeTools } from "@/lib/toolTranslations";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -9,7 +10,7 @@ import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 function ToolsContent() {
-  const { t } = useLanguage();
+  const { locale, t } = useLanguage();
   const [, setLocation] = useLocation();
   const [tools, setTools] = useState<ToolFromApi[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,20 +30,20 @@ function ToolsContent() {
       <AppNavBar />
 
       <section className="px-6 md:px-12 py-14 md:py-20">
-        <p className="frame-label mb-3">// Ferramentas</p>
+        <p className="frame-label mb-3">// {t("app.nav.studioIA")}</p>
         <h1 className="frame-title text-[clamp(2.3rem,4.3vw,3.8rem)] text-frame-white mb-14">
           ESTÚDIO <em className="not-italic text-transparent [-webkit-text-stroke:1px_#f5f0e8]">IA</em>
         </h1>
 
         {loading && (
           <p className="font-frame-mono text-[0.65rem] tracking-[0.15em] uppercase text-frame-gray-light">
-            Carregando ferramentas...
+            {t("app.common.loading")}
           </p>
         )}
         {error && <p className="text-frame-red font-frame-mono text-sm">{error}</p>}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 xl:gap-4">
-          {tools.map((tool) => {
+          {localizeTools(tools, locale).map((tool) => {
             const Icon = getToolIcon(tool.slug);
             return (
               <div
@@ -77,7 +78,7 @@ function ToolsContent() {
                     );
                   }}
                 >
-                  Abrir no studio →
+                  {t("app.tools.openInStudio")} →
                 </button>
               </div>
             );

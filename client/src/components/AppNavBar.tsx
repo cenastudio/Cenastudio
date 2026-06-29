@@ -11,6 +11,7 @@ import { motion } from "framer-motion";
 import NotificationsPopover from "@/components/NotificationsPopover";
 import BrandLogo from "@/components/BrandLogo";
 import AccessibilityFontControls from "@/components/AccessibilityFontControls";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 interface AppNavBarProps {
   children?: React.ReactNode;
@@ -181,6 +182,9 @@ export default function AppNavBar({ children }: AppNavBarProps) {
 
       <div className="flex items-center gap-2.5">
         {children}
+        <div className="hidden sm:flex items-center border border-frame-gray-3 bg-frame-black/40 px-1">
+          <LanguageSwitcher compact />
+        </div>
         {user && (
           <button
             type="button"
@@ -247,6 +251,9 @@ export default function AppNavBar({ children }: AppNavBarProps) {
             ))}
           </nav>
           <div className="mt-3 grid grid-cols-2 gap-2 sm:hidden">
+            <div className="min-h-10 border border-frame-gray-3 px-2 flex items-center justify-center">
+              <LanguageSwitcher compact />
+            </div>
             <button
               type="button"
               onClick={() => {
@@ -257,6 +264,8 @@ export default function AppNavBar({ children }: AppNavBarProps) {
             >
               {t("app.nav.myAccount") as string}
             </button>
+          </div>
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:hidden">
             <button
               type="button"
               onClick={handleBadgeClick}

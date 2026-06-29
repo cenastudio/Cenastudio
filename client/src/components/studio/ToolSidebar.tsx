@@ -3,6 +3,7 @@ import { type ToolFromApi } from "@/lib/api";
 import ContextPanel from "./ContextPanel";
 import ProjectSelector from "./ProjectSelector";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { localizeTools } from "@/lib/toolTranslations";
 
 interface ToolSidebarProps {
   tools: ToolFromApi[];
@@ -31,9 +32,10 @@ const CATEGORIES: CategoryGroup[] = [
 ];
 
 export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolSidebarProps) {
-  const { t } = useLanguage();
+  const { locale, t } = useLanguage();
+  const localizedTools = localizeTools(tools, locale);
   // Helper to find tool by slug
-  const getToolBySlug = (slug: string) => tools.find((t) => t.slug === slug);
+  const getToolBySlug = (slug: string) => localizedTools.find((t) => t.slug === slug);
   const categoryLabels: Record<string, string> = {
     preProduction: t("app.studio.preProduction") as string,
     commercial: t("app.studio.commercial") as string,

@@ -7,9 +7,8 @@ import { Github, Loader2 } from "lucide-react";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const { t } = useLanguage();
-
 export default function Login() {
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -92,7 +91,7 @@ export default function Login() {
             {submitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Entrando...
+                {t("app.auth.signingIn")}
               </>
             ) : (
               t("app.auth.accessStudio")
@@ -114,7 +113,7 @@ export default function Login() {
             className="frame-btn-ghost w-full flex items-center justify-center gap-2"
           >
             <Github className="w-5 h-5" />
-            Entrar com GitHub
+            {t("app.auth.loginWithGithub")}
           </button>
 
           <AuthLink>
@@ -124,7 +123,7 @@ export default function Login() {
               onClick={() => setLocation("/register")}
               className="text-frame-orange bg-transparent border-none font-inherit"
             >
-              Criar conta grátis
+              {t("app.auth.createFreeAccount")}
             </button>
           </AuthLink>
           <AuthLink>

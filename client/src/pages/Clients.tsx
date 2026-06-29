@@ -181,6 +181,7 @@ function SortableClientCard({
   onDelete: (client: Client) => void;
   isDragging?: boolean;
 }) {
+  const { t } = useLanguage();
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: `client-${client.id}`,
   });

@@ -19,10 +19,10 @@ interface AdminUser {
 
 type PlanId = "free" | "pro" | "studio";
 
-const PLANS: Array<{ id: PlanId; label: string; detail: string }> = [
+const PLANS: Array<{ id: PlanId; label: string; detail?: string; detailKey?: string }> = [
   { id: "pro", label: "Pro", detail: "50 geracoes + ferramentas pagas" },
   { id: "studio", label: "Studio", detail: "Ilimitado + acesso total" },
-  { id: "free", label: "Free", detail: t("app.admin.limitedTest") },
+  { id: "free", label: "Free", detailKey: "app.admin.limitedTest" },
 ];
 
 function AdminContent() {
@@ -226,7 +226,9 @@ function AdminContent() {
                   <span className="font-frame-mono text-[0.62rem] uppercase tracking-[0.14em] text-frame-white">
                     {plan.label}
                   </span>
-                  <span className="block text-xs text-frame-gray-light mt-2 leading-relaxed">{plan.detail}</span>
+                  <span className="block text-xs text-frame-gray-light mt-2 leading-relaxed">
+                    {plan.detailKey ? t(plan.detailKey) : plan.detail}
+                  </span>
                 </button>
               ))}
             </div>

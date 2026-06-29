@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useState } from "react";
 import type { Language } from "@/lib/types";
+import { SUPPLEMENTAL_TRANSLATIONS } from "./translationsSupplemental";
 
 export type { Language };
 
@@ -1094,6 +1095,44 @@ const TRANSLATIONS: Record<Language, Record<string, string | Record<string, unkn
         invalidEmail: "Email inválido",
         passwordRequired: "Senha é obrigatória",
         nameRequired: "Nome é obrigatório",
+        accessStudio: "Entrar no estúdio",
+        accountCreatedWithTrial: "Conta criada com período de teste!",
+        createAccount: "Criar conta",
+        createFreeAccount: "Criar conta gratuita",
+        emailPlaceholder: "seu@email.com",
+        invalidLink: "Link inválido",
+        invalidLinkSubtitle: "Solicite um novo link para redefinir sua senha.",
+        loggingIn: "Entrando",
+        loginSubtitle: "Acesse sua operação audiovisual.",
+        namePlaceholder: "Seu nome completo",
+        newPassword: "Nova senha",
+        newPasswordSubtitle: "Crie uma nova senha segura para sua conta.",
+        passwordMinChars: "Use pelo menos 8 caracteres.",
+        passwordPlaceholder: "Sua senha",
+        passwordResetError: "Não foi possível redefinir a senha.",
+        recoverPassword: "Recuperar senha",
+        recoverPasswordSubtitle: "Enviaremos as instruções para o seu e-mail.",
+        repeatPassword: "Repita a senha",
+        sendInstructions: "Enviar instruções",
+        trialIncluded: "Teste do plano incluído",
+        validatingAccess: "Validando seu acesso...",
+        studioReadyTitle: "Seu estúdio pronto para operar.",
+        studioReadyDescription: "Projetos, documentos, equipe, arquivos e aprovações entram no mesmo fluxo de produção.",
+        featureFilmmakers: "Feito por filmmakers, para filmmakers.",
+        featureAI: "IA aplicada ao fluxo de produção.",
+        featureSecure: "Acesso seguro ao ambiente do estúdio.",
+        loginTab: "Entrar",
+        registerTab: "Criar conta",
+        authenticating: "Autenticando",
+        finalizingLogin: "Finalizando login...",
+        signingIn: "Entrando...",
+        checkEmail: "Verifique seu e-mail",
+        resetInstructionsSent: "Se o e-mail existir em nossa base, você receberá as instruções para redefinir sua senha.",
+        backToLogin: "Voltar ao login",
+        creatingAccount: "Criando conta...",
+        sending: "Enviando...",
+        saving: "Salvando...",
+        requestNewLink: "Solicitar novo link",
       },
       notifications: {
         title: "Notificações",
@@ -1121,6 +1160,20 @@ const TRANSLATIONS: Record<Language, Record<string, string | Record<string, unkn
         forbidden: "Você não tem acesso",
         requiredField: "Este campo é obrigatório",
         invalidField: "Valor inválido",
+        createAccount: "Não foi possível criar a conta.",
+        fillAllFields: "Preencha todos os campos obrigatórios.",
+        fillEmailPassword: "Informe e-mail e senha.",
+        finalizeLoginFailed: "Não foi possível finalizar o login.",
+        githubSessionNotFound: "Sessão do GitHub não encontrada.",
+        invalidToken: "Token inválido ou expirado.",
+        invalidTokenMessage: "Este link de redefinição não é mais válido.",
+        loginFailed: "Não foi possível entrar.",
+        passwordMinChars: "A senha deve ter pelo menos 8 caracteres.",
+        passwordsDontMatch: "As senhas não coincidem.",
+        provideEmail: "Informe seu e-mail.",
+        sendRequest: "Não foi possível enviar a solicitação.",
+        supabaseFrontend: "A autenticação não está configurada no frontend.",
+        supabaseNotConfigured: "Login com GitHub não está configurado.",
       },
       company: {
         title: "Configurações da Empresa",
@@ -1149,6 +1202,35 @@ const TRANSLATIONS: Record<Language, Record<string, string | Record<string, unkn
         goTo: "Ir para",
         actions: "Ações",
         noResults: "Nenhum resultado encontrado",
+      },
+      landing: {
+        hero: {
+          subtitle: "Plataforma real para organizar produção, clientes, arquivos e aprovações.",
+          titleLine1: "Operação",
+          titleLine2: "audiovisual",
+          titleLine3: "em Cena.",
+          description: "Um ambiente para produtoras acompanharem briefing, documentos, equipe, arquivos e revisão sem espalhar a operação.",
+          cta: "Entrar no estúdio",
+          watchProduct: "Ver o produto real",
+          filmmakers: "Feito por filmmakers, para filmmakers.",
+          realProduct: "Produto real",
+          reviewProduction: "Review e produção",
+          branding: "Cena Studio · Operação audiovisual",
+        },
+        footer: {
+          eyebrow: "Cena Studio",
+          heading: "PRODUÇÃO ORGANIZADA DO BRIEFING À ENTREGA",
+          copy: "Centralize projetos, documentos, equipe, arquivos e aprovações em um fluxo conectado.",
+          description: "Operação audiovisual conectada por projeto.",
+          enterProduct: "Entrar no produto",
+          scheduleDemo: "Agendar demonstração",
+          allRightsReserved: "Todos os direitos reservados.",
+          license: "Licenciado sob a licença MIT.",
+          madeBy: "Feito por filmmakers, para filmmakers.",
+          secureCheckout: "Checkout seguro",
+          dataProtected: "Dados protegidos",
+          clearPlans: "Planos transparentes",
+        },
       },
       shared: {
         site: {
@@ -2261,6 +2343,44 @@ const TRANSLATIONS: Record<Language, Record<string, string | Record<string, unkn
         invalidEmail: "Invalid email",
         passwordRequired: "Password is required",
         nameRequired: "Name is required",
+        accessStudio: "Enter studio",
+        accountCreatedWithTrial: "Account created with trial access!",
+        createAccount: "Create account",
+        createFreeAccount: "Create free account",
+        emailPlaceholder: "you@email.com",
+        invalidLink: "Invalid link",
+        invalidLinkSubtitle: "Request a new link to reset your password.",
+        loggingIn: "Signing in",
+        loginSubtitle: "Access your audiovisual operation.",
+        namePlaceholder: "Your full name",
+        newPassword: "New password",
+        newPasswordSubtitle: "Create a new secure password for your account.",
+        passwordMinChars: "Use at least 8 characters.",
+        passwordPlaceholder: "Your password",
+        passwordResetError: "Could not reset your password.",
+        recoverPassword: "Recover password",
+        recoverPasswordSubtitle: "We will send instructions to your email.",
+        repeatPassword: "Repeat password",
+        sendInstructions: "Send instructions",
+        trialIncluded: "Plan trial included",
+        validatingAccess: "Validating your access...",
+        studioReadyTitle: "Your studio, ready to operate.",
+        studioReadyDescription: "Projects, documents, teams, files and approvals move through the same production workflow.",
+        featureFilmmakers: "Made by filmmakers, for filmmakers.",
+        featureAI: "AI applied to the production workflow.",
+        featureSecure: "Secure access to your studio environment.",
+        loginTab: "Sign in",
+        registerTab: "Create account",
+        authenticating: "Authenticating",
+        finalizingLogin: "Completing sign-in...",
+        signingIn: "Signing in...",
+        checkEmail: "Check your email",
+        resetInstructionsSent: "If the email exists in our records, you will receive instructions to reset your password.",
+        backToLogin: "Back to sign in",
+        creatingAccount: "Creating account...",
+        sending: "Sending...",
+        saving: "Saving...",
+        requestNewLink: "Request a new link",
       },
       notifications: {
         title: "Notifications",
@@ -2288,6 +2408,20 @@ const TRANSLATIONS: Record<Language, Record<string, string | Record<string, unkn
         forbidden: "You don't have access",
         requiredField: "This field is required",
         invalidField: "Invalid value",
+        createAccount: "Could not create the account.",
+        fillAllFields: "Complete all required fields.",
+        fillEmailPassword: "Enter your email and password.",
+        finalizeLoginFailed: "Could not complete sign-in.",
+        githubSessionNotFound: "GitHub session not found.",
+        invalidToken: "Invalid or expired token.",
+        invalidTokenMessage: "This password reset link is no longer valid.",
+        loginFailed: "Could not sign in.",
+        passwordMinChars: "Password must contain at least 8 characters.",
+        passwordsDontMatch: "Passwords do not match.",
+        provideEmail: "Enter your email.",
+        sendRequest: "Could not send the request.",
+        supabaseFrontend: "Authentication is not configured in the frontend.",
+        supabaseNotConfigured: "GitHub sign-in is not configured.",
       },
       company: {
         title: "Company Settings",
@@ -2330,6 +2464,15 @@ const TRANSLATIONS: Record<Language, Record<string, string | Record<string, unkn
           step1: "Create briefing",
           step2: "Generate documents",
           step3: "Track delivery",
+          titleLine1: "Audiovisual",
+          titleLine2: "operations",
+          titleLine3: "in Scene.",
+          cta: "Enter studio",
+          watchProduct: "See the real product",
+          filmmakers: "Made by filmmakers, for filmmakers.",
+          realProduct: "Real product",
+          reviewProduction: "Review and production",
+          branding: "Cena Studio · Audiovisual operations",
         },
         pricing: {
           title: "Plans",
@@ -2460,11 +2603,31 @@ const TRANSLATIONS: Record<Language, Record<string, string | Record<string, unkn
   },
 };
 
+export function translate(locale: Language, key: string): string {
+  const directValue = (TRANSLATIONS[locale] as Record<string, unknown>)[key];
+  if (typeof directValue === "string") return directValue;
+
+  const parts = key.split(".");
+  let value: unknown = TRANSLATIONS[locale];
+  for (const part of parts) {
+    if (typeof value === "object" && value !== null && part in value) {
+      value = (value as Record<string, unknown>)[part];
+    } else {
+      value = undefined;
+      break;
+    }
+  }
+  if (typeof value === "string") return value;
+  return (SUPPLEMENTAL_TRANSLATIONS[locale] as Record<string, string>)[key] || key;
+}
+
 type LanguageContextType = {
   locale: Language;
   setLocale: (lang: Language) => void;
-  t: (key: string) => string | Record<string, unknown>;
+  t: (key: string) => string;
 };
+
+export type Translate = LanguageContextType["t"];
 
 export const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
@@ -2484,18 +2647,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const t = (key: string): string | Record<string, unknown> => {
-    const parts = key.split(".");
-    let value: unknown = TRANSLATIONS[locale];
-    for (const part of parts) {
-      if (typeof value === "object" && value !== null && part in value) {
-        value = (value as Record<string, unknown>)[part];
-      } else {
-        return key;
-      }
-    }
-    return typeof value === "string" ? value : key;
-  };
+  const t = useCallback((key: string): string => {
+    return translate(locale, key);
+  }, [locale]);
 
   return (
     <LanguageContext.Provider value={{ locale, setLocale: setLocaleCallback, t }}>

@@ -97,18 +97,18 @@ interface ProjectFile {
   size: number | null;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; icon: any; color: string; bg: string }> = {
-  draft: { label: t("app.videoReviews.draft"), icon: HelpCircle, color: "text-frame-gray-light", bg: "bg-frame-gray-3" },
-  pending_review: { label: t("app.videoReviews.pending"), icon: AlertCircle, color: "text-yellow-400", bg: "bg-yellow-500/10" },
-  changes_requested: { label: t("app.videoReviews.changes"), icon: AlertCircle, color: "text-orange-400", bg: "bg-orange-500/10" },
-  approved: { label: t("app.videoReviews.approved"), icon: CheckCircle2, color: "text-green-400", bg: "bg-green-500/10" },
-  rejected: { label: t("app.videoReviews.rejected"), icon: XCircle, color: "text-red-400", bg: "bg-red-500/10" },
+const STATUS_CONFIG: Record<string, { labelKey: string; icon: any; color: string; bg: string }> = {
+  draft: { labelKey: "app.videoReviews.draft", icon: HelpCircle, color: "text-frame-gray-light", bg: "bg-frame-gray-3" },
+  pending_review: { labelKey: "app.videoReviews.pending", icon: AlertCircle, color: "text-yellow-400", bg: "bg-yellow-500/10" },
+  changes_requested: { labelKey: "app.videoReviews.changes", icon: AlertCircle, color: "text-orange-400", bg: "bg-orange-500/10" },
+  approved: { labelKey: "app.videoReviews.approved", icon: CheckCircle2, color: "text-green-400", bg: "bg-green-500/10" },
+  rejected: { labelKey: "app.videoReviews.rejected", icon: XCircle, color: "text-red-400", bg: "bg-red-500/10" },
 };
 
 const STATUS_ACTIONS = [
-  { value: "approved", label: t("app.videoReviews.approve"), color: "border-green-500/30 text-green-400 hover:bg-green-500/10" },
-  { value: "changes_requested", label: t("app.videoReviews.requestChanges"), color: "border-orange-500/30 text-orange-400 hover:bg-orange-500/10" },
-  { value: "rejected", label: t("app.videoReviews.reject"), color: "border-red-500/30 text-red-400 hover:bg-red-500/10" },
+  { value: "approved", labelKey: "app.videoReviews.approve", color: "border-green-500/30 text-green-400 hover:bg-green-500/10" },
+  { value: "changes_requested", labelKey: "app.videoReviews.requestChanges", color: "border-orange-500/30 text-orange-400 hover:bg-orange-500/10" },
+  { value: "rejected", labelKey: "app.videoReviews.reject", color: "border-red-500/30 text-red-400 hover:bg-red-500/10" },
 ];
 
 function VideoReviewsContent() {
@@ -449,19 +449,19 @@ function VideoReviewsContent() {
       <main id="main-content" className="flex-1 flex flex-col min-h-0">
         <div className="border-b border-frame-gray-3 bg-frame-gray-1/20 px-4 sm:px-6 py-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="frame-label">// APROVAÇÃO</p>
+            <p className="frame-label">// {t("app.videoReviews.approval")}</p>
             <h1 className="frame-title text-[clamp(1.6rem,3vw,2.4rem)] leading-none mt-1">REVIEW ROOM</h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {selectedReview && currentStatus && (
               <span className={`inline-flex items-center gap-1.5 px-2 py-1 text-[0.62rem] font-frame-mono uppercase tracking-wider ${currentStatus.bg} ${currentStatus.color} border border-current/20`}>
                 <currentStatus.icon className="w-3 h-3" />
-                {currentStatus.label}
+                {t(currentStatus.labelKey)}
               </span>
             )}
             <button onClick={loadAllReviews} className="frame-btn-ghost flex items-center gap-2">
               <RefreshCw className="w-4 h-4" />
-              Atualizar
+              {t("app.common.refresh")}
             </button>
             {selectedReview && (
               <button onClick={handleGenerateShareLink} className="frame-btn-primary flex items-center gap-2">
@@ -480,7 +480,7 @@ function VideoReviewsContent() {
           <div className="flex-1 grid grid-cols-1 xl:grid-cols-[340px_minmax(0,1fr)_400px] min-h-0">
             <aside className="border-b xl:border-b-0 xl:border-r border-frame-gray-3 bg-frame-gray-1/10 overflow-y-auto">
               <div className="p-4 border-b border-frame-gray-3">
-                <p className="frame-label mb-3">// CRIAR SALA</p>
+                <p className="frame-label mb-3">// {t("app.videoReviews.createRoom")}</p>
                 <div className="space-y-3">
                   <input value={title} onChange={(e) => setTitle(e.target.value)} className="frame-input w-full" placeholder={t("app.videoReviews.reviewTitlePlaceholder")} />
                   <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="frame-input w-full h-20 resize-none" placeholder={t("app.videoReviews.contextPlaceholder")} />
@@ -490,7 +490,7 @@ function VideoReviewsContent() {
                   </div>
                   {videoFiles.length > 0 && (
                     <select value={selectedFileId} onChange={(e) => setSelectedFileId(e.target.value)} className="frame-input w-full">
-                      <option value="">Ou escolha um vídeo do projeto</option>
+                      <option value="">{t("app.videoReviews.chooseProjectVideo")}</option>
                       {videoFiles.map((file) => (
                         <option key={file.id} value={file.id}>{file.original_name}</option>
                       ))}
@@ -499,7 +499,7 @@ function VideoReviewsContent() {
                   {previewUrl && (
                     <div className="border border-frame-orange/30 bg-frame-orange/5 p-3">
                       <p className="text-[0.64rem] font-frame-mono uppercase tracking-wider text-frame-orange mb-1">
-                        Preview detectado
+                        {t("app.videoReviews.previewDetected")}
                       </p>
                       <p className="text-xs text-frame-gray-light break-all">
                         {previewUrl}
@@ -511,19 +511,19 @@ function VideoReviewsContent() {
                     {isCreating ? t("app.videoReviews.creating") : t("app.videoReviews.createApprovalRoom")}
                   </button>
                   <p className="text-[0.62rem] text-frame-gray-light leading-relaxed">
-                    O cliente recebe um link com player, comentários por tempo e ações de aprovação.
+                    {t("app.videoReviews.clientReceivesLink")}
                   </p>
                 </div>
               </div>
 
               <div className="p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="frame-label">// FILA</p>
+                  <p className="frame-label">// {t("app.videoReviews.queue")}</p>
                   <span className="text-xs text-frame-gray-light">{reviews.length}</span>
                 </div>
                 {reviews.length === 0 ? (
                   <div className="border border-dashed border-frame-gray-3 p-5 text-center text-sm text-frame-gray-light">
-                    Nenhum review ainda. Cole um link acima e crie o primeiro.
+                    {t("app.videoReviews.noReviewsYet")}
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -573,7 +573,7 @@ function VideoReviewsContent() {
                         disabled={selectedReview.status === action.value}
                         className={`px-2.5 py-1.5 text-[0.64rem] font-frame-mono uppercase tracking-wider border transition ${action.color} disabled:opacity-45`}
                       >
-                        {action.label}
+                        {t(action.labelKey)}
                       </button>
                     ))}
                   </div>
@@ -592,7 +592,7 @@ function VideoReviewsContent() {
                       pauseRequest={pauseRequest}
                     />
                     <p className="mt-3 text-[0.6rem] font-frame-mono uppercase tracking-wider text-frame-gray-light">
-                      Player de aprovação com comentários por timestamp e marcações no frame.
+                      {t("app.videoReviews.playerHint")}
                     </p>
                   </div>
                 ) : previewUrl ? (
@@ -602,9 +602,9 @@ function VideoReviewsContent() {
                 ) : (
                   <div className="text-center max-w-md border border-dashed border-frame-gray-3 p-10">
                     <Video className="w-16 h-16 mx-auto mb-4 text-frame-gray-light" />
-                    <h2 className="text-xl font-bold mb-2">Sala de aprovação pronta</h2>
+                    <h2 className="text-xl font-bold mb-2">{t("app.videoReviews.roomReady")}</h2>
                     <p className="text-sm text-frame-gray-light">
-                      Cole um link do Drive/YouTube/Vimeo ou escolha um vídeo do projeto. O player aparece aqui antes de enviar ao cliente.
+                      {t("app.videoReviews.roomReadyDescription")}
                     </p>
                   </div>
                 )}
@@ -616,7 +616,7 @@ function VideoReviewsContent() {
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="text-sm font-semibold flex items-center gap-2">
                     <Share2 className="w-4 h-4 text-frame-orange" />
-                    Sala do cliente
+                    {t("app.videoReviews.clientRoom")}
                   </h3>
                   <span className="text-[0.64rem] font-frame-mono uppercase tracking-wider text-frame-gray-light">
                     {selectedReview ? (selectedReview.expires_at ? t("app.videoReviews.linkActive") : t("app.videoReviews.noLink")) : t("app.videoReviews.waiting")}
@@ -637,7 +637,7 @@ function VideoReviewsContent() {
                         className="frame-btn-ghost flex items-center justify-center gap-2"
                       >
                         <Copy className="w-3.5 h-3.5" />
-                        Copiar
+                        {t("app.common.copy")}
                       </button>
                       <a
                         href={selectedShareUrl}
@@ -645,21 +645,21 @@ function VideoReviewsContent() {
                         className="frame-btn-primary flex items-center justify-center gap-2"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
-                        Abrir
+                        {t("app.common.open")}
                       </a>
                     </div>
                   </>
                 ) : selectedReview ? (
                   <button type="button" onClick={handleGenerateShareLink} className="frame-btn-primary w-full flex items-center justify-center gap-2">
                     <Share2 className="w-4 h-4" />
-                    Gerar link do cliente
+                    {t("app.videoReviews.generateClientLink")}
                   </button>
                 ) : (
                   <div className="border border-frame-gray-3 bg-frame-black/30 p-4">
                     <FileVideo className="w-5 h-5 text-frame-orange mb-3" />
-                    <p className="text-sm font-semibold text-frame-white">Crie ou selecione um review</p>
+                    <p className="text-sm font-semibold text-frame-white">{t("app.videoReviews.createOrSelect")}</p>
                     <p className="text-xs text-frame-gray-light mt-2">
-                      Aqui ficam o link público, aprovação, comentários e histórico do vídeo selecionado.
+                      {t("app.videoReviews.sidePanelHint")}
                     </p>
                   </div>
                 )}
@@ -667,7 +667,7 @@ function VideoReviewsContent() {
               <div className="p-4 border-b border-frame-gray-3">
                 <h3 className="text-sm font-semibold flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-frame-orange" />
-                  Comentários
+                  {t("app.videoReviews.comments")}
                   <span className="text-frame-gray-light font-normal text-xs ml-auto">{comments.length}</span>
                 </h3>
               </div>
@@ -693,7 +693,7 @@ function VideoReviewsContent() {
                             {comment.annotations?.length > 0 && (
                               <div className="flex items-center gap-1 mt-1 text-[0.62rem] text-frame-gray-light/50">
                                 <PenLine className="w-2.5 h-2.5" />
-                                {comment.annotations.length} {t("app.videoReviews.annotation")}{comment.annotations.length > 1 ? "ões" : ""} {t("app.videoReviews.onFrame")}
+                                {comment.annotations.length} {comment.annotations.length > 1 ? t("app.videoReviews.annotations") : t("app.videoReviews.annotation")} {t("app.videoReviews.onFrame")}
                               </div>
                             )}
                             <div className="flex items-center gap-2 mt-2">
@@ -703,7 +703,7 @@ function VideoReviewsContent() {
                               </button>
                               <button onClick={() => handleDeleteComment(comment.id)} className="text-[0.64rem] text-frame-gray-light hover:text-red-400 flex items-center gap-1">
                                 <Trash2 className="w-3 h-3" />
-                                Excluir
+                                {t("app.common.delete")}
                               </button>
                             </div>
                           </div>
@@ -713,13 +713,13 @@ function VideoReviewsContent() {
                   ) : (
                     <div className="text-center py-10">
                       <MessageSquare className="w-8 h-8 mx-auto mb-2 text-frame-gray-light/30" />
-                      <p className="text-xs text-frame-gray-light/60">Nenhum comentário ainda</p>
+                      <p className="text-xs text-frame-gray-light/60">{t("app.videoReviews.noCommentsYet")}</p>
                     </div>
                   )
                 ) : (
                   <div className="text-center py-10">
                     <MessageSquare className="w-8 h-8 mx-auto mb-2 text-frame-gray-light/30" />
-                    <p className="text-xs text-frame-gray-light/60">Comentários aparecem quando houver uma sala selecionada</p>
+                    <p className="text-xs text-frame-gray-light/60">{t("app.videoReviews.commentsWhenSelected")}</p>
                   </div>
                 )}
               </div>
@@ -760,7 +760,7 @@ function VideoReviewsContent() {
               <div className="p-6 border-b border-frame-gray-3 flex items-center justify-between">
                 <h2 className="text-lg font-bold flex items-center gap-2">
                   <Share2 className="w-4 h-4 text-frame-orange" />
-                  Link do Cliente
+                  {t("app.videoReviews.clientLink")}
                 </h2>
                 <button onClick={() => setShowShareModal(false)} className="text-frame-gray-light hover:text-frame-white p-1">
                   <X className="w-5 h-5" />
@@ -775,11 +775,11 @@ function VideoReviewsContent() {
                 </div>
                 <a href={shareUrl} target="_self" className="flex items-center gap-2 text-xs text-frame-orange hover:underline">
                   <ExternalLink className="w-3.5 h-3.5" />
-                  Abrir página pública
+                  {t("app.videoReviews.openPublicPage")}
                 </a>
               </div>
               <div className="p-6 border-t border-frame-gray-3">
-                <button onClick={() => setShowShareModal(false)} className="frame-btn-primary w-full">Fechar</button>
+                <button onClick={() => setShowShareModal(false)} className="frame-btn-primary w-full">{t("app.common.close")}</button>
               </div>
             </motion.div>
           </motion.div>
