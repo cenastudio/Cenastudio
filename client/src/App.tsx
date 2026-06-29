@@ -5,9 +5,9 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppProvider } from "@/contexts/AppContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { LanguageProvider } from "@/contexts/LanguageContext";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminUsers from "@/pages/AdminUsers";
 import Analytics from "@/pages/Analytics";
@@ -94,7 +94,7 @@ function App() {
             <AppProvider>
               <LanguageProvider>
                 <TooltipProvider>
-                <FrameShell>
+                  <FrameShell>
                   <Toaster />
                   <CommandPalette />
                   <Router />
