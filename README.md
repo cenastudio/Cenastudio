@@ -328,7 +328,7 @@ SQLite local em `./data/frame.db`. Tabelas principais:
 ### Vercel
 1. Configure as variáveis de ambiente no painel Vercel
 2. Deploy automático via push para branch `main`
-3. URL: https://cena-studio-frame-studio-landing.vercel.app
+3. URL: https://frame-ai-director-correto.vercel.app
 
 ### Variáveis de Ambiente Necessárias
 - `JWT_SECRET` — Obrigatório
