@@ -2604,6 +2604,9 @@ const TRANSLATIONS: Record<Language, Record<string, string | Record<string, unkn
 };
 
 export function translate(locale: Language, key: string): string {
+  const supplementalValue = (SUPPLEMENTAL_TRANSLATIONS[locale] as Record<string, string>)[key];
+  if (supplementalValue) return supplementalValue;
+
   const directValue = (TRANSLATIONS[locale] as Record<string, unknown>)[key];
   if (typeof directValue === "string") return directValue;
 
@@ -2618,7 +2621,7 @@ export function translate(locale: Language, key: string): string {
     }
   }
   if (typeof value === "string") return value;
-  return (SUPPLEMENTAL_TRANSLATIONS[locale] as Record<string, string>)[key] || key;
+  return key;
 }
 
 type LanguageContextType = {

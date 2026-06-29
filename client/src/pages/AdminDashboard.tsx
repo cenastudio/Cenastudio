@@ -20,15 +20,17 @@ interface AdminUser {
 type PlanId = "free" | "pro" | "studio";
 
 const PLANS: Array<{ id: PlanId; label: string; detail?: string; detailKey?: string }> = [
-  { id: "pro", label: "Pro", detail: "50 geracoes + ferramentas pagas" },
-  { id: "studio", label: "Studio", detail: "Ilimitado + acesso total" },
-  { id: "free", label: "Free", detailKey: "app.admin.limitedTest" },
+  { id: "pro", label: "Pro", detailKey: "app.admin.planProDetail" },
+  { id: "studio", label: "Studio", detailKey: "app.admin.planStudioDetail" },
+  { id: "free", label: "Free", detailKey: "app.admin.planFreeDetail" },
 ];
 
 function AdminContent() {
   const { t } = useLanguage();
   const { logout } = useAuth();
   const [, setLocation] = useLocation();
+  const manageAccessTitle = t("app.admin.manageAccess");
+  const [manageAccessFirstWord, ...manageAccessRest] = manageAccessTitle.split(" ");
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [toolCount, setToolCount] = useState(0);
   const [activeToolCount, setActiveToolCount] = useState(0);
@@ -108,7 +110,7 @@ function AdminContent() {
             className="font-frame-mono text-[0.64rem] tracking-[0.09em] uppercase bg-transparent border border-frame-gray-3 text-frame-gray-light px-2.5 py-1.5 transition hover:border-frame-orange hover:text-frame-orange flex items-center gap-1.5"
           >
             <ArrowLeft className="w-3 h-3" />
-            Voltar
+            {t("app.common.back")}
           </button>
           <button
             type="button"
@@ -118,17 +120,17 @@ function AdminContent() {
             <BrandLogo compact className="scale-90 origin-left" />
           </button>
         </div>
-        <p className="font-frame-mono text-[0.64rem] tracking-[0.14em] uppercase text-frame-gold hidden sm:block">
-          Admin
+        <p className="font-frame-mono text-[0.64rem] tracking-[0.14em] uppercase text-frame-orange hidden sm:block">
+          {t("app.admin.adminTitle")}
         </p>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setLocation("/admin/gerenciar")}
-            className="font-frame-mono text-[0.64rem] tracking-[0.09em] uppercase bg-transparent border border-frame-gold/50 text-frame-gold px-2.5 py-1.5 transition hover:border-frame-orange hover:text-frame-orange flex items-center gap-1.5"
+            className="font-frame-mono text-[0.64rem] tracking-[0.09em] uppercase bg-transparent border border-frame-orange/50 text-frame-orange px-2.5 py-1.5 transition hover:border-frame-orange hover:text-frame-white flex items-center gap-1.5"
           >
             <Users className="w-3 h-3" />
-            Usuarios
+            {t("app.admin.users")}
           </button>
           <button
             type="button"
@@ -136,15 +138,15 @@ function AdminContent() {
             className="font-frame-mono text-[0.64rem] tracking-[0.09em] uppercase bg-transparent border border-frame-gray-3 text-frame-gray-light px-2.5 py-1.5 transition hover:border-frame-red hover:text-frame-red flex items-center gap-1.5"
           >
             <LogOut className="w-3 h-3" />
-            Sair
+            {t("app.common.logout")}
           </button>
         </div>
       </header>
 
       <div className="px-4 sm:px-9 py-7 border-b border-frame-gray-2">
-        <p className="frame-label text-frame-gold">Administracao</p>
+        <p className="frame-label text-frame-orange">{t("app.admin.administration")}</p>
         <h1 className="frame-title text-[2.1rem] text-frame-white">
-          GERENCIAR <span className="text-frame-gold">ACESSOS</span>
+          {manageAccessFirstWord} <span className="text-frame-orange">{manageAccessRest.join(" ")}</span>
         </h1>
       </div>
 
@@ -154,7 +156,7 @@ function AdminContent() {
             { label: t("app.admin.users"), value: users.length, icon: Users, accent: "border-b-frame-orange" },
             { label: t("app.admin.paidAccounts"), value: stats.paid, icon: Sparkles, accent: "border-b-frame-green" },
             { label: t("app.admin.admins"), value: stats.admins, icon: Crown, accent: "border-b-[#4d9fff]" },
-            { label: t("app.admin.activeTools"), value: `${activeToolCount}/${toolCount}`, icon: ShieldCheck, accent: "border-b-frame-gold" },
+            { label: t("app.admin.activeTools"), value: `${activeToolCount}/${toolCount}`, icon: ShieldCheck, accent: "border-b-frame-orange" },
           ].map((stat) => {
             const Icon = stat.icon;
             return (
@@ -177,7 +179,7 @@ function AdminContent() {
         <section className="grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-5">
           <div className="bg-frame-gray-2 border border-frame-gray-3 p-5 sm:p-6">
             <h2 className="font-frame-mono text-[0.68rem] tracking-[0.16em] uppercase text-frame-orange mb-5 flex items-center gap-2">
-              <UserPlus className="w-4 h-4" /> Criar usuario de acesso
+              <UserPlus className="w-4 h-4" /> {t("app.admin.createAccessUser")}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               <input
@@ -206,8 +208,8 @@ function AdminContent() {
                 onChange={(e) => setForm({ ...form, role: e.target.value as "user" | "admin" })}
                 className="frame-input"
               >
-                <option value="user">Usuario comum</option>
-                <option value="admin">Administrador</option>
+                <option value="user">{t("app.admin.commonUser")}</option>
+                <option value="admin">{t("app.admin.adminTitle")}</option>
               </select>
             </div>
 
@@ -244,11 +246,11 @@ function AdminContent() {
           </div>
 
           <aside className="bg-frame-gray-2 border border-frame-gray-3 p-5 sm:p-6">
-            <h2 className="font-frame-mono text-[0.68rem] tracking-[0.16em] uppercase text-frame-gold mb-4">
-              Ultimos usuarios
+            <h2 className="font-frame-mono text-[0.68rem] tracking-[0.16em] uppercase text-frame-orange mb-4">
+              {t("app.admin.recentUsers")}
             </h2>
             {loading ? (
-              <p className="text-sm text-frame-gray-light">Carregando...</p>
+              <p className="text-sm text-frame-gray-light">{t("app.common.loading")}</p>
             ) : (
               <div className="space-y-2">
                 {users.slice(0, 6).map((user) => (
@@ -261,7 +263,7 @@ function AdminContent() {
                     </div>
                     <p className="text-xs text-frame-gray-light truncate mt-1">{user.email}</p>
                     <p className="text-[0.64rem] text-frame-gray-muted font-frame-mono uppercase mt-1">
-                      {user.role === "admin" ? t("app.admin.label") : "Usuario"}
+                      {user.role === "admin" ? t("app.admin.adminTitle") : t("app.admin.label")}
                     </p>
                   </div>
                 ))}
@@ -272,7 +274,7 @@ function AdminContent() {
               onClick={() => setLocation("/admin/gerenciar")}
               className="frame-btn-ghost w-full mt-4"
             >
-              Gerenciar todos
+              {t("app.admin.manageAll")}
             </button>
           </aside>
         </section>

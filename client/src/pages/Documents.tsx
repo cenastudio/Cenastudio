@@ -646,7 +646,7 @@ function DocumentsContent() {
                   {t("app.documents.preview") + " " + selectedDoc.label}
                 </span>
                 <p className="mt-1 text-xs text-frame-gray-light">
-                  t("app.documents.pdfInfo")
+                  {t("app.documents.pdfInfo")}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">

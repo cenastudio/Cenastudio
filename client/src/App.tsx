@@ -1,6 +1,5 @@
+import { lazy, Suspense } from "react";
 import FrameShell from "@/components/FrameShell";
-import { CheckoutModal } from "@/components/landing/modals/CheckoutModal";
-import { DemoModal } from "@/components/landing/modals/DemoModal";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppProvider } from "@/contexts/AppContext";
@@ -8,38 +7,49 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import AdminDashboard from "@/pages/AdminDashboard";
-import AdminUsers from "@/pages/AdminUsers";
-import Analytics from "@/pages/Analytics";
-import Clients from "@/pages/Clients";
-import NewClient from "@/pages/NewClient";
-import EditClient from "@/pages/EditClient";
-import Collaborators from "@/pages/Collaborators";
-import CompanySettings from "@/pages/CompanySettings";
-import Dashboard from "@/pages/Dashboard";
-import Documents from "@/pages/Documents";
-import Files from "@/pages/Files";
-import Interactions from "@/pages/Interactions";
-import Landing from "@/pages/Landing";
-import ForgotPassword from "@/pages/ForgotPassword";
-import AuthCallback from "@/pages/AuthCallback";
-import Login from "@/pages/Login";
-import Pipeline from "@/pages/Pipeline";
-import Proposals from "@/pages/Proposals";
-import Profile from "@/pages/Profile";
-import ProjectHub from "@/pages/ProjectHub";
-import Register from "@/pages/Register";
-import ResetPassword from "@/pages/ResetPassword";
-import NotFound from "@/pages/NotFound";
-import Studio from "@/pages/Studio";
-import Success from "@/pages/Success";
-import ToolDetail from "@/pages/ToolDetail";
-import Tools from "@/pages/Tools";
-import VideoReviews from "@/pages/VideoReviews";
-import SharedReview from "@/pages/SharedReview";
 import CommandPalette from "@/components/CommandPalette";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { Route, Switch } from "wouter";
+
+const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
+const AdminUsers = lazy(() => import("@/pages/AdminUsers"));
+const Analytics = lazy(() => import("@/pages/Analytics"));
+const Clients = lazy(() => import("@/pages/Clients"));
+const NewClient = lazy(() => import("@/pages/NewClient"));
+const EditClient = lazy(() => import("@/pages/EditClient"));
+const Collaborators = lazy(() => import("@/pages/Collaborators"));
+const CompanySettings = lazy(() => import("@/pages/CompanySettings"));
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const Documents = lazy(() => import("@/pages/Documents"));
+const Files = lazy(() => import("@/pages/Files"));
+const Interactions = lazy(() => import("@/pages/Interactions"));
+const Landing = lazy(() => import("@/pages/Landing"));
+const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
+const AuthCallback = lazy(() => import("@/pages/AuthCallback"));
+const Login = lazy(() => import("@/pages/Login"));
+const Pipeline = lazy(() => import("@/pages/Pipeline"));
+const Proposals = lazy(() => import("@/pages/Proposals"));
+const Profile = lazy(() => import("@/pages/Profile"));
+const ProjectHub = lazy(() => import("@/pages/ProjectHub"));
+const Register = lazy(() => import("@/pages/Register"));
+const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
+const Studio = lazy(() => import("@/pages/Studio"));
+const Success = lazy(() => import("@/pages/Success"));
+const ToolDetail = lazy(() => import("@/pages/ToolDetail"));
+const Tools = lazy(() => import("@/pages/Tools"));
+const VideoReviews = lazy(() => import("@/pages/VideoReviews"));
+const SharedReview = lazy(() => import("@/pages/SharedReview"));
+const CheckoutModal = lazy(() => import("@/components/landing/modals/CheckoutModal").then((module) => ({ default: module.CheckoutModal })));
+const DemoModal = lazy(() => import("@/components/landing/modals/DemoModal").then((module) => ({ default: module.DemoModal })));
+
+function PageFallback() {
+  return (
+    <div className="min-h-screen bg-frame-black text-frame-white flex items-center justify-center">
+      <span className="font-frame-mono text-[0.68rem] uppercase tracking-[0.18em] text-frame-orange">Carregando</span>
+    </div>
+  );
+}
 
 function Router() {
   return (
@@ -97,9 +107,11 @@ function App() {
                   <FrameShell>
                     <Toaster />
                     <CommandPalette />
-                    <Router />
-                    <CheckoutModal />
-                    <DemoModal />
+                    <Suspense fallback={<PageFallback />}>
+                      <Router />
+                      <CheckoutModal />
+                      <DemoModal />
+                    </Suspense>
                   </FrameShell>
                 </TooltipProvider>
               </AppProvider>
