@@ -66,10 +66,10 @@ Rotas autenticadas: `/dashboard`, `/project/:id`, `/project/:id/*`, `/tools`, `/
 
 ```bash
 cd cena-studio
-pnpm install
+npm install
 cp .env.example .env
 # Edite .env — JWT_SECRET é obrigatório, ANTHROPIC_API_KEY para IA, GITHUB_CLIENT_ID/SECRET para login GitHub
-pnpm dev
+npm run dev
 ```
 
 - Frontend: http://localhost:5173
@@ -88,13 +88,13 @@ Altere estas senhas imediatamente em produção.
 
 | Script | Descrição |
 |--------|-----------|
-| `pnpm dev` | Servidor API + Vite dev (hot reload) |
-| `pnpm build` | Build client + bundle server |
-| `pnpm start` | Servidor produção (serve SPA + API) |
-| `pnpm preview` | Preview do build de produção |
-| `pnpm check` | TypeScript check (`tsc --noEmit`) |
-| `pnpm lint` | TypeScript check (`tsc --noEmit`) |
-| `pnpm format` | Prettier format |
+| `npm run dev` | Servidor API + Vite dev (hot reload) |
+| `npm run build` | Build client + bundle server |
+| `npm start` | Servidor produção (serve SPA + API) |
+| `npm run preview` | Preview do build de produção |
+| `npm run check` | TypeScript check (`tsc --noEmit`) |
+| `npm run lint` | TypeScript check (`tsc --noEmit`) |
+| `npm run format` | Prettier format |
 
 ## 🏗️ Arquitetura
 
