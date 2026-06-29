@@ -7,6 +7,7 @@ import { AppProvider } from "@/contexts/AppContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminUsers from "@/pages/AdminUsers";
 import Analytics from "@/pages/Analytics";
@@ -91,7 +92,8 @@ function App() {
         <AuthProvider>
           <ProjectProvider>
             <AppProvider>
-              <TooltipProvider>
+              <LanguageProvider>
+                <TooltipProvider>
                 <FrameShell>
                   <Toaster />
                   <CommandPalette />
@@ -100,6 +102,7 @@ function App() {
                   <DemoModal />
                 </FrameShell>
               </TooltipProvider>
+              </LanguageProvider>
             </AppProvider>
           </ProjectProvider>
         </AuthProvider>

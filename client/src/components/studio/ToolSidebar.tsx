@@ -2,7 +2,6 @@ import { getToolIcon } from "@/lib/toolIcons";
 import { type ToolFromApi } from "@/lib/api";
 import ContextPanel from "./ContextPanel";
 import ProjectSelector from "./ProjectSelector";
-import BrandLogo from "@/components/BrandLogo";
 
 interface ToolSidebarProps {
   tools: ToolFromApi[];
@@ -35,11 +34,12 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
   const getToolBySlug = (slug: string) => tools.find((t) => t.slug === slug);
 
   return (
-    <aside className="w-full lg:w-64 shrink-0 bg-frame-gray-1 border-b lg:border-b-0 lg:border-r border-frame-gray-2 flex flex-col overflow-x-auto lg:overflow-y-auto">
+    <aside className="studio-sidebar w-full lg:w-[280px] shrink-0 border-b lg:border-b-0 lg:border-r border-frame-gray-2 flex flex-col overflow-x-auto lg:overflow-y-auto">
       {/* Brand Header (Hidden on Mobile) */}
-      <div className="hidden lg:block px-[18px] py-5 border-b border-frame-gray-2">
-        <p className="font-frame-mono text-[0.62rem] tracking-[0.15em] uppercase text-frame-gray-light mt-0.5">
-          Studio WORKSPACE
+      <div className="hidden lg:block px-5 py-5 border-b border-frame-gray-2">
+        <p className="frame-label mb-1">// Studio</p>
+        <p className="font-frame-mono text-[0.62rem] tracking-[0.15em] uppercase text-frame-gray-light">
+          Workspace operacional
         </p>
       </div>
 
@@ -47,7 +47,7 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
       <ProjectSelector />
 
       {/* Categories / Navigation */}
-      <div className="flex lg:flex-col overflow-x-auto lg:overflow-x-visible shrink-0 lg:shrink py-2 lg:py-0 w-full">
+      <div className="flex lg:flex-col overflow-x-auto lg:overflow-x-visible shrink-0 lg:shrink py-2 lg:py-3 w-full">
         {CATEGORIES.map((cat) => {
           // Filter tools belonging to this category
           const categoryTools = cat.slugs
@@ -62,8 +62,8 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
               <p className="hidden lg:block font-frame-mono text-[0.62rem] tracking-[0.2em] uppercase text-frame-gray-muted px-[18px] pt-4 pb-1.5">
                 // {cat.name}
               </p>
-              <div className="flex lg:flex-col gap-1 px-2 lg:px-0">
-{categoryTools.map((t) => {
+              <div className="flex lg:flex-col gap-2 px-2 lg:px-3">
+                {categoryTools.map((t) => {
                    const TIcon = getToolIcon(t.slug);
                    const active = t.id === activeToolId || t.slug === activeToolId;
                   return (
@@ -71,10 +71,10 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
                       key={t.id}
                       type="button"
                       onClick={() => onSelectTool(t.id)}
-                      className={`flex items-center gap-2.5 px-[15px] lg:px-[18px] py-2 lg:py-2.5 text-left border-l-2 transition-colors shrink-0 lg:shrink bg-transparent border-t-0 border-r-0 border-b-0 ${
+                      className={`studio-tool-nav flex items-center gap-2.5 px-3.5 py-2.5 text-left border transition shrink-0 lg:shrink ${
                         active
-                          ? "border-l-frame-orange bg-[rgba(255,77,0,0.08)] text-frame-white"
-                          : "border-l-transparent text-frame-gray-light hover:bg-frame-gray-1 hover:text-frame-white"
+                          ? "is-active border-frame-orange text-frame-white"
+                          : "border-transparent text-frame-gray-light hover:text-frame-white"
                       }`}
                     >
                       <TIcon className={`w-4 h-4 shrink-0 transition-colors ${active ? "text-frame-orange" : "text-frame-gray-light"}`} />

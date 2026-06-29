@@ -27,7 +27,7 @@ export default function ToolWorkspace({
   const renderAutosaveStatus = () => {
     if (!activeProject) {
       return (
-        <span className="font-frame-mono text-[0.62rem] text-frame-gray-muted">
+        <span className="font-frame-mono text-[0.62rem] text-[var(--ds-text-muted)]">
           Estúdio de Pré-produção
         </span>
       );
@@ -36,30 +36,30 @@ export default function ToolWorkspace({
     switch (autosaveStatus) {
       case "saving":
         return (
-          <span className="flex items-center gap-1.5 font-frame-mono text-[0.62rem] text-frame-orange animate-pulse">
-            <span className="w-1 h-1 rounded-full bg-frame-orange" />
+          <span className="flex items-center gap-1.5 font-frame-mono text-[0.62rem] text-[var(--ds-primary)] animate-pulse">
+            <span className="w-1 h-1 rounded-full bg-[var(--ds-primary)]" />
             Salvando...
           </span>
         );
       case "saved":
         return (
-          <span className="flex items-center gap-1.5 font-frame-mono text-[0.62rem] text-[#00c864] transition-colors duration-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#00c864]" />
+          <span className="flex items-center gap-1.5 font-frame-mono text-[0.62rem] text-[var(--ds-success)] transition-colors duration-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--ds-success)]" />
             Salvo
           </span>
         );
       case "error":
         return (
-          <span className="flex items-center gap-1.5 font-frame-mono text-[0.62rem] text-frame-red">
-            <span className="w-1.5 h-1.5 rounded-full bg-frame-red animate-ping" />
+          <span className="flex items-center gap-1.5 font-frame-mono text-[0.62rem] text-[var(--ds-danger)]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--ds-danger)] animate-ping" />
             Erro ao salvar
           </span>
         );
       case "idle":
       default:
         return (
-          <span className="flex items-center gap-1.5 font-frame-mono text-[0.62rem] text-frame-gray-light">
-            <span className="w-1 h-1 rounded-full bg-frame-gray-muted" />
+          <span className="flex items-center gap-1.5 font-frame-mono text-[0.62rem] text-[var(--ds-text-muted)]">
+            <span className="w-1 h-1 rounded-full bg-[var(--ds-text-muted)]" />
             Pronto
           </span>
         );
@@ -67,18 +67,23 @@ export default function ToolWorkspace({
   };
 
   return (
-    <div className="w-full lg:w-[360px] shrink-0 p-5 md:p-6 overflow-y-auto border-b lg:border-b-0 lg:border-r border-frame-gray-2 flex flex-col justify-between h-full bg-frame-black select-none">
+    <div className="studio-input-panel w-full lg:w-[390px] shrink-0 p-4 md:p-5 overflow-y-auto border-b lg:border-b-0 lg:border-r border-[var(--ds-border)] flex flex-col justify-between h-full select-none">
       <div className="space-y-4">
         {/* Workspace Title & Input Marker */}
-        <div className="flex justify-between items-center border-b border-frame-gray-3 pb-2 mb-2">
-          <span className="font-frame-mono text-[0.62rem] tracking-[0.18em] uppercase text-frame-orange font-semibold">
-            Input Params
-          </span>
+        <div className="studio-panel-header flex justify-between items-center border-b border-[var(--ds-border)] pb-3 mb-3">
+          <div>
+            <span className="font-frame-mono text-[0.62rem] tracking-[0.18em] uppercase text-[var(--ds-primary)] font-semibold">
+              Input Params
+            </span>
+            <p className="mt-1 text-[0.75rem] leading-relaxed text-[var(--ds-text-muted)]">
+              Preencha somente o necessário para gerar um documento limpo.
+            </p>
+          </div>
           {renderAutosaveStatus()}
         </div>
 
         {/* Specialized Form Dispatcher */}
-        <div className="space-y-4">
+        <div className="studio-form-stack space-y-4">
           <FormDispatcher
             slug={tool.slug}
             data={formData}
@@ -89,7 +94,7 @@ export default function ToolWorkspace({
 
         {/* Error Notice */}
         {error && (
-          <p className="text-frame-red font-frame-mono text-[0.65rem] mt-2 border border-frame-red/20 bg-frame-red/5 p-2 rounded-sm leading-relaxed">
+          <p className="text-[var(--ds-danger)] font-frame-mono text-[0.65rem] mt-2 border border-[var(--ds-danger)]/20 bg-[var(--ds-danger)]/5 p-2 rounded-[var(--ds-radius-1)] leading-relaxed">
             ⚠ {error}
           </p>
         )}
@@ -97,12 +102,12 @@ export default function ToolWorkspace({
 
       {/* Execution Button */}
       {tool.slug !== "checklist" && (
-        <div className="pt-4 mt-4 border-t border-frame-gray-2">
+        <div className="studio-runbar pt-4 mt-4 border-t border-[var(--ds-border)]">
           <button
             type="button"
             onClick={onExecute}
             disabled={isProcessing}
-            className="w-full bg-frame-orange text-frame-black border-none py-3 font-frame-mono text-[0.72rem] tracking-[0.15em] uppercase font-semibold transition hover:bg-frame-orange-dark disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer rounded-none"
+            className="frame-btn-primary w-full"
           >
             {isProcessing ? (
               <>

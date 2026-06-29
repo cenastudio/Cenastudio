@@ -9,13 +9,10 @@ export default function BrandLogo({ compact = false, className = "", tone = "aut
   const textTone = tone === "onDark" ? "text-[#f9f9f9]" : "text-frame-white";
 
   return (
-    <span className={`inline-flex items-baseline gap-2 leading-none ${className}`} aria-label="Cena Studio">
-      <span className={`font-frame-body font-semibold tracking-normal ${textTone} ${compact ? "text-lg" : "text-xl"}`}>
-        Cena
-      </span>
-      <span className={`font-frame-mono uppercase tracking-[0.18em] text-frame-orange ${compact ? "text-[0.56rem]" : "text-[0.62rem]"}`}>
-        Studio
-      </span>
+    <span className={`brand-wordmark ${compact ? "brand-wordmark--compact" : ""} ${className}`} aria-label="Cena Studio">
+      <span className={`brand-wordmark-cena ${textTone}`}>Cena</span>
+      <span className="brand-wordmark-dot" aria-hidden="true" />
+      <span className={`brand-wordmark-studio ${textTone}`}>Studio</span>
     </span>
   );
 }

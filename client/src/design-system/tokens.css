@@ -24,6 +24,12 @@
   --ds-surface-2: #181818; /* cards */
   --ds-surface-3: #333333; /* borders */
 
+  /* Semantic aliases consumed by component primitives */
+  --ds-bg: var(--ds-surface-0);
+  --ds-border: var(--ds-surface-3);
+  --ds-primary: var(--ds-orange);
+  --ds-text-muted: var(--ds-text-3);
+
   --ds-text-1: #f9f9f9;
   --ds-text-2: #d9c3ab;
   --ds-text-3: #a7a7a7;
@@ -79,4 +85,82 @@
   --ds-dur-1: 120ms;
   --ds-dur-2: 180ms;
   --ds-dur-3: 280ms;
+
+  /* Chat system */
+  --ds-chat-bg-user: var(--ds-surface-2);
+  --ds-chat-border-user: var(--ds-orange);
+  --ds-chat-text-user: var(--ds-text-1);
+  --ds-chat-bg-assistant: var(--ds-surface-1);
+  --ds-chat-border-assistant: var(--ds-surface-3);
+  --ds-chat-text-assistant: var(--ds-cream);
+  --ds-chat-avatar-user-bg: var(--ds-surface-3);
+  --ds-chat-avatar-user-text: var(--ds-text-1);
+  --ds-chat-avatar-assistant-bg: var(--ds-orange);
+  --ds-chat-avatar-assistant-text: var(--ds-black);
+}
+
+/* Chat primitives */
+.frame-chat-bubble {
+  @apply px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap max-w-[min(760px,86vw)];
+  border-width: 1px;
+  border-style: solid;
+  border-radius: var(--ds-radius-1);
+}
+.frame-chat-bubble--user {
+  background: var(--ds-chat-bg-user);
+  border-color: var(--ds-chat-border-user);
+  color: var(--ds-chat-text-user);
+  border-right-width: 2px;
+}
+.frame-chat-bubble--assistant {
+  background: var(--ds-chat-bg-assistant);
+  border-color: var(--ds-chat-border-assistant);
+  color: var(--ds-chat-text-assistant);
+  border-left-width: 2px;
+}
+
+.frame-chat-avatar {
+  @apply w-9 h-9 flex items-center justify-center shrink-0 font-frame-mono text-[0.6rem] font-semibold select-none;
+  border-radius: 50%;
+  border-width: 1px;
+  border-style: solid;
+}
+.frame-chat-avatar--user {
+  background: var(--ds-chat-avatar-user-bg);
+  border-color: var(--ds-chat-avatar-user-bg);
+  color: var(--ds-chat-avatar-user-text);
+}
+.frame-chat-avatar--assistant {
+  background: var(--ds-chat-avatar-assistant-bg);
+  border-color: var(--ds-chat-avatar-assistant-bg);
+  color: var(--ds-chat-avatar-assistant-text);
+}
+
+.frame-chat-loading {
+  @apply flex items-center gap-2 font-frame-mono text-[0.65rem] text-[var(--ds-text-muted)] py-2;
+}
+
+.frame-chat-loading > div {
+  @apply flex gap-1;
+}
+
+.frame-chat-loading > div > span {
+  @apply w-1.5 h-1.5 rounded-full bg-[var(--ds-primary)];
+  animation: ds-chat-bounce 1.2s var(--ds-ease-out) infinite;
+}
+
+.frame-chat-loading > div > span:nth-child(2) { animation-delay: 0.15s; }
+.frame-chat-loading > div > span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes ds-chat-bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame-chat-loading > div > span {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }

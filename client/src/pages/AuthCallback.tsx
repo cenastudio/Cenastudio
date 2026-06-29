@@ -1,4 +1,4 @@
-import AuthLayout from "@/components/AuthLayout";
+import AuthLayout, { AuthLoadingAnimation } from "@/components/AuthLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
@@ -47,9 +47,7 @@ export default function AuthCallback() {
 
   return (
     <AuthLayout mode="login" title="Entrando" subtitle={message}>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-frame-gray-3">
-        <div className="h-full w-1/2 animate-pulse rounded-full bg-frame-orange" />
-      </div>
+      <AuthLoadingAnimation message={message} />
     </AuthLayout>
   );
 }

@@ -21,7 +21,7 @@ function EditClientContent() {
       .then((res) => res.json())
       .then((result) => {
         if (result.success && result.data) {
-          const c = result.data;
+          const c = result.data.client ?? result.data;
           setData({
             name: c.name || "",
             company: c.company || "",
@@ -45,6 +45,7 @@ function EditClientContent() {
             billingCycle: c.billing_cycle || "",
             paymentMethod: c.payment_method || "",
             taxId: c.tax_id || "",
+            totalSpent: c.total_spent?.toString() || "",
           });
         } else {
           setError(result.error || "Cliente não encontrado");
@@ -81,6 +82,7 @@ function EditClientContent() {
           billing_cycle: data.billingCycle.trim() || undefined,
           payment_method: data.paymentMethod.trim() || undefined,
           tax_id: data.taxId.trim() || undefined,
+          total_spent: data.totalSpent ? Number(data.totalSpent) : undefined,
         }),
       });
       const result = await response.json();

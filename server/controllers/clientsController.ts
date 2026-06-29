@@ -89,7 +89,7 @@ export const createClient: RequestHandler = (req, res, next) => {
       name, company, email, phone, segment, status, notes,
       address, city, state, country, website, linkedin, instagram,
       industry, company_size, annual_revenue, contact_person, contact_role,
-      billing_cycle, payment_method, tax_id,
+      billing_cycle, payment_method, tax_id, total_spent, workflow_stage,
     } = req.body;
 
     if (!name || !name.trim()) {
@@ -102,13 +102,13 @@ export const createClient: RequestHandler = (req, res, next) => {
           user_id, name, company, email, phone, segment, status, notes,
           address, city, state, country, website, linkedin, instagram,
           industry, company_size, annual_revenue, contact_person, contact_role,
-          billing_cycle, payment_method, tax_id,
+          billing_cycle, payment_method, tax_id, total_spent, workflow_stage,
           first_contact_at, last_contact_at
         ) VALUES (
           ?, ?, ?, ?, ?, ?, ?, ?,
           ?, ?, ?, ?, ?, ?, ?,
           ?, ?, ?, ?, ?,
-          ?, ?, ?,
+          ?, ?, ?, ?, ?,
           datetime('now'), datetime('now')
         )`,
       )
@@ -136,6 +136,8 @@ export const createClient: RequestHandler = (req, res, next) => {
         billing_cycle || null,
         payment_method || null,
         tax_id?.trim() || null,
+        total_spent != null ? Number(total_spent) || 0 : 0,
+        workflow_stage || "prospect",
       );
 
     const newClient = db.prepare("SELECT * FROM clients WHERE id = ?").get(result.lastInsertRowid);

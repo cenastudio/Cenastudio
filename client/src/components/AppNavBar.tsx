@@ -119,10 +119,11 @@ export default function AppNavBar({ children }: AppNavBarProps) {
         <button
           type="button"
           onClick={() => {
-            setLocation("/tools");
+            setLocation("/dashboard");
             setMobileMenuOpen(false);
           }}
           className="bg-transparent border-none"
+          aria-label="Voltar ao painel"
         >
           <BrandLogo compact className="scale-90 origin-left" />
         </button>
@@ -162,6 +163,18 @@ export default function AppNavBar({ children }: AppNavBarProps) {
             </div>
           )}
         </div>
+        {user && (
+          <button
+            type="button"
+            onClick={handleOpenCommandPalette}
+            className="command-palette-trigger inline-flex"
+            title="Buscar e navegar com Command + K"
+            aria-label="Abrir busca"
+          >
+            <Search className="h-3.5 w-3.5" />
+            <kbd>⌘K</kbd>
+          </button>
+        )}
       </nav>
 
       <div className="flex items-center gap-2.5">
@@ -170,13 +183,12 @@ export default function AppNavBar({ children }: AppNavBarProps) {
           <button
             type="button"
             onClick={handleOpenCommandPalette}
-            className="hidden lg:flex h-9 items-center gap-2 border border-frame-gray-3 bg-frame-gray-1/70 px-2.5 font-frame-mono text-[0.64rem] uppercase tracking-[0.1em] text-frame-gray-light transition hover:border-frame-orange hover:text-frame-white"
+            className="command-palette-trigger inline-flex xl:hidden"
             title="Buscar e navegar com Command + K"
             aria-label="Abrir busca"
           >
-            <Search className="h-3.5 w-3.5 text-frame-orange" />
-            <span className="hidden 2xl:inline">Buscar</span>
-            <kbd className="hidden 2xl:inline border border-frame-gray-3 px-1.5 py-0.5 text-[0.6rem] text-frame-gray-muted">⌘K</kbd>
+            <Search className="h-3.5 w-3.5" />
+            <kbd className="hidden lg:inline">⌘K</kbd>
           </button>
         )}
         {user && (
