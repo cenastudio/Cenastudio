@@ -15,6 +15,7 @@
     "landing:capture": "node scripts/capture-landing-screens.mjs",
     "verify": "npm run check && npm run test && npm run build",
     "launch:check": "node scripts/launch-check.mjs",
+    "production:smoke": "node scripts/production-auth-smoke.mjs",
     "lint": "tsc --noEmit",
     "format": "prettier --write ."
   },
