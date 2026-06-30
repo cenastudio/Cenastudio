@@ -401,7 +401,6 @@ export function createResetToken(email: string) {
     expires,
   );
 
-  console.log(`[DEV] Reset token for ${normalized}: ${token}`);
   return token;
 }
 

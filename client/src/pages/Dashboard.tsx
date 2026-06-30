@@ -16,11 +16,13 @@ import {
   ChevronRight,
   Loader2,
   Clock,
+  CalendarClock,
   Building2,
   Target,
-  CheckCircle2,
-  AlertCircle,
   Sparkles,
+  FileText,
+  ListChecks,
+  ArrowUpRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -53,6 +55,13 @@ const getMetadata = (p: Project): ProjectMetadata => {
   } catch {
     return {};
   }
+};
+
+const formatDate = (value?: string) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 };
 
 function DashboardContent() {
@@ -125,6 +134,63 @@ function DashboardContent() {
   const activeProjects = projects.filter((p) => p.status === "active");
   const recentProject = projects[0];
   const pendingBriefings = projects.filter((p) => !getMetadata(p).objective && !getMetadata(p).creativeGoals?.format);
+  const projectsWithoutDeadline = activeProjects.filter((p) => !getMetadata(p).deadline);
+  const focusProject = pinnedProjects[0] || recentProject;
+  const focusMeta = focusProject ? getMetadata(focusProject) : null;
+  const focusClient = focusMeta?.creativeGoals?.client;
+  const focusFormat = focusMeta?.creativeGoals?.format;
+  const focusDeadline = focusMeta?.deadline;
+  const focusStatus = !focusProject
+    ? t("app.dashboard.statusEmpty")
+    : !focusMeta?.objective && !focusFormat
+      ? t("app.dashboard.statusBriefing")
+      : focusProject.status === "completed"
+        ? t("app.dashboard.statusDelivery")
+        : t("app.dashboard.statusProduction");
+  const focusNextAction = !focusProject
+    ? t("app.dashboard.actionCreateProject")
+    : !focusMeta?.objective && !focusFormat
+      ? t("app.dashboard.actionCompleteBriefing")
+      : !focusDeadline
+        ? t("app.dashboard.actionDefineDeadline")
+        : t("app.dashboard.actionOpenHub");
+  const directorQueue = [
+    ...pendingBriefings.slice(0, 2).map((project) => ({
+      id: `briefing-${project.id}`,
+      label: t("app.dashboard.queueBriefing"),
+      detail: project.name,
+      icon: FileText,
+      tone: "text-frame-orange",
+      action: () => setLocation(`/project/${project.id}/studio/07`),
+    })),
+    ...projectsWithoutDeadline.slice(0, 2).map((project) => ({
+      id: `deadline-${project.id}`,
+      label: t("app.dashboard.queueDeadline"),
+      detail: project.name,
+      icon: CalendarClock,
+      tone: "text-amber-500",
+      action: () => setLocation(`/project/${project.id}`),
+    })),
+    ...activities.slice(0, 2).map((activity) => ({
+      id: `activity-${activity.id}`,
+      label: t("app.dashboard.queueReviewOutput"),
+      detail: activity.projectName || `${t("app.common.noData")} #${activity.toolId}`,
+      icon: Sparkles,
+      tone: "text-frame-orange",
+      action: () => {
+        if (activity.projectId) setLocation(`/project/${activity.projectId}/studio/${activity.toolId}`);
+        else setLocation(`/studio/${activity.toolId}`);
+      },
+    })),
+  ].slice(0, 5);
+
+  const getActivityLabel = (act: RecentActivity) => {
+    const projectLabel = act.projectName ? ` · ${act.projectName}` : "";
+    if (act.toolId === "05") return `${t("app.dashboard.activityProposal")}${projectLabel}`;
+    if (act.toolId === "07") return `${t("app.dashboard.activityBriefing")}${projectLabel}`;
+    if (act.toolId === "03") return `${t("app.dashboard.activityCallsheet")}${projectLabel}`;
+    return `${t("app.dashboard.activityGenerated")}${projectLabel}`;
+  };
 
   // Toggle Pinned status in metadataJson
   const handleTogglePin = async (p: Project, e: React.MouseEvent) => {
@@ -224,14 +290,20 @@ function DashboardContent() {
           </div>
 
           {/* Quick Stats Grid */}
-          <div className="flex flex-wrap gap-4 shrink-0 font-frame-mono">
-            <div className="px-4 py-3 border border-frame-gray-3 bg-frame-gray-1/30 min-w-[120px]">
+          <div className="flex flex-wrap gap-3 shrink-0 font-frame-mono">
+            <div className="px-4 py-3 border border-frame-gray-3 bg-frame-gray-1/30 min-w-[112px]">
               <span className="block text-[0.62rem] text-frame-gray-light tracking-widest uppercase mb-1">
                 {t("app.dashboard.activeProjects") as string}
               </span>
-              <span className="text-xl font-bold text-frame-white">{projects.length}</span>
+              <span className="text-xl font-bold text-frame-white">{activeProjects.length}</span>
             </div>
-            <div className="px-4 py-3 border border-frame-gray-3 bg-frame-gray-1/30 min-w-[140px]">
+            <div className="px-4 py-3 border border-frame-gray-3 bg-frame-gray-1/30 min-w-[112px]">
+              <span className="block text-[0.62rem] text-frame-gray-light tracking-widest uppercase mb-1">
+                {t("app.dashboard.pendingBriefings") as string}
+              </span>
+              <span className="text-xl font-bold text-frame-white">{pendingBriefings.length}</span>
+            </div>
+            <div className="px-4 py-3 border border-frame-gray-3 bg-frame-gray-1/30 min-w-[132px]">
               <span className="block text-[0.62rem] text-frame-gray-light tracking-widest uppercase mb-1">
                 {t("app.profile.currentPlan") as string}
               </span>
@@ -252,28 +324,50 @@ function DashboardContent() {
           </div>
         </div>
 
-        <section className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-          <div className="lg:col-span-2 border border-frame-gray-3 bg-frame-gray-1/20 p-5">
-            <div className="flex items-center justify-between gap-4 mb-4">
+        <section className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)] gap-5">
+          <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-5 sm:p-6">
+            <div className="flex items-start justify-between gap-4 mb-5">
               <div>
-                <p className="frame-label mb-1">// {t("app.common.next") as string}</p>
-                <h2 className="text-frame-white font-semibold tracking-tight">
-                  {recentProject ? t("app.dashboard.projectHub") as string : t("app.dashboard.createFirstProject") as string}
+                <p className="frame-label mb-1">// {t("app.dashboard.focusLabel") as string}</p>
+                <h2 className="frame-title text-[clamp(1.7rem,3vw,2.6rem)] leading-none text-frame-white">
+                  {focusProject ? focusProject.name : t("app.dashboard.createFirstProject") as string}
                 </h2>
               </div>
-              <Sparkles className="w-4 h-4 text-frame-orange shrink-0" />
+              <span className="font-frame-mono text-[0.62rem] tracking-[0.15em] uppercase text-frame-orange border border-frame-orange/30 px-2 py-1">
+                {focusStatus as string}
+              </span>
             </div>
-            <p className="text-sm text-frame-gray-light leading-relaxed mb-4">
-              {recentProject
-                ? `Último projeto: ${recentProject.name}. Abra o hub para ver briefing, arquivos, aprovações e equipe no mesmo fluxo.`
+            <p className="text-sm text-frame-gray-light leading-relaxed max-w-2xl mb-5">
+              {focusProject
+                ? focusProject.description || t("app.dashboard.focusDescriptionFallback") as string
                 : t("app.dashboard.createFirstProjectDesc") as string}
             </p>
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-5">
+              <div className="border border-frame-gray-3 bg-frame-black/40 p-3">
+                <span className="font-frame-mono text-[0.58rem] tracking-[0.14em] uppercase text-frame-gray-light">{t("app.dashboard.nextAction") as string}</span>
+                <strong className="block text-sm text-frame-white mt-1 leading-tight">{focusNextAction as string}</strong>
+              </div>
+              <div className="border border-frame-gray-3 bg-frame-black/40 p-3">
+                <span className="font-frame-mono text-[0.58rem] tracking-[0.14em] uppercase text-frame-gray-light">{t("app.dashboard.client") as string}</span>
+                <strong className="block text-sm text-frame-white mt-1 truncate">{focusClient || t("app.common.noData") as string}</strong>
+              </div>
+              <div className="border border-frame-gray-3 bg-frame-black/40 p-3">
+                <span className="font-frame-mono text-[0.58rem] tracking-[0.14em] uppercase text-frame-gray-light">{t("app.studio.metadataModal.format") as string}</span>
+                <strong className="block text-sm text-frame-white mt-1 truncate">{focusFormat || t("app.common.noData") as string}</strong>
+              </div>
+              <div className="border border-frame-gray-3 bg-frame-black/40 p-3">
+                <span className="font-frame-mono text-[0.58rem] tracking-[0.14em] uppercase text-frame-gray-light">{t("app.dashboard.deadline") as string}</span>
+                <strong className="block text-sm text-frame-white mt-1">{formatDate(focusDeadline) || t("app.common.noData") as string}</strong>
+              </div>
+            </div>
+
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => {
-                  if (recentProject) {
-                    setLocation(`/project/${recentProject.id}`);
+                  if (focusProject) {
+                    setLocation(`/project/${focusProject.id}`);
                     return;
                   }
                   resetCreateForm();
@@ -281,13 +375,13 @@ function DashboardContent() {
                 }}
                 className="frame-btn-primary !py-2.5 !px-4 !text-[0.6rem] flex items-center gap-2"
               >
-                {recentProject ? t("app.dashboard.projectHub") as string : t("app.dashboard.createProject") as string}
+                {focusProject ? t("app.dashboard.projectHub") as string : t("app.dashboard.createProject") as string}
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
-              {recentProject && (
+              {focusProject && (
                 <button
                   type="button"
-                  onClick={() => setLocation(`/project/${recentProject.id}/studio/briefing`)}
+                  onClick={() => setLocation(`/project/${focusProject.id}/studio/07`)}
                   className="frame-btn-ghost !py-2.5 !px-4 !text-[0.6rem] flex items-center gap-2"
                 >
                   {t("app.studio.timeline.briefing") as string}
@@ -297,26 +391,40 @@ function DashboardContent() {
             </div>
           </div>
 
-          <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="font-frame-mono text-[0.64rem] tracking-[0.15em] uppercase text-frame-gray-light">
-                {t("app.dashboard.activeProjects") as string}
-              </span>
-              <CheckCircle2 className="w-4 h-4 text-frame-orange" />
+          <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-5 sm:p-6">
+            <div className="flex items-center justify-between gap-4 border-b border-frame-gray-3 pb-3 mb-4">
+              <div>
+                <p className="frame-label">// {t("app.dashboard.radarLabel") as string}</p>
+                <h2 className="text-frame-white font-semibold tracking-tight mt-1">{t("app.dashboard.directorQueue") as string}</h2>
+              </div>
+              <ListChecks className="w-4 h-4 text-frame-orange shrink-0" />
             </div>
-            <strong className="block text-3xl text-frame-white">{activeProjects.length}</strong>
-            <p className="text-xs text-frame-gray-light mt-2">{t("app.dashboard.activeProjectsDesc") as string}</p>
-          </div>
-
-          <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="font-frame-mono text-[0.64rem] tracking-[0.15em] uppercase text-frame-gray-light">
-                {t("app.dashboard.pendingBriefings") as string}
-              </span>
-              <AlertCircle className="w-4 h-4 text-frame-orange" />
-            </div>
-            <strong className="block text-3xl text-frame-white">{pendingBriefings.length}</strong>
-            <p className="text-xs text-frame-gray-light mt-2">{t("app.dashboard.pendingBriefingsDesc") as string}</p>
+            {directorQueue.length ? (
+              <div className="space-y-2">
+                {directorQueue.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={item.action}
+                      className="w-full group border border-frame-gray-3 bg-frame-black/40 hover:border-frame-orange/50 p-3 text-left transition flex items-center gap-3"
+                    >
+                      <Icon className={`w-4 h-4 shrink-0 ${item.tone}`} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-frame-mono text-[0.58rem] tracking-[0.14em] uppercase text-frame-gray-light">{item.label as string}</span>
+                        <strong className="block text-sm text-frame-white truncate group-hover:text-frame-orange">{item.detail}</strong>
+                      </span>
+                      <ArrowUpRight className="w-3.5 h-3.5 text-frame-gray-light group-hover:text-frame-orange" />
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="border border-dashed border-frame-gray-3 p-5 text-sm text-frame-gray-light">
+                {t("app.dashboard.queueEmpty") as string}
+              </div>
+            )}
           </div>
         </section>
 
@@ -527,13 +635,22 @@ function DashboardContent() {
                       </div>
 
                       <p className="text-[0.76rem] font-medium text-frame-white leading-normal group-hover:text-frame-orange transition-colors">
-                        {t("app.studio.generationComplete") as string}
+                        {getActivityLabel(act)}
                       </p>
 
                       {act.projectName && (
-                        <div className="flex items-center gap-1 font-frame-mono text-[0.62rem] text-frame-gray-light mt-1 pt-1.5 border-t border-frame-gray-3/40">
-                          <Folder className="w-2.5 h-2.5 text-frame-orange" />
-                          <span className="truncate">{act.projectName}</span>
+                        <div className="flex items-center justify-between gap-2 font-frame-mono text-[0.62rem] text-frame-gray-light mt-1 pt-1.5 border-t border-frame-gray-3/40">
+                          <span className="flex items-center gap-1 min-w-0">
+                            <Folder className="w-2.5 h-2.5 text-frame-orange shrink-0" />
+                            <span className="truncate">{act.projectName}</span>
+                          </span>
+                          <span className="text-frame-orange uppercase tracking-[0.12em] shrink-0">{t("app.common.open") as string}</span>
+                        </div>
+                      )}
+
+                      {!act.projectName && (
+                        <div className="flex items-center justify-end font-frame-mono text-[0.62rem] text-frame-orange mt-1 pt-1.5 border-t border-frame-gray-3/40 uppercase tracking-[0.12em]">
+                          {t("app.common.open") as string}
                         </div>
                       )}
                     </div>

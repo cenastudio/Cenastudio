@@ -1,5 +1,5 @@
 import React from "react";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 
@@ -37,7 +37,7 @@ describe("application module", () => {
     });
 
     expect(container).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "EN" }));
+    fireEvent.click(await screen.findByRole("button", { name: "EN" }));
     expect(container?.textContent).toContain("AUDIOVISUAL");
     expect(container?.textContent).not.toMatch(/app\.[a-z]/i);
   });
@@ -51,7 +51,9 @@ describe("application module", () => {
     await act(async () => {
       container = render(React.createElement(App)).container;
     });
-    expect(container?.textContent).toContain("Access your audiovisual operation.");
+    await waitFor(() => {
+      expect(container?.textContent).toContain("Access your audiovisual operation.");
+    });
     expect(container?.textContent).not.toMatch(/app\.[a-z]/i);
     vi.mocked(window.localStorage.getItem).mockReset();
   });
@@ -92,7 +94,9 @@ describe("application module", () => {
       container = render(React.createElement(App)).container;
     });
 
-    expect(screen.getAllByRole("group", { name: "Idioma" }).length).toBeGreaterThan(0);
+    await waitFor(() => {
+      expect(screen.getAllByRole("group", { name: "Idioma" }).length).toBeGreaterThan(0);
+    });
     fireEvent.click(screen.getAllByRole("button", { name: "EN" })[0]);
     expect(container?.textContent).toContain("Dashboard");
     expect(container?.textContent).not.toMatch(/app\.[a-z]/i);

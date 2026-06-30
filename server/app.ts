@@ -10,6 +10,7 @@ import { requireEnvOrThrow } from "./controllers/contactController.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { initDatabase } from "./models/db.js";
 import passport from "./config/passport.js";
+import { assertLaunchReadyEnvironment } from "./config/launchGuards.js";
 import apiRouter from "./router.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -19,6 +20,7 @@ let databaseInitialized = false;
 
 function ensureDatabase() {
   if (!databaseInitialized) {
+    assertLaunchReadyEnvironment();
     requireEnvOrThrow();
     initDatabase();
     databaseInitialized = true;

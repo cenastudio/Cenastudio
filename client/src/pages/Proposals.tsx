@@ -196,7 +196,7 @@ function buildProposalHtml(form: ProposalForm, lines: ProposalLine[], studio: St
     *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
     html,body{margin:0;min-height:100%;background:#0d0d0d;color:#e8e8e8;font-family:Arial,sans-serif}
     body{background:radial-gradient(circle at 88% 5%,${studio.primaryColor}2e,transparent 34%),linear-gradient(135deg,#15100d 0%,#0d0d0d 42%,#050505 100%)}
-    .page{width:210mm;min-height:297mm;margin:0 auto;padding:18mm;background:radial-gradient(circle at 92% 4%,${studio.primaryColor}30,transparent 33%),linear-gradient(180deg,#111 0%,#0d0d0d 100%);position:relative;overflow:hidden}
+    .page{width:210mm;min-height:297mm;margin:0 auto;padding:18mm;background:radial-gradient(circle at 92% 4%,${studio.primaryColor}30,transparent 33%),linear-gradient(180deg,#111 0%,#0d0d0d 100%);position:relative;overflow:visible}
     .page:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(232,80,2,.08),transparent 32%),radial-gradient(circle at 10% 92%,rgba(217,195,171,.08),transparent 32%);pointer-events:none}
     .page>*{position:relative;z-index:1}.header{display:flex;justify-content:space-between;gap:32px;padding-bottom:28px;border-bottom:3px solid ${studio.primaryColor}}
     .brand{font-size:34px;font-weight:900;letter-spacing:.06em;color:#fff}.brand span{color:${studio.primaryColor}}.sub{font-size:11px;color:${studio.primaryColor};font-weight:900;letter-spacing:.18em;text-transform:uppercase;margin-top:5px}
@@ -211,7 +211,19 @@ function buildProposalHtml(form: ProposalForm, lines: ProposalLine[], studio: St
     .final small{display:block;color:${studio.primaryColor};font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.12em}.final strong{font-size:40px;color:#fff}
     .terms{background:#111;border:1px solid #242424;padding:20px;margin-top:28px;color:#aaa;font-size:12px;line-height:1.7}.footer{display:flex;justify-content:space-between;gap:40px;margin-top:56px}.sign{width:240px;border-top:1px solid #333;padding-top:8px;text-align:center;color:#777;font-size:10px}
     @media screen{.page{box-shadow:0 22px 70px rgba(0,0,0,.34)}}
-    @media print{html,body{width:210mm;min-height:297mm;background:#0d0d0d}.page{width:210mm;min-height:297mm;margin:0;padding:18mm;box-shadow:none}.section{break-inside:avoid}}
+    @media print{
+      html,body{width:210mm;min-height:297mm;background:#0d0d0d}
+      body:before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 92% 4%,${studio.primaryColor}24,transparent 33%),linear-gradient(180deg,#111 0%,#0d0d0d 100%);z-index:0}
+      .page{width:210mm;min-height:297mm;height:auto;margin:0;padding:16mm;box-shadow:none;background:radial-gradient(circle at 92% 4%,${studio.primaryColor}24,transparent 33%),linear-gradient(180deg,#111 0%,#0d0d0d 100%);overflow:visible;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+      .page:before{display:none}
+      .page>*{position:relative;z-index:1}
+      .header,.field,.totals,.final,.terms,.footer,tr{break-inside:avoid;page-break-inside:avoid}
+      .section-title{break-after:avoid;page-break-after:avoid}
+      .footer{margin-top:24px;padding-top:18px}
+      .sign{padding-top:10px}
+      thead{display:table-header-group}
+      table{page-break-inside:auto}
+    }
   </style>
 </head>
 <body>

@@ -1564,6 +1564,38 @@
   color: rgba(22, 20, 18, 0.48);
 }
 
+:root:not(.dark) [data-slot="dialog-content"].bg-frame-black,
+:root:not(.dark) [data-slot="dialog-content"] .bg-frame-black,
+:root:not(.dark) [data-slot="dialog-content"] .bg-\[\#111\],
+:root:not(.dark) [data-slot="dialog-content"] .bg-frame-gray-1,
+:root:not(.dark) [data-slot="dialog-content"] .bg-frame-gray-2 {
+  background: var(--app-surface-strong) !important;
+}
+
+:root:not(.dark) [data-slot="dialog-content"].text-frame-white,
+:root:not(.dark) [data-slot="dialog-content"] .text-frame-white,
+:root:not(.dark) [data-slot="dialog-content"] .text-frame-cream {
+  color: var(--app-text) !important;
+}
+
+:root:not(.dark) [data-slot="dialog-content"] .text-frame-gray-light,
+:root:not(.dark) [data-slot="dialog-content"] .text-frame-gray-muted {
+  color: var(--app-muted) !important;
+}
+
+:root:not(.dark) [data-slot="dialog-content"] input,
+:root:not(.dark) [data-slot="dialog-content"] textarea,
+:root:not(.dark) [data-slot="dialog-content"] select {
+  background: rgba(255, 255, 255, 0.78) !important;
+  border-color: var(--app-border) !important;
+  color: var(--app-text) !important;
+}
+
+:root:not(.dark) [data-slot="dialog-content"] input::placeholder,
+:root:not(.dark) [data-slot="dialog-content"] textarea::placeholder {
+  color: rgba(22, 20, 18, 0.5) !important;
+}
+
 :root:not(.dark) .proposal-machine .frame-input {
   background: rgba(255, 255, 255, 0.62);
   border-color: rgba(217, 195, 171, 0.72);

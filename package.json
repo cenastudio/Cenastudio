@@ -10,7 +10,11 @@
     "preview": "vite preview --host",
     "check": "tsc --noEmit",
     "test": "vitest run",
+    "e2e": "playwright test",
+    "e2e:headed": "playwright test --headed",
+    "landing:capture": "node scripts/capture-landing-screens.mjs",
     "verify": "npm run check && npm run test && npm run build",
+    "launch:check": "node scripts/launch-check.mjs",
     "lint": "tsc --noEmit",
     "format": "prettier --write ."
   },
@@ -84,6 +88,7 @@
   },
   "devDependencies": {
     "@builder.io/vite-plugin-jsx-loc": "^0.1.1",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/typography": "^0.5.15",
     "@tailwindcss/vite": "^4.1.3",
     "@testing-library/dom": "^10.4.1",

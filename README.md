@@ -75,6 +75,18 @@ npm run dev
 - Frontend: http://localhost:5173
 - API: http://localhost:5001 (proxied via Vite como `/api`)
 
+### Checklist de lançamento
+
+Para produção pública, configure:
+
+- `JWT_SECRET` forte, com pelo menos 32 caracteres.
+- `CLIENT_ORIGIN` apontando para o domínio final, sem `localhost`.
+- `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
+- Supabase migrations aplicadas, incluindo RLS em `supabase/migrations`.
+- Banco persistente para dados operacionais. O backend ainda usa SQLite como fonte principal de runtime; em hosts efêmeros como Vercel, o fallback `/tmp/frame.db` não é aceitável para lançamento público.
+
+O servidor bloqueia inicialização em `NODE_ENV=production` no Vercel com SQLite efêmero, exceto quando `ALLOW_EPHEMERAL_SQLITE=true` estiver definido para beta/controlado.
+
 ### Contas Padrão (primeiro boot)
 
 | Email | Senha | Role |
@@ -93,6 +105,11 @@ Altere estas senhas imediatamente em produção.
 | `npm start` | Servidor produção (serve SPA + API) |
 | `npm run preview` | Preview do build de produção |
 | `npm run check` | TypeScript check (`tsc --noEmit`) |
+| `npm run test` | Test suite (`vitest run`) |
+| `npm run e2e` | QA visual e fluxos críticos com Playwright |
+| `npm run landing:capture` | Regera os 3 prints reais da landing em tema claro |
+| `npm run verify` | TypeScript + testes + build |
+| `npm run launch:check` | Valida env essencial e RLS do Supabase |
 | `npm run lint` | TypeScript check (`tsc --noEmit`) |
 | `npm run format` | Prettier format |
 
