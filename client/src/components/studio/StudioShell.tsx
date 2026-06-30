@@ -14,6 +14,28 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import ProjectTimeline from "./ProjectTimeline";
 import AssistantChatWorkspace from "./AssistantChatWorkspace";
 
+function buildClientPrefill(
+  toolSlug: string,
+  projectName: string,
+  client: Awaited<ReturnType<typeof api.clients.get>>["client"],
+) {
+  const clientDisplayName = client.company || client.name;
+  const common: Record<string, string> = {};
+
+  if (["briefing", "proposta", "entrega"].includes(toolSlug)) common.cliente = clientDisplayName;
+  if (["proposta"].includes(toolSlug)) common.empresa = client.company || client.name;
+  if (["contrato"].includes(toolSlug)) {
+    common.contratante = client.company || client.name;
+    common.cpf_contratante = client.tax_id || "";
+  }
+  if (["callsheet"].includes(toolSlug)) {
+    common.endereco = client.address || "";
+    common.cidade = [client.city, client.state].filter(Boolean).join(" / ");
+  }
+  if (["proposta", "entrega", "cronograma"].includes(toolSlug)) common.nome = projectName;
+  return common;
+}
+
 export default function StudioShell() {
   const [, setLocation] = useLocation();
   const [, params] = useRoute("/studio/:id");
@@ -75,11 +97,25 @@ export default function StudioShell() {
 
   // Reset or load tool inputs/output when selected tool changes or project changes
   useEffect(() => {
-    if (activeProject && activeToolId) {
-      fetchToolState(activeToolId).then((state) => {
+    let cancelled = false;
+    if (activeProject && tool) {
+      fetchToolState(tool.id).then((state) => {
+        if (cancelled) return;
         if (state) {
           setFormData(state.formData || {});
           setOutput(state.outputData || "");
+        } else if (activeProject.clientId && tool) {
+          api.clients.get(activeProject.clientId).then((details) => {
+            if (!cancelled) {
+              setFormData(buildClientPrefill(tool.slug, activeProject.name, details.client));
+              setOutput("");
+            }
+          }).catch(() => {
+            if (!cancelled) {
+              setFormData({});
+              setOutput("");
+            }
+          });
         } else {
           setFormData({});
           setOutput("");
@@ -91,7 +127,10 @@ export default function StudioShell() {
     }
     setError(null);
     setLimitReached(false);
-  }, [activeToolId, activeProject]);
+    return () => {
+      cancelled = true;
+    };
+  }, [activeToolId, activeProject, tool?.id, tool?.slug]);
 
   if (isLoading) {
     return (
@@ -215,7 +254,7 @@ export default function StudioShell() {
   return (
     <div className="studio-app min-h-screen bg-frame-black text-frame-white flex flex-col h-screen overflow-hidden">
       <AppNavBar />
-      <ProjectTimeline activeToolId={tool.id} />
+      <ProjectTimeline activeToolId={tool.slug} />
 
       <div className="studio-workbench flex flex-1 overflow-hidden flex-col lg:flex-row">
         {/* Tool Sidebar */}

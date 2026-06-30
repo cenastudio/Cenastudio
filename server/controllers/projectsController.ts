@@ -4,10 +4,13 @@ import { AppError } from "../middleware/errorHandler.js";
 import type { DbProject, DbProjectState } from "../models/types.js";
 
 function serializeProject(project: DbProject) {
+  const withClient = project as DbProject & { client_name?: string | null };
+
   return {
     ...project,
     userId: project.user_id,
     clientId: project.client_id,
+    clientName: withClient.client_name ?? null,
     metadataJson: project.metadata_json,
     createdAt: project.created_at,
     updatedAt: project.updated_at,
@@ -24,12 +27,32 @@ function normalizeMetadataJson(value: unknown) {
   }
 }
 
+function normalizeOwnedClientId(value: unknown, userId: number): number | null {
+  if (value === undefined || value === null || value === "") return null;
+  const clientId = Number(value);
+  if (!Number.isInteger(clientId) || clientId <= 0) {
+    throw new AppError("Cliente inválido", 400);
+  }
+
+  const client = db
+    .prepare("SELECT id FROM clients WHERE id = ? AND user_id = ?")
+    .get(clientId, userId);
+  if (!client) throw new AppError("Cliente não encontrado ou acesso não autorizado", 404);
+  return clientId;
+}
+
 // List all projects for current user
 export const listProjects: RequestHandler = (req, res, next) => {
   try {
     const userId = req.user!.id;
     const rows = db
-      .prepare("SELECT * FROM projects WHERE user_id = ? ORDER BY id DESC")
+      .prepare(
+        `SELECT p.*, COALESCE(c.company, c.name) AS client_name
+         FROM projects p
+         LEFT JOIN clients c ON c.id = p.client_id AND c.user_id = p.user_id
+         WHERE p.user_id = ?
+         ORDER BY p.id DESC`,
+      )
       .all(userId) as DbProject[];
     res.json({ success: true, data: rows.map(serializeProject) });
   } catch (e) {
@@ -48,15 +71,21 @@ export const createProject: RequestHandler = (req, res, next) => {
     }
 
     const metadata = normalizeMetadataJson(metadataJson ?? metadata_json);
+    const ownedClientId = normalizeOwnedClientId(clientId, userId);
 
     const result = db
       .prepare(
         "INSERT INTO projects (user_id, name, description, status, metadata_json, client_id) VALUES (?, ?, ?, 'active', ?, ?)",
       )
-      .run(userId, name.trim(), description?.trim() || "", metadata, clientId || null);
+      .run(userId, name.trim(), description?.trim() || "", metadata, ownedClientId);
 
     const newProject = db
-      .prepare("SELECT * FROM projects WHERE id = ?")
+      .prepare(
+        `SELECT p.*, COALESCE(c.company, c.name) AS client_name
+         FROM projects p
+         LEFT JOIN clients c ON c.id = p.client_id AND c.user_id = p.user_id
+         WHERE p.id = ?`,
+      )
       .get(result.lastInsertRowid) as DbProject;
 
     res.json({ success: true, data: serializeProject(newProject) });
@@ -72,7 +101,12 @@ export const getProject: RequestHandler = (req, res, next) => {
     const projectId = req.params.id;
 
     const project = db
-      .prepare("SELECT * FROM projects WHERE id = ? AND user_id = ?")
+      .prepare(
+        `SELECT p.*, COALESCE(c.company, c.name) AS client_name
+         FROM projects p
+         LEFT JOIN clients c ON c.id = p.client_id AND c.user_id = p.user_id
+         WHERE p.id = ? AND p.user_id = ?`,
+      )
       .get(projectId, userId) as DbProject | undefined;
 
     if (!project) {
@@ -90,7 +124,7 @@ export const updateProject: RequestHandler = (req, res, next) => {
   try {
     const userId = req.user!.id;
     const projectId = req.params.id;
-    const { name, description, status, metadata_json, metadataJson } = req.body;
+    const { name, description, status, clientId, metadata_json, metadataJson } = req.body;
 
     const project = db
       .prepare("SELECT * FROM projects WHERE id = ? AND user_id = ?")
@@ -104,12 +138,15 @@ export const updateProject: RequestHandler = (req, res, next) => {
       metadata_json !== undefined || metadataJson !== undefined
         ? normalizeMetadataJson(metadataJson ?? metadata_json)
         : project.metadata_json;
+    const nextClientId =
+      clientId !== undefined ? normalizeOwnedClientId(clientId, userId) : project.client_id;
 
     db.prepare(
       `UPDATE projects SET
         name = ?,
         description = ?,
         status = ?,
+        client_id = ?,
         metadata_json = ?,
         updated_at = datetime('now')
       WHERE id = ? AND user_id = ?`,
@@ -117,13 +154,19 @@ export const updateProject: RequestHandler = (req, res, next) => {
       name?.trim() ?? project.name,
       description?.trim() ?? project.description,
       status ?? project.status,
+      nextClientId,
       nextMetadata,
       projectId,
       userId,
     );
 
     const updated = db
-      .prepare("SELECT * FROM projects WHERE id = ?")
+      .prepare(
+        `SELECT p.*, COALESCE(c.company, c.name) AS client_name
+         FROM projects p
+         LEFT JOIN clients c ON c.id = p.client_id AND c.user_id = p.user_id
+         WHERE p.id = ?`,
+      )
       .get(projectId) as DbProject;
 
     res.json({ success: true, data: serializeProject(updated) });

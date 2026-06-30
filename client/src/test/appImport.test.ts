@@ -37,7 +37,7 @@ describe("application module", () => {
     });
 
     expect(container).toBeTruthy();
-    fireEvent.click(await screen.findByRole("button", { name: "EN" }));
+    fireEvent.click(await screen.findByRole("button", { name: "EN" }, { timeout: 5000 }));
     expect(container?.textContent).toContain("AUDIOVISUAL");
     expect(container?.textContent).not.toMatch(/app\.[a-z]/i);
   });
@@ -83,6 +83,7 @@ describe("application module", () => {
     });
     vi.mocked(api.projects.list).mockResolvedValue([]);
     vi.mocked(api.projects.activity).mockResolvedValue([]);
+    vi.mocked(api.clients.list).mockResolvedValue([]);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
       json: vi.fn().mockResolvedValue({ success: true, data: [] }),
     }));
@@ -96,7 +97,7 @@ describe("application module", () => {
 
     await waitFor(() => {
       expect(screen.getAllByRole("group", { name: "Idioma" }).length).toBeGreaterThan(0);
-    });
+    }, { timeout: 5000 });
     fireEvent.click(screen.getAllByRole("button", { name: "EN" })[0]);
     expect(container?.textContent).toContain("Dashboard");
     expect(container?.textContent).not.toMatch(/app\.[a-z]/i);

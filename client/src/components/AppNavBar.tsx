@@ -90,18 +90,18 @@ export default function AppNavBar({ children }: AppNavBarProps) {
   };
 
   const primaryNavItems = [
-    ["/dashboard", t("app.nav.dashboard") as string],
-    ["/tools", t("app.nav.studioIA") as string],
-    ["/clients", t("app.nav.clients") as string],
+    ["/dashboard", t("app.nav.operationalPanel") as string],
+    ["/clients", t("app.nav.commercialCrm") as string],
+    ["/tools", t("app.nav.projectManagement") as string],
+    ["/analytics", t("app.nav.financeErp") as string],
     ["/pipeline", t("app.nav.pipeline") as string],
-    ["/video-reviews", t("app.nav.approval") as string],
   ] as const;
 
   const secondaryNavItems = [
     ["/proposals", t("app.nav.proposals") as string],
     ["/documents", t("app.nav.docs") as string],
+    ["/video-reviews", t("app.nav.approval") as string],
     ["/collaborators", t("app.nav.team") as string],
-    ["/analytics", t("app.nav.analytics") as string],
     ["/company", t("app.nav.company") as string],
     ...(isAdmin ? [["/admin", t("app.nav.admin") as string]] as const : []),
   ] as const;

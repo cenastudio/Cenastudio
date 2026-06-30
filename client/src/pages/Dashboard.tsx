@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { api, type Project, type RecentActivity } from "@/lib/api";
+import { api, type Client, type Project, type RecentActivity } from "@/lib/api";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import {
@@ -23,6 +23,8 @@ import {
   FileText,
   ListChecks,
   ArrowUpRight,
+  KanbanSquare,
+  WalletCards,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -93,7 +95,7 @@ function DashboardContent() {
   const [objective, setObjective] = useState("");
   const [format, setFormat] = useState("");
   const [tone, setTone] = useState("");
-  const [clients, setClients] = useState<any[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const resetCreateForm = () => {
@@ -112,14 +114,16 @@ function DashboardContent() {
     loadProjects();
 
     // Load clients for project creation
-    fetch("/api/clients")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          setClients(data.data);
-        }
-      })
-      .catch(() => {});
+    api.clients.list().then((loadedClients) => {
+      setClients(loadedClients);
+      const query = new URLSearchParams(window.location.search);
+      const requestedClientId = query.get("clientId");
+      if (query.get("newProject") === "1" && requestedClientId && loadedClients.some((client) => String(client.id) === requestedClientId)) {
+        setClientId(requestedClientId);
+        setIsCreateOpen(true);
+        window.history.replaceState({}, "", "/dashboard");
+      }
+    }).catch(() => setClients([]));
 
     api.projects
       .activity()
@@ -137,7 +141,7 @@ function DashboardContent() {
   const projectsWithoutDeadline = activeProjects.filter((p) => !getMetadata(p).deadline);
   const focusProject = pinnedProjects[0] || recentProject;
   const focusMeta = focusProject ? getMetadata(focusProject) : null;
-  const focusClient = focusMeta?.creativeGoals?.client;
+  const focusClient = focusProject?.clientName || focusMeta?.creativeGoals?.client;
   const focusFormat = focusMeta?.creativeGoals?.format;
   const focusDeadline = focusMeta?.deadline;
   const focusStatus = !focusProject
@@ -184,6 +188,56 @@ function DashboardContent() {
     })),
   ].slice(0, 5);
 
+  const startProjectFromClient = () => {
+    if (!clients.length) {
+      toast.info("O fluxo começa no CRM: cadastre um cliente antes de abrir o projeto.");
+      setLocation("/clients/new");
+      return;
+    }
+
+    resetCreateForm();
+    setIsCreateOpen(true);
+  };
+
+  const operatingModules = [
+    {
+      id: "commercial",
+      icon: Building2,
+      eyebrow: "01 / COMERCIAL",
+      title: "CRM",
+      description: "Cadastre o cliente, entenda a demanda e transforme a conversa em briefing, orçamento, proposta e contrato.",
+      metric: String(clients.length),
+      metricLabel: "clientes",
+      route: clients.length ? "/clients" : "/clients/new",
+      action: clients.length ? "Abrir comercial" : "Cadastrar cliente",
+      steps: ["Cliente", "Pipeline", "Briefing", "Proposta", "Contrato"],
+    },
+    {
+      id: "projects",
+      icon: KanbanSquare,
+      eyebrow: "02 / PROJECT MANAGEMENT",
+      title: "Produção",
+      description: "Depois da venda, o job vira produção: roteiro, decupagem, callsheet, cronograma, arquivos, revisão e entrega.",
+      metric: String(activeProjects.length),
+      metricLabel: "projetos ativos",
+      route: focusProject ? `/project/${focusProject.id}` : "/tools",
+      action: focusProject ? "Abrir hub" : "Ver Studio IA",
+      steps: ["Roteiro", "Decupagem", "Callsheet", "Cronograma", "Entrega"],
+    },
+    {
+      id: "finance",
+      icon: WalletCards,
+      eyebrow: "03 / FINANCEIRO",
+      title: "ERP",
+      description: "Acompanhe o dinheiro do estúdio por cliente e por projeto: recebimentos, custos, recorrência e margem.",
+      metric: String(activities.length),
+      metricLabel: "movimentos recentes",
+      route: "/analytics",
+      action: "Abrir ERP",
+      steps: ["Receitas", "Custos", "A receber", "Margem", "Forecast"],
+    },
+  ];
+
   const getActivityLabel = (act: RecentActivity) => {
     const projectLabel = act.projectName ? ` · ${act.projectName}` : "";
     if (act.toolId === "05") return `${t("app.dashboard.activityProposal")}${projectLabel}`;
@@ -221,7 +275,10 @@ function DashboardContent() {
   // Handle Create Project
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || !clientId) {
+      toast.error("Selecione o cliente antes de criar o projeto.");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -312,10 +369,7 @@ function DashboardContent() {
               </span>
             </div>
             <button
-              onClick={() => {
-                resetCreateForm();
-                setIsCreateOpen(true);
-              }}
+              onClick={startProjectFromClient}
               className="frame-btn-primary !py-3 !px-5 !text-[0.62rem] flex items-center justify-center gap-2 cursor-pointer h-full self-stretch"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -323,6 +377,48 @@ function DashboardContent() {
             </button>
           </div>
         </div>
+
+        <section className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+          {operatingModules.map((module) => {
+            const Icon = module.icon;
+            return (
+              <button
+                key={module.id}
+                type="button"
+                onClick={() => setLocation(module.route)}
+                className="group min-h-[260px] border border-frame-gray-3 bg-frame-gray-1/20 p-5 text-left transition hover:border-frame-orange/60 hover:bg-frame-gray-1/35 sm:p-6"
+              >
+                <div className="mb-8 flex items-start justify-between gap-4">
+                  <div>
+                    <p className="frame-label mb-2">// {module.eyebrow}</p>
+                    <h2 className="frame-title text-[clamp(1.8rem,3vw,2.7rem)] leading-none text-frame-white group-hover:text-frame-orange">
+                      {module.title}
+                    </h2>
+                  </div>
+                  <Icon className="h-5 w-5 text-frame-orange" />
+                </div>
+                <p className="min-h-[64px] text-sm leading-relaxed text-frame-gray-light">{module.description}</p>
+                <div className="mt-5 grid grid-cols-[96px_1fr] gap-4 border-y border-frame-gray-3 py-4">
+                  <div>
+                    <span className="block text-3xl font-bold leading-none text-frame-white">{module.metric}</span>
+                    <span className="font-frame-mono text-[0.58rem] uppercase tracking-[0.12em] text-frame-gray-light">{module.metricLabel}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {module.steps.map((step) => (
+                      <span key={step} className="border border-frame-gray-3 px-2 py-1 font-frame-mono text-[0.56rem] uppercase tracking-[0.1em] text-frame-gray-light">
+                        {step}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <span className="mt-5 inline-flex items-center gap-2 font-frame-mono text-[0.62rem] uppercase tracking-[0.14em] text-frame-orange">
+                  {module.action}
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </span>
+              </button>
+            );
+          })}
+        </section>
 
         <section className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)] gap-5">
           <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-5 sm:p-6">
@@ -370,8 +466,7 @@ function DashboardContent() {
                     setLocation(`/project/${focusProject.id}`);
                     return;
                   }
-                  resetCreateForm();
-                  setIsCreateOpen(true);
+                  startProjectFromClient();
                 }}
                 className="frame-btn-primary !py-2.5 !px-4 !text-[0.6rem] flex items-center gap-2"
               >
@@ -469,6 +564,12 @@ function DashboardContent() {
                           <p className="text-[0.76rem] leading-relaxed text-frame-gray-light line-clamp-2 font-light">
                             {p.description || t("app.common.noData") as string}
                           </p>
+                          {p.clientName && (
+                            <p className="inline-flex items-center gap-1.5 font-frame-mono text-[0.58rem] uppercase tracking-[0.12em] text-frame-orange">
+                              <Building2 className="h-3 w-3" />
+                              {p.clientName}
+                            </p>
+                          )}
                         </div>
 
                         {/* Metas display (format / tone) */}
@@ -520,10 +621,7 @@ function DashboardContent() {
                     {t("app.dashboard.createFirstProjectDesc") as string}
                   </p>
                   <button
-                    onClick={() => {
-                      resetCreateForm();
-                      setIsCreateOpen(true);
-                    }}
+                    onClick={startProjectFromClient}
                     className="frame-btn-ghost !py-2 !px-4 !text-[0.62rem] flex items-center gap-1.5"
                   >
                     <Plus className="w-3.5 h-3.5" /> {t("app.dashboard.createFirstProject") as string}
@@ -553,6 +651,12 @@ function DashboardContent() {
                           <p className="text-[0.76rem] text-frame-gray-light line-clamp-1 font-light max-w-xl">
                             {p.description || t("app.common.noData") as string}
                           </p>
+                          {p.clientName && (
+                            <p className="flex items-center gap-1.5 font-frame-mono text-[0.58rem] uppercase tracking-[0.12em] text-frame-orange">
+                              <Building2 className="h-3 w-3" />
+                              {p.clientName}
+                            </p>
+                          )}
                         </div>
 
                         {/* Actions block */}
@@ -797,7 +901,7 @@ function DashboardContent() {
 
             <div className="space-y-1.5">
               <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
-                {t("app.dashboard.client") as string} ({t("app.common.optional") as string})
+                {t("app.dashboard.client") as string} *
               </label>
               <div className="relative">
                 <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
@@ -807,7 +911,7 @@ function DashboardContent() {
                   onChange={(e) => setClientId(e.target.value)}
                   className="w-full bg-[#111] border border-frame-gray-3 text-frame-white pl-10 pr-4 py-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none appearance-none cursor-pointer"
                 >
-                  <option value="">{t("app.common.none") as string}</option>
+                  <option value="">Selecione um cliente</option>
                   {clients.map((client) => (
                     <option key={client.id} value={client.id}>
                       {client.company ? `${client.name} (${client.company})` : client.name}
@@ -828,7 +932,7 @@ function DashboardContent() {
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting || !name.trim()}
+                disabled={isSubmitting || !name.trim() || !clientId}
                 className="frame-btn-primary !py-2 !px-4 !text-[0.62rem] flex items-center justify-center gap-1.5"
               >
                 {isSubmitting ? (

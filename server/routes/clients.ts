@@ -11,6 +11,7 @@ router.use(authenticate);
 
 // Clients
 router.get("/stats", clientsController.getClientStats);
+router.get("/lookup/cnpj/:cnpj", clientsController.getCompanyByCnpj);
 router.get("/", clientsController.listClients);
 router.get("/:id", clientsController.getClient);
 router.post("/", clientsController.createClient);

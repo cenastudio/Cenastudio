@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useRoute } from "wouter";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -18,8 +18,9 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ChevronDown, Folder, Plus, Trash2, Edit3, X, Loader2 } from "lucide-react";
+import { Building2, ChevronDown, Folder, Plus, Trash2, Edit3, X, Loader2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import { api, type Client } from "@/lib/api";
 
 export default function ProjectSelector() {
   const { t } = useLanguage();
@@ -46,7 +47,13 @@ export default function ProjectSelector() {
   // Form states
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [clientId, setClientId] = useState("");
+  const [clients, setClients] = useState<Client[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    api.clients.list().then(setClients).catch(() => setClients([]));
+  }, []);
 
   // Helper to trigger select project by ID (updating route)
   const handleSelectProject = (projectId: number | null) => {
@@ -60,14 +67,20 @@ export default function ProjectSelector() {
   // Handle Create Project
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || !clientId) return;
 
     setIsSubmitting(true);
     try {
-      const newProj = await createProject(name.trim(), description.trim() || undefined);
+      const selectedClient = clients.find((client) => String(client.id) === clientId);
+      const metadata = JSON.stringify({
+        workflowFocus: "briefing",
+        creativeGoals: { client: selectedClient?.company || selectedClient?.name || "" },
+      });
+      const newProj = await createProject(name.trim(), description.trim() || undefined, Number(clientId), metadata);
       setIsCreateOpen(false);
       setName("");
       setDescription("");
+      setClientId("");
       toast.success(t("app.studio.projectSelector.created") as string);
       // Automatically select the new project and redirect
       handleSelectProject(newProj.id);
@@ -83,6 +96,7 @@ export default function ProjectSelector() {
     if (!activeProject) return;
     setName(activeProject.name);
     setDescription(activeProject.description || "");
+    setClientId(activeProject.clientId ? String(activeProject.clientId) : "");
     setIsEditOpen(true);
   };
 
@@ -96,6 +110,7 @@ export default function ProjectSelector() {
       await updateProject(activeProject.id, {
         name: name.trim(),
         description: description.trim() || undefined,
+        clientId: clientId ? Number(clientId) : null,
       });
       setIsEditOpen(false);
       setName("");
@@ -179,7 +194,10 @@ export default function ProjectSelector() {
                     }`}
                   >
                     <Folder className={`w-3 h-3 shrink-0 ${activeProject?.id === p.id ? "text-frame-orange" : ""}`} />
-                    <span className="truncate">{p.name}</span>
+                    <span className="min-w-0">
+                      <span className="block truncate">{p.name}</span>
+                      {p.clientName && <span className="block truncate text-[0.62rem] opacity-70">{p.clientName}</span>}
+                    </span>
                   </DropdownMenuItem>
                 ))}
               </div>
@@ -201,6 +219,7 @@ export default function ProjectSelector() {
               onClick={() => {
                 setName("");
                 setDescription("");
+                setClientId("");
                 setIsCreateOpen(true);
               }}
               className="flex items-center gap-2 text-xs py-2 px-2.5 text-frame-orange font-frame-mono tracking-wide cursor-pointer rounded-none hover:bg-frame-gray-2 focus:bg-frame-gray-2"
@@ -263,6 +282,40 @@ export default function ProjectSelector() {
 
             <div className="space-y-1.5">
               <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
+                Cliente do projeto *
+              </label>
+              {clients.length > 0 ? (
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-frame-gray-light" />
+                  <select
+                    required
+                    disabled={isSubmitting}
+                    value={clientId}
+                    onChange={(event) => setClientId(event.target.value)}
+                    className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white pl-9 pr-3 py-2.5 font-frame-body text-[0.83rem] outline-none focus:border-frame-orange rounded-none appearance-none"
+                  >
+                    <option value="">Selecione um cliente</option>
+                    {clients.map((client) => (
+                      <option key={client.id} value={client.id}>
+                        {client.company ? `${client.name} · ${client.company}` : client.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setLocation("/clients/new")}
+                  className="frame-btn-ghost w-full !py-2.5 flex items-center justify-center gap-2"
+                >
+                  <UserPlus className="w-3.5 h-3.5" /> Cadastrar primeiro cliente
+                </button>
+              )}
+              <p className="text-[0.68rem] text-frame-gray-light">O histórico e as ferramentas ficarão ligados a este cliente.</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
                 {t("app.studio.projectSelector.projectDescription") as string}
               </label>
               <textarea
@@ -285,7 +338,7 @@ export default function ProjectSelector() {
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting || !name.trim()}
+                disabled={isSubmitting || !name.trim() || !clientId}
                 className="frame-btn-primary !py-2 !px-4 !text-[0.62rem] flex items-center justify-center gap-1.5"
               >
                 {isSubmitting ? (
@@ -327,6 +380,25 @@ export default function ProjectSelector() {
                 onChange={(e) => setName(e.target.value)}
                 className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none"
               />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
+                Cliente do projeto
+              </label>
+              <select
+                disabled={isSubmitting}
+                value={clientId}
+                onChange={(event) => setClientId(event.target.value)}
+                className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white px-3 py-2.5 font-frame-body text-[0.83rem] outline-none focus:border-frame-orange rounded-none appearance-none"
+              >
+                <option value="">Sem cliente vinculado</option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.company ? `${client.name} · ${client.company}` : client.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-1.5">

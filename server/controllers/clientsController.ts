@@ -3,6 +3,16 @@ import { db } from "../models/db.js";
 import { AppError } from "../middleware/errorHandler.js";
 import type { DbClient, DbCount, DbSum } from "../models/types.js";
 import { notifyAdmins, notifyUser } from "../services/notificationService.js";
+import { lookupCnpj } from "../services/cnpjService.js";
+
+export const getCompanyByCnpj: RequestHandler = async (req, res, next) => {
+  try {
+    const data = await lookupCnpj(req.params.cnpj);
+    res.json({ success: true, data });
+  } catch (e) {
+    next(e);
+  }
+};
 
 // List all clients for current user
 export const listClients: RequestHandler = (req, res, next) => {

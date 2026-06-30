@@ -150,6 +150,11 @@ export const api = {
     list: () => request<ToolFromApi[]>("/tools"),
     get: (id: string) => request<ToolFromApi>(`/tools/${id}`),
   },
+  clients: {
+    list: () => request<Client[]>("/clients"),
+    get: (id: number) => request<ClientDetails>(`/clients/${id}`),
+    lookupCnpj: (cnpj: string) => request<CnpjCompanyData>(`/clients/lookup/cnpj/${encodeURIComponent(cnpj)}`),
+  },
   ai: {
     generate: (toolId: string, input: Record<string, string>, projectId?: number | null) =>
       request<{ output: string; generationId: number }>("/ai/generate", {
@@ -306,11 +311,54 @@ export interface ContactPayload {
 export interface Project {
   id: number;
   userId: number;
+  clientId?: number | null;
+  clientName?: string | null;
   name: string;
   description?: string;
   status: "active" | "completed" | "archived";
   metadataJson: string;
   createdAt: string;
+  updatedAt: string;
+}
+
+export interface Client {
+  id: number;
+  name: string;
+  company?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  tax_id?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+  industry?: string | null;
+}
+
+export interface ClientDetails {
+  client: Client;
+  projects: Project[];
+  opportunities: unknown[];
+  interactions: unknown[];
+}
+
+export interface CnpjCompanyData {
+  cnpj: string;
+  legalName: string;
+  tradeName: string;
+  email: string;
+  phone: string;
+  address: string;
+  postalCode: string;
+  district: string;
+  city: string;
+  state: string;
+  country: string;
+  industry: string;
+  companySize: string;
+  status: string;
+  legalNature: string;
+  shareCapital: string;
   updatedAt: string;
 }
 

@@ -14,20 +14,31 @@ interface ToolSidebarProps {
 interface CategoryGroup {
   key: string;
   slugs: string[];
+  numbered?: boolean;
 }
 
 const CATEGORIES: CategoryGroup[] = [
   {
-    key: "preProduction",
-    slugs: ["roteiro", "decupagem", "callsheet", "checklist", "cronograma"],
-  },
-  {
     key: "commercial",
     slugs: ["briefing", "orcamento", "proposta", "contrato"],
+    numbered: true,
   },
   {
-    key: "aesthetic",
-    slugs: ["moodboard", "entrega", "assistente"],
+    key: "preproduction",
+    slugs: ["roteiro", "decupagem", "callsheet", "cronograma", "checklist"],
+    numbered: true,
+  },
+  {
+    key: "delivery",
+    slugs: ["entrega"],
+  },
+  {
+    key: "creative",
+    slugs: ["moodboard"],
+  },
+  {
+    key: "assistant",
+    slugs: ["assistente"],
   },
 ];
 
@@ -37,9 +48,11 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
   // Helper to find tool by slug
   const getToolBySlug = (slug: string) => localizedTools.find((t) => t.slug === slug);
   const categoryLabels: Record<string, string> = {
-    preProduction: t("app.studio.preProduction") as string,
-    commercial: t("app.studio.commercial") as string,
-    aesthetic: t("app.studio.aesthetic") as string,
+    commercial: locale === "pt" ? "Comercial primeiro" : "Commercial first",
+    preproduction: locale === "pt" ? "Pré-produção" : "Pre-production",
+    delivery: locale === "pt" ? "Entrega e fechamento" : "Delivery and wrap",
+    creative: locale === "pt" ? "Direção visual" : "Visual direction",
+    assistant: locale === "pt" ? "Apoio livre" : "Open support",
   };
 
   return (
@@ -72,7 +85,7 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
                 // {categoryLabels[cat.key]}
               </p>
               <div className="flex lg:flex-col gap-2 px-2 lg:px-3">
-                {categoryTools.map((t) => {
+                {categoryTools.map((t, index) => {
                    const TIcon = getToolIcon(t.slug);
                    const active = t.id === activeToolId || t.slug === activeToolId;
                   return (
@@ -86,7 +99,13 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
                           : "border-transparent text-frame-gray-light hover:text-frame-white"
                       }`}
                     >
-                      <TIcon className={`w-4 h-4 shrink-0 transition-colors ${active ? "text-frame-orange" : "text-frame-gray-light"}`} />
+                      {cat.numbered ? (
+                        <span className={`w-5 h-5 shrink-0 rounded-full border flex items-center justify-center font-frame-mono text-[0.58rem] ${active ? "border-frame-orange bg-frame-orange text-frame-black" : "border-frame-gray-3 text-frame-gray-light"}`}>
+                          {index + 1}
+                        </span>
+                      ) : (
+                        <TIcon className={`w-4 h-4 shrink-0 transition-colors ${active ? "text-frame-orange" : "text-frame-gray-light"}`} />
+                      )}
                       <span className="text-[0.76rem] font-medium tracking-wide font-frame-body">
                         {t.name}
                       </span>

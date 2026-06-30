@@ -46,7 +46,7 @@ function NewClientContent() {
       const result = await response.json();
       if (result.success) {
         toast.success(t("app.clients.clientCreated") as string);
-        setLocation("/clients");
+        setLocation(`/dashboard?newProject=1&clientId=${result.data.id}`);
       } else {
         toast.error(result.error || t("app.errors.generic") as string);
       }
@@ -78,7 +78,7 @@ function NewClientContent() {
               {t("app.common.cancel") as string}
             </button>
             <button type="submit" disabled={isSubmitting || !data.name.trim()} className="frame-btn-primary flex-1">
-              {isSubmitting ? t("app.studio.projectSelector.creating") as string : t("app.clients.newClient") as string}
+              {isSubmitting ? t("app.studio.projectSelector.creating") as string : "Salvar cliente e criar projeto"}
             </button>
           </div>
         </form>

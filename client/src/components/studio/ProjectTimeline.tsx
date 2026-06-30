@@ -7,18 +7,19 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TimelineStep {
   id: string;
+  toolId: string;
   name: string;
   categoryKey: string;
 }
 
 const TIMELINE_STEPS: TimelineStep[] = [
-  { id: "briefing", name: "Briefing", categoryKey: "commercial" },
-  { id: "roteiro", name: "Roteiro", categoryKey: "preProd" },
-  { id: "decupagem", name: "Decupagem", categoryKey: "preProd" },
-  { id: "callsheet", name: "Callsheet", categoryKey: "preProd" },
-  { id: "cronograma", name: "Cronograma", categoryKey: "preProd" },
-  { id: "checklist", name: "Checklist", categoryKey: "preProd" },
-  { id: "entrega", name: "Entrega", categoryKey: "posProd" },
+  { id: "briefing", toolId: "07", name: "Briefing", categoryKey: "commercial" },
+  { id: "roteiro", toolId: "01", name: "Roteiro", categoryKey: "preProd" },
+  { id: "decupagem", toolId: "02", name: "Decupagem", categoryKey: "preProd" },
+  { id: "callsheet", toolId: "03", name: "Callsheet", categoryKey: "preProd" },
+  { id: "cronograma", toolId: "10", name: "Cronograma", categoryKey: "preProd" },
+  { id: "checklist", toolId: "09", name: "Checklist", categoryKey: "preProd" },
+  { id: "entrega", toolId: "11", name: "Entrega", categoryKey: "posProd" },
 ];
 
 interface ProjectTimelineProps {
@@ -63,16 +64,16 @@ export default function ProjectTimeline({ activeToolId }: ProjectTimelineProps) 
   };
 
   // Helper to determine if step has any content (either fetched from DB or in memory cache)
-  const isStepPopulated = (stepId: string) => {
+  const isStepPopulated = (stepId: string, toolId: string) => {
     // Check in-memory active cache
-    const cache = toolStates[stepId];
+    const cache = toolStates[toolId] || toolStates[stepId];
     if (cache) {
       const hasForm = Object.values(cache.formData || {}).some(Boolean);
       const hasOutput = !!cache.outputData && cache.outputData.trim().length > 0;
       if (hasForm || hasOutput) return true;
     }
     // Check SQLite fetched steps list
-    return populatedSteps.includes(stepId);
+    return populatedSteps.includes(toolId) || populatedSteps.includes(stepId);
   };
 
   return (
@@ -94,8 +95,8 @@ export default function ProjectTimeline({ activeToolId }: ProjectTimelineProps) 
           <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[1px] bg-frame-gray-3/40 z-0 pointer-events-none" />
 
           {TIMELINE_STEPS.map((step, idx) => {
-            const isActive = step.id === activeToolId;
-            const isFilled = isStepPopulated(step.id);
+            const isActive = step.id === activeToolId || step.toolId === activeToolId;
+            const isFilled = isStepPopulated(step.id, step.toolId);
             
             return (
               <button

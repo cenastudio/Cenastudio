@@ -88,6 +88,11 @@ vi.mock('@/lib/api', () => ({
       getState: vi.fn(),
       populatedStates: vi.fn(),
     },
+    clients: {
+      list: vi.fn(),
+      get: vi.fn(),
+      lookupCnpj: vi.fn(),
+    },
     admin: {
       listTools: vi.fn(),
       updateTool: vi.fn(),

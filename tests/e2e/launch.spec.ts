@@ -42,7 +42,7 @@ test("critical authenticated app screens render without layout breaks", async ({
   await loginAsAdmin(page);
 
   const routes = [
-    ["/dashboard", /Central do Diretor|Director/i, "dashboard"],
+    ["/dashboard", /Central da Operação|Operations Center/i, "dashboard"],
     ["/admin", /Gerenciar acessos|Manage access/i, "admin"],
     ["/admin/gerenciar", /Gerenciar usuários|Manage users/i, "admin-users"],
     ["/proposals", /Propostas|Proposals/i, "proposals"],
@@ -59,33 +59,107 @@ test("critical authenticated app screens render without layout breaks", async ({
 
 test("light theme project dialog keeps readable light inputs", async ({ page }) => {
   await loginAsAdmin(page);
+  const suffix = Date.now();
+  const clientResponse = await page.request.post("/api/clients", {
+    data: {
+      name: `Cliente Dialog ${suffix}`,
+      company: `Marca Dialog ${suffix}`,
+      status: "active",
+    },
+  });
+  expect(clientResponse.ok()).toBeTruthy();
+  const clientPayload = await clientResponse.json();
+
   await page.goto("/dashboard");
-  await expect(page.getByText(/Central do Diretor|Director/i).first()).toBeVisible();
+  await expect(page.getByText(/Central da Operação|Operations Center/i).first()).toBeVisible();
 
-  const lightToggle = page.getByTitle(/modo claro|light mode/i);
-  if (await lightToggle.count()) await lightToggle.first().click();
+  try {
+    const lightToggle = page.getByTitle(/modo claro|light mode/i);
+    if (await lightToggle.count()) await lightToggle.first().click();
 
-  await page.getByRole("button", { name: /novo projeto|new project/i }).first().click();
-  await expect(page.getByRole("dialog")).toBeVisible();
-  await expect(page.getByRole("dialog").getByText(/criar novo projeto|create/i).first()).toBeVisible();
+    await page.getByRole("button", { name: /novo projeto|new project/i }).first().click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(page.getByRole("dialog").getByText(/criar novo projeto|create/i).first()).toBeVisible();
 
-  const fieldColors = await page.getByRole("dialog").locator("input, textarea, select").evaluateAll((nodes) =>
-    nodes.map((node) => {
-      const style = window.getComputedStyle(node);
-      return {
-        backgroundColor: style.backgroundColor,
-        color: style.color,
-      };
-    }),
-  );
+    const fieldColors = await page.getByRole("dialog").locator("input, textarea, select").evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const style = window.getComputedStyle(node);
+        return {
+          backgroundColor: style.backgroundColor,
+          color: style.color,
+        };
+      }),
+    );
 
-  expect(fieldColors.length).toBeGreaterThan(0);
-  for (const color of fieldColors) {
-    expect(color.backgroundColor).not.toBe("rgb(17, 17, 17)");
-    expect(color.backgroundColor).not.toBe("rgb(0, 0, 0)");
-    expect(color.color).not.toBe("rgb(255, 255, 255)");
+    expect(fieldColors.length).toBeGreaterThan(0);
+    for (const color of fieldColors) {
+      expect(color.backgroundColor).not.toBe("rgb(17, 17, 17)");
+      expect(color.backgroundColor).not.toBe("rgb(0, 0, 0)");
+      expect(color.color).not.toBe("rgb(255, 255, 255)");
+    }
+
+    await expectNoHorizontalOverflow(page);
+    await screenshot(page, "light-project-dialog");
+  } finally {
+    await page.request.delete(`/api/clients/${clientPayload.data.id}`);
   }
+});
 
-  await expectNoHorizontalOverflow(page);
-  await screenshot(page, "light-project-dialog");
+test("client, project and studio workflow stay connected", async ({ page }) => {
+  test.skip(test.info().project.name.includes("mobile"), "Desktop sidebar workflow assertion");
+  await loginAsAdmin(page);
+  const suffix = Date.now();
+
+  const clientResponse = await page.request.post("/api/clients", {
+    data: {
+      name: `Cliente Fluxo ${suffix}`,
+      company: `Marca Fluxo ${suffix}`,
+      status: "active",
+      segment: "brand",
+      tax_id: "11378117000120",
+      address: "Rua do Set, 100",
+      city: "São Paulo",
+      state: "SP",
+    },
+  });
+  expect(clientResponse.ok()).toBeTruthy();
+  const clientPayload = await clientResponse.json();
+
+  const projectResponse = await page.request.post("/api/projects", {
+    data: {
+      name: `Projeto Fluxo ${suffix}`,
+      clientId: clientPayload.data.id,
+      metadataJson: JSON.stringify({ workflowFocus: "briefing" }),
+    },
+  });
+  expect(projectResponse.ok()).toBeTruthy();
+  const projectPayload = await projectResponse.json();
+
+  try {
+    await page.goto(`/project/${projectPayload.data.id}/studio/briefing`);
+    await expect(page.getByText("Comercial primeiro")).toBeVisible();
+    await expect(page.getByText("Pré-produção")).toBeVisible();
+
+    const workflowLabels = await page.locator(".studio-sidebar .studio-tool-nav").evaluateAll((nodes) =>
+      nodes.slice(0, 9).map((node) => node.textContent?.replace(/^(\d)(\S)/, "$1 $2").replace(/\s+/g, " ").trim()),
+    );
+    expect(workflowLabels).toEqual([
+      "1 Briefing Inteligente",
+      "2 Orçamento Automático",
+      "3 Proposta Comercial",
+      "4 Contratos",
+      "1 Gerador de Roteiro",
+      "2 Decupagem Técnica",
+      "3 Callsheet Inteligente",
+      "4 Cronograma",
+      "5 Checklist de Set",
+    ]);
+
+    await expect(page.locator(`input[value="Marca Fluxo ${suffix}"]`)).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    await screenshot(page, "connected-client-workflow");
+  } finally {
+    await page.request.delete(`/api/projects/${projectPayload.data.id}`);
+    await page.request.delete(`/api/clients/${clientPayload.data.id}`);
+  }
 });

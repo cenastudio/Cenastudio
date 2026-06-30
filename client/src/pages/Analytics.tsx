@@ -261,6 +261,30 @@ function AnalyticsContent() {
   };
 
   const summary = finance?.summary;
+  const erpLanes = summary
+    ? [
+        {
+          label: "Contas a receber",
+          value: formatCurrency(summary.toReceive),
+          detail: `${formatCurrency(summary.overdueReceivables)} vencido`,
+        },
+        {
+          label: "Contas a pagar",
+          value: formatCurrency(summary.toPay),
+          detail: `${formatCurrency(summary.fixedMonthly)} fixo mensal`,
+        },
+        {
+          label: "Receita recorrente",
+          value: formatCurrency(summary.recurringRevenue),
+          detail: `${summary.recurringClients} cliente(s) recorrente(s)`,
+        },
+        {
+          label: "Forecast comercial",
+          value: formatCurrency(summary.weightedPipeline),
+          detail: `${formatCurrency(summary.openPipeline)} em pipeline`,
+        },
+      ]
+    : [];
 
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body">
@@ -484,6 +508,34 @@ function AnalyticsContent() {
           </div>
         ) : (
           <>
+            <section className="grid grid-cols-1 gap-3 lg:grid-cols-[0.9fr_1.1fr]">
+              <div className="app-panel p-5 sm:p-6">
+                <p className="frame-label">// FINANCEIRO / ERP</p>
+                <h2 className="mt-2 text-2xl font-semibold">Operação financeira ligada ao CRM</h2>
+                <p className="mt-3 text-sm leading-relaxed text-frame-gray-light">
+                  O dinheiro precisa seguir o mesmo fluxo do projeto: cliente no CRM, proposta aprovada, entrada no caixa, custo controlado e margem visível.
+                </p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {["Cliente", "Proposta", "Receita", "Custo", "Margem"].map((step, index) => (
+                    <span key={step} className="inline-flex min-h-9 items-center gap-2 border border-frame-gray-3 px-3 font-frame-mono text-[0.58rem] uppercase tracking-[0.12em] text-frame-gray-light">
+                      <span className="text-frame-orange">{index + 1}</span>
+                      {step}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {erpLanes.map((lane) => (
+                  <div key={lane.label} className="border border-frame-gray-3 bg-frame-gray-1/20 p-4">
+                    <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.14em] text-frame-gray-light">{lane.label}</p>
+                    <strong className="mt-2 block text-xl text-frame-white">{lane.value}</strong>
+                    <span className="mt-1 block text-xs text-frame-gray-light">{lane.detail}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
             <section className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
               <MetricCard label={t("app.analytics.receivedMonth")} value={formatCurrency(summary.receivedMonth)} icon={ArrowUpRight} tone="positive" />
               <MetricCard label={t("app.analytics.expensesMonth")} value={formatCurrency(summary.expensesMonth)} icon={ArrowDownRight} tone="negative" />
