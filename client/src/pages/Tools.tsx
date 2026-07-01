@@ -8,6 +8,7 @@ import { useLocation } from "wouter";
 import type { ToolFromApi } from "@/lib/api";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { getStageForTool, WORKFLOW_STAGES } from "@/lib/workflow";
 
 const TOOL_FOCUS: Record<string, { phase: string; outcome: string; critical?: boolean }> = {
   briefing: { phase: "01 Descoberta", outcome: "Base para roteiro, proposta e contrato.", critical: true },
@@ -32,7 +33,6 @@ function ToolsContent() {
   const [error, setError] = useState<string | null>(null);
   const { activeProject } = useProject();
   const localizedTools = localizeTools(tools, locale);
-  const criticalTools = localizedTools.filter((tool) => TOOL_FOCUS[tool.slug]?.critical);
 
   useEffect(() => {
     api.tools
@@ -59,22 +59,17 @@ function ToolsContent() {
           </div>
 
           <div className="border border-frame-orange/30 bg-frame-orange/5 p-4">
-            <p className="font-frame-mono text-[0.6rem] uppercase tracking-[0.16em] text-frame-orange">{t("app.tools.criticalSessions") as string}</p>
-            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-1">
-              {criticalTools.slice(0, 5).map((tool) => (
+            <p className="font-frame-mono text-[0.6rem] uppercase tracking-[0.16em] text-frame-orange">Escolha pelo momento do job</p>
+            <div className="mt-3 grid grid-cols-2 gap-2 xl:grid-cols-3">
+              {WORKFLOW_STAGES.filter((stage) => stage.actions.some((action) => action.toolId)).map((stage) => (
                 <button
-                  key={tool.id}
+                  key={stage.id}
                   type="button"
-                  onClick={() => setLocation(activeProject ? `/project/${activeProject.id}/studio/${tool.id}` : `/studio/${tool.id}`)}
-                  className="flex items-center justify-between gap-3 border border-frame-gray-3 bg-frame-black/30 px-3 py-2 text-left transition hover:border-frame-orange/50"
+                  onClick={() => setLocation(activeProject ? `/project/${activeProject.id}/journey/${stage.id}` : `/tools#${stage.id}`)}
+                  className="border border-frame-gray-3 bg-frame-black/30 px-3 py-2 text-left transition hover:border-frame-orange/50"
                 >
-                  <span className="min-w-0">
-                    <span className="block truncate text-[0.74rem] font-semibold text-frame-white">{tool.name}</span>
-                    <span className="block truncate font-frame-mono text-[0.54rem] uppercase tracking-[0.12em] text-frame-gray-light">
-                      {TOOL_FOCUS[tool.slug]?.phase}
-                    </span>
-                  </span>
-                  <span className="text-frame-orange">→</span>
+                  <span className="block font-frame-mono text-[0.52rem] text-frame-orange">{stage.number}</span>
+                  <span className="mt-1 block text-[0.72rem] font-semibold text-frame-white">{stage.label}</span>
                 </button>
               ))}
             </div>
@@ -88,51 +83,34 @@ function ToolsContent() {
         )}
         {error && <p className="text-frame-red font-frame-mono text-sm">{error}</p>}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 xl:gap-4">
-          {localizedTools.map((tool) => {
-            const Icon = getToolIcon(tool.slug);
-            const focus = TOOL_FOCUS[tool.slug];
+        <div className="space-y-10">
+          {WORKFLOW_STAGES.map((stage) => {
+            const stageTools = localizedTools.filter((tool) => getStageForTool(tool.slug) === stage.id);
+            if (!stageTools.length) return null;
             return (
-              <div
-                key={tool.id}
-                className="frame-card cursor-pointer group"
-                onClick={() => setLocation(`/tools/${tool.id}`)}
-              >
-                <Icon className="w-7 h-7 mb-3.5 text-frame-gray-light grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-300" />
-                <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] text-frame-orange mb-2">
-                  {focus?.phase || tool.id}
-                </p>
-                <h3 className="frame-title text-[1.45rem] text-frame-white mb-2">{tool.name}</h3>
-                <p className="text-[0.8rem] leading-relaxed text-frame-gray-light font-light mb-4 line-clamp-3">
-                  {tool.description}
-                </p>
-                {focus && (
-                  <p className="mb-4 border-l-2 border-frame-orange/55 pl-3 text-[0.68rem] leading-relaxed text-frame-gray-light">
-                    {focus.outcome}
-                  </p>
-                )}
-                <div className="flex flex-wrap gap-1 mb-4">
-                  {tool.tags.slice(0, 3).map((tag) => (
-                    <span key={tag} className="frame-tag">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  className="frame-btn-ghost w-full !min-h-10 !py-2 !px-3.5 text-center transition group-hover:border-frame-orange/60 group-hover:text-frame-white"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLocation(
-                      activeProject
-                        ? `/project/${activeProject.id}/studio/${tool.id}`
-                        : `/studio/${tool.id}`,
+              <section key={stage.id} id={stage.id} className="scroll-mt-24">
+                <header className="mb-4 flex flex-col gap-2 border-b border-frame-gray-3 pb-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div><p className="frame-label">// Capítulo {stage.number}</p><h2 className="mt-1 text-xl font-semibold">{stage.label}</h2></div>
+                  <p className="max-w-xl text-xs leading-relaxed text-frame-gray-light">{stage.description}</p>
+                </header>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:gap-4">
+                  {stageTools.map((tool) => {
+                    const Icon = getToolIcon(tool.slug);
+                    const focus = TOOL_FOCUS[tool.slug];
+                    return (
+                      <div key={tool.id} className={`frame-card cursor-pointer group ${focus?.critical ? "border-frame-orange/35" : ""}`} onClick={() => setLocation(`/tools/${tool.id}`)}>
+                        <Icon className="w-7 h-7 mb-3.5 text-frame-gray-light grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-300" />
+                        <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] text-frame-orange mb-2">{focus?.critical ? "SESSÃO DEDICADA" : focus?.phase || tool.id}</p>
+                        <h3 className="frame-title text-[1.45rem] text-frame-white mb-2">{tool.name}</h3>
+                        <p className="text-[0.8rem] leading-relaxed text-frame-gray-light font-light mb-4 line-clamp-3">{tool.description}</p>
+                        {focus && <p className="mb-4 border-l-2 border-frame-orange/55 pl-3 text-[0.68rem] leading-relaxed text-frame-gray-light">{focus.outcome}</p>}
+                        <div className="flex flex-wrap gap-1 mb-4">{tool.tags.slice(0, 3).map((tag) => <span key={tag} className="frame-tag">{tag}</span>)}</div>
+                        <button type="button" className="frame-btn-ghost w-full !min-h-10 !py-2 !px-3.5 text-center transition group-hover:border-frame-orange/60 group-hover:text-frame-white" onClick={(event) => { event.stopPropagation(); setLocation(activeProject ? `/project/${activeProject.id}/studio/${tool.id}` : `/studio/${tool.id}`); }}>{t("app.tools.openInStudio")} →</button>
+                      </div>
                     );
-                  }}
-                >
-                  {t("app.tools.openInStudio")} →
-                </button>
-              </div>
+                  })}
+                </div>
+              </section>
             );
           })}
         </div>

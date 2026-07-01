@@ -20,6 +20,8 @@ const EditClient = lazy(() => import("@/pages/EditClient"));
 const Collaborators = lazy(() => import("@/pages/Collaborators"));
 const CompanySettings = lazy(() => import("@/pages/CompanySettings"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const Projects = lazy(() => import("@/pages/Projects"));
+const CommercialHub = lazy(() => import("@/pages/CommercialHub"));
 const Documents = lazy(() => import("@/pages/Documents"));
 const Files = lazy(() => import("@/pages/Files"));
 const Interactions = lazy(() => import("@/pages/Interactions"));
@@ -31,6 +33,7 @@ const Pipeline = lazy(() => import("@/pages/Pipeline"));
 const Proposals = lazy(() => import("@/pages/Proposals"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const ProjectHub = lazy(() => import("@/pages/ProjectHub"));
+const ProjectChapter = lazy(() => import("@/pages/ProjectChapter"));
 const Register = lazy(() => import("@/pages/Register"));
 const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
@@ -78,6 +81,8 @@ function Router() {
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/projects" component={Projects} />
+      <Route path="/commercial" component={CommercialHub} />
       <Route path="/clients/new" component={NewClient} />
       <Route path="/clients/:id/editar" component={EditClient} />
       <Route path="/clients" component={Clients} />
@@ -99,6 +104,7 @@ function Router() {
       <Route path="/tools/:id" component={ToolDetail} />
       <Route path="/profile" component={Profile} />
       <Route path="/studio/:id" component={Studio} />
+      <Route path="/project/:projectId/journey/:stage" component={ProjectChapter} />
       <Route path="/project/:id" component={ProjectHub} />
       <Route path="/project/:projectId/studio/:id" component={Studio} />
       <Route path="/project/:projectId/documents" component={Documents} />

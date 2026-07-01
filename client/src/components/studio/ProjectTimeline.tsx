@@ -2,25 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useProject } from "@/contexts/ProjectContext";
 import { api } from "@/lib/api";
-import { Check, Flame } from "lucide-react";
+import { Check } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-
-interface TimelineStep {
-  id: string;
-  toolId: string;
-  name: string;
-  categoryKey: string;
-}
-
-const TIMELINE_STEPS: TimelineStep[] = [
-  { id: "briefing", toolId: "07", name: "Briefing", categoryKey: "commercial" },
-  { id: "roteiro", toolId: "01", name: "Roteiro", categoryKey: "preProd" },
-  { id: "decupagem", toolId: "02", name: "Decupagem", categoryKey: "preProd" },
-  { id: "callsheet", toolId: "03", name: "Callsheet", categoryKey: "preProd" },
-  { id: "cronograma", toolId: "10", name: "Cronograma", categoryKey: "preProd" },
-  { id: "checklist", toolId: "09", name: "Checklist", categoryKey: "preProd" },
-  { id: "entrega", toolId: "11", name: "Entrega", categoryKey: "posProd" },
-];
+import { getStageForTool, isActionComplete, WORKFLOW_STAGES } from "@/lib/workflow";
 
 interface ProjectTimelineProps {
   activeToolId: string;
@@ -30,11 +14,6 @@ export default function ProjectTimeline({ activeToolId }: ProjectTimelineProps) 
   const { t } = useLanguage();
   const [, setLocation] = useLocation();
   const { activeProject, toolStates } = useProject();
-  const timelineCategories: Record<string, string> = {
-    commercial: t("app.studio.timeline.commercial") as string,
-    preProd: t("app.studio.timeline.preProd") as string,
-    posProd: t("app.studio.timeline.posProd") as string,
-  };
   const [populatedSteps, setPopulatedSteps] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -57,24 +36,27 @@ export default function ProjectTimeline({ activeToolId }: ProjectTimelineProps) 
 
   const handleNavigateStep = (stepId: string) => {
     if (activeProject) {
-      setLocation(`/project/${activeProject.id}/studio/${stepId}`);
+      setLocation(`/project/${activeProject.id}/journey/${stepId}`);
     } else {
-      setLocation(`/studio/${stepId}`);
+      const stage = WORKFLOW_STAGES.find((item) => item.id === stepId);
+      const action = stage?.actions.find((item) => item.toolSlug);
+      setLocation(action?.toolSlug ? `/studio/${action.toolSlug}` : "/tools");
     }
   };
 
-  // Helper to determine if step has any content (either fetched from DB or in memory cache)
-  const isStepPopulated = (stepId: string, toolId: string) => {
-    // Check in-memory active cache
-    const cache = toolStates[toolId] || toolStates[stepId];
-    if (cache) {
-      const hasForm = Object.values(cache.formData || {}).some(Boolean);
-      const hasOutput = !!cache.outputData && cache.outputData.trim().length > 0;
-      if (hasForm || hasOutput) return true;
-    }
-    // Check SQLite fetched steps list
-    return populatedSteps.includes(toolId) || populatedSteps.includes(stepId);
+  const isStagePopulated = (stageId: string) => {
+    const stage = WORKFLOW_STAGES.find((item) => item.id === stageId);
+    if (!stage) return false;
+    return stage.actions.some((action) => {
+      const cache = (action.toolId && toolStates[action.toolId]) || (action.toolSlug && toolStates[action.toolSlug]);
+      if (cache) {
+        const hasForm = Object.entries(cache.formData || {}).some(([key, value]) => !key.startsWith("__") && Boolean(value));
+        if (hasForm || cache.outputData?.trim()) return true;
+      }
+      return isActionComplete(action, populatedSteps);
+    });
   };
+  const activeStage = getStageForTool(activeToolId);
 
   return (
     <div className="w-full bg-frame-gray-1 border-b border-frame-gray-2 px-6 py-3 select-none flex items-center justify-between overflow-x-auto scrollbar-thin">
@@ -94,9 +76,9 @@ export default function ProjectTimeline({ activeToolId }: ProjectTimelineProps) 
           {/* Subtle connector timeline line background */}
           <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[1px] bg-frame-gray-3/40 z-0 pointer-events-none" />
 
-          {TIMELINE_STEPS.map((step, idx) => {
-            const isActive = step.id === activeToolId || step.toolId === activeToolId;
-            const isFilled = isStepPopulated(step.id, step.toolId);
+          {WORKFLOW_STAGES.map((step, idx) => {
+            const isActive = step.id === activeStage;
+            const isFilled = isStagePopulated(step.id);
             
             return (
               <button
@@ -131,10 +113,10 @@ export default function ProjectTimeline({ activeToolId }: ProjectTimelineProps) 
                         : "text-frame-gray-light group-hover:text-frame-white"
                     }`}
                   >
-                    {step.name}
+                    {step.label}
                   </span>
                   <span className="hidden sm:inline font-frame-mono text-[0.6rem] tracking-wider text-frame-gray-muted -mt-0.5">
-                    {timelineCategories[step.categoryKey]}
+                    {step.eyebrow}
                   </span>
                 </div>
               </button>

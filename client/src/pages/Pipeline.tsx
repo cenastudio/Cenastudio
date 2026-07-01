@@ -32,6 +32,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { motion } from "framer-motion";
 import type { Translate } from "@/contexts/LanguageContext";
+import { useProject } from "@/contexts/ProjectContext";
+import { useLocation } from "wouter";
 
 interface Opportunity {
   id: number;
@@ -110,6 +112,8 @@ const emptyForm = {
 
 function PipelineContent() {
   const { t } = useLanguage();
+  const { projects, createProject } = useProject();
+  const [, setLocation] = useLocation();
   const stages = useMemo(() => getStages(t), [t]);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [stats, setStats] = useState<PipelineStats | null>(null);
@@ -117,6 +121,7 @@ function PipelineContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState("all");
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
@@ -251,6 +256,53 @@ function PipelineContent() {
   const closeModal = () => {
     setModalMode(null);
     setSelectedOpportunity(null);
+  };
+
+  const projectFromOpportunity = (opportunityId: number) => projects.find((project) => {
+    try {
+      return Number(JSON.parse(project.metadataJson || "{}").sourceOpportunityId) === opportunityId;
+    } catch {
+      return false;
+    }
+  });
+
+  const convertOpportunityToProject = async (opportunity: Opportunity) => {
+    const existing = projectFromOpportunity(opportunity.id);
+    if (existing) {
+      closeModal();
+      setLocation(`/project/${existing.id}`);
+      return;
+    }
+
+    setIsConverting(true);
+    try {
+      const clientId = opportunity.client_id ?? opportunity.clientId ?? undefined;
+      const metadata = {
+        sourceOpportunityId: opportunity.id,
+        commercialValue: opportunity.estimated_value || 0,
+        projectType: "Comercial",
+        objective: opportunity.title,
+        workflowFocus: "briefing",
+        workflowStage: "entry",
+        creativeGoals: {
+          client: opportunity.client_company || opportunity.client_name || undefined,
+          budget: opportunity.estimated_value ? formatCurrency(opportunity.estimated_value) : undefined,
+        },
+      };
+      const project = await createProject(
+        opportunity.title,
+        `Projeto criado a partir da oportunidade #${opportunity.id}.`,
+        clientId || undefined,
+        JSON.stringify(metadata),
+      );
+      toast.success("Oportunidade convertida em projeto com o contexto comercial.");
+      closeModal();
+      setLocation(`/project/${project.id}/journey/entry`);
+    } catch {
+      toast.error("Não foi possível transformar a oportunidade em projeto.");
+    } finally {
+      setIsConverting(false);
+    }
   };
 
   const submitOpportunity = async (event: React.FormEvent) => {
@@ -561,6 +613,20 @@ function PipelineContent() {
         footer={
           selectedOpportunity && (
             <>
+              {selectedOpportunity.stage === "won" && (
+                <button
+                  type="button"
+                  disabled={isConverting}
+                  onClick={() => void convertOpportunityToProject(selectedOpportunity)}
+                  className="frame-btn-primary"
+                >
+                  {isConverting
+                    ? "Criando projeto..."
+                    : projectFromOpportunity(selectedOpportunity.id)
+                      ? "Abrir projeto"
+                      : "Transformar em projeto"}
+                </button>
+              )}
               <button onClick={() => openEditModal(selectedOpportunity)} className="frame-btn-ghost">
                 {t("app.common.edit") as string}
               </button>

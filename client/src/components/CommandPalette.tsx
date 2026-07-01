@@ -23,7 +23,10 @@ import {
   Shield,
   UserPlus,
   Wrench,
+  FolderKanban,
+  BriefcaseBusiness,
 } from "lucide-react";
+import { useProject } from "@/contexts/ProjectContext";
 
 interface CommandItem {
   labelKey: string;
@@ -32,6 +35,10 @@ interface CommandItem {
 }
 
 const COMMAND_DEFS: CommandItem[] = [
+  { labelKey: "app.commandPalette.cmd.dashboard", path: "/dashboard", icon: LayoutDashboard },
+  { labelKey: "app.nav.projects", path: "/projects", icon: FolderKanban },
+  { labelKey: "app.nav.commercialCrm", path: "/commercial", icon: BriefcaseBusiness },
+  { labelKey: "app.nav.finance", path: "/analytics", icon: BarChart3 },
   { labelKey: "app.commandPalette.cmd.studioIa", path: "/tools", icon: Wrench },
   { labelKey: "app.commandPalette.cmd.clients", path: "/clients", icon: Users },
   { labelKey: "app.commandPalette.cmd.pipeline", path: "/pipeline", icon: GitBranch },
@@ -40,9 +47,7 @@ const COMMAND_DEFS: CommandItem[] = [
   { labelKey: "app.commandPalette.cmd.documents", path: "/documents", icon: FileText },
   { labelKey: "app.commandPalette.cmd.videoReviews", path: "/video-reviews", icon: Film },
   { labelKey: "app.commandPalette.cmd.team", path: "/collaborators", icon: UserCheck },
-  { labelKey: "app.commandPalette.cmd.analytics", path: "/analytics", icon: BarChart3 },
   { labelKey: "app.commandPalette.cmd.profile", path: "/profile", icon: User },
-  { labelKey: "app.commandPalette.cmd.dashboard", path: "/dashboard", icon: LayoutDashboard },
   { labelKey: "app.commandPalette.cmd.admin", path: "/admin", icon: Shield },
   { labelKey: "app.commandPalette.cmd.newClient", path: "/clients/new", icon: UserPlus },
 ];
@@ -52,6 +57,7 @@ export default function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [, setLocation] = useLocation();
   const { isAdmin } = useAuth();
+  const { projects } = useProject();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -95,6 +101,16 @@ export default function CommandPalette() {
             );
           })}
         </CommandGroup>
+        {projects.length > 0 && (
+          <CommandGroup heading={t("app.nav.projects") as string}>
+            {projects.slice(0, 8).map((project) => (
+              <CommandItem key={project.id} value={`${project.name} ${project.clientName || ""}`} onSelect={() => handleSelect(`/project/${project.id}`)}>
+                <FolderKanban className="mr-2 h-4 w-4" />
+                <span>{project.name}</span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
       </CommandList>
     </CommandDialog>
   );

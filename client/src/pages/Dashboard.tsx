@@ -27,6 +27,7 @@ import {
   WalletCards,
 } from "lucide-react";
 import { toast } from "sonner";
+import { getStageForTool, getWorkflowStage, WORKFLOW_STAGES } from "@/lib/workflow";
 import {
   Dialog,
   DialogContent,
@@ -42,6 +43,7 @@ interface ProjectMetadata {
   deadline?: string;
   objective?: string;
   workflowFocus?: string;
+  workflowStage?: string;
   creativeGoals?: {
     format?: string;
     client?: string;
@@ -144,6 +146,7 @@ function DashboardContent() {
   const focusClient = focusProject?.clientName || focusMeta?.creativeGoals?.client;
   const focusFormat = focusMeta?.creativeGoals?.format;
   const focusDeadline = focusMeta?.deadline;
+  const focusStage = getWorkflowStage(focusMeta?.workflowStage || getStageForTool(focusMeta?.workflowFocus));
   const focusStatus = !focusProject
     ? t("app.dashboard.statusEmpty")
     : !focusMeta?.objective && !focusFormat
@@ -288,6 +291,7 @@ function DashboardContent() {
         deadline: deadline || undefined,
         objective: objective.trim() || undefined,
         workflowFocus: "briefing",
+        workflowStage: "entry",
         creativeGoals: {
           format: format.trim() || undefined,
           client: selectedClient?.company || selectedClient?.name || undefined,
@@ -377,6 +381,35 @@ function DashboardContent() {
             </button>
           </div>
         </div>
+
+        <section className="grid gap-4 border border-frame-orange/45 bg-frame-orange/[0.06] p-4 sm:p-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+          <div className="min-w-0">
+            <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.18em] text-frame-orange">Agora na sua história</p>
+            <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h2 className="text-xl font-semibold text-frame-white">{focusProject?.name || "Seu primeiro job"}</h2>
+              <span className="font-frame-mono text-[0.6rem] uppercase tracking-[0.12em] text-frame-gray-light">{focusProject ? `${focusStage.number} · ${focusStage.label}` : "Comece pelo cliente"}</span>
+            </div>
+            <p className="mt-2 text-sm text-frame-gray-light">{focusNextAction as string}</p>
+            {focusProject && (
+              <div className="mt-4 flex gap-1 overflow-x-auto pb-1" aria-label="Capítulos do job">
+                {WORKFLOW_STAGES.map((stage) => (
+                  <button key={stage.id} type="button" onClick={() => setLocation(`/project/${focusProject.id}/journey/${stage.id}`)} className={`min-w-[112px] border px-3 py-2 text-left transition ${stage.id === focusStage.id ? "border-frame-orange bg-frame-orange/10" : "border-frame-gray-3 bg-frame-black/20 hover:border-frame-orange/40"}`}>
+                    <span className="block font-frame-mono text-[0.52rem] text-frame-orange">{stage.number}</span>
+                    <span className="mt-1 block text-xs font-semibold">{stage.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => focusProject ? setLocation(`/project/${focusProject.id}/journey/${focusStage.id}`) : startProjectFromClient()}
+            className="frame-btn-primary flex min-w-[190px] items-center justify-center gap-2"
+          >
+            {focusProject ? "Continuar história" : "Iniciar primeiro job"}
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </section>
 
         <section className="grid grid-cols-1 gap-3 lg:grid-cols-3">
           {operatingModules.map((module) => {

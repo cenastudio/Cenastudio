@@ -22,6 +22,7 @@ import {
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { isActionComplete, WORKFLOW_STAGES } from "@/lib/workflow";
 
 interface ProjectDetail {
   id: number;
@@ -66,15 +67,6 @@ const QUICK_TOOLS = [
   { id: "03", slug: "callsheet", name: "Callsheet", icon: Calendar },
   { id: "04", slug: "orcamento", name: "Orçamento", icon: Gauge },
   { id: "08", slug: "moodboard", name: "Moodboard", icon: Target },
-];
-
-const WORKFLOW_STEPS = [
-  { slug: "briefing", label: "Briefing", hint: "app.projectHub.stepBriefingHint" },
-  { slug: "roteiro", label: "Roteiro", hint: "app.projectHub.stepScriptHint" },
-  { slug: "decupagem", label: "Decupagem", hint: "app.projectHub.stepBreakdownHint" },
-  { slug: "callsheet", label: "Callsheet", hint: "app.projectHub.stepCallsheetHint" },
-  { slug: "orcamento", label: "Orçamento", hint: "app.projectHub.stepBudgetHint" },
-  { slug: "moodboard", label: "Moodboard", hint: "app.projectHub.stepMoodboardHint" },
 ];
 
 interface ProjectMetadata {
@@ -163,9 +155,18 @@ function ProjectHubContent() {
   }
 
   const metadata = parseProjectMetadata(project);
-  const completedSteps = WORKFLOW_STEPS.filter((step) => populatedStates.includes(step.slug));
-  const progress = Math.round((completedSteps.length / WORKFLOW_STEPS.length) * 100);
-  const nextStep = WORKFLOW_STEPS.find((step) => !populatedStates.includes(step.slug)) || WORKFLOW_STEPS[0];
+  const stageStates = WORKFLOW_STAGES.map((stage) => {
+    const toolActions = stage.actions.filter((action) => action.toolId || action.toolSlug);
+    let complete = toolActions.length > 0 && toolActions.every((action) => isActionComplete(action, populatedStates));
+    if (stage.id === "production") complete = recentFiles.length > 0 || members.length > 0;
+    if (stage.id === "review") complete = recentReviews.some((review) => review.status === "approved");
+    if (stage.id === "closing") complete = project.status === "completed" || project.status === "archived";
+    return { ...stage, complete };
+  });
+  const completedSteps = stageStates.filter((stage) => stage.complete);
+  const progress = Math.round((completedSteps.length / stageStates.length) * 100);
+  const nextStep = stageStates.find((stage) => !stage.complete) || stageStates[stageStates.length - 1];
+  const nextAction = nextStep.actions.find((action) => !isActionComplete(action, populatedStates)) || nextStep.actions[0];
   const createdAt = project.createdAt || project.created_at;
   const updatedAt = project.updatedAt || project.updated_at;
   const pendingReviews = recentReviews.filter((review) => review.status !== "approved").length;
@@ -227,14 +228,14 @@ function ProjectHubContent() {
               </div>
               <button
                 type="button"
-                onClick={() => setLocation(`/project/${projectId}/studio/${nextStep.slug}`)}
+                onClick={() => setLocation(nextAction.route(projectId))}
                 className="w-full frame-btn-primary !py-2.5 !px-4 !text-[0.6rem] flex items-center justify-center gap-2"
               >
-                {t("app.projectHub.continue")} {nextStep.label}
+                {t("app.projectHub.continue")} {nextAction.label}
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
               <p className="mt-3 text-[0.68rem] leading-relaxed text-frame-gray-light">
-                {t(nextStep.hint)}
+                {nextStep.description}
               </p>
             </div>
           </div>
@@ -270,7 +271,7 @@ function ProjectHubContent() {
                   {t("app.projectHub.projectFlow")}
                 </h2>
                 <span className="font-frame-mono text-[0.64rem] text-frame-gray-light tracking-wider">
-                  {completedSteps.length}/{WORKFLOW_STEPS.length} {t("app.projectHub.steps")}
+                  {completedSteps.length}/{stageStates.length} {t("app.projectHub.steps")}
                 </span>
               </div>
               <div className="border border-frame-orange/40 bg-frame-orange/[0.05] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -278,27 +279,27 @@ function ProjectHubContent() {
                   <p className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-orange mb-1">
                     {t("app.projectHub.nextOperationalMove")}
                   </p>
-                  <h3 className="text-base font-semibold text-frame-white">{nextStep.label}</h3>
-                  <p className="text-xs text-frame-gray-light mt-1 leading-relaxed">{t(nextStep.hint)}</p>
+                  <h3 className="text-base font-semibold text-frame-white">{nextStep.label}: {nextAction.label}</h3>
+                  <p className="text-xs text-frame-gray-light mt-1 leading-relaxed">{nextAction.description}</p>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setLocation(`/project/${projectId}/studio/${nextStep.slug}`)}
+                  onClick={() => setLocation(nextAction.route(projectId))}
                   className="frame-btn-primary !py-2.5 !px-4 !text-[0.6rem] shrink-0"
                 >
                   {t("app.projectHub.openStep")}
                 </button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {WORKFLOW_STEPS.map((step) => {
-                  const isDone = populatedStates.includes(step.slug);
-                  const isNext = step.slug === nextStep.slug;
+                {stageStates.map((step) => {
+                  const isDone = step.complete;
+                  const isNext = step.id === nextStep.id;
 
                   return (
                     <button
-                      key={step.slug}
+                      key={step.id}
                       type="button"
-                      onClick={() => setLocation(`/project/${projectId}/studio/${step.slug}`)}
+                      onClick={() => setLocation(`/project/${projectId}/journey/${step.id}`)}
                       className={`text-left border p-4 transition group ${
                         isNext
                           ? "border-frame-orange/60 bg-frame-orange/[0.06]"
@@ -322,7 +323,7 @@ function ProjectHubContent() {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-frame-gray-light mt-2 leading-relaxed">{t(step.hint)}</p>
+                      <p className="text-xs text-frame-gray-light mt-2 leading-relaxed">{step.description}</p>
                     </button>
                   );
                 })}

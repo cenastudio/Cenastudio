@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { api, type Project } from "@/lib/api";
 
 interface OverallAnalytics {
   projects: { total: number; active: number };
@@ -132,6 +133,8 @@ function AnalyticsContent() {
   const [refreshing, setRefreshing] = useState(false);
   const [showEntryForm, setShowEntryForm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [contextProject, setContextProject] = useState<Project | null>(null);
+  const projectIdParam = Number(new URLSearchParams(window.location.search).get("projectId") || 0);
 
   const loadAnalytics = useCallback(async () => {
     try {
@@ -164,6 +167,25 @@ function AnalyticsContent() {
   useEffect(() => {
     loadAnalytics();
   }, [loadAnalytics]);
+
+  useEffect(() => {
+    if (!projectIdParam) return;
+    api.projects.get(projectIdParam).then(setContextProject).catch(() => setContextProject(null));
+  }, [projectIdParam]);
+
+  const openProjectEntry = () => {
+    if (contextProject) {
+      let metadata: { commercialValue?: number } = {};
+      try { metadata = JSON.parse(contextProject.metadataJson || "{}"); } catch { metadata = {}; }
+      setEntry((current) => ({
+        ...current,
+        description: `Resultado do projeto: ${contextProject.name}`,
+        amount: metadata.commercialValue ? String(metadata.commercialValue) : current.amount,
+        clientId: contextProject.clientId ? String(contextProject.clientId) : current.clientId,
+      }));
+    }
+    setShowEntryForm(true);
+  };
 
   useEffect(() => {
     if (!showEntryForm) return;
@@ -320,7 +342,7 @@ function AnalyticsContent() {
             </button>
             <button
               type="button"
-              onClick={() => setShowEntryForm(true)}
+              onClick={openProjectEntry}
               className="frame-btn-primary inline-flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
@@ -328,6 +350,17 @@ function AnalyticsContent() {
             </button>
           </div>
         </header>
+
+        {contextProject && (
+          <section className="flex flex-col gap-4 border border-frame-orange/40 bg-frame-orange/[0.06] p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="frame-label text-frame-orange">// Fechamento do job</p>
+              <h2 className="mt-1 text-lg font-semibold">{contextProject.name}</h2>
+              <p className="mt-1 text-xs text-frame-gray-light">Registre receita e custos vinculados ao cliente antes de concluir a história.</p>
+            </div>
+            <button type="button" onClick={() => setLocation(`/project/${contextProject.id}/journey/closing`)} className="frame-btn-ghost shrink-0">Voltar ao fechamento</button>
+          </section>
+        )}
 
         {showEntryForm && (
           <div className="fixed inset-0 z-50 overflow-y-auto">

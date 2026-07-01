@@ -9,6 +9,10 @@ const routerState = vi.hoisted(() => ({
   setLocation: vi.fn(),
   params: { id: "7" },
 }));
+const projectContextState = vi.hoisted(() => ({
+  projects: [] as Array<{ id: number; metadataJson: string }>,
+  createProject: vi.fn(),
+}));
 
 vi.mock("wouter", () => ({
   useLocation: () => ["/", routerState.setLocation],
@@ -19,6 +23,9 @@ vi.mock("@/components/AppNavBar", () => ({ default: () => <div data-testid="app-
 vi.mock("@/components/ProjectNav", () => ({ default: () => <div data-testid="project-nav" /> }));
 vi.mock("@/components/ProtectedRoute", () => ({
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+vi.mock("@/contexts/ProjectContext", () => ({
+  useProject: () => projectContextState,
 }));
 
 function renderWithLanguage(component: React.ReactElement) {
@@ -37,6 +44,8 @@ describe("operational UI and UX flows", () => {
     vi.mocked(window.localStorage.getItem).mockReturnValue(null);
     routerState.setLocation.mockClear();
     routerState.params = { id: "7" };
+    projectContextState.projects = [];
+    projectContextState.createProject.mockReset();
   });
 
   afterEach(() => {
@@ -202,8 +211,8 @@ describe("operational UI and UX flows", () => {
 
     await screen.findByText("Campanha Aurora");
     expect(screen.getByText("Próximo movimento operacional")).toBeInTheDocument();
-    expect(screen.getAllByText("Roteiro").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Transforme o briefing em narrativa pronta para revisar e produzir.").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Orçamento").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Custos, margem e premissas do job.").length).toBeGreaterThan(0);
   });
 
   it("shows client load recovery and no-result state without losing context", async () => {
@@ -269,6 +278,45 @@ describe("operational UI and UX flows", () => {
     expect(screen.getByText("Próximo foco")).toBeInTheDocument();
     expect(screen.getByText("Abertas")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Ações para Retainer mensal" })).toBeInTheDocument();
+  });
+
+  it("turns a won opportunity into a connected project", async () => {
+    projectContextState.createProject.mockResolvedValue({ id: 91, name: "Filme Aurora", metadataJson: "{}" });
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("pipeline-opportunities")) return jsonResponse({ success: true, data: [{
+        id: 44,
+        client_id: 7,
+        title: "Filme Aurora",
+        stage: "won",
+        estimated_value: 48000,
+        probability: 100,
+        expected_close_date: null,
+        lost_reason: null,
+        client_name: "Aurora",
+        client_company: "Aurora Filmes",
+        created_at: "2026-06-30T12:00:00.000Z",
+        updated_at: "2026-06-30T12:00:00.000Z",
+      }] });
+      if (url.includes("pipeline-stats")) return jsonResponse({ success: true, data: { totalOpportunities: 1, totalPipelineValue: 48000, byStage: [], wonThisMonth: { count: 1, value: 48000 } } });
+      return jsonResponse({ success: true, data: [{ id: 7, name: "Aurora", company: "Aurora Filmes" }] });
+    }));
+
+    const { default: Pipeline } = await import("@/pages/Pipeline");
+    renderWithLanguage(<Pipeline />);
+
+    const title = await screen.findByText("Filme Aurora");
+    fireEvent.click(title.closest("button")!);
+    const convert = await screen.findByRole("button", { name: "Transformar em projeto" });
+    fireEvent.click(convert);
+
+    await waitFor(() => expect(projectContextState.createProject).toHaveBeenCalledWith(
+      "Filme Aurora",
+      "Projeto criado a partir da oportunidade #44.",
+      7,
+      expect.stringContaining('"sourceOpportunityId":44'),
+    ));
+    await waitFor(() => expect(routerState.setLocation).toHaveBeenCalledWith("/project/91/journey/entry"));
   });
 
   it("shows progress and expected output for critical Studio sessions", async () => {

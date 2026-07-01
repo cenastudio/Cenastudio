@@ -8,18 +8,18 @@ Inteligência artificial para produção audiovisual — roteiros, callsheets, d
 
 - **[SYSTEM_DOCUMENTATION.md](SYSTEM_DOCUMENTATION.md)** - Documentação completa do sistema (arquitetura, componentes, API, banco de dados)
 - **[SENIOR_LEVEL_ROADMAP.md](SENIOR_LEVEL_ROADMAP.md)** - Roadmap para alcançar nível Senior (12 melhorias priorizadas)
+- **[UX_FLOW_ARCHITECTURE.md](UX_FLOW_ARCHITECTURE.md)** - Storytelling operacional, arquitetura de navegação e ciclo completo do job
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Guia para contribuidores (setup, padrões de código, processo de PR)
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - Decisões de arquitetura (10 ADRs documentados)
 - **[DEPLOYMENT.md](DEPLOYMENT.md)** - Guia de deployment (local, Vercel, self-hosted, Docker)
 - **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Guia de troubleshooting (problemas comuns e soluções)
 - **[SECURITY.md](SECURITY.md)** - Política de segurança (report de vulnerabilidades, secrets management)
 - **[ONBOARDING.md](ONBOARDING.md)** - Guia para novos desenvolvedores (setup, estrutura, primeiras tarefas)
-- **[API_GUIDE.md](API_GUIDE.md)** - Guia da API (endpoints, autenticação, exemplos)
 - **[API_INTERNAL.md](API_INTERNAL.md)** - Documentação interna da API (serviços, patterns, testing)
 - **[PERFORMANCE.md](PERFORMANCE.md)** - Guia de performance (métricas, otimizações, escalabilidade)
 - **[CHANGELOG.md](CHANGELOG.md)** - Histórico de versões e mudanças
 - **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)** - Diagrama e documentação do banco de dados
-- **[DECISION_LOG.md](DECISION_LOG.md)** - Log de decisões técnicas (13 decisões documentadas)
+- **[DECISION_LOG.md](DECISION_LOG.md)** - Log de decisões técnicas e de produto
 
 ## 🌍 Internacionalização (i18n)
 
@@ -31,6 +31,10 @@ Inteligência artificial para produção audiovisual — roteiros, callsheets, d
 
 ## 🚀 Novidades Recentes
 
+- **Storytelling operacional**: Hoje → Entrada → Planejamento → Produção → Revisão → Entrega → Fechamento
+- **Navegação simplificada**: Hoje, Projetos, Comercial, Financeiro e Mais, sem remoção das rotas anteriores
+- **Artefatos versionados**: Studio e Documents persistem rascunho, revisão, aprovação, arquivo e versão por projeto
+- **Comercial conectado**: oportunidade ganha pode virar projeto com cliente, valor e contexto preenchidos
 - **Project Hub**: Página `/project/:id` com visão geral do projeto, ferramentas de acesso rápido, arquivos recentes e aprovações
 - **Nav Contextual**: Barra `ProjectNav` com abas (Visão Geral, Studio, Arquivos, Aprovação, Equipe) em todas as páginas do projeto
 - **Admin Users**: Página `/admin/gerenciar` para gerenciar usuários, papéis e planos
@@ -50,7 +54,9 @@ Inteligência artificial para produção audiovisual — roteiros, callsheets, d
 | `/register` | **Registro** — nova conta (trial de 14 dias Pro) |
 | `/forgot-password` | Solicitação de reset de senha |
 | `/reset-password` | Definir nova senha (`?token=`) |
-| `/dashboard` | **Painel** — lista de projetos, fixar, criar, excluir |
+| `/dashboard` | **Hoje** — foco atual, pendências, continuidade e projetos |
+| `/projects` | **Projetos** — carteira completa de jobs |
+| `/commercial` | **Comercial** — entrada para clientes, pipeline, interações e propostas |
 | `/clients` | **CRM** — listagem de clientes |
 | `/clients/new` | **CRM** — criação de cliente |
 | `/clients/:id/editar` | **CRM** — edição de cliente |
@@ -67,6 +73,7 @@ Inteligência artificial para produção audiovisual — roteiros, callsheets, d
 | `/tools` | **Ferramentas** — 12 ferramentas IA de produção |
 | `/tools/:id` | **Detalhe** — página individual da ferramenta |
 | `/project/:id` | **Project Hub** — visão geral e acesso rápido às ferramentas |
+| `/project/:id/journey/:stage` | **Capítulo do job** — Entrada, Planejamento, Produção, Revisão, Entrega ou Fechamento |
 | `/project/:id/studio/:toolId` | **Studio (projeto)** — workspace com contexto do projeto |
 | `/project/:id/files` | **Arquivos (projeto)** — upload e gestão por projeto |
 | `/project/:id/video-reviews` | **Aprovação (projeto)** — reviews de vídeo por projeto |
@@ -77,7 +84,7 @@ Inteligência artificial para produção audiovisual — roteiros, callsheets, d
 | `/admin` | **Admin Dashboard** — métricas do sistema |
 | `/admin/gerenciar` | **Admin Users** — gerenciar usuários, papéis e planos (admin only, não listado) |
 
-Rotas autenticadas: `/dashboard`, `/project/:id`, `/project/:id/*`, `/tools`, `/tools/:id`, `/studio/:id`, `/admin`, `/admin/gerenciar`, `/clients`, `/clients/new`, `/clients/:id/editar`, `/pipeline`, `/proposals`, `/interactions`, `/documents`, `/company`, `/files/:projectId`, `/video-reviews/:projectId`, `/collaborators`, `/analytics`, `/profile`, `/success`.
+Rotas autenticadas: `/dashboard`, `/projects`, `/commercial`, `/project/:id`, `/project/:id/*`, `/tools`, `/tools/:id`, `/studio/:id`, `/admin`, `/admin/gerenciar`, `/clients`, `/clients/new`, `/clients/:id/editar`, `/pipeline`, `/proposals`, `/interactions`, `/documents`, `/company`, `/files/:projectId`, `/video-reviews/:projectId`, `/collaborators`, `/analytics`, `/profile`, `/success`.
 
 ## 🛠️ Setup
 
@@ -100,7 +107,7 @@ Para produção pública, configure:
 - `CLIENT_ORIGIN` apontando para o domínio final, sem `localhost`.
 - `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
 - Supabase migrations aplicadas, incluindo RLS em `supabase/migrations`.
-- Banco persistente para dados operacionais. O backend ainda usa SQLite como fonte principal de runtime; em hosts efêmeros como Vercel, o fallback `/tmp/frame.db` não é aceitável para lançamento público.
+- Banco persistente para dados operacionais. Produção Vercel usa Supabase Postgres via Prisma; SQLite permanece apenas como compatibilidade de desenvolvimento local.
 
 O servidor bloqueia inicialização em `NODE_ENV=production` no Vercel com SQLite efêmero, exceto quando `ALLOW_EPHEMERAL_SQLITE=true` estiver definido para beta/controlado.
 

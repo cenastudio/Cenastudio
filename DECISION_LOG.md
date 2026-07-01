@@ -41,6 +41,34 @@ Outras opções que foram consideradas.
 
 ## 🎯 Decisões
 
+### [D-015] Projeto como eixo da experiencia operacional
+
+**Data:** 30/06/2026
+**Status:** Accepted / Implemented
+**Decidido por:** Produto e Desenvolvimento
+
+**Contexto:**
+O sistema acumulou modulos completos, mas a navegacao global passou a misturar departamentos, etapas e ferramentas. Mesmo com melhorias locais, o usuario ainda precisava decidir entre muitos destinos antes de saber onde iniciar ou continuar um job.
+
+**Decisão:**
+Adotar a arquitetura de `UX_FLOW_ARCHITECTURE.md`. O projeto/job sera a unidade principal de continuidade. A navegacao global sera reduzida a Hoje, Projetos, Comercial, Financeiro e Mais; dentro do projeto, as funcoes serao organizadas em Entrada, Planejamento, Producao, Revisao, Entrega e Fechamento.
+
+**Rationale:**
+- preserva todas as capacidades enquanto reduz carga de decisao;
+- aproxima o produto da proposta de sistema operacional audiovisual;
+- torna contexto, progresso e proxima acao visiveis;
+- permite que ferramentas especializadas continuem acessiveis sem dominar a navegacao.
+
+**Consequências:**
+- positivas: menor desorientacao, dados mais conectados e fluxo mensuravel;
+- negativas: exige migracao incremental da navegacao e um modelo mais explicito de etapas/artefatos;
+- mitigacao: manter rotas atuais, redirecionamentos e acesso por busca durante toda a transicao.
+
+**Alternativas Consideradas:**
+- apenas reduzir o numero de itens do menu, rejeitada por nao resolver a continuidade;
+- criar um wizard obrigatorio, rejeitada por limitar usuarios experientes;
+- manter as ferramentas como eixo principal, rejeitada por reforcar a sensacao de funcoes soltas.
+
 ### [D-001] Escolha de Framework Frontend
 
 **Data:** 01/01/2026

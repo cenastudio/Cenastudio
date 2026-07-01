@@ -19,6 +19,7 @@ import {
   mergeStudioPrefill,
   type StudioLinkedContext,
 } from "@/lib/studioContext";
+import { getArtifactStatus, getArtifactVersion, type ArtifactStatus, visibleFormValues } from "@/lib/workflow";
 
 export default function StudioShell() {
   const [, setLocation] = useLocation();
@@ -174,7 +175,7 @@ export default function StudioShell() {
     if (!tool) return;
 
     // Check if we have at least some input
-    const values = Object.values(formData).filter(Boolean);
+    const values = visibleFormValues(formData);
     if (values.length === 0) {
       toast.error(t("app.studio.fillRequiredFields") as string);
       return;
@@ -189,7 +190,13 @@ export default function StudioShell() {
       setOutput(result.output);
       toast.success(t("app.studio.generationComplete") as string);
       if (activeProject) {
-        saveToolStateImmediately(tool.id, formData, result.output);
+        const nextForm = {
+          ...formData,
+          __artifactStatus: "draft",
+          __artifactVersion: String(output ? getArtifactVersion(formData) + 1 : getArtifactVersion(formData)),
+        };
+        setFormData(nextForm);
+        saveToolStateImmediately(tool.id, nextForm, result.output);
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : t("app.studio.generationError") as string;
@@ -244,6 +251,14 @@ export default function StudioShell() {
     if (activeProject && tool) {
       saveToolStateImmediately(tool.id, input, outputText);
     }
+  };
+
+  const handleArtifactStatusChange = (status: ArtifactStatus) => {
+    if (!activeProject || !tool) return;
+    const nextForm = { ...formData, __artifactStatus: status, __artifactVersion: String(getArtifactVersion(formData)) };
+    setFormData(nextForm);
+    saveToolStateImmediately(tool.id, nextForm, output);
+    toast.success(`Artefato marcado como ${status === "draft" ? "rascunho" : status === "review" ? "em revisão" : status === "approved" ? "aprovado" : "arquivado"}.`);
   };
 
   const handleSelectTool = (id: string) => {
@@ -345,6 +360,9 @@ export default function StudioShell() {
                   onToggleHistory={() => setHistoryOpen(!historyOpen)}
                   onCopy={handleCopy}
                   onDownload={handleDownload}
+                  artifactStatus={getArtifactStatus(formData)}
+                  artifactVersion={getArtifactVersion(formData)}
+                  onArtifactStatusChange={activeProject ? handleArtifactStatusChange : undefined}
                 />
               </div>
 

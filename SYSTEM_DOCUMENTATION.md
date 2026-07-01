@@ -89,8 +89,8 @@ Cena Studio é uma plataforma SaaS completa para produtoras audiovisuais, oferec
                        ▼
 ┌─────────────────────────────────────────────────────────────┐
 │              Data Layer (SQLite / Supabase)                  │
-│  - better-sqlite3 (runtime atual)                           │
-│  - Supabase Postgres (preparado para migração)              │
+│  - better-sqlite3 (desenvolvimento e testes)                 │
+│  - Supabase Postgres + Prisma 7 (producao)                   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -100,7 +100,7 @@ Cena Studio é uma plataforma SaaS completa para produtoras audiovisuais, oferec
 2. **Express** valida autenticação via JWT httpOnly cookies
 3. **Controllers** processam a lógica de negócio
 4. **Services** interagem com APIs externas (IA, Stripe) e banco de dados
-5. **SQLite/Supabase** persiste os dados
+5. **SQLite local ou Supabase Postgres em producao** persiste os dados
 
 ### Fluxo Studio -> Documento -> Projeto
 
@@ -129,6 +129,12 @@ A interface evolui por continuidade de fluxo, preservando a identidade escura/ci
 7. Documents mostra contexto de projeto, cliente e documento quando aberto por `/project/:projectId/documents`.
 
 Regra de design: mudar visual apenas quando melhora leitura, decisao ou continuidade entre cliente, projeto, IA, documento, arquivo e aprovacao.
+
+### Arquitetura de fluxo implementada
+
+A evolucao estrutural esta especificada em `UX_FLOW_ARCHITECTURE.md`. O projeto/job e o eixo da experiencia, sem remocao de funcionalidades. A navegacao global usa Hoje, Projetos, Comercial, Financeiro e Mais; o workspace do projeto esta organizado em Entrada, Planejamento, Producao, Revisao, Entrega e Fechamento.
+
+As rotas anteriores permanecem validas. Studio e Documents persistem status e versao dos artefatos em `project_states`; oportunidades ganhas podem criar projetos com cliente, valor e origem comercial preenchidos; o fechamento abre o financeiro contextual e permite concluir o job.
 
 ---
 

@@ -183,7 +183,7 @@ Baseline atual:
 - `server/controllers/aiProjectsReviews.test.ts` cobre histórico de gerações filtrado por projeto ativo.
 - `server/services/supabaseStorage.test.ts` cobre bucket privado, upload, remoção, URL assinada e sanitização de path.
 - GitHub Actions executa typecheck, coverage e build.
-- Baseline em 30/06/2026: 58 testes passando; cobertura global segue em evolução rumo a 80%+.
+- Baseline em 30/06/2026: 64 testes passando; cobertura global segue em evolução rumo a 80%+.
 - Validação visual responsiva executada em desktop e mobile (390 x 844), sem overflow horizontal; já passaram por navegador local landing, login, loading, Tools, Studio, Documents, clientes, pipeline e ProjectHub coberto por teste automatizado.
 
 Frente UX senior executada:
@@ -192,9 +192,13 @@ Frente UX senior executada:
 - Tools passou a destacar sessões críticas e resultado esperado antes de abrir o Studio.
 - Output do Studio e Documents reforçam a continuidade geração -> documento -> exportação do projeto.
 
-Próxima frente UX senior:
-- Aprofundar documento editável/versionado para as sessões críticas, com exportação final e histórico aprovado por projeto.
-- Avaliar se Briefing, Proposta, Orçamento, Contratos e Entrega devem ganhar telas dedicadas completas quando o fluxo exigir mais do que um formulário lateral.
+Frente de storytelling operacional concluida:
+- [concluido] Adotar `UX_FLOW_ARCHITECTURE.md`: projeto/job como unidade central e funcoes organizadas pelo ciclo completo do trabalho.
+- [concluido] Simplificar a navegacao global para Hoje, Projetos, Comercial, Financeiro e Mais, preservando rotas e funcionalidades existentes.
+- [concluido] Transformar Dashboard, ProjectHub e ProjectChapter em orientadores da proxima acao e da etapa atual.
+- [concluido] Implementar status e versao para artefatos do Studio e Documents usando estado persistente do projeto.
+- [concluido] Conectar oportunidade ganha -> projeto -> fechamento financeiro sem redigitacao de contexto.
+- [validado] Desktop e mobile 390 x 844 sem overflow horizontal e sem erros de console nas superficies novas.
 
 ```typescript
 // vitest.config.ts

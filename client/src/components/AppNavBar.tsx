@@ -12,6 +12,7 @@ import NotificationsPopover from "@/components/NotificationsPopover";
 import BrandLogo from "@/components/BrandLogo";
 import AccessibilityFontControls from "@/components/AccessibilityFontControls";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useProject } from "@/contexts/ProjectContext";
 
 interface AppNavBarProps {
   children?: React.ReactNode;
@@ -22,6 +23,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
   const { openModal, selectPlan } = useApp();
   const { theme, toggleTheme } = useTheme();
   const { t } = useLanguage();
+  const { projects, activeProject } = useProject();
   const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
@@ -50,6 +52,8 @@ export default function AppNavBar({ children }: AppNavBarProps) {
     : "—";
 
   const isAdmin = user?.role === "admin";
+  const routeProjectId = Number(location.match(/^\/project\/(\d+)/)?.[1] || 0);
+  const contextProject = projects.find((project) => project.id === routeProjectId) || activeProject;
 
   const handleBadgeClick = () => {
     if (!plan) return;
@@ -69,7 +73,10 @@ export default function AppNavBar({ children }: AppNavBarProps) {
   };
 
   const navLink = (href: string, label: string) => {
-    const active = location === href || location.startsWith(href + "/");
+    const commercialRoutes = ["/clients", "/pipeline", "/interactions", "/proposals"];
+    const active = location === href || location.startsWith(href + "/") ||
+      (href === "/commercial" && commercialRoutes.some((route) => location === route || location.startsWith(`${route}/`))) ||
+      (href === "/projects" && location.startsWith("/project/"));
     return (
       <motion.button
         type="button"
@@ -90,14 +97,16 @@ export default function AppNavBar({ children }: AppNavBarProps) {
   };
 
   const primaryNavItems = [
-    ["/dashboard", t("app.nav.operationalPanel") as string],
-    ["/clients", t("app.nav.commercialCrm") as string],
-    ["/tools", t("app.nav.projectManagement") as string],
-    ["/analytics", t("app.nav.financeErp") as string],
-    ["/pipeline", t("app.nav.pipeline") as string],
+    ["/dashboard", t("app.nav.today") as string],
+    ["/projects", t("app.nav.projects") as string],
+    ["/commercial", t("app.nav.commercialCrm") as string],
+    ["/analytics", t("app.nav.finance") as string],
   ] as const;
 
   const secondaryNavItems = [
+    ["/tools", t("app.nav.studioLibrary") as string],
+    ["/clients", t("app.nav.clients") as string],
+    ["/pipeline", t("app.nav.pipeline") as string],
     ["/proposals", t("app.nav.proposals") as string],
     ["/documents", t("app.nav.docs") as string],
     ["/video-reviews", t("app.nav.approval") as string],
@@ -170,6 +179,19 @@ export default function AppNavBar({ children }: AppNavBarProps) {
 
       <div className="flex items-center gap-2.5">
         {children}
+        {user && contextProject && (
+          <label className="hidden 2xl:flex min-w-0 items-center border border-frame-gray-3 bg-frame-black/40 px-2 py-1.5" title={t("app.nav.activeProject") as string}>
+            <span className="mr-2 font-frame-mono text-[0.52rem] uppercase tracking-[0.12em] text-frame-orange">JOB</span>
+            <select
+              value={contextProject.id}
+              onChange={(event) => setLocation(`/project/${event.target.value}`)}
+              className="max-w-[150px] bg-transparent text-[0.68rem] font-semibold text-frame-white outline-none"
+              aria-label={t("app.nav.activeProject") as string}
+            >
+              {projects.map((project) => <option key={project.id} value={project.id} className="bg-frame-black">{project.name}</option>)}
+            </select>
+          </label>
+        )}
         {user && (
           <button
             type="button"

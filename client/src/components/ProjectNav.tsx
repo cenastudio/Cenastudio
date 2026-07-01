@@ -1,33 +1,18 @@
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
-import {
-  LayoutDashboard,
-  Film,
-  FileText,
-  Video,
-  Users,
-  ChevronLeft,
-} from "lucide-react";
+import { BookOpen, ChevronLeft } from "lucide-react";
+import { getStageForLocation, WORKFLOW_STAGES } from "@/lib/workflow";
 
 interface ProjectNavProps {
   projectId: number;
 }
 
-const TABS = [
-  { path: (id: number) => `/project/${id}`, labelKey: "app.common.overview", icon: LayoutDashboard },
-  { path: (id: number) => `/project/${id}/studio/01`, labelKey: "app.common.studio", icon: Film },
-  { path: (id: number) => `/project/${id}/documents`, labelKey: "app.nav.docs", icon: FileText },
-  { path: (id: number) => `/project/${id}/files`, labelKey: "app.common.materials", icon: FileText },
-  { path: (id: number) => `/project/${id}/video-reviews`, labelKey: "app.common.approval", icon: Video },
-  { path: (id: number) => `/project/${id}/collaborators`, labelKey: "app.common.team", icon: Users },
-];
-
 export default function ProjectNav({ projectId }: ProjectNavProps) {
   const { t } = useLanguage();
   const [location, setLocation] = useLocation();
   const [projectName, setProjectName] = useState("");
-  const currentSection = location.replace(`/project/${projectId}/`, "").split("/")[0] || "";
+  const activeStage = getStageForLocation(location);
 
   useEffect(() => {
     fetch(`/api/projects/${projectId}`, { credentials: "include" })
@@ -60,16 +45,22 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
             </span>
           </div>
           <div className="h-4 w-px bg-frame-gray-3" />
-          <nav className="flex items-center gap-1 overflow-x-auto scrollbar-none">
-            {TABS.map((tab) => {
-              const isActive =
-                tab.path(projectId) === location ||
-                (currentSection && tab.path(projectId).includes(`/project/${projectId}/${currentSection}`));
+          <button
+            type="button"
+            onClick={() => setLocation(`/project/${projectId}`)}
+            className={`flex min-h-10 shrink-0 items-center gap-1.5 border-b-2 px-3 py-1.5 font-frame-mono text-xs tracking-wider transition ${location === `/project/${projectId}` ? "border-frame-orange text-frame-orange" : "border-transparent text-frame-gray-light hover:text-frame-white"}`}
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            {t("app.common.overview") as string}
+          </button>
+          <nav className="flex items-center gap-1 overflow-x-auto scrollbar-none" aria-label={t("app.nav.projectJourney") as string}>
+            {WORKFLOW_STAGES.map((stage) => {
+              const isActive = activeStage === stage.id && location !== `/project/${projectId}`;
               return (
                 <button
-                  key={tab.labelKey}
+                  key={stage.id}
                   type="button"
-                  onClick={() => setLocation(tab.path(projectId))}
+                  onClick={() => setLocation(`/project/${projectId}/journey/${stage.id}`)}
                   className={`flex min-h-10 items-center gap-1.5 px-3 py-1.5 text-xs font-frame-mono tracking-wider transition whitespace-nowrap ${
                     isActive
                       ? "text-frame-orange border-b-2 border-frame-orange"
@@ -77,8 +68,8 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
                   }`}
                   aria-current={isActive ? "page" : undefined}
                 >
-                  <tab.icon className="w-3.5 h-3.5" />
-                  {t(tab.labelKey) as string}
+                  <span className="text-[0.52rem] text-frame-orange">{stage.number}</span>
+                  {stage.label}
                 </button>
               );
             })}

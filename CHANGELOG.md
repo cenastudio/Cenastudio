@@ -41,6 +41,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sessões críticas guiadas no Studio para Briefing, Proposta, Orçamento, Contratos e Entrega
 - Faixa de fluxo central na landing para explicar Cliente -> Projeto -> Studio -> Arquivos -> Fechamento
 - Painel operacional no login e loading de aplicação com skeleton visual da área de trabalho
+- Arquitetura `UX_FLOW_ARCHITECTURE.md` implementada em cinco fases, usando storytelling e o projeto/job como eixo operacional
+- Páginas `/projects`, `/commercial` e `/project/:projectId/journey/:stage`
+- Ciclo persistente de artefatos com status e versão no Studio e Documents
+- Conversão de oportunidade ganha em projeto com cliente, valor e contexto comercial
+- Testes de jornada, ciclo de artefato e conversão comercial
 
 ### Changed
 - Atualização do README com referências às novas documentações
@@ -58,7 +63,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tools agora destaca sessões críticas e resultado esperado por ferramenta antes de abrir o Studio
 - Output do Studio orienta o próximo passo para documento/exportação quando há geração pronta
 - Documents mostra faixa de contexto de projeto, cliente e documento quando aberto por rota contextual
-- Baseline de testes ampliado para 58 testes com cobertura adicional em Studio context, histórico por projeto e guia de sessão crítica
+- Cobertura adicional em Studio context, histórico por projeto e guia de sessão crítica
+- Navegação global simplificada para Hoje, Projetos, Comercial, Financeiro e Mais
+- ProjectNav e Studio organizados nos capítulos Entrada, Planejamento, Produção, Revisão, Entrega e Fechamento
+- Tools reorganizado por momento do job em vez de uma grade única de ferramentas
+- Command Palette inclui áreas principais e projetos recentes
+- Baseline de testes ampliado para 64 testes; typecheck, traduções e build validados
 
 ### Fixed
 - Login em produção na Vercel com `trust proxy`

@@ -25,6 +25,7 @@ import { useLanguage, type Translate } from "@/contexts/LanguageContext";
 import { useProject } from "@/contexts/ProjectContext";
 import { buildDocumentPrefill } from "@/lib/studioContext";
 import type { Client } from "@/lib/api";
+import { getArtifactStatus, getArtifactVersion, type ArtifactStatus } from "@/lib/workflow";
 
 type DocType = "briefing" | "roteiro" | "callsheet" | "decupagem" | "orcamento" | "cronograma" | "checklist" | "entrega";
 
@@ -36,6 +37,9 @@ interface StudioDocument {
   project: string;
   html: string;
   createdAt: string;
+  projectId?: number | null;
+  status?: ArtifactStatus;
+  version?: number;
 }
 
 interface DocumentForm {
@@ -518,10 +522,18 @@ function DocumentsContent() {
   const [studio, setStudio] = useState<StudioSettings>(() => readStudioSettings());
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [linkedClient, setLinkedClient] = useState<Client | null>(null);
+  const [artifactStatus, setArtifactStatus] = useState<ArtifactStatus>("draft");
+  const [artifactVersion, setArtifactVersion] = useState(1);
   const selectedDoc = DOC_TYPES.find((item) => item.id === form.type) || DOC_TYPES[0];
   const documentForms = useMemo(() => createDocumentForms(t), [t]);
   const activeGroups = documentForms[form.type];
   const html = useMemo(() => buildDocumentHtml(form, studio, t), [form, studio, t]);
+  const visibleDocs = useMemo(
+    () => projectIdParam
+      ? savedDocs.filter((doc) => doc.projectId === projectIdParam || (!doc.projectId && doc.project === activeProject?.name))
+      : savedDocs,
+    [savedDocs, projectIdParam, activeProject?.name],
+  );
 
   useEffect(() => {
     setSavedDocs(readSavedDocs());
@@ -565,6 +577,20 @@ function DocumentsContent() {
     setForm((current) => mergeDocumentContext(current, prefill).next);
   }, [activeProject, linkedClient]);
 
+  useEffect(() => {
+    if (!projectIdParam) return;
+    let cancelled = false;
+    api.projects.getState(projectIdParam, `document:${form.type}`)
+      .then((state) => {
+        if (cancelled || !state) return;
+        setForm((current) => ({ ...current, ...state.formData, type: current.type } as DocumentForm));
+        setArtifactStatus(getArtifactStatus(state.formData));
+        setArtifactVersion(getArtifactVersion(state.formData));
+      })
+      .catch(() => null);
+    return () => { cancelled = true; };
+  }, [projectIdParam, form.type]);
+
   const update = (key: keyof DocumentForm, value: string) => setForm((current) => ({ ...current, [key]: value }));
 
   const applyLinkedContext = () => {
@@ -574,7 +600,9 @@ function DocumentsContent() {
     toast[applied ? "success" : "info"](applied ? "Documento atualizado com projeto e cliente." : "Documento já está sincronizado.");
   };
 
-  const saveCurrent = () => {
+  const saveCurrent = async () => {
+    const previousVersions = visibleDocs.filter((doc) => doc.type === form.type).map((doc) => doc.version || 1);
+    const nextVersion = Math.max(0, ...previousVersions, artifactVersion - 1) + 1;
     const next: StudioDocument = {
       id: crypto.randomUUID(),
       type: form.type,
@@ -583,16 +611,39 @@ function DocumentsContent() {
       project: form.project,
       html,
       createdAt: new Date().toISOString(),
+      projectId: projectIdParam,
+      status: "draft",
+      version: nextVersion,
     };
     const docs = [next, ...savedDocs].slice(0, 30);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(docs));
     setSavedDocs(docs);
+    setArtifactStatus("draft");
+    setArtifactVersion(nextVersion);
+    if (projectIdParam) {
+      const stateForm = { ...form, __artifactStatus: "draft", __artifactVersion: String(nextVersion) } as unknown as Record<string, string>;
+      await api.projects.saveState(projectIdParam, `document:${form.type}`, stateForm, html);
+    }
     toast.success(t("app.documents.documentSaved"));
   };
 
-  const saveAndClose = () => {
-    saveCurrent();
+  const saveAndClose = async () => {
+    await saveCurrent();
     setIsEditorOpen(false);
+  };
+
+  const updateArtifactStatus = async (status: ArtifactStatus) => {
+    setArtifactStatus(status);
+    if (projectIdParam) {
+      const stateForm = { ...form, __artifactStatus: status, __artifactVersion: String(artifactVersion) } as unknown as Record<string, string>;
+      await api.projects.saveState(projectIdParam, `document:${form.type}`, stateForm, html);
+    }
+    setSavedDocs((current) => {
+      const next = current.map((doc) => doc.projectId === projectIdParam && doc.type === form.type && (doc.version || 1) === artifactVersion ? { ...doc, status } : doc);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+    toast.success(`Documento marcado como ${status === "draft" ? "rascunho" : status === "review" ? "em revisão" : status === "approved" ? "aprovado" : "arquivado"}.`);
   };
 
   const exportPdf = (docHtml = html) => {
@@ -692,6 +743,17 @@ function DocumentsContent() {
                   <p className="mt-1 truncate text-sm text-frame-white">{value}</p>
                 </div>
               ))}
+              <div className="sm:col-span-3 flex flex-col gap-2 border border-frame-gray-3 bg-frame-black/20 p-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="font-frame-mono text-[0.56rem] uppercase tracking-[0.16em] text-frame-orange">Versão {artifactVersion} · ciclo do documento</p>
+                  <p className="mt-1 text-xs text-frame-gray-light">O status fica salvo no projeto e acompanha aprovação e arquivo.</p>
+                </div>
+                <div className="grid grid-cols-2 gap-1 sm:flex">
+                  {([['draft', 'Rascunho'], ['review', 'Em revisão'], ['approved', 'Aprovado'], ['archived', 'Arquivado']] as const).map(([status, label]) => (
+                    <button key={status} type="button" onClick={() => void updateArtifactStatus(status)} className={`min-h-9 border px-3 font-frame-mono text-[0.54rem] uppercase tracking-[0.08em] ${artifactStatus === status ? "border-frame-orange bg-frame-orange/10 text-frame-orange" : "border-frame-gray-3 text-frame-gray-light"}`} aria-pressed={artifactStatus === status}>{label}</button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </section>
@@ -771,21 +833,21 @@ function DocumentsContent() {
                 <p className="frame-label">// {t("app.documents.history")}</p>
                 <p className="mt-1 text-xs text-frame-gray-light">{t("app.documents.savedVersionsHint")}</p>
               </div>
-              <span className="font-frame-mono text-[0.62rem] text-frame-gray-light">{savedDocs.length}</span>
+              <span className="font-frame-mono text-[0.62rem] text-frame-gray-light">{visibleDocs.length}</span>
             </div>
-            {savedDocs.length === 0 ? (
+            {visibleDocs.length === 0 ? (
               <div className="border border-dashed border-frame-gray-3 p-5 text-sm leading-relaxed text-frame-gray-light">
                 {t("app.documents.emptyHistoryHint")}
               </div>
             ) : (
               <div className="max-h-[620px] space-y-2 overflow-y-auto pr-1">
-                {savedDocs.map((doc) => {
+                {visibleDocs.map((doc) => {
                   const docType = DOC_TYPES.find((item) => item.id === doc.type);
                   return (
                     <div key={doc.id} className="border border-frame-gray-3 bg-frame-black/15 p-3">
                       <button type="button" onClick={() => exportPdf(doc.html)} className="w-full text-left">
                         <span className="block font-frame-mono text-[0.54rem] uppercase tracking-[0.1em]" style={{ color: docType?.accent }}>
-                          {docType?.label}
+                          {docType?.label} · v{doc.version || 1} · {doc.status === "approved" ? "aprovado" : doc.status === "review" ? "em revisão" : doc.status === "archived" ? "arquivado" : "rascunho"}
                         </span>
                         <span className="mt-1 block truncate text-sm font-semibold">{doc.title}</span>
                         <span className="mt-1 block truncate text-[0.62rem] text-frame-gray-light">

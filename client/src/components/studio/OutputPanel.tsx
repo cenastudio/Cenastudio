@@ -5,7 +5,8 @@ import ActionToolbar from "./ActionToolbar";
 import RefineChatPanel from "./RefineChatPanel";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
-import { FileText } from "lucide-react";
+import { CheckCircle2, FileText, Send, Archive } from "lucide-react";
+import type { ArtifactStatus } from "@/lib/workflow";
 
 interface OutputPanelProps {
   tool: ToolFromApi;
@@ -16,6 +17,9 @@ interface OutputPanelProps {
   onToggleHistory: () => void;
   onCopy: () => void;
   onDownload: (format: "pdf" | "docx") => void;
+  artifactStatus?: ArtifactStatus;
+  artifactVersion?: number;
+  onArtifactStatusChange?: (status: ArtifactStatus) => void;
 }
 
 export default function OutputPanel({
@@ -27,6 +31,9 @@ export default function OutputPanel({
   onToggleHistory,
   onCopy,
   onDownload,
+  artifactStatus = "draft",
+  artifactVersion = 1,
+  onArtifactStatusChange,
 }: OutputPanelProps) {
   const { t } = useLanguage();
   const [, setLocation] = useLocation();
@@ -58,6 +65,28 @@ export default function OutputPanel({
           <div className="flex-1 p-6 md:p-8 overflow-y-auto">
             {output ? (
               <div className="space-y-5">
+                {projectId && onArtifactStatusChange && (
+                  <div className="border border-frame-gray-3 bg-frame-black/30 p-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="font-frame-mono text-[0.56rem] uppercase tracking-[0.16em] text-frame-orange">Ciclo do artefato · v{artifactVersion}</p>
+                        <p className="mt-1 text-[0.72rem] text-frame-gray-light">A versão acompanha o job até revisão, aprovação e arquivo.</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1 sm:flex" role="group" aria-label="Status do artefato">
+                        {([
+                          ["draft", "Rascunho", FileText],
+                          ["review", "Em revisão", Send],
+                          ["approved", "Aprovado", CheckCircle2],
+                          ["archived", "Arquivado", Archive],
+                        ] as const).map(([status, label, Icon]) => (
+                          <button key={status} type="button" onClick={() => onArtifactStatusChange(status)} className={`flex min-h-9 items-center justify-center gap-1.5 border px-2.5 font-frame-mono text-[0.54rem] uppercase tracking-[0.08em] transition ${artifactStatus === status ? "border-frame-orange bg-frame-orange/10 text-frame-orange" : "border-frame-gray-3 text-frame-gray-light hover:text-frame-white"}`} aria-pressed={artifactStatus === status}>
+                            <Icon className="h-3 w-3" /> {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div className="flex flex-col gap-3 border border-frame-gray-3 bg-frame-gray-1/55 p-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-orange">

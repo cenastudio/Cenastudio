@@ -17,7 +17,7 @@ Este prompt contém todo o contexto necessário para entender e trabalhar no pro
 
 ## 📚 Documentação Disponível
 
-O projeto tem **15 documentações completas**:
+O projeto tem **17 documentações completas**:
 
 ### Principais
 1. **README.md** - Visão geral, setup, rotas principais
@@ -28,7 +28,7 @@ O projeto tem **15 documentações completas**:
 4. **CONTRIBUTING.md** - Guia para contribuidores (setup, padrões de código, processo de PR)
 5. **ONBOARDING.md** - Guia para novos desenvolvedores
 6. **ARCHITECTURE.md** - Decisões de arquitetura (10 ADRs documentados)
-7. **DECISION_LOG.md** - Log de decisões técnicas (13 decisões documentadas)
+7. **DECISION_LOG.md** - Log de decisões técnicas e de produto (15 decisões documentadas)
 
 ### Operacional
 8. **DEPLOYMENT.md** - Guia de deployment (local, Vercel, self-hosted, Docker)
@@ -47,6 +47,10 @@ O projeto tem **15 documentações completas**:
 
 ### Versionamento
 15. **CHANGELOG.md** - Histórico de versões e mudanças
+
+### Produto e contexto
+16. **UX_FLOW_ARCHITECTURE.md** - Storytelling operacional e ciclo completo do job
+17. **CODEX_PROMPT.md** - Contexto vivo para continuidade do desenvolvimento
 
 ---
 
@@ -198,7 +202,7 @@ shared/
 8. [concluído] Revisar UI/UX operacional de ProjectHub, clientes e pipeline comercial com foco em próxima ação, erro/sem resultado e resumo de foco
 9. [concluído] Conectar Studio/Tools e Documents ao contexto de projeto/cliente sem sobrescrever campos manuais
 10. [concluído] Revisar landing, login, loading, Tools, Studio e Documents com foco em fluxo operacional, continuidade e responsividade
-11. [baseline atual] 58 testes; cobertura global segue em evolução
+11. [baseline atual] 64 testes; cobertura global segue em evolução
 12. Testar pipeline de deploy em PR real
 ```
 
@@ -216,7 +220,10 @@ shared/
 - [concluído] Revisar landing page, login, animação de carregamento, listagem de ferramentas, Studio e Documents com olhar senior de fluxo, hierarquia, responsividade e redução de fricção.
 - Manter identidade visual do Cena Studio quando ela ajuda o produto; mudar visual estrutural quando o fluxo pedir mais clareza operacional.
 - [concluído] Avaliar e iniciar sessão única dedicada para Proposta Comercial, Orçamento, Contratos, Briefing e Entrega, porque têm maior impacto no fluxo cliente/projeto/exportação.
-- [próximo] Aprofundar exportação e continuidade dessas sessões: geração -> documento editável -> versão aprovada -> arquivo final do projeto.
+- [concluído] Executar as cinco fases de `UX_FLOW_ARCHITECTURE.md`: projeto/job como eixo, navegacao global reduzida e jornada Entrada -> Planejamento -> Producao -> Revisao -> Entrega -> Fechamento.
+- [concluído] Criar Hoje, Projetos, Comercial, capitulos do job, biblioteca por etapa e contexto de projeto persistente sem remover rotas atuais.
+- [concluído] Implementar ciclo de artefato: geração -> documento editável -> revisão -> aprovado -> arquivado, com versao persistida em `project_states`.
+- [concluído] Conectar oportunidade ganha -> projeto contextual -> financeiro -> conclusao do job.
 - Cada alteração visual deve ser documentada e validada em desktop/mobile antes de seguir para a próxima fase.
 
 ### Média Prioridade
