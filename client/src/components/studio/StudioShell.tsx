@@ -13,28 +13,12 @@ import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ProjectTimeline from "./ProjectTimeline";
 import AssistantChatWorkspace from "./AssistantChatWorkspace";
-
-function buildClientPrefill(
-  toolSlug: string,
-  projectName: string,
-  client: Awaited<ReturnType<typeof api.clients.get>>["client"],
-) {
-  const clientDisplayName = client.company || client.name;
-  const common: Record<string, string> = {};
-
-  if (["briefing", "proposta", "entrega"].includes(toolSlug)) common.cliente = clientDisplayName;
-  if (["proposta"].includes(toolSlug)) common.empresa = client.company || client.name;
-  if (["contrato"].includes(toolSlug)) {
-    common.contratante = client.company || client.name;
-    common.cpf_contratante = client.tax_id || "";
-  }
-  if (["callsheet"].includes(toolSlug)) {
-    common.endereco = client.address || "";
-    common.cidade = [client.city, client.state].filter(Boolean).join(" / ");
-  }
-  if (["proposta", "entrega", "cronograma"].includes(toolSlug)) common.nome = projectName;
-  return common;
-}
+import {
+  buildStudioLinkedContext,
+  countFillableFields,
+  mergeStudioPrefill,
+  type StudioLinkedContext,
+} from "@/lib/studioContext";
 
 export default function StudioShell() {
   const [, setLocation] = useLocation();
@@ -62,6 +46,7 @@ export default function StudioShell() {
   const [error, setError] = useState<string | null>(null);
   const [limitReached, setLimitReached] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [linkedContext, setLinkedContext] = useState<StudioLinkedContext | null>(null);
 
   const tool = tools.find((t) => t.id === activeToolId || t.slug === activeToolId);
   const { t } = useLanguage();
@@ -99,29 +84,32 @@ export default function StudioShell() {
   useEffect(() => {
     let cancelled = false;
     if (activeProject && tool) {
-      fetchToolState(tool.id).then((state) => {
+      fetchToolState(tool.id).then(async (state) => {
         if (cancelled) return;
+        let nextLinkedContext = buildStudioLinkedContext(tool.slug, activeProject);
+        if (activeProject.clientId) {
+          try {
+            const details = await api.clients.get(activeProject.clientId);
+            if (cancelled) return;
+            nextLinkedContext = buildStudioLinkedContext(tool.slug, activeProject, details.client);
+          } catch {
+            nextLinkedContext = buildStudioLinkedContext(tool.slug, activeProject);
+          }
+        }
+        if (cancelled) return;
+        setLinkedContext(nextLinkedContext);
+
         if (state) {
           setFormData(state.formData || {});
           setOutput(state.outputData || "");
-        } else if (activeProject.clientId && tool) {
-          api.clients.get(activeProject.clientId).then((details) => {
-            if (!cancelled) {
-              setFormData(buildClientPrefill(tool.slug, activeProject.name, details.client));
-              setOutput("");
-            }
-          }).catch(() => {
-            if (!cancelled) {
-              setFormData({});
-              setOutput("");
-            }
-          });
         } else {
-          setFormData({});
+          const { merged } = mergeStudioPrefill({}, nextLinkedContext?.prefill || {});
+          setFormData(merged);
           setOutput("");
         }
       });
     } else {
+      setLinkedContext(null);
       setFormData({});
       setOutput("");
     }
@@ -165,6 +153,20 @@ export default function StudioShell() {
       }
       return updated;
     });
+  };
+
+  const handleApplyLinkedContext = () => {
+    if (!tool || !linkedContext) return;
+    const { merged, applied } = mergeStudioPrefill(formData, linkedContext.prefill);
+    if (!applied) {
+      toast.info(t("app.studio.linkedContextNoEmpty") as string);
+      return;
+    }
+    setFormData(merged);
+    if (activeProject) {
+      saveToolStateImmediately(tool.id, merged, output);
+    }
+    toast.success(t("app.studio.linkedContextApplied") as string);
   };
 
   // Execute AI generation
@@ -278,6 +280,14 @@ export default function StudioShell() {
                 onExecute={handleExecute}
                 isProcessing={isProcessing}
                 error={error}
+                linkedContext={linkedContext ? {
+                  projectName: linkedContext.projectName,
+                  clientName: linkedContext.clientName,
+                  availableCount: Object.keys(linkedContext.prefill).length,
+                  fillableCount: countFillableFields(formData, linkedContext.prefill),
+                  sourceLabel: linkedContext.sourceLabel,
+                } : null}
+                onApplyLinkedContext={handleApplyLinkedContext}
                 onSetOutput={(newOut) => {
                   setOutput(newOut);
                   if (activeProject) {
@@ -324,6 +334,7 @@ export default function StudioShell() {
                 <OutputPanel
                   tool={tool}
                   output={output}
+                  projectId={activeProject?.id}
                   onUpdateOutput={(newOut) => {
                     setOutput(newOut);
                     if (activeProject && tool) {
@@ -342,6 +353,7 @@ export default function StudioShell() {
                 isOpen={historyOpen}
                 onClose={() => setHistoryOpen(false)}
                 toolId={tool.id}
+                projectId={activeProject?.id}
                 onRestore={handleRestore}
               />
             </>

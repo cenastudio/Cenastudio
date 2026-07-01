@@ -1,11 +1,27 @@
+import SessionGuide from "./SessionGuide";
+
 interface FormProps {
   data: Record<string, string>;
   onChange: (key: string, value: string) => void;
 }
 
 export default function DeliveryForm({ data, onChange }: FormProps) {
+  const completed = [
+    data.nome && data.cliente,
+    data.arquivos,
+    data.especificacoes || data.notas,
+  ].filter(Boolean).length;
+
   return (
     <div className="space-y-4">
+      <SessionGuide
+        label="Sessão entrega"
+        title="Feche o job com pacote, specs e aceite."
+        steps={["Projeto e cliente", "Arquivos entregues", "Especificações e instruções"]}
+        output="Saída esperada: relatório de entrega pronto para cliente, arquivo e histórico do projeto."
+        completed={completed}
+      />
+
       {/* Seção 1: Informações Gerais */}
       <div>
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">

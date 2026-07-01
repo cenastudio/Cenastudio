@@ -45,8 +45,25 @@ const DemoModal = lazy(() => import("@/components/landing/modals/DemoModal").the
 
 function PageFallback() {
   return (
-    <div className="min-h-screen bg-frame-black text-frame-white flex items-center justify-center">
-      <span className="font-frame-mono text-[0.68rem] uppercase tracking-[0.18em] text-frame-orange">Carregando</span>
+    <div className="min-h-screen bg-frame-black text-frame-white flex items-center justify-center px-6">
+      <div className="w-full max-w-sm border border-frame-gray-3 bg-frame-gray-1/70 p-5 shadow-[0_26px_90px_rgba(0,0,0,0.35)]">
+        <div className="mb-5 flex items-center justify-between">
+          <span className="font-frame-mono text-[0.62rem] uppercase tracking-[0.18em] text-frame-orange">Cena Studio</span>
+          <span className="h-2 w-2 bg-frame-orange animate-pulse" />
+        </div>
+        <div className="space-y-2" aria-hidden="true">
+          <div className="h-2 w-11/12 bg-frame-gray-3/70" />
+          <div className="h-2 w-8/12 bg-frame-gray-3/50" />
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            <div className="h-12 border border-frame-gray-3 bg-frame-black/35" />
+            <div className="h-12 border border-frame-gray-3 bg-frame-black/35" />
+            <div className="h-12 border border-frame-gray-3 bg-frame-black/35" />
+          </div>
+        </div>
+        <p className="mt-5 font-frame-mono text-[0.62rem] uppercase tracking-[0.16em] text-frame-gray-light">
+          Carregando espaço de trabalho
+        </p>
+      </div>
     </div>
   );
 }
@@ -84,6 +101,7 @@ function Router() {
       <Route path="/studio/:id" component={Studio} />
       <Route path="/project/:id" component={ProjectHub} />
       <Route path="/project/:projectId/studio/:id" component={Studio} />
+      <Route path="/project/:projectId/documents" component={Documents} />
       <Route path="/project/:projectId/files" component={Files} />
       <Route path="/project/:projectId/video-reviews" component={VideoReviews} />
       <Route path="/project/:projectId/collaborators" component={Collaborators} />

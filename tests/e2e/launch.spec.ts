@@ -137,8 +137,8 @@ test("client, project and studio workflow stay connected", async ({ page }) => {
 
   try {
     await page.goto(`/project/${projectPayload.data.id}/studio/briefing`);
-    await expect(page.getByText("Comercial primeiro")).toBeVisible();
-    await expect(page.getByText("Pré-produção")).toBeVisible();
+    await expect(page.locator(".studio-sidebar").getByText("Comercial primeiro")).toBeVisible();
+    await expect(page.locator(".studio-sidebar").getByText("// Pré-produção")).toBeVisible();
 
     const workflowLabels = await page.locator(".studio-sidebar .studio-tool-nav").evaluateAll((nodes) =>
       nodes.slice(0, 9).map((node) => node.textContent?.replace(/^(\d)(\S)/, "$1 $2").replace(/\s+/g, " ").trim()),

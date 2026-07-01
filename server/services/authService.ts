@@ -4,6 +4,8 @@ import { db } from "../models/db.js";
 import type { AuthUser } from "../middleware/authenticate.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { notifyAdmins } from "./notificationService.js";
+import { logger } from "../utils/logger.js";
+import { prisma, shouldUsePrisma } from "../models/prisma.js";
 
 interface DbUser {
   id: number;
@@ -11,6 +13,17 @@ interface DbUser {
   password_hash: string;
   role: "user" | "admin";
   name?: string | null;
+}
+
+interface SupabaseAdminUser {
+  id?: string;
+  email?: string;
+}
+
+interface SupabaseErrorDetail {
+  message: string;
+  code?: string;
+  raw?: unknown;
 }
 
 export interface UserPlanRow {
@@ -22,6 +35,16 @@ export interface UserPlanRow {
   generation_limit: number;
   features: string;
 }
+
+type PrismaUserWithProfile = {
+  id: bigint;
+  email: string;
+  role: string;
+  name: string | null;
+  studioName?: string | null;
+  studioRole?: string | null;
+  phone?: string | null;
+};
 
 export interface FormattedUserPlan {
   planId: string;
@@ -36,6 +59,35 @@ function hashPassword(password: string): string {
   return bcrypt.hashSync(password, 12);
 }
 
+function toAuthUser(row: PrismaUserWithProfile): AuthUser {
+  return {
+    id: Number(row.id),
+    email: row.email,
+    role: row.role === "admin" ? "admin" : "user",
+    name: row.name ?? undefined,
+    studioName: row.studioName ?? undefined,
+    studioRole: row.studioRole ?? undefined,
+    phone: row.phone ?? undefined,
+  };
+}
+
+function toPlanRow(row: {
+  status: string;
+  trialEndsAt: Date | null;
+  currentPeriodEnd: Date | null;
+  plan: { id: string; name: string; generationLimit: number; features: unknown };
+}): UserPlanRow {
+  return {
+    status: row.status,
+    trial_ends_at: row.trialEndsAt?.toISOString() ?? null,
+    current_period_end: row.currentPeriodEnd?.toISOString() ?? null,
+    plan_id: row.plan.id,
+    plan_name: row.plan.name,
+    generation_limit: row.plan.generationLimit,
+    features: JSON.stringify(row.plan.features ?? []),
+  };
+}
+
 export function isAdminEmail(email?: string | null): boolean {
   if (!email) return false;
   const adminEmails = new Set(
@@ -46,7 +98,22 @@ export function isAdminEmail(email?: string | null): boolean {
   return adminEmails.has(email.toLowerCase().trim());
 }
 
-export function ensureUserSubscription(userId: number, planId: string, status = "active") {
+export async function ensureUserSubscription(userId: number, planId: string, status = "active") {
+  if (shouldUsePrisma) {
+    const existing = await prisma.subscription.findFirst({ where: { userId: BigInt(userId) } });
+    if (!existing) {
+      await prisma.subscription.create({
+        data: {
+          userId: BigInt(userId),
+          planId,
+          status,
+          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+      });
+    }
+    return;
+  }
+
   const existing = db.prepare("SELECT id FROM subscriptions WHERE user_id = ?").get(userId);
   if (!existing) {
     db.prepare(
@@ -56,11 +123,159 @@ export function ensureUserSubscription(userId: number, planId: string, status = 
   }
 }
 
-function createTrialSubscription(userId: number) {
+async function createTrialSubscription(userId: number) {
   const trialEnd = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+  if (shouldUsePrisma) {
+    await prisma.subscription.create({
+      data: {
+        userId: BigInt(userId),
+        planId: "pro",
+        status: "trial",
+        trialEndsAt: new Date(trialEnd),
+        currentPeriodEnd: new Date(trialEnd),
+      },
+    });
+    return;
+  }
+
   db.prepare(
     "INSERT INTO subscriptions (user_id, plan_id, status, trial_ends_at, current_period_end) VALUES (?, ?, ?, ?, ?)",
   ).run(userId, "pro", "trial", trialEnd, trialEnd);
+}
+
+async function readSupabaseError(response: Response): Promise<SupabaseErrorDetail> {
+  const text = await response.text().catch(() => "");
+  let raw: unknown = text;
+
+  if (text) {
+    try {
+      raw = JSON.parse(text) as unknown;
+    } catch {
+      raw = text;
+    }
+  }
+
+  const detail = raw && typeof raw === "object" ? raw as Record<string, unknown> : {};
+  const message =
+    detail.message ||
+    detail.msg ||
+    detail.error_description ||
+    detail.error ||
+    (typeof raw === "string" ? raw : "") ||
+    "Nao foi possivel criar o acesso no Supabase.";
+
+  return {
+    message: String(message),
+    code: detail.code ? String(detail.code) : undefined,
+    raw,
+  };
+}
+
+function isSupabaseUserConflict(status: number, detail: SupabaseErrorDetail) {
+  const value = `${detail.code || ""} ${detail.message}`.toLowerCase();
+  return (
+    status === 409 ||
+    status === 422 ||
+    value.includes("already") ||
+    value.includes("exists") ||
+    value.includes("registered")
+  );
+}
+
+function supabaseHeaders(serviceRoleKey: string) {
+  return {
+    apikey: serviceRoleKey,
+    Authorization: `Bearer ${serviceRoleKey}`,
+    "Content-Type": "application/json",
+  };
+}
+
+async function findSupabaseUserByEmail(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  email: string,
+): Promise<SupabaseAdminUser | null> {
+  const response = await fetch(`${supabaseUrl}/auth/v1/admin/users?page=1&per_page=1000`, {
+    headers: supabaseHeaders(serviceRoleKey),
+  });
+
+  if (!response.ok) {
+    const detail = await readSupabaseError(response);
+    logger.warn(
+      { status: response.status, code: detail.code, error: detail.message },
+      "Could not list Supabase users while reconciling managed access",
+    );
+    return null;
+  }
+
+  const payload = await response.json().catch(() => ({})) as { users?: SupabaseAdminUser[] } | SupabaseAdminUser[];
+  const users = Array.isArray(payload) ? payload : payload.users || [];
+  return users.find((user) => user.email?.toLowerCase() === email) || null;
+}
+
+async function updateSupabaseManagedUser(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  supabaseId: string,
+  data: { name: string; password: string; role: string; planId: string },
+) {
+  const response = await fetch(`${supabaseUrl}/auth/v1/admin/users/${supabaseId}`, {
+    method: "PUT",
+    headers: supabaseHeaders(serviceRoleKey),
+    body: JSON.stringify({
+      password: data.password,
+      email_confirm: true,
+      user_metadata: { name: data.name },
+      app_metadata: { role: data.role, plan_id: data.planId },
+    }),
+  });
+
+  if (!response.ok) {
+    const detail = await readSupabaseError(response);
+    logger.warn(
+      { status: response.status, code: detail.code, error: detail.message },
+      "Could not update existing Supabase managed user",
+    );
+    throw new AppError(detail.message, response.status === 422 ? 409 : 502);
+  }
+}
+
+async function createSupabaseManagedUser(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  data: { name: string; email: string; password: string; role: string; planId: string },
+): Promise<SupabaseAdminUser> {
+  const supabaseResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
+    method: "POST",
+    headers: supabaseHeaders(serviceRoleKey),
+    body: JSON.stringify({
+      email: data.email,
+      password: data.password,
+      email_confirm: true,
+      user_metadata: { name: data.name },
+      app_metadata: { role: data.role, plan_id: data.planId },
+    }),
+  });
+
+  if (supabaseResponse.ok) {
+    return await supabaseResponse.json() as SupabaseAdminUser;
+  }
+
+  const detail = await readSupabaseError(supabaseResponse);
+  logger.warn(
+    { status: supabaseResponse.status, code: detail.code, error: detail.message },
+    "Could not create Supabase managed user",
+  );
+
+  if (isSupabaseUserConflict(supabaseResponse.status, detail)) {
+    const existing = await findSupabaseUserByEmail(supabaseUrl, serviceRoleKey, data.email);
+    if (existing?.id) {
+      await updateSupabaseManagedUser(supabaseUrl, serviceRoleKey, existing.id, data);
+      return existing;
+    }
+  }
+
+  throw new AppError(detail.message, supabaseResponse.status === 422 ? 409 : 502);
 }
 
 export function formatUserPlan(row: UserPlanRow | undefined): FormattedUserPlan | null {
@@ -81,8 +296,16 @@ export function formatUserPlan(row: UserPlanRow | undefined): FormattedUserPlan 
   };
 }
 
-export function loginUser(email: string, password: string): AuthUser {
+export async function loginUser(email: string, password: string): Promise<AuthUser> {
   const normalized = email.toLowerCase().trim();
+  if (shouldUsePrisma) {
+    const row = await prisma.user.findUnique({ where: { email: normalized } });
+    if (!row || !bcrypt.compareSync(password, row.passwordHash)) {
+      throw new AppError("Invalid email or password", 401);
+    }
+    return toAuthUser(row);
+  }
+
   const row = db.prepare("SELECT * FROM users WHERE email = ?").get(normalized) as
     | DbUser
     | undefined;
@@ -97,7 +320,12 @@ export function loginUser(email: string, password: string): AuthUser {
   };
 }
 
-export function getUserById(id: number): AuthUser | null {
+export async function getUserById(id: number): Promise<AuthUser | null> {
+  if (shouldUsePrisma) {
+    const row = await prisma.user.findUnique({ where: { id: BigInt(id) } });
+    return row ? toAuthUser(row) : null;
+  }
+
   const row = db
     .prepare(
       `SELECT id, email, role, name,
@@ -110,13 +338,34 @@ export function getUserById(id: number): AuthUser | null {
   return row ?? null;
 }
 
-export function ensureUserFromToken(tokenUser: AuthUser): AuthUser {
-  const existing = getUserById(tokenUser.id);
+export async function ensureUserFromToken(tokenUser: AuthUser): Promise<AuthUser> {
+  const existing = await getUserById(tokenUser.id);
   if (existing) return existing;
 
   const normalized = tokenUser.email.toLowerCase().trim();
   const role = tokenUser.role === "admin" || isAdminEmail(normalized) ? "admin" : "user";
   const hash = hashPassword(crypto.randomBytes(24).toString("hex"));
+
+  if (shouldUsePrisma) {
+    const user = await prisma.user.upsert({
+      where: { id: BigInt(tokenUser.id) },
+      update: {},
+      create: {
+        id: BigInt(tokenUser.id),
+        name: tokenUser.name || normalized.split("@")[0],
+        email: normalized,
+        passwordHash: hash,
+        role,
+        emailVerified: true,
+      },
+    });
+    if (role === "admin") {
+      await ensureUserSubscription(Number(user.id), "pro", "active");
+    } else if (!(await getUserPlan(Number(user.id)))) {
+      await createTrialSubscription(Number(user.id));
+    }
+    return toAuthUser(user);
+  }
 
   db.prepare(
     `INSERT OR IGNORE INTO users (id, name, email, password_hash, role, email_verified)
@@ -124,22 +373,35 @@ export function ensureUserFromToken(tokenUser: AuthUser): AuthUser {
   ).run(tokenUser.id, tokenUser.name || normalized.split("@")[0], normalized, hash, role);
 
   if (role === "admin") {
-    ensureUserSubscription(tokenUser.id, "pro", "active");
-  } else if (!getUserPlan(tokenUser.id)) {
-    createTrialSubscription(tokenUser.id);
+    await ensureUserSubscription(tokenUser.id, "pro", "active");
+  } else if (!(await getUserPlan(tokenUser.id))) {
+    await createTrialSubscription(tokenUser.id);
   }
 
-  const restored = getUserById(tokenUser.id);
+  const restored = await getUserById(tokenUser.id);
   if (!restored) throw new AppError("Sessão expirada. Entre novamente para continuar.", 401);
   return restored;
 }
 
-export function updateProfile(
+export async function updateProfile(
   userId: number,
   data: { name?: string; studioName?: string; studioRole?: string; phone?: string },
-): AuthUser {
-  const current = getUserById(userId);
+): Promise<AuthUser> {
+  const current = await getUserById(userId);
   if (!current) throw new AppError("Sessão expirada. Entre novamente para continuar.", 401);
+
+  if (shouldUsePrisma) {
+    const updated = await prisma.user.update({
+      where: { id: BigInt(userId) },
+      data: {
+        name: data.name?.trim() || current.name || null,
+        studioName: data.studioName?.trim() || current.studioName || null,
+        studioRole: data.studioRole?.trim() || current.studioRole || null,
+        phone: data.phone?.trim() || current.phone || null,
+      },
+    });
+    return toAuthUser(updated);
+  }
 
   db.prepare(
     `UPDATE users
@@ -153,7 +415,7 @@ export function updateProfile(
     userId,
   );
 
-  const updated = getUserById(userId);
+  const updated = await getUserById(userId);
   if (!updated) throw new AppError("Sessão expirada. Entre novamente para continuar.", 401);
   return updated;
 }
@@ -162,13 +424,48 @@ function roleForEmail(email: string): "user" | "admin" {
   return isAdminEmail(email) ? "admin" : "user";
 }
 
-export function upsertOAuthUser(
+export async function upsertOAuthUser(
   email: string,
   name?: string | null,
   access?: { role?: "user" | "admin"; planId?: string; supabaseId?: string },
-): AuthUser {
+): Promise<AuthUser> {
   const normalized = email.toLowerCase().trim();
   const role = access?.role === "admin" || roleForEmail(normalized) === "admin" ? "admin" : "user";
+  if (shouldUsePrisma) {
+    const existing = await prisma.user.findUnique({ where: { email: normalized } });
+    if (existing) {
+      const updated = await prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          role,
+          supabaseId: access?.supabaseId || existing.supabaseId,
+        },
+      });
+      if (access?.planId) await updateUserPlanInDatabase(Number(updated.id), access.planId);
+      return toAuthUser(updated);
+    }
+
+    const created = await prisma.user.create({
+      data: {
+        name: name ?? normalized.split("@")[0],
+        email: normalized,
+        passwordHash: hashPassword(crypto.randomBytes(24).toString("hex")),
+        role,
+        emailVerified: true,
+        supabaseId: access?.supabaseId || null,
+      },
+    });
+    if (access?.planId) await ensureUserSubscription(Number(created.id), access.planId, "active");
+    else await createTrialSubscription(Number(created.id));
+    notifyAdmins(
+      "Conta sincronizada",
+      `${name || normalized} entrou pela autenticacao persistente.`,
+      "user",
+      "/admin/gerenciar",
+    );
+    return toAuthUser(created);
+  }
+
   const existing = db
     .prepare("SELECT id, email, role, name FROM users WHERE email = ?")
     .get(normalized) as AuthUser | undefined;
@@ -181,7 +478,7 @@ export function upsertOAuthUser(
       db.prepare("UPDATE users SET role = ? WHERE id = ?").run(role, existing.id);
       existing.role = role;
     }
-    if (access?.planId) updateUserPlanInDatabase(existing.id, access.planId);
+    if (access?.planId) await updateUserPlanInDatabase(existing.id, access.planId);
     return existing;
   }
 
@@ -193,8 +490,8 @@ export function upsertOAuthUser(
     .run(name ?? normalized.split("@")[0], normalized, hash, role, 1, access?.supabaseId || null);
 
   const userId = Number(result.lastInsertRowid);
-  if (access?.planId) ensureUserSubscription(userId, access.planId, "active");
-  else createTrialSubscription(userId);
+  if (access?.planId) await ensureUserSubscription(userId, access.planId, "active");
+  else await createTrialSubscription(userId);
   notifyAdmins(
     "Conta sincronizada",
     `${name || normalized} entrou pela autenticacao persistente.`,
@@ -211,8 +508,31 @@ export function upsertOAuthUser(
 }
 
 /** Public registration: user + 14-day Pro trial */
-export function registerUser(name: string, email: string, password: string) {
+export async function registerUser(name: string, email: string, password: string) {
   const normalized = email.toLowerCase().trim();
+  if (shouldUsePrisma) {
+    const existing = await prisma.user.findUnique({ where: { email: normalized } });
+    if (existing) throw new AppError("E-mail já cadastrado.", 409);
+
+    const created = await prisma.user.create({
+      data: {
+        name,
+        email: normalized,
+        passwordHash: hashPassword(password),
+        role: "user",
+        emailVerified: false,
+      },
+    });
+    await createTrialSubscription(Number(created.id));
+    notifyAdmins(
+      "Nova conta criada",
+      `${name} (${normalized}) criou acesso na plataforma e recebeu trial Pro de 14 dias.`,
+      "user",
+      "/admin/gerenciar",
+    );
+    return { id: Number(created.id), name, email: normalized, role: "user" as const };
+  }
+
   const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(normalized);
   if (existing) {
     throw new AppError("E-mail já cadastrado.", 409);
@@ -226,7 +546,7 @@ export function registerUser(name: string, email: string, password: string) {
     .run(name, normalized, hash, "user", 0);
 
   const userId = Number(result.lastInsertRowid);
-  createTrialSubscription(userId);
+  await createTrialSubscription(userId);
   notifyAdmins(
     "Nova conta criada",
     `${name} (${normalized}) criou acesso na plataforma e recebeu trial Pro de 14 dias.`,
@@ -245,7 +565,9 @@ export async function createManagedUser(data: {
   planId: string;
 }) {
   const normalized = data.email.toLowerCase().trim();
-  const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(normalized);
+  const existing = shouldUsePrisma
+    ? await prisma.user.findUnique({ where: { email: normalized } })
+    : db.prepare("SELECT id FROM users WHERE email = ?").get(normalized);
   if (existing) {
     throw new AppError("E-mail já cadastrado.", 409);
   }
@@ -257,56 +579,80 @@ export async function createManagedUser(data: {
     throw new AppError("Supabase Admin nao esta configurado para criar acessos persistentes.", 503);
   }
 
-  const supabaseResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
-    method: "POST",
-    headers: {
-      apikey: serviceRoleKey,
-      Authorization: `Bearer ${serviceRoleKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      email: normalized,
-      password: data.password,
-      email_confirm: true,
-      user_metadata: { name: data.name.trim() },
-      app_metadata: { role, plan_id: data.planId },
-    }),
+  const trimmedName = data.name.trim();
+  const supabaseUser = await createSupabaseManagedUser(supabaseUrl, serviceRoleKey, {
+    name: trimmedName,
+    email: normalized,
+    password: data.password,
+    role,
+    planId: data.planId,
   });
 
-  if (!supabaseResponse.ok) {
-    const detail = await supabaseResponse.json().catch(() => ({})) as { message?: string; error_description?: string };
-    const message = detail.message || detail.error_description || "Nao foi possivel criar o acesso no Supabase.";
-    throw new AppError(message, supabaseResponse.status === 422 ? 409 : 502);
-  }
-  const supabaseUser = await supabaseResponse.json() as { id?: string };
-
   const hash = hashPassword(data.password);
+  if (shouldUsePrisma) {
+    const created = await prisma.user.create({
+      data: {
+        name: trimmedName,
+        email: normalized,
+        passwordHash: hash,
+        role,
+        emailVerified: true,
+        supabaseId: supabaseUser.id || null,
+      },
+    });
+    await ensureUserSubscription(Number(created.id), data.planId, "active");
+
+    notifyAdmins(
+      "Conta criada pelo admin",
+      `${trimmedName} (${normalized}) recebeu acesso ${data.planId.toUpperCase()} como ${role}.`,
+      "user",
+      "/admin/gerenciar",
+    );
+
+    return {
+      id: Number(created.id),
+      name: trimmedName,
+      email: normalized,
+      role,
+      planId: data.planId,
+    };
+  }
+
   const result = db
     .prepare(
       "INSERT INTO users (name, email, password_hash, role, email_verified, supabase_id) VALUES (?, ?, ?, ?, ?, ?)",
     )
-    .run(data.name.trim(), normalized, hash, role, 1, supabaseUser.id || null);
+    .run(trimmedName, normalized, hash, role, 1, supabaseUser.id || null);
 
   const userId = Number(result.lastInsertRowid);
-  ensureUserSubscription(userId, data.planId, "active");
+  await ensureUserSubscription(userId, data.planId, "active");
 
   notifyAdmins(
     "Conta criada pelo admin",
-    `${data.name} (${normalized}) recebeu acesso ${data.planId.toUpperCase()} como ${role}.`,
+    `${trimmedName} (${normalized}) recebeu acesso ${data.planId.toUpperCase()} como ${role}.`,
     "user",
     "/admin/gerenciar",
   );
 
   return {
     id: userId,
-    name: data.name.trim(),
+    name: trimmedName,
     email: normalized,
     role,
     planId: data.planId,
   };
 }
 
-export function getUserPlan(userId: number): UserPlanRow | undefined {
+export async function getUserPlan(userId: number): Promise<UserPlanRow | undefined> {
+  if (shouldUsePrisma) {
+    const row = await prisma.subscription.findFirst({
+      where: { userId: BigInt(userId) },
+      include: { plan: true },
+      orderBy: { id: "desc" },
+    });
+    return row ? toPlanRow(row) : undefined;
+  }
+
   return db
     .prepare(
       `SELECT s.status, s.trial_ends_at, s.current_period_end, p.id as plan_id,
@@ -319,10 +665,10 @@ export function getUserPlan(userId: number): UserPlanRow | undefined {
     .get(userId) as UserPlanRow | undefined;
 }
 
-function ensureUsablePlan(userId: number): UserPlanRow | undefined {
-  let plan = getUserPlan(userId);
+async function ensureUsablePlan(userId: number): Promise<UserPlanRow | undefined> {
+  let plan = await getUserPlan(userId);
   if (!plan) {
-    createTrialSubscription(userId);
+    await createTrialSubscription(userId);
     return getUserPlan(userId);
   }
 
@@ -331,6 +677,20 @@ function ensureUsablePlan(userId: number): UserPlanRow | undefined {
     plan.trial_ends_at &&
     new Date(plan.trial_ends_at).getTime() < Date.now()
   ) {
+    if (shouldUsePrisma) {
+      await prisma.subscription.updateMany({
+        where: { userId: BigInt(userId) },
+        data: {
+          planId: "free",
+          status: "active",
+          trialEndsAt: null,
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+      });
+      return getUserPlan(userId);
+    }
+
     db.prepare(
       `UPDATE subscriptions
        SET plan_id = 'free', status = 'active', trial_ends_at = NULL,
@@ -338,19 +698,58 @@ function ensureUsablePlan(userId: number): UserPlanRow | undefined {
            current_period_end = datetime('now', '+1 month')
        WHERE user_id = ?`,
     ).run(userId);
-    plan = getUserPlan(userId);
+    plan = await getUserPlan(userId);
   }
 
   return plan;
 }
 
-export function checkAndIncrementUsage(userId: number, toolId: string) {
+export async function checkAndIncrementUsage(userId: number, toolId: string) {
+  if (shouldUsePrisma) {
+    const userRow = await prisma.user.findUnique({
+      where: { id: BigInt(userId) },
+      select: { role: true, email: true },
+    });
+    const role = userRow?.role;
+    const email = userRow?.email?.toLowerCase();
+    if (role === "admin" || isAdminEmail(email)) return;
+
+    const plan = await ensureUsablePlan(userId);
+    if (!plan) {
+      throw new AppError("Não conseguimos ativar seu plano automaticamente. Tente sair e entrar novamente.", 403);
+    }
+    if (plan.generation_limit === -1) return;
+
+    const period = new Date().toISOString().slice(0, 7);
+    await prisma.usage.upsert({
+      where: { userId_toolId_period: { userId: BigInt(userId), toolId, period } },
+      create: { userId: BigInt(userId), toolId, period, count: 0 },
+      update: {},
+    });
+    const totalRow = await prisma.usage.aggregate({
+      where: { userId: BigInt(userId), period },
+      _sum: { count: true },
+    });
+    const total = totalRow._sum.count ?? 0;
+    if (total >= plan.generation_limit) {
+      throw new AppError(
+        `Você atingiu ${plan.generation_limit} gerações neste mês. Seu trabalho foi preservado; atualize o plano ou chame o administrador para liberar mais uso.`,
+        403,
+      );
+    }
+    await prisma.usage.update({
+      where: { userId_toolId_period: { userId: BigInt(userId), toolId, period } },
+      data: { count: { increment: 1 } },
+    });
+    return;
+  }
+
   const userRow = db.prepare("SELECT role, email FROM users WHERE id = ?").get(userId) as { role: string; email: string } | undefined;
   const role = userRow?.role;
   const email = userRow?.email?.toLowerCase();
   if (role === "admin" || isAdminEmail(email)) return;
 
-  const plan = ensureUsablePlan(userId);
+  const plan = await ensureUsablePlan(userId);
   if (!plan) {
     throw new AppError("Não conseguimos ativar seu plano automaticamente. Tente sair e entrar novamente.", 403);
   }
@@ -380,8 +779,18 @@ export function checkAndIncrementUsage(userId: number, toolId: string) {
   ).run(userId, toolId, period);
 }
 
-export function createResetToken(email: string) {
+export async function createResetToken(email: string) {
   const normalized = email.toLowerCase().trim();
+  if (shouldUsePrisma) {
+    const user = await prisma.user.findUnique({ where: { email: normalized }, select: { id: true } });
+    if (!user) return;
+    const token = crypto.randomBytes(32).toString("hex");
+    const expires = new Date(Date.now() + 60 * 60 * 1000);
+    await prisma.resetToken.deleteMany({ where: { userId: user.id } });
+    await prisma.resetToken.create({ data: { userId: user.id, token, expiresAt: expires } });
+    return token;
+  }
+
   const user = db.prepare("SELECT id FROM users WHERE email = ?").get(normalized) as
     | { id: number }
     | undefined;
@@ -404,7 +813,19 @@ export function createResetToken(email: string) {
   return token;
 }
 
-export function resetPassword(token: string, newPassword: string) {
+export async function resetPassword(token: string, newPassword: string) {
+  if (shouldUsePrisma) {
+    const row = await prisma.resetToken.findFirst({
+      where: { token, used: false, expiresAt: { gt: new Date() } },
+    });
+    if (!row) throw new AppError("Token inválido ou expirado.", 400);
+    await prisma.$transaction([
+      prisma.user.update({ where: { id: row.userId }, data: { passwordHash: hashPassword(newPassword) } }),
+      prisma.resetToken.update({ where: { id: row.id }, data: { used: true } }),
+    ]);
+    return;
+  }
+
   const row = db
     .prepare(
       "SELECT * FROM reset_tokens WHERE token = ? AND used = 0 AND expires_at > datetime('now')",
@@ -420,12 +841,14 @@ export function resetPassword(token: string, newPassword: string) {
   db.prepare("UPDATE reset_tokens SET used = 1 WHERE id = ?").run(row.id);
 }
 
-export function countUsers(): number {
+export async function countUsers(): Promise<number> {
+  if (shouldUsePrisma) return prisma.user.count();
+
   const row = db.prepare("SELECT COUNT(*) as c FROM users").get() as { c: number };
   return row.c;
 }
 
-export function listAllUsers(): Array<{
+export async function listAllUsers(): Promise<Array<{
   id: number;
   name: string | null;
   email: string;
@@ -437,7 +860,33 @@ export function listAllUsers(): Array<{
   project_count: number;
   file_count: number;
   review_count: number;
-}> {
+}>> {
+  if (shouldUsePrisma) {
+    const users = await prisma.user.findMany({
+      include: {
+        subscriptions: { include: { plan: true }, orderBy: { id: "desc" }, take: 1 },
+        _count: { select: { projects: true, files: true, videoReviews: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return users.map((user) => {
+      const subscription = user.subscriptions[0];
+      return {
+        id: Number(user.id),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        github_id: user.githubId,
+        created_at: user.createdAt.toISOString(),
+        plan_name: subscription?.plan.name ?? null,
+        generation_limit: subscription?.plan.generationLimit ?? null,
+        project_count: user._count.projects,
+        file_count: user._count.files,
+        review_count: user._count.videoReviews,
+      };
+    });
+  }
+
   return db
     .prepare(
       `SELECT u.id, u.name, u.email, u.role, u.github_id, u.created_at,
@@ -457,7 +906,34 @@ export function listAllUsers(): Array<{
     .all() as any[];
 }
 
-function updateUserPlanInDatabase(userId: number, planId: string) {
+async function updateUserPlanInDatabase(userId: number, planId: string) {
+  if (shouldUsePrisma) {
+    const validPlan = await prisma.plan.findUnique({ where: { id: planId }, select: { id: true } });
+    if (!validPlan) throw new AppError("Invalid plan ID", 400);
+    const existing = await prisma.subscription.findFirst({ where: { userId: BigInt(userId) } });
+    if (existing) {
+      await prisma.subscription.update({
+        where: { id: existing.id },
+        data: {
+          planId,
+          status: "active",
+          trialEndsAt: null,
+          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+      });
+    } else {
+      await prisma.subscription.create({
+        data: {
+          userId: BigInt(userId),
+          planId,
+          status: "active",
+          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+      });
+    }
+    return;
+  }
+
   const validPlans = db.prepare("SELECT id FROM plans").all() as { id: string }[];
   if (!validPlans.some((p) => p.id === planId)) throw new AppError("Invalid plan ID", 400);
   const existing = db.prepare("SELECT id FROM subscriptions WHERE user_id = ?").get(userId);
@@ -469,6 +945,34 @@ function updateUserPlanInDatabase(userId: number, planId: string) {
 }
 
 async function syncSupabaseAccess(userId: number) {
+  if (shouldUsePrisma) {
+    const access = await prisma.user.findUnique({
+      where: { id: BigInt(userId) },
+      select: {
+        supabaseId: true,
+        role: true,
+        subscriptions: { select: { planId: true }, orderBy: { id: "desc" }, take: 1 },
+      },
+    });
+    if (!access?.supabaseId) return;
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !serviceRoleKey) throw new AppError("Supabase Admin nao esta configurado.", 503);
+    const response = await fetch(`${supabaseUrl}/auth/v1/admin/users/${access.supabaseId}`, {
+      method: "PUT",
+      headers: {
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        app_metadata: { role: access.role, plan_id: access.subscriptions[0]?.planId || "free" },
+      }),
+    });
+    if (!response.ok) throw new AppError("Nao foi possivel sincronizar a permissao no Supabase.", 502);
+    return;
+  }
+
   const access = db.prepare(
     `SELECT u.supabase_id, u.role, s.plan_id
      FROM users u LEFT JOIN subscriptions s ON s.user_id = u.id
@@ -495,9 +999,11 @@ export async function updateUserRole(userId: number, role: string, actorId?: num
     throw new AppError("Invalid role. Must be 'user' or 'admin'.", 400);
   }
 
-  const user = db.prepare("SELECT id, role FROM users WHERE id = ?").get(userId) as
-    | { id: number; role: string }
-    | undefined;
+  const user = shouldUsePrisma
+    ? await prisma.user.findUnique({ where: { id: BigInt(userId) }, select: { id: true, role: true } })
+    : db.prepare("SELECT id, role FROM users WHERE id = ?").get(userId) as
+      | { id: number | bigint; role: string }
+      | undefined;
   if (!user) {
     throw new AppError("User not found", 404);
   }
@@ -505,10 +1011,18 @@ export async function updateUserRole(userId: number, role: string, actorId?: num
     throw new AppError("Você não pode remover seu próprio acesso admin.", 400);
   }
   if (user.role === "admin" && role !== "admin") {
-    const row = db.prepare("SELECT COUNT(*) as c FROM users WHERE role = 'admin'").get() as { c: number };
-    if (row.c <= 1) {
+    const adminCount = shouldUsePrisma
+      ? await prisma.user.count({ where: { role: "admin" } })
+      : (db.prepare("SELECT COUNT(*) as c FROM users WHERE role = 'admin'").get() as { c: number }).c;
+    if (adminCount <= 1) {
       throw new AppError("Mantenha pelo menos um administrador ativo.", 400);
     }
+  }
+
+  if (shouldUsePrisma) {
+    await prisma.user.update({ where: { id: BigInt(userId) }, data: { role } });
+    await syncSupabaseAccess(userId);
+    return;
   }
 
   const result = db.prepare("UPDATE users SET role = ? WHERE id = ?").run(role, userId);
@@ -519,7 +1033,7 @@ export async function updateUserRole(userId: number, role: string, actorId?: num
 }
 
 export async function updateUserPlan(userId: number, planId: string) {
-  updateUserPlanInDatabase(userId, planId);
+  await updateUserPlanInDatabase(userId, planId);
   await syncSupabaseAccess(userId);
 }
 
@@ -528,18 +1042,56 @@ export async function deleteManagedUser(userId: number, actorId: number) {
     throw new AppError("Você não pode apagar a própria conta enquanto está logado.", 400);
   }
 
-  const user = db
-    .prepare("SELECT id, email, role, supabase_id FROM users WHERE id = ?")
-    .get(userId) as { id: number; email: string; role: string; supabase_id?: string | null } | undefined;
+  const user = shouldUsePrisma
+    ? await prisma.user.findUnique({
+      where: { id: BigInt(userId) },
+      select: { id: true, email: true, role: true, supabaseId: true },
+    })
+    : db
+      .prepare("SELECT id, email, role, supabase_id FROM users WHERE id = ?")
+      .get(userId) as { id: number | bigint; email: string; role: string; supabase_id?: string | null; supabaseId?: string | null } | undefined;
   if (!user) {
     throw new AppError("User not found", 404);
   }
 
   if (user.role === "admin") {
-    const row = db.prepare("SELECT COUNT(*) as c FROM users WHERE role = 'admin'").get() as { c: number };
-    if (row.c <= 1) {
+    const adminCount = shouldUsePrisma
+      ? await prisma.user.count({ where: { role: "admin" } })
+      : (db.prepare("SELECT COUNT(*) as c FROM users WHERE role = 'admin'").get() as { c: number }).c;
+    if (adminCount <= 1) {
       throw new AppError("Mantenha pelo menos um administrador ativo.", 400);
     }
+  }
+
+  if (shouldUsePrisma) {
+    const [projects, clients, files, reviews, generations] = await Promise.all([
+      prisma.project.count({ where: { userId: BigInt(userId) } }),
+      prisma.client.count({ where: { userId: BigInt(userId) } }),
+      prisma.file.count({ where: { userId: BigInt(userId) } }),
+      prisma.videoReview.count({ where: { userId: BigInt(userId) } }),
+      prisma.generation.count({ where: { userId: BigInt(userId) } }),
+    ]);
+
+    if (user.supabaseId) {
+      const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (!supabaseUrl || !serviceRoleKey) throw new AppError("Supabase Admin nao esta configurado.", 503);
+      const response = await fetch(`${supabaseUrl}/auth/v1/admin/users/${user.supabaseId}`, {
+        method: "DELETE",
+        headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` },
+      });
+      if (!response.ok && response.status !== 404) {
+        throw new AppError("Nao foi possivel apagar a conta persistente no Supabase.", 502);
+      }
+    }
+
+    await prisma.user.delete({ where: { id: BigInt(userId) } });
+    return {
+      id: userId,
+      email: user.email,
+      deleted: true,
+      summary: { projects, clients, files, reviews, generations },
+    };
   }
 
   const summary = db
@@ -563,11 +1115,12 @@ export async function deleteManagedUser(userId: number, actorId: number) {
     db.prepare("DELETE FROM users WHERE id = ?").run(userId);
   });
 
-  if (user.supabase_id) {
+  const sqliteSupabaseId = "supabase_id" in user ? user.supabase_id : user.supabaseId;
+  if (sqliteSupabaseId) {
     const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !serviceRoleKey) throw new AppError("Supabase Admin nao esta configurado.", 503);
-    const response = await fetch(`${supabaseUrl}/auth/v1/admin/users/${user.supabase_id}`, {
+    const response = await fetch(`${supabaseUrl}/auth/v1/admin/users/${sqliteSupabaseId}`, {
       method: "DELETE",
       headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` },
     });

@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { useRoute } from "wouter";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AnimatedModal from "@/components/AnimatedModal";
+import ProjectNav from "@/components/ProjectNav";
 import { api } from "@/lib/api";
 import {
   CalendarDays,
@@ -11,6 +13,7 @@ import {
   Download,
   FileText,
   Film,
+  Link2,
   ListChecks,
   Pencil,
   Save,
@@ -19,6 +22,9 @@ import {
 import { toast } from "sonner";
 import { readStudioSettings, saveStudioSettings, type StudioSettings } from "@/lib/studioSettings";
 import { useLanguage, type Translate } from "@/contexts/LanguageContext";
+import { useProject } from "@/contexts/ProjectContext";
+import { buildDocumentPrefill } from "@/lib/studioContext";
+import type { Client } from "@/lib/api";
 
 type DocType = "briefing" | "roteiro" | "callsheet" | "decupagem" | "orcamento" | "cronograma" | "checklist" | "entrega";
 
@@ -460,6 +466,21 @@ function nextFormForType(current: DocumentForm, type: DocType): DocumentForm {
   };
 }
 
+function mergeDocumentContext(current: DocumentForm, prefill: Partial<DocumentForm>) {
+  const next = { ...current };
+  let applied = 0;
+  for (const [key, value] of Object.entries(prefill) as Array<[keyof DocumentForm, string]>) {
+    if (!value) continue;
+    const currentValue = String(next[key] || "").trim();
+    const defaultValue = String(initialForm[key] || "").trim();
+    if (!currentValue || currentValue === defaultValue) {
+      if (next[key] !== value) applied += 1;
+      next[key] = value as never;
+    }
+  }
+  return { next, applied };
+}
+
 function FormField({ field, value, onChange }: { field: DocumentField; value: string; onChange: (value: string) => void }) {
   const className = "frame-input w-full bg-frame-gray-2/90 min-h-0";
   return (
@@ -489,10 +510,14 @@ function FormField({ field, value, onChange }: { field: DocumentField; value: st
 
 function DocumentsContent() {
   const { t } = useLanguage();
+  const [, projectParams] = useRoute("/project/:projectId/documents");
+  const { activeProject, selectProject } = useProject();
+  const projectIdParam = projectParams?.projectId ? Number(projectParams.projectId) : null;
   const [form, setForm] = useState<DocumentForm>(initialForm);
   const [savedDocs, setSavedDocs] = useState<StudioDocument[]>([]);
   const [studio, setStudio] = useState<StudioSettings>(() => readStudioSettings());
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [linkedClient, setLinkedClient] = useState<Client | null>(null);
   const selectedDoc = DOC_TYPES.find((item) => item.id === form.type) || DOC_TYPES[0];
   const documentForms = useMemo(() => createDocumentForms(t), [t]);
   const activeGroups = documentForms[form.type];
@@ -510,7 +535,44 @@ function DocumentsContent() {
       .catch(() => null);
   }, []);
 
+  useEffect(() => {
+    if (projectIdParam) {
+      selectProject(projectIdParam);
+    }
+  }, [projectIdParam]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!activeProject?.clientId) {
+      setLinkedClient(null);
+      return;
+    }
+    api.clients.get(activeProject.clientId)
+      .then((details) => {
+        if (!cancelled) setLinkedClient(details.client);
+      })
+      .catch(() => {
+        if (!cancelled) setLinkedClient(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeProject?.clientId]);
+
+  useEffect(() => {
+    if (!activeProject) return;
+    const prefill = buildDocumentPrefill(activeProject, linkedClient);
+    setForm((current) => mergeDocumentContext(current, prefill).next);
+  }, [activeProject, linkedClient]);
+
   const update = (key: keyof DocumentForm, value: string) => setForm((current) => ({ ...current, [key]: value }));
+
+  const applyLinkedContext = () => {
+    if (!activeProject) return;
+    const { next, applied } = mergeDocumentContext(form, buildDocumentPrefill(activeProject, linkedClient));
+    setForm(next);
+    toast[applied ? "success" : "info"](applied ? "Documento atualizado com projeto e cliente." : "Documento já está sincronizado.");
+  };
 
   const saveCurrent = () => {
     const next: StudioDocument = {
@@ -582,6 +644,7 @@ function DocumentsContent() {
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body">
       <AppNavBar />
+      {projectIdParam && <ProjectNav projectId={projectIdParam} />}
       <main id="main-content" className="px-4 sm:px-6 py-5 sm:py-6 space-y-5 max-w-[1680px] mx-auto">
         <section className="border border-frame-gray-3 bg-frame-gray-1/60 p-4 sm:p-5 shadow-[0_18px_70px_rgba(0,0,0,0.18)]">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
@@ -593,6 +656,12 @@ function DocumentsContent() {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
+              {activeProject && (
+                <button type="button" onClick={applyLinkedContext} className="frame-btn-ghost flex items-center gap-2">
+                  <Link2 className="w-4 h-4" />
+                  Contexto do projeto
+                </button>
+              )}
               <button type="button" onClick={() => setIsEditorOpen(true)} className="frame-btn-ghost flex items-center gap-2">
                 <Pencil className="w-4 h-4" />
                 {t("app.documents.editContent")}
@@ -611,6 +680,20 @@ function DocumentsContent() {
               </button>
             </div>
           </div>
+          {projectIdParam && (
+            <div className="mt-5 grid grid-cols-1 gap-2 border-t border-frame-gray-3 pt-4 sm:grid-cols-3">
+              {[
+                [t("app.documents.contextProject") as string, activeProject?.name || t("app.documents.syncingContext") as string],
+                [t("app.documents.contextClient") as string, form.client || t("app.common.toBeDefined") as string],
+                [t("app.documents.contextDocument") as string, selectedDoc.label],
+              ].map(([label, value]) => (
+                <div key={label} className="border border-frame-gray-3 bg-frame-black/20 p-3">
+                  <p className="font-frame-mono text-[0.56rem] uppercase tracking-[0.16em] text-frame-orange">{label}</p>
+                  <p className="mt-1 truncate text-sm text-frame-white">{value}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="app-panel p-4">

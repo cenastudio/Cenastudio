@@ -21,8 +21,18 @@ interface Notification {
   created_at: string;
 }
 
+function parseNotificationDate(dateStr: string) {
+  const normalized = dateStr.includes("T") || /[zZ]|[+-]\d{2}:?\d{2}$/.test(dateStr)
+    ? dateStr
+    : `${dateStr.replace(" ", "T")}Z`;
+  const date = new Date(normalized);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 function relativeTime(dateStr: string, t: (key: string) => string): string {
-  const diff = Date.now() - new Date(dateStr + "Z").getTime();
+  const date = parseNotificationDate(dateStr);
+  if (!date) return "";
+  const diff = Date.now() - date.getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return t("app.notifications.justNow") as string;
   if (mins < 60) return `${mins}min`;
@@ -30,7 +40,22 @@ function relativeTime(dateStr: string, t: (key: string) => string): string {
   if (hours < 24) return `${hours}h`;
   const days = Math.floor(hours / 24);
   if (days < 30) return `${days}d`;
-  return new Date(dateStr + "Z").toLocaleDateString("pt-BR");
+  return date.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+  });
+}
+
+function absoluteTime(dateStr: string, locale: string): string {
+  const date = parseNotificationDate(dateStr);
+  if (!date) return "";
+  return date.toLocaleString(locale, {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 const typeIcons: Record<string, typeof Bell> = {
@@ -46,7 +71,7 @@ const typeColors: Record<string, string> = {
 };
 
 export default function NotificationsPopover() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const [, setLocation] = useLocation();
   const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -241,6 +266,7 @@ export default function NotificationsPopover() {
               {notifications.map((n) => {
                 const Icon = typeIcons[n.type] || Bell;
                 const color = typeColors[n.type] || "text-frame-gray-light";
+                const exactTime = absoluteTime(n.created_at, locale === "pt" ? "pt-BR" : "en-US");
                 return (
                   <button
                     key={n.id}
@@ -264,9 +290,15 @@ export default function NotificationsPopover() {
                         >
                           {n.title}
                         </span>
-                        <span className="shrink-0 font-frame-mono text-[0.62rem] text-frame-gray-light whitespace-nowrap">
-                          {relativeTime(n.created_at, t)}
-                        </span>
+                        <time
+                          dateTime={n.created_at}
+                          title={exactTime}
+                          aria-label={`${t("app.notifications.createdAt") as string}: ${exactTime}`}
+                          className="shrink-0 text-right font-frame-mono text-frame-gray-light whitespace-nowrap"
+                        >
+                          <span className="block text-[0.62rem]">{relativeTime(n.created_at, t)}</span>
+                          <span className="block text-[0.52rem] opacity-70">{exactTime}</span>
+                        </time>
                       </div>
                       <p className="font-frame-mono text-[0.64rem] text-frame-gray-light mt-0.5 line-clamp-2">
                         {n.message}

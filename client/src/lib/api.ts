@@ -161,7 +161,7 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ toolId, input, projectId }),
       }),
-    history: (toolId: string) =>
+    history: (toolId: string, projectId?: number | null) =>
       request<
         Array<{
           id: number;
@@ -169,8 +169,10 @@ export const api = {
           input: string;
           output: string;
           createdAt: string;
+          projectId?: number | null;
+          projectName?: string | null;
         }>
-      >(`/ai/history/${toolId}`),
+      >(`/ai/history/${toolId}${projectId ? `?projectId=${projectId}` : ""}`),
   },
   projects: {
     list: () => request<Project[]>("/projects"),

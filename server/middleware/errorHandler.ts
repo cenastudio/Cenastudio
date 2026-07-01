@@ -1,4 +1,5 @@
 import type { ErrorRequestHandler } from "express";
+import { logger } from "../utils/logger.js";
 
 export class AppError extends Error {
   status: number;
@@ -11,7 +12,14 @@ export class AppError extends Error {
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   const status = err.status ?? 500;
   if (!(err instanceof AppError) || status >= 500) {
-    console.error(err);
+    logger.error(
+      {
+        status,
+        error: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+      },
+      "Unhandled request error",
+    );
   }
   const message =
     process.env.NODE_ENV === "production" && status === 500

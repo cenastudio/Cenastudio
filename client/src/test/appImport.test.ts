@@ -99,7 +99,7 @@ describe("application module", () => {
       expect(screen.getAllByRole("group", { name: "Idioma" }).length).toBeGreaterThan(0);
     }, { timeout: 5000 });
     fireEvent.click(screen.getAllByRole("button", { name: "EN" })[0]);
-    expect(container?.textContent).toContain("Dashboard");
+    expect(container?.textContent).toContain("Operations Center");
     expect(container?.textContent).not.toMatch(/app\.[a-z]/i);
 
     vi.mocked(window.localStorage.getItem).mockReset();

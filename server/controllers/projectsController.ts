@@ -2,6 +2,8 @@ import type { RequestHandler } from "express";
 import { db } from "../models/db.js";
 import { AppError } from "../middleware/errorHandler.js";
 import type { DbProject, DbProjectState } from "../models/types.js";
+import { prisma, shouldUsePrisma } from "../models/prisma.js";
+import { jsonSafe } from "../utils/prismaSerialization.js";
 
 function serializeProject(project: DbProject) {
   const withClient = project as DbProject & { client_name?: string | null };
@@ -17,6 +19,29 @@ function serializeProject(project: DbProject) {
   };
 }
 
+function serializePrismaProject(project: any) {
+  const safe = jsonSafe(project) as any;
+  const clientName = safe.client?.company || safe.client?.name || null;
+  delete safe.client;
+  return {
+    ...safe,
+    user_id: safe.userId,
+    client_id: safe.clientId,
+    clientName,
+    client_name: clientName,
+    metadataJson: JSON.stringify(safe.metadataJson || {}),
+    metadata_json: JSON.stringify(safe.metadataJson || {}),
+    created_at: safe.createdAt,
+    updated_at: safe.updatedAt,
+  };
+}
+
+function positiveBigInt(value: unknown, label: string) {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) throw new AppError(`${label} inválido`, 400);
+  return BigInt(parsed);
+}
+
 function normalizeMetadataJson(value: unknown) {
   if (typeof value !== "string" || !value.trim()) return "{}";
 
@@ -27,24 +52,36 @@ function normalizeMetadataJson(value: unknown) {
   }
 }
 
-function normalizeOwnedClientId(value: unknown, userId: number): number | null {
+async function normalizeOwnedClientId(value: unknown, userId: number): Promise<number | null> {
   if (value === undefined || value === null || value === "") return null;
   const clientId = Number(value);
   if (!Number.isInteger(clientId) || clientId <= 0) {
     throw new AppError("Cliente inválido", 400);
   }
 
-  const client = db
-    .prepare("SELECT id FROM clients WHERE id = ? AND user_id = ?")
-    .get(clientId, userId);
+  const client = shouldUsePrisma
+    ? await prisma.client.findFirst({
+        where: { id: BigInt(clientId), userId: BigInt(userId) },
+        select: { id: true },
+      })
+    : db.prepare("SELECT id FROM clients WHERE id = ? AND user_id = ?").get(clientId, userId);
   if (!client) throw new AppError("Cliente não encontrado ou acesso não autorizado", 404);
   return clientId;
 }
 
 // List all projects for current user
-export const listProjects: RequestHandler = (req, res, next) => {
+export const listProjects: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
+    if (shouldUsePrisma) {
+      const projects = await prisma.project.findMany({
+        where: { userId: BigInt(userId) },
+        include: { client: { select: { name: true, company: true } } },
+        orderBy: { id: "desc" },
+      });
+      res.json({ success: true, data: projects.map(serializePrismaProject) });
+      return;
+    }
     const rows = db
       .prepare(
         `SELECT p.*, COALESCE(c.company, c.name) AS client_name
@@ -61,7 +98,7 @@ export const listProjects: RequestHandler = (req, res, next) => {
 };
 
 // Create a new project
-export const createProject: RequestHandler = (req, res, next) => {
+export const createProject: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const { name, description, clientId, metadataJson, metadata_json } = req.body;
@@ -71,7 +108,23 @@ export const createProject: RequestHandler = (req, res, next) => {
     }
 
     const metadata = normalizeMetadataJson(metadataJson ?? metadata_json);
-    const ownedClientId = normalizeOwnedClientId(clientId, userId);
+    const ownedClientId = await normalizeOwnedClientId(clientId, userId);
+
+    if (shouldUsePrisma) {
+      const created = await prisma.project.create({
+        data: {
+          userId: BigInt(userId),
+          clientId: ownedClientId ? BigInt(ownedClientId) : null,
+          name: name.trim(),
+          description: description?.trim() || "",
+          status: "active",
+          metadataJson: JSON.parse(metadata),
+        },
+        include: { client: { select: { name: true, company: true } } },
+      });
+      res.json({ success: true, data: serializePrismaProject(created) });
+      return;
+    }
 
     const result = db
       .prepare(
@@ -95,10 +148,20 @@ export const createProject: RequestHandler = (req, res, next) => {
 };
 
 // Get specific project details
-export const getProject: RequestHandler = (req, res, next) => {
+export const getProject: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const projectId = req.params.id;
+
+    if (shouldUsePrisma) {
+      const project = await prisma.project.findFirst({
+        where: { id: positiveBigInt(projectId, "Projeto"), userId: BigInt(userId) },
+        include: { client: { select: { name: true, company: true } } },
+      });
+      if (!project) throw new AppError("Projeto não encontrado ou acesso não autorizado", 404);
+      res.json({ success: true, data: serializePrismaProject(project) });
+      return;
+    }
 
     const project = db
       .prepare(
@@ -120,11 +183,37 @@ export const getProject: RequestHandler = (req, res, next) => {
 };
 
 // Update project metadata
-export const updateProject: RequestHandler = (req, res, next) => {
+export const updateProject: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const projectId = req.params.id;
     const { name, description, status, clientId, metadata_json, metadataJson } = req.body;
+
+    if (shouldUsePrisma) {
+      const id = positiveBigInt(projectId, "Projeto");
+      const project = await prisma.project.findFirst({ where: { id, userId: BigInt(userId) } });
+      if (!project) throw new AppError("Projeto não encontrado ou acesso não autorizado", 404);
+      const nextClientId = clientId !== undefined
+        ? await normalizeOwnedClientId(clientId, userId)
+        : project.clientId === null ? null : Number(project.clientId);
+      const metadata = metadata_json !== undefined || metadataJson !== undefined
+        ? JSON.parse(normalizeMetadataJson(metadataJson ?? metadata_json))
+        : project.metadataJson;
+      const updated = await prisma.project.update({
+        where: { id },
+        data: {
+          name: name?.trim() ?? project.name,
+          description: description?.trim() ?? project.description,
+          status: status ?? project.status,
+          clientId: nextClientId ? BigInt(nextClientId) : null,
+          metadataJson: metadata as any,
+          updatedAt: new Date(),
+        },
+        include: { client: { select: { name: true, company: true } } },
+      });
+      res.json({ success: true, data: serializePrismaProject(updated) });
+      return;
+    }
 
     const project = db
       .prepare("SELECT * FROM projects WHERE id = ? AND user_id = ?")
@@ -139,7 +228,7 @@ export const updateProject: RequestHandler = (req, res, next) => {
         ? normalizeMetadataJson(metadataJson ?? metadata_json)
         : project.metadata_json;
     const nextClientId =
-      clientId !== undefined ? normalizeOwnedClientId(clientId, userId) : project.client_id;
+      clientId !== undefined ? await normalizeOwnedClientId(clientId, userId) : project.client_id;
 
     db.prepare(
       `UPDATE projects SET
@@ -176,10 +265,19 @@ export const updateProject: RequestHandler = (req, res, next) => {
 };
 
 // Delete project
-export const deleteProject: RequestHandler = (req, res, next) => {
+export const deleteProject: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const projectId = req.params.id;
+
+    if (shouldUsePrisma) {
+      const result = await prisma.project.deleteMany({
+        where: { id: positiveBigInt(projectId, "Projeto"), userId: BigInt(userId) },
+      });
+      if (result.count === 0) throw new AppError("Projeto não encontrado ou acesso não autorizado", 404);
+      res.json({ success: true, data: { id: Number(projectId) } });
+      return;
+    }
 
     const result = db
       .prepare("DELETE FROM projects WHERE id = ? AND user_id = ?")
@@ -196,7 +294,7 @@ export const deleteProject: RequestHandler = (req, res, next) => {
 };
 
 // Save tool state (Autosave)
-export const saveToolState: RequestHandler = (req, res, next) => {
+export const saveToolState: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const projectId = req.params.id;
@@ -204,6 +302,31 @@ export const saveToolState: RequestHandler = (req, res, next) => {
 
     if (!toolId) {
       throw new AppError("ID da ferramenta é obrigatório", 400);
+    }
+
+    if (shouldUsePrisma) {
+      const id = positiveBigInt(projectId, "Projeto");
+      const project = await prisma.project.findFirst({
+        where: { id, userId: BigInt(userId) },
+        select: { id: true },
+      });
+      if (!project) throw new AppError("Projeto não encontrado ou acesso não autorizado", 403);
+      await prisma.projectState.upsert({
+        where: { projectId_toolId: { projectId: id, toolId } },
+        create: {
+          projectId: id,
+          toolId,
+          formData: formData || {},
+          outputData: outputData || "",
+        },
+        update: {
+          formData: formData || {},
+          outputData: outputData || "",
+          updatedAt: new Date(),
+        },
+      });
+      res.json({ success: true, data: { projectId: Number(projectId), toolId } });
+      return;
     }
 
     // Verify project ownership
@@ -236,11 +359,36 @@ export const saveToolState: RequestHandler = (req, res, next) => {
 };
 
 // Get tool state
-export const getToolState: RequestHandler = (req, res, next) => {
+export const getToolState: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const projectId = req.params.id;
     const { toolId } = req.params;
+
+    if (shouldUsePrisma) {
+      const id = positiveBigInt(projectId, "Projeto");
+      const project = await prisma.project.findFirst({
+        where: { id, userId: BigInt(userId) },
+        select: { id: true },
+      });
+      if (!project) throw new AppError("Projeto não encontrado ou acesso não autorizado", 403);
+      const state = await prisma.projectState.findUnique({
+        where: { projectId_toolId: { projectId: id, toolId } },
+      });
+      res.json({
+        success: true,
+        data: state
+          ? {
+              projectId: Number(state.projectId),
+              toolId: state.toolId,
+              formData: jsonSafe(state.formData || {}),
+              outputData: state.outputData,
+              updatedAt: state.updatedAt.toISOString(),
+            }
+          : null,
+      });
+      return;
+    }
 
     // Verify project ownership
     const project = db
@@ -283,10 +431,25 @@ export const getToolState: RequestHandler = (req, res, next) => {
 };
 
 // List populated tool states for a project (lightweight check for filled timeline steps)
-export const listProjectStates: RequestHandler = (req, res, next) => {
+export const listProjectStates: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const projectId = req.params.id;
+
+    if (shouldUsePrisma) {
+      const id = positiveBigInt(projectId, "Projeto");
+      const project = await prisma.project.findFirst({
+        where: { id, userId: BigInt(userId) },
+        select: { id: true },
+      });
+      if (!project) throw new AppError("Projeto não encontrado ou acesso não autorizado", 403);
+      const states = await prisma.projectState.findMany({
+        where: { projectId: id },
+        select: { toolId: true, updatedAt: true },
+      });
+      res.json({ success: true, data: jsonSafe(states) });
+      return;
+    }
 
     // Verify project ownership
     const project = db
@@ -308,9 +471,28 @@ export const listProjectStates: RequestHandler = (req, res, next) => {
 };
 
 // Get recent activities (last 10 AI generations across all tools with project name)
-export const getRecentActivities: RequestHandler = (req, res, next) => {
+export const getRecentActivities: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
+    if (shouldUsePrisma) {
+      const rows = await prisma.generation.findMany({
+        where: { userId: BigInt(userId) },
+        select: { id: true, toolId: true, createdAt: true, projectId: true, project: { select: { name: true } } },
+        orderBy: { id: "desc" },
+        take: 10,
+      });
+      res.json({
+        success: true,
+        data: rows.map((row) => ({
+          id: Number(row.id),
+          toolId: row.toolId,
+          createdAt: row.createdAt.toISOString(),
+          projectId: row.projectId === null ? null : Number(row.projectId),
+          projectName: row.project?.name || null,
+        })),
+      });
+      return;
+    }
     const rows = db
       .prepare(
         `SELECT g.id, g.tool_id as toolId, g.created_at as createdAt, g.project_id as projectId, p.name as projectName

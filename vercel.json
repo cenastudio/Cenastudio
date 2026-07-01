@@ -3,6 +3,8 @@
   "outputDirectory": "dist/public",
   "installCommand": "npm install --legacy-peer-deps",
   "rewrites": [
+    { "source": "/health", "destination": "/api?_rootPath=health" },
+    { "source": "/ready", "destination": "/api?_rootPath=ready" },
     { "source": "/api/:path*", "destination": "/api?_apiPath=:path*" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],

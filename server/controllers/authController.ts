@@ -21,10 +21,10 @@ interface SupabaseUserResponse {
   };
 }
 
-export const login: RequestHandler = (req, res, next) => {
+export const login: RequestHandler = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const user = authService.loginUser(email, password);
+    const user = await authService.loginUser(email, password);
     const token = signToken(user);
     res.cookie(COOKIE_NAME, token, cookieOptions);
     res.json({ success: true, data: { user } });
@@ -33,10 +33,10 @@ export const login: RequestHandler = (req, res, next) => {
   }
 };
 
-export const register: RequestHandler = (req, res, next) => {
+export const register: RequestHandler = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
-    const user = authService.registerUser(name, email, password);
+    const user = await authService.registerUser(name, email, password);
     const token = signToken(user);
     res.cookie(COOKIE_NAME, token, cookieOptions);
     res.status(201).json({ success: true, data: { user } });
@@ -45,9 +45,9 @@ export const register: RequestHandler = (req, res, next) => {
   }
 };
 
-export const forgotPassword: RequestHandler = (req, res, next) => {
+export const forgotPassword: RequestHandler = async (req, res, next) => {
   try {
-    authService.createResetToken(req.body.email);
+    await authService.createResetToken(req.body.email);
     res.json({
       success: true,
       data: { message: "Se o e-mail existir, você receberá as instruções." },
@@ -57,9 +57,9 @@ export const forgotPassword: RequestHandler = (req, res, next) => {
   }
 };
 
-export const resetPassword: RequestHandler = (req, res, next) => {
+export const resetPassword: RequestHandler = async (req, res, next) => {
   try {
-    authService.resetPassword(req.body.token, req.body.password);
+    await authService.resetPassword(req.body.token, req.body.password);
     res.json({
       success: true,
       data: { message: "Senha redefinida com sucesso." },
@@ -99,13 +99,13 @@ export const supabaseLogin: RequestHandler = async (req, res, next) => {
       supabaseUser.user_metadata?.name ||
       supabaseUser.user_metadata?.full_name ||
       supabaseUser.user_metadata?.user_name;
-    const user = authService.upsertOAuthUser(supabaseUser.email, name, {
+    const user = await authService.upsertOAuthUser(supabaseUser.email, name, {
       role: supabaseUser.app_metadata?.role,
       planId: supabaseUser.app_metadata?.plan_id,
       supabaseId: supabaseUser.id,
     });
     const token = signToken(user);
-    const plan = authService.formatUserPlan(authService.getUserPlan(user.id));
+    const plan = authService.formatUserPlan(await authService.getUserPlan(user.id));
     res.cookie(COOKIE_NAME, token, cookieOptions);
     res.json({ success: true, data: { user, plan } });
   } catch (e) {
@@ -113,11 +113,11 @@ export const supabaseLogin: RequestHandler = async (req, res, next) => {
   }
 };
 
-export const me: RequestHandler = (req, res, next) => {
+export const me: RequestHandler = async (req, res, next) => {
   try {
     if (!req.user) throw new AppError("Unauthorized", 401);
-    const user = authService.getUserById(req.user.id) || req.user;
-    const planRow = authService.getUserPlan(req.user.id);
+    const user = (await authService.getUserById(req.user.id)) || req.user;
+    const planRow = await authService.getUserPlan(req.user.id);
     const plan = authService.formatUserPlan(planRow);
     res.json({ success: true, data: { user, plan } });
   } catch (e) {
@@ -125,10 +125,10 @@ export const me: RequestHandler = (req, res, next) => {
   }
 };
 
-export const updateProfile: RequestHandler = (req, res, next) => {
+export const updateProfile: RequestHandler = async (req, res, next) => {
   try {
     if (!req.user) throw new AppError("Unauthorized", 401);
-    const user = authService.updateProfile(req.user.id, {
+    const user = await authService.updateProfile(req.user.id, {
       name: req.body.name,
       studioName: req.body.studioName,
       studioRole: req.body.studioRole,

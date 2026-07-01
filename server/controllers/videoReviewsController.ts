@@ -5,6 +5,36 @@ import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 import fs from "fs";
 import { safeStoredFilePath } from "../utils/fileSafety.js";
 import { notifyUser } from "../services/notificationService.js";
+import { prisma, shouldUsePrisma } from "../models/prisma.js";
+import { withSnakeCase } from "../utils/prismaSerialization.js";
+import { createProjectFileUrl } from "../services/supabaseStorage.js";
+
+function serializeComment(value: any) {
+  return withSnakeCase(value, {
+    reviewId: "review_id", userId: "user_id", authorName: "author_name",
+    timestampSeconds: "timestamp_seconds", createdAt: "created_at", updatedAt: "updated_at",
+  });
+}
+
+function serializeReview(value: any) {
+  const result = withSnakeCase(value, {
+    projectId: "project_id", fileId: "file_id", userId: "user_id",
+    shareToken: "share_token", expiresAt: "expires_at", videoUrl: "video_url",
+    createdAt: "created_at", updatedAt: "updated_at",
+  }) as any;
+  if (result.file) {
+    result.original_name = result.file.originalName;
+    result.file_path = result.file.path;
+    result.mime_type = result.file.mimeType;
+    delete result.file;
+  }
+  if (result.project) {
+    result.project_name = result.project.name;
+    delete result.project;
+  }
+  if (result.comments) result.comments = result.comments.map(serializeComment);
+  return result;
+}
 
 interface StatelessReviewToken {
   id: number;
@@ -83,9 +113,16 @@ function reviewLink(review: { project_id?: number | null; id: number }) {
 }
 
 // List all video reviews for the authenticated user
-export const listAllVideoReviews: RequestHandler = (req, res, next) => {
+export const listAllVideoReviews: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
+    if (shouldUsePrisma) {
+      const reviews = await prisma.videoReview.findMany({
+        where: { userId: BigInt(userId) }, include: { file: true }, orderBy: { createdAt: "desc" },
+      });
+      res.json({ success: true, data: reviews.map(serializeReview) });
+      return;
+    }
 
     const reviews = db
       .prepare(
@@ -110,13 +147,22 @@ export const listAllVideoReviews: RequestHandler = (req, res, next) => {
 };
 
 // List video reviews for a project
-export const listVideoReviews: RequestHandler = (req, res, next) => {
+export const listVideoReviews: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const projectId = parseInt(req.params.projectId);
 
     if (!projectId) {
       throw new AppError("Project ID is required", 400);
+    }
+    if (shouldUsePrisma) {
+      const project = await prisma.project.findFirst({ where: { id: BigInt(projectId), userId: BigInt(userId) }, select: { id: true } });
+      if (!project) throw new AppError("Project not found", 404);
+      const reviews = await prisma.videoReview.findMany({
+        where: { projectId: project.id }, include: { file: true }, orderBy: { createdAt: "desc" },
+      });
+      res.json({ success: true, data: reviews.map(serializeReview) });
+      return;
     }
 
     // Verify user owns the project
@@ -150,13 +196,22 @@ export const listVideoReviews: RequestHandler = (req, res, next) => {
 };
 
 // Get a specific video review with comments
-export const getVideoReview: RequestHandler = (req, res, next) => {
+export const getVideoReview: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const reviewId = parseInt(req.params.id);
 
     if (!reviewId) {
       throw new AppError("Review ID is required", 400);
+    }
+    if (shouldUsePrisma) {
+      const review = await prisma.videoReview.findFirst({
+        where: { id: BigInt(reviewId), project: { userId: BigInt(userId) } },
+        include: { file: true, comments: { orderBy: { timestampSeconds: "asc" } } },
+      });
+      if (!review) throw new AppError("Review not found or access denied", 404);
+      res.json({ success: true, data: serializeReview(review) });
+      return;
     }
 
     const review = db
@@ -201,7 +256,7 @@ export const getVideoReview: RequestHandler = (req, res, next) => {
 };
 
 // Create a new video review
-export const createVideoReview: RequestHandler = (req, res, next) => {
+export const createVideoReview: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     let { projectId, fileId, title, description, status, videoUrl } = req.body;
@@ -212,6 +267,38 @@ export const createVideoReview: RequestHandler = (req, res, next) => {
 
     if (!fileId && !videoUrl) {
       throw new AppError("File ID or Video URL is required", 400);
+    }
+    if (shouldUsePrisma) {
+      const owner = BigInt(userId);
+      let project;
+      if (projectId) {
+        project = await prisma.project.findFirst({ where: { id: BigInt(Number(projectId)), userId: owner }, select: { id: true } });
+      } else {
+        project = await prisma.project.create({ data: {
+          userId: owner, name: "Aprovação de Vídeo", description: "Projeto para aprovação de vídeos",
+        }, select: { id: true } });
+        projectId = Number(project.id);
+      }
+      if (!project) throw new AppError("Project not found", 404);
+      const linkedFileId = fileId ? BigInt(Number(fileId)) : null;
+      if (linkedFileId) {
+        const file = await prisma.file.findFirst({ where: { id: linkedFileId, projectId: project.id }, select: { id: true } });
+        if (!file) throw new AppError("File not found in this project", 404);
+      }
+      const expiresInDays = 7;
+      const expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + expiresInDays);
+      const shareToken = randomBytes(32).toString("hex");
+      const created = await prisma.videoReview.create({
+        data: {
+          projectId: project.id, fileId: linkedFileId, userId: owner, title,
+          description: description || null, status: status || "draft", videoUrl: videoUrl || null,
+          shareToken, expiresAt,
+        }, include: { file: true },
+      });
+      res.json({ success: true, data: {
+        ...serializeReview(created), shareUrl: `${getClientOrigin()}/review/${shareToken}`,
+      } });
+      return;
     }
 
     // If no projectId, auto-create a sandbox project for reviews
@@ -280,7 +367,7 @@ export const createVideoReview: RequestHandler = (req, res, next) => {
 };
 
 // Update a video review
-export const updateVideoReview: RequestHandler = (req, res, next) => {
+export const updateVideoReview: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const reviewId = parseInt(req.params.id);
@@ -288,6 +375,21 @@ export const updateVideoReview: RequestHandler = (req, res, next) => {
 
     if (!reviewId) {
       throw new AppError("Review ID is required", 400);
+    }
+    if (shouldUsePrisma) {
+      const review = await prisma.videoReview.findFirst({
+        where: { id: BigInt(reviewId), project: { userId: BigInt(userId) } },
+      });
+      if (!review) throw new AppError("Review not found or access denied", 404);
+      const updated = await prisma.videoReview.update({
+        where: { id: review.id }, data: {
+          title: title || review.title, description: description || review.description,
+          status: status || review.status, videoUrl: videoUrl !== undefined ? videoUrl : review.videoUrl,
+          updatedAt: new Date(),
+        }, include: { file: true },
+      });
+      res.json({ success: true, data: serializeReview(updated) });
+      return;
     }
 
     const review = db
@@ -337,13 +439,21 @@ export const updateVideoReview: RequestHandler = (req, res, next) => {
 };
 
 // Delete a video review
-export const deleteVideoReview: RequestHandler = (req, res, next) => {
+export const deleteVideoReview: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const reviewId = parseInt(req.params.id);
 
     if (!reviewId) {
       throw new AppError("Review ID is required", 400);
+    }
+    if (shouldUsePrisma) {
+      const result = await prisma.videoReview.deleteMany({
+        where: { id: BigInt(reviewId), project: { userId: BigInt(userId) } },
+      });
+      if (result.count === 0) throw new AppError("Review not found or access denied", 404);
+      res.json({ success: true, message: "Review deleted successfully" });
+      return;
     }
 
     const review = db
@@ -372,7 +482,7 @@ export const deleteVideoReview: RequestHandler = (req, res, next) => {
 };
 
 // Generate a shareable link for a review
-export const generateShareLink: RequestHandler = (req, res, next) => {
+export const generateShareLink: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const reviewId = parseInt(req.params.id);
@@ -380,6 +490,19 @@ export const generateShareLink: RequestHandler = (req, res, next) => {
 
     if (!reviewId) {
       throw new AppError("Review ID is required", 400);
+    }
+    if (shouldUsePrisma) {
+      const review = await prisma.videoReview.findFirst({
+        where: { id: BigInt(reviewId), project: { userId: BigInt(userId) } },
+      });
+      if (!review) throw new AppError("Review not found or access denied", 404);
+      const expiresAt = new Date(); expiresAt.setDate(expiresAt.getDate() + (Number(expiresInDays) || 7));
+      const shareToken = randomBytes(32).toString("hex");
+      await prisma.videoReview.update({ where: { id: review.id }, data: { shareToken, expiresAt, updatedAt: new Date() } });
+      res.json({ success: true, data: {
+        shareUrl: `${getClientOrigin()}/review/${shareToken}`, expiresAt: expiresAt.toISOString(),
+      } });
+      return;
     }
 
     const review = db
@@ -416,12 +539,36 @@ export const generateShareLink: RequestHandler = (req, res, next) => {
 };
 
 // Access a shared review (public endpoint)
-export const accessSharedReview: RequestHandler = (req, res, next) => {
+export const accessSharedReview: RequestHandler = async (req, res, next) => {
   try {
     const { token } = req.params;
 
     if (!token) {
       throw new AppError("Share token is required", 400);
+    }
+
+    if (shouldUsePrisma) {
+      const review = await prisma.videoReview.findUnique({
+        where: { shareToken: token },
+        include: { file: true, project: { select: { name: true } }, comments: { orderBy: [{ timestampSeconds: "asc" }, { createdAt: "asc" }] } },
+      });
+      if (!review) {
+        const stateless = parseStatelessReviewToken(token);
+        if (!stateless) throw new AppError("Review not found or link expired", 404);
+        if (new Date(stateless.expiresAt) < new Date()) throw new AppError("Share link has expired", 410);
+        res.json({ success: true, data: {
+          id: stateless.id, project_id: 0, file_id: null, title: stateless.title,
+          description: stateless.description, status: "pending_review", share_token: token,
+          expires_at: stateless.expiresAt, original_name: "Vídeo externo", file_path: null,
+          project_name: stateless.projectName, video_url: stateless.videoUrl, comments: [],
+        } });
+        return;
+      }
+      if (review.expiresAt && review.expiresAt < new Date()) throw new AppError("Share link has expired", 410);
+      const data = serializeReview(review) as any;
+      data.video_url = data.video_url || (review.fileId ? `/api/public-review-video?token=${token}` : undefined);
+      res.json({ success: true, data });
+      return;
     }
 
     const review = db
@@ -488,12 +635,23 @@ export const accessSharedReview: RequestHandler = (req, res, next) => {
 };
 
 // Stream a review video through the public token, without exposing all files publicly.
-export const streamSharedReviewVideo: RequestHandler = (req, res, next) => {
+export const streamSharedReviewVideo: RequestHandler = async (req, res, next) => {
   try {
     const { token } = req.params;
 
     if (!token) {
       throw new AppError("Share token is required", 400);
+    }
+    if (shouldUsePrisma) {
+      const review = await prisma.videoReview.findUnique({ where: { shareToken: token }, include: { file: true } });
+      if (!review?.file) throw new AppError("Video not found", 404);
+      if (review.expiresAt && review.expiresAt < new Date()) throw new AppError("Share link has expired", 410);
+      if (review.file.mimeType === "text/uri-list") {
+        res.redirect(review.file.path);
+        return;
+      }
+      res.redirect(await createProjectFileUrl(review.file.path, 300));
+      return;
     }
 
     const review = db
@@ -527,7 +685,7 @@ export const streamSharedReviewVideo: RequestHandler = (req, res, next) => {
 };
 
 // Add a comment to a review
-export const addComment: RequestHandler = (req, res, next) => {
+export const addComment: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const reviewId = parseInt(req.params.id);
@@ -535,6 +693,21 @@ export const addComment: RequestHandler = (req, res, next) => {
 
     if (!reviewId || timestampSeconds === undefined || !comment) {
       throw new AppError("Review ID, timestamp, and comment are required", 400);
+    }
+    if (shouldUsePrisma) {
+      const review = await prisma.videoReview.findFirst({
+        where: { id: BigInt(reviewId), project: { userId: BigInt(userId) } },
+      });
+      if (!review) throw new AppError("Review not found or access denied", 404);
+      const created = await prisma.videoComment.create({ data: {
+        reviewId: review.id, userId: BigInt(userId), authorName: authorName || "Anonymous",
+        timestampSeconds: Number(timestampSeconds), comment, annotations: annotations || [],
+      } });
+      notifyUser(Number(review.userId), "Novo comentário no review",
+        `${authorName || "Cliente"} comentou em ${Math.floor(Number(timestampSeconds) / 60)}:${String(Math.floor(Number(timestampSeconds) % 60)).padStart(2, "0")}.`,
+        "client", reviewLink({ project_id: Number(review.projectId), id: Number(review.id) }));
+      res.json({ success: true, data: serializeComment(created) });
+      return;
     }
 
     const review = db
@@ -580,13 +753,32 @@ export const addComment: RequestHandler = (req, res, next) => {
 };
 
 // Add a comment to a shared review (public endpoint)
-export const addSharedComment: RequestHandler = (req, res, next) => {
+export const addSharedComment: RequestHandler = async (req, res, next) => {
   try {
     const { token } = req.params;
     const { timestampSeconds, comment, authorName, annotations } = req.body;
 
     if (!token || timestampSeconds === undefined || !comment) {
       throw new AppError("Token, timestamp, and comment are required", 400);
+    }
+    if (shouldUsePrisma) {
+      const review = await prisma.videoReview.findUnique({ where: { shareToken: token } });
+      if (!review) {
+        const stateless = parseStatelessReviewToken(token);
+        if (!stateless) throw new AppError("Review not found", 404);
+        if (new Date(stateless.expiresAt) < new Date()) throw new AppError("Share link has expired", 410);
+        throw new AppError("Este link esta em armazenamento temporario e nao pode salvar comentarios. Gere um novo link no Studio.", 503);
+      }
+      if (review.expiresAt && review.expiresAt < new Date()) throw new AppError("Share link has expired", 410);
+      const created = await prisma.videoComment.create({ data: {
+        reviewId: review.id, userId: review.userId, authorName: authorName || "Anonymous",
+        timestampSeconds: Number(timestampSeconds), comment, annotations: annotations || [],
+      } });
+      notifyUser(Number(review.userId), "Novo comentário do cliente",
+        `${authorName || "Cliente"} comentou em ${Math.floor(Number(timestampSeconds) / 60)}:${String(Math.floor(Number(timestampSeconds) % 60)).padStart(2, "0")} no review "${review.title}".`,
+        "client", reviewLink({ project_id: Number(review.projectId), id: Number(review.id) }));
+      res.json({ success: true, data: serializeComment(created) });
+      return;
     }
 
     const review = db
@@ -644,7 +836,7 @@ export const addSharedComment: RequestHandler = (req, res, next) => {
 };
 
 // Let clients approve or request changes from the public share page.
-export const updateSharedReviewStatus: RequestHandler = (req, res, next) => {
+export const updateSharedReviewStatus: RequestHandler = async (req, res, next) => {
   try {
     const { token } = req.params;
     const { status, authorName, comment } = req.body as {
@@ -656,6 +848,36 @@ export const updateSharedReviewStatus: RequestHandler = (req, res, next) => {
     const allowed = new Set(["approved", "changes_requested", "rejected"]);
     if (!token || !status || !allowed.has(status)) {
       throw new AppError("Token and a valid status are required", 400);
+    }
+    if (shouldUsePrisma) {
+      const review = await prisma.videoReview.findUnique({ where: { shareToken: token } });
+      if (!review) {
+        const stateless = parseStatelessReviewToken(token);
+        if (!stateless) throw new AppError("Review not found", 404);
+        if (new Date(stateless.expiresAt) < new Date()) throw new AppError("Share link has expired", 410);
+        throw new AppError("Este link esta em armazenamento temporario e nao pode registrar a decisao. Gere um novo link no Studio.", 503);
+      }
+      if (review.expiresAt && review.expiresAt < new Date()) throw new AppError("Share link has expired", 410);
+      const statusLabel = status === "approved" ? "Aprovado" : status === "changes_requested" ? "Alterações solicitadas" : "Rejeitado";
+      const decisionComment = comment?.trim() || statusLabel;
+      await prisma.$transaction([
+        prisma.videoReview.update({ where: { id: review.id }, data: { status, updatedAt: new Date() } }),
+        prisma.videoComment.create({ data: {
+          reviewId: review.id, userId: review.userId, authorName: authorName?.trim() || "Cliente",
+          timestampSeconds: 0, comment: `[${statusLabel}] ${decisionComment}`, annotations: [],
+        } }),
+      ]);
+      notifyUser(Number(review.userId), `Review ${statusLabel.toLowerCase()}`,
+        `${authorName?.trim() || "Cliente"} atualizou o status de "${review.title}".`,
+        status === "approved" ? "success" : status === "changes_requested" ? "warning" : "error",
+        reviewLink({ project_id: Number(review.projectId), id: Number(review.id) }));
+      const updated = await prisma.videoReview.findUnique({
+        where: { id: review.id }, include: { file: true, project: { select: { name: true } }, comments: { orderBy: [{ timestampSeconds: "asc" }, { createdAt: "asc" }] } },
+      });
+      const data = serializeReview(updated) as any;
+      data.video_url = data.video_url || (updated?.fileId ? `/api/public-review-video?token=${token}` : undefined);
+      res.json({ success: true, data });
+      return;
     }
 
     const review = db
@@ -736,7 +958,7 @@ export const updateSharedReviewStatus: RequestHandler = (req, res, next) => {
 };
 
 // Resolve/unresolve a comment
-export const resolveComment: RequestHandler = (req, res, next) => {
+export const resolveComment: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const commentId = parseInt(req.params.id);
@@ -744,6 +966,17 @@ export const resolveComment: RequestHandler = (req, res, next) => {
 
     if (!commentId) {
       throw new AppError("Comment ID is required", 400);
+    }
+    if (shouldUsePrisma) {
+      const commentRecord = await prisma.videoComment.findFirst({
+        where: { id: BigInt(commentId), review: { project: { userId: BigInt(userId) } } },
+      });
+      if (!commentRecord) throw new AppError("Comment not found or access denied", 404);
+      const updated = await prisma.videoComment.update({
+        where: { id: commentRecord.id }, data: { resolved: Boolean(resolved), updatedAt: new Date() },
+      });
+      res.json({ success: true, data: serializeComment(updated) });
+      return;
     }
 
     const comment = db
@@ -785,13 +1018,21 @@ export const resolveComment: RequestHandler = (req, res, next) => {
 };
 
 // Delete a comment
-export const deleteComment: RequestHandler = (req, res, next) => {
+export const deleteComment: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const commentId = parseInt(req.params.id);
 
     if (!commentId) {
       throw new AppError("Comment ID is required", 400);
+    }
+    if (shouldUsePrisma) {
+      const result = await prisma.videoComment.deleteMany({
+        where: { id: BigInt(commentId), review: { project: { userId: BigInt(userId) } } },
+      });
+      if (result.count === 0) throw new AppError("Comment not found or access denied", 404);
+      res.json({ success: true, message: "Comment deleted successfully" });
+      return;
     }
 
     const comment = db

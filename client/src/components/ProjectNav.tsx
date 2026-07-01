@@ -17,6 +17,7 @@ interface ProjectNavProps {
 const TABS = [
   { path: (id: number) => `/project/${id}`, labelKey: "app.common.overview", icon: LayoutDashboard },
   { path: (id: number) => `/project/${id}/studio/01`, labelKey: "app.common.studio", icon: Film },
+  { path: (id: number) => `/project/${id}/documents`, labelKey: "app.nav.docs", icon: FileText },
   { path: (id: number) => `/project/${id}/files`, labelKey: "app.common.materials", icon: FileText },
   { path: (id: number) => `/project/${id}/video-reviews`, labelKey: "app.common.approval", icon: Video },
   { path: (id: number) => `/project/${id}/collaborators`, labelKey: "app.common.team", icon: Users },

@@ -93,6 +93,10 @@ vi.mock('@/lib/api', () => ({
       get: vi.fn(),
       lookupCnpj: vi.fn(),
     },
+    studioSettings: {
+      get: vi.fn(),
+      update: vi.fn(),
+    },
     admin: {
       listTools: vi.fn(),
       updateTool: vi.fn(),

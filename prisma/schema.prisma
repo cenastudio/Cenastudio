@@ -1,0 +1,443 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             BigInt    @id @default(autoincrement())
+  email          String    @unique
+  passwordHash   String    @map("password_hash")
+  role           String    @default("user")
+  name           String?
+  avatarUrl      String?   @map("avatar_url")
+  emailVerified  Boolean   @default(false) @map("email_verified")
+  githubId       String?   @map("github_id")
+  supabaseId     String?   @unique @map("supabase_id") @db.Uuid
+  studioName     String?   @map("studio_name")
+  studioRole     String?   @map("studio_role")
+  phone          String?
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  generations    Generation[]
+  subscriptions  Subscription[]
+  usage          Usage[]
+  resetTokens    ResetToken[]
+  clients        Client[]
+  projects       Project[]
+  opportunities  Opportunity[]
+  interactions   Interaction[]
+  collaborators  Collaborator[]
+  projectMembers ProjectMember[]
+  files          File[]
+  videoReviews   VideoReview[]
+  videoComments  VideoComment[]
+  notifications  Notification[]
+  financialEntries FinancialEntry[]
+  studioSettings StudioSetting?
+
+  @@index([email], map: "idx_users_email")
+  @@index([githubId], map: "idx_users_github_id")
+  @@index([supabaseId], map: "idx_users_supabase_id")
+  @@map("users")
+}
+
+model Tool {
+  id          String   @id
+  name        String
+  description String?
+  category    String?
+  isActive    Boolean  @default(true) @map("is_active")
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  generations Generation[]
+
+  @@map("tools")
+}
+
+model Generation {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt?  @map("user_id")
+  toolId    String?  @map("tool_id")
+  projectId BigInt?  @map("project_id")
+  input     String?
+  output    String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user    User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tool    Tool?    @relation(fields: [toolId], references: [id])
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([userId], map: "idx_generations_user_id")
+  @@index([toolId], map: "idx_generations_tool_id")
+  @@index([projectId], map: "idx_generations_project_id")
+  @@index([createdAt], map: "idx_generations_created_at")
+  @@map("generations")
+}
+
+model Contact {
+  id        BigInt   @id @default(autoincrement())
+  name      String
+  email     String
+  phone     String?
+  message   String
+  type      String   @default("contact")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("contacts")
+}
+
+model Plan {
+  id              String @id
+  name            String
+  priceBrl        Int    @map("price_brl")
+  generationLimit Int    @map("generation_limit")
+  features        Json   @default("[]")
+
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+model Subscription {
+  id                   BigInt    @id @default(autoincrement())
+  userId               BigInt    @map("user_id")
+  planId               String    @map("plan_id")
+  status               String    @default("active")
+  trialEndsAt          DateTime? @map("trial_ends_at") @db.Timestamptz
+  currentPeriodStart   DateTime  @default(now()) @map("current_period_start") @db.Timestamptz
+  currentPeriodEnd     DateTime? @map("current_period_end") @db.Timestamptz
+  stripeCustomerId     String?   @map("stripe_customer_id")
+  stripeSubscriptionId String?   @map("stripe_subscription_id")
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan Plan @relation(fields: [planId], references: [id])
+
+  @@index([userId], map: "idx_subscriptions_user_id")
+  @@map("subscriptions")
+}
+
+model Usage {
+  id     BigInt @id @default(autoincrement())
+  userId BigInt @map("user_id")
+  toolId String @map("tool_id")
+  period String
+  count  Int    @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, toolId, period])
+  @@map("usage")
+}
+
+model ResetToken {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  used      Boolean  @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token], map: "idx_reset_tokens_token")
+  @@map("reset_tokens")
+}
+
+model Client {
+  id             BigInt    @id @default(autoincrement())
+  userId         BigInt    @map("user_id")
+  name           String
+  company        String?
+  email          String?
+  phone          String?
+  segment        String    @default("direct")
+  status         String    @default("lead")
+  workflowStage  String    @default("prospect") @map("workflow_stage")
+  notes          String?
+  totalSpent     Int       @default(0) @map("total_spent")
+  firstContactAt DateTime? @map("first_contact_at") @db.Timestamptz
+  lastContactAt  DateTime? @map("last_contact_at") @db.Timestamptz
+  address        String?
+  city           String?
+  state          String?
+  country        String?
+  website        String?
+  linkedin       String?
+  instagram      String?
+  industry       String?
+  companySize    String?   @map("company_size")
+  annualRevenue  Int?      @map("annual_revenue")
+  contactPerson  String?   @map("contact_person")
+  contactRole    String?   @map("contact_role")
+  billingCycle   String?   @map("billing_cycle")
+  paymentMethod  String?   @map("payment_method")
+  taxId          String?   @map("tax_id")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @default(now()) @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projects Project[]
+  opportunities Opportunity[]
+  interactions Interaction[]
+  financialEntries FinancialEntry[]
+
+  @@index([userId], map: "idx_clients_user_id")
+  @@index([status], map: "idx_clients_status")
+  @@map("clients")
+}
+
+model Project {
+  id           BigInt   @id @default(autoincrement())
+  userId       BigInt   @map("user_id")
+  clientId     BigInt?  @map("client_id")
+  name         String
+  description  String?
+  status       String   @default("active")
+  metadataJson Json     @default("{}") @map("metadata_json")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client        Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  generations   Generation[]
+  projectStates ProjectState[]
+  projectMembers ProjectMember[]
+  files         File[]
+  videoReviews  VideoReview[]
+
+  @@index([userId], map: "idx_projects_user_id")
+  @@index([clientId], map: "idx_projects_client_id")
+  @@index([status], map: "idx_projects_status")
+  @@map("projects")
+}
+
+model ProjectState {
+  id         BigInt   @id @default(autoincrement())
+  projectId  BigInt   @map("project_id")
+  toolId     String   @map("tool_id")
+  formData   Json?    @map("form_data")
+  outputData String?  @map("output_data")
+  updatedAt  DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, toolId])
+  @@index([projectId], map: "idx_project_states_project_id")
+  @@map("project_states")
+}
+
+model Opportunity {
+  id                BigInt    @id @default(autoincrement())
+  userId            BigInt    @map("user_id")
+  clientId          BigInt?   @map("client_id")
+  title             String
+  stage             String    @default("prospect")
+  estimatedValue    Int?      @map("estimated_value")
+  probability       Int       @default(50)
+  expectedCloseDate DateTime? @map("expected_close_date") @db.Date
+  lostReason        String?   @map("lost_reason")
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @default(now()) @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  interactions Interaction[]
+  financialEntries FinancialEntry[]
+
+  @@index([userId], map: "idx_opportunities_user_id")
+  @@index([clientId], map: "idx_opportunities_client_id")
+  @@index([stage], map: "idx_opportunities_stage")
+  @@map("opportunities")
+}
+
+model Interaction {
+  id             BigInt    @id @default(autoincrement())
+  userId         BigInt    @map("user_id")
+  clientId       BigInt?   @map("client_id")
+  opportunityId  BigInt?   @map("opportunity_id")
+  type           String?
+  subject        String?
+  notes          String?
+  nextFollowUp   DateTime? @map("next_follow_up") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client Client? @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  opportunity Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+
+  @@index([clientId], map: "idx_interactions_client_id")
+  @@index([userId], map: "idx_interactions_user_id")
+  @@map("interactions")
+}
+
+model Collaborator {
+  id           BigInt   @id @default(autoincrement())
+  userId       BigInt   @map("user_id")
+  name         String
+  email        String
+  role         String   @default("member")
+  phone        String   @default("")
+  skills       String?
+  dailyRate    Int      @default(0) @map("daily_rate")
+  status       String   @default("active")
+  availability String?
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectMembers ProjectMember[]
+
+  @@index([userId], map: "idx_collaborators_user_id")
+  @@map("collaborators")
+}
+
+model ProjectMember {
+  id             BigInt   @id @default(autoincrement())
+  projectId      BigInt   @map("project_id")
+  userId         BigInt?  @map("user_id")
+  collaboratorId BigInt?  @map("collaborator_id")
+  role           String   @default("member")
+  permissions    Json     @default("[]")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collaborator Collaborator? @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
+
+  @@index([projectId], map: "idx_project_members_project_id")
+  @@index([collaboratorId], map: "idx_project_members_collaborator_id")
+  @@map("project_members")
+}
+
+model File {
+  id           BigInt   @id @default(autoincrement())
+  projectId    BigInt?  @map("project_id")
+  userId       BigInt   @map("user_id")
+  filename     String
+  originalName String   @map("original_name")
+  mimeType     String?  @map("mime_type")
+  size         Int?
+  path         String
+  category     String   @default("general")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videoReviews VideoReview[]
+
+  @@index([projectId], map: "idx_files_project_id")
+  @@index([userId], map: "idx_files_user_id")
+  @@map("files")
+}
+
+model VideoReview {
+  id          BigInt    @id @default(autoincrement())
+  projectId   BigInt    @map("project_id")
+  fileId      BigInt?   @map("file_id")
+  userId      BigInt    @map("user_id")
+  title       String
+  description String?
+  status      String    @default("draft")
+  shareToken  String?   @unique @map("share_token")
+  expiresAt   DateTime? @map("expires_at") @db.Timestamptz
+  videoUrl    String?   @map("video_url")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @default(now()) @map("updated_at") @db.Timestamptz
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  file File? @relation(fields: [fileId], references: [id], onDelete: SetNull)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments VideoComment[]
+
+  @@index([projectId], map: "idx_video_reviews_project_id")
+  @@index([shareToken], map: "idx_video_reviews_share_token")
+  @@map("video_reviews")
+}
+
+model VideoComment {
+  id               BigInt   @id @default(autoincrement())
+  reviewId         BigInt   @map("review_id")
+  userId           BigInt   @map("user_id")
+  authorName       String   @map("author_name")
+  timestampSeconds Float    @map("timestamp_seconds")
+  comment          String
+  annotations      Json     @default("[]")
+  resolved         Boolean  @default(false)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  review VideoReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId], map: "idx_video_comments_review_id")
+  @@map("video_comments")
+}
+
+model Notification {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt   @map("user_id")
+  title     String
+  message   String
+  type      String   @default("info")
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "idx_notifications_user_id")
+  @@index([read], map: "idx_notifications_read")
+  @@map("notifications")
+}
+
+model FinancialEntry {
+  id            BigInt    @id @default(autoincrement())
+  userId        BigInt    @map("user_id")
+  clientId      BigInt?   @map("client_id")
+  opportunityId BigInt?   @map("opportunity_id")
+  kind          String
+  description   String
+  category      String    @default("geral")
+  amount        Int       @default(0)
+  status        String    @default("pending")
+  dueDate       DateTime? @map("due_date") @db.Date
+  paidAt        DateTime? @map("paid_at") @db.Timestamptz
+  recurrence    String    @default("once")
+  isFixed       Boolean   @default(false) @map("is_fixed")
+  notes         String?
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @default(now()) @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  opportunity Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+
+  @@index([userId], map: "idx_financial_entries_user_id")
+  @@index([dueDate], map: "idx_financial_entries_due_date")
+  @@index([status], map: "idx_financial_entries_status")
+  @@map("financial_entries")
+}
+
+model StudioSetting {
+  userId       BigInt   @id @map("user_id")
+  studioName   String   @default("Cena Studio") @map("studio_name")
+  legalName    String   @default("") @map("legal_name")
+  document     String   @default("")
+  email        String   @default("")
+  phone        String   @default("")
+  city         String   @default("")
+  website      String   @default("")
+  signature    String   @default("Responsavel comercial")
+  primaryColor String   @default("#ff4d1d") @map("primary_color")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "idx_studio_settings_user_id")
+  @@map("studio_settings")
+}

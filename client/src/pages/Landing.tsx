@@ -239,6 +239,44 @@ function ProductProofSection() {
   );
 }
 
+function OperatingSpineSection() {
+  const { t } = useLanguage();
+  const steps = [
+    ["01", t("app.landing.spineStepClient") as string, t("app.landing.spineStepClientDesc") as string],
+    ["02", t("app.landing.spineStepProject") as string, t("app.landing.spineStepProjectDesc") as string],
+    ["03", t("app.landing.spineStepStudio") as string, t("app.landing.spineStepStudioDesc") as string],
+    ["04", t("app.landing.spineStepFiles") as string, t("app.landing.spineStepFilesDesc") as string],
+    ["05", t("app.landing.spineStepClose") as string, t("app.landing.spineStepCloseDesc") as string],
+  ];
+
+  return (
+    <section className="landing-section !py-10">
+      <div className="landing-shell">
+        <div className="border border-[var(--landing-line)] bg-[rgba(10,7,6,0.72)] p-4 sm:p-5">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="landing-eyebrow">// {t("app.landing.spineEyebrow") as string}</p>
+              <h2 className="mt-2 text-2xl font-semibold text-[var(--landing-text)]">{t("app.landing.spineTitle") as string}</h2>
+            </div>
+            <p className="max-w-md text-sm leading-relaxed text-[var(--landing-muted)]">
+              {t("app.landing.spineCopy") as string}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-5">
+            {steps.map(([number, title, description]) => (
+              <div key={number} className="border border-[var(--landing-line)] bg-black/20 p-4">
+                <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.18em] text-frame-orange">{number}</p>
+                <h3 className="mt-3 text-base font-semibold text-[var(--landing-text)]">{title}</h3>
+                <p className="mt-2 text-xs leading-relaxed text-[var(--landing-muted)]">{description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function Landing() {
   const { openModal, modals } = useApp();
   const { t } = useLanguage();
@@ -248,6 +286,7 @@ export default function Landing() {
     <div className="cena-landing min-h-screen overflow-x-hidden">
       <Navigation />
       <Hero />
+      <OperatingSpineSection />
       <ProductProofSection />
       <ToolsSection />
 

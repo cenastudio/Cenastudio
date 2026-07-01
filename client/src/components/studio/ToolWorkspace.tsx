@@ -1,9 +1,17 @@
 import { type ToolFromApi } from "@/lib/api";
 import FormDispatcher from "./forms/FormDispatcher";
-import { Loader2 } from "lucide-react";
+import { Link2, Loader2 } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import StudioTextLocalizer from "./StudioTextLocalizer";
+
+interface LinkedContextSummary {
+  projectName?: string;
+  clientName?: string;
+  sourceLabel: string;
+  availableCount: number;
+  fillableCount: number;
+}
 
 interface ToolWorkspaceProps {
   tool: ToolFromApi;
@@ -12,6 +20,8 @@ interface ToolWorkspaceProps {
   onExecute: () => void;
   isProcessing: boolean;
   error: string | null;
+  linkedContext?: LinkedContextSummary | null;
+  onApplyLinkedContext?: () => void;
   onSetOutput?: (output: string) => void;
 }
 
@@ -22,6 +32,8 @@ export default function ToolWorkspace({
   onExecute,
   isProcessing,
   error,
+  linkedContext,
+  onApplyLinkedContext,
   onSetOutput,
 }: ToolWorkspaceProps) {
   const { autosaveStatus, activeProject } = useProject();
@@ -84,6 +96,37 @@ export default function ToolWorkspace({
           </div>
           {renderAutosaveStatus()}
         </div>
+
+        {linkedContext && linkedContext.availableCount > 0 && (
+          <div className="border border-frame-orange/30 bg-frame-orange/5 p-3 shadow-[inset_0_0_0_1px_rgba(255,77,0,0.04)]">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <Link2 className="h-3.5 w-3.5 shrink-0 text-frame-orange" />
+                  <span className="font-frame-mono text-[0.6rem] uppercase tracking-[0.16em] text-frame-orange">
+                    {t("app.studio.linkedContextTitle") as string}
+                  </span>
+                </div>
+                <p className="mt-2 truncate text-[0.72rem] text-frame-white">
+                  {linkedContext.sourceLabel}
+                </p>
+                <p className="mt-1 text-[0.64rem] leading-relaxed text-frame-gray-light">
+                  {linkedContext.fillableCount > 0
+                    ? `${linkedContext.fillableCount} ${t("app.studio.linkedContextFieldsReady") as string}`
+                    : t("app.studio.linkedContextSynced") as string}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onApplyLinkedContext}
+                disabled={!linkedContext.fillableCount}
+                className="shrink-0 border border-frame-orange/45 px-2.5 py-2 font-frame-mono text-[0.56rem] uppercase tracking-[0.12em] text-frame-orange transition hover:bg-frame-orange hover:text-frame-black disabled:cursor-not-allowed disabled:border-frame-gray-3 disabled:text-frame-gray-light disabled:hover:bg-transparent"
+              >
+                {t("app.studio.linkedContextFill") as string}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Specialized Form Dispatcher */}
         <div className="studio-form-stack space-y-4">

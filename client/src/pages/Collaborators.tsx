@@ -19,6 +19,8 @@ import {
   CheckCircle2,
   SlidersHorizontal,
   Sparkles,
+  Search,
+  AlertCircle,
 } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import { toast } from "sonner";
@@ -83,6 +85,7 @@ function CollaboratorsContent() {
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [stats, setStats] = useState<CollaboratorStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -101,6 +104,7 @@ function CollaboratorsContent() {
   // Filter states
   const [filterRole, setFilterRole] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  const [filterQuery, setFilterQuery] = useState("");
 
   useEffect(() => {
     loadCollaborators();
@@ -108,14 +112,16 @@ function CollaboratorsContent() {
   }, []);
 
   const loadCollaborators = async () => {
+    setIsLoading(true);
+    setLoadError(false);
     try {
       const response = await fetch("/api/collaborators", { credentials: "include" });
       const data = await response.json();
-      if (data.success) {
-        setCollaborators(data.data);
-      }
+      if (!response.ok || !data.success) throw new Error(data.error || "Failed to load collaborators");
+      setCollaborators(data.data);
     } catch (error) {
       console.error("Error loading collaborators:", error);
+      setLoadError(true);
     } finally {
       setIsLoading(false);
     }
@@ -260,6 +266,14 @@ function CollaboratorsContent() {
 
   const getFilteredCollaborators = () => {
     return collaborators.filter((collaborator) => {
+      const query = filterQuery.trim().toLocaleLowerCase();
+      if (query) {
+        const searchable = [collaborator.name, collaborator.email, collaborator.phone, collaborator.skills]
+          .filter(Boolean)
+          .join(" ")
+          .toLocaleLowerCase();
+        if (!searchable.includes(query)) return false;
+      }
       if (filterRole && collaborator.role !== filterRole) return false;
       if (filterStatus && collaborator.status !== filterStatus) return false;
       return true;
@@ -278,6 +292,7 @@ function CollaboratorsContent() {
   };
 
   const filteredCollaborators = getFilteredCollaborators();
+  const hasActiveFilters = Boolean(filterQuery.trim() || filterRole || filterStatus);
   const primaryRole = stats?.byRole?.[0];
   const roleLabel = (roleId: string) => t(ROLES.find((r) => r.id === roleId)?.labelKey || "app.collaborators.member") as string;
   const statusLabel = (statusId: string) => t(STATUS.find((s) => s.id === statusId)?.labelKey || "app.collaborators.pending") as string;
@@ -398,8 +413,20 @@ function CollaboratorsContent() {
         )}
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3 border border-frame-gray-3 bg-frame-gray-1/10 p-4">
-          <div className="mr-auto flex items-center gap-2">
+        <div className="grid gap-3 border border-frame-gray-3 bg-frame-gray-1/10 p-4 lg:grid-cols-[minmax(220px,1fr)_auto_auto_auto] lg:items-center">
+          <label className="relative min-w-0">
+            <span className="sr-only">{t("app.collaborators.search") as string}</span>
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-frame-gray-light" />
+            <input
+              type="search"
+              value={filterQuery}
+              onChange={(event) => setFilterQuery(event.target.value)}
+              placeholder={t("app.collaborators.searchPlaceholder") as string}
+              className="frame-input h-10 w-full pl-10"
+            />
+          </label>
+
+          <div className="flex items-center gap-2 lg:hidden">
             <SlidersHorizontal className="w-4 h-4 text-frame-orange" />
             <span className="font-frame-mono text-xs uppercase tracking-wider">{t("app.collaborators.filters") as string}</span>
             <span className="text-xs text-frame-gray-light">
@@ -410,7 +437,8 @@ function CollaboratorsContent() {
           <select
             value={filterRole}
             onChange={(e) => setFilterRole(e.target.value)}
-            className="bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
+            aria-label={t("app.collaborators.allRoles") as string}
+            className="h-10 bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
           >
             <option value="">{t("app.collaborators.allRoles") as string}</option>
             {ROLES.map((role) => (
@@ -423,7 +451,8 @@ function CollaboratorsContent() {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
+            aria-label={t("app.collaborators.allStatus") as string}
+            className="h-10 bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange rounded-none"
           >
             <option value="">{t("app.collaborators.allStatus") as string}</option>
             {STATUS.map((status) => (
@@ -437,8 +466,10 @@ function CollaboratorsContent() {
             onClick={() => {
               setFilterRole("");
               setFilterStatus("");
+              setFilterQuery("");
             }}
-            className="frame-btn-ghost text-xs"
+            disabled={!hasActiveFilters}
+            className="frame-btn-ghost h-10 text-xs disabled:cursor-not-allowed disabled:opacity-35"
           >
             {t("app.collaborators.clearFilters") as string}
           </button>
@@ -449,8 +480,32 @@ function CollaboratorsContent() {
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-frame-orange" />
           </div>
+        ) : loadError ? (
+          <EmptyState
+            icon={AlertCircle}
+            title={t("app.collaborators.loadError") as string}
+            description={t("app.collaborators.loadErrorDescription") as string}
+            action={{ label: t("app.common.tryAgain") as string, onClick: loadCollaborators }}
+          />
         ) : filteredCollaborators.length === 0 ? (
-          <EmptyState icon={Users} title={t("app.collaborators.noCollaborators")} />
+          <EmptyState
+            icon={hasActiveFilters ? Search : Users}
+            title={t(hasActiveFilters ? "app.collaborators.noResults" : "app.collaborators.noCollaborators") as string}
+            description={t(hasActiveFilters ? "app.collaborators.noResultsDescription" : "app.collaborators.noCollaboratorsDesc") as string}
+            action={hasActiveFilters
+              ? {
+                  label: t("app.collaborators.clearFilters") as string,
+                  onClick: () => {
+                    setFilterQuery("");
+                    setFilterRole("");
+                    setFilterStatus("");
+                  },
+                }
+              : {
+                  label: t("app.collaborators.newCollaborator") as string,
+                  onClick: () => setIsCreateOpen(true),
+                }}
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredCollaborators.map((collaborator) => (
@@ -480,7 +535,11 @@ function CollaboratorsContent() {
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="p-1 hover:bg-frame-gray-3 transition rounded-none opacity-0 group-hover:opacity-100">
+                      <button
+                        type="button"
+                        aria-label={`${t("app.collaborators.actionsFor") as string} ${collaborator.name}`}
+                        className="p-1 hover:bg-frame-gray-3 transition rounded-none opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 focus-visible:opacity-100"
+                      >
                         <MoreVertical className="w-4 h-4" />
                       </button>
                     </DropdownMenuTrigger>

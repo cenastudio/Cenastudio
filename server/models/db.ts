@@ -11,12 +11,25 @@ const defaultDbPath =
     ? path.join("/tmp", "frame.db")
     : path.join(__dirname, "..", "..", "data", "frame.db");
 const dbPath = process.env.DATABASE_PATH || defaultDbPath;
-fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+let sqlite: Database.Database | null = null;
 
-export const db = new Database(dbPath);
+function getSqliteDatabase() {
+  if (!sqlite) {
+    fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+    sqlite = new Database(dbPath);
+    sqlite.pragma("journal_mode = WAL");
+    sqlite.pragma("foreign_keys = ON");
+  }
+  return sqlite;
+}
 
-db.pragma("journal_mode = WAL");
-db.pragma("foreign_keys = ON");
+export const db = new Proxy({} as Database.Database, {
+  get(_target, property) {
+    const database = getSqliteDatabase() as any;
+    const value = database[property];
+    return typeof value === "function" ? value.bind(database) : value;
+  },
+});
 
 function ensureUserColumns() {
   const userCols = (db.prepare("PRAGMA table_info(users)").all() as { name: string }[]).map(

@@ -1,4 +1,6 @@
 import { db } from "../models/db.js";
+import { prisma, shouldUsePrisma } from "../models/prisma.js";
+import { logger } from "../utils/logger.js";
 
 type NotificationType = "info" | "success" | "warning" | "error" | "user" | "client";
 
@@ -9,6 +11,12 @@ export function notifyUser(
   type: NotificationType = "info",
   link?: string,
 ) {
+  if (shouldUsePrisma) {
+    void prisma.notification.create({
+      data: { userId: BigInt(userId), title, message, type, link: link || null },
+    }).catch((error) => logger.error({ error, userId }, "Failed to create notification"));
+    return;
+  }
   db.prepare(
     `INSERT INTO notifications (user_id, title, message, type, link)
      VALUES (?, ?, ?, ?, ?)`,
@@ -21,6 +29,14 @@ export function notifyAdmins(
   type: NotificationType = "info",
   link = "/admin/gerenciar",
 ) {
+  if (shouldUsePrisma) {
+    void prisma.user.findMany({ where: { role: "admin" }, select: { id: true } })
+      .then((admins) => prisma.notification.createMany({
+        data: admins.map((admin) => ({ userId: admin.id, title, message, type, link })),
+      }))
+      .catch((error) => logger.error({ error }, "Failed to notify admins"));
+    return;
+  }
   const admins = db.prepare("SELECT id FROM users WHERE role = 'admin'").all() as Array<{ id: number }>;
   for (const admin of admins) {
     notifyUser(admin.id, title, message, type, link);

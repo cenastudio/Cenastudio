@@ -12,12 +12,6 @@ router.use(authenticate);
 // Clients
 router.get("/stats", clientsController.getClientStats);
 router.get("/lookup/cnpj/:cnpj", clientsController.getCompanyByCnpj);
-router.get("/", clientsController.listClients);
-router.get("/:id", clientsController.getClient);
-router.post("/", clientsController.createClient);
-router.put("/:id", clientsController.updateClient);
-router.patch("/:id", clientsController.patchClient);
-router.delete("/:id", clientsController.deleteClient);
 
 // Opportunities
 router.get("/opportunities/stats", opportunitiesController.getPipelineStats);
@@ -33,5 +27,13 @@ router.get("/interactions", interactionsController.listInteractions);
 router.post("/interactions", interactionsController.createInteraction);
 router.put("/interactions/:id", interactionsController.updateInteraction);
 router.delete("/interactions/:id", interactionsController.deleteInteraction);
+
+// Generic client routes must stay after nested collections.
+router.get("/", clientsController.listClients);
+router.get("/:id", clientsController.getClient);
+router.post("/", clientsController.createClient);
+router.put("/:id", clientsController.updateClient);
+router.patch("/:id", clientsController.patchClient);
+router.delete("/:id", clientsController.deleteClient);
 
 export default router;

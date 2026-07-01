@@ -1,11 +1,27 @@
+import SessionGuide from "./SessionGuide";
+
 interface FormProps {
   data: Record<string, string>;
   onChange: (key: string, value: string) => void;
 }
 
 export default function ContractForm({ data, onChange }: FormProps) {
+  const completed = [
+    data.tipo,
+    data.contratante && data.contratado,
+    data.objeto && (data.valor || data.prazo),
+  ].filter(Boolean).length;
+
   return (
     <div className="space-y-4">
+      <SessionGuide
+        label="Sessão contrato"
+        title="Organize partes, objeto e termos antes do rascunho."
+        steps={["Modelo jurídico", "Partes e documentos", "Objeto, valor e vigência"]}
+        output="Saída esperada: minuta de referência para revisão jurídica antes de assinatura."
+        completed={completed}
+      />
+
       {/* Seção 1: Modelo Contratual */}
       <div>
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">

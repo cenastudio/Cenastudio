@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { db } from "../models/db.js";
 import { AppError } from "../middleware/errorHandler.js";
+import { prisma, shouldUsePrisma } from "../models/prisma.js";
 
 function getStripe(): Stripe {
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -56,7 +57,13 @@ export async function createCheckoutSession(
 export async function createPortalSession(userId: number, returnUrl: string) {
   const stripe = getStripe();
 
-  const sub = db
+  const prismaSub = shouldUsePrisma
+    ? await prisma.subscription.findFirst({
+        where: { userId: BigInt(userId), stripeCustomerId: { not: null } },
+        orderBy: { id: "desc" }, select: { stripeCustomerId: true },
+      })
+    : null;
+  const sub = shouldUsePrisma ? null : db
     .prepare(
       `SELECT stripe_customer_id FROM subscriptions
        WHERE user_id = ? AND stripe_customer_id IS NOT NULL
@@ -64,12 +71,13 @@ export async function createPortalSession(userId: number, returnUrl: string) {
     )
     .get(userId) as { stripe_customer_id: string } | undefined;
 
-  if (!sub?.stripe_customer_id) {
+  const customerId = prismaSub?.stripeCustomerId || sub?.stripe_customer_id;
+  if (!customerId) {
     throw new AppError("Nenhuma assinatura Stripe encontrada.", 404);
   }
 
   const session = await stripe.billingPortal.sessions.create({
-    customer: sub.stripe_customer_id,
+    customer: customerId,
     return_url: returnUrl,
   });
 
@@ -119,7 +127,12 @@ export async function syncCheckoutSession(userId: number, sessionId: string) {
 
   const periodEnd = new Date(subscription.current_period_end * 1000).toISOString();
 
-  db.prepare(
+  if (shouldUsePrisma) {
+    await prisma.subscription.updateMany({ where: { userId: BigInt(userId) }, data: {
+      planId, status: "active", stripeCustomerId: customerId, stripeSubscriptionId: subscriptionId,
+      currentPeriodStart: new Date(), currentPeriodEnd: new Date(periodEnd), trialEndsAt: null,
+    } });
+  } else db.prepare(
     `UPDATE subscriptions
      SET plan_id = ?, status = 'active', stripe_customer_id = ?, stripe_subscription_id = ?,
          current_period_start = datetime('now'), current_period_end = ?, trial_ends_at = NULL
@@ -166,7 +179,13 @@ export async function handleWebhook(rawBody: Buffer, signature: string) {
       const stripeSub = await stripe.subscriptions.retrieve(subscriptionId);
       const periodEnd = new Date(stripeSub.current_period_end * 1000).toISOString();
 
-      db.prepare(
+      if (shouldUsePrisma) {
+        await prisma.subscription.updateMany({ where: { userId: BigInt(userId) }, data: {
+          planId, status: "active", stripeCustomerId: customerId ?? null,
+          stripeSubscriptionId: subscriptionId, currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date(periodEnd), trialEndsAt: null,
+        } });
+      } else db.prepare(
         `UPDATE subscriptions
          SET plan_id = ?, status = 'active', stripe_customer_id = ?, stripe_subscription_id = ?,
              current_period_start = datetime('now'), current_period_end = ?, trial_ends_at = NULL
@@ -191,7 +210,11 @@ export async function handleWebhook(rawBody: Buffer, signature: string) {
       const periodEnd = new Date(sub.current_period_end * 1000).toISOString();
       const planId = sub.metadata?.planId;
 
-      if (planId) {
+      if (shouldUsePrisma) {
+        await prisma.subscription.updateMany({ where: { userId: BigInt(userId) }, data: {
+          status, currentPeriodEnd: new Date(periodEnd), ...(planId ? { planId } : {}),
+        } });
+      } else if (planId) {
         db.prepare(
           `UPDATE subscriptions SET status = ?, current_period_end = ?, plan_id = ?
            WHERE user_id = ?`,
@@ -209,6 +232,20 @@ export async function handleWebhook(rawBody: Buffer, signature: string) {
       const userId = Number(sub.metadata?.userId);
       if (!userId) break;
 
+      if (shouldUsePrisma) {
+        const existing = await prisma.subscription.findFirst({ where: { userId: BigInt(userId) }, select: { id: true } });
+        if (existing) {
+          await prisma.subscription.update({ where: { id: existing.id }, data: {
+            planId: "free", status: "cancelled", stripeSubscriptionId: null,
+            currentPeriodEnd: new Date(Date.now() + 30 * 86400000),
+          } });
+        } else {
+          await prisma.subscription.create({ data: {
+            userId: BigInt(userId), planId: "free", status: "active",
+            currentPeriodEnd: new Date(Date.now() + 30 * 86400000),
+          } });
+        }
+      } else {
       const existingSub = db.prepare("SELECT id FROM subscriptions WHERE user_id = ?").get(userId);
       if (existingSub) {
         db.prepare(
@@ -221,6 +258,7 @@ export async function handleWebhook(rawBody: Buffer, signature: string) {
           `INSERT INTO subscriptions (user_id, plan_id, status, current_period_end)
            VALUES (?, 'free', 'active', datetime('now', '+1 month'))`,
         ).run(userId);
+      }
       }
 
       console.log(`[Stripe] User ${userId} downgraded to free (subscription cancelled)`);

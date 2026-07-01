@@ -4,6 +4,21 @@ import { AppError } from "../middleware/errorHandler.js";
 import path from "path";
 import fs from "fs";
 import { ensureUploadsDirectory, safeStoredFilePath, UPLOADS_DIR } from "../utils/fileSafety.js";
+import { prisma, shouldUsePrisma } from "../models/prisma.js";
+import { withSnakeCase } from "../utils/prismaSerialization.js";
+import {
+  createProjectFileUrl,
+  removeProjectFile,
+  storageObjectPath,
+  uploadProjectFile,
+} from "../services/supabaseStorage.js";
+
+function serializeFile(value: any) {
+  return withSnakeCase(value, {
+    projectId: "project_id", userId: "user_id", originalName: "original_name",
+    mimeType: "mime_type", createdAt: "created_at",
+  });
+}
 
 const MAX_UPLOAD_SIZE_MB = Number.parseInt(process.env.MAX_UPLOAD_SIZE_MB || "10", 10);
 const MAX_UPLOAD_SIZE = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
@@ -12,13 +27,20 @@ const MAX_UPLOAD_SIZE = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
 ensureUploadsDirectory();
 
 // List files for a project
-export const listFiles: RequestHandler = (req, res, next) => {
+export const listFiles: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const projectId = parseInt(req.params.projectId);
 
     if (!projectId) {
       throw new AppError("Project ID is required", 400);
+    }
+    if (shouldUsePrisma) {
+      const project = await prisma.project.findFirst({ where: { id: BigInt(projectId), userId: BigInt(userId) }, select: { id: true } });
+      if (!project) throw new AppError("Project not found", 404);
+      const files = await prisma.file.findMany({ where: { projectId: project.id }, orderBy: { createdAt: "desc" } });
+      res.json({ success: true, data: files.map(serializeFile) });
+      return;
     }
 
     // Verify user owns the project
@@ -41,7 +63,7 @@ export const listFiles: RequestHandler = (req, res, next) => {
 };
 
 // Upload a file
-export const uploadFile: RequestHandler = (req, res, next) => {
+export const uploadFile: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const projectId = parseInt(req.body.projectId);
@@ -57,6 +79,34 @@ export const uploadFile: RequestHandler = (req, res, next) => {
     const decodedSize = Buffer.byteLength(fileData, "utf8") * 0.75;
     if (decodedSize > MAX_UPLOAD_SIZE) {
       throw new AppError(`Arquivo excede o limite de ${MAX_UPLOAD_SIZE_MB}MB`, 413);
+    }
+
+    if (shouldUsePrisma) {
+      const project = await prisma.project.findFirst({
+        where: { id: BigInt(projectId), userId: BigInt(userId) }, select: { id: true },
+      });
+      if (!project) throw new AppError("Project not found", 404);
+      let storedPath: string;
+      let storedSize: number;
+      let storedFilename = fileName;
+      if (fileType === "text/uri-list") {
+        const decodedUrl = Buffer.from(fileData, "base64").toString("utf8").trim();
+        if (!/^https?:\/\/\S+$/i.test(decodedUrl)) throw new AppError("URL inválida", 400);
+        storedPath = decodedUrl;
+        storedSize = decodedUrl.length;
+      } else {
+        const buffer = Buffer.from(fileData, "base64");
+        storedPath = storageObjectPath(userId, projectId, fileName);
+        storedFilename = storedPath.split("/").pop() || fileName;
+        storedSize = Number.isFinite(fileSize) ? fileSize : buffer.length;
+        await uploadProjectFile(storedPath, buffer, fileType);
+      }
+      const created = await prisma.file.create({ data: {
+        userId: BigInt(userId), projectId: project.id, filename: storedFilename,
+        originalName: fileName, mimeType: fileType || null, size: storedSize, path: storedPath,
+      } });
+      res.json({ success: true, data: serializeFile(created) });
+      return;
     }
 
     // Verify user owns the project
@@ -124,13 +174,21 @@ export const uploadFile: RequestHandler = (req, res, next) => {
 };
 
 // Delete a file
-export const deleteFile: RequestHandler = (req, res, next) => {
+export const deleteFile: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const fileId = parseInt(req.params.id);
 
     if (!fileId) {
       throw new AppError("File ID is required", 400);
+    }
+    if (shouldUsePrisma) {
+      const file = await prisma.file.findFirst({ where: { id: BigInt(fileId), userId: BigInt(userId) } });
+      if (!file) throw new AppError("File not found", 404);
+      if (file.mimeType !== "text/uri-list") await removeProjectFile(file.path);
+      await prisma.file.delete({ where: { id: file.id } });
+      res.json({ success: true, message: "File deleted successfully" });
+      return;
     }
 
     // Get file info
@@ -158,13 +216,19 @@ export const deleteFile: RequestHandler = (req, res, next) => {
 };
 
 // Get file info
-export const getFile: RequestHandler = (req, res, next) => {
+export const getFile: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const fileId = parseInt(req.params.id);
 
     if (!fileId) {
       throw new AppError("File ID is required", 400);
+    }
+    if (shouldUsePrisma) {
+      const file = await prisma.file.findFirst({ where: { id: BigInt(fileId), userId: BigInt(userId) } });
+      if (!file) throw new AppError("File not found", 404);
+      res.json({ success: true, data: serializeFile(file) });
+      return;
     }
 
     const file = db
@@ -182,13 +246,23 @@ export const getFile: RequestHandler = (req, res, next) => {
 };
 
 // Download file
-export const downloadFile: RequestHandler = (req, res, next) => {
+export const downloadFile: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const fileId = parseInt(req.params.id);
 
     if (!fileId) {
       throw new AppError("File ID is required", 400);
+    }
+    if (shouldUsePrisma) {
+      const file = await prisma.file.findFirst({ where: { id: BigInt(fileId), userId: BigInt(userId) } });
+      if (!file) throw new AppError("File not found", 404);
+      if (file.mimeType === "text/uri-list") {
+        res.redirect(file.path);
+        return;
+      }
+      res.redirect(await createProjectFileUrl(file.path));
+      return;
     }
 
     const file = db

@@ -69,12 +69,12 @@ const QUICK_TOOLS = [
 ];
 
 const WORKFLOW_STEPS = [
-  { slug: "briefing", label: "Briefing" },
-  { slug: "roteiro", label: "Roteiro" },
-  { slug: "decupagem", label: "Decupagem" },
-  { slug: "callsheet", label: "Callsheet" },
-  { slug: "orcamento", label: "Orçamento" },
-  { slug: "moodboard", label: "Moodboard" },
+  { slug: "briefing", label: "Briefing", hint: "app.projectHub.stepBriefingHint" },
+  { slug: "roteiro", label: "Roteiro", hint: "app.projectHub.stepScriptHint" },
+  { slug: "decupagem", label: "Decupagem", hint: "app.projectHub.stepBreakdownHint" },
+  { slug: "callsheet", label: "Callsheet", hint: "app.projectHub.stepCallsheetHint" },
+  { slug: "orcamento", label: "Orçamento", hint: "app.projectHub.stepBudgetHint" },
+  { slug: "moodboard", label: "Moodboard", hint: "app.projectHub.stepMoodboardHint" },
 ];
 
 interface ProjectMetadata {
@@ -233,6 +233,9 @@ function ProjectHubContent() {
                 {t("app.projectHub.continue")} {nextStep.label}
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
+              <p className="mt-3 text-[0.68rem] leading-relaxed text-frame-gray-light">
+                {t(nextStep.hint)}
+              </p>
             </div>
           </div>
         </div>
@@ -270,6 +273,22 @@ function ProjectHubContent() {
                   {completedSteps.length}/{WORKFLOW_STEPS.length} {t("app.projectHub.steps")}
                 </span>
               </div>
+              <div className="border border-frame-orange/40 bg-frame-orange/[0.05] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-orange mb-1">
+                    {t("app.projectHub.nextOperationalMove")}
+                  </p>
+                  <h3 className="text-base font-semibold text-frame-white">{nextStep.label}</h3>
+                  <p className="text-xs text-frame-gray-light mt-1 leading-relaxed">{t(nextStep.hint)}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setLocation(`/project/${projectId}/studio/${nextStep.slug}`)}
+                  className="frame-btn-primary !py-2.5 !px-4 !text-[0.6rem] shrink-0"
+                >
+                  {t("app.projectHub.openStep")}
+                </button>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {WORKFLOW_STEPS.map((step) => {
                   const isDone = populatedStates.includes(step.slug);
@@ -303,6 +322,7 @@ function ProjectHubContent() {
                           </span>
                         )}
                       </div>
+                      <p className="text-xs text-frame-gray-light mt-2 leading-relaxed">{t(step.hint)}</p>
                     </button>
                   );
                 })}

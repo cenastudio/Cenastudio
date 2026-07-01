@@ -8,21 +8,27 @@ import { fileURLToPath } from "url";
 import * as checkoutController from "./controllers/checkoutController.js";
 import { requireEnvOrThrow } from "./controllers/contactController.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { requestLogger } from "./middleware/requestLogger.js";
 import { initDatabase } from "./models/db.js";
+import { initPrismaCoreData } from "./models/prismaSeed.js";
 import passport from "./config/passport.js";
 import { assertLaunchReadyEnvironment } from "./config/launchGuards.js";
 import apiRouter from "./router.js";
+import healthRoutes from "./routes/health.js";
+import { shouldUsePrisma } from "./models/prisma.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 let databaseInitialized = false;
+let prismaCoreReady: Promise<void> | null = null;
 
 function ensureDatabase() {
   if (!databaseInitialized) {
     assertLaunchReadyEnvironment();
     requireEnvOrThrow();
-    initDatabase();
+    if (!shouldUsePrisma) initDatabase();
+    prismaCoreReady = initPrismaCoreData();
     databaseInitialized = true;
   }
 }
@@ -31,6 +37,7 @@ export function createApp() {
   ensureDatabase();
 
   const app = express();
+  app.set("trust proxy", 1);
   const clientOrigin = process.env.CLIENT_ORIGIN || "http://localhost:5173";
 
   app.use(helmet({
@@ -56,6 +63,16 @@ export function createApp() {
   app.use(cors({ origin: clientOrigin, credentials: true }));
   app.use(cookieParser());
   app.use(passport.initialize());
+  app.use(async (_req, _res, next) => {
+    try {
+      await prismaCoreReady;
+      next();
+    } catch (error) {
+      next(error);
+    }
+  });
+  app.use(requestLogger);
+  app.use(healthRoutes);
 
   app.post(
     "/api/checkout/webhook",

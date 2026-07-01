@@ -15,7 +15,20 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      exclude: ['node_modules/', 'client/src/test/', '**/*.d.ts', '**/*.config.*'],
+      exclude: [
+        'node_modules/',
+        '.vercel/',
+        'dist/',
+        'coverage/',
+        'api/',
+        'scripts/',
+        'tests/e2e/',
+        'client/public/',
+        'client/src/test/',
+        '**/*.{test,spec}.{ts,tsx}',
+        '**/*.d.ts',
+        '**/*.config.*',
+      ],
     },
   },
   resolve: {

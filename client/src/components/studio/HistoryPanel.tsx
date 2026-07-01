@@ -10,19 +10,23 @@ interface HistoryItem {
   input: string; // JSON serialized string
   output: string;
   createdAt: string;
+  projectId?: number | null;
+  projectName?: string | null;
 }
 
 interface HistoryPanelProps {
   isOpen: boolean;
   onClose: () => void;
   toolId: string;
+  projectId?: number | null;
   onRestore: (input: Record<string, string>, output: string) => void;
 }
 
-export default function HistoryPanel({ isOpen, onClose, toolId, onRestore }: HistoryPanelProps) {
+export default function HistoryPanel({ isOpen, onClose, toolId, projectId, onRestore }: HistoryPanelProps) {
   const { t } = useLanguage();
   const [items, setItems] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [scope, setScope] = useState<"project" | "all">("project");
 
   useEffect(() => {
     if (!isOpen) return;
@@ -30,7 +34,7 @@ export default function HistoryPanel({ isOpen, onClose, toolId, onRestore }: His
     const loadHistory = async () => {
       setLoading(true);
       try {
-        const historyData = await api.ai.history(toolId);
+        const historyData = await api.ai.history(toolId, scope === "project" ? projectId : null);
         setItems(historyData);
       } catch (e) {
         toast.error(t("app.studio.historyLoading") as string);
@@ -40,7 +44,11 @@ export default function HistoryPanel({ isOpen, onClose, toolId, onRestore }: His
     };
 
     loadHistory();
-  }, [isOpen, toolId]);
+  }, [isOpen, toolId, projectId, scope]);
+
+  useEffect(() => {
+    if (!projectId) setScope("all");
+  }, [projectId]);
 
   if (!isOpen) return null;
 
@@ -61,6 +69,30 @@ export default function HistoryPanel({ isOpen, onClose, toolId, onRestore }: His
         >
           <X className="w-4 h-4" />
         </button>
+      </div>
+
+      <div className="border-b border-frame-gray-2 p-3">
+        <div className="grid grid-cols-2 border border-frame-gray-3 bg-frame-black/30">
+          <button
+            type="button"
+            onClick={() => setScope("project")}
+            disabled={!projectId}
+            className={`px-3 py-2 font-frame-mono text-[0.58rem] uppercase tracking-[0.14em] transition ${
+              scope === "project" ? "bg-frame-orange text-frame-black" : "text-frame-gray-light hover:text-frame-white"
+            } disabled:cursor-not-allowed disabled:opacity-40`}
+          >
+            {t("app.studio.historyProject") as string}
+          </button>
+          <button
+            type="button"
+            onClick={() => setScope("all")}
+            className={`px-3 py-2 font-frame-mono text-[0.58rem] uppercase tracking-[0.14em] transition ${
+              scope === "all" ? "bg-frame-orange text-frame-black" : "text-frame-gray-light hover:text-frame-white"
+            }`}
+          >
+            {t("app.studio.historyAll") as string}
+          </button>
+        </div>
       </div>
 
       {/* List Area */}
@@ -126,6 +158,11 @@ export default function HistoryPanel({ isOpen, onClose, toolId, onRestore }: His
                   <p className="text-[0.66rem] text-frame-gray-light line-clamp-2 mt-1.5 font-light leading-normal">
                     {item.output}
                   </p>
+                  {scope === "all" && item.projectName && (
+                    <p className="mt-2 truncate font-frame-mono text-[0.56rem] uppercase tracking-[0.1em] text-frame-orange/80">
+                      {item.projectName}
+                    </p>
+                  )}
                 </div>
 
                 <button

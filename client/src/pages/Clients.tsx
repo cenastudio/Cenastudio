@@ -4,7 +4,9 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AnimatedModal from "@/components/AnimatedModal";
+import EmptyState from "@/components/EmptyState";
 import {
+  AlertCircle,
   Users, Plus, Search, Phone, Mail, MoreVertical,
   Edit, Trash2, TrendingUp, DollarSign, GripVertical, Upload,
 } from "lucide-react";
@@ -306,6 +308,7 @@ function ClientsContent() {
   const [clients, setClients] = useState<Client[]>([]);
   const [stats, setStats] = useState<ClientStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -322,16 +325,21 @@ function ClientsContent() {
   );
 
   const loadClients = useCallback(async () => {
+    setIsLoading(true);
+    setLoadError(false);
     try {
       const params = new URLSearchParams();
       if (filterStatus) params.append("status", filterStatus);
       if (filterSegment) params.append("segment", filterSegment);
-      if (searchTerm) params.append("search", searchTerm);
+      if (debouncedSearch) params.append("search", debouncedSearch);
       const response = await fetch(`/api/clients?${params}`);
       const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || "Erro ao carregar clientes");
       if (data.success) setClients(data.data);
     } catch (error) {
       console.error("Error loading clients:", error);
+      setClients([]);
+      setLoadError(true);
     } finally {
       setIsLoading(false);
     }
@@ -517,6 +525,12 @@ function ClientsContent() {
   const activeDragClient = activeDragId
     ? clients.find((c) => `client-${c.id}` === activeDragId)
     : null;
+  const hasActiveFilters = Boolean(debouncedSearch.trim() || filterStatus || filterSegment);
+  const clearFilters = () => {
+    setSearchTerm("");
+    setFilterStatus("");
+    setFilterSegment("");
+  };
 
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
@@ -617,6 +631,14 @@ function ClientsContent() {
             <option value="agency">{t("app.common.segmentAgency") as string}</option>
             <option value="brand">{t("app.common.segmentBrand") as string}</option>
           </select>
+          <button
+            type="button"
+            onClick={clearFilters}
+            disabled={!hasActiveFilters}
+            className="frame-btn-ghost disabled:opacity-40 disabled:pointer-events-none"
+          >
+            {t("app.clients.clearFilters") as string}
+          </button>
         </div>
 
         {/* Main Content with Sidebar */}
@@ -722,6 +744,31 @@ function ClientsContent() {
 
           {/* Kanban Board */}
           <div className="flex-1 min-w-0">
+          {isLoading ? (
+            <div className="border border-frame-gray-3 bg-frame-gray-1/20 py-20 flex items-center justify-center">
+              <div className="h-8 w-8 animate-spin border-2 border-frame-gray-3 border-t-frame-orange" />
+            </div>
+          ) : loadError ? (
+            <div className="border border-frame-red/30 bg-frame-red/5 py-16">
+              <EmptyState
+                icon={AlertCircle}
+                title={t("app.clients.loadError") as string}
+                description={t("app.clients.loadErrorDescription") as string}
+                action={{ label: t("app.common.tryAgain") as string, onClick: loadClients }}
+              />
+            </div>
+          ) : clients.length === 0 ? (
+            <div className="border border-dashed border-frame-gray-3 p-12 text-center">
+              <EmptyState
+                icon={hasActiveFilters ? Search : Users}
+                title={t(hasActiveFilters ? "app.clients.noResults" : "app.clients.noClients") as string}
+                description={t(hasActiveFilters ? "app.clients.noResultsDescription" : "app.clients.noClientsDesc") as string}
+                action={hasActiveFilters
+                  ? { label: t("app.clients.clearFilters") as string, onClick: clearFilters }
+                  : { label: t("app.clients.newClient") as string, onClick: () => setLocation("/clients/new") }}
+              />
+            </div>
+          ) : (
           <DndContext
             sensors={sensors}
             onDragStart={handleDragStart}
@@ -774,21 +821,7 @@ function ClientsContent() {
             ) : null}
           </DragOverlay>
         </DndContext>
-
-        {/* Empty State */}
-        {!isLoading && clients.length === 0 && (
-          <div className="border border-dashed border-frame-gray-3 p-12 text-center">
-            <Users className="w-12 h-12 text-frame-gray-light mx-auto mb-4" />
-            <p className="text-frame-gray-light mb-4">{t("app.clients.noClients") as string}</p>
-            <button
-              onClick={() => setLocation("/clients/new")}
-              className="frame-btn-primary inline-flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              {t("app.clients.newClient") as string}
-            </button>
-          </div>
-        )}
+          )}
         </div>{/* end kanban flex-1 */}
       </div>{/* end sidebar layout */}
       </main>

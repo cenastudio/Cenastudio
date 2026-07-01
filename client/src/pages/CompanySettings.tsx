@@ -3,25 +3,37 @@ import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { api } from "@/lib/api";
 import { DEFAULT_STUDIO_SETTINGS, readStudioSettings, saveStudioSettings, type StudioSettings } from "@/lib/studioSettings";
-import { BadgeCheck, Building2, FileText, Globe2, Mail, Palette, Phone, Save, ShieldCheck } from "lucide-react";
+import { BadgeCheck, Building2, Check, FileText, Globe2, Mail, Palette, Phone, Save, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 function CompanySettingsContent() {
   const { t } = useLanguage();
   const [settings, setSettings] = useState<StudioSettings>(DEFAULT_STUDIO_SETTINGS);
+  const [savedSettings, setSavedSettings] = useState<StudioSettings>(DEFAULT_STUDIO_SETTINGS);
   const [saving, setSaving] = useState(false);
+  const isDirty = JSON.stringify(settings) !== JSON.stringify(savedSettings);
 
   useEffect(() => {
-    setSettings(readStudioSettings());
+    const localSettings = readStudioSettings();
+    setSettings(localSettings);
+    setSavedSettings(localSettings);
     api.studioSettings
       .get()
       .then((data) => {
         setSettings(data);
+        setSavedSettings(data);
         saveStudioSettings(data);
       })
       .catch(() => null);
   }, []);
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warnBeforeLeaving);
+    return () => window.removeEventListener("beforeunload", warnBeforeLeaving);
+  }, [isDirty]);
 
   const update = (key: keyof StudioSettings, value: string) => {
     setSettings((current) => ({ ...current, [key]: value }));
@@ -32,11 +44,13 @@ function CompanySettingsContent() {
     try {
       const saved = await api.studioSettings.update(settings);
       setSettings(saved);
+      setSavedSettings(saved);
       saveStudioSettings(saved);
       toast.success(t("app.company.saved"));
     } catch (error) {
       saveStudioSettings(settings);
-      toast.error(error instanceof Error ? error.message : t("app.company.savedLocally"));
+      setSavedSettings(settings);
+      toast.warning(error instanceof Error ? error.message : t("app.company.savedLocally"));
     } finally {
       setSaving(false);
     }
@@ -83,9 +97,15 @@ function CompanySettingsContent() {
                 <p className="frame-label">// {t("app.company.identityBlock") as string}</p>
                 <h2 className="mt-2 text-xl font-semibold text-frame-white">{t("app.company.identityTitle") as string}</h2>
               </div>
-              <span className="hidden sm:inline-flex border border-frame-orange/40 px-3 py-2 font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-orange">
-                {settings.primaryColor}
-              </span>
+              <div className="flex flex-col items-end gap-2">
+                <span className={`inline-flex items-center gap-1.5 border px-3 py-2 font-frame-mono text-[0.58rem] uppercase tracking-[0.12em] ${isDirty ? "border-frame-orange/50 text-frame-orange" : "border-green-500/35 text-green-400"}`}>
+                  {isDirty ? <Save className="h-3 w-3" /> : <Check className="h-3 w-3" />}
+                  {t(isDirty ? "app.company.unsavedChanges" : "app.company.allSaved") as string}
+                </span>
+                <span className="hidden sm:inline-flex border border-frame-gray-3 px-2 py-1 font-frame-mono text-[0.58rem] uppercase text-frame-gray-light">
+                  {settings.primaryColor}
+                </span>
+              </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label className="space-y-2">
@@ -143,13 +163,18 @@ function CompanySettingsContent() {
               <span className="frame-label text-frame-gray-light">{t("app.company.documentSignature") as string}</span>
               <input className="frame-input w-full" value={settings.signature} onChange={(event) => update("signature", event.target.value)} placeholder={t("app.company.signaturePlaceholder")} />
             </label>
-            <button type="button" onClick={handleSave} disabled={saving} className="frame-btn-primary flex items-center justify-center gap-2 disabled:opacity-60">
-              <Save className="w-4 h-4" />
-              {saving ? t("app.common.saving") : t("app.company.saveCompany")}
-            </button>
+            <div className="flex flex-col gap-3 border border-frame-gray-3 bg-frame-black/95 p-3 shadow-2xl sm:flex-row sm:items-center sm:justify-between lg:sticky lg:bottom-3 lg:z-10">
+              <p className="font-frame-mono text-[0.62rem] uppercase tracking-[0.1em] text-frame-gray-light">
+                {t(isDirty ? "app.company.unsavedHint" : "app.company.savedHint") as string}
+              </p>
+              <button type="button" onClick={handleSave} disabled={saving || !isDirty} className="frame-btn-primary flex shrink-0 items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-40">
+                {isDirty ? <Save className="w-4 h-4" /> : <Check className="w-4 h-4" />}
+                {saving ? t("app.common.saving") : isDirty ? t("app.company.saveCompany") : t("app.company.allSaved")}
+              </button>
+            </div>
           </div>
 
-          <aside className="space-y-5">
+          <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
             <div className="border border-frame-gray-3 bg-frame-gray-1/30 p-5 h-max">
             <p className="frame-label mb-3">// {t("app.company.preview") as string}</p>
             <div className="border border-frame-gray-3 bg-frame-black/40 p-5 shadow-2xl">

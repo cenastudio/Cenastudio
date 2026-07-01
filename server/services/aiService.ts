@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getToolById } from "../../shared/tools.js";
 import { db } from "../models/db.js";
 import { AppError } from "../middleware/errorHandler.js";
+import { prisma, shouldUsePrisma } from "../models/prisma.js";
 
 interface NvidiaChatResponse {
   choices?: Array<{
@@ -134,10 +135,10 @@ export async function generateForTool(
     throw new AppError("Tool not found", 404);
   }
 
-  const active = db.prepare("SELECT is_active FROM tools WHERE id = ?").get(toolId) as
-    | { is_active: number }
-    | undefined;
-  if (!active || active.is_active === 0) {
+  const isActive = shouldUsePrisma
+    ? (await prisma.tool.findUnique({ where: { id: toolId }, select: { isActive: true } }))?.isActive
+    : (db.prepare("SELECT is_active FROM tools WHERE id = ?").get(toolId) as { is_active: number } | undefined)?.is_active === 1;
+  if (!isActive) {
     throw new AppError("Tool is not active", 403);
   }
 
@@ -159,11 +160,20 @@ export async function generateForTool(
       ? await generateWithNvidia(system, userText)
       : await generateWithAnthropic(system, userText);
 
-  const result = db
-    .prepare(
-      "INSERT INTO generations (user_id, tool_id, input, output, project_id) VALUES (?, ?, ?, ?, ?)",
-    )
-    .run(userId, toolId, JSON.stringify(input), output, projectId ? Number(projectId) : null);
+  if (shouldUsePrisma) {
+    const linkedProjectId = projectId ? BigInt(Number(projectId)) : null;
+    if (linkedProjectId) {
+      const project = await prisma.project.findFirst({ where: { id: linkedProjectId, userId: BigInt(userId) }, select: { id: true } });
+      if (!project) throw new AppError("Project not found", 404);
+    }
+    const generation = await prisma.generation.create({ data: {
+      userId: BigInt(userId), toolId, input: JSON.stringify(input), output, projectId: linkedProjectId,
+    } });
+    return { output, generationId: Number(generation.id) };
+  }
 
+  const result = db.prepare(
+    "INSERT INTO generations (user_id, tool_id, input, output, project_id) VALUES (?, ?, ?, ?, ?)",
+  ).run(userId, toolId, JSON.stringify(input), output, projectId ? Number(projectId) : null);
   return { output, generationId: Number(result.lastInsertRowid) };
 }

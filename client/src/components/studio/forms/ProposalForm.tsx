@@ -1,11 +1,27 @@
+import SessionGuide from "./SessionGuide";
+
 interface FormProps {
   data: Record<string, string>;
   onChange: (key: string, value: string) => void;
 }
 
 export default function ProposalForm({ data, onChange }: FormProps) {
+  const completed = [
+    data.cliente,
+    data.escopo,
+    data.valor || data.prazo,
+  ].filter(Boolean).length;
+
   return (
     <div className="space-y-4">
+      <SessionGuide
+        label="Sessão proposta"
+        title="Monte a ponte entre escopo, valor e aceite."
+        steps={["Cliente e necessidade", "Escopo e entregáveis", "Valor, prazo e pagamento"]}
+        output="Saída esperada: proposta pronta para cliente, com base para contrato e orçamento."
+        completed={completed}
+      />
+
       {/* Seção 1: Identidade do Proponente */}
       <div>
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">

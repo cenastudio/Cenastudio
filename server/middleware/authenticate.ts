@@ -1,8 +1,7 @@
 import type { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 import { AppError } from "./errorHandler.js";
-import { db } from "../models/db.js";
-import { ensureUserFromToken } from "../services/authService.js";
+import { ensureUserFromToken, getUserById } from "../services/authService.js";
 
 export interface AuthUser {
   id: number;
@@ -52,24 +51,16 @@ export const cookieOptions = {
 
 export { COOKIE_NAME };
 
-export const authenticate: RequestHandler = (req, res, next) => {
+export const authenticate: RequestHandler = async (req, res, next) => {
   const token = req.cookies?.[COOKIE_NAME];
   if (!token) {
     return next(new AppError("Unauthorized", 401));
   }
   try {
     const payload = jwt.verify(token, getJwtSecret()) as AuthUser;
-    const currentUser = db
-      .prepare(
-        `SELECT id, email, role, name,
-                studio_name as studioName,
-                studio_role as studioRole,
-                phone
-         FROM users WHERE id = ?`,
-      )
-      .get(payload.id) as AuthUser | undefined;
+    const currentUser = await getUserById(payload.id);
     if (!currentUser) {
-      req.user = ensureUserFromToken(payload);
+      req.user = await ensureUserFromToken(payload);
       next();
       return;
     }

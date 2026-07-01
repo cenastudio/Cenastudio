@@ -3,7 +3,8 @@ import crypto from "crypto";
 import passport from "passport";
 import { Strategy as GitHubStrategy } from "passport-github2";
 import { db } from "../models/db.js";
-import { ensureUserSubscription } from "../services/authService.js";
+import { ensureUserSubscription, getUserById, upsertOAuthUser } from "../services/authService.js";
+import { prisma, shouldUsePrisma } from "../models/prisma.js";
 
 interface GitHubProfile {
   id: string;
@@ -40,6 +41,20 @@ if (githubClientId && githubClientSecret) {
       },
       async (accessToken: string, refreshToken: string, profile: GitHubProfile, done: any) => {
         try {
+          if (shouldUsePrisma) {
+            const email = profile.emails[0]?.value;
+            if (!email) throw new Error("GitHub profile did not provide an email");
+            const byGitHub = await prisma.user.findFirst({ where: { githubId: profile.id } });
+            if (byGitHub) return done(null, await getUserById(Number(byGitHub.id)));
+            const user = await upsertOAuthUser(email, profile.displayName || profile.username, {
+              role: getRoleForEmail(email) as "user" | "admin",
+            });
+            await prisma.user.update({
+              where: { id: BigInt(user.id) },
+              data: { githubId: profile.id, avatarUrl: profile.photos?.[0]?.value || null },
+            });
+            return done(null, user);
+          }
           // Check if user exists by GitHub ID
           let user = db
             .prepare("SELECT * FROM users WHERE github_id = ?")
@@ -87,7 +102,7 @@ if (githubClientId && githubClientSecret) {
 
           user = db.prepare("SELECT * FROM users WHERE id = ?").get(result.lastInsertRowid);
 
-          ensureUserSubscription(user!.id, "pro", "trial");
+          await ensureUserSubscription(user!.id, "pro", "trial");
 
           return done(null, user);
         } catch (error) {
@@ -104,8 +119,12 @@ passport.serializeUser((user: any, done) => {
 });
 
 // Deserialize user from session
-passport.deserializeUser((id: number, done) => {
+passport.deserializeUser(async (id: number, done) => {
   try {
+    if (shouldUsePrisma) {
+      done(null, await getUserById(id));
+      return;
+    }
     const user = db.prepare("SELECT * FROM users WHERE id = ?").get(id) as Express.User | null;
     done(null, user);
   } catch (error) {

@@ -1,5 +1,6 @@
 import type { RequestHandler } from "express";
 import { db } from "../models/db.js";
+import { prisma, shouldUsePrisma } from "../models/prisma.js";
 
 interface StudioSettingsRow {
   studio_name: string;
@@ -44,9 +45,18 @@ function clean(value: unknown, fallback = "") {
   return typeof value === "string" ? value.trim().slice(0, 300) : fallback;
 }
 
-export const getStudioSettings: RequestHandler = (req, res, next) => {
+export const getStudioSettings: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
+    if (shouldUsePrisma) {
+      const row = await prisma.studioSetting.findUnique({ where: { userId: BigInt(userId) } });
+      res.json({ success: true, data: row ? {
+        studioName: row.studioName, legalName: row.legalName, document: row.document,
+        email: row.email, phone: row.phone, city: row.city, website: row.website,
+        signature: row.signature, primaryColor: row.primaryColor,
+      } : DEFAULT_SETTINGS });
+      return;
+    }
     const row = db
       .prepare(
         `SELECT studio_name, legal_name, document, email, phone, city, website, signature, primary_color
@@ -60,7 +70,7 @@ export const getStudioSettings: RequestHandler = (req, res, next) => {
   }
 };
 
-export const updateStudioSettings: RequestHandler = (req, res, next) => {
+export const updateStudioSettings: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const settings = {
@@ -76,6 +86,16 @@ export const updateStudioSettings: RequestHandler = (req, res, next) => {
         ? String(req.body.primaryColor)
         : DEFAULT_SETTINGS.primaryColor,
     };
+
+    if (shouldUsePrisma) {
+      await prisma.studioSetting.upsert({
+        where: { userId: BigInt(userId) },
+        create: { userId: BigInt(userId), ...settings },
+        update: { ...settings, updatedAt: new Date() },
+      });
+      res.json({ success: true, data: settings });
+      return;
+    }
 
     db.prepare(
       `INSERT INTO studio_settings (

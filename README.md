@@ -2,7 +2,24 @@
 
 Inteligência artificial para produção audiovisual — roteiros, callsheets, decupagem, orçamentos, CRM, reviews de vídeos e muito mais.
 
-**Última atualização:** 29 de Junho de 2026
+**Última atualização:** 30 de Junho de 2026
+
+## 📚 Documentação
+
+- **[SYSTEM_DOCUMENTATION.md](SYSTEM_DOCUMENTATION.md)** - Documentação completa do sistema (arquitetura, componentes, API, banco de dados)
+- **[SENIOR_LEVEL_ROADMAP.md](SENIOR_LEVEL_ROADMAP.md)** - Roadmap para alcançar nível Senior (12 melhorias priorizadas)
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Guia para contribuidores (setup, padrões de código, processo de PR)
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Decisões de arquitetura (10 ADRs documentados)
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Guia de deployment (local, Vercel, self-hosted, Docker)
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Guia de troubleshooting (problemas comuns e soluções)
+- **[SECURITY.md](SECURITY.md)** - Política de segurança (report de vulnerabilidades, secrets management)
+- **[ONBOARDING.md](ONBOARDING.md)** - Guia para novos desenvolvedores (setup, estrutura, primeiras tarefas)
+- **[API_GUIDE.md](API_GUIDE.md)** - Guia da API (endpoints, autenticação, exemplos)
+- **[API_INTERNAL.md](API_INTERNAL.md)** - Documentação interna da API (serviços, patterns, testing)
+- **[PERFORMANCE.md](PERFORMANCE.md)** - Guia de performance (métricas, otimizações, escalabilidade)
+- **[CHANGELOG.md](CHANGELOG.md)** - Histórico de versões e mudanças
+- **[DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)** - Diagrama e documentação do banco de dados
+- **[DECISION_LOG.md](DECISION_LOG.md)** - Log de decisões técnicas (13 decisões documentadas)
 
 ## 🌍 Internacionalização (i18n)
 
@@ -106,10 +123,13 @@ Altere estas senhas imediatamente em produção.
 | `npm run preview` | Preview do build de produção |
 | `npm run check` | TypeScript check (`tsc --noEmit`) |
 | `npm run test` | Test suite (`vitest run`) |
+| `npm run test:coverage` | Test suite com relatório de cobertura |
+| `npm run ci` | TypeScript + coverage + build, igual ao GitHub Actions |
 | `npm run e2e` | QA visual e fluxos críticos com Playwright |
 | `npm run landing:capture` | Regera os 3 prints reais da landing em tema claro |
 | `npm run verify` | TypeScript + testes + build |
 | `npm run launch:check` | Valida env essencial e RLS do Supabase |
+| `npm run smoke:prisma` | Smoke operacional contra `SMOKE_BASE_URL` ou localhost |
 | `npm run lint` | TypeScript check (`tsc --noEmit`) |
 | `npm run format` | Prettier format |
 
@@ -310,7 +330,7 @@ Veja `.env.example`. O servidor **falha ao iniciar** se `JWT_SECRET` estiver fal
 
 ## 📚 Documentação Adicional
 
-- `UPGRADE_LOG.md` — Detalhes completos de todas implementações e migrações
+- `CHANGELOG.md` — Histórico de versões, implementações e migrações
 - `.env.example` — Template de variáveis de ambiente
 - `shared/tools.ts` — Definição das 12 ferramentas IA
 - `shared/site.ts` — Configurações de landing, pricing e navegação

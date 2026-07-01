@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
-import { Github, Loader2 } from "lucide-react";
+import { CheckCircle2, Github, Loader2 } from "lucide-react";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -60,6 +60,24 @@ export default function Login() {
         <AuthLoadingAnimation message={t("app.auth.validatingAccess")} />
       ) : (
         <>
+          <div className="mb-5 border border-frame-orange/25 bg-frame-orange/5 p-3">
+            <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-orange">
+              {t("app.auth.operationalAccess") as string}
+            </p>
+            <div className="mt-3 grid gap-2">
+              {[
+                t("app.auth.accessItemProjects") as string,
+                t("app.auth.accessItemStudio") as string,
+                t("app.auth.accessItemDelivery") as string,
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-2 text-[0.72rem] text-frame-gray-light">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-frame-orange" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <AuthField label={t("app.auth.email")}>
             <input
               type="email"

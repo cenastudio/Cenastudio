@@ -4,6 +4,12 @@ import { createApp } from "../server/app.js";
 const app = createApp();
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
+  const rootPath = req.query._rootPath;
+  if (rootPath) {
+    const normalizedPath = Array.isArray(rootPath) ? rootPath[0] : rootPath;
+    req.url = `/${normalizedPath}`;
+  }
+
   const apiPath = req.query._apiPath;
   if (apiPath) {
     const normalizedPath = Array.isArray(apiPath) ? apiPath.join("/") : apiPath;

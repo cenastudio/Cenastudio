@@ -28,8 +28,18 @@ export function assertLaunchReadyEnvironment() {
     issues.push("SUPABASE_SERVICE_ROLE_KEY is required for admin-managed accounts.");
   }
 
+  const persistentDatabaseUrl =
+    process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL || process.env.POSTGRES_URL;
+
+  if (!persistentDatabaseUrl && process.env.ALLOW_EPHEMERAL_SQLITE !== "true") {
+    issues.push(
+      "DATABASE_URL, POSTGRES_PRISMA_URL, or POSTGRES_URL is required for persistent Supabase Postgres production storage.",
+    );
+  }
+
   const databasePath = process.env.DATABASE_PATH;
   const usingUnsafeVercelSqlite =
+    !persistentDatabaseUrl &&
     process.env.VERCEL === "1" &&
     (!databasePath || databasePath.startsWith("/tmp") || databasePath.startsWith("./") || databasePath.startsWith("../"));
   if (usingUnsafeVercelSqlite && process.env.ALLOW_EPHEMERAL_SQLITE !== "true") {

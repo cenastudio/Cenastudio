@@ -4,6 +4,50 @@ import { AppError } from "../middleware/errorHandler.js";
 import type { DbClient, DbCount, DbSum } from "../models/types.js";
 import { notifyAdmins, notifyUser } from "../services/notificationService.js";
 import { lookupCnpj } from "../services/cnpjService.js";
+import { prisma, shouldUsePrisma } from "../models/prisma.js";
+import { jsonSafe, withSnakeCase } from "../utils/prismaSerialization.js";
+
+const clientFields = {
+  userId: "user_id",
+  workflowStage: "workflow_stage",
+  totalSpent: "total_spent",
+  firstContactAt: "first_contact_at",
+  lastContactAt: "last_contact_at",
+  companySize: "company_size",
+  annualRevenue: "annual_revenue",
+  contactPerson: "contact_person",
+  contactRole: "contact_role",
+  billingCycle: "billing_cycle",
+  paymentMethod: "payment_method",
+  taxId: "tax_id",
+  createdAt: "created_at",
+  updatedAt: "updated_at",
+};
+
+function serializeClient(value: any) {
+  return withSnakeCase(value, clientFields);
+}
+
+function serializeOpportunityRecord(value: any) {
+  return withSnakeCase(value, {
+    userId: "user_id", clientId: "client_id", estimatedValue: "estimated_value",
+    expectedCloseDate: "expected_close_date", lostReason: "lost_reason",
+    createdAt: "created_at", updatedAt: "updated_at",
+  });
+}
+
+function serializeInteractionRecord(value: any) {
+  return withSnakeCase(value, {
+    userId: "user_id", clientId: "client_id", opportunityId: "opportunity_id",
+    nextFollowUp: "next_follow_up", createdAt: "created_at",
+  });
+}
+
+function clientBigInt(value: unknown) {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) throw new AppError("Cliente inválido", 400);
+  return BigInt(parsed);
+}
 
 export const getCompanyByCnpj: RequestHandler = async (req, res, next) => {
   try {
@@ -15,10 +59,30 @@ export const getCompanyByCnpj: RequestHandler = async (req, res, next) => {
 };
 
 // List all clients for current user
-export const listClients: RequestHandler = (req, res, next) => {
+export const listClients: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const { status, segment, search } = req.query;
+
+    if (shouldUsePrisma) {
+      const rows = await prisma.client.findMany({
+        where: {
+          userId: BigInt(userId),
+          ...(status ? { status: String(status) } : {}),
+          ...(segment ? { segment: String(segment) } : {}),
+          ...(search
+            ? {
+                OR: ["name", "company", "email"].map((field) => ({
+                  [field]: { contains: String(search), mode: "insensitive" as const },
+                })),
+              }
+            : {}),
+        },
+        orderBy: { updatedAt: "desc" },
+      });
+      res.json({ success: true, data: rows.map(serializeClient) });
+      return;
+    }
 
     let query = "SELECT * FROM clients WHERE user_id = ?";
     const params: any[] = [userId];
@@ -49,10 +113,33 @@ export const listClients: RequestHandler = (req, res, next) => {
 };
 
 // Get specific client details
-export const getClient: RequestHandler = (req, res, next) => {
+export const getClient: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const clientId = req.params.id;
+
+    if (shouldUsePrisma) {
+      const client = await prisma.client.findFirst({
+        where: { id: clientBigInt(clientId), userId: BigInt(userId) },
+        include: {
+          projects: { select: { id: true, name: true, status: true, createdAt: true }, orderBy: { createdAt: "desc" } },
+          opportunities: { orderBy: { updatedAt: "desc" } },
+          interactions: { orderBy: { createdAt: "desc" }, take: 10 },
+        },
+      });
+      if (!client) throw new AppError("Cliente não encontrado ou acesso não autorizado", 404);
+      const { projects, opportunities, interactions, ...record } = client;
+      res.json({
+        success: true,
+        data: {
+          client: serializeClient(record),
+          projects: projects.map((item) => withSnakeCase(item as any, { createdAt: "created_at" })),
+          opportunities: opportunities.map(serializeOpportunityRecord),
+          interactions: interactions.map(serializeInteractionRecord),
+        },
+      });
+      return;
+    }
 
     const client = db
       .prepare("SELECT * FROM clients WHERE id = ? AND user_id = ?")
@@ -92,7 +179,7 @@ export const getClient: RequestHandler = (req, res, next) => {
 };
 
 // Create a new client
-export const createClient: RequestHandler = (req, res, next) => {
+export const createClient: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const {
@@ -104,6 +191,27 @@ export const createClient: RequestHandler = (req, res, next) => {
 
     if (!name || !name.trim()) {
       throw new AppError("O nome do cliente é obrigatório", 400);
+    }
+
+    if (shouldUsePrisma) {
+      const now = new Date();
+      const created = await prisma.client.create({
+        data: {
+          userId: BigInt(userId), name: name.trim(), company: company?.trim() || null,
+          email: email?.trim() || null, phone: phone?.trim() || null, segment: segment || "direct",
+          status: status || "lead", notes: notes?.trim() || null, address: address?.trim() || null,
+          city: city?.trim() || null, state: state?.trim() || null, country: country?.trim() || null,
+          website: website?.trim() || null, linkedin: linkedin?.trim() || null,
+          instagram: instagram?.trim() || null, industry: industry?.trim() || null,
+          companySize: company_size || null, annualRevenue: annual_revenue != null ? Number(annual_revenue) : null,
+          contactPerson: contact_person?.trim() || null, contactRole: contact_role?.trim() || null,
+          billingCycle: billing_cycle || null, paymentMethod: payment_method || null,
+          taxId: tax_id?.trim() || null, totalSpent: total_spent != null ? Number(total_spent) || 0 : 0,
+          workflowStage: workflow_stage || "prospect", firstContactAt: now, lastContactAt: now,
+        },
+      });
+      res.json({ success: true, data: serializeClient(created) });
+      return;
     }
 
     const result = db
@@ -167,7 +275,7 @@ export const createClient: RequestHandler = (req, res, next) => {
 };
 
 // Update client
-export const updateClient: RequestHandler = (req, res, next) => {
+export const updateClient: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const clientId = req.params.id;
@@ -177,6 +285,34 @@ export const updateClient: RequestHandler = (req, res, next) => {
       industry, company_size, annual_revenue, contact_person, contact_role,
       billing_cycle, payment_method, tax_id,
     } = req.body;
+
+    if (shouldUsePrisma) {
+      const id = clientBigInt(clientId);
+      const client = await prisma.client.findFirst({ where: { id, userId: BigInt(userId) } });
+      if (!client) throw new AppError("Cliente não encontrado ou acesso não autorizado", 404);
+      const updated = await prisma.client.update({
+        where: { id },
+        data: {
+          name: name?.trim() ?? client.name, company: company?.trim() ?? client.company,
+          email: email?.trim() ?? client.email, phone: phone?.trim() ?? client.phone,
+          segment: segment ?? client.segment, status: status ?? client.status,
+          notes: notes?.trim() ?? client.notes, address: address?.trim() ?? client.address,
+          city: city?.trim() ?? client.city, state: state?.trim() ?? client.state,
+          country: country?.trim() ?? client.country, website: website?.trim() ?? client.website,
+          linkedin: linkedin?.trim() ?? client.linkedin, instagram: instagram?.trim() ?? client.instagram,
+          industry: industry?.trim() ?? client.industry, companySize: company_size ?? client.companySize,
+          annualRevenue: annual_revenue != null ? Number(annual_revenue) : client.annualRevenue,
+          contactPerson: contact_person?.trim() ?? client.contactPerson,
+          contactRole: contact_role?.trim() ?? client.contactRole,
+          billingCycle: billing_cycle ?? client.billingCycle,
+          paymentMethod: payment_method ?? client.paymentMethod, taxId: tax_id?.trim() ?? client.taxId,
+          totalSpent: total_spent !== undefined ? Number(total_spent) : client.totalSpent,
+          lastContactAt: new Date(), updatedAt: new Date(),
+        },
+      });
+      res.json({ success: true, data: serializeClient(updated) });
+      return;
+    }
 
     const client = db
       .prepare("SELECT * FROM clients WHERE id = ? AND user_id = ?")
@@ -235,11 +371,23 @@ export const updateClient: RequestHandler = (req, res, next) => {
 };
 
 // Patch client (partial update for workflow_stage, etc.)
-export const patchClient: RequestHandler = (req, res, next) => {
+export const patchClient: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const clientId = req.params.id;
     const { workflow_stage } = req.body;
+
+    if (shouldUsePrisma) {
+      const id = clientBigInt(clientId);
+      const client = await prisma.client.findFirst({ where: { id, userId: BigInt(userId) } });
+      if (!client) throw new AppError("Cliente não encontrado ou acesso não autorizado", 404);
+      const updated = await prisma.client.update({
+        where: { id },
+        data: workflow_stage ? { workflowStage: workflow_stage, updatedAt: new Date() } : {},
+      });
+      res.json({ success: true, data: serializeClient(updated) });
+      return;
+    }
 
     const client = db
       .prepare("SELECT * FROM clients WHERE id = ? AND user_id = ?")
@@ -264,10 +412,19 @@ export const patchClient: RequestHandler = (req, res, next) => {
 };
 
 // Delete client
-export const deleteClient: RequestHandler = (req, res, next) => {
+export const deleteClient: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const clientId = req.params.id;
+
+    if (shouldUsePrisma) {
+      const result = await prisma.client.deleteMany({
+        where: { id: clientBigInt(clientId), userId: BigInt(userId) },
+      });
+      if (result.count === 0) throw new AppError("Cliente não encontrado ou acesso não autorizado", 404);
+      res.json({ success: true, data: { id: Number(clientId) } });
+      return;
+    }
 
     const result = db.prepare("DELETE FROM clients WHERE id = ? AND user_id = ?").run(clientId, userId);
 
@@ -282,9 +439,33 @@ export const deleteClient: RequestHandler = (req, res, next) => {
 };
 
 // Get client statistics
-export const getClientStats: RequestHandler = (req, res, next) => {
+export const getClientStats: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
+
+    if (shouldUsePrisma) {
+      const owner = BigInt(userId);
+      const [totalClients, activeClients, leadClients, totals, grouped, recent] = await Promise.all([
+        prisma.client.count({ where: { userId: owner } }),
+        prisma.client.count({ where: { userId: owner, status: "active" } }),
+        prisma.client.count({ where: { userId: owner, status: "lead" } }),
+        prisma.client.aggregate({ where: { userId: owner }, _sum: { totalSpent: true } }),
+        prisma.client.groupBy({ by: ["segment"], where: { userId: owner }, _count: { _all: true } }),
+        prisma.interaction.findMany({
+          where: { client: { userId: owner } }, include: { client: { select: { name: true } } },
+          orderBy: { createdAt: "desc" }, take: 5,
+        }),
+      ]);
+      res.json({
+        success: true,
+        data: {
+          totalClients, activeClients, leadClients, totalRevenue: totals._sum.totalSpent || 0,
+          bySegment: grouped.map((item) => ({ segment: item.segment, count: item._count._all })),
+          recentActivity: recent.map((item) => ({ ...serializeInteractionRecord(item), client_name: item.client?.name || null })),
+        },
+      });
+      return;
+    }
 
     const totalClients = db.prepare("SELECT COUNT(*) as c FROM clients WHERE user_id = ?").get(userId) as DbCount;
     const activeClients = db.prepare("SELECT COUNT(*) as c FROM clients WHERE user_id = ? AND status = 'active'").get(userId) as DbCount;

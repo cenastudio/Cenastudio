@@ -1,11 +1,27 @@
+import SessionGuide from "./SessionGuide";
+
 interface FormProps {
   data: Record<string, string>;
   onChange: (key: string, value: string) => void;
 }
 
 export default function BudgetForm({ data, onChange }: FormProps) {
+  const completed = [
+    data.tipo,
+    data.dias || data.locacoes,
+    data.equipe || data.camera || data.edicao,
+  ].filter(Boolean).length;
+
   return (
     <div className="space-y-4">
+      <SessionGuide
+        label="Sessão orçamento"
+        title="Transforme escopo em premissas de custo."
+        steps={["Formato e volume", "Diárias e locações", "Equipe, equipamento e pós"]}
+        output="Saída esperada: orçamento base com categorias claras para proposta e financeiro."
+        completed={completed}
+      />
+
       {/* Seção 1: Escopo do Projeto */}
       <div>
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">

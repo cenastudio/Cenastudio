@@ -1,11 +1,27 @@
+import SessionGuide from "./SessionGuide";
+
 interface FormProps {
   data: Record<string, string>;
   onChange: (key: string, value: string) => void;
 }
 
 export default function BriefingForm({ data, onChange }: FormProps) {
+  const completed = [
+    data.cliente,
+    data.objetivo,
+    data.publico || data.veiculacao,
+  ].filter(Boolean).length;
+
   return (
     <div className="space-y-4">
+      <SessionGuide
+        label="Sessão briefing"
+        title="Transforme conversa solta em direção de produção."
+        steps={["Cliente e segmento", "Objetivo e mensagem", "Público, canal e restrições"]}
+        output="Saída esperada: briefing claro para roteiro, proposta, cronograma e aprovação inicial."
+        completed={completed}
+      />
+
       {/* Seção 1: Cliente */}
       <div>
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">

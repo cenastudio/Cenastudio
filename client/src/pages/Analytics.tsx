@@ -279,9 +279,9 @@ function AnalyticsContent() {
           detail: `${summary.recurringClients} cliente(s) recorrente(s)`,
         },
         {
-          label: "Forecast comercial",
+          label: "Previsão de novos jobs",
           value: formatCurrency(summary.weightedPipeline),
-          detail: `${formatCurrency(summary.openPipeline)} em pipeline`,
+          detail: `${formatCurrency(summary.openPipeline)} em conversas abertas`,
         },
       ]
     : [];
@@ -510,10 +510,10 @@ function AnalyticsContent() {
           <>
             <section className="grid grid-cols-1 gap-3 lg:grid-cols-[0.9fr_1.1fr]">
               <div className="app-panel p-5 sm:p-6">
-                <p className="frame-label">// FINANCEIRO / ERP</p>
-                <h2 className="mt-2 text-2xl font-semibold">Operação financeira ligada ao CRM</h2>
+                <p className="frame-label">// FINANCEIRO DO ESTÚDIO</p>
+                <h2 className="mt-2 text-2xl font-semibold">Dinheiro conectado ao cliente e ao job</h2>
                 <p className="mt-3 text-sm leading-relaxed text-frame-gray-light">
-                  O dinheiro precisa seguir o mesmo fluxo do projeto: cliente no CRM, proposta aprovada, entrada no caixa, custo controlado e margem visível.
+                  Quando a proposta fecha, ela não pode sumir numa planilha. Aqui você enxerga o que entrou, o que falta receber, o que custa manter a operação e a margem de cada movimento.
                 </p>
                 <div className="mt-5 flex flex-wrap gap-2">
                   {["Cliente", "Proposta", "Receita", "Custo", "Margem"].map((step, index) => (

@@ -6,6 +6,7 @@ import AnimatedModal from "@/components/AnimatedModal";
 import EmptyState from "@/components/EmptyState";
 import { toast } from "sonner";
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
   Building2,
@@ -69,13 +70,13 @@ type StageDefinition = {
 } & ({ labelKey: string; label?: never } | { label: string; labelKey?: never });
 
 const STAGE_DEFINITIONS: StageDefinition[] = [
-  { id: "prospect", labelKey: "app.pipeline.lead", description: "Entrou no radar", color: "border-sky-400/40", dot: "bg-sky-400" },
-  { id: "meeting", label: "Diagnóstico", description: "Reunião e briefing", color: "border-amber-400/40", dot: "bg-amber-400" },
-  { id: "proposal", labelKey: "app.pipeline.proposal", description: "Escopo enviado", color: "border-violet-400/40", dot: "bg-violet-400" },
-  { id: "negotiation", labelKey: "app.pipeline.negotiation", description: "Ajustes finais", color: "border-orange-400/50", dot: "bg-frame-orange" },
-  { id: "paused", label: "Pausado", description: "Cliente em pausa", color: "border-gray-400/40", dot: "bg-gray-400" },
-  { id: "won", labelKey: "app.pipeline.closedWon", description: "Virou projeto", color: "border-emerald-400/50", dot: "bg-emerald-400" },
-  { id: "lost", labelKey: "app.pipeline.closedLost", description: "Encerrado", color: "border-red-400/45", dot: "bg-frame-red" },
+  { id: "prospect", labelKey: "app.pipeline.lead", description: "Primeiro interesse", color: "border-sky-400/40", dot: "bg-sky-400" },
+  { id: "meeting", label: "Diagnóstico", description: "Entender o job", color: "border-amber-400/40", dot: "bg-amber-400" },
+  { id: "proposal", labelKey: "app.pipeline.proposal", description: "Proposta na mesa", color: "border-violet-400/40", dot: "bg-violet-400" },
+  { id: "negotiation", labelKey: "app.pipeline.negotiation", description: "Ajustando para fechar", color: "border-orange-400/50", dot: "bg-frame-orange" },
+  { id: "paused", label: "Pausado", description: "Aguardando cliente", color: "border-gray-400/40", dot: "bg-gray-400" },
+  { id: "won", labelKey: "app.pipeline.closedWon", description: "Pronto para virar projeto", color: "border-emerald-400/50", dot: "bg-emerald-400" },
+  { id: "lost", labelKey: "app.pipeline.closedLost", description: "Sem avanço agora", color: "border-red-400/45", dot: "bg-frame-red" },
 ];
 
 interface PipelineStage {
@@ -114,6 +115,7 @@ function PipelineContent() {
   const [stats, setStats] = useState<PipelineStats | null>(null);
   const [clients, setClients] = useState<ClientOption[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState("all");
@@ -127,6 +129,7 @@ function PipelineContent() {
 
   const loadPipeline = async () => {
     setIsLoading(true);
+    setLoadError(false);
     try {
       const [opportunitiesRes, statsRes, clientsRes] = await Promise.all([
         fetch("/api/pipeline-opportunities", { credentials: "include" }),
@@ -140,10 +143,19 @@ function PipelineContent() {
         clientsRes.json(),
       ]);
 
+      if (!opportunitiesRes.ok || !statsRes.ok || !clientsRes.ok) {
+        throw new Error("Erro ao carregar pipeline");
+      }
+      if (!opportunitiesData.success || !statsData.success || !clientsData.success) {
+        throw new Error(opportunitiesData.error || statsData.error || clientsData.error || "Erro ao carregar pipeline");
+      }
+
       if (opportunitiesData.success) setOpportunities(opportunitiesData.data || []);
       if (statsData.success) setStats(statsData.data);
       if (clientsData.success) setClients(clientsData.data || []);
     } catch {
+      setLoadError(true);
+      setOpportunities([]);
       toast.error(t("app.errors.generic") as string);
     } finally {
       setIsLoading(false);
@@ -333,6 +345,13 @@ function PipelineContent() {
   };
 
   const stageById = (id: string) => stages.find((stage) => stage.id === id) || stages[0];
+  const hasActiveFilters = Boolean(search.trim() || stageFilter !== "all");
+  const clearFilters = () => {
+    setSearch("");
+    setStageFilter("all");
+  };
+  const openOpportunities = filteredOpportunities.filter((opp) => !["won", "lost"].includes(opp.stage));
+  const urgentOpportunities = openOpportunities.filter((opp) => getDueTone(opp.expected_close_date) !== "text-frame-gray-light").length;
 
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col overflow-x-hidden">
@@ -344,7 +363,7 @@ function PipelineContent() {
             <p className="frame-label mb-2">// {t("app.pipeline.title") as string}</p>
             <h1 className="frame-title text-[clamp(2rem,4vw,3.4rem)]">{t("app.pipeline.title") as string}</h1>
             <p className="text-frame-gray-light text-sm mt-2 max-w-2xl leading-relaxed">
-              {t("app.pipeline.noOpportunitiesDesc") as string}
+              Acompanhe cada conversa comercial do primeiro contato até virar projeto, sem perder proposta, valor e próximo passo.
             </p>
           </div>
 
@@ -391,13 +410,60 @@ function PipelineContent() {
           />
         </section>
 
+        <section className="border border-frame-gray-3 bg-frame-gray-1/15 px-4 py-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div>
+              <p className="frame-label text-frame-gray-light">{t("app.pipeline.filtered") as string}</p>
+              <p className="text-frame-white font-semibold mt-1">{filteredOpportunities.length}</p>
+            </div>
+            <div>
+              <p className="frame-label text-frame-gray-light">{t("app.pipeline.openDeals") as string}</p>
+              <p className="text-frame-white font-semibold mt-1">{openOpportunities.length}</p>
+            </div>
+            <div>
+              <p className="frame-label text-frame-gray-light">{t("app.pipeline.attention") as string}</p>
+              <p className={urgentOpportunities > 0 ? "text-amber-300 font-semibold mt-1" : "text-frame-white font-semibold mt-1"}>
+                {urgentOpportunities}
+              </p>
+            </div>
+            <div>
+              <p className="frame-label text-frame-gray-light">{t("app.pipeline.nextFocus") as string}</p>
+              <p className="text-frame-white font-semibold mt-1 truncate">{nextClosing?.title || t("app.common.noData") as string}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={clearFilters}
+            disabled={!hasActiveFilters}
+            className="frame-btn-ghost disabled:opacity-40 disabled:pointer-events-none"
+          >
+            {t("app.pipeline.clearFilters") as string}
+          </button>
+        </section>
+
         {isLoading ? (
           <div className="flex items-center justify-center py-24">
             <div className="h-8 w-8 animate-spin border-2 border-frame-gray-3 border-t-frame-orange" />
           </div>
+        ) : loadError ? (
+          <div className="border border-frame-red/30 bg-frame-red/5 py-16">
+            <EmptyState
+              icon={AlertCircle}
+              title={t("app.pipeline.loadError") as string}
+              description={t("app.pipeline.loadErrorDescription") as string}
+              action={{ label: t("app.common.tryAgain") as string, onClick: loadPipeline }}
+            />
+          </div>
         ) : filteredOpportunities.length === 0 ? (
           <div className="border border-frame-gray-3 bg-frame-gray-1/20 py-16">
-            <EmptyState icon={Inbox} title={t("app.pipeline.noOpportunities") as string} />
+            <EmptyState
+              icon={hasActiveFilters ? Search : Inbox}
+              title={t(hasActiveFilters ? "app.pipeline.noResults" : "app.pipeline.noOpportunities") as string}
+              description={t(hasActiveFilters ? "app.pipeline.noResultsDescription" : "app.pipeline.noOpportunitiesDesc") as string}
+              action={hasActiveFilters
+                ? { label: t("app.pipeline.clearFilters") as string, onClick: clearFilters }
+                : { label: t("app.pipeline.newOpportunity") as string, onClick: openCreateModal }}
+            />
           </div>
         ) : (
           <section className="flex gap-3 overflow-x-auto pb-4">
@@ -640,6 +706,7 @@ function OpportunityCard({
                 role="button"
                 tabIndex={0}
                 onClick={(event) => event.stopPropagation()}
+                aria-label={`${t("app.pipeline.actionsFor") as string} ${opportunity.title}`}
                 className="p-1 text-frame-gray-light hover:text-frame-orange"
               >
                 <MoreVertical className="w-4 h-4" />

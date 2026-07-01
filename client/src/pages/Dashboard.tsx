@@ -190,7 +190,7 @@ function DashboardContent() {
 
   const startProjectFromClient = () => {
     if (!clients.length) {
-      toast.info("O fluxo começa no CRM: cadastre um cliente antes de abrir o projeto.");
+      toast.info("O fluxo começa no Comercial: cadastre um cliente antes de abrir o job.");
       setLocation("/clients/new");
       return;
     }
@@ -204,22 +204,22 @@ function DashboardContent() {
       id: "commercial",
       icon: Building2,
       eyebrow: "01 / COMERCIAL",
-      title: "CRM",
+      title: "Comercial",
       description: "Cadastre o cliente, entenda a demanda e transforme a conversa em briefing, orçamento, proposta e contrato.",
       metric: String(clients.length),
       metricLabel: "clientes",
       route: clients.length ? "/clients" : "/clients/new",
-      action: clients.length ? "Abrir comercial" : "Cadastrar cliente",
+      action: clients.length ? "Abrir Comercial" : "Cadastrar cliente",
       steps: ["Cliente", "Pipeline", "Briefing", "Proposta", "Contrato"],
     },
     {
       id: "projects",
       icon: KanbanSquare,
-      eyebrow: "02 / PROJECT MANAGEMENT",
+      eyebrow: "02 / PRODUÇÃO",
       title: "Produção",
       description: "Depois da venda, o job vira produção: roteiro, decupagem, callsheet, cronograma, arquivos, revisão e entrega.",
       metric: String(activeProjects.length),
-      metricLabel: "projetos ativos",
+      metricLabel: "jobs ativos",
       route: focusProject ? `/project/${focusProject.id}` : "/tools",
       action: focusProject ? "Abrir hub" : "Ver Studio IA",
       steps: ["Roteiro", "Decupagem", "Callsheet", "Cronograma", "Entrega"],
@@ -228,12 +228,12 @@ function DashboardContent() {
       id: "finance",
       icon: WalletCards,
       eyebrow: "03 / FINANCEIRO",
-      title: "ERP",
+      title: "Financeiro",
       description: "Acompanhe o dinheiro do estúdio por cliente e por projeto: recebimentos, custos, recorrência e margem.",
       metric: String(activities.length),
       metricLabel: "movimentos recentes",
       route: "/analytics",
-      action: "Abrir ERP",
+      action: "Abrir Financeiro",
       steps: ["Receitas", "Custos", "A receber", "Margem", "Forecast"],
     },
   ];
