@@ -1,29 +1,31 @@
 {
   "version": 2,
   "buildCommand": "npm run build",
-  "builds": [
-    {
-      "src": "server/index.ts",
-      "use": "@vercel/node"
-    }
-  ],
+  "outputDirectory": "dist/public",
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "server/index.ts"
+      "dest": "/api/index.js"
     },
     {
       "src": "/health",
-      "dest": "server/index.ts"
+      "dest": "/api/index.js"
     },
     {
       "src": "/ready",
-      "dest": "server/index.ts"
+      "dest": "/api/index.js"
+    },
+    {
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",
-      "dest": "/dist/public/$1"
+      "dest": "/index.html"
     }
   ],
-  "outputDirectory": "dist/public"
+  "functions": {
+    "api/index.js": {
+      "runtime": "@vercel/node@3"
+    }
+  }
 }
