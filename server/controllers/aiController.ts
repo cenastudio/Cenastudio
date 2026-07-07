@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import { generateScriptSuggestions } from '../services/ai/scriptSuggestions';
-import { analyzeBudget } from '../services/ai/budgetAnalysis';
-import { generateProposal } from '../services/ai/proposalGenerator';
-import { summarizeInteraction } from '../services/ai/interactionSummarizer';
-import { analyzeSentiment } from '../services/ai/sentimentAnalysis';
-import { chatbotHelp } from '../services/ai/helpChatbot';
+import { generateScriptSuggestions } from '../services/ai/scriptSuggestions.js';
+import { analyzeBudget } from '../services/ai/budgetAnalysis.js';
+import { generateProposal } from '../services/ai/proposalGenerator.js';
+import { summarizeInteraction } from '../services/ai/interactionSummarizer.js';
+import { analyzeSentiment } from '../services/ai/sentimentAnalysis.js';
+import { chatbotHelp } from '../services/ai/helpChatbot.js';
 import { generateForTool, trackUsage } from '../services/aiService.js';
 import { checkAndIncrementUsage } from '../services/authService.js';
 import { db } from '../models/db.js';
