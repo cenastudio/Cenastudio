@@ -11,21 +11,9 @@
     }
   ],
   "routes": [
-    {
-      "src": "/api/.*",
-      "dest": "dist/index.js"
-    },
-    {
-      "src": "/assets/.*",
-      "dest": "dist/public/$0"
-    },
-    {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
-      "dest": "dist/public/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "dist/index.js"
-    }
+    { "src": "/api/(.*)", "dest": "dist/index.js" },
+    { "src": "/assets/(.*)", "dest": "dist/public/assets/$1" },
+    { "src": "/(.*\\.(?:js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|webp|avif|json|txt|xml|webmanifest))$", "dest": "dist/public/$1" },
+    { "src": "/(.*)", "dest": "dist/index.js" }
   ]
 }
