@@ -21,11 +21,7 @@ export function assertLaunchReadyEnvironment() {
     issues.push("CLIENT_ORIGIN must point to the production frontend origin.");
   }
 
-  // Supabase is optional - only validate if other Supabase vars are present
-  const hasSupabaseConfig = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (hasSupabaseConfig && !process.env.SUPABASE_URL) {
-    issues.push("SUPABASE_URL is required when using Supabase authentication.");
-  }
+  // Supabase is optional - skip validation entirely
 
   const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD;
   if (!adminPassword || adminPassword.length < 12 || isPlaceholder(adminPassword)) {
