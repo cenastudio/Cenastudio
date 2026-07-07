@@ -182,3 +182,49 @@ cookies.txt
 .checkout.txt
 add-progress-column.sql
 supabase-rls-policies.sql
+
+# Pastas internas
+docs/
+skills/
+uploads/
+
+# Docs de trabalho
+*_COMPLETA.md
+*_DEPLOY*.md
+*_GIT*.md
+CHECKLIST_*.md
+COMANDOS_*.md
+CREDENCIAIS_*.md
+DECISAO_*.txt
+DIAGNOSTICO_*.md
+ENV_*.md
+ERROS_*.md
+LIMPEZA_*.md
+PEGAR_*.md
+PERMITIR_*.md
+PERFORMANCE_EXPLICACAO.md
+PRE_*.md
+PRONTO_*.md
+PROXIMO_*.md
+PUSH_*.md
+RAILWAY_*.md
+RELATORIO_*.md
+RESOLVER_*.md
+RESPOSTA_*.md
+RESULTADO_*.txt
+RESUMO_*.md
+ROTAS_*.md
+SITUACAO_*.md
+STATUS_*.md
+VERIFICAR_*.md
+
+# Scripts de trabalho
+limpar-*.sh
+remover-*.sh
+PUSH_*.sh
+
+# Temporários
+cookies.txt
+.checkout.txt
+add-progress-column.sql
+supabase-rls-policies.sql
