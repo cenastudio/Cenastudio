@@ -47,3 +47,18 @@ supabase/.branches/
 # Misc
 uploads/
 .cache/
+
+# Deployment docs (NÃO COMMITAR - CONTÉM CREDENCIAIS)
+SETUP_ACCOUNTS.md
+STRIPE_SETUP.md
+RAILWAY_SETUP.md
+RAILWAY_ENV_VARS.txt
+STATUS_DEPLOY.md
+PROXIMOS_PASSOS.md
+DEPLOY_AGORA.md
+DEPLOY_GUIDE.md
+PEGAR_PUBLISHABLE_KEY.md
+.env.production.template
+CREDENCIAIS_TEMPLATE.md
+scripts/create-stripe-products.ts
+scripts/get-stripe-keys.ts
