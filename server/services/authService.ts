@@ -355,9 +355,18 @@ export async function getUserById(id: number): Promise<AuthUser | null> {
               must_reset_password as mustResetPassword
        FROM users WHERE id = ?`,
     )
-    .get(id) as (AuthUser & { mustResetPassword: number }) | undefined;
+    .get(id) as any;
   if (!row) return null;
-  return { ...row, mustResetPassword: Boolean(row.mustResetPassword) };
+  return {
+    id: row.id,
+    email: row.email,
+    role: row.role,
+    name: row.name,
+    studioName: row.studioName,
+    studioRole: row.studioRole,
+    phone: row.phone,
+    mustResetPassword: Boolean(row.mustResetPassword)
+  };
 }
 
 export async function ensureUserFromToken(tokenUser: AuthUser): Promise<AuthUser> {

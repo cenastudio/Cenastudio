@@ -294,7 +294,17 @@ export async function generateForTool(
             take: 10,
             select: { toolId: true, output: true, createdAt: true },
           });
-          projectContext = buildProjectContext({ name: project.name, description: project.description, clientName, goals, approvedDocs });
+          projectContext = buildProjectContext({
+            name: project.name,
+            description: project.description,
+            clientName,
+            goals,
+            approvedDocs: approvedDocs.map(doc => ({
+              toolId: doc.toolId || '',
+              output: doc.output || '',
+              createdAt: doc.createdAt
+            }))
+          });
         }
       } else {
         const project = db.prepare(
