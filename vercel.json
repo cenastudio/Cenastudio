@@ -1,25 +1,10 @@
 {
   "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "framework": null,
   "outputDirectory": "dist/public",
   "functions": {
-    "api/index.js": {
+    "api/*.js": {
       "includeFiles": "dist/**"
     }
-  },
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api"
-    },
-    {
-      "source": "/health",
-      "destination": "/api"
-    },
-    {
-      "source": "/ready",
-      "destination": "/api"
-    }
-  ]
+  }
 }
