@@ -24,7 +24,15 @@ import {
   getOverallAnalytics,
   getProjectAnalytics,
   getRevenueAnalytics,
+  getFinancialOverview,
+  createFinancialEntry,
+  updateFinancialEntry,
+  deleteFinancialEntry,
 } from "./controllers/analyticsController.js";
+import {
+  listPlans,
+  getPlan,
+} from "./controllers/plansController.js";
 import { exportPipeline } from "./controllers/exportController.js";
 import {
   createOpportunity,
@@ -34,6 +42,13 @@ import {
   listOpportunities,
   updateOpportunity,
 } from "./controllers/opportunitiesController.js";
+import {
+  createInteraction,
+  deleteInteraction,
+  getUpcomingFollowUps,
+  listInteractions,
+  updateInteraction,
+} from "./controllers/interactionsController.js";
 import {
   listUsers,
   updateUserPlan,
@@ -102,6 +117,34 @@ router.get("/pipeline-opportunity", authenticate, withParam("id", "id", getOppor
 router.post("/pipeline-opportunity", authenticate, createOpportunity);
 router.put("/pipeline-opportunity", authenticate, withParam("id", "id", updateOpportunity));
 router.delete("/pipeline-opportunity", authenticate, withParam("id", "id", deleteOpportunity));
+
+// Aliases for opportunities (more RESTful)
+router.get("/opportunities", authenticate, listOpportunities);
+router.get("/opportunities/stats", authenticate, getPipelineStats);
+router.get("/opportunities/:id", authenticate, withParam("id", "id", getOpportunity));
+router.post("/opportunities", authenticate, createOpportunity);
+router.put("/opportunities/:id", authenticate, withParam("id", "id", updateOpportunity));
+router.delete("/opportunities/:id", authenticate, withParam("id", "id", deleteOpportunity));
+
+// Interactions routes
+router.get("/interactions", authenticate, listInteractions);
+router.get("/interactions/follow-ups", authenticate, getUpcomingFollowUps);
+router.post("/interactions", authenticate, createInteraction);
+router.put("/interactions/:id", authenticate, withParam("id", "id", updateInteraction));
+router.delete("/interactions/:id", authenticate, withParam("id", "id", deleteInteraction));
+
+// Financial entries routes
+router.get("/financial-entries", authenticate, getFinancialOverview);
+router.post("/financial-entries", authenticate, createFinancialEntry);
+router.put("/financial-entries/:id", authenticate, withParam("id", "id", updateFinancialEntry));
+router.delete("/financial-entries/:id", authenticate, withParam("id", "id", deleteFinancialEntry));
+
+// Plans routes (public)
+router.get("/plans", listPlans);
+router.get("/plans/:id", getPlan);
+
+// Stats route (alias for analytics-overall)
+router.get("/stats", authenticate, getOverallAnalytics);
 router.get("/video-review", authenticate, withParam("id", "id", getVideoReview));
 router.put("/video-review", authenticate, withParam("id", "id", updateVideoReview));
 router.post("/video-review-share", authenticate, withParam("id", "reviewId", generateShareLink));

@@ -40,6 +40,7 @@ import { ownerOnly } from "../middleware/teamAccess.js";
 
 // Get overall analytics
 router.get("/overall", getOverallAnalytics);
+router.get("/dashboard", getOverallAnalytics); // Alias for compatibility
 
 // Get project-specific analytics
 router.get("/projects/:id", getProjectAnalytics);

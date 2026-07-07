@@ -51,7 +51,16 @@ SETUP_ACCOUNTS.md
 STRIPE_SETUP.md
 PEGAR_PUBLISHABLE_KEY.md
 CREDENCIAIS_TEMPLATE.md
+CREDENCIAIS_PRODUCAO.md
 scripts/create-stripe-products.ts
 scripts/get-stripe-keys.ts
 .vercel
 .env*
+
+# Docs locais com secrets
+VERCEL_ENV_VARS_TO_ADD.md
+SESSAO_*.md
+STATUS_COMPLETO_*.md
+LIMPEZA_*.md
+RESOLVER_*.md
+PUSH_*.md

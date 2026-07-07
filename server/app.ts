@@ -84,6 +84,7 @@ export function createApp() {
   });
   app.use(requestLogger);
   app.use(healthRoutes);
+  app.use("/api", healthRoutes); // Also mount under /api for consistency
 
   app.post(
     "/api/checkout/webhook",
