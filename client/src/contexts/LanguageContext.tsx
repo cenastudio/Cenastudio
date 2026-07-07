@@ -493,8 +493,6 @@ const TRANSLATIONS: Record<Language, Record<string, string | Record<string, unkn
         lastMonth: "Mês passado",
         custom: "Personalizado",
         noData: "Nenhum movimento financeiro ainda",
-      },
-      analytics: {
         yourDashboards: "Seus Dashboards",
         newDashboard: "Novo Dashboard",
         noDashboards: "Nenhum dashboard criado",
@@ -1722,8 +1720,6 @@ const TRANSLATIONS: Record<Language, Record<string, string | Record<string, unkn
         lastMonth: "Last month",
         custom: "Custom",
         noData: "No financial movement yet",
-      },
-      analytics: {
         yourDashboards: "Your Dashboards",
         newDashboard: "New Dashboard",
         noDashboards: "No dashboards created",
