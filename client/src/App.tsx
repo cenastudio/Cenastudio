@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Redirect, Route, Switch } from "wouter";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import FrameShell from "@/components/FrameShell";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -135,6 +136,7 @@ function App() {
                           <DemoModal />
                           <ForcePasswordReset />
                         </Suspense>
+                        <SpeedInsights />
                       </FrameShell>
                     </TooltipProvider>
                   </AppProvider>
