@@ -45,9 +45,9 @@ export default function Hero() {
             </p>
           </div>
 
-          <h1 className="landing-hero-title text-[clamp(3.4rem,6.2vw,6.5rem)] font-light leading-[0.95] tracking-tight">
+          <h1 className="landing-hero-title text-[clamp(3.4rem,6.2vw,6.5rem)] font-light leading-[1.05] tracking-tight">
             <HeroTitleLine>{t("app.landing.hero.titleLine1") as string}</HeroTitleLine>
-            <br />
+            {" "}
             <HeroTitleLine>{t("app.landing.hero.titleLine2") as string}</HeroTitleLine>
             {" "}
             <HeroTitleLine>{t("app.landing.hero.titleLine3") as string}</HeroTitleLine>
