@@ -18,7 +18,8 @@ async function loadDatabaseCtor() {
   try {
     // Dynamic import so the module is only loaded when SQLite is actually needed
     // (Prisma/Postgres deployments do not have better-sqlite3 installed).
-    const mod = await import("better-sqlite3");
+    const moduleName = "better-sqlite3";
+    const mod = await import(moduleName);
     DatabaseCtor = (mod as any).default ?? mod;
     return DatabaseCtor;
   } catch (err) {

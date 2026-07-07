@@ -287,7 +287,10 @@ export async function generateForTool(
             if (client) clientName = client.company || client.name || "";
           }
           let goals: Record<string, string> = {};
-          try { goals = JSON.parse(project.metadataJson || "{}").creativeGoals || {}; } catch {}
+          try {
+            const metadata = JSON.parse(String(project.metadataJson || "{}"));
+            goals = metadata.creativeGoals || {};
+          } catch {}
           const approvedDocs = await prisma.generation.findMany({
             where: { userId: BigInt(userId), projectId: BigInt(pid) },
             orderBy: { createdAt: "desc" },
