@@ -340,7 +340,8 @@ export default function StudioShell() {
           ) : (
             <>
               {/* Main workspace (Inputs & Forms) — collapsible */}
-              <div className={`transition-all duration-200 overflow-hidden shrink-0 ${workspaceCollapsed ? "w-0" : "w-auto md:w-[380px] lg:w-[420px]"}`}>
+              {/* Mobile stacks panels in a column, so height is the collapse axis there (h-0); md+ stacks in a row, so width stays the collapse axis (w-0), unchanged from before. */}
+              <div className={`transition-all duration-200 overflow-hidden shrink-0 ${workspaceCollapsed ? "h-0 w-auto md:h-auto md:w-0" : "w-auto md:w-[380px] lg:w-[420px] max-h-[42vh] md:max-h-none"}`}>
                 <ToolWorkspace
                   tool={tool}
                   formData={formData}
@@ -365,14 +366,14 @@ export default function StudioShell() {
                 />
               </div>
 
-              {/* Workspace toggle — orange chevron icon */}
+              {/* Workspace toggle — orange chevron icon. Visible on mobile too (rotated to point up/down) since the panels stack vertically there. */}
               <button
                 type="button"
                 onClick={() => setWorkspaceCollapsed(!workspaceCollapsed)}
-                className="hidden md:flex items-center justify-center w-5 shrink-0 transition-colors"
+                className="flex items-center justify-center w-full h-5 md:w-5 md:h-auto shrink-0 transition-colors"
                 title={workspaceCollapsed ? "Mostrar formulário" : "Esconder formulário"}
               >
-                <ChevronLeft className={`w-4 h-4 text-frame-orange transition-transform ${workspaceCollapsed ? "rotate-180" : ""}`} />
+                <ChevronLeft className={`w-4 h-4 text-frame-orange transition-transform md:rotate-0 ${workspaceCollapsed ? "rotate-90 md:rotate-180" : "-rotate-90 md:rotate-0"}`} />
               </button>
 
               {/* Output and Refinement Chat Panel */}

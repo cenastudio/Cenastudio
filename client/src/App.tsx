@@ -31,7 +31,6 @@ const Collaborators = lazy(() => import("@/pages/Collaborators"));
 const TeamPage = lazy(() => import("@/pages/Team"));
 const CompanySettings = lazy(() => import("@/pages/CompanySettings"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
-const Home = lazy(() => import("@/pages/Home"));
 const Projects = lazy(() => import("@/pages/Projects"));
 const ProductionShell = lazy(() => import("@/pages/ProductionShell"));
 const CommercialHub = lazy(() => import("@/pages/CommercialHub"));
