@@ -35,9 +35,11 @@ function ensureDatabase() {
     if (!shouldUsePrisma) {
       sqliteInitReady = initDatabase();
     }
-    // Temporarily disabled to test Vercel deployment
-    // prismaCoreReady = initPrismaCoreData();
-    prismaCoreReady = Promise.resolve();
+    if (shouldUsePrisma) {
+      prismaCoreReady = initPrismaCoreData();
+    } else {
+      prismaCoreReady = Promise.resolve();
+    }
     databaseInitialized = true;
   }
 }
