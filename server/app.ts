@@ -26,8 +26,9 @@ let sqliteInitReady: Promise<void> | null = null;
 
 function ensureDatabase() {
   if (!databaseInitialized) {
-    // Skip heavy validations in serverless cold start
-    if (process.env.VERCEL !== "1") {
+    // Skip validations in production serverless - they cause cold start crashes
+    // Validations run on local dev only
+    if (process.env.NODE_ENV !== "production") {
       assertLaunchReadyEnvironment();
       requireEnvOrThrow();
     }
