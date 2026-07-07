@@ -53,3 +53,5 @@ PEGAR_PUBLISHABLE_KEY.md
 CREDENCIAIS_TEMPLATE.md
 scripts/create-stripe-products.ts
 scripts/get-stripe-keys.ts
+.vercel
+.env*
