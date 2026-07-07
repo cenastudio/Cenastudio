@@ -1,6 +1,4 @@
 {
-  "buildCommand": "npm ci && npm run build",
-  "installCommand": "npm ci",
   "outputDirectory": "dist/public",
   "functions": {
     "api/*.js": {
