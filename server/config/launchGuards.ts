@@ -9,6 +9,7 @@ export function assertLaunchReadyEnvironment() {
   if (process.env.NODE_ENV !== "production") return;
 
   const issues: string[] = [];
+  // Force rebuild: 2026-07-05 01:02 - Remove Supabase requirement
   const clientOrigin = process.env.CLIENT_ORIGIN;
   const jwtSecret = process.env.JWT_SECRET;
 
