@@ -9,8 +9,21 @@
   ],
   "routes": [
     {
-      "src": "/(.*)",
+      "src": "/api/(.*)",
       "dest": "server/index.ts"
+    },
+    {
+      "src": "/health",
+      "dest": "server/index.ts"
+    },
+    {
+      "src": "/ready",
+      "dest": "server/index.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/dist/public/$1"
     }
-  ]
+  ],
+  "outputDirectory": "dist/public"
 }

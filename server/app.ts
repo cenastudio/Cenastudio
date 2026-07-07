@@ -117,13 +117,10 @@ export function createApp() {
 
   app.use("/api", apiRouter);
 
-  if (process.env.NODE_ENV === "production") {
-    // In Vercel serverless, __dirname is /var/task/server/ after bundling
-    // But static files are in /var/task/dist/public/
-    const staticPath = process.env.VERCEL
-      ? path.resolve(process.cwd(), "dist/public")
-      : path.resolve(__dirname, "public");
-
+  // In Vercel, static files are served directly by the platform
+  // Only serve static files in non-Vercel environments
+  if (process.env.NODE_ENV === "production" && !process.env.VERCEL) {
+    const staticPath = path.resolve(__dirname, "public");
     app.use(express.static(staticPath));
     app.get("*", (_req, res) => {
       res.sendFile(path.join(staticPath, "index.html"));
