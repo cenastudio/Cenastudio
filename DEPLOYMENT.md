@@ -199,7 +199,7 @@ curl https://cenastudio.com.br/api/auth/providers
 DATABASE_URL="postgresql://postgres.<project-ref>:<db-password>@aws-1-us-east-1.pooler.supabase.com:5432/postgres?pgbouncer=true&connection_limit=1"
 ```
 
-No projeto atual, o `project-ref` é `vylxwhuuqluloxkhlsmd`.
+O `project-ref` é o identificador único do seu projeto Supabase, encontrado na URL do dashboard: `https://supabase.com/dashboard/project/<project-ref>`.
 
 ### 6. Preparar Supabase Postgres
 
@@ -228,17 +228,17 @@ vercel --prod
 
 O Prisma 7 usa `@prisma/adapter-pg` com pool máximo padrão de uma conexão por instância serverless, timeout de conexão padrão de 30s e retry curto para erros transitórios do pooler. Ajuste `DATABASE_POOL_MAX`, `DATABASE_CONNECT_TIMEOUT_MS` e `DATABASE_TRANSIENT_RETRIES` somente após medir a capacidade do pooler.
 
-### Validação de produção em 30/06/2026
+### Validação de Produção
 
-- Deployment atual: `dpl_J8f2jBNL7ZwfEEHWGffqoV6eUY6g`
-- Alias: `https://frame-ai-director-correto.vercel.app`
-- `GET /health`: 200
-- `GET /ready`: 200, banco pronto
-- `ALLOW_EPHEMERAL_SQLITE` removido do ambiente `production`
-- Smoke de produção executado com `SMOKE_BASE_URL=https://frame-ai-director-correto.vercel.app npm run smoke:prisma`
-- Checks validados: health, ready, auth, clientes, projetos, oportunidades, interações, colaboradores, membros de projeto, arquivos via Supabase Storage, video reviews, financeiro e analytics
+Após o deploy, valide os seguintes endpoints:
 
-Deploys anteriores apresentaram timeout transitório do pooler sob rajadas frias. O adapter usa uma conexão por instância, timeout explícito e retry curto; esse comportamento deve continuar sendo observado nos logs.
+- `GET /health` - deve retornar 200 (liveness check)
+- `GET /ready` - deve retornar 200 (readiness check com banco)
+- Remova `ALLOW_EPHEMERAL_SQLITE` do ambiente `production`
+- Execute smoke tests: `SMOKE_BASE_URL=https://seu-dominio.com npm run smoke:prisma`
+- Valide: health, ready, auth, clientes, projetos, oportunidades, interações, colaboradores, membros de projeto, arquivos via Supabase Storage, video reviews, financeiro e analytics
+
+Observação: Deploys podem apresentar timeout transitório do pooler sob rajadas frias. O adapter usa uma conexão por instância, timeout explícito e retry curto; observe os logs para identificar padrões.
 
 ---
 

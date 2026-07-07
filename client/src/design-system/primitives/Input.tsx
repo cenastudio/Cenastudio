@@ -4,25 +4,25 @@ import { cn } from "@/lib/utils";
 
 /**
  * Input Primitive Component
- * 
+ *
  * Plan-aware text input that uses plan tokens for visual styling.
  * Adapts appearance based on user's plan (free/pro/studio).
- * 
+ *
  * Features:
  * - Plan token integration for colors, borders, and focus states
  * - Consistent sizing across all plans
  * - Accessibility compliant (ARIA, labels, error states)
  * - Glow effects on focus for pro/studio plans
  * - Gold accent in studio financial context
- * 
+ *
  * @example
  * ```tsx
  * // Basic input
  * <Input type="text" placeholder="Project name" />
- * 
+ *
  * // With error state
  * <Input type="email" error placeholder="Email address" />
- * 
+ *
  * // Studio financial context (gold focus ring)
  * <div data-context="financial">
  *   <Input type="number" placeholder="Budget" />
@@ -69,7 +69,7 @@ const inputVariants = cva(
 );
 
 export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement>,
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size">,
     VariantProps<typeof inputVariants> {}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(

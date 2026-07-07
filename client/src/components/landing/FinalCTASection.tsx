@@ -1,15 +1,16 @@
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { ArrowRight, Sparkles, Zap, CheckCircle2 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function FinalCTASection() {
   const [, setLocation] = useLocation();
+  const { locale } = useLanguage();
+  const isEn = locale === "en";
 
-  const benefits = [
-    "Grátis para começar",
-    "Sem cartão necessário",
-    "Cancele quando quiser",
-  ];
+  const benefits = isEn
+    ? ["Free to start", "No credit card required", "Cancel anytime"]
+    : ["Grátis para começar", "Sem cartão necessário", "Cancele quando quiser"];
 
   return (
     <section className="landing-section relative overflow-hidden">
@@ -42,10 +43,21 @@ export default function FinalCTASection() {
             transition={{ delay: 0.1 }}
             className="frame-title text-[clamp(2.8rem,5.5vw,5rem)] mb-6"
           >
-            Pronto para{" "}
-            <span className="text-frame-orange">transformar</span>
-            <br />
-            seu workflow?
+            {isEn ? (
+              <>
+                Ready to{" "}
+                <span className="text-frame-orange">transform</span>
+                <br />
+                your workflow?
+              </>
+            ) : (
+              <>
+                Pronto para{" "}
+                <span className="text-frame-orange">transformar</span>
+                <br />
+                seu workflow?
+              </>
+            )}
           </motion.h2>
 
           {/* Subheading */}
@@ -56,8 +68,9 @@ export default function FinalCTASection() {
             transition={{ delay: 0.2 }}
             className="text-frame-gray-light text-lg mb-8 max-w-2xl mx-auto"
           >
-            Junte-se a centenas de filmmakers que já estão criando projetos mais rápido e
-            com mais qualidade.
+            {isEn
+              ? "Join hundreds of filmmakers already delivering projects faster and with higher quality."
+              : "Junte-se a centenas de filmmakers que já estão criando projetos mais rápido e com mais qualidade."}
           </motion.p>
 
           {/* Benefits */}
@@ -98,7 +111,7 @@ export default function FinalCTASection() {
               className="frame-btn-primary text-lg px-8 py-4 flex items-center justify-center gap-3 group"
             >
               <Zap className="w-5 h-5" />
-              Começar Gratuitamente
+              {isEn ? "Start for free" : "Começar Gratuitamente"}
               <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
             </motion.button>
 
@@ -110,7 +123,7 @@ export default function FinalCTASection() {
               }}
               className="frame-btn-ghost text-lg px-8 py-4"
             >
-              Ver Demonstração
+              {isEn ? "See it in action" : "Ver Demonstração"}
             </motion.button>
           </motion.div>
 
@@ -122,9 +135,19 @@ export default function FinalCTASection() {
             transition={{ delay: 0.6 }}
             className="mt-8 text-sm text-frame-gray-light"
           >
-            <span className="text-frame-orange font-semibold">500+</span> projetos criados •{" "}
-            <span className="text-frame-orange font-semibold">30+</span> filmmakers ativos •{" "}
-            <span className="text-frame-orange font-semibold">4.8/5</span> rating médio
+            {isEn ? (
+              <>
+                <span className="text-frame-orange font-semibold">500+</span> projects created •{" "}
+                <span className="text-frame-orange font-semibold">30+</span> active filmmakers •{" "}
+                <span className="text-frame-orange font-semibold">4.8/5</span> average rating
+              </>
+            ) : (
+              <>
+                <span className="text-frame-orange font-semibold">500+</span> projetos criados •{" "}
+                <span className="text-frame-orange font-semibold">30+</span> filmmakers ativos •{" "}
+                <span className="text-frame-orange font-semibold">4.8/5</span> rating médio
+              </>
+            )}
           </motion.p>
         </motion.div>
 

@@ -5,8 +5,9 @@ import ActionToolbar from "./ActionToolbar";
 import RefineChatPanel from "./RefineChatPanel";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
-import { CheckCircle2, FileText, Send, Archive } from "lucide-react";
+import { CheckCircle2, FileText, Send, Archive, ChevronRight, Sparkles } from "lucide-react";
 import type { ArtifactStatus } from "@/lib/workflow";
+import { getNextToolSuggestions } from "@/lib/workflow";
 
 interface OutputPanelProps {
   tool: ToolFromApi;
@@ -39,6 +40,18 @@ export default function OutputPanel({
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<"document" | "refine">("document");
   const displayOutput = cleanGeneratedText(output);
+  const nextSuggestions = getNextToolSuggestions(tool.slug);
+
+  // Se o output for limpo, volta para a aba documento
+  const handleTabChange = (tab: "document" | "refine") => {
+    if (tab === "refine" && !output) return;
+    setActiveTab(tab);
+  };
+
+  // Se output for apagado estando na tab refine, volta para document
+  if (!output && activeTab === "refine") {
+    setActiveTab("document");
+  }
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-frame-black border-t lg:border-t-0 border-frame-gray-2">
@@ -49,7 +62,7 @@ export default function OutputPanel({
         onClear={onClearAll}
         onToggleHistory={onToggleHistory}
         activeTab={activeTab}
-        onChangeTab={setActiveTab}
+        onChangeTab={handleTabChange}
         hasOutput={!!output}
       />
 
@@ -110,6 +123,39 @@ export default function OutputPanel({
                 <pre className="whitespace-pre-wrap break-words font-frame-body text-[0.88rem] leading-[1.8] text-frame-cream selection:bg-frame-orange selection:text-frame-black">
                   {displayOutput}
                 </pre>
+
+                {/* ─── PRÓXIMA FERRAMENTA SUGERIDA ─── */}
+                {nextSuggestions.length > 0 && (
+                  <div className="border border-frame-gray-3/50 bg-frame-gray-2/20 p-4 space-y-3 mt-2">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-3.5 h-3.5 text-frame-orange" />
+                      <span className="font-frame-mono text-[0.58rem] uppercase tracking-[0.18em] text-frame-orange">
+                        Próximo passo sugerido
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {nextSuggestions.map((s) => (
+                        <button
+                          key={s.slug}
+                          type="button"
+                          onClick={() => {
+                            const path = projectId
+                              ? `/project/${projectId}/studio/${s.slug}`
+                              : `/studio/${s.slug}`;
+                            setLocation(path);
+                          }}
+                          className="group w-full text-left flex items-center gap-3 p-3 border border-frame-gray-3/50 hover:border-frame-orange/40 hover:bg-frame-orange/[0.04] transition-all rounded"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[0.78rem] font-semibold text-frame-white group-hover:text-frame-orange transition-colors">{s.label}</p>
+                            <p className="text-[0.62rem] text-frame-gray-light mt-0.5 leading-relaxed">{s.reason}</p>
+                          </div>
+                          <ChevronRight className="w-3.5 h-3.5 text-frame-gray-light group-hover:text-frame-orange transition-colors shrink-0" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="h-full min-h-[250px] flex flex-col items-center justify-center gap-4 opacity-25 select-none">

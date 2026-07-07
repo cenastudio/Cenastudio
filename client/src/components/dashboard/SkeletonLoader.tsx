@@ -155,8 +155,8 @@ export const WorkflowCardSkeleton: React.FC<SkeletonLoaderProps> = ({
   return (
     <div
       className={cn(
-        "flex flex-col items-start justify-between p-6 rounded-[24px]",
-        "border-2 border-gray-200/80 bg-white/70",
+        "flex flex-col items-start justify-between p-6 rounded-2xl",
+        "border border-frame-gray-3 bg-frame-gray-2/40",
         className
       )}
       style={{
@@ -267,7 +267,7 @@ export const JobCardSkeleton: React.FC<SkeletonLoaderProps> = ({
   return (
     <div
       className={cn(
-        "p-6 rounded-[16px] border-2 border-gray-200/80 bg-white/70",
+        "p-6 rounded-2xl border border-frame-gray-3 bg-frame-gray-2/40",
         className
       )}
       style={{
@@ -479,7 +479,7 @@ export const DashboardSkeleton: React.FC<DashboardSkeletonProps> = () => {
       >
         {/* Checklist Column Skeleton */}
         <div
-          className="p-6 rounded-[16px] border-2 border-gray-200/80 bg-white/70"
+          className="p-6 rounded-2xl border border-frame-gray-3 bg-frame-gray-2/40"
           aria-label="Loading checklist"
         >
           {/* Header */}
@@ -504,7 +504,7 @@ export const DashboardSkeleton: React.FC<DashboardSkeletonProps> = () => {
 
         {/* Active Jobs Column Skeleton */}
         <div
-          className="p-6 rounded-[16px] border-2 border-gray-200/80 bg-white/70"
+          className="p-6 rounded-2xl border border-frame-gray-3 bg-frame-gray-2/40"
           aria-label="Loading active jobs"
         >
           {/* Header */}

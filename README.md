@@ -359,7 +359,10 @@ Veja `.env.example`. O servidor **falha ao iniciar** se `JWT_SECRET` estiver fal
 
 ## 🗄️ Banco de Dados
 
-SQLite local em `./data/frame.db`. Tabelas principais:
+**Desenvolvimento:** SQLite local em `./data/frame.db`
+**Produção:** Supabase Postgres via Prisma (migrations aplicadas em 30/06/2026)
+
+Tabelas principais:
 - `users` — Usuários e autenticação (inclui name, avatar_url, email_verified, github_id, supabase_id, studio_name, studio_role, phone)
 - `tools` — Metadados das ferramentas IA
 - `generations` — Histórico de gerações IA

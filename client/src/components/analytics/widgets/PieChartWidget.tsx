@@ -61,7 +61,7 @@ export default function PieChartWidget({ title, data, config }: PieChartWidgetPr
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+              label={({ percent }) => `${((percent ?? 0) * 100).toFixed(0)}%`}
               outerRadius={80}
               fill="#8884d8"
               dataKey="value"
@@ -77,8 +77,8 @@ export default function PieChartWidget({ title, data, config }: PieChartWidgetPr
                 borderRadius: "4px",
                 fontSize: "0.875rem"
               }}
-              formatter={(value: number) => [
-                isCurrency ? formatCurrency(value) : value.toLocaleString("pt-BR"),
+              formatter={(value) => [
+                isCurrency ? formatCurrency(Number(value)) : Number(value).toLocaleString("pt-BR"),
                 ""
               ]}
             />

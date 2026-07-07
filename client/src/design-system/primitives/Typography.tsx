@@ -5,15 +5,15 @@ import { cn } from "@/lib/utils";
 
 /**
  * Typography Primitive Component
- * 
+ *
  * Plan-aware text component that uses plan tokens for sizing and colors.
  * Adapts typography scale based on user's plan (free/pro/studio).
- * 
+ *
  * Plan Typography Scales:
  * - Free: 1.0x (base scale)
  * - Pro: 1.06x (slightly enhanced)
  * - Studio: 1.08x (premium scale)
- * 
+ *
  * Features:
  * - Plan token integration for colors and scale
  * - Semantic heading levels (h1-h6)
@@ -21,24 +21,24 @@ import { cn } from "@/lib/utils";
  * - Polymorphic component (asChild support)
  * - Accessible heading hierarchy
  * - Muted and accent color variants
- * 
+ *
  * @example
  * ```tsx
  * // Headings
  * <Typography variant="h1">Main Title</Typography>
  * <Typography variant="h2">Section Title</Typography>
- * 
+ *
  * // Body text
  * <Typography variant="body">Regular paragraph text</Typography>
  * <Typography variant="bodySmall" color="muted">
  *   Helper text or captions
  * </Typography>
- * 
+ *
  * // Custom element
  * <Typography variant="h3" asChild>
  *   <a href="/projects">Projects</a>
  * </Typography>
- * 
+ *
  * // Accent color (uses plan accent)
  * <Typography variant="body" color="accent">
  *   Highlighted text
@@ -134,7 +134,7 @@ const variantToElement = {
 } as const;
 
 export interface TypographyProps
-  extends React.HTMLAttributes<HTMLElement>,
+  extends Omit<React.HTMLAttributes<HTMLElement>, "color">,
     VariantProps<typeof typographyVariants> {
   /**
    * Render as a child component
@@ -154,7 +154,7 @@ const Typography = React.forwardRef<HTMLElement, TypographyProps>(
     return (
       <Comp
         className={cn(typographyVariants({ variant, color, align, className }))}
-        ref={ref}
+        ref={ref as React.Ref<never>}
         {...props}
       />
     );

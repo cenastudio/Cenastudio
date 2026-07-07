@@ -14,8 +14,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import WidgetFactory from "@/components/analytics/WidgetFactory";
-// import GridLayout from "react-grid-layout"; // Will be installed
-// import "react-grid-layout/css/styles.css"; // Will be added
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Dashboard {
   id: string;
@@ -44,6 +43,7 @@ interface Widget {
 function DashboardViewContent() {
   const [, params] = useRoute("/analytics-premium/dashboard/:id");
   const [, setLocation] = useLocation();
+  const { t } = useLanguage();
   const dashboardId = params?.id;
 
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
@@ -64,12 +64,12 @@ function DashboardViewContent() {
       if (result.success) {
         setDashboard(result.data);
       } else {
-        toast.error("Dashboard não encontrado");
+        toast.error(t("app.dashboardView.notFound"));
         setLocation("/analytics-premium");
       }
     } catch (error) {
       console.error("Error loading dashboard:", error);
-      toast.error("Erro ao carregar dashboard");
+      toast.error(t("app.dashboardView.loadError"));
     } finally {
       setIsLoading(false);
     }
@@ -96,26 +96,26 @@ function DashboardViewContent() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success("Dashboard salvo!");
+        toast.success(t("app.dashboardView.saved"));
         setIsEditMode(false);
       } else {
-        toast.error(result.error || "Erro ao salvar dashboard");
+        toast.error(result.error || t("app.dashboardView.saveError"));
       }
     } catch (error) {
       console.error("Error saving dashboard:", error);
-      toast.error("Erro ao salvar dashboard");
+      toast.error(t("app.dashboardView.saveError"));
     } finally {
       setIsSaving(false);
     }
   };
 
   const addWidget = () => {
-    toast.info("Widget configuration modal será implementado na Task 1.6");
+    toast.info(t("app.dashboardView.widgetModalPlaceholder"));
     // This will open WidgetConfig modal
   };
 
   const deleteWidget = async (widgetId: string) => {
-    if (!window.confirm("Deletar este widget?")) return;
+    if (!window.confirm(t("app.dashboardView.deleteWidget"))) return;
 
     try {
       const response = await fetch(`/api/analytics/widgets/${widgetId}`, {
@@ -126,14 +126,14 @@ function DashboardViewContent() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success("Widget deletado!");
+        toast.success(t("app.dashboardView.widgetDeleted"));
         loadDashboard();
       } else {
-        toast.error(result.error || "Erro ao deletar widget");
+        toast.error(result.error || t("app.dashboardView.widgetDeleteError"));
       }
     } catch (error) {
       console.error("Error deleting widget:", error);
-      toast.error("Erro ao deletar widget");
+      toast.error(t("app.dashboardView.widgetDeleteError"));
     }
   };
 
@@ -167,7 +167,7 @@ function DashboardViewContent() {
                 className="frame-btn-ghost"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Voltar
+                {t("app.dashboardView.back")}
               </Button>
 
               <div>
@@ -188,7 +188,7 @@ function DashboardViewContent() {
                     onClick={() => setIsEditMode(false)}
                     className="frame-btn-ghost"
                   >
-                    Cancelar
+                    {t("app.dashboardView.cancelEdit")}
                   </Button>
                   <Button
                     onClick={saveDashboard}
@@ -196,7 +196,7 @@ function DashboardViewContent() {
                     className="frame-btn-primary"
                   >
                     <Save className="h-4 w-4 mr-2" />
-                    {isSaving ? "Salvando..." : "Salvar"}
+                    {isSaving ? t("app.dashboardView.saving") : t("app.dashboardView.save")}
                   </Button>
                 </>
               ) : (
@@ -207,14 +207,14 @@ function DashboardViewContent() {
                     className="frame-btn-ghost"
                   >
                     <Edit className="h-4 w-4 mr-2" />
-                    Editar
+                    {t("app.dashboardView.edit")}
                   </Button>
                   <Button
                     onClick={addWidget}
                     className="frame-btn-primary"
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    Adicionar Widget
+                    {t("app.dashboardView.addWidget")}
                   </Button>
                 </>
               )}
@@ -222,18 +222,18 @@ function DashboardViewContent() {
           </div>
         </header>
 
-        {/* Dashboard Grid - Placeholder until react-grid-layout is installed */}
+        {/* Dashboard Grid */}
         <div className="space-y-4">
           {dashboard.widgets.length === 0 ? (
             <div className="border-2 border-dashed border-frame-gray-3 rounded-lg p-12 text-center">
               <Plus className="h-12 w-12 text-frame-gray-light mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Nenhum widget adicionado</h3>
+              <h3 className="text-lg font-semibold mb-2">{t("app.dashboardView.noWidgets")}</h3>
               <p className="text-sm text-frame-gray-light mb-6 max-w-md mx-auto">
-                Clique em "Adicionar Widget" para começar a personalizar seu dashboard.
+                {t("app.dashboardView.noWidgetsDesc")}
               </p>
               <Button onClick={addWidget} className="frame-btn-primary">
                 <Plus className="h-4 w-4 mr-2" />
-                Adicionar Primeiro Widget
+                {t("app.dashboardView.addFirstWidget")}
               </Button>
             </div>
           ) : (
@@ -262,23 +262,6 @@ function DashboardViewContent() {
               ))}
             </div>
           )}
-        </div>
-
-        {/* Installation Instructions */}
-        <div className="mt-8 border border-frame-orange/40 bg-frame-orange/[0.06] p-4 rounded-lg">
-          <p className="font-frame-mono text-xs uppercase tracking-wider text-frame-orange mb-2">
-            // PRÓXIMOS PASSOS
-          </p>
-          <p className="text-sm text-frame-gray-light">
-            <strong>Task 1.4:</strong> Este é o placeholder. Após instalar{" "}
-            <code className="text-frame-orange">react-grid-layout</code>, o drag & drop será ativado.
-          </p>
-          <p className="text-sm text-frame-gray-light mt-2">
-            <strong>Task 1.5:</strong> Componentes de widgets (KPI, Charts, Tables) serão renderizados aqui.
-          </p>
-          <p className="text-sm text-frame-gray-light mt-2">
-            <strong>Task 1.6:</strong> Modal de configuração permitirá escolher tipo e data source.
-          </p>
         </div>
       </main>
     </div>

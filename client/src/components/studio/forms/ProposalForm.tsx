@@ -1,3 +1,4 @@
+import { useLanguage } from "@/contexts/LanguageContext";
 import SessionGuide from "./SessionGuide";
 
 interface FormProps {
@@ -6,6 +7,8 @@ interface FormProps {
 }
 
 export default function ProposalForm({ data, onChange }: FormProps) {
+  const { t } = useLanguage();
+
   const completed = [
     data.cliente,
     data.escopo,
@@ -15,22 +18,26 @@ export default function ProposalForm({ data, onChange }: FormProps) {
   return (
     <div className="space-y-4">
       <SessionGuide
-        label="Sessão proposta"
-        title="Monte a ponte entre escopo, valor e aceite."
-        steps={["Cliente e necessidade", "Escopo e entregáveis", "Valor, prazo e pagamento"]}
-        output="Saída esperada: proposta pronta para cliente, com base para contrato e orçamento."
+        label={t("app.studio.forms.proposal.sessionLabel")}
+        title={t("app.studio.forms.proposal.sessionTitle")}
+        steps={[
+          t("app.studio.forms.proposal.step1"),
+          t("app.studio.forms.proposal.step2"),
+          t("app.studio.forms.proposal.step3"),
+        ]}
+        output={t("app.studio.forms.proposal.sessionOutput")}
         completed={completed}
       />
 
       {/* Seção 1: Identidade do Proponente */}
       <div>
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
-          // Sua Identidade
+          {t("app.studio.forms.proposal.sectionIdentity")}
         </p>
         <div className="space-y-3">
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Produtora / Freelancer
+              {t("app.studio.forms.proposal.company")}
             </label>
             <input
               type="text"
@@ -43,7 +50,7 @@ export default function ProposalForm({ data, onChange }: FormProps) {
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Seu Nome Completo
+              {t("app.studio.forms.proposal.fullName")}
             </label>
             <input
               type="text"
@@ -56,7 +63,7 @@ export default function ProposalForm({ data, onChange }: FormProps) {
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Seus Diferenciais Profissionais
+              {t("app.studio.forms.proposal.credentials")}
             </label>
             <textarea
               value={data.diferenciais || ""}
@@ -72,12 +79,12 @@ export default function ProposalForm({ data, onChange }: FormProps) {
       {/* Seção 2: O Negócio */}
       <div className="pt-2 border-t border-frame-gray-2">
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
-          // Detalhes da Proposta
+          {t("app.studio.forms.proposal.sectionDetails")}
         </p>
         <div className="space-y-3">
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Nome do Cliente
+              {t("app.studio.forms.proposal.clientName")}
             </label>
             <input
               type="text"
@@ -90,7 +97,7 @@ export default function ProposalForm({ data, onChange }: FormProps) {
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Escopo Detalhado do Projeto
+              {t("app.studio.forms.proposal.scope")}
             </label>
             <textarea
               value={data.escopo || ""}
@@ -104,7 +111,7 @@ export default function ProposalForm({ data, onChange }: FormProps) {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Valor Total (BRL)
+                {t("app.studio.forms.proposal.totalValue")}
               </label>
               <input
                 type="text"
@@ -116,7 +123,7 @@ export default function ProposalForm({ data, onChange }: FormProps) {
             </div>
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Prazo de Entrega
+                {t("app.studio.forms.proposal.deadline")}
               </label>
               <input
                 type="text"
@@ -130,47 +137,47 @@ export default function ProposalForm({ data, onChange }: FormProps) {
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Condição de Pagamento
+              {t("app.studio.forms.proposal.paymentTerms")}
             </label>
             <select
-              value={data.pagamento || "50% entrada + 50% entrega"}
+              value={data.pagamento || t("app.studio.forms.proposal.optPayment5050")}
               onChange={(e) => onChange("pagamento", e.target.value)}
               className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
             >
-              <option value="50% entrada + 50% entrega">50% entrada + 50% entrega</option>
-              <option value="30% entrada + 70% entrega">30% entrada + 70% entrega</option>
-              <option value="100% faturamento antes do início">100% faturamento antes do início</option>
-              <option value="3x mensais iguais">3x mensais iguais</option>
+              <option value={t("app.studio.forms.proposal.optPayment5050")}>{t("app.studio.forms.proposal.optPayment5050")}</option>
+              <option value={t("app.studio.forms.proposal.optPayment3070")}>{t("app.studio.forms.proposal.optPayment3070")}</option>
+              <option value={t("app.studio.forms.proposal.optPayment100")}>{t("app.studio.forms.proposal.optPayment100")}</option>
+              <option value={t("app.studio.forms.proposal.optPayment3x")}>{t("app.studio.forms.proposal.optPayment3x")}</option>
             </select>
           </div>
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Revisões Inclusas no Valor
+              {t("app.studio.forms.proposal.revisions")}
             </label>
             <select
-              value={data.revisoes || "2 rodadas de revisão"}
+              value={data.revisoes || t("app.studio.forms.proposal.optRevisions2")}
               onChange={(e) => onChange("revisoes", e.target.value)}
               className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
             >
-              <option value="2 rodadas de revisão">2 rodadas de revisão</option>
-              <option value="3 rodadas de revisão">3 rodadas de revisão</option>
-              <option value="1 rodada — alterações extras cobradas">1 rodada — alterações extras cobradas</option>
+              <option value={t("app.studio.forms.proposal.optRevisions2")}>{t("app.studio.forms.proposal.optRevisions2")}</option>
+              <option value={t("app.studio.forms.proposal.optRevisions3")}>{t("app.studio.forms.proposal.optRevisions3")}</option>
+              <option value={t("app.studio.forms.proposal.optRevisions1")}>{t("app.studio.forms.proposal.optRevisions1")}</option>
             </select>
           </div>
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Tom de Comunicação
+              {t("app.studio.forms.proposal.tone")}
             </label>
             <select
-              value={data.tom || "Profissional e formal"}
+              value={data.tom || t("app.studio.forms.proposal.optToneFormal")}
               onChange={(e) => onChange("tom", e.target.value)}
               className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
             >
-              <option value="Profissional e formal">Profissional e formal</option>
-              <option value="Próximo e descontraído">Próximo e descontraído</option>
-              <option value="Criativo e diferenciado">Criativo e diferenciado</option>
+              <option value={t("app.studio.forms.proposal.optToneFormal")}>{t("app.studio.forms.proposal.optToneFormal")}</option>
+              <option value={t("app.studio.forms.proposal.optToneCasual")}>{t("app.studio.forms.proposal.optToneCasual")}</option>
+              <option value={t("app.studio.forms.proposal.optToneCreative")}>{t("app.studio.forms.proposal.optToneCreative")}</option>
             </select>
           </div>
         </div>

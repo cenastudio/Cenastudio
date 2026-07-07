@@ -8,8 +8,60 @@ import { Check, CreditCard } from "lucide-react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 
+// EN translations for plan descriptions and features from shared/site.ts (which is PT).
+// Keyed by the original PT string. When locale === 'en', we look up the EN version.
+const PLAN_TEXT_EN: Record<string, string> = {
+  // Descriptions
+  "Para freelancers validarem o fluxo com até 5 clientes": "For freelancers validating the workflow with up to 5 clients",
+  "Para profissionais operarem até 15 clientes ativos": "For professionals running up to 15 active clients",
+  "Para produtoras com equipe, 50 clientes e operação compartilhada":
+    "For production companies with a team, 50 clients and shared operations",
+  // ROI
+  "💡 Economize 10h/mês em burocracia": "💡 Save 10h/month on paperwork",
+  "🚀 Ganhe 20% mais capacidade operacional sem contratar": "🚀 Gain 20% more operational capacity without hiring",
+  // Periods
+  "/mês": "/mo",
+  "/mês — mais popular": "/mo — most popular",
+  "/mês — ativação após pagamento": "/mo — activated after payment",
+  // Features - Free
+  "5 gerações com IA/mês": "5 AI generations/month",
+  "Acesso inicial às ferramentas": "Starter access to tools",
+  "Export .txt": ".txt export",
+  "Projetos para teste": "Test projects",
+  "CRM básico de clientes": "Basic client CRM",
+  "Até 5 clientes cadastrados": "Up to 5 registered clients",
+  "Suporte por email": "Email support",
+  // Features - Pro
+  "15 clientes": "15 clients",
+  "+ Clientes adicionais": "+ Additional clients",
+  "100 gerações com IA/mês": "100 AI generations/month",
+  "50 gerações com IA/mês": "50 AI generations/month",
+  "Fluxos principais de produção": "Main production workflows",
+  "Histórico completo": "Full history",
+  "Export PDF e DOCX": "PDF and DOCX export",
+  "Review de vídeos com anotações": "Video reviews with annotations",
+  "CRM completo + pipeline": "Full CRM + pipeline",
+  "Até 50 clientes cadastrados": "Up to 50 registered clients",
+  "Suporte prioritário": "Priority support",
+  // Features - Studio
+  "50 clientes": "50 clients",
+  "Tudo do Profissional": "Everything in Pro",
+  "Gerações ilimitadas": "Unlimited generations",
+  "Projetos e pastas": "Projects and folders",
+  "Equipe e colaboradores": "Team and collaborators",
+  "Arquivos e aprovações por projeto": "Files and approvals per project",
+  "Relatórios operacionais": "Operational reports",
+  "Clientes ilimitados após ativação": "Unlimited clients after activation",
+};
+
+function translatePlanText(text: string, isEn: boolean): string {
+  if (!isEn) return text;
+  return PLAN_TEXT_EN[text] ?? text;
+}
+
 export default function PricingSection() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
+  const isEn = locale === "en";
   const [, setLocation] = useLocation();
   const { isAuthenticated } = useAuth();
 
@@ -111,12 +163,19 @@ export default function PricingSection() {
                   <span className="landing-heading text-[3.2rem]">
                     {plan.price}
                   </span>
-                  <span className="ml-2 text-sm font-light text-[var(--landing-muted)]">{plan.period}</span>
+                  <span className="ml-2 text-sm font-light text-[var(--landing-muted)]">{translatePlanText(plan.period, isEn)}</span>
                 </div>
 
                 <p className="mb-8 text-sm font-light leading-relaxed text-[var(--landing-muted)]">
-                  {plan.description}
+                  {translatePlanText(plan.description, isEn)}
                 </p>
+
+                {/* ROI Badge */}
+                {plan.roi && (
+                  <div className="mb-6 inline-block rounded border border-frame-orange/30 bg-frame-orange/10 px-3 py-1.5">
+                    <p className="text-xs font-medium text-frame-orange">{plan.roi}</p>
+                  </div>
+                )}
 
                 <button
                   type="button"
@@ -133,7 +192,7 @@ export default function PricingSection() {
                   {plan.features.map((feature: string, fidx: number) => (
                     <li key={fidx} className="flex items-start gap-3">
                       <Check size={18} className="text-frame-orange flex-shrink-0 mt-0.5" />
-                      <span className="text-sm font-light text-[var(--landing-subtle)]">{feature}</span>
+                      <span className="text-sm font-light text-[var(--landing-subtle)]">{translatePlanText(feature, isEn)}</span>
                     </li>
                   ))}
                 </ul>

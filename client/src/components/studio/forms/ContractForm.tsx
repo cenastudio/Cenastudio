@@ -1,3 +1,4 @@
+import { useLanguage } from "@/contexts/LanguageContext";
 import SessionGuide from "./SessionGuide";
 
 interface FormProps {
@@ -6,6 +7,8 @@ interface FormProps {
 }
 
 export default function ContractForm({ data, onChange }: FormProps) {
+  const { t } = useLanguage();
+
   const completed = [
     data.tipo,
     data.contratante && data.contratado,
@@ -15,34 +18,38 @@ export default function ContractForm({ data, onChange }: FormProps) {
   return (
     <div className="space-y-4">
       <SessionGuide
-        label="Sessão contrato"
-        title="Organize partes, objeto e termos antes do rascunho."
-        steps={["Modelo jurídico", "Partes e documentos", "Objeto, valor e vigência"]}
-        output="Saída esperada: minuta de referência para revisão jurídica antes de assinatura."
+        label={t("app.studio.forms.contract.sessionLabel")}
+        title={t("app.studio.forms.contract.sessionTitle")}
+        steps={[
+          t("app.studio.forms.contract.step1"),
+          t("app.studio.forms.contract.step2"),
+          t("app.studio.forms.contract.step3"),
+        ]}
+        output={t("app.studio.forms.contract.sessionOutput")}
         completed={completed}
       />
 
       {/* Seção 1: Modelo Contratual */}
       <div>
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
-          // Tipo de Instrumento
+          {t("app.studio.forms.contract.sectionType")}
         </p>
         <div className="space-y-3">
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Modelo de Contrato
+              {t("app.studio.forms.contract.contractModel")}
             </label>
             <select
-              value={data.tipo || "Prestação de Serviços Audiovisuais"}
+              value={data.tipo || t("app.studio.forms.contract.optAudiovisual")}
               onChange={(e) => onChange("tipo", e.target.value)}
               className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
             >
-              <option value="Prestação de Serviços Audiovisuais">Prestação de Serviços Audiovisuais</option>
-              <option value="Cessão de Direitos de Imagem">Cessão de Direitos de Imagem</option>
-              <option value="Cessão de Uso de Trilha Sonora">Cessão de Uso de Trilha Sonora</option>
-              <option value="Contrato de Locação de Espaço">Contrato de Locação de Espaço</option>
-              <option value="NDA — Termo de Confidencialidade">NDA — Termo de Confidencialidade</option>
-              <option value="Contrato de Freelancer / Prestador de Serviço">Contrato de Freelancer / Prestador de Serviço</option>
+              <option value={t("app.studio.forms.contract.optAudiovisual")}>{t("app.studio.forms.contract.optAudiovisual")}</option>
+              <option value={t("app.studio.forms.contract.optImageRights")}>{t("app.studio.forms.contract.optImageRights")}</option>
+              <option value={t("app.studio.forms.contract.optSoundtrack")}>{t("app.studio.forms.contract.optSoundtrack")}</option>
+              <option value={t("app.studio.forms.contract.optLocationRental")}>{t("app.studio.forms.contract.optLocationRental")}</option>
+              <option value={t("app.studio.forms.contract.optNDA")}>{t("app.studio.forms.contract.optNDA")}</option>
+              <option value={t("app.studio.forms.contract.optFreelancer")}>{t("app.studio.forms.contract.optFreelancer")}</option>
             </select>
           </div>
         </div>
@@ -51,13 +58,13 @@ export default function ContractForm({ data, onChange }: FormProps) {
       {/* Seção 2: Partes Contratantes */}
       <div className="pt-2 border-t border-frame-gray-2">
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
-          // Partes Envolvidas
+          {t("app.studio.forms.contract.sectionParties")}
         </p>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Contratante (Cliente)
+                {t("app.studio.forms.contract.contractingParty")}
               </label>
               <input
                 type="text"
@@ -69,7 +76,7 @@ export default function ContractForm({ data, onChange }: FormProps) {
             </div>
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                CPF / CNPJ Contratante
+                {t("app.studio.forms.contract.contractingDoc")}
               </label>
               <input
                 type="text"
@@ -84,7 +91,7 @@ export default function ContractForm({ data, onChange }: FormProps) {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Contratado (Você)
+                {t("app.studio.forms.contract.contractor")}
               </label>
               <input
                 type="text"
@@ -96,7 +103,7 @@ export default function ContractForm({ data, onChange }: FormProps) {
             </div>
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                CPF / CNPJ Contratado
+                {t("app.studio.forms.contract.contractorDoc")}
               </label>
               <input
                 type="text"
@@ -113,12 +120,12 @@ export default function ContractForm({ data, onChange }: FormProps) {
       {/* Seção 3: Objeto do Serviço */}
       <div className="pt-2 border-t border-frame-gray-2">
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
-          // Objeto & Termos
+          {t("app.studio.forms.contract.sectionObject")}
         </p>
         <div className="space-y-3">
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Objeto (Descrição do Serviço)
+              {t("app.studio.forms.contract.serviceObject")}
             </label>
             <textarea
               value={data.objeto || ""}
@@ -132,7 +139,7 @@ export default function ContractForm({ data, onChange }: FormProps) {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Valor Total (BRL)
+                {t("app.studio.forms.contract.totalValue")}
               </label>
               <input
                 type="text"
@@ -144,7 +151,7 @@ export default function ContractForm({ data, onChange }: FormProps) {
             </div>
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Prazo de Vigência/Entrega
+                {t("app.studio.forms.contract.termDelivery")}
               </label>
               <input
                 type="text"
@@ -158,7 +165,7 @@ export default function ContractForm({ data, onChange }: FormProps) {
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Foro para Resolução de Conflitos
+              {t("app.studio.forms.contract.jurisdiction")}
             </label>
             <input
               type="text"

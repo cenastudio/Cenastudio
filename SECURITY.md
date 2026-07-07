@@ -112,7 +112,7 @@ NVIDIA_API_KEY=
 
 # ❌ Ruim (.env commitado)
 JWT_SECRET=real-secret-here
-SUPABASE_URL=https://real-url.supabase.co
+SUPABASE_URL=https://<seu-project-ref>.supabase.co
 ```
 
 ### Chaves de API

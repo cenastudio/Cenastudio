@@ -248,13 +248,7 @@ export function CustomStyledSkeletonExample() {
   return (
     <div style={{ padding: "2rem", maxWidth: "800px" }}>
       <h2 style={{ marginBottom: "2rem" }}>Custom Styled Skeleton</h2>
-      <GreetingSkeleton
-        className="custom-skeleton"
-        style={{
-          background: "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
-          backgroundSize: "200% 100%",
-        }}
-      />
+      <GreetingSkeleton className="custom-skeleton" />
     </div>
   );
 }

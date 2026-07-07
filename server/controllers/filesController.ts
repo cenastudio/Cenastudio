@@ -288,3 +288,42 @@ export const downloadFile: RequestHandler = async (req, res, next) => {
     next(e);
   }
 };
+
+
+// Rename a file
+export const renameFile: RequestHandler = async (req, res, next) => {
+  try {
+    const userId = req.user!.id;
+    const fileId = parseInt(req.params.id);
+    const { name } = req.body as { name?: string };
+
+    if (!fileId) {
+      throw new AppError("File ID is required", 400);
+    }
+
+    if (!name?.trim()) {
+      res.status(400).json({ success: false, error: "Name is required" });
+      return;
+    }
+
+    if (shouldUsePrisma) {
+      const file = await prisma.file.findFirst({ where: { id: BigInt(fileId), userId: BigInt(userId) } });
+      if (!file) throw new AppError("File not found", 404);
+      await prisma.file.update({ where: { id: file.id }, data: { originalName: name.trim() } });
+      res.json({ success: true });
+      return;
+    }
+
+    const result = db
+      .prepare("UPDATE files SET original_name = ?, updated_at = datetime('now') WHERE id = ? AND user_id = ?")
+      .run(name.trim(), fileId, userId);
+
+    if ((result as any).changes === 0) {
+      throw new AppError("File not found", 404);
+    }
+
+    res.json({ success: true });
+  } catch (e) {
+    next(e);
+  }
+};

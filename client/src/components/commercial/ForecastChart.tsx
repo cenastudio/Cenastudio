@@ -9,6 +9,7 @@ import {
   ReferenceLine,
   Legend,
 } from 'recharts';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ForecastChartProps {
   data: {
@@ -25,10 +26,12 @@ interface ForecastChartProps {
 }
 
 export function ForecastChart({ data, loading = false }: ForecastChartProps) {
+  const { t } = useLanguage();
+
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="text-sm text-frame-gray-light">Carregando previsão...</div>
+        <div className="text-sm text-frame-gray-light">{t("app.commercial.forecastLoading")}</div>
       </div>
     );
   }
@@ -36,7 +39,7 @@ export function ForecastChart({ data, loading = false }: ForecastChartProps) {
   if (!data || (!data.historical.length && !data.forecast.length)) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="text-sm text-frame-gray-light">Dados insuficientes para previsão</div>
+        <div className="text-sm text-frame-gray-light">{t("app.commercial.forecastInsufficient")}</div>
       </div>
     );
   }
@@ -52,19 +55,19 @@ export function ForecastChart({ data, loading = false }: ForecastChartProps) {
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="rounded border border-frame-gray-3 bg-frame-gray-2/50 p-3">
-          <p className="text-xs text-frame-gray-light">Média Histórica</p>
+          <p className="text-xs text-frame-gray-light">{t("app.commercial.forecastAvg")}</p>
           <p className="mt-1 text-lg font-semibold text-frame-white">
             R$ {data.metrics.avgRevenue.toLocaleString('pt-BR')}
           </p>
         </div>
         <div className="rounded border border-frame-gray-3 bg-frame-gray-2/50 p-3">
-          <p className="text-xs text-frame-gray-light">Tendência Recente</p>
+          <p className="text-xs text-frame-gray-light">{t("app.commercial.forecastTrend")}</p>
           <p className="mt-1 text-lg font-semibold text-frame-white">
             R$ {data.metrics.recentTrend.toLocaleString('pt-BR')}
           </p>
         </div>
         <div className="rounded border border-frame-gray-3 bg-frame-gray-2/50 p-3">
-          <p className="text-xs text-frame-gray-light">Taxa de Crescimento</p>
+          <p className="text-xs text-frame-gray-light">{t("app.commercial.forecastGrowth")}</p>
           <p className={`mt-1 text-lg font-semibold ${
             parseFloat(data.metrics.growthRate) >= 0 ? 'text-green-500' : 'text-red-500'
           }`}>
@@ -96,11 +99,11 @@ export function ForecastChart({ data, loading = false }: ForecastChartProps) {
               fontSize: '12px',
             }}
             labelStyle={{ color: '#ff4d1d', marginBottom: '4px' }}
-            formatter={(value: number, name: string, props: any) => {
+            formatter={(value, _name, props: any) => {
               const isForecast = props.payload.isForecast;
               return [
-                `R$ ${value.toLocaleString('pt-BR')}`,
-                isForecast ? 'Previsão' : 'Receita Real',
+                `R$ ${Number(value).toLocaleString('pt-BR')}`,
+                isForecast ? t('app.commercial.forecastPrediction') : t('app.commercial.forecastActual'),
               ];
             }}
           />
@@ -117,7 +120,7 @@ export function ForecastChart({ data, loading = false }: ForecastChartProps) {
             x={chartData[forecastStartIndex]?.month}
             stroke="#666"
             strokeDasharray="5 5"
-            label={{ value: 'Início da Previsão', position: 'top', fill: '#999', fontSize: 10 }}
+            label={{ value: t('app.commercial.forecastStart'), position: 'top', fill: '#999', fontSize: 10 }}
           />
 
           {/* Historical data line (solid) */}
@@ -129,7 +132,7 @@ export function ForecastChart({ data, loading = false }: ForecastChartProps) {
             strokeWidth={2}
             dot={{ fill: '#ff4d1d', r: 3 }}
             activeDot={{ r: 5, fill: '#ff4d1d' }}
-            name="Receita Real"
+            name={t('app.commercial.forecastActual')}
             connectNulls={false}
           />
 
@@ -143,7 +146,7 @@ export function ForecastChart({ data, loading = false }: ForecastChartProps) {
             strokeDasharray="5 5"
             dot={{ fill: '#22c55e', r: 3 }}
             activeDot={{ r: 5, fill: '#22c55e' }}
-            name="Previsão"
+            name={t('app.commercial.forecastPrediction')}
             connectNulls={true}
           />
         </LineChart>
@@ -157,10 +160,10 @@ export function ForecastChart({ data, loading = false }: ForecastChartProps) {
           'bg-red-500'
         }`} />
         <span>
-          Confiança da previsão: {
-            data.metrics.confidence === 'high' ? 'Alta' :
-            data.metrics.confidence === 'medium' ? 'Média' :
-            'Baixa'
+          {t('app.commercial.forecastConfidence')} {
+            data.metrics.confidence === 'high' ? t('app.commercial.forecastHigh') :
+            data.metrics.confidence === 'medium' ? t('app.commercial.forecastMedium') :
+            t('app.commercial.forecastLow')
           }
         </span>
       </div>

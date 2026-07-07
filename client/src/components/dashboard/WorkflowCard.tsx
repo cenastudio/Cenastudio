@@ -31,14 +31,12 @@ export function WorkflowCard({
     <button
       onClick={onClick}
       className={cn(
-        "glass-card flex flex-col items-start justify-between p-6",
-        "rounded-[24px] border-2 transition-all duration-300 ease-out",
-        "hover:translate-y-[-4px] hover:shadow-lg",
+        "glow-card flex flex-col items-start justify-between p-6",
+        "rounded-2xl border-2 transition-all duration-300 ease-out",
+        "hover:translate-y-[-4px]",
         "cursor-pointer text-left w-full",
-        "bg-white/70 backdrop-blur-[20px] backdrop-saturate-[180%]",
-        "border-gray-200/80 shadow-[0_8px_32px_rgba(0,0,0,0.08)]",
         "active:scale-[0.95]",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B00] focus-visible:ring-offset-2",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-frame-orange focus-visible:ring-offset-2",
         statusBorderColors[status]
       )}
       aria-label={`${label}: ${count}`}
@@ -48,16 +46,16 @@ export function WorkflowCard({
       </div>
 
       <div className="flex flex-col gap-1 w-full">
-        <div className="text-5xl font-bold text-gray-900 leading-none mb-2">
+        <div className="text-5xl font-bold text-frame-white leading-none mb-2">
           {count}
         </div>
 
-        <div className="text-xs font-bold uppercase tracking-wider text-gray-700">
+        <div className="text-xs font-bold uppercase tracking-wider text-frame-gray-light">
           {label}
         </div>
 
         {sublabel && (
-          <div className="text-sm text-gray-500 mt-1">
+          <div className="text-sm text-frame-gray-light/70 mt-1">
             {sublabel}
           </div>
         )}

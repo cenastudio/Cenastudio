@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { ApiError, api, type Project, type ToolState } from "@/lib/api";
 import { useAuth } from "./AuthContext";
+import { translate } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 
 export type AutosaveStatus = "idle" | "saving" | "saved" | "error";
@@ -80,7 +81,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       setToolStates({}); // Reset state cache to reload states for new active project
       return project;
     } catch (e) {
-      toast.error("Erro ao carregar os detalhes do projeto");
+      const locale = (localStorage.getItem("language") as "pt" | "en") || "pt";
+      toast.error(translate(locale, "app.errors.loadProject"));
       setActiveProject(null);
       return null;
     } finally {
@@ -95,7 +97,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       setProjects((prev) => [newProj, ...prev]);
       return newProj;
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro ao criar projeto");
+      const locale = (localStorage.getItem("language") as "pt" | "en") || "pt";
+      toast.error(e instanceof Error ? e.message : translate(locale, "app.errors.createProject"));
       throw e;
     }
   };
@@ -110,7 +113,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       }
       return updated;
     } catch (e) {
-      toast.error("Erro ao atualizar projeto");
+      const locale = (localStorage.getItem("language") as "pt" | "en") || "pt";
+      toast.error(translate(locale, "app.errors.updateProject"));
       throw e;
     }
   };
@@ -125,7 +129,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         setToolStates({});
       }
     } catch (e) {
-      toast.error("Erro ao excluir projeto");
+      const locale = (localStorage.getItem("language") as "pt" | "en") || "pt";
+      toast.error(translate(locale, "app.errors.deleteProject"));
       throw e;
     }
   };

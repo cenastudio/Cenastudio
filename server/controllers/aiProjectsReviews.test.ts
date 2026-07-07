@@ -9,6 +9,7 @@ vi.mock("../services/aiService.js", () => ({
     output: `Gerado para ${toolId}`,
     generationId: 123,
   })),
+  trackUsage: vi.fn(async () => {}),
 }));
 
 vi.mock("../services/notificationService.js", () => ({

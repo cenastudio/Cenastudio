@@ -1,3 +1,4 @@
+import { useLanguage } from "@/contexts/LanguageContext";
 import SessionGuide from "./SessionGuide";
 
 interface FormProps {
@@ -6,6 +7,8 @@ interface FormProps {
 }
 
 export default function DeliveryForm({ data, onChange }: FormProps) {
+  const { t } = useLanguage();
+
   const completed = [
     data.nome && data.cliente,
     data.arquivos,
@@ -15,22 +18,26 @@ export default function DeliveryForm({ data, onChange }: FormProps) {
   return (
     <div className="space-y-4">
       <SessionGuide
-        label="Sessão entrega"
-        title="Feche o job com pacote, specs e aceite."
-        steps={["Projeto e cliente", "Arquivos entregues", "Especificações e instruções"]}
-        output="Saída esperada: relatório de entrega pronto para cliente, arquivo e histórico do projeto."
+        label={t("app.studio.forms.delivery.sessionLabel")}
+        title={t("app.studio.forms.delivery.sessionTitle")}
+        steps={[
+          t("app.studio.forms.delivery.step1"),
+          t("app.studio.forms.delivery.step2"),
+          t("app.studio.forms.delivery.step3"),
+        ]}
+        output={t("app.studio.forms.delivery.sessionOutput")}
         completed={completed}
       />
 
       {/* Seção 1: Informações Gerais */}
       <div>
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
-          // Identificação do Projeto
+          {t("app.studio.forms.delivery.sectionIdentification")}
         </p>
         <div className="space-y-3">
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Nome do Projeto
+              {t("app.studio.forms.delivery.projectName")}
             </label>
             <input
               type="text"
@@ -43,7 +50,7 @@ export default function DeliveryForm({ data, onChange }: FormProps) {
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Cliente
+              {t("app.studio.forms.delivery.client")}
             </label>
             <input
               type="text"
@@ -57,7 +64,7 @@ export default function DeliveryForm({ data, onChange }: FormProps) {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Data de Início
+                {t("app.studio.forms.delivery.startDate")}
               </label>
               <input
                 type="date"
@@ -68,7 +75,7 @@ export default function DeliveryForm({ data, onChange }: FormProps) {
             </div>
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Data de Entrega
+                {t("app.studio.forms.delivery.deliveryDate")}
               </label>
               <input
                 type="date"
@@ -84,12 +91,12 @@ export default function DeliveryForm({ data, onChange }: FormProps) {
       {/* Seção 2: Entregáveis e Especificações */}
       <div className="pt-2 border-t border-frame-gray-2">
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
-          // Entregáveis & Specs
+          {t("app.studio.forms.delivery.sectionDeliverables")}
         </p>
         <div className="space-y-3">
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Lista de Arquivos Entregues
+              {t("app.studio.forms.delivery.fileList")}
             </label>
             <textarea
               value={data.arquivos || ""}
@@ -102,7 +109,7 @@ export default function DeliveryForm({ data, onChange }: FormProps) {
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Especificações Técnicas dos Arquivos
+              {t("app.studio.forms.delivery.technicalSpecs")}
             </label>
             <textarea
               value={data.especificacoes || ""}
@@ -115,7 +122,7 @@ export default function DeliveryForm({ data, onChange }: FormProps) {
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Notas Finais / Instruções para o Cliente
+              {t("app.studio.forms.delivery.finalNotes")}
             </label>
             <textarea
               value={data.notas || ""}

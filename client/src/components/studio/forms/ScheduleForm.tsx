@@ -1,20 +1,24 @@
+import { useLanguage } from "@/contexts/LanguageContext";
+
 interface FormProps {
   data: Record<string, string>;
   onChange: (key: string, value: string) => void;
 }
 
 export default function ScheduleForm({ data, onChange }: FormProps) {
+  const { t } = useLanguage();
+
   return (
     <div className="space-y-4">
       {/* Seção 1: Projeto */}
       <div>
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
-          // Cronograma do Projeto
+          {t("app.studio.forms.schedule.sectionProject")}
         </p>
         <div className="space-y-3">
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Nome do Projeto
+              {t("app.studio.forms.schedule.projectName")}
             </label>
             <input
               type="text"
@@ -28,7 +32,7 @@ export default function ScheduleForm({ data, onChange }: FormProps) {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Data de Início
+                {t("app.studio.forms.schedule.startDate")}
               </label>
               <input
                 type="date"
@@ -39,7 +43,7 @@ export default function ScheduleForm({ data, onChange }: FormProps) {
             </div>
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Data de Entrega
+                {t("app.studio.forms.schedule.deliveryDate")}
               </label>
               <input
                 type="date"
@@ -53,24 +57,24 @@ export default function ScheduleForm({ data, onChange }: FormProps) {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Tipo de Produção
+                {t("app.studio.forms.schedule.productionType")}
               </label>
               <select
-                value={data.tipo || "Vídeo Institucional"}
+                value={data.tipo || t("app.studio.forms.schedule.optInstitutional")}
                 onChange={(e) => onChange("tipo", e.target.value)}
                 className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
               >
-                <option value="Vídeo Institucional">Vídeo Institucional</option>
-                <option value="Curta-metragem">Curta-metragem</option>
-                <option value="Documentário">Documentário</option>
-                <option value="Vídeo Publicitário">Vídeo Publicitário</option>
-                <option value="Webserie">Websérie</option>
-                <option value="Videoclipe">Videoclipe</option>
+                <option value={t("app.studio.forms.schedule.optInstitutional")}>{t("app.studio.forms.schedule.optInstitutional")}</option>
+                <option value={t("app.studio.forms.schedule.optShortFilm")}>{t("app.studio.forms.schedule.optShortFilm")}</option>
+                <option value={t("app.studio.forms.schedule.optDocumentary")}>{t("app.studio.forms.schedule.optDocumentary")}</option>
+                <option value={t("app.studio.forms.schedule.optAdvertising")}>{t("app.studio.forms.schedule.optAdvertising")}</option>
+                <option value={t("app.studio.forms.schedule.optWebSeries")}>{t("app.studio.forms.schedule.optWebSeries")}</option>
+                <option value={t("app.studio.forms.schedule.optMusicVideo")}>{t("app.studio.forms.schedule.optMusicVideo")}</option>
               </select>
             </div>
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Dias de Filmagem
+                {t("app.studio.forms.schedule.shootDays")}
               </label>
               <input
                 type="number"
@@ -87,12 +91,12 @@ export default function ScheduleForm({ data, onChange }: FormProps) {
       {/* Seção 2: Equipe e Entregas */}
       <div className="pt-2 border-t border-frame-gray-2">
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
-          // Equipe & Entregáveis
+          {t("app.studio.forms.schedule.sectionCrew")}
         </p>
         <div className="space-y-3">
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Equipe Envolvida
+              {t("app.studio.forms.schedule.crewInvolved")}
             </label>
             <textarea
               value={data.equipe || ""}
@@ -105,7 +109,7 @@ export default function ScheduleForm({ data, onChange }: FormProps) {
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Entregáveis Finais do Projeto
+              {t("app.studio.forms.schedule.deliverables")}
             </label>
             <textarea
               value={data.entregaveis || ""}

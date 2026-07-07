@@ -1,3 +1,4 @@
+import { useLanguage } from "@/contexts/LanguageContext";
 import SessionGuide from "./SessionGuide";
 
 interface FormProps {
@@ -6,6 +7,8 @@ interface FormProps {
 }
 
 export default function BriefingForm({ data, onChange }: FormProps) {
+  const { t } = useLanguage();
+
   const completed = [
     data.cliente,
     data.objetivo,
@@ -15,22 +18,26 @@ export default function BriefingForm({ data, onChange }: FormProps) {
   return (
     <div className="space-y-4">
       <SessionGuide
-        label="Sessão briefing"
-        title="Transforme conversa solta em direção de produção."
-        steps={["Cliente e segmento", "Objetivo e mensagem", "Público, canal e restrições"]}
-        output="Saída esperada: briefing claro para roteiro, proposta, cronograma e aprovação inicial."
+        label={t("app.studio.forms.briefing.sessionLabel")}
+        title={t("app.studio.forms.briefing.sessionTitle")}
+        steps={[
+          t("app.studio.forms.briefing.step1"),
+          t("app.studio.forms.briefing.step2"),
+          t("app.studio.forms.briefing.step3"),
+        ]}
+        output={t("app.studio.forms.briefing.sessionOutput")}
         completed={completed}
       />
 
       {/* Seção 1: Cliente */}
       <div>
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
-          // Cliente & Identidade
+          {t("app.studio.forms.briefing.sectionClient")}
         </p>
         <div className="space-y-3">
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Nome do Cliente / Empresa
+              {t("app.studio.forms.briefing.clientName")}
             </label>
             <input
               type="text"
@@ -43,7 +50,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Segmento de Atuação
+              {t("app.studio.forms.briefing.segment")}
             </label>
             <input
               type="text"
@@ -56,20 +63,20 @@ export default function BriefingForm({ data, onChange }: FormProps) {
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Tipo de Conteúdo/Vídeo
+              {t("app.studio.forms.briefing.contentType")}
             </label>
             <select
-              value={data.tipo || "Vídeo Institucional"}
+              value={data.tipo || t("app.studio.forms.briefing.optInstitutional")}
               onChange={(e) => onChange("tipo", e.target.value)}
               className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
             >
-              <option value="Vídeo Institucional">Vídeo Institucional</option>
-              <option value="Vídeo de Produto">Vídeo de Produto</option>
-              <option value="Depoimento / Testimonial">Depoimento / Testimonial</option>
-              <option value="Treinamento Interno">Treinamento Interno</option>
-              <option value="Redes Sociais">Redes Sociais</option>
-              <option value="Evento Corporativo">Evento Corporativo</option>
-              <option value="Vídeo Publicitário">Vídeo Publicitário</option>
+              <option value={t("app.studio.forms.briefing.optInstitutional")}>{t("app.studio.forms.briefing.optInstitutional")}</option>
+              <option value={t("app.studio.forms.briefing.optProduct")}>{t("app.studio.forms.briefing.optProduct")}</option>
+              <option value={t("app.studio.forms.briefing.optTestimonial")}>{t("app.studio.forms.briefing.optTestimonial")}</option>
+              <option value={t("app.studio.forms.briefing.optTraining")}>{t("app.studio.forms.briefing.optTraining")}</option>
+              <option value={t("app.studio.forms.briefing.optSocial")}>{t("app.studio.forms.briefing.optSocial")}</option>
+              <option value={t("app.studio.forms.briefing.optEvent")}>{t("app.studio.forms.briefing.optEvent")}</option>
+              <option value={t("app.studio.forms.briefing.optAdvertising")}>{t("app.studio.forms.briefing.optAdvertising")}</option>
             </select>
           </div>
         </div>
@@ -78,12 +85,12 @@ export default function BriefingForm({ data, onChange }: FormProps) {
       {/* Seção 2: Contexto */}
       <div className="pt-2 border-t border-frame-gray-2">
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
-          // Contexto & Metas
+          {t("app.studio.forms.briefing.sectionContext")}
         </p>
         <div className="space-y-3">
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Objetivo Principal
+              {t("app.studio.forms.briefing.mainObjective")}
             </label>
             <textarea
               value={data.objetivo || ""}
@@ -96,7 +103,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Público-Alvo
+              {t("app.studio.forms.briefing.targetAudience")}
             </label>
             <input
               type="text"
@@ -109,7 +116,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Canal de Veiculação principal
+              {t("app.studio.forms.briefing.distributionChannel")}
             </label>
             <input
               type="text"
@@ -123,7 +130,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Duração Desejada
+                {t("app.studio.forms.briefing.desiredDuration")}
               </label>
               <input
                 type="text"
@@ -135,7 +142,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
             </div>
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Prazo de Entrega
+                {t("app.studio.forms.briefing.deadline")}
               </label>
               <input
                 type="text"
@@ -149,7 +156,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Referências de Vídeos
+              {t("app.studio.forms.briefing.videoReferences")}
             </label>
             <input
               type="text"
@@ -162,7 +169,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              O que NÃO deve aparecer/conter (Restrições)
+              {t("app.studio.forms.briefing.restrictions")}
             </label>
             <textarea
               value={data.restricoes || ""}

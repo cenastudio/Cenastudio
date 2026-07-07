@@ -18,6 +18,7 @@ import demoRoutes from "./routes/demo.js";
 import dashboardRoutes from "./routes/dashboard.js";
 import checklistRoutes from "./routes/checklist.js";
 import commercialRoutes from "./routes/commercial.js";
+import teamRoutes from "./routes/team.js";
 import {
   getActivityAnalytics,
   getOverallAnalytics,
@@ -55,7 +56,6 @@ import {
 import { authenticate, requireAdmin } from "./middleware/authenticate.js";
 import notificationsRoutes from "./routes/notifications.js";
 import aiFeaturesRoutes from "./routes/aiFeatures.js";
-import calendarRoutes from "./routes/calendar.js";
 
 const router = Router();
 
@@ -87,6 +87,7 @@ router.use("/demo", demoRoutes);
 router.use("/dashboard", dashboardRoutes);
 router.use("/checklist", checklistRoutes);
 router.use("/commercial", commercialRoutes);
+router.use("/team", teamRoutes);
 router.get("/analytics-overall", authenticate, getOverallAnalytics);
 router.get("/analytics-revenue", authenticate, getRevenueAnalytics);
 router.get("/analytics-activity", authenticate, getActivityAnalytics);
@@ -116,6 +117,5 @@ router.use("/public/video-reviews", videoReviewsPublicRoutes);
 router.use("/video-upload", videoUploadRoutes);
 router.use("/notifications", notificationsRoutes);
 router.use("/ai-features", aiFeaturesRoutes);
-router.use("/calendar", calendarRoutes);
 
 export default router;

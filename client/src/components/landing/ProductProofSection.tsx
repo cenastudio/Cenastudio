@@ -15,7 +15,7 @@ interface ProductScene {
   icon: any;
 }
 
-const scenes: ProductScene[] = [
+const SCENES_PT: ProductScene[] = [
   {
     id: "dashboard",
     title: "Dashboard Inteligente",
@@ -51,8 +51,46 @@ const scenes: ProductScene[] = [
   },
 ];
 
+const SCENES_EN: ProductScene[] = [
+  {
+    id: "dashboard",
+    title: "Smart Dashboard",
+    description: "A single view of every project, next actions and the director's radar.",
+    image: "/landing/product/dashboard.png",
+    annotation: {
+      text: "← Operations hub",
+      position: "top-right",
+    },
+    icon: Sparkles,
+  },
+  {
+    id: "project-hub",
+    title: "Project Hub",
+    description: "Every job becomes a complete hub with goals, team, files and creative journey.",
+    image: "/landing/product/project-hub.png",
+    annotation: {
+      text: "Project hub →",
+      position: "center",
+    },
+    icon: Zap,
+  },
+  {
+    id: "studio",
+    title: "AI Studio",
+    description: "AI tools for scripts, storyboards, briefings and operational documents.",
+    image: "/landing/product/studio.png",
+    annotation: {
+      text: "AI generating content ↓",
+      position: "bottom-right",
+    },
+    icon: Video,
+  },
+];
+
 export default function ProductProofSection() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
+  const isEn = locale === "en";
+  const scenes = isEn ? SCENES_EN : SCENES_PT;
   const [currentScene, setCurrentScene] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [progress, setProgress] = useState(0);
@@ -111,6 +149,8 @@ export default function ProductProofSection() {
 
   return (
     <section id="product-proof" className="landing-section">
+      {/* Anchor for nav "How it works" link (Navigation.tsx uses #how-it-works) */}
+      <span id="how-it-works" aria-hidden="true" className="block h-0 w-0" />
       <div className="landing-shell">
         {/* Header */}
         <motion.div
@@ -119,12 +159,24 @@ export default function ProductProofSection() {
           viewport={{ once: true }}
           className="text-center mb-14"
         >
-          <p className="frame-label mb-3">// PRODUTO EM AÇÃO</p>
+          <p className="frame-label mb-3">
+            {isEn ? "// PRODUCT IN ACTION" : "// PRODUTO EM AÇÃO"}
+          </p>
           <h2 className="frame-title text-[clamp(2.8rem,5.5vw,5rem)] mb-4">
-            Veja o <span className="text-frame-orange">Cena Studio</span> funcionando
+            {isEn ? (
+              <>
+                See <span className="text-frame-orange">Cena Studio</span> in action
+              </>
+            ) : (
+              <>
+                Veja o <span className="text-frame-orange">Cena Studio</span> funcionando
+              </>
+            )}
           </h2>
           <p className="text-frame-gray-light text-lg max-w-2xl mx-auto">
-            Screenshots reais do produto. Nada de mockups ou protótipos.
+            {isEn
+              ? "Real screenshots from the product. No mockups or prototypes."
+              : "Screenshots reais do produto. Nada de mockups ou protótipos."}
           </p>
         </motion.div>
 

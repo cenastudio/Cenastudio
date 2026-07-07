@@ -8,21 +8,21 @@ const plans = [
     name: "Free",
     priceBrl: 0,
     generationLimit: 5,
-    features: ["5 gerações/mês", "Acesso a 6 ferramentas", "Export .txt"],
+    features: ["5 clientes", "5 gerações/mês", "8 ferramentas IA", "Export .txt"],
   },
   {
     id: "pro",
     name: "Pro",
-    priceBrl: 4900,
-    generationLimit: 50,
-    features: ["50 gerações/mês", "Fluxos principais de produção", "Export PDF e DOCX", "Histórico completo"],
+    priceBrl: 19900,
+    generationLimit: 100,
+    features: ["15 clientes", "+ Clientes adicionais", "100 gerações/mês", "12 ferramentas IA", "Pipeline", "Video Reviews", "Export PDF/DOCX", "Colaboração (5 membros)"],
   },
   {
     id: "studio",
     name: "Studio",
-    priceBrl: 9900,
+    priceBrl: 39900,
     generationLimit: -1,
-    features: ["Gerações ilimitadas", "Fluxos principais de produção", "Projetos e pastas", "Suporte prioritário"],
+    features: ["50 clientes", "+ Clientes adicionais", "Gerações ilimitadas", "12 ferramentas IA", "Commercial Hub", "Módulo Financeiro", "Equipe ilimitada", "API Access", "Suporte premium"],
   },
 ];
 

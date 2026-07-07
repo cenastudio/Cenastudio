@@ -15,6 +15,7 @@ import {
   Command,
   X,
 } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface QuickAction {
   id: string;
@@ -30,8 +31,8 @@ export default function QuickActionsMenu() {
   const [, setLocation] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const { t } = useLanguage();
 
-  // Listen for Cmd+K / Ctrl+K
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -40,11 +41,21 @@ export default function QuickActionsMenu() {
         setIsOpen(false);
         setSearch("");
       }
+
+      // Global shortcuts (work even when menu is closed)
+      if (event.metaKey || event.ctrlKey) {
+        const key = event.key;
+        if (key === "1") { event.preventDefault(); setLocation("/dashboard"); setIsOpen(false); }
+        if (key === "2") { event.preventDefault(); setLocation("/commercial"); setIsOpen(false); }
+        if (key === "3") { event.preventDefault(); setLocation("/projects"); setIsOpen(false); }
+        if (key === "4") { event.preventDefault(); setLocation("/analytics"); setIsOpen(false); }
+        if (key === "j" || key === "J") { event.preventDefault(); setLocation("/dashboard?newProject=1"); setIsOpen(false); }
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
+  }, [isOpen, setLocation]);
 
   // Listen for custom event (from AppNavBar and CommandPalette via Cmd+K)
   useEffect(() => {
@@ -69,82 +80,79 @@ export default function QuickActionsMenu() {
     // Navigation
     {
       id: "nav-dashboard",
-      label: "Dashboard",
-      description: "Ver visão geral do dia",
+      label: t("app.quickActions.panel"),
+      description: t("app.quickActions.panelDesc"),
       icon: Home,
       action: () => setLocation("/dashboard"),
-      shortcut: "⌘ D",
+      shortcut: "⌘ 1",
+      category: "navigation",
+    },
+    {
+      id: "nav-commercial",
+      label: t("app.quickActions.commercial"),
+      description: t("app.quickActions.commercialDesc"),
+      icon: Users,
+      action: () => setLocation("/commercial"),
+      shortcut: "⌘ 2",
       category: "navigation",
     },
     {
       id: "nav-projects",
-      label: "Projetos",
-      description: "Ver todos os projetos",
+      label: t("app.quickActions.production"),
+      description: t("app.quickActions.productionDesc"),
       icon: FolderKanban,
       action: () => setLocation("/projects"),
-      shortcut: "⌘ P",
-      category: "navigation",
-    },
-    {
-      id: "nav-clients",
-      label: "Clientes",
-      description: "Gerenciar clientes",
-      icon: Users,
-      action: () => setLocation("/clients"),
-      shortcut: "⌘ C",
-      category: "navigation",
-    },
-    {
-      id: "nav-pipeline",
-      label: "Pipeline",
-      description: "Acompanhar oportunidades",
-      icon: Target,
-      action: () => setLocation("/pipeline"),
-      shortcut: "⌘ L",
-      category: "navigation",
-    },
-    {
-      id: "nav-video-reviews",
-      label: "Video Reviews",
-      description: "Revisar vídeos",
-      icon: Video,
-      action: () => setLocation("/video-reviews"),
-      shortcut: "⌘ V",
+      shortcut: "⌘ 3",
       category: "navigation",
     },
     {
       id: "nav-analytics",
-      label: "Analytics",
-      description: "Ver métricas",
+      label: t("app.quickActions.financial"),
+      description: t("app.quickActions.financialDesc"),
       icon: BarChart3,
       action: () => setLocation("/analytics"),
+      shortcut: "⌘ 4",
+      category: "navigation",
+    },
+    {
+      id: "nav-pipeline",
+      label: t("app.quickActions.pipeline"),
+      description: t("app.quickActions.pipelineDesc"),
+      icon: Target,
+      action: () => setLocation("/pipeline"),
+      category: "navigation",
+    },
+    {
+      id: "nav-video-reviews",
+      label: t("app.quickActions.approvals"),
+      description: t("app.quickActions.approvalsDesc"),
+      icon: Video,
+      action: () => setLocation("/video-reviews"),
       category: "navigation",
     },
 
     // Create Actions
     {
       id: "create-project",
-      label: "Novo Projeto",
-      description: "Criar um novo projeto",
+      label: t("app.quickActions.newJob"),
+      description: t("app.quickActions.newJobDesc"),
       icon: Plus,
-      action: () => {
-        setLocation("/dashboard?newProject=1");
-      },
-      shortcut: "⌘ N",
+      action: () => setLocation("/dashboard?newProject=1"),
+      shortcut: "⌘ J",
       category: "create",
     },
     {
       id: "create-client",
-      label: "Novo Cliente",
-      description: "Adicionar novo cliente",
+      label: t("app.quickActions.newClient"),
+      description: t("app.quickActions.newClientDesc"),
       icon: Plus,
       action: () => setLocation("/clients/new"),
       category: "create",
     },
     {
       id: "create-opportunity",
-      label: "Nova Oportunidade",
-      description: "Adicionar ao pipeline",
+      label: t("app.quickActions.newNegotiation"),
+      description: t("app.quickActions.newNegotiationDesc"),
       icon: Plus,
       action: () => setLocation("/pipeline?new=1"),
       category: "create",
@@ -153,8 +161,8 @@ export default function QuickActionsMenu() {
     // Settings
     {
       id: "settings",
-      label: "Configurações",
-      description: "Ajustes da conta",
+      label: t("app.quickActions.settings"),
+      description: t("app.quickActions.settingsDesc"),
       icon: Settings,
       action: () => setLocation("/settings"),
       category: "settings",
@@ -170,7 +178,7 @@ export default function QuickActionsMenu() {
         action.label.toLowerCase().includes(term) ||
         action.description.toLowerCase().includes(term)
     );
-  }, [search]);
+  }, [search, t]);
 
   const handleSelectAction = (action: QuickAction) => {
     action.action();
@@ -193,9 +201,9 @@ export default function QuickActionsMenu() {
   }, [filteredActions]);
 
   const categoryLabels = {
-    navigation: "Navegação",
-    create: "Criar",
-    settings: "Configurações",
+    navigation: t("app.quickActions.categoryNavigation"),
+    create: t("app.quickActions.categoryCreate"),
+    settings: t("app.quickActions.categorySettings"),
   };
 
   return (
@@ -231,7 +239,7 @@ export default function QuickActionsMenu() {
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Buscar ações... (ou use atalhos)"
+                  placeholder={t("app.quickActions.searchPlaceholder")}
                   autoFocus
                   className="flex-1 bg-transparent outline-none text-frame-white placeholder:text-frame-gray-light"
                 />
@@ -255,7 +263,7 @@ export default function QuickActionsMenu() {
               <div className="max-h-[60vh] overflow-y-auto">
                 {filteredActions.length === 0 ? (
                   <div className="py-12 text-center text-frame-gray-light text-sm">
-                    Nenhuma ação encontrada
+                    {t("app.quickActions.noResults")}
                   </div>
                 ) : (
                   <>
@@ -309,17 +317,17 @@ export default function QuickActionsMenu() {
               <div className="flex items-center justify-between px-4 py-2 border-t border-frame-gray-3 bg-frame-gray-2/50">
                 <div className="flex items-center gap-4 text-xs text-frame-gray-light">
                   <span className="flex items-center gap-1">
-                    <kbd className="px-1.5 py-0.5 bg-frame-gray-3 rounded">↑↓</kbd> Navegar
+                    <kbd className="px-1.5 py-0.5 bg-frame-gray-3 rounded">↑↓</kbd> {t("app.quickActions.navigate")}
                   </span>
                   <span className="flex items-center gap-1">
-                    <kbd className="px-1.5 py-0.5 bg-frame-gray-3 rounded">Enter</kbd> Selecionar
+                    <kbd className="px-1.5 py-0.5 bg-frame-gray-3 rounded">Enter</kbd> {t("app.quickActions.select")}
                   </span>
                   <span className="flex items-center gap-1">
-                    <kbd className="px-1.5 py-0.5 bg-frame-gray-3 rounded">Esc</kbd> Fechar
+                    <kbd className="px-1.5 py-0.5 bg-frame-gray-3 rounded">Esc</kbd> {t("app.quickActions.closeAction")}
                   </span>
                 </div>
                 <p className="text-xs text-frame-gray-light font-frame-mono">
-                  {filteredActions.length} ações
+                  {t("app.quickActions.actionsCount").replace("{count}", String(filteredActions.length))}
                 </p>
               </div>
             </motion.div>

@@ -103,9 +103,6 @@ export default function FinanceStripExamples() {
             monthlyRevenue={15000}
             jobsCompleted={10}
             className="custom-finance-strip"
-            style={{
-              background: "linear-gradient(135deg, rgba(255, 107, 0, 0.1), rgba(255, 107, 0, 0.05))",
-            } as any}
           />
         </section>
 

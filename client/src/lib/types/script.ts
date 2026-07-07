@@ -119,7 +119,15 @@ export const createElement = (
 /**
  * Screenplay formatting rules
  */
-export const SCREENPLAY_FORMAT = {
+interface ScreenplayFormatRule {
+  uppercase: boolean;
+  indent: number;
+  width: number;
+  italic?: boolean;
+  alignRight?: boolean;
+}
+
+export const SCREENPLAY_FORMAT: Record<ScriptElementType, ScreenplayFormatRule> = {
   scene_heading: {
     uppercase: true,
     indent: 0,
@@ -163,7 +171,7 @@ export const SCREENPLAY_FORMAT = {
     width: 60,
     italic: true,
   },
-} as const;
+};
 
 /**
  * Common transitions

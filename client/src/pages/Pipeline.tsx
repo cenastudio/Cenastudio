@@ -87,16 +87,17 @@ type StageDefinition = {
   description: string;
   color: string;
   dot: string;
-} & ({ labelKey: string; label?: never } | { label: string; labelKey?: never });
+  labelKey: string;
+};
 
 const STAGE_DEFINITIONS: StageDefinition[] = [
-  { id: "prospect", labelKey: "app.pipeline.lead", description: "Primeiro interesse", color: "border-sky-400/40", dot: "bg-sky-400" },
-  { id: "meeting", label: "Diagnóstico", description: "Entender o job", color: "border-amber-400/40", dot: "bg-amber-400" },
-  { id: "proposal", labelKey: "app.pipeline.proposal", description: "Proposta na mesa", color: "border-violet-400/40", dot: "bg-violet-400" },
-  { id: "negotiation", labelKey: "app.pipeline.negotiation", description: "Ajustando para fechar", color: "border-orange-400/50", dot: "bg-frame-orange" },
-  { id: "paused", label: "Pausado", description: "Aguardando cliente", color: "border-gray-400/40", dot: "bg-gray-400" },
-  { id: "won", labelKey: "app.pipeline.closedWon", description: "Pronto para virar projeto", color: "border-emerald-400/50", dot: "bg-emerald-400" },
-  { id: "lost", labelKey: "app.pipeline.closedLost", description: "Sem avanço agora", color: "border-red-400/45", dot: "bg-frame-red" },
+  { id: "prospect", labelKey: "app.pipeline.lead", description: "app.commercial.pipeline.stageDescProspect", color: "border-sky-400/40", dot: "bg-sky-400" },
+  { id: "meeting", labelKey: "app.commercial.pipeline.stageMeeting", description: "app.commercial.pipeline.stageDescMeeting", color: "border-amber-400/40", dot: "bg-amber-400" },
+  { id: "proposal", labelKey: "app.pipeline.proposal", description: "app.commercial.pipeline.stageDescProposal", color: "border-violet-400/40", dot: "bg-violet-400" },
+  { id: "negotiation", labelKey: "app.pipeline.negotiation", description: "app.commercial.pipeline.stageDescNegotiation", color: "border-orange-400/50", dot: "bg-frame-orange" },
+  { id: "paused", labelKey: "app.commercial.pipeline.stagePaused", description: "app.commercial.pipeline.stageDescPaused", color: "border-gray-400/40", dot: "bg-gray-400" },
+  { id: "won", labelKey: "app.pipeline.closedWon", description: "app.commercial.pipeline.stageDescWon", color: "border-emerald-400/50", dot: "bg-emerald-400" },
+  { id: "lost", labelKey: "app.pipeline.closedLost", description: "app.commercial.pipeline.stageDescLost", color: "border-red-400/45", dot: "bg-frame-red" },
 ];
 
 interface PipelineStage {
@@ -110,10 +111,10 @@ interface PipelineStage {
 const getStages = (t: Translate): PipelineStage[] =>
   STAGE_DEFINITIONS.map((stage) => ({
     id: stage.id,
-    description: stage.description,
+    description: t(stage.description),
     color: stage.color,
     dot: stage.dot,
-    label: stage.labelKey !== undefined ? t(stage.labelKey) : stage.label,
+    label: t(stage.labelKey),
   }));
 
 const STAGE_ORDER = STAGE_DEFINITIONS.map((stage) => stage.id);
@@ -128,8 +129,22 @@ const emptyForm = {
   lostReason: "",
 };
 
-function PipelineContent() {
-  const { t } = useLanguage();
+function ClientLink({ clientId, clientName }: { clientId: number | null; clientName?: string | null }) {
+  const [, setLocation] = useLocation();
+  if (!clientId || !clientName) return null;
+  return (
+    <button
+      onClick={(e) => { e.stopPropagation(); setLocation(`/clients/${clientId}`); }}
+      className="flex items-center gap-1 text-xs text-frame-orange hover:underline"
+    >
+      <Building2 className="w-3 h-3" />
+      {clientName}
+    </button>
+  );
+}
+
+function PipelineContent({ embedded }: { embedded?: boolean }) {
+  const { t, locale } = useLanguage();
   const { projects, createProject } = useProject();
   const [, setLocation] = useLocation();
   const stages = useMemo(() => getStages(t), [t]);
@@ -323,11 +338,11 @@ function PipelineContent() {
         clientId || undefined,
         JSON.stringify(metadata),
       );
-      toast.success("Oportunidade convertida em projeto com o contexto comercial.");
+      toast.success(t("app.pipeline.opportunityConverted") as string);
       closeModal();
       setLocation(`/project/${project.id}/journey/entry`);
     } catch {
-      toast.error("Não foi possível transformar a oportunidade em projeto.");
+      toast.error(t("app.pipeline.convertError") as string);
     } finally {
       setIsConverting(false);
     }
@@ -336,7 +351,7 @@ function PipelineContent() {
   const submitOpportunity = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!form.title.trim()) {
-      toast.error("Dê um nome para a oportunidade");
+      toast.error(t("app.pipeline.nameRequired") as string);
       return;
     }
 
@@ -467,18 +482,38 @@ function PipelineContent() {
   const activeOpportunity = activeId ? opportunities.find((opp) => opp.id === activeId) : null;
 
   return (
-    <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col overflow-x-hidden">
-      <AppNavBar />
+    <div className={`${embedded ? "" : "min-h-screen"} bg-frame-black text-frame-white font-frame-body flex flex-col overflow-x-hidden`}>
+      {!embedded && <AppNavBar />}
 
       <main id="main-content" className="flex-1 w-full px-4 md:px-6 py-6 space-y-5">
-        <Breadcrumbs />
         <section className="flex flex-col xl:flex-row xl:items-end justify-between gap-5 border-b border-frame-gray-3 pb-5">
           <div className="max-w-3xl min-w-0">
-            <p className="frame-label mb-2">// {t("app.pipeline.title") as string}</p>
-            <h1 className="frame-title text-[clamp(2rem,4vw,3.4rem)]">{t("app.pipeline.title") as string}</h1>
+            <p className="frame-label mb-2">{locale === "en" ? "// Sales pipeline" : "// Pipeline de vendas"}</p>
+            <h1 className="frame-title text-[clamp(1.8rem,3.5vw,2.8rem)]">{locale === "en" ? "Ongoing negotiations" : "Negociações em andamento"}</h1>
             <p className="text-frame-gray-light text-sm mt-2 max-w-2xl leading-relaxed">
-              Acompanhe cada conversa comercial do primeiro contato até virar projeto, sem perder proposta, valor e próximo passo.
+              {locale === "en"
+                ? "Every commercial conversation lives here until it becomes a project. Track value, closing chance and next step without missing any opportunity."
+                : "Cada conversa comercial vive aqui até virar projeto. Acompanhe valor, chance de fechamento e próximo passo sem perder nenhuma oportunidade."}
             </p>
+            {/* Connection story */}
+            <div className="flex gap-2 mt-4">
+              <div className="border border-frame-orange/30 bg-frame-orange/[0.06] px-3 py-2 text-center min-w-[90px]">
+                <span className="block font-frame-mono text-[0.5rem] text-frame-orange">01</span>
+                <span className="block text-[0.6rem] font-medium text-frame-white mt-0.5">Lead entra</span>
+              </div>
+              <div className="border border-frame-gray-3/40 px-3 py-2 text-center min-w-[90px]">
+                <span className="block font-frame-mono text-[0.5rem] text-frame-gray-light">02</span>
+                <span className="block text-[0.6rem] font-medium text-frame-gray-light mt-0.5">Proposta</span>
+              </div>
+              <div className="border border-frame-gray-3/40 px-3 py-2 text-center min-w-[90px]">
+                <span className="block font-frame-mono text-[0.5rem] text-frame-gray-light">03</span>
+                <span className="block text-[0.6rem] font-medium text-frame-gray-light mt-0.5">Negociação</span>
+              </div>
+              <div className="border border-frame-gray-3/40 px-3 py-2 text-center min-w-[90px]">
+                <span className="block font-frame-mono text-[0.5rem] text-frame-gray-light">04</span>
+                <span className="block text-[0.6rem] font-medium text-frame-gray-light mt-0.5">Vira job</span>
+              </div>
+            </div>
           </div>
 
           <div className="flex flex-col lg:flex-row gap-2 w-full xl:w-auto">
@@ -586,15 +621,33 @@ function PipelineContent() {
             />
           </div>
         ) : filteredOpportunities.length === 0 ? (
-          <div className="border border-frame-gray-3 bg-frame-gray-1/20 py-16">
-            <EmptyState
-              icon={hasActiveFilters ? Search : Inbox}
-              title={t(hasActiveFilters ? "app.pipeline.noResults" : "app.pipeline.noOpportunities") as string}
-              description={t(hasActiveFilters ? "app.pipeline.noResultsDescription" : "app.pipeline.noOpportunitiesDesc") as string}
-              action={hasActiveFilters
-                ? { label: t("app.pipeline.clearFilters") as string, onClick: clearFilters }
-                : { label: t("app.pipeline.newOpportunity") as string, onClick: openCreateModal }}
-            />
+          <div className="frame-empty-state p-10 max-w-2xl mx-auto text-center space-y-5">
+            <Inbox className="w-10 h-10 mx-auto text-frame-orange/60" />
+            <div className="space-y-2">
+              <h2 className="text-lg font-semibold text-frame-white">
+                {hasActiveFilters ? t("app.commercial.pipeline.emptyFiltered") : t("app.commercial.pipeline.emptyNone")}
+              </h2>
+              <p className="text-sm text-frame-gray-light leading-relaxed">
+                {hasActiveFilters
+                  ? t("app.commercial.pipeline.emptyFilteredDesc")
+                  : t("app.commercial.pipeline.emptyNoneDesc")}
+              </p>
+            </div>
+            {!hasActiveFilters && (
+              <div className="border-t border-frame-orange/20 pt-4 space-y-2 text-left max-w-sm mx-auto">
+                <p className="font-frame-mono text-[0.55rem] uppercase tracking-wider text-frame-orange">{t("app.commercial.pipeline.howConnects")}</p>
+                <p className="text-[0.65rem] text-frame-gray-light">{t("app.commercial.pipeline.connectClient")}</p>
+                <p className="text-[0.65rem] text-frame-gray-light">{t("app.commercial.pipeline.connectProposal")}</p>
+                <p className="text-[0.65rem] text-frame-gray-light">{t("app.commercial.pipeline.connectJob")}</p>
+              </div>
+            )}
+            <button
+              onClick={hasActiveFilters ? clearFilters : openCreateModal}
+              className="frame-btn-primary inline-flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              {hasActiveFilters ? t("app.commercial.pipeline.clearFilters") : t("app.commercial.pipeline.newDeal")}
+            </button>
           </div>
         ) : (
           <DndContext
@@ -739,6 +792,9 @@ function PipelineContent() {
                     {selectedOpportunity.client_name || "Sem cliente vinculado"}
                     {selectedOpportunity.client_company ? ` / ${selectedOpportunity.client_company}` : ""}
                   </p>
+                  <div className="mt-1">
+                    <ClientLink clientId={selectedOpportunity.client_id ?? selectedOpportunity.clientId ?? null} clientName={selectedOpportunity.client_name ?? null} />
+                  </div>
                 </div>
                 <span className="text-frame-orange font-semibold">
                   {formatCurrency(selectedOpportunity.estimated_value || 0)}
@@ -862,7 +918,7 @@ function DroppableStageColumn({
         {opportunities.length === 0 && (
           <button
             onClick={openCreateModal}
-            className="w-full border border-dashed border-frame-gray-3 p-4 text-left text-xs text-frame-gray-light hover:border-frame-orange/60 hover:text-frame-orange transition"
+            className="w-full frame-empty-state p-4 text-left text-xs text-frame-gray-light hover:border-frame-orange/60 hover:text-frame-orange transition"
           >
             {t("app.pipeline.newOpportunity") as string}
           </button>
@@ -986,8 +1042,13 @@ function OpportunityCard({
         </div>
 
         <div className="flex items-center gap-2 text-xs text-frame-gray-light">
-          <Building2 className="w-3.5 h-3.5" />
-          <span className="truncate">{opportunity.client_name || t("app.common.none") as string}</span>
+          <ClientLink clientId={opportunity.client_id ?? opportunity.clientId ?? null} clientName={opportunity.client_name ?? null} />
+          {!opportunity.client_name && (
+            <>
+              <Building2 className="w-3.5 h-3.5" />
+              <span className="truncate">{t("app.common.none") as string}</span>
+            </>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-2 text-xs">
@@ -1169,7 +1230,8 @@ function DetailStat({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default function Pipeline() {
+export default function Pipeline({ embedded }: { embedded?: boolean }) {
+  if (embedded) return <PipelineContent embedded />;
   return (
     <ProtectedRoute>
       <PipelineContent />

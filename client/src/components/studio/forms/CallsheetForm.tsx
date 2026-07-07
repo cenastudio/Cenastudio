@@ -1,20 +1,24 @@
+import { useLanguage } from "@/contexts/LanguageContext";
+
 interface FormProps {
   data: Record<string, string>;
   onChange: (key: string, value: string) => void;
 }
 
 export default function CallsheetForm({ data, onChange }: FormProps) {
+  const { t } = useLanguage();
+
   return (
     <div className="space-y-4">
       {/* Seção 1: Produção */}
       <div>
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
-          // Produção & Locação
+          {t("app.studio.forms.callsheet.sectionProduction")}
         </p>
         <div className="space-y-3">
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Nome da Produção
+              {t("app.studio.forms.callsheet.productionName")}
             </label>
             <input
               type="text"
@@ -28,7 +32,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Data de Filmagem
+                {t("app.studio.forms.callsheet.filmingDate")}
               </label>
               <input
                 type="date"
@@ -39,7 +43,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
             </div>
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Cidade/Estado
+                {t("app.studio.forms.callsheet.cityState")}
               </label>
               <input
                 type="text"
@@ -53,7 +57,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Endereço da Locação
+              {t("app.studio.forms.callsheet.locationAddress")}
             </label>
             <input
               type="text"
@@ -67,7 +71,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Geral / Call Time
+                {t("app.studio.forms.callsheet.callTime")}
               </label>
               <input
                 type="time"
@@ -78,7 +82,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
             </div>
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Wrap Previsto (Término)
+                {t("app.studio.forms.callsheet.expectedWrap")}
               </label>
               <input
                 type="time"
@@ -94,13 +98,13 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
       {/* Seção 2: Equipe */}
       <div className="pt-2 border-t border-frame-gray-2">
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
-          // Contatos da Equipe
+          {t("app.studio.forms.callsheet.sectionCrew")}
         </p>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Diretor
+                {t("app.studio.forms.callsheet.director")}
               </label>
               <input
                 type="text"
@@ -112,7 +116,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
             </div>
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Produtor Executivo
+                {t("app.studio.forms.callsheet.executiveProducer")}
               </label>
               <input
                 type="text"
@@ -127,7 +131,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                DOP (Fotografia)
+                {t("app.studio.forms.callsheet.dop")}
               </label>
               <input
                 type="text"
@@ -139,7 +143,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
             </div>
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Som Direto
+                {t("app.studio.forms.callsheet.sound")}
               </label>
               <input
                 type="text"
@@ -153,7 +157,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Outros Membros da Equipe
+              {t("app.studio.forms.callsheet.otherCrew")}
             </label>
             <textarea
               value={data.equipe || ""}
@@ -169,12 +173,12 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
       {/* Seção 3: Logística */}
       <div className="pt-2 border-t border-frame-gray-2">
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
-          // Logística & Notas
+          {t("app.studio.forms.callsheet.sectionLogistics")}
         </p>
         <div className="space-y-3">
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Equipamentos Principais no Set
+              {t("app.studio.forms.callsheet.mainEquipment")}
             </label>
             <textarea
               value={data.equipamentos || ""}
@@ -187,7 +191,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Instruções / Alimentação / Notas de Set
+              {t("app.studio.forms.callsheet.instructions")}
             </label>
             <textarea
               value={data.observacoes || ""}

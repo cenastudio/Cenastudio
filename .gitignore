@@ -30,6 +30,11 @@ logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.manus-logs/
+
+# Supabase CLI (contém credenciais reais de conexão)
+supabase/.temp/
+supabase/.branches/
 
 # Editor
 .vscode/

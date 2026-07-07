@@ -15,9 +15,11 @@ export interface WorkflowStage {
   id: WorkflowStageId;
   number: string;
   label: string;
+  labelEn: string;
   eyebrow: string;
   description: string;
   outcome: string;
+  order?: number;
   actions: WorkflowAction[];
 }
 
@@ -26,6 +28,8 @@ export const WORKFLOW_STAGES: WorkflowStage[] = [
     id: "entry",
     number: "01",
     label: "Entrada",
+    labelEn: "Intake",
+    order: 1,
     eyebrow: "A história começa",
     description: "Transforme a demanda do cliente em escopo, valor e acordo claros.",
     outcome: "Job aprovado e pronto para ser planejado.",
@@ -40,6 +44,8 @@ export const WORKFLOW_STAGES: WorkflowStage[] = [
     id: "planning",
     number: "02",
     label: "Planejamento",
+    labelEn: "Planning",
+    order: 2,
     eyebrow: "O job ganha forma",
     description: "Converta o acordo em narrativa, linguagem visual e plano executável.",
     outcome: "Equipe e set sabem exatamente o que produzir.",
@@ -56,6 +62,8 @@ export const WORKFLOW_STAGES: WorkflowStage[] = [
     id: "production",
     number: "03",
     label: "Produção",
+    labelEn: "Production",
+    order: 3,
     eyebrow: "O plano vira material",
     description: "Centralize equipe, referências, arquivos e decisões enquanto o job acontece.",
     outcome: "Material captado e organizado para pós-produção.",
@@ -69,6 +77,8 @@ export const WORKFLOW_STAGES: WorkflowStage[] = [
     id: "review",
     number: "04",
     label: "Revisão",
+    labelEn: "Review",
+    order: 4,
     eyebrow: "O cliente participa",
     description: "Compartilhe versões, concentre comentários e registre a aprovação.",
     outcome: "Versão final aprovada sem feedback espalhado.",
@@ -81,6 +91,8 @@ export const WORKFLOW_STAGES: WorkflowStage[] = [
     id: "delivery",
     number: "05",
     label: "Entrega",
+    labelEn: "Delivery",
+    order: 5,
     eyebrow: "A promessa se concretiza",
     description: "Organize o pacote final, especificações, links e aceite do cliente.",
     outcome: "Entrega registrada, rastreável e pronta para consulta.",
@@ -94,6 +106,8 @@ export const WORKFLOW_STAGES: WorkflowStage[] = [
     id: "closing",
     number: "06",
     label: "Fechamento",
+    labelEn: "Closing",
+    order: 6,
     eyebrow: "O job vira aprendizado",
     description: "Conclua o projeto, confira resultado financeiro e preserve o histórico.",
     outcome: "Job encerrado com resultado e memória operacional.",
@@ -152,4 +166,32 @@ export function visibleFormValues(formData: Record<string, string>): string[] {
   return Object.entries(formData)
     .filter(([key, value]) => !key.startsWith("__") && Boolean(value))
     .map(([, value]) => value);
+}
+
+// ─── NEXT TOOL SUGGESTIONS ─────────────────────────────────────────────────
+// Maps tool slug → recommended next tool(s) in the workflow
+export const NEXT_TOOL_SUGGESTIONS: Record<string, Array<{ slug: string; label: string; reason: string }>> = {
+  briefing:    [{ slug: "orcamento",  label: "Orçamento",       reason: "Com o briefing pronto, monte o orçamento do job" },
+                { slug: "proposta",   label: "Proposta",         reason: "Transforme o briefing em proposta comercial" }],
+  orcamento:   [{ slug: "proposta",   label: "Proposta",         reason: "Combine orçamento e escopo em uma proposta" },
+                { slug: "contrato",   label: "Contrato",         reason: "Formalize o acordo com o cliente" }],
+  proposta:    [{ slug: "contrato",   label: "Contrato",         reason: "Proposta aceita? Assine o contrato" },
+                { slug: "briefing",   label: "Briefing",         reason: "Detalhe o briefing criativo do job" }],
+  contrato:    [{ slug: "roteiro",    label: "Roteiro",          reason: "Job fechado — comece o roteiro" },
+                { slug: "moodboard",  label: "Moodboard & Look", reason: "Defina a identidade visual do projeto" }],
+  roteiro:     [{ slug: "moodboard",  label: "Moodboard & Look", reason: "Visual complementa a narrativa do roteiro" },
+                { slug: "decupagem",  label: "Decupagem",        reason: "Transforme o roteiro em plano de câmera" }],
+  moodboard:   [{ slug: "decupagem",  label: "Decupagem",        reason: "Com a direção visual definida, planeje os planos" },
+                { slug: "callsheet",  label: "Callsheet",        reason: "Prepare a logística do dia de filmagem" }],
+  decupagem:   [{ slug: "callsheet",  label: "Callsheet",        reason: "Com a decupagem pronta, monte o callsheet" },
+                { slug: "cronograma", label: "Cronograma",       reason: "Planeje os prazos do projeto" }],
+  cronograma:  [{ slug: "callsheet",  label: "Callsheet",        reason: "Distribua o cronograma para a equipe" },
+                { slug: "checklist",  label: "Checklist de Set", reason: "Garanta que o set esteja completo" }],
+  callsheet:   [{ slug: "checklist",  label: "Checklist de Set", reason: "Confira os equipamentos antes de filmar" }],
+  checklist:   [{ slug: "entrega",    label: "Relatório de Entrega", reason: "Filmagem concluída? Documente a entrega" }],
+  entrega:     [{ slug: "assistente", label: "Assistente",       reason: "Precisa de ajuda com o fechamento do projeto?" }],
+};
+
+export function getNextToolSuggestions(slug: string): Array<{ slug: string; label: string; reason: string }> {
+  return NEXT_TOOL_SUGGESTIONS[slug] || [];
 }

@@ -446,7 +446,7 @@ function printHtmlDocument(docHtml: string) {
     const frameWindow = iframe.contentWindow;
     if (!frameWindow) {
       cleanup();
-      toast.error("Não foi possível preparar o PDF");
+      toast.error(t("app.studio.documentError"));
       return;
     }
     frameWindow.focus();
@@ -692,223 +692,183 @@ function DocumentsContent() {
     setSavedDocs(docs);
   };
 
+
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body">
       <AppNavBar />
       {projectIdParam && <ProjectNav projectId={projectIdParam} />}
-      <main id="main-content" className="px-4 sm:px-6 py-5 sm:py-6 space-y-5 max-w-[1680px] mx-auto">
-        <section className="border border-frame-gray-3 bg-frame-gray-1/60 p-4 sm:p-5 shadow-[0_18px_70px_rgba(0,0,0,0.18)]">
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-            <div>
-              <p className="frame-label">// {t("app.documents.studioDocuments")}</p>
-              <h1 className="frame-title text-[clamp(1.8rem,4vw,3.6rem)] leading-none mt-2">{t("app.documents.operationalDocuments")}</h1>
-              <p className="text-sm text-frame-gray-light max-w-2xl mt-3">
-                {t("app.documents.pageDescription")}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {activeProject && (
-                <button type="button" onClick={applyLinkedContext} className="frame-btn-ghost flex items-center gap-2">
-                  <Link2 className="w-4 h-4" />
-                  Contexto do projeto
-                </button>
-              )}
-              <button type="button" onClick={() => setIsEditorOpen(true)} className="frame-btn-ghost flex items-center gap-2">
-                <Pencil className="w-4 h-4" />
-                {t("app.documents.editContent")}
-              </button>
-              <button type="button" onClick={copyText} className="frame-btn-ghost flex items-center gap-2">
-                <Copy className="w-4 h-4" />
-                {t("app.documents.copyText")}
-              </button>
-              <button type="button" onClick={exportDocx} className="frame-btn-ghost flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                Word
-              </button>
-              <button type="button" onClick={() => exportPdf()} className="frame-btn-primary flex items-center gap-2">
-                <Download className="w-4 h-4" />
-                {t("app.documents.exportPdf")}
-              </button>
+      <main id="main-content" className="px-4 sm:px-6 py-5 sm:py-6 max-w-[1680px] mx-auto space-y-4">
+
+        {/* ═══ HEADER ═══ */}
+        <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-frame-gray-3 pb-4">
+          <div>
+            <p className="frame-label mb-1">// Documentos de produção</p>
+            <h1 className="frame-title text-[clamp(1.5rem,3vw,2.2rem)] leading-none">Documentos do job</h1>
+            <p className="text-xs text-frame-gray-light mt-2 max-w-md leading-relaxed">
+              Escolha o tipo de documento, preencha os campos à esquerda e veja o PDF profissional sendo montado em tempo real à direita. Quando pronto, exporte ou salve uma versão.
+            </p>
+            {/* Workflow steps */}
+            <div className="flex gap-2 mt-3">
+              <div className="border border-frame-orange/30 bg-frame-orange/[0.06] px-2.5 py-1.5 text-center">
+                <span className="block font-frame-mono text-[0.48rem] text-frame-orange">01</span>
+                <span className="block text-[0.55rem] font-medium text-frame-white mt-0.5">Escolher tipo</span>
+              </div>
+              <div className="border border-frame-gray-3/40 px-2.5 py-1.5 text-center">
+                <span className="block font-frame-mono text-[0.48rem] text-frame-gray-light">02</span>
+                <span className="block text-[0.55rem] font-medium text-frame-gray-light mt-0.5">Preencher</span>
+              </div>
+              <div className="border border-frame-gray-3/40 px-2.5 py-1.5 text-center">
+                <span className="block font-frame-mono text-[0.48rem] text-frame-gray-light">03</span>
+                <span className="block text-[0.55rem] font-medium text-frame-gray-light mt-0.5">Revisar preview</span>
+              </div>
+              <div className="border border-frame-gray-3/40 px-2.5 py-1.5 text-center">
+                <span className="block font-frame-mono text-[0.48rem] text-frame-gray-light">04</span>
+                <span className="block text-[0.55rem] font-medium text-frame-gray-light mt-0.5">Exportar PDF</span>
+              </div>
             </div>
           </div>
-          {projectIdParam && (
-            <div className="mt-5 grid grid-cols-1 gap-2 border-t border-frame-gray-3 pt-4 sm:grid-cols-3">
-              {[
-                [t("app.documents.contextProject") as string, activeProject?.name || t("app.documents.syncingContext") as string],
-                [t("app.documents.contextClient") as string, form.client || t("app.common.toBeDefined") as string],
-                [t("app.documents.contextDocument") as string, selectedDoc.label],
-              ].map(([label, value]) => (
-                <div key={label} className="border border-frame-gray-3 bg-frame-black/20 p-3">
-                  <p className="font-frame-mono text-[0.56rem] uppercase tracking-[0.16em] text-frame-orange">{label}</p>
-                  <p className="mt-1 truncate text-sm text-frame-white">{value}</p>
-                </div>
+          <div className="flex flex-wrap gap-2 shrink-0">
+            {activeProject && (
+              <button type="button" onClick={applyLinkedContext} className="frame-btn-ghost flex items-center gap-2">
+                <Link2 className="w-4 h-4" /> Contexto
+              </button>
+            )}
+            <button type="button" onClick={copyText} className="frame-btn-ghost flex items-center gap-2">
+              <Copy className="w-4 h-4" /> Copiar
+            </button>
+            <button type="button" onClick={exportDocx} className="frame-btn-ghost flex items-center gap-2">
+              <FileText className="w-4 h-4" /> Word
+            </button>
+            <button type="button" onClick={() => saveCurrent()} className="frame-btn-ghost flex items-center gap-2">
+              <Save className="w-4 h-4" /> Salvar
+            </button>
+            <button type="button" onClick={() => exportPdf()} className="frame-btn-primary flex items-center gap-2">
+              <Download className="w-4 h-4" /> PDF
+            </button>
+          </div>
+        </header>
+
+        {/* ═══ DOC TYPE TABS ═══ */}
+        <nav className="flex gap-1.5 overflow-x-auto scrollbar-none">
+          {DOC_TYPES.map((doc) => {
+            const Icon = doc.icon;
+            const active = form.type === doc.id;
+            return (
+              <button
+                key={doc.id}
+                type="button"
+                onClick={() => setForm((current) => nextFormForType(current, doc.id))}
+                className={`flex items-center gap-1.5 px-3 py-2 border whitespace-nowrap transition text-[0.62rem] font-semibold uppercase tracking-wider ${
+                  active
+                    ? "border-frame-orange bg-frame-orange/10 text-frame-orange"
+                    : "border-frame-gray-3 text-frame-gray-light hover:border-frame-orange/40 hover:text-frame-white"
+                }`}
+              >
+                <Icon className="w-3 h-3" />
+                {doc.label}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* ═══ STATUS (in project) ═══ */}
+        {projectIdParam && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border border-frame-gray-3 bg-frame-gray-1/15 px-4 py-2.5">
+            <span className="text-xs text-frame-gray-light">
+              <span className="font-frame-mono text-frame-orange text-[0.55rem]">v{artifactVersion}</span>
+              {" · "}{activeProject?.name} · {form.client || "Sem cliente"}
+            </span>
+            <div className="flex gap-1">
+              {([["draft", "Rascunho"], ["review", "Revisão"], ["approved", "Aprovado"], ["archived", "Arquivado"]] as const).map(([status, label]) => (
+                <button key={status} type="button" onClick={() => void updateArtifactStatus(status)} className={`min-h-7 border px-2.5 font-frame-mono text-[0.5rem] uppercase tracking-wider transition ${artifactStatus === status ? "border-frame-orange bg-frame-orange/10 text-frame-orange" : "border-frame-gray-3 text-frame-gray-light hover:text-frame-white"}`}>{label}</button>
               ))}
-              <div className="sm:col-span-3 flex flex-col gap-2 border border-frame-gray-3 bg-frame-black/20 p-3 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <p className="font-frame-mono text-[0.56rem] uppercase tracking-[0.16em] text-frame-orange">Versão {artifactVersion} · ciclo do documento</p>
-                  <p className="mt-1 text-xs text-frame-gray-light">O status fica salvo no projeto e acompanha aprovação e arquivo.</p>
-                </div>
-                <div className="grid grid-cols-2 gap-1 sm:flex">
-                  {([['draft', 'Rascunho'], ['review', 'Em revisão'], ['approved', 'Aprovado'], ['archived', 'Arquivado']] as const).map(([status, label]) => (
-                    <button key={status} type="button" onClick={() => void updateArtifactStatus(status)} className={`min-h-9 border px-3 font-frame-mono text-[0.54rem] uppercase tracking-[0.08em] ${artifactStatus === status ? "border-frame-orange bg-frame-orange/10 text-frame-orange" : "border-frame-gray-3 text-frame-gray-light"}`} aria-pressed={artifactStatus === status}>{label}</button>
+            </div>
+          </div>
+        )}
+
+        {/* ═══ SPLIT VIEW: Form (left) | Preview (right) ═══ */}
+        <div className="grid grid-cols-1 xl:grid-cols-[440px_minmax(0,1fr)] gap-4 items-start">
+
+          {/* LEFT: Inline Form */}
+          <aside className="space-y-3 xl:sticky xl:top-20 xl:max-h-[calc(100vh-100px)] xl:overflow-y-auto xl:pr-2 scrollbar-thin">
+            {activeGroups.map((group) => (
+              <section key={group.title} className="border border-frame-gray-3 bg-frame-gray-1/15 p-4">
+                <p className="mb-3 font-frame-mono text-[0.58rem] uppercase tracking-[0.14em]" style={{ color: selectedDoc.accent }}>
+                  {group.title}
+                </p>
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  {group.fields.map((field) => (
+                    <FormField
+                      key={`${group.title}-${field.key}`}
+                      field={field}
+                      value={String(form[field.key] ?? "")}
+                      onChange={(value) => update(field.key, value)}
+                    />
                   ))}
                 </div>
-              </div>
+              </section>
+            ))}
+            <div className="flex gap-2 pt-2">
+              <button type="button" onClick={() => saveCurrent()} className="frame-btn-ghost flex-1 flex items-center justify-center gap-1.5 text-xs">
+                <Save className="w-3 h-3" /> Salvar versão
+              </button>
+              <button type="button" onClick={() => exportPdf()} className="frame-btn-primary flex-1 flex items-center justify-center gap-1.5 text-xs">
+                <Download className="w-3 h-3" /> Exportar PDF
+              </button>
             </div>
-          )}
-        </section>
-
-        <section className="app-panel p-4">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <p className="frame-label">// {t("app.documents.documentType")}</p>
-              <p className="mt-1 text-xs text-frame-gray-light">{t("app.documents.chooseDocumentHint")}</p>
-            </div>
-            <span className="font-frame-mono text-[0.6rem] uppercase tracking-[0.12em]" style={{ color: selectedDoc.accent }}>
-              {selectedDoc.label}
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-8">
-            {DOC_TYPES.map((doc) => {
-              const Icon = doc.icon;
-              const active = form.type === doc.id;
-              return (
-                <button
-                  key={doc.id}
-                  type="button"
-                  onClick={() => setForm((current) => nextFormForType(current, doc.id))}
-                  className={`min-h-[86px] border p-3 text-left transition ${
-                    active
-                      ? "bg-frame-orange/8 shadow-[inset_0_-3px_0_var(--color-frame-orange)]"
-                      : "border-frame-gray-3 bg-frame-black/10 hover:bg-frame-gray-2/30"
-                  }`}
-                  style={{ borderColor: active ? doc.accent : undefined }}
-                >
-                  <Icon className="mb-3 h-4 w-4" style={{ color: doc.accent }} />
-                  <span className="block text-xs font-semibold uppercase tracking-wide">{doc.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="app-panel overflow-hidden shadow-[0_26px_100px_rgba(0,0,0,0.24)]">
-            <div className="flex flex-col gap-3 border-b border-frame-gray-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <span className="font-frame-mono text-[0.62rem] uppercase tracking-[0.14em]" style={{ color: selectedDoc.accent }}>
-                  {t("app.documents.preview") + " " + selectedDoc.label}
-                </span>
-                <p className="mt-1 text-xs text-frame-gray-light">
-                  {t("app.documents.pdfInfo")}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <button type="button" onClick={() => setIsEditorOpen(true)} className="frame-btn-ghost flex items-center gap-2 px-3 py-2">
-                  <Pencil className="h-3.5 w-3.5" />
-                  {t("app.common.edit")}
-                </button>
-                <button type="button" onClick={copyText} className="frame-btn-ghost flex items-center gap-2 px-3 py-2">
-                  <Copy className="h-3.5 w-3.5" />
-                  {t("app.common.copy")}
-                </button>
-                <button type="button" onClick={() => exportPdf()} className="frame-btn-primary flex items-center gap-2 px-3 py-2">
-                  <Download className="h-3.5 w-3.5" />
-                  {t("app.documents.exportPdf")}
-                </button>
-              </div>
-            </div>
-            <div className="bg-frame-black/20 p-3 sm:p-6">
-              <iframe
-                title={t("app.documents.documentPreview") as string}
-                srcDoc={html}
-                className="mx-auto h-[min(980px,calc(100vh-190px))] min-h-[680px] w-full max-w-[920px] bg-[#f8f4ed] shadow-[0_22px_70px_rgba(0,0,0,0.28)]"
-              />
-            </div>
-          </div>
-
-          <aside className="app-panel p-4 xl:sticky xl:top-24">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <p className="frame-label">// {t("app.documents.history")}</p>
-                <p className="mt-1 text-xs text-frame-gray-light">{t("app.documents.savedVersionsHint")}</p>
-              </div>
-              <span className="font-frame-mono text-[0.62rem] text-frame-gray-light">{visibleDocs.length}</span>
-            </div>
-            {visibleDocs.length === 0 ? (
-              <div className="border border-dashed border-frame-gray-3 p-5 text-sm leading-relaxed text-frame-gray-light">
-                {t("app.documents.emptyHistoryHint")}
-              </div>
-            ) : (
-              <div className="max-h-[620px] space-y-2 overflow-y-auto pr-1">
-                {visibleDocs.map((doc) => {
-                  const docType = DOC_TYPES.find((item) => item.id === doc.type);
-                  return (
-                    <div key={doc.id} className="border border-frame-gray-3 bg-frame-black/15 p-3">
-                      <button type="button" onClick={() => exportPdf(doc.html)} className="w-full text-left">
-                        <span className="block font-frame-mono text-[0.54rem] uppercase tracking-[0.1em]" style={{ color: docType?.accent }}>
-                          {docType?.label} · v{doc.version || 1} · {doc.status === "approved" ? "aprovado" : doc.status === "review" ? "em revisão" : doc.status === "archived" ? "arquivado" : "rascunho"}
-                        </span>
-                        <span className="mt-1 block truncate text-sm font-semibold">{doc.title}</span>
-                        <span className="mt-1 block truncate text-[0.62rem] text-frame-gray-light">
-                          {doc.client || t("app.documents.withoutClient")} · {new Date(doc.createdAt).toLocaleDateString("pt-BR")}
-                        </span>
-                      </button>
-                      <div className="mt-3 flex items-center justify-end gap-2 border-t border-frame-gray-3 pt-2">
-                        <button type="button" onClick={() => exportPdf(doc.html)} className="text-frame-orange transition hover:text-frame-white" title={t("app.common.exportPdf")}>
-                          <Download className="h-4 w-4" />
-                        </button>
-                        <button type="button" onClick={() => removeDoc(doc.id)} className="text-frame-gray-light transition hover:text-red-400" title={t("app.common.delete")}>
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
           </aside>
-        </section>
-      </main>
 
-      <AnimatedModal
-        isOpen={isEditorOpen}
-        onClose={() => setIsEditorOpen(false)}
-        title={`${t("app.common.edit")} ${selectedDoc.label}`}
-        description={t("app.documents.editModalDescription")}
-        className="max-w-5xl"
-        footer={
-          <>
-            <button type="button" onClick={() => setIsEditorOpen(false)} className="frame-btn-ghost">
-              Fechar sem salvar
-            </button>
-            <button type="button" onClick={saveAndClose} className="frame-btn-primary flex items-center gap-2">
-              <Save className="h-4 w-4" />
-              Salvar e fechar
-            </button>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          {activeGroups.map((group) => (
-            <section key={group.title} className="border border-frame-gray-3 bg-frame-gray-1/30 p-4">
-              <p className="mb-3 font-frame-mono text-[0.64rem] uppercase tracking-[0.18em]" style={{ color: selectedDoc.accent }}>
-                {group.title}
-              </p>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {group.fields.map((field) => (
-                  <FormField
-                    key={`${group.title}-${field.key}`}
-                    field={field}
-                    value={String(form[field.key] ?? "")}
-                    onChange={(value) => update(field.key, value)}
-                  />
-                ))}
+          {/* RIGHT: Live Preview + History */}
+          <div className="space-y-4">
+            <section className="border border-frame-gray-3 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-frame-gray-3 bg-frame-gray-1/20">
+                <span className="font-frame-mono text-[0.58rem] uppercase tracking-[0.1em]" style={{ color: selectedDoc.accent }}>
+                  Preview · {selectedDoc.label}
+                </span>
+                <button type="button" onClick={() => exportPdf()} className="text-frame-orange hover:text-frame-white transition" title="PDF">
+                  <Download className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div className="bg-frame-black/30 p-3 sm:p-4">
+                <iframe
+                  title="Preview do documento"
+                  srcDoc={html}
+                  className="mx-auto w-full max-w-[820px] h-[min(850px,calc(100vh-220px))] min-h-[550px] bg-[#f8f4ed] shadow-[0_18px_60px_rgba(0,0,0,0.25)]"
+                />
               </div>
             </section>
-          ))}
+
+            {/* History */}
+            <section className="border border-frame-gray-3 p-4">
+              <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.1em] text-frame-gray-light mb-3">
+                Histórico · {visibleDocs.length} versões
+              </p>
+              {visibleDocs.length === 0 ? (
+                <div className="frame-empty-state p-4 text-xs text-frame-gray-light text-center">
+                  Salve a primeira versão para criar histórico.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
+                  {visibleDocs.map((doc) => {
+                    const docType = DOC_TYPES.find((item) => item.id === doc.type);
+                    return (
+                      <div key={doc.id} className="border border-frame-gray-3 bg-frame-black/20 p-2.5 flex items-center justify-between gap-2">
+                        <button type="button" onClick={() => exportPdf(doc.html)} className="text-left min-w-0 flex-1">
+                          <span className="block font-frame-mono text-[0.5rem] uppercase" style={{ color: docType?.accent }}>{docType?.label} · v{doc.version || 1}</span>
+                          <span className="block truncate text-xs font-medium mt-0.5">{doc.title}</span>
+                        </button>
+                        <button type="button" onClick={() => removeDoc(doc.id)} className="text-frame-gray-light hover:text-red-400 transition p-1 shrink-0">
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          </div>
         </div>
-      </AnimatedModal>
+      </main>
     </div>
   );
 }

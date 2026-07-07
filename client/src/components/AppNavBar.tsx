@@ -5,7 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { planDisplayLabel } from "@/lib/plans";
 import { WHATSAPP_NUMBER } from "@/lib/constants";
-import { LogOut, Sun, Moon, Menu, X, Search } from "lucide-react";
+import { LogOut, Sun, Moon, Menu, X, Search, Film, ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import NotificationsPopover from "@/components/NotificationsPopover";
@@ -13,19 +13,21 @@ import BrandLogo from "@/components/BrandLogo";
 import AccessibilityFontControls from "@/components/AccessibilityFontControls";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useProject } from "@/contexts/ProjectContext";
+import JourneyBreadcrumb from "@/components/JourneyBreadcrumb";
 
 interface AppNavBarProps {
   children?: React.ReactNode;
 }
 
 export default function AppNavBar({ children }: AppNavBarProps) {
-  const { logout, user, plan } = useAuth();
+  const { logout, user, plan, isTeamMember } = useAuth();
   const { openModal, selectPlan } = useApp();
   const { theme, toggleTheme } = useTheme();
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const { projects, activeProject } = useProject();
   const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   // Close mobile menu on Esc key
@@ -92,11 +94,8 @@ export default function AppNavBar({ children }: AppNavBarProps) {
     );
   };
 
-  const navLink = (href: string, label: string, icon: string, tourId?: string) => {
-    const commercialRoutes = ["/clients", "/pipeline", "/interactions", "/proposals"];
-    const active = location === href || location.startsWith(href + "/") ||
-      (href === "/commercial" && commercialRoutes.some((route) => location === route || location.startsWith(`${route}/`))) ||
-      (href === "/projects" && location.startsWith("/project/"));
+  const navLink = (href: string, label: string, _icon: string, tourId?: string, forceActive?: boolean) => {
+    const active = forceActive ?? (location === href || location.startsWith(href + "/"));
     return (
       <motion.button
         type="button"
@@ -111,24 +110,37 @@ export default function AppNavBar({ children }: AppNavBarProps) {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
-        style={{ minHeight: "44px" }} // Accessibility: touch target ≥ 44px
+        style={{ minHeight: "44px" }}
       >
-        <span className="mr-1.5">{icon}</span>
+        <span className={`mr-1.5 text-[0.45rem] ${active ? "text-frame-orange" : "text-frame-gray-muted"}`}>●</span>
         {label}
       </motion.button>
     );
   };
 
-  // 5 primary navigation tabs: HOME, CLIENTS, JOBS, STUDIO, FINANCE
-  const primaryNavItems = [
-    ["/dashboard", t("app.nav.dashboard") as string, "🏠", "dashboard"],
-    ["/commercial", t("app.nav.clients") as string, "👥", "clients"],
-    ["/projects", "JOBS", "🎬", "projects"],
-    ["/tools", "STUDIO", "🤖", "studio"],
-    ["/analytics", t("app.nav.analytics") as string, "💰", "analytics"],
-  ] as const;
+  // Navigation follows the job story: Painel → Comercial → Produção → Financeiro
+  const commercialRoutes = ["/commercial", "/clients", "/pipeline", "/interactions", "/proposals"];
+  const productionRoutes = ["/projects", "/project/", "/tools", "/studio/", "/files", "/video-reviews", "/collaborators", "/documents", "/team"];
+  const financeRoutes = ["/analytics", "/analytics-premium"];
+
+  const isInCommercial = commercialRoutes.some((r) => location === r || location.startsWith(r + "/") || (r.endsWith("/") && location.startsWith(r)));
+  const isInProduction = productionRoutes.some((r) => location === r || location.startsWith(r + "/") || (r.endsWith("/") && location.startsWith(r)));
+  const isInFinance = financeRoutes.some((r) => location === r || location.startsWith(r + "/"));
+
+  const primaryNavItems = (
+    [
+      ["/dashboard",  locale === "en" ? "PANEL"      : "PAINEL",     "●", "dashboard", location === "/dashboard" || location === "/home"],
+      ["/commercial", locale === "en" ? "COMMERCIAL" : "COMERCIAL",  "●", "clients",   isInCommercial],
+      ["/projects",   locale === "en" ? "PRODUCTION" : "PRODUÇÃO",   "●", "projects",  isInProduction],
+      ["/analytics",  locale === "en" ? "FINANCE"    : "FINANCEIRO", "●", "analytics", isInFinance],
+    ] as const
+  ).filter(([path]) => {
+    if (isTeamMember && (path === "/commercial" || path === "/analytics")) return false;
+    return true;
+  });
 
   return (
+    <>
     <header className="frame-nav">
       <div className="flex items-center gap-2">
         <button
@@ -155,26 +167,83 @@ export default function AppNavBar({ children }: AppNavBarProps) {
       </div>
 
       <nav className="hidden xl:flex items-center gap-4">
-        {primaryNavItems.map(([href, label, icon, tourId]) => (
-          <span key={href}>{navLink(href, label, icon, tourId)}</span>
+        {primaryNavItems.map(([href, label, icon, tourId, active]) => (
+          <span key={href}>{navLink(href, label, icon, tourId, active as boolean)}</span>
         ))}
       </nav>
 
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2">
         {children}
+        {/* JOB selector — compact chip with glass dropdown */}
         {user && contextProject && (
-          <label className="hidden xl:flex min-w-0 items-center border border-frame-gray-3 bg-frame-black/40 px-2 py-1.5" title={t("app.nav.activeProject") as string}>
-            <span className="mr-2 font-frame-mono text-[0.52rem] uppercase tracking-[0.12em] text-frame-orange">JOB</span>
-            <select
-              value={contextProject.id}
-              onChange={(event) => setLocation(`/project/${event.target.value}`)}
-              className="max-w-[118px] 2xl:max-w-[150px] bg-transparent text-[0.68rem] font-semibold text-frame-white outline-none"
+          <div className="hidden xl:block relative">
+            <button
+              type="button"
+              onClick={() => setProjectDropdownOpen(!projectDropdownOpen)}
+              className="flex items-center gap-2.5 px-3 py-1.5 border border-frame-gray-3/60 bg-frame-gray-1/30 hover:border-frame-orange/50 hover:bg-frame-orange/[0.04] transition-all group rounded-sm"
               aria-label={t("app.nav.activeProject") as string}
             >
-              {projects.map((project) => <option key={project.id} value={project.id} className="bg-frame-black">{project.name}</option>)}
-            </select>
-          </label>
+              <span className="w-5 h-5 flex items-center justify-center bg-frame-orange/15 border border-frame-orange/30 rounded-sm shrink-0">
+                <Film className="w-3 h-3 text-frame-orange" />
+              </span>
+              <span className="flex flex-col items-start min-w-0 max-w-[150px]">
+                <span className="text-[0.72rem] font-semibold text-frame-white truncate w-full leading-tight">{contextProject.name}</span>
+                <span className="text-[0.58rem] text-frame-gray-light truncate w-full leading-tight">{contextProject.clientName || contextProject.status}</span>
+              </span>
+              <ChevronDown className={`w-3 h-3 text-frame-gray-light group-hover:text-frame-orange transition-transform ${projectDropdownOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {/* Glass dropdown */}
+            {projectDropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setProjectDropdownOpen(false)} />
+                <div
+                  className="absolute top-full right-0 mt-2 w-72 z-50 border border-frame-gray-3/60 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 project-dropdown-glass"
+                >
+                  <div className="px-3 py-2.5 border-b border-frame-gray-3/40">
+                    <p className="font-frame-mono text-[0.55rem] uppercase tracking-[0.14em] text-frame-orange">{t("app.nav.activeProject")}</p>
+                  </div>
+                  <div className="max-h-[280px] overflow-y-auto py-1">
+                    {projects.map((project) => {
+                      const isActive = project.id === contextProject.id;
+                      return (
+                        <button
+                          key={project.id}
+                          type="button"
+                          onClick={() => { setLocation(`/project/${project.id}`); setProjectDropdownOpen(false); }}
+                          className={`w-full text-left px-3 py-2.5 flex items-center gap-3 transition-colors ${
+                            isActive
+                              ? "bg-frame-orange/10 border-l-2 border-frame-orange"
+                              : "hover:bg-frame-gray-2/50 border-l-2 border-transparent"
+                          }`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isActive ? "bg-frame-orange" : "bg-frame-gray-3"}`} />
+                          <span className="min-w-0 flex-1">
+                            <span className={`block text-[0.75rem] font-medium truncate ${isActive ? "text-frame-orange" : "text-frame-white"}`}>{project.name}</span>
+                            {project.clientName && (
+                              <span className="block text-[0.6rem] text-frame-gray-light truncate">{project.clientName}</span>
+                            )}
+                          </span>
+                          {isActive && <span className="text-[0.5rem] font-frame-mono text-frame-orange">✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="px-3 py-2 border-t border-frame-gray-3/40">
+                    <button
+                      type="button"
+                      onClick={() => { setLocation("/projects"); setProjectDropdownOpen(false); }}
+                      className="w-full text-left text-[0.65rem] font-frame-mono text-frame-gray-light hover:text-frame-orange transition tracking-wider"
+                    >
+                      {t("app.hub.viewAll")}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         )}
+        {/* Search */}
         {user && (
           <button
             type="button"
@@ -187,51 +256,66 @@ export default function AppNavBar({ children }: AppNavBarProps) {
             <kbd className="hidden lg:inline">⌘K</kbd>
           </button>
         )}
+        {/* Notifications */}
+        {user && <NotificationsPopover />}
+        {/* Avatar + dropdown menu */}
         {user && (
-          <button
-            type="button"
-            onClick={() => setLocation("/profile")}
-            className="hidden sm:flex items-center gap-2.5 group"
-            title="Abrir conta"
-            data-tour="profile"
-          >
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-[0.75rem] font-bold shrink-0 transition group-hover:scale-105 bg-frame-orange text-frame-black">
-              {(user.name ?? user.email).charAt(0).toUpperCase()}
-            </div>
-            <div className="hidden sm:block text-left leading-tight">
-              <div className="font-frame-mono text-[0.6rem] tracking-[0.06em] text-frame-white truncate max-w-[100px]">
-                {user?.name ?? user?.email}
+          <div className="relative group">
+            <button
+              type="button"
+              className="flex items-center gap-2 group"
+              title={user.name ?? user.email}
+            >
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-[0.75rem] font-bold shrink-0 transition group-hover:scale-105 bg-frame-orange text-frame-black">
+                {(user.name ?? user.email).charAt(0).toUpperCase()}
               </div>
-              <div className="font-frame-mono text-[0.62rem] tracking-[0.08em] text-frame-gray-light">
-                {user?.email}
+            </button>
+            {/* Dropdown on hover */}
+            <div className="absolute right-0 top-full mt-1 w-56 border border-frame-gray-3 bg-frame-black/98 backdrop-blur-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <div className="p-3 border-b border-frame-gray-3">
+                <p className="text-xs font-semibold text-frame-white truncate">{user.name ?? user.email}</p>
+                <p className="text-[0.6rem] text-frame-gray-light truncate">{user.email}</p>
+              </div>
+              <div className="p-1.5 space-y-0.5">
+                <button type="button" onClick={() => setLocation("/profile")} className="w-full text-left px-3 py-2 text-xs text-frame-gray-light hover:text-frame-white hover:bg-frame-gray-1/50 transition flex items-center gap-2">
+                  {t("app.nav.myAccount") as string}
+                </button>
+                <button type="button" onClick={() => setLocation("/company")} className="w-full text-left px-3 py-2 text-xs text-frame-gray-light hover:text-frame-white hover:bg-frame-gray-1/50 transition flex items-center gap-2">
+                  {locale === "en" ? "Configure studio" : "Configurar estúdio"}
+                </button>
+                <div className="px-3 py-2 flex items-center justify-between">
+                  <span className="text-xs text-frame-gray-light">Idioma</span>
+                  <LanguageSwitcher compact />
+                </div>
+                <div className="px-3 py-2 flex items-center justify-between">
+                  <span className="text-xs text-frame-gray-light">Tema</span>
+                  <button type="button" onClick={toggleTheme} className="text-frame-gray-light hover:text-frame-orange transition">
+                    {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+                <div className="px-3 py-2 flex items-center justify-between">
+                  <span className="text-xs text-frame-gray-light">Fonte</span>
+                  <AccessibilityFontControls />
+                </div>
+              </div>
+              <div className="p-1.5 border-t border-frame-gray-3">
+                <button type="button" onClick={handleBadgeClick} className="w-full text-left px-3 py-2 text-xs text-frame-orange hover:bg-frame-orange/10 transition">
+                  {planLabel}
+                </button>
+                <button type="button" onClick={handleLogout} className="w-full text-left px-3 py-2 text-xs text-frame-gray-light hover:text-red-400 hover:bg-red-400/5 transition flex items-center gap-2">
+                  <LogOut className="w-3 h-3" />
+                  {t("app.nav.logout") as string}
+                </button>
               </div>
             </div>
+          </div>
+        )}
+        {/* Plan badge (visible when trial) */}
+        {user && plan && (plan.status === "trial" || plan.planId === "free") && (
+          <button type="button" onClick={handleBadgeClick} className="frame-badge hidden md:inline-flex">
+            {planLabel}
           </button>
         )}
-        <div className="hidden sm:flex items-center">
-          <LanguageSwitcher compact />
-        </div>
-        {user && <NotificationsPopover />}
-        {user && <div className="hidden sm:block"><AccessibilityFontControls /></div>}
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className="p-2 border border-frame-gray-3 text-frame-gray-light hover:text-frame-orange hover:border-frame-orange transition rounded-none"
-          title={theme === "dark" ? t("app.nav.darkMode") as string : t("app.nav.lightMode") as string}
-        >
-          {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-        </button>
-        <button type="button" onClick={handleBadgeClick} className="frame-badge hidden md:inline-flex">
-          {planLabel}
-        </button>
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="hidden sm:flex font-frame-mono text-[0.64rem] tracking-[0.09em] uppercase bg-transparent border border-frame-gray-3 text-frame-gray-light px-2.5 py-1.5 transition hover:border-frame-red hover:text-frame-red items-center gap-1.5"
-        >
-          <LogOut className="w-3 h-3" />
-          {t("app.nav.logout") as string}
-        </button>
       </div>
 
       {/* Mobile menu with animations, backdrop, and accessibility features */}
@@ -258,10 +342,10 @@ export default function AppNavBar({ children }: AppNavBarProps) {
               transition={{ duration: 0.3, ease: "easeOut" }}
               className="absolute left-0 right-0 top-full z-[500] xl:hidden border-b border-frame-gray-2 bg-frame-black/98 backdrop-blur-xl px-4 py-4 shadow-2xl"
             >
-              {/* Primary navigation - 5 tabs in 2-column grid */}
+              {/* Primary navigation - story-driven */}
               <nav className="grid grid-cols-2 gap-2">
-                {primaryNavItems.map(([href, label, icon, tourId]) => (
-                  <span key={href} className="block">{navLink(href, label, icon, tourId)}</span>
+                {primaryNavItems.map(([href, label, icon, tourId, active]) => (
+                  <span key={href} className="block">{navLink(href, label, icon, tourId, active as boolean)}</span>
                 ))}
               </nav>
 
@@ -305,5 +389,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
         )}
       </AnimatePresence>
     </header>
+    <JourneyBreadcrumb />
+    </>
   );
 }

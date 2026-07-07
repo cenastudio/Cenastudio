@@ -344,7 +344,7 @@ describe('GlassCard', () => {
       );
 
       const card = container.querySelector('.glass-card') as HTMLElement;
-      expect(card.style.WebkitBackdropFilter).toBeDefined();
+      expect(card.style.getPropertyValue('-webkit-backdrop-filter')).toBeDefined();
     });
   });
 

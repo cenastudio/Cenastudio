@@ -48,12 +48,17 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
           <button
             type="button"
             onClick={() => setLocation(`/project/${projectId}`)}
-            className={`flex min-h-10 shrink-0 items-center gap-1.5 border-b-2 px-3 py-1.5 font-frame-mono text-xs tracking-wider transition ${location === `/project/${projectId}` ? "border-frame-orange text-frame-orange" : "border-transparent text-frame-gray-light hover:text-frame-white"}`}
+            className={`flex min-h-10 shrink-0 items-center gap-1.5 px-3 py-1.5 font-frame-mono text-xs tracking-wider transition-all duration-200
+              relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:transition-all
+              ${location === `/project/${projectId}`
+                ? "text-frame-orange after:bg-frame-orange"
+                : "text-frame-gray-light hover:text-frame-white after:bg-transparent"
+              }`}
           >
             <BookOpen className="h-3.5 w-3.5" />
             {t("app.common.overview") as string}
           </button>
-          <nav className="flex items-center gap-1 overflow-x-auto scrollbar-none" aria-label={t("app.nav.projectJourney") as string}>
+          <nav className="flex items-center gap-0 overflow-x-auto scrollbar-none" aria-label={t("app.nav.projectJourney") as string}>
             {WORKFLOW_STAGES.map((stage) => {
               const isActive = activeStage === stage.id && location !== `/project/${projectId}`;
               return (
@@ -61,14 +66,15 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
                   key={stage.id}
                   type="button"
                   onClick={() => setLocation(`/project/${projectId}/journey/${stage.id}`)}
-                  className={`flex min-h-10 items-center gap-1.5 px-3 py-1.5 text-xs font-frame-mono tracking-wider transition whitespace-nowrap ${
-                    isActive
-                      ? "text-frame-orange border-b-2 border-frame-orange"
-                      : "text-frame-gray-light hover:text-frame-white border-b-2 border-transparent"
-                  }`}
+                  className={`flex min-h-10 items-center gap-1.5 px-3 py-1.5 text-xs font-frame-mono tracking-wider transition-all duration-200 whitespace-nowrap
+                    relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:transition-all
+                    ${isActive
+                      ? "text-frame-orange after:bg-frame-orange"
+                      : "text-frame-gray-light hover:text-frame-white after:bg-transparent"
+                    }`}
                   aria-current={isActive ? "page" : undefined}
                 >
-                  <span className="text-[0.52rem] text-frame-orange">{stage.number}</span>
+                  <span className={`text-[0.52rem] transition-colors ${isActive ? "text-frame-orange" : "text-frame-gray-muted"}`}>{stage.number}</span>
                   {stage.label}
                 </button>
               );

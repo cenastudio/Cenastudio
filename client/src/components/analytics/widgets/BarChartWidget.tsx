@@ -65,7 +65,7 @@ export default function BarChartWidget({ title, data, config }: BarChartWidgetPr
                 borderRadius: "4px",
                 fontSize: "0.875rem"
               }}
-              formatter={(value: number) => [formatNumber(value), "Count"]}
+              formatter={(value) => [formatNumber(Number(value)), "Count"]}
             />
             <Bar
               dataKey="value"

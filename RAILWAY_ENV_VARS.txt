@@ -1,0 +1,84 @@
+# =============================================================================
+# VARIÁVEIS DE AMBIENTE RAILWAY - COPIAR E COLAR NO DASHBOARD
+# =============================================================================
+# Acesse: https://railway.app/project/2dade05a-97e9-473c-936e-c9667b6732535528b051-9fc1-4aa5-a12e-4c46612dc718
+# Vá em: Variables > Raw Editor
+# Cole TUDO abaixo (substitua os <PLACEHOLDERS>)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. SERVER CONFIGURATION
+# -----------------------------------------------------------------------------
+NODE_ENV=production
+PORT=5000
+CLIENT_ORIGIN=https://cenastudio.dev
+
+# -----------------------------------------------------------------------------
+# 2. AUTHENTICATION
+# -----------------------------------------------------------------------------
+# IMPORTANTE: Gerar JWT Secret no terminal:
+# openssl rand -base64 32
+JWT_SECRET=<COLAR_RESULTADO_DO_COMANDO_ACIMA>
+
+# Seu email de admin
+ADMIN_EMAILS=seu-email@dominio.com
+
+# Senhas fortes (min 12 caracteres)
+ADMIN_DEFAULT_PASSWORD=<CRIAR_SENHA_FORTE_12_CHARS>
+DEMO_USER_PASSWORD=demo123456789
+
+# -----------------------------------------------------------------------------
+# 3. DATABASE - POSTGRESQL
+# -----------------------------------------------------------------------------
+# ATENÇÃO: Adicionar PostgreSQL no Railway PRIMEIRO!
+# Dashboard > New > Database > Add PostgreSQL
+# Depois volte aqui e adicione esta variável:
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+
+# -----------------------------------------------------------------------------
+# 4. CLOUDINARY - ✅ PRONTO!
+# -----------------------------------------------------------------------------
+CLOUDINARY_CLOUD_NAME=tlfxvneq
+CLOUDINARY_API_KEY=616546241273315
+CLOUDINARY_API_SECRET=1LR3bMh83L6kLtMxkkdII4HqFfc
+
+# -----------------------------------------------------------------------------
+# 5. AI PROVIDER - OPENROUTER
+# -----------------------------------------------------------------------------
+# CRIAR CONTA: https://openrouter.ai
+# Depois: https://openrouter.ai/keys > Create Key
+AI_PROVIDER=openrouter
+OPENROUTER_API_KEY=<COLAR_KEY_DO_OPENROUTER>
+OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
+OPENROUTER_MAX_TOKENS=4096
+OPENROUTER_TEMPERATURE=0.7
+
+# -----------------------------------------------------------------------------
+# 6. STRIPE - PAGAMENTOS
+# -----------------------------------------------------------------------------
+# CRIAR CONTA: https://dashboard.stripe.com/register
+# Developers > API Keys
+STRIPE_SECRET_KEY=<COLAR_SECRET_KEY_DO_STRIPE>
+STRIPE_PUBLISHABLE_KEY=<COLAR_PUBLISHABLE_KEY_DO_STRIPE>
+
+# Price IDs dos produtos (criar os produtos primeiro)
+STRIPE_PRICE_PRO=<COLAR_PRICE_ID_DO_PLANO_PRO>
+STRIPE_PRICE_STUDIO=<COLAR_PRICE_ID_DO_PLANO_STUDIO>
+
+# Webhook Secret (configurar DEPOIS do deploy)
+STRIPE_WEBHOOK_SECRET=<CONFIGURAR_DEPOIS>
+
+# -----------------------------------------------------------------------------
+# 7. SUPABASE (OPCIONAL - deixar vazio por enquanto)
+# -----------------------------------------------------------------------------
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+
+# -----------------------------------------------------------------------------
+# 8. GITHUB OAUTH (OPCIONAL - deixar vazio por enquanto)
+# -----------------------------------------------------------------------------
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+GITHUB_CALLBACK_URL=https://cenastudio.dev/api/auth/github/callback

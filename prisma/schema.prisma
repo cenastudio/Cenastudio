@@ -19,6 +19,7 @@ model User {
   studioName     String?   @map("studio_name")
   studioRole     String?   @map("studio_role")
   phone          String?
+  mustResetPassword Boolean @default(false) @map("must_reset_password")
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   ownedWorkspaces Workspace[] @relation("WorkspaceOwner")

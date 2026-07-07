@@ -7,6 +7,7 @@ import {
   deleteFile,
   getFile,
   downloadFile,
+  renameFile,
 } from "../controllers/filesController.js";
 
 const router = Router();
@@ -25,6 +26,9 @@ router.get("/:id", getFile);
 
 // Download file
 router.get("/:id/download", downloadFile);
+
+// Rename a file
+router.patch("/:id/rename", renameFile);
 
 // Delete a file
 router.delete("/:id", deleteFile);

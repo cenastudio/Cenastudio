@@ -5,6 +5,89 @@ import { generateProposal } from '../services/ai/proposalGenerator';
 import { summarizeInteraction } from '../services/ai/interactionSummarizer';
 import { analyzeSentiment } from '../services/ai/sentimentAnalysis';
 import { chatbotHelp } from '../services/ai/helpChatbot';
+import { generateForTool, trackUsage } from '../services/aiService.js';
+import { checkAndIncrementUsage } from '../services/authService.js';
+import { db } from '../models/db.js';
+import { prisma, shouldUsePrisma } from '../models/prisma.js';
+import { jsonSafe } from '../utils/prismaSerialization.js';
+
+/**
+ * POST /api/ai/generate
+ * Gera conteúdo usando uma das 12 ferramentas IA
+ */
+export async function generate(req: Request, res: Response, next: (err?: unknown) => void) {
+  try {
+    const userId = req.user!.id;
+    const { toolId, input, projectId, model } = req.body;
+
+    await checkAndIncrementUsage(userId, toolId);
+    const result = await generateForTool(userId, toolId, input || {}, projectId, model);
+
+    res.json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * GET /api/ai/history/:toolId
+ * Lista o histórico de gerações de uma ferramenta para o usuário autenticado
+ */
+export async function getHistory(req: Request, res: Response) {
+  try {
+    const userId = req.user!.id;
+    const { toolId } = req.params;
+    const { projectId } = req.query;
+
+    let generations: any[];
+    if (shouldUsePrisma) {
+      const rows = await prisma.generation.findMany({
+        where: {
+          userId: BigInt(userId),
+          toolId,
+          ...(projectId ? { projectId: BigInt(Number(projectId)) } : {}),
+        },
+        include: { project: { select: { name: true } } },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      });
+      generations = rows.map((row) => {
+        const { project, ...rest } = row as any;
+        return { ...jsonSafe(rest), projectName: project?.name ?? null };
+      });
+    } else {
+      if (projectId) {
+        generations = db
+          .prepare(
+            `SELECT g.*, p.name as project_name FROM generations g
+             LEFT JOIN projects p ON g.project_id = p.id
+             WHERE g.user_id = ? AND g.tool_id = ? AND g.project_id = ?
+             ORDER BY g.created_at DESC LIMIT 50`,
+          )
+          .all(userId, toolId, Number(projectId)) as any[];
+      } else {
+        generations = db
+          .prepare(
+            `SELECT g.*, p.name as project_name FROM generations g
+             LEFT JOIN projects p ON g.project_id = p.id
+             WHERE g.user_id = ? AND g.tool_id = ?
+             ORDER BY g.created_at DESC LIMIT 50`,
+          )
+          .all(userId, toolId) as any[];
+      }
+      // Normalize project_name to camelCase for consistency
+      generations = generations.map((g: any) => ({ ...g, projectName: g.project_name ?? null }));
+    }
+
+    res.json({ success: true, data: generations });
+  } catch (error) {
+    console.error('Error in getHistory:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao buscar histórico'
+    });
+  }
+}
 
 /**
  * POST /api/ai/script-suggestions

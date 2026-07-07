@@ -2,575 +2,210 @@ import { useEffect, useState, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
 import AppNavBar from "@/components/AppNavBar";
-import Breadcrumbs from "@/components/Breadcrumbs";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import AnimatedModal from "@/components/AnimatedModal";
 import EmptyState from "@/components/EmptyState";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { SkeletonCard, SkeletonCardGrid } from "@/components/skeletons";
+import { SkeletonCard } from "@/components/skeletons";
 import { ExportButton } from "@/components/ExportButton";
-import {
-  AlertCircle,
-  Users, Plus, Search, Phone, Mail, MoreVertical,
-  Edit, Trash2, TrendingUp, DollarSign, GripVertical, Upload,
-} from "lucide-react";
+import { Users, Plus, Search, Phone, Mail, MapPin, Edit, Trash2, TrendingUp, DollarSign, Upload, ChevronRight, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useDebounce } from "@/hooks/useDebounce";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  DndContext, DragOverlay, PointerSensor, useDroppable, useSensor, useSensors, DragStartEvent, DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext, useSortable, verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { motion } from "framer-motion";
 
 interface Client {
-  id: number;
-  name: string;
-  company?: string;
-  email?: string;
-  phone?: string;
-  segment: string;
-  status: string;
-  workflow_stage?: string;
-  notes?: string;
-  total_spent: number;
-  created_at: string;
-  updated_at: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  website?: string;
-  linkedin?: string;
-  instagram?: string;
-  industry?: string;
-  company_size?: string;
-  annual_revenue?: number;
-  contact_person?: string;
-  contact_role?: string;
-  billing_cycle?: string;
-  payment_method?: string;
-  tax_id?: string;
+  id: number; name: string; company?: string; email?: string; phone?: string;
+  segment: string; status: string; workflow_stage?: string; total_spent: number;
+  city?: string; state?: string; contact_person?: string; contact_role?: string;
 }
 
-const WORKFLOW_STAGES = [
-  { id: "prospect", label: "Prospectado", color: "border-blue-500/30 bg-blue-500/5" },
-  { id: "contacted", label: "Contatado", color: "border-yellow-500/30 bg-yellow-500/5" },
-  { id: "qualified", label: "Qualificado", color: "border-purple-500/30 bg-purple-500/5" },
-  { id: "proposal", label: "Proposta", color: "border-orange-500/30 bg-orange-500/5" },
-  { id: "negotiation", label: "Negociação", color: "border-pink-500/30 bg-pink-500/5" },
-  { id: "won", label: "Ganho", color: "border-green-500/30 bg-green-500/5" },
-  { id: "recurrent", label: "Recorrente", color: "border-cyan-500/30 bg-cyan-500/5" },
-  { id: "freela", label: "Freela", color: "border-indigo-500/30 bg-indigo-500/5" },
-  { id: "lost", label: "Perdido", color: "border-red-500/30 bg-red-500/5" },
-];
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-
-const normalizeKey = (value?: unknown) =>
-  String(value ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\D/g, "")
-    .trim()
-    .toLowerCase();
-
-const normalizeTextKey = (value?: unknown) =>
-  String(value ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLowerCase();
-
-const parseMoney = (value: unknown) => {
-  if (typeof value === "number") return Number.isFinite(value) ? Math.round(value) : 0;
-  const raw = String(value ?? "").replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", ".");
-  const parsed = Number(raw);
-  return Number.isFinite(parsed) ? Math.round(parsed) : 0;
+const STAGE_COLORS: Record<string, string> = {
+  prospect: "bg-blue-500/15 text-blue-400 border-blue-500/30",
+  contacted: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
+  qualified: "bg-purple-500/15 text-purple-400 border-purple-500/30",
+  proposal: "bg-orange-500/15 text-orange-400 border-orange-500/30",
+  negotiation: "bg-pink-500/15 text-pink-400 border-pink-500/30",
+  won: "bg-green-500/15 text-green-400 border-green-500/30",
+  recurrent: "bg-cyan-500/15 text-cyan-400 border-cyan-500/30",
+  freela: "bg-indigo-500/15 text-indigo-400 border-indigo-500/30",
+  lost: "bg-red-500/15 text-red-400 border-red-500/30",
 };
 
-const mapImportedWorkflowStage = (value: unknown, relationshipType?: unknown) => {
-  const status = normalizeTextKey(value);
-  const relation = normalizeTextKey(relationshipType);
-  if (relation.includes("recorrente")) return "recurrent";
-  if (status.includes("proposta")) return "proposal";
-  if (status.includes("negocia")) return "negotiation";
-  if (status.includes("ganho") || status.includes("fechado") || status.includes("aprovado")) return "won";
-  if (status.includes("perdido") || status.includes("cancelado")) return "lost";
-  if (status.includes("contat")) return "contacted";
-  if (status.includes("qualific")) return "qualified";
-  return "prospect";
+const SEGMENT_COLORS: Record<string, string> = {
+  direct: "bg-blue-500/10 text-blue-300 border-blue-500/20",
+  agency: "bg-purple-500/10 text-purple-300 border-purple-500/20",
+  brand: "bg-green-500/10 text-green-300 border-green-500/20",
 };
 
-const mapImportedStatus = (value: unknown, relationshipType?: unknown) => {
-  const status = normalizeTextKey(value);
-  const relation = normalizeTextKey(relationshipType);
-  if (status.includes("perdido") || status.includes("cancelado")) return "inactive";
-  if (status.includes("ganho") || status.includes("fechado") || relation.includes("recorrente")) return "active";
-  return "lead";
-};
+const formatCurrency = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
+const norm = (v?: unknown) => String(v ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
 
-const buildImportedNotes = (client: Record<string, unknown>) => {
-  const lines = [
-    ["Servico", client.service],
-    ["Pagamento", client.payment],
-    ["Temperatura do lead", client.leadTemp],
-    ["Origem", client.leadSource],
-    ["Proxima reuniao", client.nextMeeting],
-    ["Proxima acao", client.nextAction],
-    ["Follow-up", client.followUpDate],
-    ["Tipo de relacionamento", client.relationshipType],
-    ["PIX", client.pix],
-    ["Portfolio", client.portfolio],
-    ["Contrato", client.contract],
-    ["Disponibilidade", client.availability],
-    ["Termos de parceria", client.partnerTerms],
-    ["Permuta", client.barterDetails],
-    ["Observacoes", client.notes],
-    ["ID original", client.id],
-  ]
-    .filter(([, value]) => String(value ?? "").trim())
-    .map(([label, value]) => `${label}: ${String(value).trim()}`);
-
-  return lines.join("\n");
-};
-
-const normalizeImportedClient = (client: Record<string, unknown>) => {
-  const name = String(client.name ?? client.title ?? client.company ?? "").trim();
-  const totalSpent = parseMoney(client.monthlyValue || client.value || client.total_spent);
-  return {
-    name,
-    company: String(client.company ?? "").trim() || undefined,
-    email: String(client.email ?? "").trim() || undefined,
-    phone: String(client.phone ?? "").trim() || undefined,
-    segment: "direct",
-    status: mapImportedStatus(client.status, client.relationshipType),
-    workflow_stage: mapImportedWorkflowStage(client.status, client.relationshipType),
-    notes: buildImportedNotes(client),
-    total_spent: totalSpent,
-    website: String(client.portfolio ?? "").trim().startsWith("http")
-      ? String(client.portfolio).trim()
-      : undefined,
-    billing_cycle: String(client.relationshipType ?? "").trim() || undefined,
-    payment_method: String(client.payment ?? "").trim() || undefined,
-  };
-};
-
-const extractImportedClients = (payload: unknown) => {
-  if (Array.isArray(payload)) return payload;
-  if (payload && typeof payload === "object") {
-    const record = payload as Record<string, unknown>;
-    if (Array.isArray(record.clients)) return record.clients;
-    if (Array.isArray(record.data)) return record.data;
-    if (Array.isArray(record.customers)) return record.customers;
+const extractImported = (p: unknown) => {
+  if (Array.isArray(p)) return p;
+  if (p && typeof p === "object") {
+    const r = p as Record<string, unknown>;
+    return Array.isArray(r.clients) ? r.clients : Array.isArray(r.data) ? r.data : Array.isArray(r.customers) ? r.customers : [];
   }
   return [];
 };
 
-function SortableClientCard({
-  client,
-  onEdit,
-  onDelete,
-  isDragging,
-}: {
-  client: Client;
-  onEdit: (client: Client) => void;
-  onDelete: (client: Client) => void;
-  isDragging?: boolean;
-}) {
+function ClientCard({ client, onEdit, onDelete, onClick }: { client: Client; onEdit: () => void; onDelete: () => void; onClick: () => void }) {
   const { t } = useLanguage();
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-    id: `client-${client.id}`,
-  });
+  const stageClass = STAGE_COLORS[client.workflow_stage || "prospect"] || STAGE_COLORS.prospect;
+  const segmentClass = SEGMENT_COLORS[client.segment] || SEGMENT_COLORS.direct;
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
+  const STAGE_LABELS: Record<string, string> = {
+    prospect: t("app.clients.stageProspect") || "Prospectado",
+    contacted: t("app.clients.stageContacted") || "Contatado",
+    qualified: t("app.clients.stageQualified") || "Qualificado",
+    proposal: t("app.clients.stageProposal") || "Proposta",
+    negotiation: t("app.clients.stageNegotiation") || "Negociação",
+    won: t("app.clients.stageWon") || "Ganho",
+    recurrent: t("app.clients.stageRecurrent") || "Recorrente",
+    freela: t("app.clients.stageFreela") || "Freela",
+    lost: t("app.clients.stageLost") || "Perdido",
   };
 
-  const stage = WORKFLOW_STAGES.find((s) => s.id === client.workflow_stage) || WORKFLOW_STAGES[0];
+  const SEGMENT_LABELS: Record<string, string> = {
+    direct: t("app.common.segmentDirect") || "Direto",
+    agency: t("app.common.segmentAgency") || "Agência",
+    brand: t("app.common.segmentBrand") || "Marca",
+  };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className={`border-l-2 ${stage.color} bg-frame-gray-2/30 p-3 mb-2 cursor-grab active:cursor-grabbing hover:border-l-frame-orange transition-[background-color,border-color,box-shadow,transform] duration-200 group`}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1 min-w-0">
-          <h4 className="font-semibold text-sm text-frame-white truncate">{client.name}</h4>
-          {client.company && (
-            <p className="text-xs text-frame-gray-light truncate">{client.company}</p>
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      className="glow-card border border-frame-gray-3 bg-frame-gray-1/20 p-4 group cursor-pointer hover:border-frame-orange/40 hover:bg-frame-orange/[0.02] transition-all duration-200"
+      onClick={onClick}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0 space-y-1.5">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h3 className="font-semibold text-frame-white group-hover:text-frame-orange transition truncate">{client.name}</h3>
+            <span className={`text-[0.6rem] font-medium px-2 py-0.5 border rounded-full uppercase tracking-wider ${stageClass}`}>
+              {STAGE_LABELS[client.workflow_stage || "prospect"] || client.workflow_stage || "prospect"}
+            </span>
+            {client.segment && (
+              <span className={`text-[0.6rem] font-medium px-2 py-0.5 border rounded-full uppercase tracking-wider ${segmentClass}`}>{SEGMENT_LABELS[client.segment] || client.segment}</span>
+            )}
+          </div>
+          {client.company && <p className="text-xs text-frame-gray-light truncate">{client.company}</p>}
+          {(client.contact_person || client.contact_role) && (
+            <p className="text-xs text-frame-gray-light">{client.contact_person}{client.contact_role ? ` · ${client.contact_role}` : ""}</p>
           )}
+          <div className="flex items-center gap-4 flex-wrap text-xs text-frame-gray-light pt-1">
+            {client.phone && <a href={`tel:${client.phone}`} onClick={(e) => e.stopPropagation()} className="flex items-center gap-1 hover:text-frame-orange transition"><Phone className="w-3 h-3" /> {client.phone}</a>}
+            {client.email && <a href={`mailto:${client.email}`} onClick={(e) => e.stopPropagation()} className="flex items-center gap-1 hover:text-frame-orange transition"><Mail className="w-3 h-3" /> {client.email}</a>}
+            {(client.city || client.state) && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {[client.city, client.state].filter(Boolean).join(", ")}</span>}
+          </div>
         </div>
-        <div className="cursor-grab shrink-0 opacity-45 group-hover:opacity-100 transition" aria-hidden="true">
-          <GripVertical className="w-3.5 h-3.5 text-frame-gray-light" />
+        <div className="flex items-center gap-3 shrink-0">
+          <span className="font-frame-mono text-sm text-frame-orange font-semibold">{formatCurrency(client.total_spent)}</span>
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+            <button type="button" onClick={(e) => { e.stopPropagation(); onEdit(); }} className="p-1.5 text-frame-gray-light hover:text-frame-orange hover:bg-frame-orange/10 rounded transition" title={t("app.common.edit") as string}><Edit className="w-3.5 h-3.5" /></button>
+            <button type="button" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-1.5 text-frame-gray-light hover:text-red-400 hover:bg-red-400/10 rounded transition" title={t("app.common.delete") as string}><Trash2 className="w-3.5 h-3.5" /></button>
+          </div>
+          <ChevronRight className="w-4 h-4 text-frame-gray-light group-hover:text-frame-orange transition" />
         </div>
       </div>
-
-      <div className="flex items-center gap-2 mt-2 text-xs text-frame-gray-light">
-        {client.email && <Mail className="w-3 h-3 shrink-0" />}
-        {client.phone && <Phone className="w-3 h-3 shrink-0" />}
-      </div>
-
-      <div className="flex items-center justify-between mt-2 pt-2 border-t border-frame-gray-3">
-        <span className="text-xs text-frame-gray-light font-mono">{formatCurrency(client.total_spent)}</span>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              onPointerDown={(event) => event.stopPropagation()}
-              className="p-1 hover:bg-frame-gray-3 rounded transition-colors opacity-0 group-hover:opacity-100"
-              aria-label={`Ações de ${client.name}`}
-            >
-              <MoreVertical className="w-3.5 h-3.5 text-frame-gray-light" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit(client)}>
-              <Edit className="w-4 h-4 mr-2" /> {t("app.common.edit") as string}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onDelete(client)} className="text-red-400">
-              <Trash2 className="w-4 h-4 mr-2" /> {t("app.common.delete") as string}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </div>
+    </motion.div>
   );
 }
 
-function ColumnHeader({ stage, count }: { stage: typeof WORKFLOW_STAGES[0]; count: number }) {
-  const stageColors: Record<string, string> = {
-    prospect: "bg-blue-500",
-    contacted: "bg-yellow-500",
-    qualified: "bg-purple-500",
-    proposal: "bg-orange-500",
-    negotiation: "bg-pink-500",
-    won: "bg-green-500",
-    recurrent: "bg-cyan-500",
-    freela: "bg-indigo-500",
-    lost: "bg-red-500",
-  };
-
-  return (
-    <div className={`flex items-center justify-between px-3 py-2.5 border-b ${stage.color} bg-frame-gray-1`}>
-      <div className="flex items-center gap-2">
-        <div className={`w-2 h-2 rounded-full ${stageColors[stage.id] || "bg-frame-gray-4"}`} />
-        <h3 className="font-semibold text-xs text-frame-white uppercase tracking-wider">{stage.label}</h3>
-      </div>
-      <span className="text-xs font-mono text-frame-gray-light bg-frame-gray-2 px-2 py-0.5">{count}</span>
-    </div>
-  );
-}
-
-function DroppableStageColumn({
-  stage,
-  children,
-}: {
-  stage: typeof WORKFLOW_STAGES[0];
-  children: React.ReactNode;
-}) {
-  const { isOver, setNodeRef } = useDroppable({ id: stage.id });
-
-  return (
-    <div
-      ref={setNodeRef}
-      className={`clients-stage-column flex-shrink-0 w-[260px] border ${stage.color} bg-frame-black/50 flex flex-col transition-[border-color,box-shadow,background] duration-200 ${isOver ? "is-over border-frame-orange shadow-[0_0_0_1px_rgba(232,80,2,0.38),0_18px_60px_rgba(232,80,2,0.12)]" : ""}`}
-      style={{ maxHeight: "calc(100vh - 320px)" }}
-    >
-      {children}
-    </div>
-  );
-}
-
-interface ClientStats {
-  totalClients: number;
-  activeClients: number;
-  leadClients: number;
-  totalRevenue: number;
-  bySegment: Array<{ segment: string; count: number }>;
-  recentActivity: any[];
-}
-
-function ClientsContent() {
+function ClientsContent({ embedded }: { embedded?: boolean }) {
   const [, setLocation] = useLocation();
   const { t } = useLanguage();
-
   const [clients, setClients] = useState<Client[]>([]);
-  const [stats, setStats] = useState<ClientStats | null>(null);
+  const [stats, setStats] = useState<{ totalClients: number; activeClients: number; leadClients: number; totalRevenue: number } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeDragId, setActiveDragId] = useState<string | null>(null);
-
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 300);
   const [filterStatus, setFilterStatus] = useState("");
   const [filterSegment, setFilterSegment] = useState("");
   const [isImporting, setIsImporting] = useState(false);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-  );
-
   const loadClients = useCallback(async () => {
-    setIsLoading(true);
-    setLoadError(false);
+    setIsLoading(true); setLoadError(false);
     try {
       const params = new URLSearchParams();
       if (filterStatus) params.append("status", filterStatus);
       if (filterSegment) params.append("segment", filterSegment);
       if (debouncedSearch) params.append("search", debouncedSearch);
-      const response = await fetch(`/api/clients?${params}`);
-      const data = await response.json();
-      if (!response.ok || !data.success) throw new Error(data.error || "Erro ao carregar clientes");
-      if (data.success) setClients(data.data);
-    } catch (error) {
-      console.error("Error loading clients:", error);
-      setClients([]);
-      setLoadError(true);
-    } finally {
-      setIsLoading(false);
-    }
+      const res = await fetch(`/api/clients?${params}`);
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error();
+      setClients(data.data);
+    } catch { setClients([]); setLoadError(true); }
+    finally { setIsLoading(false); }
   }, [filterStatus, filterSegment, debouncedSearch]);
 
   const loadStats = async () => {
-    try {
-      const response = await fetch("/api/clients/stats");
-      const data = await response.json();
-      if (data.success) setStats(data.data);
-    } catch {
-      console.error("Error loading stats");
-    }
+    try { const res = await fetch("/api/clients/stats"); const data = await res.json(); if (data.success) setStats(data.data); } catch { /* silent */ }
   };
 
-  useEffect(() => {
-    loadClients();
-    loadStats();
-  }, []);
-
-  useEffect(() => {
-    loadClients();
-  }, [filterStatus, filterSegment, debouncedSearch]);
-
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveDragId(String(event.active.id));
-  };
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    setActiveDragId(null);
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    const clientId = parseInt(String(active.id).replace("client-", ""));
-    const client = clients.find((c) => c.id === clientId);
-    if (!client) return;
-
-    const overId = String(over.id);
-    let targetStage: string | null = null;
-
-    // Check if dropped on a stage column header
-    const stageMatch = WORKFLOW_STAGES.find((s) => s.id === overId);
-    if (stageMatch) {
-      targetStage = stageMatch.id;
-    }
-
-    // Check if dropped on another client card -> infer stage from that client
-    if (!targetStage && overId.startsWith("client-")) {
-      const overClientId = parseInt(overId.replace("client-", ""));
-      const overClient = clients.find((c) => c.id === overClientId);
-      if (overClient) {
-        targetStage = overClient.workflow_stage || "prospect";
-      }
-    }
-
-    if (targetStage && targetStage !== client.workflow_stage) {
-      try {
-        const response = await fetch(`/api/clients/${client.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ workflow_stage: targetStage }),
-        });
-        if (response.ok) {
-          const stageLabel = WORKFLOW_STAGES.find((s) => s.id === targetStage)?.label || targetStage;
-          toast.success(`${client.name} movido para ${stageLabel}`);
-          loadClients();
-        }
-      } catch {
-        toast.error("Erro ao mover cliente");
-      }
-    }
-  };
+  useEffect(() => { loadClients(); loadStats(); }, []);
+  useEffect(() => { loadClients(); }, [filterStatus, filterSegment, debouncedSearch]);
 
   const handleDelete = async () => {
     if (!selectedClient) return;
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/clients/${selectedClient.id}`, { method: "DELETE" });
-      const data = await response.json();
-      if (data.success) {
-        toast.success(t("app.clients.clientDeleted") as string);
-        setIsDeleteOpen(false);
-        setSelectedClient(null);
-        loadClients();
-        loadStats();
-      } else {
-        toast.error(data.error || t("app.errors.generic") as string);
-      }
-    } catch {
-      toast.error(t("app.errors.generic") as string);
-    } finally {
-      setIsSubmitting(false);
-    }
+      const res = await fetch(`/api/clients/${selectedClient.id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) { toast.success(t("app.clients.clientDeleted") as string); setIsDeleteOpen(false); setSelectedClient(null); loadClients(); loadStats(); }
+      else toast.error(data.error || t("app.errors.generic") as string);
+    } catch { toast.error(t("app.errors.generic") as string); }
+    finally { setIsSubmitting(false); }
   };
 
   const handleImportFile = async (file?: File | null) => {
     if (!file || isImporting) return;
-
     setIsImporting(true);
     try {
       const payload = JSON.parse(await file.text());
-      const imported = extractImportedClients(payload)
-        .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object")
-        .map(normalizeImportedClient)
-        .filter((client) => client.name);
+      const imported = extractImported(payload)
+        .filter((i): i is Record<string, unknown> => Boolean(i) && typeof i === "object")
+        .map((c) => ({ name: String(c.name ?? c.title ?? c.company ?? "").trim(), company: String(c.company ?? "").trim() || undefined, email: String(c.email ?? "").trim() || undefined, phone: String(c.phone ?? "").trim() || undefined, segment: "direct", status: "lead", workflow_stage: "prospect", total_spent: 0 }))
+        .filter((c) => c.name);
+      if (!imported.length) { toast.error(t("app.errors.generic") as string); return; }
 
-      if (imported.length === 0) {
-        toast.error(t("app.errors.generic") as string);
-        return;
-      }
-
-      const existingResponse = await fetch("/api/clients");
-      const existingData = await existingResponse.json();
-      const existingClients: Client[] = existingData.success ? existingData.data : clients;
-      const existingKeys = new Set(
-        existingClients.map((client) =>
-          [
-            normalizeTextKey(client.name),
-            normalizeTextKey(client.email),
-            normalizeKey(client.phone),
-          ].filter(Boolean).join("|"),
-        ),
-      );
-
-      let created = 0;
-      let skipped = 0;
-
+      const existing = await fetch("/api/clients").then((r) => r.json());
+      const keys = new Set((existing.success ? existing.data : clients).map((c: Client) => norm(c.name)));
+      let created = 0, skipped = 0;
       for (const client of imported) {
-        const key = [
-          normalizeTextKey(client.name),
-          normalizeTextKey(client.email),
-          normalizeKey(client.phone),
-        ].filter(Boolean).join("|");
-
-        if (existingKeys.has(key)) {
-          skipped += 1;
-          continue;
-        }
-
-        const response = await fetch("/api/clients", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(client),
-        });
-        const result = await response.json();
-        if (result.success) {
-          created += 1;
-          existingKeys.add(key);
-        } else {
-          skipped += 1;
-        }
+        if (keys.has(norm(client.name))) { skipped++; continue; }
+        const r = await fetch("/api/clients", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(client) });
+        const d = await r.json(); if (d.success) { created++; keys.add(norm(client.name)); } else skipped++;
       }
-
-      await loadClients();
-      await loadStats();
-      toast.success(`${created} cliente(s) importado(s). ${skipped} ignorado(s).`);
-    } catch (error) {
-      console.error("Import error:", error);
-      toast.error(t("app.errors.generic") as string);
-    } finally {
-      setIsImporting(false);
-    }
+      await loadClients(); await loadStats();
+      toast.success((t("app.clients.importSuccess") as string).replace("{created}", String(created)).replace("{skipped}", String(skipped)));
+    } catch { toast.error(t("app.errors.generic") as string); }
+    finally { setIsImporting(false); }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active": return "text-green-400 bg-green-400/10 border-green-400/20";
-      case "lead": return "text-blue-400 bg-blue-400/10 border-blue-400/20";
-      case "inactive": return "text-gray-400 bg-gray-400/10 border-gray-400/20";
-      default: return "text-gray-400 bg-gray-400/10 border-gray-400/20";
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "active": return t("app.collaborators.active") as string;
-      case "lead": return t("app.pipeline.lead") as string;
-      case "inactive": return t("app.collaborators.inactive") as string;
-      default: return status;
-    }
-  };
-
-  const activeDragClient = activeDragId
-    ? clients.find((c) => `client-${c.id}` === activeDragId)
-    : null;
   const hasActiveFilters = Boolean(debouncedSearch.trim() || filterStatus || filterSegment);
-  const clearFilters = () => {
-    setSearchTerm("");
-    setFilterStatus("");
-    setFilterSegment("");
-  };
+  const clearFilters = () => { setSearchTerm(""); setFilterStatus(""); setFilterSegment(""); };
 
   return (
-    <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
-      <AppNavBar />
-
-      <main id="main-content" className="flex-1 max-w-[1600px] w-full mx-auto px-6 py-8 space-y-6">
-        <Breadcrumbs />
+    <div className={`${embedded ? "" : "min-h-screen"} bg-frame-black text-frame-white font-frame-body flex flex-col`}>
+      {!embedded && <AppNavBar />}
+      <main id="main-content" className="flex-1 max-w-6xl w-full mx-auto px-6 py-8 space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-5 border-b border-frame-gray-3 pb-6">
           <div>
-            <p className="text-frame-orange font-frame-mono text-xs tracking-[0.2em] uppercase mb-2">// {t("app.clients.title") as string}</p>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{t("app.clients.title") as string}</h1>
-            <p className="text-frame-gray-light text-sm mt-2">{t("app.clients.noClientsDesc") as string}</p>
+            <p className="frame-label mb-2">{t("app.clients.eyebrow") as string}</p>
+            <h1 className="frame-title text-[clamp(1.8rem,3.5vw,2.8rem)]">{t("app.clients.pageTitle") as string}</h1>
+            <p className="text-frame-gray-light text-sm mt-2 max-w-lg leading-relaxed">{t("app.clients.pageDescription") as string}</p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 shrink-0">
             <ExportButton entityType="clients" variant="outline" size="default" />
-            <label className="frame-btn-ghost flex items-center justify-center gap-2 shrink-0">
-              <Upload className="w-4 h-4" />
-              {isImporting ? t("app.common.loading") as string : t("app.common.import") as string}
-              <input
-                type="file"
-                accept="application/json,.json"
-                className="sr-only"
-                disabled={isImporting}
-                onChange={(event) => {
-                  void handleImportFile(event.target.files?.[0]);
-                  event.currentTarget.value = "";
-                }}
-              />
+            <label className="frame-btn-ghost flex items-center justify-center gap-2 shrink-0 cursor-pointer">
+              <Upload className="w-4 h-4" /> {isImporting ? t("app.common.loading") as string : t("app.common.import") as string}
+              <input type="file" accept="application/json,.json" className="sr-only" disabled={isImporting} onChange={(e) => { void handleImportFile(e.target.files?.[0]); e.currentTarget.value = ""; }} />
             </label>
-            <button
-              onClick={() => setLocation("/clients/new")}
-              className="frame-btn-primary flex items-center justify-center gap-2 shrink-0"
-            >
-              <Plus className="w-4 h-4" />
-              {t("app.clients.newClient") as string}
+            <button onClick={() => setLocation("/clients/new")} className="frame-btn-primary flex items-center justify-center gap-2 shrink-0">
+              <Plus className="w-4 h-4" /> {t("app.clients.newClient") as string}
             </button>
           </div>
         </div>
@@ -579,22 +214,15 @@ function ClientsContent() {
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
-              { label: t("app.common.all") as string, value: stats.totalClients, icon: Users, color: "text-frame-orange bg-frame-orange/10" },
+              { label: t("app.clients.totalClients") as string || "Total", value: stats.totalClients, icon: Users, color: "text-frame-orange bg-frame-orange/10" },
               { label: t("app.clients.activeClients") as string, value: stats.activeClients, icon: TrendingUp, color: "text-green-400 bg-green-500/10" },
               { label: "Leads", value: stats.leadClients, icon: Users, color: "text-blue-400 bg-blue-500/10" },
-              { label: t("app.clients.totalSpent") as string, value: formatCurrency(stats.totalRevenue), icon: DollarSign, color: "text-green-400 bg-green-500/10" },
+              { label: t("app.clients.totalSpent") as string || "Valor acumulado", value: formatCurrency(stats.totalRevenue), icon: DollarSign, color: "text-green-400 bg-green-500/10" },
             ].map((item, i) => (
-              <motion.div
-                key={item.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="border border-frame-gray-3 bg-frame-gray-1/20 p-4"
-              >
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                className="border border-frame-gray-3 bg-frame-gray-1/20 p-4">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${item.color}`}>
-                    <item.icon className="w-5 h-5" />
-                  </div>
+                  <div className={`p-2 rounded-lg ${item.color}`}><item.icon className="w-5 h-5" /></div>
                   <div className="min-w-0">
                     <p className="text-[0.6rem] text-frame-gray-light font-frame-mono uppercase tracking-wider">{item.label}</p>
                     <p className="text-xl font-bold truncate">{item.value}</p>
@@ -605,267 +233,53 @@ function ClientsContent() {
           </div>
         )}
 
-        {/* Filters */}
+        {/* Search + Filters */}
         <div className="flex flex-wrap gap-3 items-center">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
-            <input
-              type="text"
-              placeholder={t("app.clients.search") as string}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-frame-gray-2 border border-frame-gray-3 pl-10 pr-4 py-2 text-sm outline-none focus:border-frame-orange"
-            />
+            <input type="text" placeholder={t("app.clients.search") as string} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+              className="frame-input w-full pl-10 pr-4 py-2 text-sm" />
           </div>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="bg-frame-gray-2 border border-frame-gray-3 px-4 py-2 text-sm outline-none focus:border-frame-orange"
-          >
+          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="bg-frame-gray-2 border border-frame-gray-3 px-4 py-2 text-sm outline-none focus:border-frame-orange">
             <option value="">{t("app.common.all") as string}</option>
             <option value="active">{t("app.collaborators.active") as string}</option>
             <option value="lead">{t("app.pipeline.lead") as string}</option>
             <option value="inactive">{t("app.collaborators.inactive") as string}</option>
           </select>
-          <select
-            value={filterSegment}
-            onChange={(e) => setFilterSegment(e.target.value)}
-            className="bg-frame-gray-2 border border-frame-gray-3 px-4 py-2 text-sm outline-none focus:border-frame-orange"
-          >
+          <select value={filterSegment} onChange={(e) => setFilterSegment(e.target.value)} className="bg-frame-gray-2 border border-frame-gray-3 px-4 py-2 text-sm outline-none focus:border-frame-orange">
             <option value="">{t("app.common.all") as string}</option>
             <option value="direct">{t("app.common.segmentDirect") as string}</option>
             <option value="agency">{t("app.common.segmentAgency") as string}</option>
             <option value="brand">{t("app.common.segmentBrand") as string}</option>
           </select>
-          <button
-            type="button"
-            onClick={clearFilters}
-            disabled={!hasActiveFilters}
-            className="frame-btn-ghost disabled:opacity-40 disabled:pointer-events-none"
-          >
-            {t("app.clients.clearFilters") as string}
-          </button>
+          {hasActiveFilters && <button type="button" onClick={clearFilters} className="frame-btn-ghost text-sm">{t("app.clients.clearFilters") as string}</button>}
         </div>
 
-        {/* Main Content with Sidebar */}
-        <div className="flex gap-6">
-          {/* Sidebar */}
-          <aside className="hidden lg:block w-56 shrink-0 space-y-4">
-            <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-4">
-              <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-3">{t("app.common.filter") as string}</p>
-              <div className="space-y-2">
-                 <button onClick={() => setLocation("/clients/new")} className="w-full text-left text-sm text-frame-gray-light hover:text-frame-white transition px-2 py-1.5 border border-frame-gray-3 hover:border-frame-orange/50">
-                  + {t("app.clients.newClient") as string}
-                </button>
-                <label className="block w-full text-left text-sm text-frame-gray-light hover:text-frame-white transition px-2 py-1.5 border border-frame-gray-3 hover:border-frame-orange/50 cursor-pointer">
-                  {t("app.common.import") as string}
-                  <input
-                    type="file"
-                    accept="application/json,.json"
-                    className="sr-only"
-                    disabled={isImporting}
-                    onChange={(event) => {
-                      void handleImportFile(event.target.files?.[0]);
-                      event.currentTarget.value = "";
-                    }}
-                  />
-                </label>
-              </div>
-            </div>
-            <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-4">
-              <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-3">{t("app.clients.segment") as string}</p>
-              <div className="space-y-1.5">
-                {[
-                  { id: "", label: t("app.common.all") as string, color: "bg-frame-gray-3" },
-                  { id: "direct", label: "Direto", color: "bg-blue-400" },
-                  { id: "agency", label: "Agência", color: "bg-purple-400" },
-                  { id: "brand", label: "Marca", color: "bg-green-400" },
-                ].map((seg) => (
-                  <button
-                    key={seg.id}
-                    onClick={() => setFilterSegment(seg.id)}
-                    className={`w-full text-left text-xs flex items-center gap-2 px-2 py-1.5 transition ${
-                      filterSegment === seg.id ? "text-frame-white bg-frame-gray-2" : "text-frame-gray-light hover:text-frame-white"
-                    }`}
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full ${seg.color}`} />
-                    {seg.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-4">
-              <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-3">{t("app.clients.workflowStage") as string}</p>
-              <div className="space-y-1.5">
-                {[
-                  { id: "", label: t("app.common.all") as string, color: "bg-frame-gray-3" },
-                  { id: "active", label: t("app.collaborators.active") as string, color: "bg-green-400" },
-                  { id: "lead", label: t("app.pipeline.lead") as string, color: "bg-blue-400" },
-                  { id: "inactive", label: t("app.collaborators.inactive") as string, color: "bg-red-400" },
-                ].map((st) => (
-                  <button
-                    key={st.id}
-                    onClick={() => setFilterStatus(st.id)}
-                    className={`w-full text-left text-xs flex items-center gap-2 px-2 py-1.5 transition ${
-                      filterStatus === st.id ? "text-frame-white bg-frame-gray-2" : "text-frame-gray-light hover:text-frame-white"
-                    }`}
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full ${st.color}`} />
-                    {st.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {stats && (
-              <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-4">
-                <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] uppercase text-frame-orange mb-3">{t("app.clients.stats") as string}</p>
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-frame-gray-light">{t("app.common.all") as string}</span>
-                    <span className="font-semibold">{stats.totalClients}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-green-400">{t("app.clients.activeClients") as string}</span>
-                    <span className="font-semibold">{stats.activeClients}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-blue-400">{t("app.pipeline.lead") as string}</span>
-                    <span className="font-semibold">{stats.leadClients}</span>
-                  </div>
-                  {stats.bySegment.length > 0 && (
-                    <>
-                      <div className="border-t border-frame-gray-3 my-1" />
-                      {stats.bySegment.map((s) => (
-                        <div key={s.segment} className="flex justify-between">
-                          <span className="text-frame-gray-light">{s.segment || t("app.common.none") as string}</span>
-                          <span className="font-semibold">{s.count}</span>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-          </aside>
-
-          {/* Kanban Board */}
-          <div className="flex-1 min-w-0">
-          {isLoading ? (
-            <div className="flex gap-3 overflow-x-auto pb-4">
-              {WORKFLOW_STAGES.slice(0, 5).map((stage) => (
-                <div key={stage.id} className="flex-shrink-0 w-[260px] border border-frame-gray-3 bg-frame-gray-1/20">
-                  <div className="px-3 py-2.5 border-b border-frame-gray-3">
-                    <div className="h-4 w-24 bg-frame-gray-3 animate-pulse rounded" />
-                  </div>
-                  <div className="p-2 space-y-2">
-                    <SkeletonCard />
-                    <SkeletonCard />
-                    <SkeletonCard />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : loadError ? (
-            <div className="border border-frame-red/30 bg-frame-red/5 py-16">
-              <EmptyState
-                icon={AlertCircle}
-                title={t("app.clients.loadError") as string}
-                description={t("app.clients.loadErrorDescription") as string}
-                action={{ label: t("app.common.tryAgain") as string, onClick: loadClients }}
-              />
-            </div>
-          ) : clients.length === 0 ? (
-            <div className="border border-dashed border-frame-gray-3 p-12 text-center">
-              <EmptyState
-                icon={hasActiveFilters ? Search : Users}
-                title={t(hasActiveFilters ? "app.clients.noResults" : "app.clients.noClients") as string}
-                description={t(hasActiveFilters ? "app.clients.noResultsDescription" : "app.clients.noClientsDesc") as string}
-                action={hasActiveFilters
-                  ? { label: t("app.clients.clearFilters") as string, onClick: clearFilters }
-                  : { label: t("app.clients.newClient") as string, onClick: () => setLocation("/clients/new") }}
-              />
-            </div>
-          ) : (
-          <DndContext
-            sensors={sensors}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          >
-          <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-thin" style={{ minHeight: "500px" }}>
-            {WORKFLOW_STAGES.map((stage) => {
-              const stageClients = clients.filter((c) => c.workflow_stage === stage.id);
-              return (
-                <DroppableStageColumn key={stage.id} stage={stage}>
-                  <ColumnHeader stage={stage} count={stageClients.length} />
-                  <SortableContext
-                    items={stageClients.map((c) => `client-${c.id}`)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    <div className="flex-1 overflow-y-auto p-2 space-y-0">
-                      <AnimatePresence>
-                        {stageClients.map((client) => (
-                          <motion.div
-                            key={client.id}
-                            layout
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                          >
-                            <SortableClientCard
-                               client={client}
-                               onEdit={(c) => setLocation(`/clients/${c.id}/editar`)}
-                               onDelete={(c) => { setSelectedClient(c); setIsDeleteOpen(true); }}
-                               isDragging={activeDragId === `client-${client.id}`}
-                            />
-                          </motion.div>
-                        ))}
-                      </AnimatePresence>
-                    </div>
-                  </SortableContext>
-                </DroppableStageColumn>
-              );
-            })}
+        {/* Client List */}
+        {isLoading ? (
+          <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)}</div>
+        ) : loadError ? (
+          <EmptyState icon={AlertCircle} title={t("app.clients.loadError") as string} description={t("app.clients.loadErrorDescription") as string} action={{ label: t("app.common.tryAgain") as string, onClick: loadClients }} />
+        ) : clients.length === 0 ? (
+          <div className="py-16"><EmptyState icon={Users} title={hasActiveFilters ? t("app.clients.emptyFilteredTitle") as string : t("app.clients.emptyTitle") as string} description={hasActiveFilters ? t("app.clients.emptyFilteredDesc") as string : t("app.clients.emptyDesc") as string} action={{ label: hasActiveFilters ? t("app.clients.clearFilters") as string : t("app.clients.newClient") as string, onClick: hasActiveFilters ? clearFilters : () => setLocation("/clients/new") }} /></div>
+        ) : (
+          <div className="space-y-2">
+            {clients.map((client) => (
+              <ClientCard key={client.id} client={client} onClick={() => setLocation(`/clients/${client.id}`)} onEdit={() => setLocation(`/clients/${client.id}/editar`)} onDelete={() => { setSelectedClient(client); setIsDeleteOpen(true); }} />
+            ))}
           </div>
-
-          <DragOverlay>
-            {activeDragClient ? (
-              <div className="w-[260px] border-l-2 border-frame-orange bg-frame-gray-2/80 p-3 shadow-2xl">
-                <h4 className="font-semibold text-sm text-frame-white">{activeDragClient.name}</h4>
-                {activeDragClient.company && (
-                  <p className="text-xs text-frame-gray-light">{activeDragClient.company}</p>
-                )}
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
-          )}
-        </div>{/* end kanban flex-1 */}
-      </div>{/* end sidebar layout */}
+        )}
       </main>
 
-
-
-      {/* Delete Confirmation */}
-      <ConfirmDialog
-        isOpen={isDeleteOpen}
-        onClose={() => setIsDeleteOpen(false)}
-        onConfirm={handleDelete}
-        title={`${t("app.common.delete") as string} ${t("app.clients.title") as string}`}
-        description={t("app.common.confirmDelete") as string}
-        confirmText={t("app.common.delete") as string}
-        cancelText={t("app.common.cancel") as string}
-        variant="delete"
-        isLoading={isSubmitting}
-        itemName={selectedClient ? `${selectedClient.name}${selectedClient.company ? ` (${selectedClient.company})` : ''}` : undefined}
-      />
+      <ConfirmDialog isOpen={isDeleteOpen} onClose={() => setIsDeleteOpen(false)} onConfirm={handleDelete}
+        title={`${t("app.common.delete") as string} ${t("app.clients.title") as string}`} description={t("app.common.confirmDelete") as string}
+        confirmText={t("app.common.delete") as string} cancelText={t("app.common.cancel") as string} variant="delete" isLoading={isSubmitting}
+        itemName={selectedClient ? `${selectedClient.name}${selectedClient.company ? ` (${selectedClient.company})` : ""}` : undefined} />
     </div>
   );
 }
 
-export default function Clients() {
-  return (
-    <ProtectedRoute>
-      <ClientsContent />
-    </ProtectedRoute>
-  );
+export default function Clients({ embedded }: { embedded?: boolean }) {
+  if (embedded) return <ClientsContent embedded />;
+  return <ProtectedRoute><ClientsContent /></ProtectedRoute>;
 }

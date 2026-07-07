@@ -18,6 +18,7 @@ vi.mock('../../models/prisma', () => ({
   prisma: {
     project: {
       count: vi.fn(),
+      findMany: vi.fn(),
     },
     client: {
       count: vi.fn(),

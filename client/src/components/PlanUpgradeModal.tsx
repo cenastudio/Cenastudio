@@ -3,18 +3,6 @@
  *
  * Full-featured modal for plan selection and upgrade.
  * Shows plan comparison, pricing, and Stripe checkout integration.
- *
- * @example
- * ```tsx
- * const [showModal, setShowModal] = useState(false);
- *
- * <button onClick={() => setShowModal(true)}>Upgrade</button>
- * <PlanUpgradeModal
- *   open={showModal}
- *   onClose={() => setShowModal(false)}
- *   currentPlan="free"
- * />
- * ```
  */
 
 import React, { useState } from "react";
@@ -32,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Zap, Sparkles, Crown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export interface PlanUpgradeModalProps {
   /** Whether modal is open */
@@ -54,89 +43,6 @@ export interface PlanUpgradeModalProps {
 }
 
 /**
- * Plan features and pricing
- */
-const PLAN_DETAILS = {
-  free: {
-    name: "Free",
-    price: 0,
-    priceAnnual: 0,
-    icon: <Zap className="h-6 w-6" />,
-    description: "Para começar sua jornada audiovisual",
-    features: [
-      "5 clientes máximo",
-      "Projetos ilimitados",
-      "8 ferramentas IA básicas",
-      "Armazenamento 1GB",
-      "Suporte comunidade",
-    ],
-    limitations: [
-      "Sem Pipeline View",
-      "Sem Video Reviews",
-      "Sem Commercial Hub",
-      "Sem Colaboração em tempo real",
-    ],
-  },
-  pro: {
-    name: "Pro",
-    price: 199,
-    priceAnnual: 1990, // 2 meses grátis
-    icon: <Sparkles className="h-6 w-6" />,
-    description: "Para profissionais e freelancers",
-    badge: "Mais Popular",
-    features: [
-      "50 clientes máximo",
-      "Projetos ilimitados",
-      "12 ferramentas IA completas",
-      "Pipeline View (Kanban)",
-      "Video Reviews (timestamped)",
-      "Colaboração (5 membros)",
-      "Exportação avançada",
-      "Armazenamento 50GB",
-      "Glow effects no design",
-      "Suporte prioritário",
-    ],
-    highlights: [
-      "Pipeline View",
-      "Video Reviews",
-      "Colaboração",
-    ],
-  },
-  studio: {
-    name: "Studio",
-    price: 399,
-    priceAnnual: 3990, // 2 meses grátis
-    icon: <Crown className="h-6 w-6" />,
-    description: "Para produtoras e agências",
-    badge: "Completo",
-    features: [
-      "Clientes ilimitados",
-      "Projetos ilimitados",
-      "12 ferramentas IA completas",
-      "Pipeline View (Kanban)",
-      "Video Reviews (timestamped)",
-      "Colaboração ilimitada",
-      "Commercial Hub completo",
-      "Propostas e Contratos IA",
-      "Módulo Financeiro (dourado)",
-      "Team Management ilimitado",
-      "Analytics avançado",
-      "API access",
-      "Custom branding",
-      "Armazenamento 500GB",
-      "Dual accent (laranja + dourado)",
-      "Suporte premium",
-    ],
-    highlights: [
-      "Commercial Hub",
-      "Módulo Financeiro",
-      "Team ilimitado",
-      "API Access",
-    ],
-  },
-};
-
-/**
  * PlanUpgradeModal Component
  */
 export function PlanUpgradeModal({
@@ -148,13 +54,94 @@ export function PlanUpgradeModal({
   onUpgradeSuccess,
 }: PlanUpgradeModalProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [selectedPlan, setSelectedPlan] = useState<"pro" | "studio">(recommendedPlan);
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("monthly");
   const [isLoading, setIsLoading] = useState(false);
 
+  const PLAN_DETAILS = {
+    free: {
+      name: "Free",
+      price: 0,
+      priceAnnual: 0,
+      icon: <Zap className="h-6 w-6" />,
+      description: t("app.upgrade.freeDesc"),
+      features: [
+        t("app.upgrade.freeFeat1"),
+        t("app.upgrade.freeFeat2"),
+        t("app.upgrade.freeFeat3"),
+        t("app.upgrade.freeFeat4"),
+        t("app.upgrade.freeFeat5"),
+      ],
+      limitations: [
+        t("app.upgrade.freeLim1"),
+        t("app.upgrade.freeLim2"),
+        t("app.upgrade.freeLim3"),
+        t("app.upgrade.freeLim4"),
+      ],
+    },
+    pro: {
+      name: "Pro",
+      price: 199,
+      priceAnnual: 1990,
+      icon: <Sparkles className="h-6 w-6" />,
+      description: t("app.upgrade.proDesc"),
+      badge: t("app.upgrade.mostPopular"),
+      features: [
+        t("app.upgrade.proFeat1"),
+        t("app.upgrade.proFeat2"),
+        t("app.upgrade.proFeat3"),
+        t("app.upgrade.proFeat4"),
+        t("app.upgrade.proFeat5"),
+        t("app.upgrade.proFeat6"),
+        t("app.upgrade.proFeat7"),
+        t("app.upgrade.proFeat8"),
+        t("app.upgrade.proFeat9"),
+        t("app.upgrade.proFeat10"),
+      ],
+      highlights: [
+        "Pipeline View",
+        "Video Reviews",
+        t("app.upgrade.collaborationTitle"),
+      ],
+    },
+    studio: {
+      name: "Studio",
+      price: 399,
+      priceAnnual: 3990,
+      icon: <Crown className="h-6 w-6" />,
+      description: t("app.upgrade.studioDesc"),
+      badge: t("app.upgrade.complete"),
+      features: [
+        t("app.upgrade.studioFeat1"),
+        t("app.upgrade.studioFeat2"),
+        t("app.upgrade.studioFeat3"),
+        t("app.upgrade.studioFeat4"),
+        t("app.upgrade.studioFeat5"),
+        t("app.upgrade.studioFeat6"),
+        t("app.upgrade.studioFeat7"),
+        t("app.upgrade.studioFeat8"),
+        t("app.upgrade.studioFeat9"),
+        t("app.upgrade.studioFeat10"),
+        t("app.upgrade.studioFeat11"),
+        t("app.upgrade.studioFeat12"),
+        t("app.upgrade.studioFeat13"),
+        t("app.upgrade.studioFeat14"),
+        t("app.upgrade.studioFeat15"),
+        t("app.upgrade.studioFeat16"),
+      ],
+      highlights: [
+        "Commercial Hub",
+        t("app.upgrade.financialTitle"),
+        t("app.upgrade.teamTitle"),
+        "API Access",
+      ],
+    },
+  };
+
   const handleUpgrade = async () => {
     if (!user) {
-      toast.error("Você precisa estar logado para fazer upgrade");
+      toast.error(t("app.upgrade.loginRequired"));
       return;
     }
 
@@ -175,7 +162,7 @@ export function PlanUpgradeModal({
       }
     } catch (error) {
       console.error("Upgrade error:", error);
-      toast.error("Erro ao processar upgrade. Tente novamente.");
+      toast.error(t("app.upgrade.errorProcessing"));
     } finally {
       setIsLoading(false);
     }
@@ -197,11 +184,11 @@ export function PlanUpgradeModal({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Escolha seu plano</DialogTitle>
+          <DialogTitle className="text-2xl">{t("app.upgrade.choosePlan")}</DialogTitle>
           <DialogDescription>
             {triggerFeature
-              ? `Upgrade para acessar ${triggerFeature} e muito mais`
-              : "Desbloqueie todo o potencial do CenaStudio"
+              ? t("app.upgrade.upgradeToAccess").replace("{feature}", triggerFeature)
+              : t("app.upgrade.unlockPotential")
             }
           </DialogDescription>
         </DialogHeader>
@@ -214,14 +201,14 @@ export function PlanUpgradeModal({
               onClick={() => setBillingPeriod("monthly")}
               size="sm"
             >
-              Mensal
+              {t("app.upgrade.monthly")}
             </Button>
             <Button
               variant={billingPeriod === "annual" ? "default" : "outline"}
               onClick={() => setBillingPeriod("annual")}
               size="sm"
             >
-              Anual
+              {t("app.upgrade.annual")}
               {billingPeriod === "annual" && (
                 <Badge variant="secondary" className="ml-2">
                   -17% 🎉
@@ -259,11 +246,13 @@ export function PlanUpgradeModal({
                     <span className="text-3xl font-bold">
                       R$ {billingPeriod === "monthly" ? proDetails.price : Math.round(proDetails.priceAnnual / 12)}
                     </span>
-                    <span className="text-muted-foreground">/mês</span>
+                    <span className="text-muted-foreground">{t("app.upgrade.perMonth")}</span>
                   </div>
                   {billingPeriod === "annual" && (
                     <p className="text-sm text-muted-foreground mt-1">
-                      Cobrado R$ {proDetails.priceAnnual}/ano • Economize R$ {proDetails.price * 2}
+                      {t("app.upgrade.billedAnnually")
+                        .replace("{total}", String(proDetails.priceAnnual))
+                        .replace("{savings}", String(proDetails.price * 2))}
                     </p>
                   )}
                 </div>
@@ -282,7 +271,7 @@ export function PlanUpgradeModal({
                 {proDetails.highlights && (
                   <div className="mt-4 p-3 bg-orange-500/10 rounded-lg">
                     <p className="text-xs font-medium text-orange-500 mb-2">
-                      Destaques:
+                      {t("app.upgrade.highlights")}
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {proDetails.highlights.map((highlight, index) => (
@@ -323,11 +312,13 @@ export function PlanUpgradeModal({
                     <span className="text-3xl font-bold">
                       R$ {billingPeriod === "monthly" ? studioDetails.price : Math.round(studioDetails.priceAnnual / 12)}
                     </span>
-                    <span className="text-muted-foreground">/mês</span>
+                    <span className="text-muted-foreground">{t("app.upgrade.perMonth")}</span>
                   </div>
                   {billingPeriod === "annual" && (
                     <p className="text-sm text-muted-foreground mt-1">
-                      Cobrado R$ {studioDetails.priceAnnual}/ano • Economize R$ {studioDetails.price * 2}
+                      {t("app.upgrade.billedAnnually")
+                        .replace("{total}", String(studioDetails.priceAnnual))
+                        .replace("{savings}", String(studioDetails.price * 2))}
                     </p>
                   )}
                 </div>
@@ -346,7 +337,7 @@ export function PlanUpgradeModal({
                 {studioDetails.highlights && (
                   <div className="mt-4 p-3 bg-gradient-to-r from-orange-500/10 to-yellow-500/10 rounded-lg">
                     <p className="text-xs font-medium text-orange-500 mb-2">
-                      Exclusivo Studio:
+                      {t("app.upgrade.exclusiveStudio")}
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {studioDetails.highlights.map((highlight, index) => (
@@ -366,27 +357,27 @@ export function PlanUpgradeModal({
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">
-                  Plano selecionado: <span className="text-orange-500">{selectedDetails.name}</span>
+                  {t("app.upgrade.selectedPlan")} <span className="text-orange-500">{selectedDetails.name}</span>
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  R$ {selectedPrice}/mês • {billingPeriod === "monthly" ? "Mensal" : "Anual"}
-                  {savings > 0 && ` • Economize R$ ${savings}`}
+                  R$ {selectedPrice}{t("app.upgrade.perMonth")} • {billingPeriod === "monthly" ? t("app.upgrade.monthly") : t("app.upgrade.annual")}
+                  {savings > 0 && ` • ${t("app.upgrade.billedAnnually").split("•")[1]?.trim().replace("{savings}", String(savings)) || `Economize R$ ${savings}`}`}
                 </p>
               </div>
 
               <div className="flex gap-2">
                 <Button variant="outline" onClick={onClose} disabled={isLoading}>
-                  Cancelar
+                  {t("app.upgrade.cancel")}
                 </Button>
                 <Button onClick={handleUpgrade} disabled={isLoading} size="lg">
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processando...
+                      {t("app.upgrade.processing")}
                     </>
                   ) : (
                     <>
-                      Continuar para pagamento
+                      {t("app.upgrade.continueToPay")}
                     </>
                   )}
                 </Button>
@@ -394,7 +385,7 @@ export function PlanUpgradeModal({
             </div>
 
             <p className="text-xs text-muted-foreground mt-4 text-center">
-              🔒 Pagamento seguro via Stripe • Cancele quando quiser • Garantia de 7 dias
+              {t("app.upgrade.securePayment")}
             </p>
           </div>
         </div>
@@ -405,20 +396,6 @@ export function PlanUpgradeModal({
 
 /**
  * Hook para usar o modal facilmente
- *
- * @example
- * ```tsx
- * function MyComponent() {
- *   const { showUpgradeModal, PlanUpgradeModalComponent } = usePlanUpgradeModal();
- *
- *   return (
- *     <>
- *       <button onClick={() => showUpgradeModal('pro')}>Upgrade</button>
- *       {PlanUpgradeModalComponent}
- *     </>
- *   );
- * }
- * ```
  */
 export function usePlanUpgradeModal(currentPlan: PlanMode = "free") {
   const [isOpen, setIsOpen] = useState(false);

@@ -1,4 +1,5 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface RevenueChartProps {
   data: Array<{ month: string; revenue: number }>;
@@ -6,10 +7,12 @@ interface RevenueChartProps {
 }
 
 export function RevenueChart({ data, loading = false }: RevenueChartProps) {
+  const { t } = useLanguage();
+
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="text-sm text-frame-gray-light">Carregando dados...</div>
+        <div className="text-sm text-frame-gray-light">{t("app.commercial.chartLoading")}</div>
       </div>
     );
   }
@@ -17,7 +20,7 @@ export function RevenueChart({ data, loading = false }: RevenueChartProps) {
   if (!data || data.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="text-sm text-frame-gray-light">Nenhum dado disponível</div>
+        <div className="text-sm text-frame-gray-light">{t("app.commercial.chartNoData")}</div>
       </div>
     );
   }
@@ -45,7 +48,7 @@ export function RevenueChart({ data, loading = false }: RevenueChartProps) {
             fontSize: '12px'
           }}
           labelStyle={{ color: '#ff4d1d', marginBottom: '4px' }}
-          formatter={(value: number) => [`R$ ${value.toLocaleString('pt-BR')}`, 'Receita']}
+          formatter={(value) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, t('app.commercial.chartTooltipRevenue')]}
         />
         <Line
           type="monotone"

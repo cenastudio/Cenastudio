@@ -8,7 +8,7 @@ import {
   Image as ImageIcon, Video, Music, File,
   Folder, Plus, X, Loader2, Search,
   Eye, Grid3X3, List, Link, ExternalLink,
-  Globe,
+  Globe, Pencil,
 } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import { toast } from "sonner";
@@ -70,6 +70,10 @@ function FilesContent() {
   // New project creation state
   const [showNewProject, setShowNewProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
+
+  // Rename state
+  const [renamingFile, setRenamingFile] = useState<FileData | null>(null);
+  const [newFileName, setNewFileName] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -242,6 +246,28 @@ function FilesContent() {
 
   const handleDownload = (file: FileData) => window.open(`/api/files/${file.id}/download`, "_blank");
 
+  const handleRename = async () => {
+    if (!renamingFile || !newFileName.trim()) { setRenamingFile(null); return; }
+    try {
+      const res = await fetch(`/api/files/${renamingFile.id}/rename`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name: newFileName.trim() }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(t("app.files.renamed"));
+        loadFiles();
+      } else {
+        toast.error(data.error || t("app.errors.generic"));
+      }
+    } catch {
+      toast.error(t("app.errors.generic"));
+    }
+    setRenamingFile(null);
+  };
+
   const openPreview = (file: FileData) => { setPreviewFile(file); setIsPreviewOpen(true); };
 
   const getFileIcon = (fileType: string) => {
@@ -280,6 +306,16 @@ function FilesContent() {
     });
 
   const isPreviewableImage = (file: FileData) => (file.mime_type || "").startsWith("image/");
+
+  const isPreviewable = (file: FileData) => {
+    const mime = (file.mime_type || "").toLowerCase();
+    return (
+      mime.startsWith("image/") ||
+      mime.startsWith("video/") ||
+      mime.startsWith("audio/") ||
+      mime === "application/pdf"
+    );
+  };
 
   const filterTabs: { key: FileFilter; label: string }[] = [
     { key: "all", label: t("app.common.all") },
@@ -497,13 +533,16 @@ function FilesContent() {
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div
-                            className="p-3 bg-frame-gray-2 rounded-lg cursor-pointer"
-                            onClick={() => !isLink && isPreviewableImage(file) && openPreview(file)}
+                            className="relative p-3 bg-frame-gray-2 rounded-lg cursor-pointer"
+                            onClick={() => !isLink && isPreviewable(file) && openPreview(file)}
                           >
                             <Icon className="w-6 h-6 text-frame-orange" />
+                            {(file.mime_type || "").startsWith("video/") && (
+                              <Video className="w-3 h-3 text-frame-orange absolute bottom-1 right-1 opacity-70" />
+                            )}
                           </div>
                           <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                            {!isLink && isPreviewableImage(file) && (
+                            {!isLink && isPreviewable(file) && (
                               <button onClick={() => openPreview(file)} className="p-2 hover:bg-frame-gray-3 transition" title={t("app.common.preview")}>
                                 <Eye className="w-4 h-4" />
                               </button>
@@ -517,6 +556,9 @@ function FilesContent() {
                                 <Download className="w-4 h-4" />
                               </button>
                             )}
+                            <button onClick={(e) => { e.stopPropagation(); setRenamingFile(file); setNewFileName(file.original_name); }} className="p-2 hover:bg-frame-gray-3 transition" title={t("app.files.rename")}>
+                              <Pencil className="w-4 h-4" />
+                            </button>
                             <button onClick={() => { setSelectedFile(file); setIsDeleteOpen(true); }} className="p-2 hover:bg-frame-red/20 hover:text-frame-red transition" title={t("app.common.delete")}>
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -551,7 +593,7 @@ function FilesContent() {
                       </div>
                       <span className="text-xs text-frame-gray-light hidden sm:block">{formatDate(file.created_at)}</span>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
-                        {!isLink && isPreviewableImage(file) && (
+                        {!isLink && isPreviewable(file) && (
                           <button onClick={() => openPreview(file)} className="p-1.5 hover:bg-frame-gray-3 transition" title={t("app.common.preview")}>
                             <Eye className="w-4 h-4" />
                           </button>
@@ -565,6 +607,9 @@ function FilesContent() {
                             <Download className="w-4 h-4" />
                           </button>
                         )}
+                        <button onClick={(e) => { e.stopPropagation(); setRenamingFile(file); setNewFileName(file.original_name); }} className="p-1.5 hover:bg-frame-gray-3 transition" title={t("app.files.rename")}>
+                          <Pencil className="w-4 h-4" />
+                        </button>
                         <button onClick={() => { setSelectedFile(file); setIsDeleteOpen(true); }} className="p-1.5 hover:bg-frame-red/20 hover:text-frame-red transition" title={t("app.common.delete")}>
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -735,6 +780,27 @@ function FilesContent() {
             {previewFile && isPreviewableImage(previewFile) && (
               <img src={`/api/files/${previewFile.id}/download`} alt={previewFile.original_name} className="max-w-full max-h-[60vh] object-contain" />
             )}
+            {previewFile && (previewFile.mime_type || "").startsWith("video/") && (
+              <video
+                src={`/api/files/${previewFile.id}/download`}
+                controls
+                className="max-w-full max-h-[60vh]"
+              />
+            )}
+            {previewFile && (previewFile.mime_type || "").startsWith("audio/") && (
+              <audio
+                src={`/api/files/${previewFile.id}/download`}
+                controls
+                className="w-full max-w-md"
+              />
+            )}
+            {previewFile && (previewFile.mime_type || "") === "application/pdf" && (
+              <iframe
+                src={`/api/files/${previewFile.id}/download`}
+                title={previewFile.original_name}
+                className="w-full h-[60vh]"
+              />
+            )}
           </div>
           <div className="flex items-center justify-between pt-4 border-t border-frame-gray-3 text-xs text-frame-gray-light">
             <span>{previewFile && formatFileSize(previewFile.size || 0)}</span>
@@ -767,6 +833,26 @@ function FilesContent() {
           <DialogFooter className="gap-2 pt-4 border-t border-frame-gray-3">
             <button type="button" onClick={() => setShowNewProject(false)} className="frame-btn-ghost">{t("app.common.cancel")}</button>
             <button type="button" disabled={!newProjectName.trim()} onClick={handleCreateProject} className="frame-btn-primary">{t("app.files.createProject")}</button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Renomear */}
+      <Dialog open={!!renamingFile} onOpenChange={(open) => !open && setRenamingFile(null)}>
+        <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white sm:max-w-md rounded-none p-6">
+          <DialogHeader>
+            <DialogTitle className="frame-title text-xl">{t("app.files.rename")}</DialogTitle>
+          </DialogHeader>
+          <input
+            value={newFileName}
+            onChange={(e) => setNewFileName(e.target.value)}
+            className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange mt-2"
+            onKeyDown={(e) => { if (e.key === "Enter") handleRename(); }}
+            autoFocus
+          />
+          <DialogFooter className="gap-2 pt-4 border-t border-frame-gray-3">
+            <button type="button" onClick={() => setRenamingFile(null)} className="frame-btn-ghost">{t("app.common.cancel")}</button>
+            <button type="button" onClick={handleRename} className="frame-btn-primary">{t("app.common.save")}</button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

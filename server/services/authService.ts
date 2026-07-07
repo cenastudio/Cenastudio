@@ -45,6 +45,7 @@ type PrismaUserWithProfile = {
   studioName?: string | null;
   studioRole?: string | null;
   phone?: string | null;
+  mustResetPassword?: boolean | null;
 };
 
 export interface FormattedUserPlan {
@@ -80,6 +81,7 @@ function toAuthUser(row: PrismaUserWithProfile): AuthUser {
     studioName: row.studioName ?? undefined,
     studioRole: row.studioRole ?? undefined,
     phone: row.phone ?? undefined,
+    mustResetPassword: row.mustResetPassword ?? false,
   };
 }
 
@@ -349,11 +351,13 @@ export async function getUserById(id: number): Promise<AuthUser | null> {
       `SELECT id, email, role, name,
               studio_name as studioName,
               studio_role as studioRole,
-              phone
+              phone,
+              must_reset_password as mustResetPassword
        FROM users WHERE id = ?`,
     )
-    .get(id) as AuthUser | undefined;
-  return row ?? null;
+    .get(id) as (AuthUser & { mustResetPassword: number }) | undefined;
+  if (!row) return null;
+  return { ...row, mustResetPassword: Boolean(row.mustResetPassword) };
 }
 
 export async function ensureUserFromToken(tokenUser: AuthUser): Promise<AuthUser> {
@@ -438,6 +442,30 @@ export async function updateProfile(
   const updated = await getUserById(userId);
   if (!updated) throw new AppError("Sessão expirada. Entre novamente para continuar.", 401);
   return updated;
+}
+
+export async function changePassword(
+  userId: number,
+  currentPassword: string,
+  newPassword: string,
+): Promise<void> {
+  if (shouldUsePrisma) {
+    const user = await prisma.user.findUnique({ where: { id: BigInt(userId) }, select: { passwordHash: true } });
+    if (!user) throw new AppError("Usuário não encontrado.", 404);
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) throw new AppError("Senha atual incorreta.", 400);
+    await prisma.user.update({
+      where: { id: BigInt(userId) },
+      data: { passwordHash: hashPassword(newPassword), mustResetPassword: false },
+    });
+    return;
+  }
+
+  const row = db.prepare("SELECT password_hash FROM users WHERE id = ?").get(userId) as { password_hash: string } | undefined;
+  if (!row) throw new AppError("Usuário não encontrado.", 404);
+  const valid = await bcrypt.compare(currentPassword, row.password_hash);
+  if (!valid) throw new AppError("Senha atual incorreta.", 400);
+  db.prepare("UPDATE users SET password_hash = ?, must_reset_password = 0 WHERE id = ?").run(hashPassword(newPassword), userId);
 }
 
 function roleForEmail(email: string): "user" | "admin" {

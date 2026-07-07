@@ -84,8 +84,8 @@ export default function LineChartWidget({ title, data, config }: LineChartWidget
                 borderRadius: "4px",
                 fontSize: "0.875rem"
               }}
-              formatter={(value: number) => [
-                isCurrency ? formatCurrency(value) : formatNumber(value),
+              formatter={(value) => [
+                isCurrency ? formatCurrency(Number(value)) : formatNumber(Number(value)),
                 ""
               ]}
             />

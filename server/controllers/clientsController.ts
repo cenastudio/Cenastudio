@@ -134,11 +134,68 @@ export const getClient: RequestHandler = async (req, res, next) => {
         include: {
           projects: { select: { id: true, name: true, status: true, createdAt: true }, orderBy: { createdAt: "desc" } },
           opportunities: { orderBy: { updatedAt: "desc" } },
-          interactions: { orderBy: { createdAt: "desc" }, take: 10 },
+          interactions: { orderBy: { createdAt: "desc" }, take: 20 },
         },
       });
       if (!client) throw new AppError("Cliente não encontrado ou acesso não autorizado", 404);
       const { projects, opportunities, interactions, ...record } = client;
+
+      const projectIds = projects.map((p) => p.id);
+      const warnings: string[] = [];
+
+      let financial: any[] = [];
+      try {
+        const financialRows = await prisma.financialEntry.findMany({
+          where: { clientId: clientBigInt(clientId), userId: BigInt(userId) },
+          orderBy: { dueDate: "desc" },
+          select: { id: true, kind: true, description: true, amount: true, status: true, dueDate: true, category: true },
+        });
+        financial = financialRows.map((e) =>
+          withSnakeCase(e as any, { dueDate: "due_date" })
+        );
+      } catch {
+        warnings.push("financial");
+      }
+
+      let files: any[] = [];
+      try {
+        if (projectIds.length > 0) {
+          const fileRows = await prisma.file.findMany({
+            where: { projectId: { in: projectIds }, userId: BigInt(userId) },
+            orderBy: { createdAt: "desc" },
+            take: 100,
+            select: { id: true, originalName: true, mimeType: true, createdAt: true, projectId: true, project: { select: { name: true } } },
+          });
+          files = fileRows.map((f) =>
+            withSnakeCase(
+              { id: f.id, originalName: f.originalName, mimeType: f.mimeType, createdAt: f.createdAt, projectId: f.projectId, projectName: f.project?.name ?? null } as any,
+              { originalName: "original_name", mimeType: "mime_type", createdAt: "created_at", projectId: "project_id", projectName: "project_name" }
+            )
+          );
+        }
+      } catch {
+        warnings.push("files");
+      }
+
+      let videoReviews: any[] = [];
+      try {
+        if (projectIds.length > 0) {
+          const vrRows = await prisma.videoReview.findMany({
+            where: { projectId: { in: projectIds }, userId: BigInt(userId) },
+            orderBy: { createdAt: "desc" },
+            select: { id: true, projectId: true, title: true, status: true, createdAt: true, project: { select: { name: true } } },
+          });
+          videoReviews = vrRows.map((vr) =>
+            withSnakeCase(
+              { id: vr.id, projectId: vr.projectId, projectName: vr.project?.name ?? null, title: vr.title, status: vr.status, createdAt: vr.createdAt } as any,
+              { projectId: "project_id", projectName: "project_name", createdAt: "created_at" }
+            )
+          );
+        }
+      } catch {
+        warnings.push("videoReviews");
+      }
+
       res.json({
         success: true,
         data: {
@@ -146,6 +203,10 @@ export const getClient: RequestHandler = async (req, res, next) => {
           projects: projects.map((item) => withSnakeCase(item as any, { createdAt: "created_at" })),
           opportunities: opportunities.map(serializeOpportunityRecord),
           interactions: interactions.map(serializeInteractionRecord),
+          financial,
+          files,
+          videoReviews,
+          ...(warnings.length ? { warnings } : {}),
         },
       });
       return;
@@ -169,10 +230,65 @@ export const getClient: RequestHandler = async (req, res, next) => {
       .prepare("SELECT * FROM opportunities WHERE client_id = ? ORDER BY updated_at DESC")
       .all(clientId);
 
-    // Get recent interactions
+    // Get recent interactions (limited to 20)
     const interactions = db
-      .prepare("SELECT * FROM interactions WHERE client_id = ? ORDER BY created_at DESC LIMIT 10")
+      .prepare("SELECT * FROM interactions WHERE client_id = ? ORDER BY created_at DESC LIMIT 20")
       .all(clientId);
+
+    const warnings: string[] = [];
+
+    // Get financial entries for this client
+    let financial: any[] = [];
+    try {
+      financial = db
+        .prepare(
+          "SELECT id, kind, description, amount, status, due_date, category FROM financial_entries WHERE client_id = ? ORDER BY due_date DESC"
+        )
+        .all(clientId);
+    } catch {
+      warnings.push("financial");
+      financial = [];
+    }
+
+    // Get files for all projects belonging to this client
+    let files: any[] = [];
+    try {
+      const projectIds = (projects as any[]).map((p: any) => p.id);
+      if (projectIds.length > 0) {
+        const placeholders = projectIds.map(() => "?").join(",");
+        files = db
+          .prepare(
+            `SELECT f.id, f.original_name, f.mime_type, f.created_at, f.project_id, p.name as project_name
+             FROM files f JOIN projects p ON p.id = f.project_id
+             WHERE f.project_id IN (${placeholders})
+             ORDER BY f.created_at DESC LIMIT 100`
+          )
+          .all(...projectIds);
+      }
+    } catch {
+      warnings.push("files");
+      files = [];
+    }
+
+    // Get video reviews for all projects belonging to this client
+    let videoReviews: any[] = [];
+    try {
+      const projectIds = (projects as any[]).map((p: any) => p.id);
+      if (projectIds.length > 0) {
+        const placeholders = projectIds.map(() => "?").join(",");
+        videoReviews = db
+          .prepare(
+            `SELECT vr.id, vr.project_id, p.name as project_name, vr.title, vr.status, vr.created_at
+             FROM video_reviews vr JOIN projects p ON p.id = vr.project_id
+             WHERE vr.project_id IN (${placeholders})
+             ORDER BY vr.created_at DESC`
+          )
+          .all(...projectIds);
+      }
+    } catch {
+      warnings.push("videoReviews");
+      videoReviews = [];
+    }
 
     res.json({
       success: true,
@@ -181,6 +297,10 @@ export const getClient: RequestHandler = async (req, res, next) => {
         projects: projects || [],
         opportunities: opportunities || [],
         interactions: interactions || [],
+        financial,
+        files,
+        videoReviews,
+        ...(warnings.length ? { warnings } : {}),
       },
     });
   } catch (e) {

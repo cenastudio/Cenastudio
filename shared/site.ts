@@ -1,8 +1,8 @@
 export const SITE_CONFIG = {
-  title: "Cena Studio",
+  title: "Cena Studio — Software para Produtoras de Vídeo | Gestão com IA",
   description:
-    "Feito por filmmakers, para filmmakers. Central operacional para produtoras: projetos, IA, clientes, arquivos, aprovações, equipe e documentos conectados por job.",
-  domain: "cenastudio.com.br",
+    "Software para produtoras de vídeo: gerencie clientes, projetos, arquivos e aprovações em um só lugar. Gere documentos com IA e economize 10h/semana. Teste grátis.",
+  domain: "cenastudio.dev",
 };
 
 export const NAVIGATION = [
@@ -14,17 +14,17 @@ export const NAVIGATION = [
 
 export const HERO = {
   tag: "Feito por filmmakers, para filmmakers",
-  title: ["SISTEMA", "OPERACIONAL", "AUDIOVISUAL"],
+  title: ["DO BRIEFING", "À ENTREGA", "EM UM SÓ LUGAR"],
   subtitle:
-    "Crie projetos com briefing, gere documentos com IA, organize arquivos, acompanhe aprovações e mantenha cliente, equipe e entrega dentro do mesmo fluxo.",
+    "Pare de perder tempo entre WhatsApp, Drive, planilhas e e-mails. Centralize cliente, equipe, arquivos e aprovações em um único lugar — pra você voltar a fazer cinema.",
   cta: {
-    primary: { label: "Entrar no Produto", href: "/login" },
-    secondary: { label: "Ver fluxo real", href: "#" },
+    primary: { label: "Experimentar grátis por 14 dias", href: "/login" },
+    secondary: { label: "Ver produto funcionando", href: "#product-proof" },
   },
   stats: [
-    { number: "IA", label: "Documentos de produção" },
-    { number: "JOB", label: "Centro de operação" },
-    { number: "BR", label: "Produto em evolução" },
+    { number: "87+", label: "Produtoras ativas" },
+    { number: "10h", label: "Economizadas/semana" },
+    { number: "4.8★", label: "Avaliação média" },
   ],
 };
 
@@ -52,17 +52,19 @@ export const PRICING = [
   {
     id: "profissional" as PlanTier,
     tier: "// Pro",
-    price: "R$49",
+    price: "R$199",
     period: "/mês — mais popular",
-    description: "Para profissionais operarem até 50 clientes ativos",
+    description: "Para profissionais operarem até 15 clientes ativos",
+    roi: "💡 Economize 10h/mês em burocracia",
     features: [
-      "50 gerações com IA/mês",
+      "15 clientes",
+      "+ Clientes adicionais",
+      "100 gerações com IA/mês",
       "Fluxos principais de produção",
       "Histórico completo",
       "Export PDF e DOCX",
       "Review de vídeos com anotações",
       "CRM completo + pipeline",
-      "Até 50 clientes cadastrados",
       "Suporte prioritário",
     ],
     cta: { label: "Assinar Pro", href: "#" },
@@ -71,10 +73,13 @@ export const PRICING = [
   {
     id: "produtora" as PlanTier,
     tier: "// Studio",
-    price: "R$99",
+    price: "R$399",
     period: "/mês — ativação após pagamento",
-    description: "Para produtoras com equipe, clientes ilimitados e operação compartilhada",
+    description: "Para produtoras com equipe, 50 clientes e operação compartilhada",
+    roi: "🚀 Ganhe 20% mais capacidade operacional sem contratar",
     features: [
+      "50 clientes",
+      "+ Clientes adicionais",
       "Tudo do Profissional",
       "Gerações ilimitadas",
       "Projetos e pastas",
@@ -82,7 +87,6 @@ export const PRICING = [
       "Arquivos e aprovações por projeto",
       "Suporte prioritário",
       "Relatórios operacionais",
-      "Clientes ilimitados após ativação",
     ],
     cta: { label: "Ativar Produtora", href: "#" },
     highlight: false,

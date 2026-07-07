@@ -7,31 +7,25 @@ import { api, type Client, type Project, type RecentActivity } from "@/lib/api";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ConfirmDialog from "@/components/ConfirmDialog";
-import { SkeletonCard, SkeletonList } from "@/components/skeletons";
 import WelcomeModal from "@/components/onboarding/WelcomeModal";
 import ProductTour from "@/components/onboarding/ProductTour";
 import {
-  Folder,
-  Pin,
-  Trash2,
   Plus,
-  Compass,
-  Activity,
   ChevronRight,
   Loader2,
   Clock,
   CalendarClock,
   Building2,
-  Target,
   Sparkles,
   FileText,
   ListChecks,
   ArrowUpRight,
-  KanbanSquare,
-  WalletCards,
+  Users,
+  FileSignature,
+  Activity,
 } from "lucide-react";
 import { toast } from "sonner";
-import { getStageForTool, getWorkflowStage, WORKFLOW_STAGES } from "@/lib/workflow";
+import { getStageForTool, getWorkflowStage } from "@/lib/workflow";
 import {
   Dialog,
   DialogContent,
@@ -65,22 +59,33 @@ export const getMetadata = (p: Project): ProjectMetadata => {
   }
 };
 
-const formatDate = (value?: string) => {
+const formatDate = (value?: string, locale = "pt-BR") => {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+  return date.toLocaleDateString(locale, { day: "2-digit", month: "short" });
 };
+
+function getGreeting(locale = "pt"): string {
+  const hour = new Date().getHours();
+  if (locale === "en") {
+    if (hour >= 5 && hour < 12) return "Good morning";
+    if (hour >= 12 && hour < 18) return "Good afternoon";
+    return "Good evening";
+  }
+  if (hour >= 5 && hour < 12) return "Bom dia";
+  if (hour >= 12 && hour < 18) return "Boa tarde";
+  return "Boa noite";
+}
 
 function DashboardContent() {
   const [, setLocation] = useLocation();
-  const { user, plan } = useAuth();
-  const { t } = useLanguage();
+  const { user, plan, isTeamMember, teamContext } = useAuth();
+  const { t, locale } = useLanguage();
   const {
     projects,
     isLoading: isProjectsLoading,
     createProject,
-    updateProject,
     deleteProject,
     loadProjects,
   } = useProject();
@@ -119,20 +124,16 @@ function DashboardContent() {
     setTone("");
   };
 
-  // Fetch recent activities on mount
   useEffect(() => {
     loadProjects();
 
-    // Check if first time user (show welcome modal)
     const hasSeenWelcome = localStorage.getItem("cena-studio-welcome-completed");
     const hasSkippedWelcome = localStorage.getItem("cena-studio-welcome-dismissed");
 
     if (!hasSeenWelcome && !hasSkippedWelcome) {
-      // Delay to let page render first
       setTimeout(() => setIsWelcomeOpen(true), 500);
     }
 
-    // Load clients for project creation
     api.clients.list().then((loadedClients) => {
       setClients(loadedClients);
       const query = new URLSearchParams(window.location.search);
@@ -151,33 +152,24 @@ function DashboardContent() {
       .finally(() => setIsActivitiesLoading(false));
   }, []);
 
-  // Filter pinned & general projects
-  const pinnedProjects = projects.filter((p) => getMetadata(p).isPinned);
-  const generalProjects = projects.filter((p) => !getMetadata(p).isPinned);
-  const activeProjects = projects.filter((p) => p.status === "active");
-  const recentProject = projects[0];
-  const pendingBriefings = projects.filter((p) => !getMetadata(p).objective && !getMetadata(p).creativeGoals?.format);
+  // Derived data — team members only see assigned projects
+  const visibleProjects = isTeamMember
+    ? projects // ProjectContext already scopes to the owner's data; we filter by membership
+    : projects;
+  const activeProjects = visibleProjects.filter((p) => p.status === "active");
+  const pinnedProjects = visibleProjects.filter((p) => getMetadata(p).isPinned);
+  const recentProject = visibleProjects[0];
+  const pendingBriefings = visibleProjects.filter((p) => !getMetadata(p).objective && !getMetadata(p).creativeGoals?.format);
   const projectsWithoutDeadline = activeProjects.filter((p) => !getMetadata(p).deadline);
+
+  // Focus project
   const focusProject = pinnedProjects[0] || recentProject;
   const focusMeta = focusProject ? getMetadata(focusProject) : null;
   const focusClient = focusProject?.clientName || focusMeta?.creativeGoals?.client;
   const focusFormat = focusMeta?.creativeGoals?.format;
   const focusDeadline = focusMeta?.deadline;
   const focusStage = getWorkflowStage(focusMeta?.workflowStage || getStageForTool(focusMeta?.workflowFocus));
-  const focusStatus = !focusProject
-    ? t("app.dashboard.statusEmpty")
-    : !focusMeta?.objective && !focusFormat
-      ? t("app.dashboard.statusBriefing")
-      : focusProject.status === "completed"
-        ? t("app.dashboard.statusDelivery")
-        : t("app.dashboard.statusProduction");
-  const focusNextAction = !focusProject
-    ? t("app.dashboard.actionCreateProject")
-    : !focusMeta?.objective && !focusFormat
-      ? t("app.dashboard.actionCompleteBriefing")
-      : !focusDeadline
-        ? t("app.dashboard.actionDefineDeadline")
-        : t("app.dashboard.actionOpenHub");
+
   const focusActionRoute = focusProject
     ? !focusMeta?.objective && !focusFormat
       ? `/project/${focusProject.id}/studio/briefing`
@@ -185,25 +177,28 @@ function DashboardContent() {
         ? `/project/${focusProject.id}`
         : `/project/${focusProject.id}/journey/${focusStage.id}`
     : null;
+
   const focusActionLabel = focusProject
     ? !focusMeta?.objective && !focusFormat
-      ? "Completar briefing"
+      ? (locale === "en" ? "Complete briefing" : "Completar briefing")
       : !focusDeadline
-        ? "Definir prazo do job"
-        : "Continuar job"
-    : "Iniciar primeiro job";
+        ? (locale === "en" ? "Set deadline" : "Definir prazo")
+        : (locale === "en" ? "Continue job" : "Continuar job")
+    : (locale === "en" ? "Start first job" : "Iniciar primeiro job");
+
+  // Director Queue (pendências)
   const directorQueue = [
-    ...pendingBriefings.slice(0, 2).map((project) => ({
+    ...pendingBriefings.slice(0, 3).map((project) => ({
       id: `briefing-${project.id}`,
-      label: t("app.dashboard.queueBriefing"),
+      label: locale === "en" ? "Complete briefing" : "Completar briefing",
       detail: project.name,
       icon: FileText,
       tone: "text-frame-orange",
-      action: () => setLocation(`/project/${project.id}/studio/07`),
+      action: () => setLocation(`/project/${project.id}/studio/briefing`),
     })),
     ...projectsWithoutDeadline.slice(0, 2).map((project) => ({
       id: `deadline-${project.id}`,
-      label: t("app.dashboard.queueDeadline"),
+      label: locale === "en" ? "Set deadline" : "Definir prazo",
       detail: project.name,
       icon: CalendarClock,
       tone: "text-amber-500",
@@ -211,8 +206,8 @@ function DashboardContent() {
     })),
     ...activities.slice(0, 2).map((activity) => ({
       id: `activity-${activity.id}`,
-      label: t("app.dashboard.queueReviewOutput"),
-      detail: activity.projectName || `${t("app.common.noData")} #${activity.toolId}`,
+      label: "Nova geração pronta",
+      detail: activity.projectName || `Geração #${activity.toolId}`,
       icon: Sparkles,
       tone: "text-frame-orange",
       action: () => {
@@ -222,13 +217,31 @@ function DashboardContent() {
     })),
   ].slice(0, 5);
 
+  // Summary line
+  const nextStep = focusProject
+    ? !focusMeta?.objective && !focusFormat
+      ? "Briefing"
+      : !focusDeadline
+        ? (locale === "en" ? "Set deadline" : "Definir prazo")
+        : (locale === "en" ? (focusStage.labelEn ?? focusStage.label) : focusStage.label)
+    : null;
+  const deadlineStr = focusDeadline ? formatDate(focusDeadline, locale === "en" ? "en-US" : "pt-BR") : null;
+  const summaryParts = [
+    locale === "en"
+      ? `${activeProjects.length} active job${activeProjects.length !== 1 ? "s" : ""}`
+      : `${activeProjects.length} job${activeProjects.length !== 1 ? "s" : ""} ativo${activeProjects.length !== 1 ? "s" : ""}`,
+    nextStep ? `${locale === "en" ? "next" : "próximo"}: ${nextStep}` : null,
+    deadlineStr ? `${locale === "en" ? "due" : "prazo"}: ${deadlineStr}` : null,
+  ].filter(Boolean);
+
   const startProjectFromClient = () => {
     if (!clients.length) {
-      toast.info("O fluxo começa no Comercial: cadastre um cliente antes de abrir o job.");
+      toast.info(locale === "en"
+        ? "The flow starts in Commercial: register a client before opening a job."
+        : "O fluxo começa no Comercial: cadastre um cliente antes de abrir o job.");
       setLocation("/clients/new");
       return;
     }
-
     resetCreateForm();
     setIsCreateOpen(true);
   };
@@ -240,93 +253,32 @@ function DashboardContent() {
 
   const handleTourComplete = () => {
     setIsTourOpen(false);
-    // After tour, return to welcome modal at step 3 (Demo Project)
     setTimeout(() => setIsWelcomeOpen(true), 300);
   };
 
   const handleWelcomeComplete = () => {
     setIsWelcomeOpen(false);
-    toast.success("Bem-vindo ao Cena Studio! 🎬");
+    toast.success(locale === "en" ? "Welcome to Cena Studio! 🎬" : "Bem-vindo ao Cena Studio! 🎬");
   };
-
-  const operatingModules = [
-    {
-      id: "commercial",
-      icon: Building2,
-      eyebrow: "01 / COMERCIAL",
-      title: "Comercial",
-      description: "Cadastre o cliente, entenda a demanda e transforme a conversa em briefing, orçamento, proposta e contrato.",
-      metric: String(clients.length),
-      metricLabel: "clientes",
-      route: clients.length ? "/clients" : "/clients/new",
-      action: clients.length ? "Abrir Comercial" : "Cadastrar cliente",
-      steps: ["Cliente", "Pipeline", "Briefing", "Proposta", "Contrato"],
-    },
-    {
-      id: "projects",
-      icon: KanbanSquare,
-      eyebrow: "02 / PRODUÇÃO",
-      title: "Produção",
-      description: "Depois da venda, o job vira produção: roteiro, decupagem, callsheet, cronograma, arquivos, revisão e entrega.",
-      metric: String(activeProjects.length),
-      metricLabel: "jobs ativos",
-      route: focusProject ? `/project/${focusProject.id}` : "/tools",
-      action: focusProject ? "Abrir hub" : "Ver Studio IA",
-      steps: ["Roteiro", "Decupagem", "Callsheet", "Cronograma", "Entrega"],
-    },
-    {
-      id: "finance",
-      icon: WalletCards,
-      eyebrow: "03 / FINANCEIRO",
-      title: "Financeiro",
-      description: "Acompanhe o dinheiro do estúdio por cliente e por projeto: recebimentos, custos, recorrência e margem.",
-      metric: String(activities.length),
-      metricLabel: "movimentos recentes",
-      route: "/analytics",
-      action: "Abrir Financeiro",
-      steps: ["Receitas", "Custos", "A receber", "Margem", "Forecast"],
-    },
-  ];
 
   const getActivityLabel = (act: RecentActivity) => {
     const projectLabel = act.projectName ? ` · ${act.projectName}` : "";
-    if (act.toolId === "05") return `${t("app.dashboard.activityProposal")}${projectLabel}`;
-    if (act.toolId === "07") return `${t("app.dashboard.activityBriefing")}${projectLabel}`;
-    if (act.toolId === "03") return `${t("app.dashboard.activityCallsheet")}${projectLabel}`;
-    return `${t("app.dashboard.activityGenerated")}${projectLabel}`;
-  };
-
-  // Toggle Pinned status in metadataJson
-  const handleTogglePin = async (p: Project, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const meta = getMetadata(p);
-    const updatedMeta: ProjectMetadata = {
-      ...meta,
-      isPinned: !meta.isPinned,
-    };
-
-    try {
-      await updateProject(p.id, {
-        metadataJson: JSON.stringify(updatedMeta),
-      });
-      toast.success(
-        updatedMeta.isPinned ? t("app.dashboard.projectUpdated") as string : t("app.dashboard.projectUpdated") as string,
-      );
-    } catch {
-      toast.error(t("app.errors.generic") as string);
+    if (locale === "en") {
+      if (act.toolId === "05") return `New proposal${projectLabel}`;
+      if (act.toolId === "07") return `New briefing${projectLabel}`;
+      if (act.toolId === "03") return `New callsheet${projectLabel}`;
+      return `New generation${projectLabel}`;
     }
+    if (act.toolId === "05") return `Nova proposta${projectLabel}`;
+    if (act.toolId === "07") return `Novo briefing${projectLabel}`;
+    if (act.toolId === "03") return `Novo callsheet${projectLabel}`;
+    return `Nova geração${projectLabel}`;
   };
 
-  // Open Studio inside Project
-  const handleOpenProject = (projectId: number) => {
-    setLocation(`/project/${projectId}`);
-  };
-
-  // Handle Create Project
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !clientId) {
-      toast.error("Selecione o cliente antes de criar o projeto.");
+      toast.error(locale === "en" ? "Select a client before creating the project." : "Selecione o cliente antes de criar o projeto.");
       return;
     }
 
@@ -362,10 +314,8 @@ function DashboardContent() {
     }
   };
 
-  // Handle Delete Confirmation
   const handleDeleteConfirm = async () => {
     if (!projectToDelete) return;
-
     setIsSubmitting(true);
     try {
       await deleteProject(projectToDelete.id);
@@ -379,431 +329,278 @@ function DashboardContent() {
     }
   };
 
+  const firstName = user?.name?.split(" ")[0] || "Diretor";
+
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
       <AppNavBar />
 
-      <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-6 py-10 md:py-16 space-y-12">
-        {/* Cinematic Header Block */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-frame-gray-3 pb-6 gap-6">
-          <div>
-            <p className="frame-label mb-2">// {t("app.dashboard.title") as string}</p>
-            <h1 className="frame-title text-[clamp(2.1rem,4vw,3.5rem)] text-frame-white leading-none">
-              {t("app.dashboard.headingLead") as string}{" "}
-              <em className="dashboard-title-outline not-italic">{t("app.dashboard.headingOutline") as string}</em>
-            </h1>
-            <p className="text-[0.82rem] text-frame-gray-light font-light mt-2 max-w-md">
-              {t("app.dashboard.subtitle") as string}
-            </p>
-          </div>
-        </div>
+      <main id="main-content" className="flex-1 max-w-5xl w-full mx-auto px-6 py-10 md:py-14 space-y-8">
 
-        <section className="grid gap-5 border border-frame-orange/45 bg-frame-orange/[0.06] p-4 sm:p-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
-          <div className="min-w-0">
-            <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.18em] text-frame-orange">Agora na sua história</p>
-            <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h2 className="text-xl font-semibold text-frame-white">{focusProject?.name || "Seu primeiro job"}</h2>
-              <span className="font-frame-mono text-[0.6rem] uppercase tracking-[0.12em] text-frame-gray-light">{focusProject ? `${focusStage.number} · ${focusStage.label}` : "Comece pelo cliente"}</span>
-            </div>
-            <p className="mt-2 text-sm text-frame-gray-light">{focusNextAction as string}</p>
-            {focusProject && (
-              <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                {[
-                  [t("app.dashboard.client") as string, focusClient || t("app.common.noData") as string],
-                  [t("app.studio.metadataModal.format") as string, focusFormat || t("app.common.noData") as string],
-                  [t("app.dashboard.deadline") as string, formatDate(focusDeadline) || t("app.common.noData") as string],
-                  [t("app.dashboard.status") as string, focusStatus as string],
-                ].map(([label, value]) => (
-                  <div key={label} className="border border-frame-orange/20 bg-frame-black/30 p-3">
-                    <span className="font-frame-mono text-[0.54rem] uppercase tracking-[0.12em] text-frame-gray-light">{label}</span>
-                    <strong className="mt-1 block truncate text-sm text-frame-white">{value}</strong>
-                  </div>
-                ))}
-              </div>
-            )}
-            {focusProject && (
-              <div className="mt-4 flex gap-1 overflow-x-auto pb-1" aria-label="Capítulos do job">
-                {WORKFLOW_STAGES.map((stage) => (
-                  <button key={stage.id} type="button" onClick={() => setLocation(`/project/${focusProject.id}/journey/${stage.id}`)} className={`min-w-[112px] border px-3 py-2 text-left transition ${stage.id === focusStage.id ? "border-frame-orange bg-frame-orange/10" : "border-frame-gray-3 bg-frame-black/20 hover:border-frame-orange/40"}`}>
-                    <span className="block font-frame-mono text-[0.52rem] text-frame-orange">{stage.number}</span>
-                    <span className="mt-1 block text-xs font-semibold">{stage.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="flex flex-col gap-2 xl:min-w-[220px]">
-            <button
-              type="button"
-              onClick={() => focusActionRoute ? setLocation(focusActionRoute) : startProjectFromClient()}
-              className="frame-btn-primary flex items-center justify-center gap-2"
-            >
-              {focusActionLabel}
-              <ChevronRight className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={startProjectFromClient}
-              className="frame-btn-ghost !min-h-10 !py-2 !text-[0.62rem]"
-            >
-              Novo job
-            </button>
-          </div>
-        </section>
-
-        <section className="grid gap-2 font-frame-mono text-[0.62rem] sm:grid-cols-3">
-          {[
-            [t("app.dashboard.activeProjects") as string, activeProjects.length],
-            [t("app.dashboard.pendingBriefings") as string, pendingBriefings.length],
-            [t("app.profile.currentPlan") as string, plan?.planName || "Free Plan"],
-          ].map(([label, value]) => (
-            <div key={String(label)} className="border border-frame-gray-3 bg-frame-gray-1/20 px-3 py-2">
-              <span className="block uppercase tracking-[0.12em] text-frame-gray-light">{label}</span>
-              <strong className="mt-1 block truncate text-frame-white">{value}</strong>
-            </div>
-          ))}
-        </section>
-
-        <section className="space-y-3">
-          <div>
-            <p className="frame-label">// Mapa do sistema</p>
-            <h2 className="mt-1 text-sm font-semibold text-frame-white">Atalhos secundários para quando você quiser sair da próxima ação.</h2>
-          </div>
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-          {operatingModules.map((module) => {
-            const Icon = module.icon;
-            return (
-              <button
-                key={module.id}
-                type="button"
-                onClick={() => setLocation(module.route)}
-                className="group min-h-[185px] border border-frame-gray-3 bg-frame-gray-1/15 p-4 text-left transition hover:border-frame-orange/50 hover:bg-frame-gray-1/30 sm:p-5"
-              >
-                <div className="mb-5 flex items-start justify-between gap-4">
-                  <div>
-                    <p className="frame-label mb-2">// {module.eyebrow}</p>
-                    <h2 className="text-lg font-semibold leading-tight text-frame-white group-hover:text-frame-orange">
-                      {module.title}
-                    </h2>
-                  </div>
-                  <Icon className="h-5 w-5 text-frame-orange" />
-                </div>
-                <p className="text-xs leading-relaxed text-frame-gray-light">{module.description}</p>
-                <div className="mt-4 grid grid-cols-[74px_1fr] gap-3 border-y border-frame-gray-3 py-3">
-                  <div>
-                    <span className="block text-xl font-bold leading-none text-frame-white">{module.metric}</span>
-                    <span className="font-frame-mono text-[0.58rem] uppercase tracking-[0.12em] text-frame-gray-light">{module.metricLabel}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {module.steps.map((step) => (
-                      <span key={step} className="border border-frame-gray-3 px-2 py-1 font-frame-mono text-[0.56rem] uppercase tracking-[0.1em] text-frame-gray-light">
-                        {step}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <span className="mt-5 inline-flex items-center gap-2 font-frame-mono text-[0.62rem] uppercase tracking-[0.14em] text-frame-orange">
-                  {module.action}
-                  <ArrowUpRight className="h-3.5 w-3.5" />
-                </span>
-              </button>
-            );
-          })}
-          </div>
-        </section>
-
-        {/* Director Queue - Moved up for better visibility */}
-        <section className="border border-frame-gray-3 bg-frame-gray-1/20 p-5 sm:p-6">
-          <div className="flex items-center justify-between gap-4 border-b border-frame-gray-3 pb-3 mb-4">
+        {/* ─── HERO: SAUDAÇÃO + STATS ─── */}
+        <header className="pb-6 border-b border-frame-gray-3/50">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
-              <p className="frame-label">// {t("app.dashboard.radarLabel") as string}</p>
-              <h2 className="text-frame-white font-semibold tracking-tight mt-1">{t("app.dashboard.directorQueue") as string}</h2>
+              <p className="font-frame-mono text-[0.56rem] uppercase tracking-[0.22em] text-frame-orange mb-2">{locale === "en" ? "// Operations panel" : "// Painel de operação"}</p>
+              <h1 className="frame-title text-[clamp(2rem,4vw,3rem)] text-frame-white leading-tight">
+                {getGreeting(locale)}, <span className="text-frame-orange">{firstName}</span>.
+              </h1>
+              <p className="font-frame-mono text-[0.7rem] text-frame-gray-light tracking-[0.04em] mt-2">
+                {isTeamMember ? `Membro ${teamContext?.role || "da equipe"} · ${summaryParts.join(" · ")}` : summaryParts.join(" · ")}
+              </p>
             </div>
-            <ListChecks className="w-4 h-4 text-frame-orange shrink-0" />
+            <div className="flex gap-2 flex-wrap shrink-0">
+              <div className="glow-card px-4 py-2.5 text-center min-w-[72px]">
+                <span className="block text-2xl font-bold text-frame-white leading-none">{activeProjects.length}</span>
+                <span className="block font-frame-mono text-[0.52rem] uppercase tracking-wider text-frame-orange mt-1">Jobs</span>
+              </div>
+              <div className="glow-card px-4 py-2.5 text-center min-w-[72px]">
+                <span className="block text-2xl font-bold text-frame-white leading-none">{directorQueue.length}</span>
+                <span className="block font-frame-mono text-[0.52rem] uppercase tracking-wider text-frame-gray-light mt-1">{locale === "en" ? "Pending" : "Pendente"}</span>
+              </div>
+              <div className="glow-card px-4 py-2.5 text-center min-w-[72px]">
+                <span className="block text-2xl font-bold text-frame-white leading-none">{activities.length}</span>
+                <span className="block font-frame-mono text-[0.52rem] uppercase tracking-wider text-frame-gray-light mt-1">{locale === "en" ? "Actions" : "Ações"}</span>
+              </div>
+            </div>
           </div>
-          {directorQueue.length ? (
+        </header>
+
+        {/* ─── JOB EM FOCO ─── */}
+        {focusProject && (
+          <section
+            className="relative overflow-hidden animate-stagger-1"
+            style={{
+              background: "linear-gradient(135deg, rgba(232,80,2,0.10) 0%, rgba(232,80,2,0.03) 60%, transparent 100%)",
+              border: "1px solid rgba(232,80,2,0.25)",
+              borderLeft: "3px solid #e85002",
+            }}
+          >
+            <div className="absolute top-0 right-0 w-48 h-48 rounded-full pointer-events-none opacity-[0.06]"
+              style={{ background: "radial-gradient(circle, #e85002 0%, transparent 70%)" }}
+            />
+            <div className="relative p-5 sm:p-7">
+              <p className="font-frame-mono text-[0.56rem] uppercase tracking-[0.22em] text-frame-orange mb-4">⚡ {locale === "en" ? "Focus job" : "Job em foco"}</p>
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+                <div className="space-y-3 min-w-0 flex-1">
+                  <h2 className="text-xl sm:text-2xl font-bold text-frame-white leading-tight">{focusProject.name}</h2>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {focusFormat && (
+                      <span className="font-frame-mono text-[0.6rem] px-2 py-0.5 border border-frame-orange/25 bg-frame-orange/[0.07] text-frame-orange">{focusFormat}</span>
+                    )}
+                    {focusClient && (
+                      <span className="font-frame-mono text-[0.6rem] px-2 py-0.5 border border-frame-gray-3 bg-frame-gray-2/30 text-frame-gray-light flex items-center gap-1">
+                        <Building2 className="w-2.5 h-2.5" />{focusClient}
+                      </span>
+                    )}
+                    {focusDeadline && (
+                      <span className="font-frame-mono text-[0.6rem] px-2 py-0.5 border border-frame-gray-3 bg-frame-gray-2/30 text-frame-gray-light flex items-center gap-1">
+                        <CalendarClock className="w-2.5 h-2.5" />{formatDate(focusDeadline)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="font-frame-mono text-[0.58rem] text-frame-gray-light uppercase">{locale === "en" ? "Stage:" : "Etapa:"}</span>
+                    <span className="font-frame-mono text-[0.58rem] text-frame-white font-semibold">{locale === "en" ? (focusStage.labelEn ?? focusStage.label) : focusStage.label}</span>
+                    <div className="flex-1 max-w-[100px] h-1 bg-frame-gray-2 rounded-full overflow-hidden">
+                      <div className="h-full bg-frame-orange rounded-full" style={{ width: `${Math.max(10, (focusStage.order ?? 1) * 14)}%` }} />
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => focusActionRoute ? setLocation(focusActionRoute) : startProjectFromClient()}
+                  className="frame-btn-primary flex items-center gap-2 shrink-0 whitespace-nowrap px-6 py-3"
+                >
+                  {focusActionLabel} <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ─── PENDÊNCIAS (Director Queue) ─── */}
+        {/* ─── PENDÊNCIAS + ATALHOS em 2 colunas ─── */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 animate-stagger-2">
+
+          {/* Pendências */}
+          <section className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ListChecks className="w-4 h-4 text-frame-orange" />
+                <h2 className="font-frame-mono text-[0.7rem] uppercase tracking-[0.16em] text-frame-white font-semibold">{locale === "en" ? "Pending" : "Pendências"}</h2>
+              </div>
+              <span className="font-frame-mono text-[0.6rem] text-frame-gray-light border border-frame-gray-3 px-2 py-0.5">
+                {directorQueue.length} item{directorQueue.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+            {directorQueue.length > 0 ? (
+              <div className="space-y-2">
+                {directorQueue.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <button key={item.id} type="button" onClick={item.action}
+                      className="w-full group glow-card p-3.5 text-left flex items-center gap-3">
+                      <div className="w-7 h-7 flex items-center justify-center border border-frame-gray-3 bg-frame-gray-2/30 shrink-0">
+                        <Icon className={`w-3.5 h-3.5 ${item.tone}`} />
+                      </div>
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-frame-mono text-[0.54rem] tracking-[0.14em] uppercase text-frame-gray-light mb-0.5">{item.label}</span>
+                        <strong className="block text-[0.82rem] text-frame-white truncate group-hover:text-frame-orange transition-colors">{item.detail}</strong>
+                      </span>
+                      <ArrowUpRight className="w-3.5 h-3.5 text-frame-gray-light group-hover:text-frame-orange transition-colors shrink-0" />
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="frame-empty-state p-5 flex items-center gap-3">
+                <div className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-frame-green/10 border border-frame-green/30">
+                  <span className="text-sm">✓</span>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-frame-white">{locale === "en" ? "All up to date" : "Tudo em dia"}</p>
+                  <p className="text-[0.66rem] text-frame-gray-light mt-0.5">{locale === "en" ? "Incomplete briefings, deadlines and reviews appear here." : "Briefings incompletos, prazos e revisões aparecem aqui."}</p>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* Atalhos */}
+          <section className="space-y-3">
+            <h2 className="font-frame-mono text-[0.7rem] uppercase tracking-[0.16em] text-frame-white font-semibold">{locale === "en" ? "Shortcuts" : "Atalhos"}</h2>
             <div className="space-y-2">
-              {directorQueue.map((item) => {
-                const Icon = item.icon;
+              {[
+                { icon: Plus, label: locale === "en" ? "New Job" : "Novo Job", sub: locale === "en" ? "Create project" : "Criar projeto", action: startProjectFromClient },
+                { icon: Users, label: locale === "en" ? "New Client" : "Novo Cliente", sub: locale === "en" ? "Register" : "Cadastrar", action: () => setLocation("/clients/new") },
+                { icon: FileSignature, label: locale === "en" ? "New Proposal" : "Nova Proposta", sub: locale === "en" ? "Quote" : "Orçamento", action: () => setLocation("/proposals") },
+              ].map((shortcut) => {
+                const Icon = shortcut.icon;
                 return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={item.action}
-                    className="w-full group border border-frame-gray-3 bg-frame-black/40 hover:border-frame-orange/50 p-3 text-left transition flex items-center gap-3"
-                  >
-                    <Icon className={`w-4 h-4 shrink-0 ${item.tone}`} />
-                    <span className="min-w-0 flex-1">
-                      <span className="block font-frame-mono text-[0.58rem] tracking-[0.14em] uppercase text-frame-gray-light">{item.label as string}</span>
-                      <strong className="block text-sm text-frame-white truncate group-hover:text-frame-orange">{item.detail}</strong>
-                    </span>
-                    <ArrowUpRight className="w-3.5 h-3.5 text-frame-gray-light group-hover:text-frame-orange" />
+                  <button key={shortcut.label} type="button" onClick={shortcut.action}
+                    className="group w-full glow-card p-3.5 text-left flex items-center gap-3">
+                    <div className="w-8 h-8 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] group-hover:bg-frame-orange group-hover:border-frame-orange transition-all rounded shrink-0">
+                      <Icon className="w-4 h-4 text-frame-orange group-hover:text-frame-black transition-colors" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="block text-[0.84rem] font-semibold text-frame-white group-hover:text-frame-orange transition-colors">{shortcut.label}</span>
+                      <span className="block font-frame-mono text-[0.58rem] text-frame-gray-light">{shortcut.sub}</span>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-frame-gray-light group-hover:text-frame-orange transition-colors shrink-0" />
                   </button>
                 );
               })}
             </div>
+          </section>
+        </div>
+
+        {/* ─── ATIVIDADES RECENTES ─── */}
+        <section className="space-y-3 animate-stagger-3">
+          <div className="flex items-center gap-2">
+            <Activity className="w-4 h-4 text-frame-orange" />
+            <h2 className="font-frame-mono text-[0.7rem] uppercase tracking-[0.16em] text-frame-white font-semibold">{locale === "en" ? "Recent activity" : "Atividades recentes"}</h2>
+          </div>
+
+          {isActivitiesLoading ? (
+            <div className="liquid-glass p-6 text-center">
+              <p className="text-sm text-frame-gray-light animate-pulse">Carregando...</p>
+            </div>
+          ) : activities.length === 0 ? (
+            <div className="frame-empty-state p-5 flex items-start gap-3">
+              <div className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-frame-orange/10 border border-frame-orange/25">
+                <Activity className="w-3.5 h-3.5 text-frame-orange" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-frame-white">{locale === "en" ? "No activity yet" : "Nenhuma atividade ainda"}</p>
+                <p className="text-[0.66rem] text-frame-gray-light mt-0.5">{locale === "en" ? "Appears when you use AI tools, create projects or upload files." : "Aparece quando você usar ferramentas de IA, criar projetos ou subir arquivos."}</p>
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {(locale === "en"
+                    ? ["Generate script", "Create briefing", "Upload file", "Video review"]
+                    : ["Gerar roteiro", "Criar briefing", "Subir arquivo", "Review de vídeo"]
+                  ).map((ex) => (
+                    <span key={ex} className="text-[0.58rem] font-mono border border-frame-orange/20 bg-frame-orange/[0.05] px-1.5 py-0.5 rounded text-frame-gray-light">{ex}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
           ) : (
-            <div className="border border-dashed border-frame-gray-3 p-5 text-sm text-frame-gray-light">
-              {t("app.dashboard.queueEmpty") as string}
+            <div className="liquid-glass overflow-hidden">
+              {activities.slice(0, 6).map((act, idx) => {
+                const dateStr = new Date(act.createdAt).toLocaleDateString(locale === "en" ? "en-US" : "pt-BR", {
+                  day: "2-digit",
+                  month: "short",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+                return (
+                  <button
+                    key={act.id}
+                    type="button"
+                    onClick={() => {
+                      if (act.projectId) setLocation(`/project/${act.projectId}/studio/${act.toolId}`);
+                      else setLocation(`/studio/${act.toolId}`);
+                    }}
+                    className="w-full flex items-center justify-between gap-4 px-5 py-3.5 text-left group transition-colors hover:bg-white/[0.03]"
+                    style={{
+                      borderBottom: idx < Math.min(activities.length, 6) - 1 ? "1px solid rgba(255, 255, 255, 0.05)" : "none",
+                    }}
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-2 h-2 rounded-full bg-frame-orange shrink-0 opacity-60" />
+                      <p className="text-[0.84rem] text-frame-white truncate group-hover:text-frame-orange transition-colors">
+                        {getActivityLabel(act)}
+                      </p>
+                    </div>
+                    <span className="flex items-center gap-1.5 text-[0.64rem] font-frame-mono text-frame-gray-light shrink-0">
+                      <Clock className="w-3 h-3" />
+                      {dateStr}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           )}
         </section>
 
-        {/* Dashboard Grid Workspace */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          {/* Projects Core Column (Left) */}
-          <div className="lg:col-span-2 space-y-10">
-            {/* 1. PINNED PROJECTS */}
-            {pinnedProjects.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-frame-gray-3 pb-2.5">
-                  <Pin className="w-3.5 h-3.5 text-frame-orange rotate-45" />
-                  <h3 className="font-frame-mono text-[0.68rem] tracking-[0.18em] uppercase text-frame-orange font-semibold">
-                    {t("app.dashboard.pinned") as string}
-                  </h3>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {pinnedProjects.map((p) => {
-                    const goals = getMetadata(p).creativeGoals;
-                    return (
-                      <div
-                        key={p.id}
-                        onClick={() => handleOpenProject(p.id)}
-                        className="group border border-frame-orange/20 bg-frame-orange/[0.02] p-5 hover:border-frame-orange hover:bg-frame-orange/[0.04] transition duration-300 relative cursor-pointer flex flex-col justify-between min-h-[155px]"
-                      >
-                        <button
-                          onClick={(e) => handleTogglePin(p, e)}
-                          className="absolute top-4 right-4 text-frame-orange hover:text-frame-white transition-colors cursor-pointer"
-                          title={t("app.dashboard.unpin") as string}
-                        >
-                          <Pin className="w-3.5 h-3.5" />
-                        </button>
-
-                        <div className="space-y-2 pr-6">
-                          <span className="font-frame-mono text-[0.62rem] tracking-wider text-frame-gray-light block">
-                            ID: #{p.id}
-                          </span>
-                          <h4 className="frame-title text-[1.4rem] text-frame-white group-hover:text-frame-orange transition-colors">
-                            {p.name}
-                          </h4>
-                          <p className="text-[0.76rem] leading-relaxed text-frame-gray-light line-clamp-2 font-light">
-                            {p.description || t("app.common.noData") as string}
-                          </p>
-                          {p.clientName && (
-                            <p className="inline-flex items-center gap-1.5 font-frame-mono text-[0.58rem] uppercase tracking-[0.12em] text-frame-orange">
-                              <Building2 className="h-3 w-3" />
-                              {p.clientName}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Metas display (format / tone) */}
-                        {goals && (goals.format || goals.tone) && (
-                          <div className="flex flex-wrap gap-1.5 pt-3 border-t border-frame-gray-3/40 mt-3 font-frame-mono">
-                            {goals.format && (
-                              <span className="text-[0.62rem] tracking-wider text-frame-orange bg-frame-orange/[0.08] px-2 py-0.5 border border-frame-orange/10">
-                                {goals.format}
-                              </span>
-                            )}
-                            {goals.tone && (
-                              <span className="text-[0.62rem] tracking-wider text-frame-white bg-frame-gray-2 px-2 py-0.5 border border-frame-gray-3">
-                                {goals.tone}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* 2. ALL PROJECTS */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-frame-gray-3 pb-2.5">
-                <div className="flex items-center gap-2">
-                  <Folder className="w-3.5 h-3.5 text-frame-gray-light" />
-                  <h3 className="font-frame-mono text-[0.68rem] tracking-[0.18em] uppercase text-frame-white font-semibold">
-                    {t("app.common.all") as string}
-                  </h3>
-                </div>
-                <span className="font-frame-mono text-[0.64rem] text-frame-gray-light">
-                  Total: {projects.length}
-                </span>
-              </div>
-
-              {isProjectsLoading && projects.length === 0 ? (
-                <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-4 space-y-3">
-                  <SkeletonList count={5} />
-                </div>
-              ) : projects.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 px-4 text-center border border-dashed border-frame-gray-3 space-y-4">
-                  <p className="text-sm text-frame-gray-light font-light max-w-sm">
-                    {t("app.dashboard.createFirstProjectDesc") as string}
-                  </p>
-                  <button
-                    onClick={startProjectFromClient}
-                    className="frame-btn-ghost !py-2 !px-4 !text-[0.62rem] flex items-center gap-1.5"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> {t("app.dashboard.createFirstProject") as string}
-                  </button>
-                </div>
-              ) : (
-                <div className="border border-frame-gray-3 bg-frame-gray-1/10 divide-y divide-frame-gray-3 font-frame-body">
-                  {generalProjects.map((p) => {
-                    const goals = getMetadata(p).creativeGoals;
-                    return (
-                      <div
-                        key={p.id}
-                        onClick={() => handleOpenProject(p.id)}
-                        className="p-4 flex items-center justify-between gap-4 hover:bg-frame-gray-1/30 transition duration-150 cursor-pointer group"
-                      >
-                        <div className="min-w-0 flex-1 space-y-1">
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-[0.88rem] font-semibold text-frame-white group-hover:text-frame-orange transition-colors truncate">
-                              {p.name}
-                            </h4>
-                            {goals?.format && (
-                              <span className="font-frame-mono text-[0.62rem] text-frame-gray-light bg-frame-gray-2 px-1.5 py-0.5 border border-frame-gray-3">
-                                {goals.format}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-[0.76rem] text-frame-gray-light line-clamp-1 font-light max-w-xl">
-                            {p.description || t("app.common.noData") as string}
-                          </p>
-                          {p.clientName && (
-                            <p className="flex items-center gap-1.5 font-frame-mono text-[0.58rem] uppercase tracking-[0.12em] text-frame-orange">
-                              <Building2 className="h-3 w-3" />
-                              {p.clientName}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Actions block */}
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            onClick={(e) => handleTogglePin(p, e)}
-                            className="p-2 text-frame-gray-light hover:text-frame-orange hover:bg-frame-gray-2 transition rounded-none cursor-pointer outline-none"
-                            title={t("app.dashboard.pinned") as string}
-                          >
-                            <Pin className="w-3.5 h-3.5 rotate-45" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setProjectToDelete(p);
-                              setIsDeleteOpen(true);
-                            }}
-                            className="p-2 text-frame-gray-light hover:text-frame-red hover:bg-frame-gray-2 transition rounded-none cursor-pointer outline-none"
-                            title={t("app.dashboard.deleteProject") as string}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                          <ChevronRight className="w-4 h-4 text-frame-gray-muted group-hover:text-frame-orange group-hover:translate-x-0.5 transition" />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+        {/* ─── EMPTY STATE (sem nenhum projeto) ─── */}
+        {!isProjectsLoading && projects.length === 0 && !focusProject && (
+          <section className="frame-empty-state p-12 text-center space-y-5 animate-stagger-5">
+            <div className="w-16 h-16 mx-auto flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-full">
+              <Plus className="w-7 h-7 text-frame-orange" />
             </div>
-          </div>
-
-          {/* Activity Column (Right) */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 border-b border-frame-gray-3 pb-2.5">
-              <Activity className="w-3.5 h-3.5 text-frame-orange" />
-              <h3 className="font-frame-mono text-[0.68rem] tracking-[0.18em] uppercase text-frame-white font-semibold">
-                {t("app.dashboard.recentActivities") as string}
-              </h3>
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-frame-white">Comece sua história</h3>
+              <p className="text-sm text-frame-gray-light max-w-sm mx-auto leading-relaxed">
+                Cadastre o cliente, crie o projeto e mantenha briefing, proposta, produção e financeiro no mesmo lugar.
+              </p>
             </div>
-
-            {isActivitiesLoading ? (
-              <div className="border border-frame-gray-3/40 bg-frame-gray-1/10 p-4">
-                <SkeletonList count={6} />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg mx-auto text-left py-2">
+              <div className="border border-frame-orange/20 bg-frame-orange/[0.04] p-3 rounded-lg">
+                <span className="block font-frame-mono text-[0.55rem] text-frame-orange uppercase tracking-wider mb-1">1. Cliente</span>
+                <span className="text-[0.7rem] text-frame-gray-light">Cadastre quem contratou o job</span>
               </div>
-            ) : activities.length === 0 ? (
-              <div className="p-6 text-center border border-frame-gray-3/40 bg-frame-gray-1/10 font-frame-body text-xs text-frame-gray-light italic">
-                {t("app.dashboard.noActivities") as string}
+              <div className="border border-frame-orange/20 bg-frame-orange/[0.04] p-3 rounded-lg">
+                <span className="block font-frame-mono text-[0.55rem] text-frame-orange uppercase tracking-wider mb-1">2. Projeto</span>
+                <span className="text-[0.7rem] text-frame-gray-light">Crie o job com briefing e prazo</span>
               </div>
-            ) : (
-              <div className="border border-frame-gray-3/40 bg-frame-gray-1/10 p-4 space-y-4 max-h-[480px] overflow-y-auto">
-                {activities.map((act) => {
-                  const dateStr = new Date(act.createdAt).toLocaleDateString("pt-BR", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  });
-                  return (
-                    <div
-                      key={act.id}
-                      onClick={() => {
-                        if (act.projectId) {
-                          setLocation(`/project/${act.projectId}/studio/${act.toolId}`);
-                        } else {
-                          setLocation(`/studio/${act.toolId}`);
-                        }
-                      }}
-                      className="group border border-[#1a1a1a] hover:border-frame-orange/30 bg-frame-black p-3 transition duration-150 cursor-pointer flex flex-col justify-between gap-1.5"
-                    >
-                      <div className="flex justify-between items-start gap-2">
-                        <span className="font-frame-mono text-[0.64rem] text-frame-orange tracking-wider uppercase font-semibold">
-                          {act.toolId}
-                        </span>
-                        <div className="flex items-center gap-1 text-frame-gray-light text-[0.62rem] font-frame-mono shrink-0">
-                          <Clock className="w-2.5 h-2.5" />
-                          {dateStr}
-                        </div>
-                      </div>
-
-                      <p className="text-[0.76rem] font-medium text-frame-white leading-normal group-hover:text-frame-orange transition-colors">
-                        {getActivityLabel(act)}
-                      </p>
-
-                      {act.projectName && (
-                        <div className="flex items-center justify-between gap-2 font-frame-mono text-[0.62rem] text-frame-gray-light mt-1 pt-1.5 border-t border-frame-gray-3/40">
-                          <span className="flex items-center gap-1 min-w-0">
-                            <Folder className="w-2.5 h-2.5 text-frame-orange shrink-0" />
-                            <span className="truncate">{act.projectName}</span>
-                          </span>
-                          <span className="text-frame-orange uppercase tracking-[0.12em] shrink-0">{t("app.common.open") as string}</span>
-                        </div>
-                      )}
-
-                      {!act.projectName && (
-                        <div className="flex items-center justify-end font-frame-mono text-[0.62rem] text-frame-orange mt-1 pt-1.5 border-t border-frame-gray-3/40 uppercase tracking-[0.12em]">
-                          {t("app.common.open") as string}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+              <div className="border border-frame-orange/20 bg-frame-orange/[0.04] p-3 rounded-lg">
+                <span className="block font-frame-mono text-[0.55rem] text-frame-orange uppercase tracking-wider mb-1">3. Operar</span>
+                <span className="text-[0.7rem] text-frame-gray-light">IA, arquivos, revisão e entrega</span>
               </div>
-            )}
-
-            {/* Quick Actions Panel */}
-            <div className="border border-frame-gray-3/40 bg-frame-gray-1/10 p-4 space-y-3 font-frame-mono text-[0.64rem]">
-              <span className="block tracking-wider uppercase text-frame-gray-light font-bold">
-                // {t("app.common.filter") as string}
-              </span>
-              <button
-                onClick={() => setLocation("/tools")}
-                className="w-full flex items-center justify-between p-2.5 border border-frame-gray-3 bg-frame-black hover:border-frame-orange/40 hover:text-frame-orange transition text-left cursor-pointer rounded-none"
-              >
-                <span className="flex items-center gap-2 font-medium tracking-wide">
-                  <Compass className="w-3.5 h-3.5 text-frame-orange" />
-                  {t("app.tools.allTools") as string}
-                </span>
-                <ChevronRight className="w-3 h-3" />
-              </button>
             </div>
-          </div>
-        </div>
+            <button
+              type="button"
+              onClick={startProjectFromClient}
+              className="frame-btn-primary inline-flex items-center gap-2 px-6 py-3"
+            >
+              <Plus className="w-4 h-4" />
+              Começar primeiro job
+            </button>
+          </section>
+        )}
       </main>
 
-      {/* CREATE MODAL */}
+      {/* ─── CREATE MODAL ─── */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-2xl rounded-none p-6">
           <DialogHeader>
@@ -885,7 +682,7 @@ function DashboardContent() {
                 <input
                   type="text"
                   disabled={isSubmitting}
-                  placeholder="ex: filme 30s, reels, case, teaser"
+                  placeholder={locale === "en" ? "e.g. 30s film, reels, case study, teaser" : "ex: filme 30s, reels, case, teaser"}
                   value={format}
                   onChange={(e) => setFormat(e.target.value)}
                   className="w-full bg-[#111] border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none"
@@ -898,7 +695,7 @@ function DashboardContent() {
                 <input
                   type="text"
                   disabled={isSubmitting}
-                  placeholder="ex: elegante, energético, documental"
+                  placeholder={locale === "en" ? "e.g. elegant, energetic, documentary" : "ex: elegante, energético, documental"}
                   value={tone}
                   onChange={(e) => setTone(e.target.value)}
                   className="w-full bg-[#111] border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none"
@@ -911,7 +708,7 @@ function DashboardContent() {
                 {t("app.dashboard.objective") as string}
               </label>
               <textarea
-                placeholder="O que esse projeto precisa resolver para o cliente?"
+                placeholder={locale === "en" ? "What does this project need to solve for the client?" : "O que esse projeto precisa resolver para o cliente?"}
                 disabled={isSubmitting}
                 value={objective}
                 onChange={(e) => setObjective(e.target.value)}
@@ -931,7 +728,7 @@ function DashboardContent() {
                   onChange={(e) => setClientId(e.target.value)}
                   className="w-full bg-[#111] border border-frame-gray-3 text-frame-white pl-10 pr-4 py-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none appearance-none cursor-pointer"
                 >
-                  <option value="">Selecione um cliente</option>
+                  <option value="">{locale === "en" ? "Select a client" : "Selecione um cliente"}</option>
                   {clients.map((client) => (
                     <option key={client.id} value={client.id}>
                       {client.company ? `${client.name} (${client.company})` : client.name}

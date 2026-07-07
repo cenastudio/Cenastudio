@@ -66,8 +66,8 @@ Infraestrutura
 
 ### ADR-001: Monolito vs Microservices
 
-**Status:** Aceito  
-**Data:** 2024  
+**Status:** Aceito
+**Data:** 2024
 **Contexto:** Precisamos decidir entre arquitetura monolítica ou microservices.
 
 **Decisão:** Monolito modular
@@ -84,7 +84,7 @@ Infraestrutura
   - Desenvolvimento mais rápido
   - Debugging mais simples
   - Menor latência entre componentes
-  
+
 - Negativas:
   - Escala vertical limitada
   - Acoplamento potencial entre módulos
@@ -96,11 +96,11 @@ Infraestrutura
 
 ### ADR-002: SQLite vs Postgres (Runtime)
 
-**Status:** Aceito (com migração planejada)  
-**Data:** 2024  
+**Status:** Aceito (migração concluída em 30/06/2026)
+**Data:** 2024
 **Contexto:** Escolher banco de dados para runtime inicial.
 
-**Decisão:** SQLite para desenvolvimento inicial, migrar para Supabase Postgres em produção
+**Decisão:** SQLite para desenvolvimento inicial, Supabase Postgres em produção (migrado)
 
 **Rationale:**
 - SQLite:
@@ -108,32 +108,31 @@ Infraestrutura
   - Perfeito para desenvolvimento
   - Fácil backup (arquivo único)
   - Performance excelente para < 100 concurrent users
-  
+
 - Supabase Postgres:
   - Escalável para produção
   - Backup automático
   - Real-time subscriptions
   - Row Level Security (RLS)
-  - Migrations já preparadas
+  - Migrations aplicadas em 30/06/2026
 
 **Consequências:**
 - Positivas:
   - Setup rápido para desenvolvimento
-  - Caminho claro para produção
-  
+  - Produção usando Postgres com todas vantagens
+
 - Negativas:
   - Duas implementações de banco para manter
-  - Queries diferentes entre SQLite e Postgres
-  - Migração requerida antes de produção
+  - Queries diferentes entre SQLite e Postgres em alguns casos
 
-**Revisão:** Migrar completamente para Supabase após Sprint 1
+**Revisão:** Migração concluída. Produção usa Supabase Postgres via Prisma com 5 migrations aplicadas.
 
 ---
 
 ### ADR-003: React vs Next.js
 
-**Status:** Aceito  
-**Data:** 2024  
+**Status:** Aceito
+**Data:** 2024
 **Contexto:** Escolher framework frontend.
 
 **Decisão:** React + Vite (sem Next.js)
@@ -143,7 +142,7 @@ Infraestrutura
   - Dev server extremamente rápido
   - Build otimizado por padrão
   - Menor configuração
-  
+
 - Next.js não escolhido porque:
   - SSR não necessário (app é SPA)
   - API routes não necessárias (tem Express backend)
@@ -155,7 +154,7 @@ Infraestrutura
   - DX (developer experience) excelente
   - HMR instantâneo
   - Build rápido
-  
+
 - Negativas:
   - Sem SEO otimizado (landing precisa ser SSR)
   - Sem image optimization automática
@@ -171,8 +170,8 @@ Infraestrutura
 
 ### ADR-004: Express vs Fastify vs Koa
 
-**Status:** Aceito  
-**Data:** 2024  
+**Status:** Aceito
+**Data:** 2024
 **Contexto:** Escolher framework backend.
 
 **Decisão:** Express
@@ -183,7 +182,7 @@ Infraestrutura
   - Middleware abundante
   - Documentação extensa
   - Time já familiarizado
-  
+
 - Fastify/Koa não escolhidos porque:
   - Ecossistema menor
   - Curva de aprendizado
@@ -194,7 +193,7 @@ Infraestrutura
   - Middleware readily available
   - Comunidade grande
   - Facilidade de hiring
-  
+
 - Negativas:
   - Performance inferior a Fastify
   - TypeScript support não nativo (requer @types)
@@ -206,8 +205,8 @@ Infraestrutura
 
 ### ADR-005: Wouter vs React Router
 
-**Status:** Aceito  
-**Data:** 2024  
+**Status:** Aceito
+**Data:** 2024
 **Contexto:** Escolher biblioteca de roteamento.
 
 **Decisão:** Wouter
@@ -218,7 +217,7 @@ Infraestrutura
   - Menor bundle size (3KB vs 15KB)
   - Hooks-first design
   - Suporte a hash routing nativo
-  
+
 - React Router não escolhido porque:
   - Overkill para SPA simples
   - Bundle size maior
@@ -229,7 +228,7 @@ Infraestrutura
   - Bundle menor
   - API mais simples
   - Performance melhor
-  
+
 - Negativas:
   - Ecossistema menor
   - Menos recursos de data fetching
@@ -241,8 +240,8 @@ Infraestrutura
 
 ### ADR-006: Radix UI vs Headless UI vs Chakra UI
 
-**Status:** Aceito  
-**Data:** 2024  
+**Status:** Aceito
+**Data:** 2024
 **Contexto:** Escolher biblioteca de componentes UI.
 
 **Decisão:** Radix UI + Tailwind CSS
@@ -253,11 +252,11 @@ Infraestrutura
   - Acessibilidade nativa (WAI-ARIA)
   - Não styled (liberdade total)
   - Performance excelente
-  
+
 - Headless UI não escolhido:
   - Focado em Tailwind (mas Radix também funciona bem)
   - Ecossistema menor
-  
+
 - Chakra UI não escolhido:
   - Styled components (menos flexível)
   - Bundle size maior
@@ -269,7 +268,7 @@ Infraestrutura
   - Estilo 100% customizável
   - Performance excelente
   - Bundle size pequeno
-  
+
 - Negativas:
   - Mais código para estilizar
   - Sem design system pré-definido
@@ -285,8 +284,8 @@ Infraestrutura
 
 ### ADR-007: Anthropic vs NVIDIA vs OpenAI
 
-**Status:** Aceito (com fallback)  
-**Data:** 2024  
+**Status:** Aceito (com fallback)
+**Data:** 2024
 **Contexto:** Escolher provider de IA.
 
 **Decisão:** NVIDIA como primary, Anthropic como fallback
@@ -297,13 +296,13 @@ Infraestrutura
   - Modelo minimax-m3 multimodal
   - Timeout configurável
   - Thinking mode disponível
-  
+
 - Anthropic:
   - Claude Sonnet 4 (modelo superior)
   - Context window maior
   - Melhor para reasoning complexo
   - Mais caro
-  
+
 - OpenAI não escolhido:
   - GPT-4 mais caro
   - Rate limits mais restritivos
@@ -313,7 +312,7 @@ Infraestrutura
   - Custo menor com NVIDIA
   - Fallback para Anthropic se necessário
   - Flexibilidade de escolha
-  
+
 - Negativas:
   - Dois providers para manter
   - Qualidade de output pode variar
@@ -329,8 +328,8 @@ Infraestrutura
 
 ### ADR-008: JWT vs Sessions vs Supabase Auth
 
-**Status:** Aceito  
-**Data:** 2024  
+**Status:** Aceito
+**Data:** 2024
 **Contexto:** Escolher método de autenticação.
 
 **Decisão:** JWT httpOnly cookies + Supabase Auth (híbrido)
@@ -340,11 +339,11 @@ Infraestrutura
   - Stateless (escala horizontal)
   - Compatível com SPA
   - httpOnly cookies seguros contra XSS
-  
+
 - Sessions não escolhidas:
   - Stateful (requer store)
   - Escala mais complexa
-  
+
 - Supabase Auth:
   - Já configurado
   - OAuth integrado
@@ -356,7 +355,7 @@ Infraestrutura
   - Escalabilidade
   - Segurança (httpOnly)
   - Integração com Supabase
-  
+
 - Negativas:
   - Revogação complexa (blacklist necessário)
   - Token size limit
@@ -373,8 +372,8 @@ Infraestrutura
 
 ### ADR-009: Stripe vs Paddle vs LemonSqueezy
 
-**Status:** Aceito (legado)  
-**Data:** 2024  
+**Status:** Aceito (legado)
+**Data:** 2024
 **Contexto:** Escolher processador de pagamentos.
 
 **Decisão:** Stripe (legado), migrando para PIX/WhatsApp
@@ -385,11 +384,11 @@ Infraestrutura
   - Webhooks confiáveis
   - Suporte global
   - Documentação excelente
-  
+
 - Paddle/LemonSqueezy não escolhidos:
   - Ecossistema menor
   - Menos features
-  
+
 - PIX/WhatsApp:
   - Melhor para mercado brasileiro
   - Sem taxas de processamento
@@ -399,7 +398,7 @@ Infraestrutura
 - Positivas:
   - Stripe como fallback/API
   - PIX/WhatsApp para fluxo principal
-  
+
 - Negativas:
   - Dois sistemas de pagamento
   - Stripe ainda mantido (legado)
@@ -414,8 +413,8 @@ Infraestrutura
 
 ### ADR-010: Vercel vs Railway vs Self-hosted
 
-**Status:** Aceito  
-**Data:** 2024  
+**Status:** Aceito
+**Data:** 2024
 **Contexto:** Escolher plataforma de hosting.
 
 **Decisão:** Vercel
@@ -427,11 +426,11 @@ Infraestrutura
   - Edge functions
   - Preview deployments
   - Integração com Next.js/React
-  
+
 - Railway não escolhido:
   - Menos otimizado para frontend
   - Preview deployments não tão bons
-  
+
 - Self-hosted não escolhido:
   - Overhead operacional
   - Manutenção de infraestrutura
@@ -442,7 +441,7 @@ Infraestrutura
   - Deploy zero-friction
   - Performance global (CDN)
   - Preview environments
-  
+
 - Negativas:
   - Vendor lock-in
   - Limites de uso (free tier)
@@ -486,7 +485,7 @@ Services contain business logic:
 export async function create(data: CreateUserDto): Promise<User> {
   const existing = await findByEmail(data.email)
   if (existing) throw new ConflictError('Email already exists')
-  
+
   const hashedPassword = await hashPassword(data.password)
   return prisma.user.create({ data: { ...data, passwordHash: hashedPassword } })
 }
@@ -506,11 +505,11 @@ export class UserRepository {
   async findById(id: number): Promise<User | null> {
     return prisma.user.findUnique({ where: { id } })
   }
-  
+
   async findByEmail(email: string): Promise<User | null> {
     return prisma.user.findUnique({ where: { email } })
   }
-  
+
   async create(data: CreateUserDto): Promise<User> {
     return prisma.user.create({ data })
   }
@@ -545,12 +544,12 @@ Reusable logic:
 // ✅ Bom
 export function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value)
-  
+
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedValue(value), delay)
     return () => clearTimeout(handler)
   }, [value, delay])
-  
+
   return debouncedValue
 }
 ```

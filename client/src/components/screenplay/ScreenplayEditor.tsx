@@ -303,7 +303,7 @@ export default function ScreenplayEditor({
                 }`}
               >
                 <textarea
-                  ref={(el) => (editorRefs.current[index] = el)}
+                  ref={(el) => { editorRefs.current[index] = el; }}
                   value={element.content}
                   onChange={(e) => handleChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(e, index)}

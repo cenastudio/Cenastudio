@@ -598,13 +598,26 @@ export const updateFinancialEntry: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const id = Number(req.params.id);
+    const { description, amount, category, kind, dueDate, recurrence, clientId, isFixed, status: bodyStatus, paidAt: bodyPaidAt } = req.body;
+
     if (shouldUsePrisma) {
       const current = await prisma.financialEntry.findFirst({ where: { id: BigInt(id), userId: BigInt(userId) } });
       if (!current) throw new AppError("Lançamento não encontrado", 404);
-      const status = req.body.status ?? current.status;
+      const status = bodyStatus ?? current.status;
       if (!FINANCIAL_STATUSES.has(String(status))) throw new AppError("Status financeiro inválido", 400);
-      const paidAt = status === "settled" ? (req.body.paidAt ? new Date(req.body.paidAt) : current.paidAt || new Date()) : null;
-      const updated = await prisma.financialEntry.update({ where: { id: current.id }, data: { status, paidAt, updatedAt: new Date() } });
+      if (kind !== undefined && !FINANCIAL_KINDS.has(kind)) throw new AppError("Tipo de lançamento inválido", 400);
+      if (recurrence !== undefined && !FINANCIAL_RECURRENCES.has(recurrence)) throw new AppError("Recorrência inválida", 400);
+      const paidAt = status === "settled" ? (bodyPaidAt ? new Date(bodyPaidAt) : current.paidAt || new Date()) : null;
+      const data: Record<string, unknown> = { status, paidAt, updatedAt: new Date() };
+      if (description !== undefined) data.description = description.trim();
+      if (amount !== undefined) data.amount = normalizeAmount(amount);
+      if (category !== undefined) data.category = category.trim();
+      if (kind !== undefined) data.kind = kind;
+      if (dueDate !== undefined) data.dueDate = dueDate ? new Date(dueDate) : null;
+      if (recurrence !== undefined) data.recurrence = recurrence;
+      if (clientId !== undefined) data.clientId = clientId ? BigInt(Number(clientId)) : null;
+      if (isFixed !== undefined) data.isFixed = Boolean(isFixed);
+      const updated = await prisma.financialEntry.update({ where: { id: current.id }, data });
       res.json({ success: true, data: serializeFinancial(updated) });
       return;
     }
@@ -612,17 +625,45 @@ export const updateFinancialEntry: RequestHandler = async (req, res, next) => {
       .get(id, userId) as Record<string, unknown> | undefined;
     if (!current) throw new AppError("Lançamento não encontrado", 404);
 
-    const status = req.body.status ?? current.status;
-    if (!FINANCIAL_STATUSES.has(String(status))) throw new AppError("Status financeiro inválido", 400);
-    const paidAt = status === "settled"
-      ? (req.body.paidAt || current.paid_at || new Date().toISOString().slice(0, 10))
+    const nextStatus = bodyStatus ?? current.status;
+    if (!FINANCIAL_STATUSES.has(String(nextStatus))) throw new AppError("Status financeiro inválido", 400);
+    if (kind !== undefined && !FINANCIAL_KINDS.has(kind)) throw new AppError("Tipo de lançamento inválido", 400);
+    if (recurrence !== undefined && !FINANCIAL_RECURRENCES.has(recurrence)) throw new AppError("Recorrência inválida", 400);
+
+    const nextAmount = amount !== undefined ? normalizeAmount(amount) : undefined;
+    const nextPaidAt = nextStatus === "settled"
+      ? (bodyPaidAt || current.paid_at || new Date().toISOString().slice(0, 10))
       : null;
 
     db.prepare(`
       UPDATE financial_entries
-      SET status = ?, paid_at = ?, updated_at = datetime('now')
+      SET description = COALESCE(?, description),
+          amount = COALESCE(?, amount),
+          category = COALESCE(?, category),
+          kind = COALESCE(?, kind),
+          due_date = COALESCE(?, due_date),
+          recurrence = COALESCE(?, recurrence),
+          client_id = ?,
+          is_fixed = COALESCE(?, is_fixed),
+          status = COALESCE(?, status),
+          paid_at = CASE WHEN ? = 'settled' THEN COALESCE(?, datetime('now')) ELSE paid_at END,
+          updated_at = datetime('now')
       WHERE id = ? AND user_id = ?
-    `).run(status, paidAt, id, userId);
+    `).run(
+      description !== undefined ? description.trim() : null,
+      nextAmount !== undefined ? nextAmount : null,
+      category !== undefined ? category.trim() : null,
+      kind !== undefined ? kind : null,
+      dueDate !== undefined ? (dueDate || null) : null,
+      recurrence !== undefined ? recurrence : null,
+      clientId !== undefined ? (clientId || null) : current.client_id,
+      isFixed !== undefined ? (isFixed ? 1 : 0) : null,
+      nextStatus,
+      nextStatus,
+      nextPaidAt,
+      id,
+      userId,
+    );
 
     const updated = db.prepare("SELECT * FROM financial_entries WHERE id = ? AND user_id = ?")
       .get(id, userId);

@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { Redirect, Route, Switch } from "wouter";
 import FrameShell from "@/components/FrameShell";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,7 +15,7 @@ import QuickActionsMenu from "@/components/QuickActionsMenu";
 import { GlobalProgressBar } from "@/components/GlobalProgressBar";
 import ErrorBoundary from "./components/ErrorBoundary";
 import WorkspaceLoadingShell from "@/components/WorkspaceLoadingShell";
-import { Route, Switch } from "wouter";
+import { ForcePasswordReset } from "@/components/ForcePasswordReset";
 
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 const AdminUsers = lazy(() => import("@/pages/AdminUsers"));
@@ -24,11 +25,14 @@ const DashboardView = lazy(() => import("@/pages/DashboardView"));
 const Clients = lazy(() => import("@/pages/Clients"));
 const NewClient = lazy(() => import("@/pages/NewClient"));
 const EditClient = lazy(() => import("@/pages/EditClient"));
+const ClientDetail = lazy(() => import("@/pages/ClientDetail"));
 const Collaborators = lazy(() => import("@/pages/Collaborators"));
+const TeamPage = lazy(() => import("@/pages/Team"));
 const CompanySettings = lazy(() => import("@/pages/CompanySettings"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Home = lazy(() => import("@/pages/Home"));
 const Projects = lazy(() => import("@/pages/Projects"));
+const ProductionShell = lazy(() => import("@/pages/ProductionShell"));
 const CommercialHub = lazy(() => import("@/pages/CommercialHub"));
 const Documents = lazy(() => import("@/pages/Documents"));
 const Files = lazy(() => import("@/pages/Files"));
@@ -67,31 +71,32 @@ function Router() {
       <Route path="/register" component={Register} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
-      <Route path="/home" component={Home} />
+      <Route path="/home">{() => <Redirect to="/dashboard" />}</Route>
       <Route path="/dashboard" component={Dashboard} />
-      <Route path="/projects" component={Projects} />
+      <Route path="/projects" component={ProductionShell} />
+      <Route path="/tools" component={ProductionShell} />
+      <Route path="/tools/:id" component={ToolDetail} />
+      <Route path="/video-reviews" component={ProductionShell} />
       <Route path="/commercial" component={CommercialHub} />
       <Route path="/clients/new" component={NewClient} />
       <Route path="/clients/:id/editar" component={EditClient} />
-      <Route path="/clients" component={Clients} />
-      <Route path="/clients/:id" component={Clients} />
-      <Route path="/pipeline" component={Pipeline} />
-      <Route path="/proposals" component={Proposals} />
-      <Route path="/interactions" component={Interactions} />
+      <Route path="/clients/:id" component={ClientDetail} />
+      <Route path="/clients" component={CommercialHub} />
+      <Route path="/pipeline" component={CommercialHub} />
+      <Route path="/proposals" component={CommercialHub} />
+      <Route path="/interactions" component={CommercialHub} />
       <Route path="/documents" component={Documents} />
       <Route path="/company" component={CompanySettings} />
       <Route path="/files" component={Files} />
       <Route path="/files/:projectId" component={Files} />
-      <Route path="/video-reviews" component={VideoReviews} />
       <Route path="/video-reviews/:projectId" component={VideoReviews} />
       <Route path="/review/:token" component={SharedReview} />
       <Route path="/collaborators" component={Collaborators} />
+      <Route path="/team" component={TeamPage} />
       <Route path="/analytics" component={Analytics} />
       <Route path="/analytics-premium" component={AnalyticsPremium} />
-      <Route path="/analytics-premium/dashboard/:id" component={DashboardView} />
+      <Route path="/analytics-premium/dashboard/:id">{() => <Redirect to="/analytics" />}</Route>
       <Route path="/success" component={Success} />
-      <Route path="/tools" component={Tools} />
-      <Route path="/tools/:id" component={ToolDetail} />
       <Route path="/profile" component={Profile} />
       <Route path="/studio/:id" component={Studio} />
       <Route path="/project/:projectId/journey/:stage" component={ProjectChapter} />
@@ -123,12 +128,12 @@ function App() {
                       <FrameShell>
                         <Toaster />
                         <GlobalProgressBar isLoading={false} />
-                        <CommandPalette />
                         <QuickActionsMenu />
                         <Suspense fallback={<PageFallback />}>
                           <Router />
                           <CheckoutModal />
                           <DemoModal />
+                          <ForcePasswordReset />
                         </Suspense>
                       </FrameShell>
                     </TooltipProvider>

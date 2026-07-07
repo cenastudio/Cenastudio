@@ -10,7 +10,7 @@ export default function LanguageSwitcher({ compact = false }: { compact?: boolea
     "min-h-8 px-2.5 text-[0.62rem] font-frame-mono font-semibold uppercase tracking-[0.12em] transition focus:outline-none focus:ring-2 focus:ring-frame-orange/50";
 
   const inactive =
-    "bg-white text-[#7a6f68] hover:bg-[#f4eee9] hover:text-[#211b18] dark:bg-transparent dark:text-white/50 dark:hover:bg-white/10 dark:hover:text-white";
+    "bg-transparent text-frame-gray-light hover:bg-frame-gray-2/50 hover:text-frame-white";
 
   const active =
     "bg-frame-orange text-frame-black shadow-[0_0_18px_rgba(255,78,0,0.18)]";

@@ -145,9 +145,9 @@ export default function ClientFormFields({ data, onChange, disabled }: ClientFor
       onChange("companySize", company.companySize);
       setExpandedSections((current) => ({ ...current, endereco: true, empresa: true }));
       setCnpjLookupLabel(`Dados encontrados · situação ${company.status || "consultada"}`);
-      toast.success("Dados da empresa preenchidos pela ReceitaWS.");
+      toast.success(t("app.clients.cnpjFilled"));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Não foi possível consultar o CNPJ.");
+      toast.error(error instanceof Error ? error.message : t("app.errors.cnpjLookup"));
     } finally {
       setIsLookingUpCnpj(false);
     }

@@ -1,5 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { startCheckout } from "@/lib/api";
+import { translate } from "@/contexts/LanguageContext";
 import { CreditCard, LogOut, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -13,7 +14,8 @@ export default function PlanActivationRequired() {
     try {
       await startCheckout("studio");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Não foi possível abrir o pagamento.");
+      const locale = (localStorage.getItem("language") as "pt" | "en") || "pt";
+      toast.error(error instanceof Error ? error.message : translate(locale, "app.errors.openPayment"));
       setCheckingOut(false);
     }
   };

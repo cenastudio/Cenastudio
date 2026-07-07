@@ -56,7 +56,7 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
   };
 
   return (
-    <aside className="studio-sidebar w-full lg:w-[280px] shrink-0 border-b lg:border-b-0 lg:border-r border-frame-gray-2 flex flex-col overflow-x-auto lg:overflow-y-auto">
+    <aside className="studio-sidebar w-full lg:w-[260px] shrink-0 border-b lg:border-b-0 flex flex-col overflow-x-auto lg:overflow-y-auto">
       {/* Brand Header (Hidden on Mobile) */}
       <div className="hidden lg:block px-5 py-5 border-b border-frame-gray-2">
         <p className="frame-label mb-1">// Studio</p>

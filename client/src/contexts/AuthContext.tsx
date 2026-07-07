@@ -2,11 +2,21 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import { ApiError, api, type AuthUser, type UserPlan } from "@/lib/api";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
+interface TeamContext {
+  isTeamMember: boolean;
+  ownerUserId: number | null;
+  workspaceId: number | null;
+  role: string | null;
+}
+
 interface AuthContextType {
   user: AuthUser | null;
   plan: UserPlan | null;
+  teamContext: TeamContext | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isTeamMember: boolean;
+  teamRole: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<AuthUser>;
   register: (name: string, email: string, password: string, desiredPlan?: "pro" | "studio") => Promise<AuthUser>;
@@ -49,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const snapshot = readAuthSnapshot();
   const [user, setUser] = useState<AuthUser | null>(() => snapshot?.user ?? null);
   const [plan, setPlan] = useState<UserPlan | null>(() => snapshot?.plan ?? null);
+  const [teamContext, setTeamContext] = useState<TeamContext | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const refresh = useCallback(async () => {
@@ -57,6 +68,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(data.user);
       setPlan(data.plan);
       writeAuthSnapshot(data.user, data.plan);
+      // Fetch team context
+      try {
+        const ctx = await api.team.context();
+        setTeamContext(ctx);
+      } catch {
+        setTeamContext(null);
+      }
     } catch (error) {
       if (error instanceof ApiError && (error.status === 401 || error.status === 429 || error.status >= 500)) {
         const cached = readAuthSnapshot();
@@ -134,8 +152,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         plan,
+        teamContext,
         isAuthenticated: !!user,
         isAdmin: user?.role === "admin",
+        isTeamMember: teamContext?.isTeamMember ?? false,
+        teamRole: teamContext?.role ?? null,
         isLoading,
         login,
         register,

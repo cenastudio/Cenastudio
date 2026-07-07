@@ -5,13 +5,14 @@ export type ProductFeatureId = string;
 
 export interface PlanEntitlement {
   clientLimit: number | null;
+  teamMemberLimit: number;
   requiresPaidActivation: boolean;
 }
 
 export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
-  free: { clientLimit: 5, requiresPaidActivation: false },
-  pro: { clientLimit: 50, requiresPaidActivation: false },
-  studio: { clientLimit: null, requiresPaidActivation: true },
+  free: { clientLimit: 5, teamMemberLimit: 0, requiresPaidActivation: false },
+  pro: { clientLimit: 15, teamMemberLimit: 0, requiresPaidActivation: false },
+  studio: { clientLimit: 50, teamMemberLimit: 5, requiresPaidActivation: true },
 };
 
 export function normalizeOperationalPlan(planId: string | null | undefined): OperationalPlanId {

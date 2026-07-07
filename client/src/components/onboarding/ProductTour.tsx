@@ -13,6 +13,7 @@ import {
   Settings,
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TourStep {
   id: string;
@@ -31,79 +32,74 @@ interface ProductTourProps {
   onComplete: () => void;
 }
 
-const tourSteps: TourStep[] = [
-  {
-    id: "dashboard",
-    target: '[data-tour="dashboard"]',
-    title: "Dashboard - Central de Controle",
-    description:
-      "Aqui você vê o resumo de tudo: projetos ativos, próximas ações, e o radar do diretor com tarefas pendentes.",
-    icon: LayoutDashboard,
-    position: "bottom",
-    highlightPadding: 8,
-  },
-  {
-    id: "projects",
-    target: '[data-tour="projects"]',
-    title: "Projetos - Seu Hub Criativo",
-    description:
-      "Cada job vira um projeto. Aqui você gerencia roteiro, decupagem, callsheet, cronograma e arquivos.",
-    icon: FolderKanban,
-    position: "bottom",
-    highlightPadding: 8,
-  },
-  {
-    id: "clients",
-    target: '[data-tour="clients"]',
-    title: "Clientes - Comercial & Pipeline",
-    description:
-      "Cadastre clientes, gerencie oportunidades no pipeline CRM, e transforme conversas em briefings.",
-    icon: Building2,
-    position: "bottom",
-    highlightPadding: 8,
-  },
-  {
-    id: "reviews",
-    target: '[data-tour="reviews"]',
-    title: "Video Reviews - Colaboração",
-    description:
-      "Faça upload de cortes, adicione anotações com timecode, e compartilhe links para aprovação do cliente.",
-    icon: Video,
-    position: "bottom",
-    highlightPadding: 8,
-  },
-  {
-    id: "studio",
-    target: '[data-tour="studio"]',
-    title: "Studio IA - Ferramentas Criativas",
-    description:
-      "Roteiros, storyboards, briefings, propostas, contratos - tudo gerado com inteligência artificial.",
-    icon: Zap,
-    position: "bottom",
-    highlightPadding: 8,
-  },
-  {
-    id: "profile",
-    target: '[data-tour="profile"]',
-    title: "Perfil & Configurações",
-    description:
-      "Gerencie sua conta, convide colaboradores, configure integrações e veja seu plano atual.",
-    icon: Settings,
-    position: "left",
-    highlightPadding: 8,
-  },
-];
-
 export default function ProductTour({
   isOpen,
   onClose,
   onComplete,
 }: ProductTourProps) {
+  const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(0);
   const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [, setLocation] = useLocation();
+
+  const tourSteps: TourStep[] = [
+    {
+      id: "dashboard",
+      target: '[data-tour="dashboard"]',
+      title: t("app.onboarding.tour.dashboardTitle"),
+      description: t("app.onboarding.tour.dashboardDesc"),
+      icon: LayoutDashboard,
+      position: "bottom",
+      highlightPadding: 8,
+    },
+    {
+      id: "projects",
+      target: '[data-tour="projects"]',
+      title: t("app.onboarding.tour.projectsTitle"),
+      description: t("app.onboarding.tour.projectsDesc"),
+      icon: FolderKanban,
+      position: "bottom",
+      highlightPadding: 8,
+    },
+    {
+      id: "clients",
+      target: '[data-tour="clients"]',
+      title: t("app.onboarding.tour.clientsTitle"),
+      description: t("app.onboarding.tour.clientsDesc"),
+      icon: Building2,
+      position: "bottom",
+      highlightPadding: 8,
+    },
+    {
+      id: "reviews",
+      target: '[data-tour="reviews"]',
+      title: t("app.onboarding.tour.reviewsTitle"),
+      description: t("app.onboarding.tour.reviewsDesc"),
+      icon: Video,
+      position: "bottom",
+      highlightPadding: 8,
+    },
+    {
+      id: "studio",
+      target: '[data-tour="studio"]',
+      title: t("app.onboarding.tour.studioTitle"),
+      description: t("app.onboarding.tour.studioDesc"),
+      icon: Zap,
+      position: "bottom",
+      highlightPadding: 8,
+    },
+    {
+      id: "profile",
+      target: '[data-tour="profile"]',
+      title: t("app.onboarding.tour.profileTitle"),
+      description: t("app.onboarding.tour.profileDesc"),
+      icon: Settings,
+      position: "left",
+      highlightPadding: 8,
+    },
+  ];
 
   const step = tourSteps[currentStep];
   const isFirstStep = currentStep === 0;
@@ -299,7 +295,7 @@ export default function ProductTour({
             <button
               onClick={handleSkip}
               className="absolute top-3 right-3 p-1.5 hover:bg-frame-gray-2 rounded transition z-10"
-              aria-label="Pular tour"
+              aria-label={t("app.onboarding.tour.skipTour")}
             >
               <X className="w-4 h-4 text-frame-gray-light hover:text-frame-white" />
             </button>
@@ -336,7 +332,7 @@ export default function ProductTour({
                   onClick={handleSkip}
                   className="text-xs text-frame-gray-light hover:text-frame-white transition"
                 >
-                  Pular tour
+                  {t("app.onboarding.tour.skipTour")}
                 </button>
 
                 <div className="flex items-center gap-2">
@@ -346,7 +342,7 @@ export default function ProductTour({
                       className="frame-btn-ghost !py-1.5 !px-3 !text-xs flex items-center gap-1"
                     >
                       <ChevronLeft className="w-3.5 h-3.5" />
-                      Voltar
+                      {t("app.onboarding.back")}
                     </button>
                   )}
 
@@ -356,12 +352,12 @@ export default function ProductTour({
                   >
                     {isLastStep ? (
                       <>
-                        Finalizar
+                        {t("app.onboarding.tour.finish")}
                         <Sparkles className="w-3.5 h-3.5" />
                       </>
                     ) : (
                       <>
-                        Próximo
+                        {t("app.onboarding.next")}
                         <ChevronRight className="w-3.5 h-3.5" />
                       </>
                     )}

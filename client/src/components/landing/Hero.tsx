@@ -3,18 +3,19 @@ import { useLocation } from "wouter";
 import { ArrowRight, MonitorPlay, Play, CircleDot } from "lucide-react";
 
 function HeroTitleLine({ children }: { children: string }) {
-  const match = children.match(/(.*?)(Cena|Scene)([.!?]?)$/i);
+  // Destaca última palavra em laranja
+  const words = children.trim().split(" ");
+  if (words.length === 0) return <span>{children}</span>;
 
-  if (!match) return <span>{children}</span>;
+  const lastWord = words[words.length - 1];
+  const before = words.slice(0, -1).join(" ");
 
-  const [, before, accent, punctuation] = match;
   return (
     <span>
-      {before}
+      {before}{before && " "}
       <em className="bg-gradient-to-r from-frame-orange via-amber-400 to-frame-orange/70 bg-clip-text text-transparent">
-        {accent}
+        {lastWord}
       </em>
-      {punctuation}
     </span>
   );
 }
@@ -45,9 +46,9 @@ export default function Hero() {
           </div>
 
           <h1 className="landing-hero-title text-[clamp(3.15rem,5.6vw,5.8rem)]">
-            <HeroTitleLine>{t("app.landing.hero.titleLine1")}</HeroTitleLine>
-            <HeroTitleLine>{t("app.landing.hero.titleLine2")}</HeroTitleLine>
-            <HeroTitleLine>{t("app.landing.hero.titleLine3")}</HeroTitleLine>
+            <HeroTitleLine>{t("app.landing.hero.titleLine1") as string}</HeroTitleLine>
+            <HeroTitleLine>{t("app.landing.hero.titleLine2") as string}</HeroTitleLine>
+            <HeroTitleLine>{t("app.landing.hero.titleLine3") as string}</HeroTitleLine>
           </h1>
 
           <p className="mt-5 max-w-[500px] text-[0.94rem] leading-relaxed text-white/72 sm:text-base">
@@ -75,6 +76,19 @@ export default function Hero() {
             </button>
           </div>
 
+          <div className="mt-5 flex flex-col gap-2 sm:hidden">
+            {[
+              { number: t("app.landing.hero.stat1Number"), label: t("app.landing.hero.stat1Label") },
+              { number: t("app.landing.hero.stat2Number"), label: t("app.landing.hero.stat2Label") },
+              { number: t("app.landing.hero.stat3Number"), label: t("app.landing.hero.stat3Label") },
+            ].map((stat, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <span className="text-sm font-bold text-frame-orange">{stat.number}</span>
+                <span className="text-xs text-white/66">{stat.label}</span>
+              </div>
+            ))}
+          </div>
+
           <div className="mt-5 hidden items-center gap-3 sm:flex">
             <div className="flex -space-x-2" aria-hidden="true">
               {["D", "P", "F"].map((letter, index) => (
@@ -87,7 +101,18 @@ export default function Hero() {
                 </span>
               ))}
             </div>
-            <span className="text-xs text-white/66">{t("app.landing.hero.filmmakers") as string}</span>
+            <div className="flex flex-col gap-1">
+              {[
+                { number: t("app.landing.hero.stat1Number"), label: t("app.landing.hero.stat1Label") },
+                { number: t("app.landing.hero.stat2Number"), label: t("app.landing.hero.stat2Label") },
+                { number: t("app.landing.hero.stat3Number"), label: t("app.landing.hero.stat3Label") },
+              ].map((stat, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-frame-orange">{stat.number}</span>
+                  <span className="text-xs text-white/66">{stat.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 

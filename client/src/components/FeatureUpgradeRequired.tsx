@@ -3,13 +3,6 @@
  *
  * Wrapper component that blocks access to premium features.
  * Shows upgrade prompt if user doesn't have required plan.
- *
- * @example
- * ```tsx
- * <FeatureUpgradeRequired feature="pipeline" currentPlan="free">
- *   <PipelineView />
- * </FeatureUpgradeRequired>
- * ```
  */
 
 import React, { useState } from "react";
@@ -22,6 +15,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Lock, Sparkles, Zap, Crown, ArrowRight } from "lucide-react";
 import { getPlanDisplayName } from "@/lib/plan-config";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export interface FeatureUpgradeRequiredProps {
   /** Feature being restricted */
@@ -47,196 +41,6 @@ export interface FeatureUpgradeRequiredProps {
 }
 
 /**
- * Feature metadata for display
- */
-const FEATURE_METADATA: Record<FeatureName, {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  benefits: string[];
-  requiredPlan: "pro" | "studio";
-}> = {
-  "pipeline": {
-    icon: <Zap className="h-8 w-8" />,
-    title: "Pipeline View",
-    description: "Visualize todo seu pipeline de vendas em formato Kanban",
-    benefits: [
-      "Arraste e solte oportunidades",
-      "Filtre por status e valor",
-      "Veja métricas em tempo real",
-      "Integre com seu CRM",
-    ],
-    requiredPlan: "pro",
-  },
-  "video-reviews": {
-    icon: <Sparkles className="h-8 w-8" />,
-    title: "Video Reviews",
-    description: "Comentários frame-a-frame com timestamps precisos",
-    benefits: [
-      "Comentários por timestamp",
-      "Anotações visuais (setas, retângulos)",
-      "Compartilhe com clientes",
-      "Thread de discussão",
-    ],
-    requiredPlan: "pro",
-  },
-  "collaboration": {
-    icon: <Sparkles className="h-8 w-8" />,
-    title: "Colaboração em Equipe",
-    description: "Trabalhe junto com sua equipe em tempo real",
-    benefits: [
-      "Até 5 membros (Pro) ou ilimitado (Studio)",
-      "Permissões granulares",
-      "Activity feed",
-      "Notificações em tempo real",
-    ],
-    requiredPlan: "pro",
-  },
-  "advanced-export": {
-    icon: <Sparkles className="h-8 w-8" />,
-    title: "Exportação Avançada",
-    description: "Exporte seus dados em múltiplos formatos",
-    benefits: [
-      "PDF, Excel, CSV",
-      "Templates customizáveis",
-      "Bulk export",
-      "Agendamento automático",
-    ],
-    requiredPlan: "pro",
-  },
-  "commercial-hub": {
-    icon: <Crown className="h-8 w-8" />,
-    title: "Commercial Hub",
-    description: "Central completa para gestão comercial",
-    benefits: [
-      "Propostas comerciais IA",
-      "Contratos automatizados",
-      "Pipeline de vendas",
-      "Métricas de conversão",
-    ],
-    requiredPlan: "studio",
-  },
-  "proposals": {
-    icon: <Crown className="h-8 w-8" />,
-    title: "Propostas Comerciais",
-    description: "Crie propostas profissionais com IA",
-    benefits: [
-      "Templates personalizados",
-      "Geração com IA",
-      "Assinatura eletrônica",
-      "Tracking de visualizações",
-    ],
-    requiredPlan: "studio",
-  },
-  "contracts": {
-    icon: <Crown className="h-8 w-8" />,
-    title: "Contratos Automatizados",
-    description: "Gere e gerencie contratos facilmente",
-    benefits: [
-      "Templates jurídicos",
-      "Cláusulas personalizadas",
-      "Assinatura digital",
-      "Histórico completo",
-    ],
-    requiredPlan: "studio",
-  },
-  "financial-module": {
-    icon: <Crown className="h-8 w-8" />,
-    title: "Módulo Financeiro",
-    description: "Controle completo das finanças da produtora",
-    benefits: [
-      "Receitas e despesas",
-      "Fluxo de caixa",
-      "Margem por projeto",
-      "Relatórios financeiros",
-    ],
-    requiredPlan: "studio",
-  },
-  "team-management": {
-    icon: <Crown className="h-8 w-8" />,
-    title: "Gestão de Equipe",
-    description: "Gerencie membros ilimitados da equipe",
-    benefits: [
-      "Membros ilimitados",
-      "Roles e permissões",
-      "Time tracking",
-      "Performance metrics",
-    ],
-    requiredPlan: "studio",
-  },
-  "analytics": {
-    icon: <Crown className="h-8 w-8" />,
-    title: "Analytics Avançado",
-    description: "Insights profundos sobre seu negócio",
-    benefits: [
-      "Dashboards customizáveis",
-      "Métricas de negócio",
-      "Exportação de relatórios",
-      "Previsões com IA",
-    ],
-    requiredPlan: "studio",
-  },
-  "api": {
-    icon: <Crown className="h-8 w-8" />,
-    title: "API Access",
-    description: "Integre com suas ferramentas via API",
-    benefits: [
-      "REST API completa",
-      "Webhooks",
-      "Documentação completa",
-      "Rate limits generosos",
-    ],
-    requiredPlan: "studio",
-  },
-  "custom-branding": {
-    icon: <Crown className="h-8 w-8" />,
-    title: "Custom Branding",
-    description: "White-label completo com sua marca",
-    benefits: [
-      "Logo personalizado",
-      "Cores da marca",
-      "Domínio próprio",
-      "Email personalizado",
-    ],
-    requiredPlan: "studio",
-  },
-  "priority-support": {
-    icon: <Crown className="h-8 w-8" />,
-    title: "Suporte Prioritário",
-    description: "Atendimento rápido quando você precisa",
-    benefits: [
-      "Resposta em < 2h",
-      "Chat direto",
-      "Call 1-on-1",
-      "Account manager dedicado",
-    ],
-    requiredPlan: "studio",
-  },
-  // Fallback for non-premium features
-  "projects": {
-    icon: <Sparkles className="h-8 w-8" />,
-    title: "Projetos",
-    description: "Gerencie seus projetos audiovisuais",
-    benefits: [],
-    requiredPlan: "pro",
-  },
-  "clients": {
-    icon: <Sparkles className="h-8 w-8" />,
-    title: "Clientes",
-    description: "Gerencie seus clientes",
-    benefits: [],
-    requiredPlan: "pro",
-  },
-  "tools": {
-    icon: <Sparkles className="h-8 w-8" />,
-    title: "Ferramentas IA",
-    description: "12 ferramentas IA para produção",
-    benefits: [],
-    requiredPlan: "pro",
-  },
-};
-
-/**
  * FeatureUpgradeRequired Component
  */
 export function FeatureUpgradeRequired({
@@ -249,7 +53,198 @@ export function FeatureUpgradeRequired({
   description,
 }: FeatureUpgradeRequiredProps) {
   const { planMode } = usePlanContext();
+  const { t } = useLanguage();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  /**
+   * Feature metadata for display
+   */
+  const FEATURE_METADATA: Record<FeatureName, {
+    icon: React.ReactNode;
+    title: string;
+    description: string;
+    benefits: string[];
+    requiredPlan: "pro" | "studio";
+  }> = {
+    "pipeline": {
+      icon: <Zap className="h-8 w-8" />,
+      title: t("app.upgrade.pipelineTitle"),
+      description: t("app.upgrade.pipelineDesc"),
+      benefits: [
+        t("app.upgrade.pipelineBenefit1"),
+        t("app.upgrade.pipelineBenefit2"),
+        t("app.upgrade.pipelineBenefit3"),
+        t("app.upgrade.pipelineBenefit4"),
+      ],
+      requiredPlan: "pro",
+    },
+    "video-reviews": {
+      icon: <Sparkles className="h-8 w-8" />,
+      title: t("app.upgrade.videoReviewsTitle"),
+      description: t("app.upgrade.videoReviewsDesc"),
+      benefits: [
+        t("app.upgrade.videoReviewsBenefit1"),
+        t("app.upgrade.videoReviewsBenefit2"),
+        t("app.upgrade.videoReviewsBenefit3"),
+        t("app.upgrade.videoReviewsBenefit4"),
+      ],
+      requiredPlan: "pro",
+    },
+    "collaboration": {
+      icon: <Sparkles className="h-8 w-8" />,
+      title: t("app.upgrade.collaborationTitle"),
+      description: t("app.upgrade.collaborationDesc"),
+      benefits: [
+        t("app.upgrade.collaborationBenefit1"),
+        t("app.upgrade.collaborationBenefit2"),
+        t("app.upgrade.collaborationBenefit3"),
+        t("app.upgrade.collaborationBenefit4"),
+      ],
+      requiredPlan: "pro",
+    },
+    "advanced-export": {
+      icon: <Sparkles className="h-8 w-8" />,
+      title: t("app.upgrade.advancedExportTitle"),
+      description: t("app.upgrade.advancedExportDesc"),
+      benefits: [
+        t("app.upgrade.advancedExportBenefit1"),
+        t("app.upgrade.advancedExportBenefit2"),
+        t("app.upgrade.advancedExportBenefit3"),
+        t("app.upgrade.advancedExportBenefit4"),
+      ],
+      requiredPlan: "pro",
+    },
+    "commercial-hub": {
+      icon: <Crown className="h-8 w-8" />,
+      title: t("app.upgrade.commercialHubTitle"),
+      description: t("app.upgrade.commercialHubDesc"),
+      benefits: [
+        t("app.upgrade.commercialHubBenefit1"),
+        t("app.upgrade.commercialHubBenefit2"),
+        t("app.upgrade.commercialHubBenefit3"),
+        t("app.upgrade.commercialHubBenefit4"),
+      ],
+      requiredPlan: "studio",
+    },
+    "proposals": {
+      icon: <Crown className="h-8 w-8" />,
+      title: t("app.upgrade.proposalsTitle"),
+      description: t("app.upgrade.proposalsDesc"),
+      benefits: [
+        t("app.upgrade.proposalsBenefit1"),
+        t("app.upgrade.proposalsBenefit2"),
+        t("app.upgrade.proposalsBenefit3"),
+        t("app.upgrade.proposalsBenefit4"),
+      ],
+      requiredPlan: "studio",
+    },
+    "contracts": {
+      icon: <Crown className="h-8 w-8" />,
+      title: t("app.upgrade.contractsTitle"),
+      description: t("app.upgrade.contractsDesc"),
+      benefits: [
+        t("app.upgrade.contractsBenefit1"),
+        t("app.upgrade.contractsBenefit2"),
+        t("app.upgrade.contractsBenefit3"),
+        t("app.upgrade.contractsBenefit4"),
+      ],
+      requiredPlan: "studio",
+    },
+    "financial-module": {
+      icon: <Crown className="h-8 w-8" />,
+      title: t("app.upgrade.financialTitle"),
+      description: t("app.upgrade.financialDesc"),
+      benefits: [
+        t("app.upgrade.financialBenefit1"),
+        t("app.upgrade.financialBenefit2"),
+        t("app.upgrade.financialBenefit3"),
+        t("app.upgrade.financialBenefit4"),
+      ],
+      requiredPlan: "studio",
+    },
+    "team-management": {
+      icon: <Crown className="h-8 w-8" />,
+      title: t("app.upgrade.teamTitle"),
+      description: t("app.upgrade.teamDesc"),
+      benefits: [
+        t("app.upgrade.teamBenefit1"),
+        t("app.upgrade.teamBenefit2"),
+        t("app.upgrade.teamBenefit3"),
+        t("app.upgrade.teamBenefit4"),
+      ],
+      requiredPlan: "studio",
+    },
+    "analytics": {
+      icon: <Crown className="h-8 w-8" />,
+      title: t("app.upgrade.analyticsTitle"),
+      description: t("app.upgrade.analyticsDesc"),
+      benefits: [
+        t("app.upgrade.analyticsBenefit1"),
+        t("app.upgrade.analyticsBenefit2"),
+        t("app.upgrade.analyticsBenefit3"),
+        t("app.upgrade.analyticsBenefit4"),
+      ],
+      requiredPlan: "studio",
+    },
+    "api": {
+      icon: <Crown className="h-8 w-8" />,
+      title: t("app.upgrade.apiTitle"),
+      description: t("app.upgrade.apiDesc"),
+      benefits: [
+        t("app.upgrade.apiBenefit1"),
+        t("app.upgrade.apiBenefit2"),
+        t("app.upgrade.apiBenefit3"),
+        t("app.upgrade.apiBenefit4"),
+      ],
+      requiredPlan: "studio",
+    },
+    "custom-branding": {
+      icon: <Crown className="h-8 w-8" />,
+      title: t("app.upgrade.brandingTitle"),
+      description: t("app.upgrade.brandingDesc"),
+      benefits: [
+        t("app.upgrade.brandingBenefit1"),
+        t("app.upgrade.brandingBenefit2"),
+        t("app.upgrade.brandingBenefit3"),
+        t("app.upgrade.brandingBenefit4"),
+      ],
+      requiredPlan: "studio",
+    },
+    "priority-support": {
+      icon: <Crown className="h-8 w-8" />,
+      title: t("app.upgrade.supportTitle"),
+      description: t("app.upgrade.supportDesc"),
+      benefits: [
+        t("app.upgrade.supportBenefit1"),
+        t("app.upgrade.supportBenefit2"),
+        t("app.upgrade.supportBenefit3"),
+        t("app.upgrade.supportBenefit4"),
+      ],
+      requiredPlan: "studio",
+    },
+    // Fallback for non-premium features
+    "projects": {
+      icon: <Sparkles className="h-8 w-8" />,
+      title: t("app.upgrade.pipelineTitle"),
+      description: t("app.upgrade.pipelineDesc"),
+      benefits: [],
+      requiredPlan: "pro",
+    },
+    "clients": {
+      icon: <Sparkles className="h-8 w-8" />,
+      title: t("app.upgrade.collaborationTitle"),
+      description: t("app.upgrade.collaborationDesc"),
+      benefits: [],
+      requiredPlan: "pro",
+    },
+    "tools": {
+      icon: <Sparkles className="h-8 w-8" />,
+      title: t("app.upgrade.advancedExportTitle"),
+      description: t("app.upgrade.advancedExportDesc"),
+      benefits: [],
+      requiredPlan: "pro",
+    },
+  };
 
   // Check if user has access
   const accessResult = canAccessFeature(feature, planMode);
@@ -282,11 +277,11 @@ export function FeatureUpgradeRequired({
             <div>
               <h3 className="font-semibold">{displayTitle}</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                Requer plano {requiredPlanName}
+                {t("app.upgrade.requiresPlan").replace("{plan}", requiredPlanName)}
               </p>
             </div>
             <Button onClick={() => setShowUpgradeModal(true)}>
-              Fazer Upgrade
+              {t("app.upgrade.doUpgrade")}
             </Button>
           </div>
         </div>
@@ -323,7 +318,7 @@ export function FeatureUpgradeRequired({
           </CardHeader>
           <CardFooter>
             <Button onClick={() => setShowUpgradeModal(true)} className="w-full">
-              Fazer Upgrade <ArrowRight className="ml-2 h-4 w-4" />
+              {t("app.upgrade.doUpgrade")} <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </CardFooter>
         </Card>
@@ -355,7 +350,7 @@ export function FeatureUpgradeRequired({
               {displayDescription}
             </CardDescription>
             <div className="flex items-center justify-center gap-2 mt-4">
-              <Badge variant="outline">Disponível no plano {requiredPlanName}</Badge>
+              <Badge variant="outline">{t("app.upgrade.availableOnPlan").replace("{plan}", requiredPlanName)}</Badge>
             </div>
           </CardHeader>
 
@@ -363,7 +358,7 @@ export function FeatureUpgradeRequired({
             {/* Benefits */}
             {metadata.benefits.length > 0 && (
               <div>
-                <p className="font-medium mb-3">O que você ganha:</p>
+                <p className="font-medium mb-3">{t("app.upgrade.whatYouGet")}</p>
                 <div className="grid sm:grid-cols-2 gap-3">
                   {metadata.benefits.map((benefit, index) => (
                     <div key={index} className="flex items-start gap-2">
@@ -381,7 +376,7 @@ export function FeatureUpgradeRequired({
             {showPreview && (
               <div className="rounded-lg border-2 border-dashed border-muted p-8 text-center">
                 <p className="text-sm text-muted-foreground">
-                  Preview da feature seria exibido aqui
+                  {t("app.upgrade.previewPlaceholder")}
                 </p>
               </div>
             )}
@@ -393,11 +388,11 @@ export function FeatureUpgradeRequired({
                 size="lg"
                 className="w-full"
               >
-                Fazer Upgrade para {requiredPlanName}
+                {t("app.upgrade.upgradeFor").replace("{plan}", requiredPlanName)}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               <p className="text-xs text-center text-muted-foreground">
-                Cancele quando quiser • Garantia de 7 dias
+                {t("app.upgrade.cancelAnytime")}
               </p>
             </div>
           </CardContent>

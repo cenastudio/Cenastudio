@@ -11,6 +11,7 @@ export interface AuthUser {
   studioName?: string;
   studioRole?: string;
   phone?: string;
+  mustResetPassword?: boolean;
 }
 
 declare global {

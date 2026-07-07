@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLanguage, type Translate } from "@/contexts/LanguageContext";
+import { useLocation } from "wouter";
+import { useClientIdFromQuery } from "@/hooks/useClientIdFromQuery";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { api } from "@/lib/api";
@@ -56,48 +58,48 @@ interface SavedProposal {
 const CATALOG_KEY = "frame.proposal.catalog.v1";
 const HISTORY_KEY = "frame.proposal.history.v1";
 
-const DEFAULT_CATALOG: ServiceItem[] = [
+const DEFAULT_CATALOG_KEYS: Array<{ id: string; nameKey: string; descKey: string; price: number; categoryKey: string }> = [
   {
     id: "institucional",
-    name: "Video institucional",
-    description: "Filme principal com roteiro, captacao, edicao, cor e entrega final.",
+    nameKey: "app.proposals.catalogInstitucionalName",
+    descKey: "app.proposals.catalogInstitucionalDesc",
     price: 4500,
-    category: "Producao",
+    categoryKey: "app.proposals.categoryProducao",
   },
   {
     id: "reels-pack",
-    name: "Pacote Reels",
-    description: "4 videos verticais editados para campanha ou conteudo recorrente.",
+    nameKey: "app.proposals.catalogReelsName",
+    descKey: "app.proposals.catalogReelsDesc",
     price: 2800,
-    category: "Social",
+    categoryKey: "app.proposals.categorySocial",
   },
   {
     id: "evento",
-    name: "Cobertura de evento",
-    description: "Captação audiovisual, melhores momentos e entrega otimizada.",
+    nameKey: "app.proposals.catalogEventoName",
+    descKey: "app.proposals.catalogEventoDesc",
     price: 6500,
-    category: "Evento",
+    categoryKey: "app.proposals.categoryEvento",
   },
   {
     id: "fotografia",
-    name: "Still / Fotos de apoio",
-    description: "Banco de imagens para campanha, bastidores e social media.",
+    nameKey: "app.proposals.catalogFotoName",
+    descKey: "app.proposals.catalogFotoDesc",
     price: 1800,
-    category: "Extra",
+    categoryKey: "app.proposals.categoryExtra",
   },
   {
     id: "motion",
-    name: "Motion graphics",
-    description: "Vinhetas, textos animados, lower thirds e grafismos.",
+    nameKey: "app.proposals.catalogMotionName",
+    descKey: "app.proposals.catalogMotionDesc",
     price: 2200,
-    category: "Pos-producao",
+    categoryKey: "app.proposals.categoryPosProducao",
   },
   {
     id: "drone",
-    name: "Drone",
-    description: "Imagens aereas com operador habilitado e arquivos finais.",
+    nameKey: "app.proposals.catalogDroneName",
+    descKey: "app.proposals.catalogDroneDesc",
     price: 1500,
-    category: "Extra",
+    categoryKey: "app.proposals.categoryExtra",
   },
 ];
 
@@ -264,23 +266,47 @@ function buildProposalHtml(form: ProposalForm, lines: ProposalLine[], studio: St
 </html>`;
 }
 
-function ProposalsContent() {
+function ProposalsContent({ embedded }: { embedded?: boolean }) {
   const { t, locale } = useLanguage();
-  const [catalog, setCatalog] = useState<ServiceItem[]>(DEFAULT_CATALOG);
+  const [, setLocation] = useLocation();
+
+  const buildDefaultCatalog = (): ServiceItem[] => DEFAULT_CATALOG_KEYS.map((item) => ({
+    id: item.id,
+    name: t(item.nameKey) as string,
+    description: t(item.descKey) as string,
+    price: item.price,
+    category: t(item.categoryKey) as string,
+  }));
+
+  const [catalog, setCatalog] = useState<ServiceItem[]>(() => buildDefaultCatalog());
   const [proposal, setProposal] = useState<ProposalForm>(initialProposal);
   const [selected, setSelected] = useState<ProposalLine[]>([]);
   const [history, setHistory] = useState<SavedProposal[]>([]);
   const [studio, setStudio] = useState<StudioSettings>(() => readStudioSettings());
+  const [clients, setClients] = useState<Array<{ id: number; name: string; company?: string | null; email?: string | null; phone?: string | null }>>([]);
+  const [selectedClientId, setSelectedClientId] = useState<string>("");
   const [editingService, setEditingService] = useState<ServiceItem>({
     id: "",
     name: "",
     description: "",
     price: 0,
-    category: "Personalizado",
+    category: t("app.proposals.categoryCustom") as string,
   });
 
+  const clientIdParam = useClientIdFromQuery();
+
+  // When clientIdParam changes and clients are already loaded, auto-select matching client
   useEffect(() => {
-    setCatalog(readJson(CATALOG_KEY, DEFAULT_CATALOG));
+    if (clientIdParam === null) return;
+    if (clients.length === 0) return;
+    const client = clients.find((c) => c.id === clientIdParam);
+    if (client) {
+      setSelectedClientId(String(client.id));
+    }
+  }, [clientIdParam, clients]);
+
+  useEffect(() => {
+    setCatalog(readJson(CATALOG_KEY, buildDefaultCatalog()));
     setHistory(readJson(HISTORY_KEY, []));
     setStudio(readStudioSettings());
     api.studioSettings
@@ -290,7 +316,30 @@ function ProposalsContent() {
         saveStudioSettings(data);
       })
       .catch(() => null);
+    // Fetch real clients
+    fetch("/api/clients", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => { if (data.success) setClients(Array.isArray(data.data) ? data.data : []); })
+      .catch(() => setClients([]));
   }, []);
+
+  // When client is selected, auto-fill proposal fields
+  useEffect(() => {
+    if (!selectedClientId) return;
+    const client = clients.find((c) => String(c.id) === selectedClientId);
+    if (client) {
+      setProposal((current) => ({
+        ...current,
+        clientName: client.name,
+        company: client.company || current.company,
+        email: client.email || current.email,
+        phone: client.phone || current.phone,
+      }));
+    }
+  }, [selectedClientId, clients]);
+
+  const hasClients = clients.length > 0;
+  const hasSelectedClient = Boolean(selectedClientId);
 
   const subtotal = selected.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const discountValue = Math.round((subtotal * proposal.discount) / 100);
@@ -339,7 +388,7 @@ function ProposalsContent() {
       ? catalog.map((item) => item.id === service.id ? service : item)
       : [service, ...catalog];
     persistCatalog(next);
-    setEditingService({ id: "", name: "", description: "", price: 0, category: "Personalizado" });
+    setEditingService({ id: "", name: "", description: "", price: 0, category: t("app.proposals.categoryCustom") as string });
     toast.success(t("app.proposals.serviceSaved") as string);
   };
 
@@ -380,9 +429,120 @@ function ProposalsContent() {
   };
 
   return (
-    <div className="proposal-machine min-h-screen bg-frame-black text-frame-white font-frame-body">
-      <AppNavBar />
+    <div className={`proposal-machine ${embedded ? "" : "min-h-screen"} bg-frame-black text-frame-white font-frame-body`}>
+      {!embedded && <AppNavBar />}
       <main id="main-content" className="px-4 sm:px-8 py-8 space-y-6">
+
+        {/* Client gate: require client selection first */}
+        {!hasClients ? (
+          <section className="max-w-2xl mx-auto py-16 space-y-6 text-center">
+            <div className="frame-empty-state p-12 space-y-6">
+              <div className="w-16 h-16 mx-auto border border-frame-orange/30 bg-frame-orange/10 flex items-center justify-center">
+                <FileSignature className="w-8 h-8 text-frame-orange" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-frame-white">
+                  {t("app.proposals.startWithClient") as string}
+                </h2>
+                <p className="text-sm text-frame-gray-light max-w-sm mx-auto leading-relaxed">
+                  {t("app.proposals.startWithClientDesc") as string}
+                </p>
+              </div>
+              <button type="button" onClick={() => setLocation("/clients/new")} className="frame-btn-primary inline-flex items-center gap-2 !py-3 !px-6">
+                <Plus className="w-4 h-4" />
+                {t("app.proposals.registerFirstClient") as string}
+              </button>
+            </div>
+          </section>
+        ) : !hasSelectedClient ? (
+          <section className="max-w-3xl mx-auto py-10 space-y-8">
+            {/* Header */}
+            <div className="text-center space-y-3">
+              <p className="font-frame-mono text-[0.6rem] uppercase tracking-[0.16em] text-frame-orange">
+                {t("app.proposals.builderEyebrow") as string}
+              </p>
+              <h2 className="text-3xl font-bold text-frame-white tracking-tight">
+                {t("app.proposals.newProposal") as string}
+              </h2>
+              <p className="text-sm text-frame-gray-light max-w-md mx-auto leading-relaxed">
+                {t("app.proposals.builderDesc") as string}
+              </p>
+            </div>
+
+            {/* Steps indicator */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
+                <span className="font-frame-mono text-[0.6rem] text-frame-orange tracking-wider block mb-2">01</span>
+                <p className="text-sm font-semibold text-frame-white">
+                  {t("app.proposals.step1") as string}
+                </p>
+                <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
+                  {t("app.proposals.step1Desc") as string}
+                </p>
+              </div>
+              <div className="border border-frame-gray-3/30 p-5 opacity-40">
+                <span className="font-frame-mono text-[0.6rem] text-frame-gray-light tracking-wider block mb-2">02</span>
+                <p className="text-sm font-semibold text-frame-gray-light">
+                  {t("app.proposals.step2") as string}
+                </p>
+                <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
+                  {t("app.proposals.step2Desc") as string}
+                </p>
+              </div>
+              <div className="border border-frame-gray-3/30 p-5 opacity-40">
+                <span className="font-frame-mono text-[0.6rem] text-frame-gray-light tracking-wider block mb-2">03</span>
+                <p className="text-sm font-semibold text-frame-gray-light">
+                  {t("app.proposals.step3") as string}
+                </p>
+                <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
+                  {t("app.proposals.step3Desc") as string}
+                </p>
+              </div>
+            </div>
+
+            {/* Client selector card */}
+            <div className="border border-frame-orange/25 bg-gradient-to-b from-frame-orange/[0.06] to-transparent p-7 space-y-5">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 shrink-0 border border-frame-orange/30 bg-frame-orange/10 flex items-center justify-center">
+                  <BriefcaseBusiness className="w-5 h-5 text-frame-orange" />
+                </div>
+                <div>
+                  <p className="font-frame-mono text-[0.6rem] uppercase tracking-[0.12em] text-frame-orange mb-1">
+                    {t("app.proposals.stepLabel") as string} 1
+                  </p>
+                  <p className="text-base font-semibold text-frame-white">
+                    {t("app.proposals.whoIsFor") as string}
+                  </p>
+                  <p className="text-xs text-frame-gray-light mt-1 leading-relaxed">
+                    {t("app.proposals.selectClientHint") as string}
+                  </p>
+                </div>
+              </div>
+              <select
+                value={selectedClientId}
+                onChange={(e) => setSelectedClientId(e.target.value)}
+                className="frame-input w-full !py-3 text-sm"
+              >
+                <option value="">{t("app.proposals.chooseClient") as string}</option>
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}{c.company ? ` · ${c.company}` : ""}
+                  </option>
+                ))}
+              </select>
+              <div className="flex items-center justify-between">
+                <p className="text-[0.65rem] text-frame-gray-light">
+                  {clients.length} {t("app.proposals.clientsRegistered") as string}
+                </p>
+                <button type="button" onClick={() => setLocation("/clients/new")} className="text-[0.65rem] font-frame-mono text-frame-orange hover:text-frame-white transition tracking-wider">
+                  {t("app.proposals.newClient") as string}
+                </button>
+              </div>
+            </div>
+          </section>
+        ) : (
+          <>
         <section className="proposal-hero p-5 sm:p-7">
           <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-4">
             <div>
@@ -428,7 +588,10 @@ function ProposalsContent() {
             </div>
 
             <div className="proposal-panel p-5">
-              <p className="frame-label mb-3">{t("app.proposals.savedServices") as string}</p>
+              <p className="frame-label mb-2">{t("app.proposals.savedServices") as string}</p>
+              <p className="text-[0.65rem] text-frame-gray-light mb-4 leading-relaxed">
+                {t("app.proposals.catalogDesc") as string}
+              </p>
               <div className="space-y-3 max-h-[620px] overflow-y-auto pr-1">
                 {catalog.map((service) => (
                   <div key={service.id} className="proposal-service-card p-4">
@@ -575,12 +738,15 @@ function ProposalsContent() {
             )}
           </aside>
         </section>
+          </>
+        )}
       </main>
     </div>
   );
 }
 
-export default function Proposals() {
+export default function Proposals({ embedded }: { embedded?: boolean }) {
+  if (embedded) return <ProposalsContent embedded />;
   return (
     <ProtectedRoute>
       <ProposalsContent />

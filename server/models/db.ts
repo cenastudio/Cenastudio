@@ -45,6 +45,9 @@ function ensureUserColumns() {
   if (!userCols.includes("studio_name")) db.prepare("ALTER TABLE users ADD COLUMN studio_name TEXT").run();
   if (!userCols.includes("studio_role")) db.prepare("ALTER TABLE users ADD COLUMN studio_role TEXT").run();
   if (!userCols.includes("phone")) db.prepare("ALTER TABLE users ADD COLUMN phone TEXT").run();
+  if (!userCols.includes("must_reset_password")) {
+    db.prepare("ALTER TABLE users ADD COLUMN must_reset_password INTEGER NOT NULL DEFAULT 0").run();
+  }
 }
 
 function ensureSubscriptionColumns() {

@@ -6,6 +6,7 @@ export interface StudioSettings {
   document: string;
   email: string;
   phone: string;
+  approvalWhatsapp?: string; // WhatsApp for client approvals/reviews
   city: string;
   website: string;
   signature: string;

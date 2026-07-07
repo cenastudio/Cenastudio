@@ -33,8 +33,10 @@ import {
 
 const router = Router();
 
-// All analytics routes require authentication
+// All analytics routes require authentication + owner access (team members cannot see finances)
 router.use(authenticate, requireOperationalPlan);
+
+import { ownerOnly } from "../middleware/teamAccess.js";
 
 // Get overall analytics
 router.get("/overall", getOverallAnalytics);
@@ -42,12 +44,12 @@ router.get("/overall", getOverallAnalytics);
 // Get project-specific analytics
 router.get("/projects/:id", getProjectAnalytics);
 
-// Get revenue analytics
-router.get("/revenue", getRevenueAnalytics);
-router.get("/finance", getFinancialOverview);
-router.post("/finance/entries", createFinancialEntry);
-router.patch("/finance/entries/:id", updateFinancialEntry);
-router.delete("/finance/entries/:id", deleteFinancialEntry);
+// Get revenue analytics (owner only)
+router.get("/revenue", ownerOnly, getRevenueAnalytics);
+router.get("/finance", ownerOnly, getFinancialOverview);
+router.post("/finance/entries", ownerOnly, createFinancialEntry);
+router.patch("/finance/entries/:id", ownerOnly, updateFinancialEntry);
+router.delete("/finance/entries/:id", ownerOnly, deleteFinancialEntry);
 
 // Get activity analytics
 router.get("/activity", getActivityAnalytics);

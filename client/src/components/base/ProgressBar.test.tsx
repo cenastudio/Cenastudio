@@ -356,7 +356,7 @@ describe('ProgressBar Component', () => {
       render(<ProgressBar value={50} />);
 
       const progressBar = screen.getByRole('progressbar');
-      const fill = progressBar.querySelector('.progress-bar-fill');
+      const fill = progressBar.querySelector('.progress-bar-fill') as HTMLElement | null;
 
       expect(progressBar).toContainElement(fill);
     });

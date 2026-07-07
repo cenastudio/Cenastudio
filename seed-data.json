@@ -1,0 +1,311 @@
+{
+  "_meta": {
+    "description": "Cena Studio — Seed data completo para demonstrar todas as funcionalidades",
+    "version": "1.0.0",
+    "createdAt": "2026-07-06",
+    "instructions": "Importe via script de seed ou use como referência para testar a plataforma"
+  },
+
+  "plans": [
+    { "id": "free", "name": "Free", "priceBrl": 0, "generationLimit": 5, "features": ["5 clientes", "Projetos de teste", "8 ferramentas IA", "Export .txt"] },
+    { "id": "pro", "name": "Pro", "priceBrl": 19900, "generationLimit": 100, "features": ["15 clientes", "+ Clientes adicionais", "Projetos ilimitados", "12 ferramentas IA", "Pipeline", "Video Reviews", "Export PDF/DOCX", "Colaboração (5 membros)"] },
+    { "id": "studio", "name": "Studio", "priceBrl": 39900, "generationLimit": -1, "features": ["50 clientes", "+ Clientes adicionais", "Projetos ilimitados", "Gerações ilimitadas", "Commercial Hub", "Módulo Financeiro", "Equipe ilimitada", "API Access", "Suporte premium"] }
+  ],
+
+  "tools": [
+    { "id": "01", "name": "Roteiro", "description": "Gerador de roteiros audiovisuais com IA", "category": "pre-production", "isActive": true },
+    { "id": "02", "name": "Decupagem", "description": "Planos, lentes e cobertura técnica", "category": "pre-production", "isActive": true },
+    { "id": "03", "name": "Callsheet", "description": "Equipe, horários, locação e logística", "category": "pre-production", "isActive": true },
+    { "id": "04", "name": "Orçamento", "description": "Custos, margem e premissas financeiras", "category": "commercial", "isActive": true },
+    { "id": "05", "name": "Proposta", "description": "Proposta comercial profissional", "category": "commercial", "isActive": true },
+    { "id": "06", "name": "Contrato", "description": "Contrato de prestação de serviços", "category": "commercial", "isActive": true },
+    { "id": "07", "name": "Briefing", "description": "Documento de briefing do cliente", "category": "pre-production", "isActive": true },
+    { "id": "08", "name": "Moodboard", "description": "Referências visuais e tom artístico", "category": "aesthetic", "isActive": true },
+    { "id": "09", "name": "Cronograma", "description": "Planejamento de produção e milestones", "category": "pre-production", "isActive": true },
+    { "id": "10", "name": "Checklist", "description": "Checklist de pré-produção", "category": "pre-production", "isActive": true },
+    { "id": "11", "name": "Entrega", "description": "Relatório de entrega e fechamento", "category": "delivery", "isActive": true },
+    { "id": "12", "name": "Assistente", "description": "Chat livre de produção com IA", "category": "assistant", "isActive": true }
+  ],
+
+  "users": [
+    {
+      "id": 1,
+      "email": "admin@cenastudio.com.br",
+      "name": "Dante Oliveira",
+      "role": "admin",
+      "studioName": "Cena Studio",
+      "studioRole": "Diretor Criativo",
+      "phone": "(11) 99999-0001",
+      "passwordHash": "$2b$10$placeholder_hash_admin",
+      "mustResetPassword": false
+    },
+    {
+      "id": 2,
+      "email": "produtor@cenastudio.com.br",
+      "name": "Lucas Mendes",
+      "role": "user",
+      "studioName": "Cena Studio",
+      "studioRole": "Produtor Executivo",
+      "phone": "(11) 99999-0002",
+      "passwordHash": "$2b$10$placeholder_hash_user",
+      "mustResetPassword": false
+    },
+    {
+      "id": 3,
+      "email": "editor@cenastudio.com.br",
+      "name": "Marina Costa",
+      "role": "user",
+      "studioName": "Cena Studio",
+      "studioRole": "Editor",
+      "phone": "(11) 99999-0003",
+      "passwordHash": "$2b$10$placeholder_hash_editor",
+      "mustResetPassword": true
+    }
+  ],
+
+  "subscriptions": [
+    { "id": 1, "userId": 1, "planId": "studio", "status": "active", "currentPeriodStart": "2026-07-01T00:00:00Z", "currentPeriodEnd": "2026-08-01T00:00:00Z" },
+    { "id": 2, "userId": 2, "planId": "pro", "status": "trial", "trialEndsAt": "2026-07-15T00:00:00Z", "currentPeriodStart": "2026-07-01T00:00:00Z", "currentPeriodEnd": "2026-07-15T00:00:00Z" },
+    { "id": 3, "userId": 3, "planId": "free", "status": "active", "currentPeriodStart": "2026-07-01T00:00:00Z", "currentPeriodEnd": "2026-08-01T00:00:00Z" }
+  ],
+
+  "studioSettings": [
+    {
+      "userId": 1,
+      "studioName": "Cena Studio",
+      "legalName": "Cena Studio Tecnologia Ltda",
+      "document": "12.345.678/0001-90",
+      "email": "contato@cenastudio.com.br",
+      "phone": "(11) 99999-0001",
+      "city": "São Paulo, SP",
+      "website": "https://cenastudio.com.br",
+      "signature": "Dante Oliveira — Diretor Criativo",
+      "primaryColor": "#e85002"
+    }
+  ],
+
+  "clients": [
+    { "id": 1, "userId": 1, "name": "Atlântica Beachwear", "company": "Atlântica Moda Praia Ltda", "email": "marketing@atlantica.com.br", "phone": "(21) 3322-1100", "segment": "brand", "status": "active", "workflowStage": "won", "totalSpent": 45000, "city": "Rio de Janeiro", "state": "RJ", "industry": "Moda", "contactPerson": "Carolina Vasconcelos", "contactRole": "Head de Marketing" },
+    { "id": 2, "userId": 1, "name": "TechXYZ", "company": "TechXYZ Solutions S.A.", "email": "conteudo@techxyz.io", "phone": "(11) 4455-6677", "segment": "direct", "status": "active", "workflowStage": "recurrent", "totalSpent": 78000, "city": "São Paulo", "state": "SP", "industry": "Tecnologia", "contactPerson": "Rafael Augusto", "contactRole": "CEO" },
+    { "id": 3, "userId": 1, "name": "Estúdio Harmonia", "company": "Harmonia Produções ME", "email": "parceria@harmonia.art", "phone": "(31) 98877-6655", "segment": "agency", "status": "active", "workflowStage": "qualified", "totalSpent": 12000, "city": "Belo Horizonte", "state": "MG", "industry": "Entretenimento", "contactPerson": "Pedro Almeida", "contactRole": "Sócio-Diretor" },
+    { "id": 4, "userId": 1, "name": "Gustavo Reis", "company": null, "email": "gustavo.reis@gmail.com", "phone": "(11) 91234-5678", "segment": "direct", "status": "lead", "workflowStage": "prospect", "totalSpent": 0, "city": "São Paulo", "state": "SP", "industry": "Gastronomia", "contactPerson": "Gustavo Reis", "contactRole": "Chef / Proprietário" },
+    { "id": 5, "userId": 1, "name": "Instituto Cultural Raízes", "company": "ICR", "email": "projetos@icr.org.br", "phone": "(21) 2233-4455", "segment": "direct", "status": "active", "workflowStage": "proposal", "totalSpent": 0, "city": "Rio de Janeiro", "state": "RJ", "industry": "ONG / Cultura", "contactPerson": "Amanda Souza", "contactRole": "Coordenadora de Projetos" }
+  ],
+
+  "projects": [
+    {
+      "id": 1, "userId": 1, "clientId": 1, "name": "Campanha Verão 2026", "description": "Filme institucional + pacote Reels para campanha de verão",
+      "status": "active", "deadline": "2026-08-15", "progress": 45,
+      "metadataJson": { "projectType": "Comercial", "workflowStage": "production", "objective": "Posicionar a marca como referência em moda praia sustentável", "creativeGoals": { "client": "Atlântica Beachwear", "format": "Filme 2min + 4 Reels", "tone": "Vibrante, natural, empoderamento", "budget": "R$ 25.000" } }
+    },
+    {
+      "id": 2, "userId": 1, "clientId": 2, "name": "Vídeo Produto SaaS",  "description": "Vídeo demo para o novo produto TechXYZ Platform",
+      "status": "active", "deadline": "2026-07-30", "progress": 70,
+      "metadataJson": { "projectType": "Institucional", "workflowStage": "review", "objective": "Explicar a nova plataforma em 90 segundos para investidores", "creativeGoals": { "client": "TechXYZ", "format": "Vídeo demo 90s", "tone": "Tech, clean, confiança", "budget": "R$ 18.000" } }
+    },
+    {
+      "id": 3, "userId": 1, "clientId": 5, "name": "Documentário Raízes", "description": "Mini-doc sobre projetos culturais na periferia do RJ",
+      "status": "active", "deadline": "2026-09-30", "progress": 15,
+      "metadataJson": { "projectType": "Documentário", "workflowStage": "planning", "objective": "Registrar impacto social dos projetos do ICR em 3 comunidades", "creativeGoals": { "client": "Instituto Cultural Raízes", "format": "Doc 12min + teaser 2min", "tone": "Humano, sensível, esperança", "budget": "R$ 35.000" } }
+    },
+    {
+      "id": 4, "userId": 1, "clientId": 2, "name": "Série Mensal TechXYZ", "description": "4 vídeos mensais para LinkedIn e YouTube",
+      "status": "active", "deadline": null, "progress": 30,
+      "metadataJson": { "projectType": "Social media", "workflowStage": "production", "objective": "Manter presença constante no LinkedIn com thought leadership", "creativeGoals": { "client": "TechXYZ", "format": "4 vídeos/mês (2-3min)", "tone": "Profissional, didático", "budget": "R$ 8.000/mês" } }
+    }
+  ],
+
+  "opportunities": [
+    { "id": 1, "userId": 1, "clientId": 5, "title": "Documentário Raízes — produção completa", "stage": "proposal", "estimatedValue": 35000, "probability": 70, "expectedCloseDate": "2026-07-20" },
+    { "id": 2, "userId": 1, "clientId": 4, "title": "Vídeo Gastronômico — Canal YouTube", "stage": "prospect", "estimatedValue": 12000, "probability": 25, "expectedCloseDate": "2026-08-10" },
+    { "id": 3, "userId": 1, "clientId": 3, "title": "Parceria cobertura eventos 2026", "stage": "negotiation", "estimatedValue": 48000, "probability": 60, "expectedCloseDate": "2026-07-25" },
+    { "id": 4, "userId": 1, "clientId": 1, "title": "Campanha Inverno 2026 (extensão)", "stage": "qualified", "estimatedValue": 30000, "probability": 50, "expectedCloseDate": "2026-09-01" },
+    { "id": 5, "userId": 1, "clientId": 2, "title": "Retenção anual TechXYZ — renovação", "stage": "won", "estimatedValue": 96000, "probability": 100, "expectedCloseDate": "2026-07-01" }
+  ],
+
+  "interactions": [
+    { "id": 1, "userId": 1, "clientId": 1, "opportunityId": null, "type": "meeting", "subject": "Kickoff Campanha Verão", "notes": "Definimos cronograma, locações (Maresias e estúdio SP). Carolina quer tom empoderamento feminino. Aprovado mood com paleta quente.", "nextFollowUp": "2026-07-10T14:00:00Z" },
+    { "id": 2, "userId": 1, "clientId": 5, "opportunityId": 1, "type": "call", "subject": "Proposta Doc Raízes", "notes": "Amanda gostou do escopo. Pediu redução de 35k para 30k. Contra-proposta: manter valor com entrega de teaser extra. Retorno em 3 dias.", "nextFollowUp": "2026-07-09T10:00:00Z" },
+    { "id": 3, "userId": 1, "clientId": 3, "opportunityId": 3, "type": "email", "subject": "Follow-up parceria eventos", "notes": "Enviei proposta detalhada com 6 eventos no segundo semestre. Pedro pediu para incluir fotos still em cada cobertura.", "nextFollowUp": "2026-07-12T16:00:00Z" },
+    { "id": 4, "userId": 1, "clientId": 2, "opportunityId": 5, "type": "meeting", "subject": "Renovação retainer anual", "notes": "Contrato renovado por mais 12 meses. Valor ajustado para R$8k/mês. Início imediato com pauta de julho.", "nextFollowUp": null },
+    { "id": 5, "userId": 1, "clientId": 4, "opportunityId": 2, "type": "whatsapp", "subject": "Primeiro contato — indicação", "notes": "Gustavo viu nosso trabalho pela Atlântica. Quer vídeos para canal de gastronomia. Marcamos call para próxima semana.", "nextFollowUp": "2026-07-14T11:00:00Z" }
+  ],
+
+  "financialEntries": [
+    { "id": 1, "userId": 1, "clientId": 2, "kind": "income", "description": "TechXYZ — Retainer julho/26", "category": "projeto", "amount": 8000, "status": "settled", "dueDate": "2026-07-05", "paidAt": "2026-07-05T10:00:00Z", "recurrence": "monthly", "isFixed": false },
+    { "id": 2, "userId": 1, "clientId": 1, "kind": "income", "description": "Atlântica — Parcela 1/2 Campanha Verão", "category": "projeto", "amount": 12500, "status": "settled", "dueDate": "2026-07-01", "paidAt": "2026-07-02T14:30:00Z", "recurrence": "once", "isFixed": false },
+    { "id": 3, "userId": 1, "clientId": null, "kind": "expense", "description": "Adobe Creative Cloud — mensal", "category": "software", "amount": 350, "status": "settled", "dueDate": "2026-07-03", "paidAt": "2026-07-03T08:00:00Z", "recurrence": "monthly", "isFixed": true },
+    { "id": 4, "userId": 1, "clientId": 1, "kind": "expense", "description": "Diária DOP + Equipamento — Campanha Verão (dia 1)", "category": "equipe", "amount": 3500, "status": "settled", "dueDate": "2026-07-06", "paidAt": "2026-07-06T18:00:00Z", "recurrence": "once", "isFixed": false },
+    { "id": 5, "userId": 1, "clientId": null, "kind": "expense", "description": "Aluguel estúdio — julho", "category": "estrutura", "amount": 4200, "status": "settled", "dueDate": "2026-07-01", "paidAt": "2026-07-01T09:00:00Z", "recurrence": "monthly", "isFixed": true },
+    { "id": 6, "userId": 1, "clientId": null, "kind": "expense", "description": "DaVinci Resolve Studio — licença anual", "category": "software", "amount": 1800, "status": "pending", "dueDate": "2026-07-15", "paidAt": null, "recurrence": "once", "isFixed": false },
+    { "id": 7, "userId": 1, "clientId": 1, "kind": "income", "description": "Atlântica — Parcela 2/2 Campanha Verão", "category": "projeto", "amount": 12500, "status": "pending", "dueDate": "2026-08-15", "paidAt": null, "recurrence": "once", "isFixed": false },
+    { "id": 8, "userId": 1, "clientId": 2, "kind": "income", "description": "TechXYZ — Vídeo Produto (parcela única)", "category": "projeto", "amount": 18000, "status": "pending", "dueDate": "2026-07-30", "paidAt": null, "recurrence": "once", "isFixed": false },
+    { "id": 9, "userId": 1, "clientId": null, "kind": "expense", "description": "Frame.io — mensal", "category": "software", "amount": 180, "status": "settled", "dueDate": "2026-07-01", "paidAt": "2026-07-01T08:00:00Z", "recurrence": "monthly", "isFixed": true },
+    { "id": 10, "userId": 1, "clientId": 5, "kind": "expense", "description": "Diária assistente + transporte — Doc Raízes (pesquisa)", "category": "equipe", "amount": 1200, "status": "settled", "dueDate": "2026-07-04", "paidAt": "2026-07-04T19:00:00Z", "recurrence": "once", "isFixed": false },
+    { "id": 11, "userId": 1, "clientId": 2, "kind": "income", "description": "TechXYZ — Retainer junho/26", "category": "projeto", "amount": 8000, "status": "settled", "dueDate": "2026-06-05", "paidAt": "2026-06-05T09:00:00Z", "recurrence": "monthly", "isFixed": false },
+    { "id": 12, "userId": 1, "clientId": 2, "kind": "income", "description": "TechXYZ — Retainer maio/26", "category": "projeto", "amount": 8000, "status": "settled", "dueDate": "2026-05-05", "paidAt": "2026-05-06T11:00:00Z", "recurrence": "monthly", "isFixed": false },
+    { "id": 13, "userId": 1, "clientId": 1, "kind": "income", "description": "Atlântica — Projeto Natal 2025", "category": "projeto", "amount": 20000, "status": "settled", "dueDate": "2025-12-20", "paidAt": "2025-12-20T15:00:00Z", "recurrence": "once", "isFixed": false },
+    { "id": 14, "userId": 1, "clientId": 2, "kind": "income", "description": "TechXYZ — Setup inicial + onboarding", "category": "projeto", "amount": 22000, "status": "settled", "dueDate": "2026-03-15", "paidAt": "2026-03-15T14:00:00Z", "recurrence": "once", "isFixed": false },
+    { "id": 15, "userId": 1, "clientId": 3, "kind": "income", "description": "Estúdio Harmonia — Cobertura Evento Maio", "category": "projeto", "amount": 6000, "status": "settled", "dueDate": "2026-05-25", "paidAt": "2026-05-28T10:00:00Z", "recurrence": "once", "isFixed": false },
+    { "id": 16, "userId": 1, "clientId": 3, "kind": "income", "description": "Estúdio Harmonia — Cobertura Evento Junho", "category": "projeto", "amount": 6000, "status": "settled", "dueDate": "2026-06-20", "paidAt": "2026-06-21T16:00:00Z", "recurrence": "once", "isFixed": false },
+    { "id": 17, "userId": 1, "clientId": 1, "kind": "expense", "description": "Produção Campanha Verão — Diária equipe (dia 2)", "category": "equipe", "amount": 4200, "status": "pending", "dueDate": "2026-07-12", "paidAt": null, "recurrence": "once", "isFixed": false },
+    { "id": 18, "userId": 1, "clientId": 2, "kind": "expense", "description": "Motion Designer — Vídeo Produto TechXYZ", "category": "equipe", "amount": 2800, "status": "pending", "dueDate": "2026-07-22", "paidAt": null, "recurrence": "once", "isFixed": false },
+    { "id": 19, "userId": 1, "clientId": 5, "kind": "expense", "description": "Locação + transporte — Doc Raízes (dia 1)", "category": "producao", "amount": 1500, "status": "pending", "dueDate": "2026-07-18", "paidAt": null, "recurrence": "once", "isFixed": false },
+    { "id": 20, "userId": 1, "clientId": null, "kind": "expense", "description": "Internet fibra — mensal", "category": "estrutura", "amount": 280, "status": "settled", "dueDate": "2026-07-05", "paidAt": "2026-07-05T08:00:00Z", "recurrence": "monthly", "isFixed": true }
+  ],
+
+  "projectStates": [
+    { "projectId": 1, "toolId": "07", "formData": { "cliente": "Atlântica Beachwear", "segmento": "Moda praia sustentável", "tipo": "Comercial", "objetivo": "Posicionar como referência em moda praia feminina sustentável", "publico": "Mulheres 25-40, classes A/B, conscientes", "veiculacao": "Instagram, YouTube, TV cabo", "duracao": "2 min principal + 4 Reels 30s", "prazo": "45 dias", "referencias": "Estilo Patagonia films, cores quentes, slow motion na água" } },
+    { "projectId": 1, "toolId": "01", "formData": { "titulo": "Campanha Verão — Atlântica", "formato": "Filme publicitário", "duracao": "2 min", "genero": "Lifestyle / Empoderamento", "sinopse": "Uma mulher percorre diferentes cenários — do amanhecer na praia ao fim de tarde na cidade — sempre em movimento, confiante, vestindo peças da nova coleção." } },
+    { "projectId": 2, "toolId": "07", "formData": { "cliente": "TechXYZ", "segmento": "Tecnologia / SaaS", "tipo": "Vídeo de Produto", "objetivo": "Explicar a nova plataforma para investidores em 90 segundos", "publico": "Investidores, CTOs, decisores B2B", "veiculacao": "YouTube, LinkedIn, site institucional", "duracao": "90 segundos", "prazo": "30 dias" } },
+    { "projectId": 2, "toolId": "01", "formData": { "titulo": "TechXYZ Platform — Product Demo", "formato": "Motion + screen capture", "duracao": "90s", "genero": "Tech, explicativo", "sinopse": "Narração em off apresenta o problema (gestão fragmentada de dados), mostra a solução (plataforma unificada) e fecha com depoimento rápido do CEO." } },
+    { "projectId": 2, "toolId": "02", "formData": { "descricao": "Plano 1: Wide do escritório (drone interno), Plano 2: Close tela com interface, Plano 3: Equipe colaborando, Plano 4: Depoimento CEO, Plano 5: Packshot logo + CTA" } }
+  ],
+
+  "projectFiles": [
+    { "id": 1, "projectId": 1, "userId": 1, "originalName": "briefing_atlantica_verao_v2.pdf", "storedName": "file_1_briefing.pdf", "mimeType": "application/pdf", "sizeBytes": 245600 },
+    { "id": 2, "projectId": 1, "userId": 1, "originalName": "moodboard_cores_quentes.jpg", "storedName": "file_2_mood.jpg", "mimeType": "image/jpeg", "sizeBytes": 1820000 },
+    { "id": 3, "projectId": 1, "userId": 1, "originalName": "roteiro_final_aprovado.docx", "storedName": "file_3_roteiro.docx", "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "sizeBytes": 89000 },
+    { "id": 4, "projectId": 2, "userId": 1, "originalName": "TechXYZ_Platform_Logo_Pack.zip", "storedName": "file_4_logos.zip", "mimeType": "application/zip", "sizeBytes": 5240000 },
+    { "id": 5, "projectId": 2, "userId": 1, "originalName": "script_narration_v3.txt", "storedName": "file_5_script.txt", "mimeType": "text/plain", "sizeBytes": 2400 },
+    { "id": 6, "projectId": 2, "userId": 1, "originalName": "screen_recordings_interface.mp4", "storedName": "file_6_screen.mp4", "mimeType": "video/mp4", "sizeBytes": 45800000 },
+    { "id": 7, "projectId": 3, "userId": 1, "originalName": "pre_producao_doc_raizes.pdf", "storedName": "file_7_preprod.pdf", "mimeType": "application/pdf", "sizeBytes": 312000 },
+    { "id": 8, "projectId": 3, "userId": 1, "originalName": "autorizacao_imagem_participantes.pdf", "storedName": "file_8_autorizacao.pdf", "mimeType": "application/pdf", "sizeBytes": 142000 },
+    { "id": 9, "projectId": 4, "userId": 1, "originalName": "pauta_julho_techxyz.xlsx", "storedName": "file_9_pauta.xlsx", "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "sizeBytes": 28000 },
+    { "id": 10, "projectId": 1, "userId": 1, "originalName": "callsheet_dia1_maresias.pdf", "storedName": "file_10_callsheet.pdf", "mimeType": "application/pdf", "sizeBytes": 178000 },
+    { "id": 11, "projectId": 1, "userId": 1, "originalName": "referencias_drone_praia.mov", "storedName": "file_11_ref_drone.mov", "mimeType": "video/quicktime", "sizeBytes": 128000000 },
+    { "id": 12, "projectId": 2, "userId": 1, "originalName": "musica_background_opcao1.mp3", "storedName": "file_12_music.mp3", "mimeType": "audio/mpeg", "sizeBytes": 4800000 }
+  ],
+
+  "videoReviews": [
+    { "id": 1, "projectId": 2, "userId": 1, "title": "TechXYZ Product — Corte 1", "description": "Primeiro corte para aprovação do cliente", "status": "changes_requested", "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "shareToken": "review_abc123" },
+    { "id": 2, "projectId": 1, "userId": 1, "title": "Atlântica Verão — Teaser 30s", "description": "Teaser para aprovação antes de finalizar o filme completo", "status": "approved", "videoUrl": "https://vimeo.com/example", "shareToken": "review_def456" }
+  ],
+
+  "videoComments": [
+    { "id": 1, "reviewId": 1, "userId": 1, "authorName": "Rafael (TechXYZ)", "timestampSeconds": 12.5, "comment": "Aqui o texto na tela está cortado no mobile. Precisa ajustar o safe area.", "annotations": [], "resolved": false },
+    { "id": 2, "reviewId": 1, "userId": 1, "authorName": "Rafael (TechXYZ)", "timestampSeconds": 45.0, "comment": "A música nesse trecho está muito alta, abafa minha fala. Reduzir -6dB.", "annotations": [], "resolved": true },
+    { "id": 3, "reviewId": 1, "userId": 1, "authorName": "Dante", "timestampSeconds": 68.0, "comment": "Vou trocar esse plano por um com mais movimento. Ficou estático demais.", "annotations": [], "resolved": false },
+    { "id": 4, "reviewId": 2, "userId": 1, "authorName": "Carolina (Atlântica)", "timestampSeconds": 8.0, "comment": "Amei esse plano! Exatamente o feeling que buscamos. Aprovado ✓", "annotations": [], "resolved": true }
+  ],
+
+  "collaborators": [
+    { "id": 1, "userId": 1, "name": "João Victor", "email": "joao@cenastudio.com.br", "role": "producer", "phone": "(11) 91111-2222", "skills": "Produção executiva, locação, logística", "dailyRate": 800, "status": "active" },
+    { "id": 2, "userId": 1, "name": "Ana Beatriz", "email": "ana@cenastudio.com.br", "role": "editor", "phone": "(11) 93333-4444", "skills": "Premiere, DaVinci, After Effects, motion", "dailyRate": 650, "status": "active" }
+  ],
+
+  "notifications": [
+    { "userId": 1, "title": "Novo comentário no review", "message": "Rafael (TechXYZ) comentou em 'TechXYZ Product — Corte 1' no timestamp 0:12", "type": "review", "read": false, "link": "/video-reviews?review=1" },
+    { "userId": 1, "title": "Proposta aprovada!", "message": "Atlântica Beachwear aprovou a proposta da Campanha Verão 2026.", "type": "pipeline", "read": true, "link": "/pipeline" },
+    { "userId": 1, "title": "Pagamento recebido", "message": "TechXYZ — Retainer julho/26: R$ 8.000,00 confirmado.", "type": "financial", "read": true, "link": "/analytics" }
+  ],
+
+  "_summary": {
+    "totalUsers": 3,
+    "totalClients": 5,
+    "totalProjects": 4,
+    "totalOpportunities": 5,
+    "totalInteractions": 5,
+    "totalFinancialEntries": 20,
+    "totalProjectFiles": 12,
+    "totalVideoReviews": 2,
+    "totalComments": 4,
+    "totalCollaborators": 2,
+    "monthlyRecurringRevenue": 8000,
+    "pipelineValue": 221000,
+    "weightedPipeline": 100350,
+    "totalIncomeSettled": 88500,
+    "totalExpensesSettled": 15710,
+    "totalIncomePending": 30500,
+    "totalExpensesPending": 10300,
+    "profitSettled": 72790,
+    "profitProjected": 92990,
+    "clientsWithProjects": 3,
+    "clientsWithOpportunities": 5,
+    "clientsWithFinancialData": 3,
+    "clientsWithInteractions": 4,
+    "modulesExercised": [
+      "Auth (3 users, 3 roles)",
+      "Plans (free/pro/studio)",
+      "CRM (5 clients across all stages)",
+      "Pipeline (5 opportunities in different stages)",
+      "Interactions (5 types: meeting/call/email/whatsapp)",
+      "Projects (4 active with metadata)",
+      "Studio IA (5 project states with form data)",
+      "Video Reviews (2 rooms, 4 comments, 2 statuses)",
+      "Financial (20 entries: 10 income/10 expense, settled/pending, monthly/once)",
+      "Project Files (12 files across 4 projects)",
+      "Team (2 collaborators with roles)",
+      "Notifications (3 types: review/pipeline/financial)",
+      "Studio Settings (complete company profile)",
+      "Client Hub Integration (all data properly linked to clients)"
+    ],
+    "clientHubIntegrationTest": {
+      "atlanticaBeachwear": {
+        "totalSpent": 45000,
+        "projects": 1,
+        "opportunities": 1,
+        "interactions": 1,
+        "financial": {
+          "income": 45000,
+          "expenses": 7700,
+          "net": 37300
+        },
+        "files": 6,
+        "videoReviews": 1
+      },
+      "techXYZ": {
+        "totalSpent": 78000,
+        "projects": 2,
+        "opportunities": 2,
+        "interactions": 2,
+        "financial": {
+          "income": 78000,
+          "expenses": 2800,
+          "net": 75200
+        },
+        "files": 6,
+        "videoReviews": 1
+      },
+      "estudioHarmonia": {
+        "totalSpent": 12000,
+        "projects": 0,
+        "opportunities": 1,
+        "interactions": 1,
+        "financial": {
+          "income": 12000,
+          "expenses": 0,
+          "net": 12000
+        },
+        "files": 0,
+        "videoReviews": 0
+      },
+      "gustavoReis": {
+        "totalSpent": 0,
+        "projects": 0,
+        "opportunities": 1,
+        "interactions": 1,
+        "financial": {
+          "income": 0,
+          "expenses": 0,
+          "net": 0
+        },
+        "files": 0,
+        "videoReviews": 0
+      },
+      "institutoRaizes": {
+        "totalSpent": 0,
+        "projects": 1,
+        "opportunities": 1,
+        "interactions": 1,
+        "financial": {
+          "income": 0,
+          "expenses": 2700,
+          "net": -2700
+        },
+        "files": 2,
+        "videoReviews": 0
+      }
+    }
+  }
+}

@@ -9,6 +9,7 @@
 import type { Request, Response } from 'express';
 import { prisma, shouldUsePrisma } from '../models/prisma.js';
 import { db } from '../models/db.js';
+import { jsonSafe } from '../utils/prismaSerialization.js';
 
 /**
  * GET /api/dashboard/stats

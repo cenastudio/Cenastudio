@@ -1,7 +1,6 @@
 import { Router } from "express";
 import * as authController from "../controllers/authController.js";
-import { authenticate } from "../middleware/authenticate.js";
-import { validateBody } from "../middleware/validate.js";
+import { authenticate } from "../middleware/authenticate.js";import { validateBody } from "../middleware/validate.js";
 import {
   forgotPasswordSchema,
   loginSchema,
@@ -21,6 +20,8 @@ router.post("/logout", authController.logout);
 router.post("/supabase", authController.supabaseLogin);
 router.get("/me", authenticate, authController.me);
 router.put("/profile", authenticate, authController.updateProfile);
+router.put("/change-password", authenticate, authController.changePassword);
+router.get("/export-data", authenticate, authController.exportUserData);
 
 // GitHub OAuth routes for users; admin is granted only by explicit email policy.
 router.get("/github", (req, res, next) => {

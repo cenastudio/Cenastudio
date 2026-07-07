@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import VideoPlayer from "@/components/VideoPlayer";
 import ReviewCommentComposer from "@/components/ReviewCommentComposer";
 import BrandLogo from "@/components/BrandLogo";
+import { readStudioSettings } from "@/lib/studioSettings";
 import {
   AlertCircle,
   CheckCircle2,
@@ -151,13 +152,23 @@ export default function SharedReview() {
 
   const shareText = useMemo(() => {
     if (!review) return "";
+
+    const statusEmoji = status.labelKey.includes("approved") ? "✅" :
+                        status.labelKey.includes("changes") ? "🔄" :
+                        status.labelKey.includes("rejected") ? "❌" : "⏳";
+
     return [
-      `${t("app.videoReviews.reviewRoom")} - ${review.title}`,
-      `${t("app.videoReviews.project")}: ${review.project_name}`,
-      `${t("app.videoReviews.status")}: ${t(status.labelKey)}`,
-      `${t("app.videoReviews.link")}: ${window.location.href}`,
-      "",
-      t("app.videoReviews.shareInstructions"),
+      `🎬 *${review.title}*`,
+      ``,
+      `Projeto: ${review.project_name}`,
+      `Status: ${statusEmoji} ${t(status.labelKey)}`,
+      ``,
+      `👉 *Visualize e comente aqui:*`,
+      window.location.href,
+      ``,
+      `💬 Você pode assistir o vídeo, adicionar comentários em momentos específicos e aprovar ou solicitar alterações diretamente na plataforma.`,
+      ``,
+      `_Enviado via Cena Studio_`
     ].join("\n");
   }, [review, status.labelKey, t]);
 
@@ -274,7 +285,15 @@ export default function SharedReview() {
   };
 
   const openWhatsapp = () => {
-    window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank", "noopener,noreferrer");
+    const studioSettings = readStudioSettings();
+    const whatsappNumber = studioSettings.approvalWhatsapp || "";
+
+    // Se tem número configurado, abre direto com o número. Senão, abre sem número (usuário escolhe contato)
+    const whatsappUrl = whatsappNumber
+      ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(shareText)}`
+      : `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   };
 
   const downloadSummary = () => {

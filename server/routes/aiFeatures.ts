@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAuth } from '../middleware/auth';
+import { authenticate } from '../middleware/authenticate.js';
 import {
   scriptSuggestions,
   budgetAnalysis,
@@ -7,12 +7,12 @@ import {
   summarizeInteractionEndpoint,
   analyzeSentimentEndpoint,
   chatbotEndpoint,
-} from '../controllers/aiController';
+} from '../controllers/aiController.js';
 
 const router = Router();
 
 // Todas rotas requerem autenticação
-router.use(requireAuth);
+router.use(authenticate);
 
 // POST /api/ai-features/script-suggestions
 router.post('/script-suggestions', scriptSuggestions);

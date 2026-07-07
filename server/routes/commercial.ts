@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/authenticate.js';
+import { ownerOnly } from '../middleware/teamAccess.js';
 import {
   getCommercialDashboard,
   getRevenueTracking,
@@ -11,8 +12,8 @@ import {
 
 const router = Router();
 
-// All commercial routes require authentication
-router.use(authenticate);
+// All commercial routes require authentication + owner access (team members blocked)
+router.use(authenticate, ownerOnly);
 
 // GET /api/commercial/dashboard - General commercial stats
 router.get('/dashboard', getCommercialDashboard);

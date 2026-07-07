@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import AppNavBar from "@/components/AppNavBar";
 import ProjectNav from "@/components/ProjectNav";
@@ -113,8 +113,9 @@ const STATUS_ACTIONS = [
   { value: "rejected", labelKey: "app.videoReviews.reject", color: "border-red-500/30 text-red-400 hover:bg-red-500/10" },
 ];
 
-function VideoReviewsContent() {
+function VideoReviewsContent({ embedded }: { embedded?: boolean }) {
   const { t } = useLanguage();
+  const [, setLocation] = useLocation();
   const { projectId } = useParams<{ projectId: string }>();
   const targetReviewId = useMemo(() => {
     if (typeof window === "undefined") return null;
@@ -141,6 +142,11 @@ function VideoReviewsContent() {
   const [isCommenting, setIsCommenting] = useState(false);
   const [showUploader, setShowUploader] = useState(false);
   const [uploadedFileId, setUploadedFileId] = useState<string | null>(null);
+  const [availableProjects, setAvailableProjects] = useState<Array<{ id: number; name: string }>>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState(projectId || "");
+  const [isEditingReview, setIsEditingReview] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
 
   const loadReviewDetails = useCallback(async (reviewId: number, preservePlayer = false) => {
     try {
@@ -199,6 +205,13 @@ function VideoReviewsContent() {
 
   useEffect(() => {
     loadAllReviews();
+    // Load projects for the selector
+    if (!projectId) {
+      fetch("/api/projects", { credentials: "include" })
+        .then((r) => r.json())
+        .then((data) => { if (data.success) setAvailableProjects(data.data || []); })
+        .catch(() => {});
+    }
   }, [loadAllReviews]);
 
   useEffect(() => {
@@ -253,7 +266,7 @@ function VideoReviewsContent() {
     setUploadedFileId(fileId);
     setTitle(metadata.filename.replace(/\.[^/.]+$/, "")); // Remove extension
     setShowUploader(false);
-    toast.success("Vídeo enviado com sucesso!");
+    toast.success(t("app.videoReviews.videoUploaded"));
   }, []);
 
   const handleVideoUploadError = useCallback((error: string) => {
@@ -439,6 +452,47 @@ function VideoReviewsContent() {
     }
   };
 
+  const handleDeleteReview = async (reviewId: number) => {
+    if (!confirm(t("app.videoReviews.confirmDeleteRoom"))) return;
+    try {
+      const response = await fetch(`/api/video-reviews/${reviewId}`, { method: "DELETE", credentials: "include" });
+      const data = await response.json();
+      if (data.success) {
+        toast.success(t("app.videoReviews.roomDeleted"));
+        if (selectedReview?.id === reviewId) {
+          setSelectedReview(null);
+          setComments([]);
+        }
+        await loadAllReviews();
+      } else {
+        toast.error(data.error || t("app.errors.deleteReview"));
+      }
+    } catch {
+      toast.error(t("app.errors.deleteReview"));
+    }
+  };
+
+  const saveReviewEdit = async () => {
+    if (!selectedReview || !editTitle.trim()) { setIsEditingReview(false); return; }
+    try {
+      const response = await fetch(`/api/video-reviews/${selectedReview.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ title: editTitle.trim(), description: editDescription.trim() }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSelectedReview(data.data);
+        loadAllReviews();
+        toast.success(t("app.videoReviews.reviewUpdated"));
+      }
+    } catch {
+      toast.error(t("app.errors.updateReview"));
+    }
+    setIsEditingReview(false);
+  };
+
   const formatTimestamp = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
@@ -460,9 +514,9 @@ function VideoReviewsContent() {
   }));
 
   return (
-    <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
-      <AppNavBar />
-      {projectId && <ProjectNav projectId={parseInt(projectId)} />}
+    <div className={`${embedded ? "" : "min-h-screen"} bg-frame-black text-frame-white font-frame-body flex flex-col`}>
+      {!embedded && <AppNavBar />}
+      {!embedded && projectId && <ProjectNav projectId={parseInt(projectId)} />}
 
       <main id="main-content" className="flex-1 flex flex-col min-h-0">
         <div className="border-b border-frame-gray-3 bg-frame-gray-1/20 px-4 sm:px-6 py-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
@@ -496,10 +550,22 @@ function VideoReviewsContent() {
           </div>
         ) : (
           <div className="flex-1 grid grid-cols-1 xl:grid-cols-[340px_minmax(0,1fr)_400px] min-h-0">
-            <aside className="border-b xl:border-b-0 xl:border-r border-frame-gray-3 bg-frame-gray-1/10 overflow-y-auto">
+            <aside className="border-b xl:border-b-0 xl:border-r border-frame-gray-3 bg-frame-black overflow-y-auto">
               <div className="p-4 border-b border-frame-gray-3">
                 <p className="frame-label mb-3">// {t("app.videoReviews.createRoom")}</p>
                 <div className="space-y-3">
+                  {!projectId && (
+                    <select
+                      value={selectedProjectId}
+                      onChange={(e) => setSelectedProjectId(e.target.value)}
+                      className="frame-input w-full"
+                    >
+                      <option value="">{t("app.videoReviews.linkToJob")}</option>
+                      {availableProjects.map((p) => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  )}
                   <input value={title} onChange={(e) => setTitle(e.target.value)} className="frame-input w-full" placeholder={t("app.videoReviews.reviewTitlePlaceholder")} />
                   <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="frame-input w-full h-20 resize-none" placeholder={t("app.videoReviews.contextPlaceholder")} />
 
@@ -510,7 +576,7 @@ function VideoReviewsContent() {
                       className={`frame-btn-ghost w-full flex items-center justify-center gap-2 ${uploadedFileId ? 'border-green-500/30 text-green-400' : ''}`}
                     >
                       <FileVideo className="w-4 h-4" />
-                      {uploadedFileId ? '✓ Vídeo Enviado' : 'Upload Novo Vídeo'}
+                      {uploadedFileId ? `✓ ${t("app.videoReviews.videoSent")}` : t("app.videoReviews.uploadNewVideo")}
                     </button>
 
                     {showUploader && (
@@ -558,13 +624,34 @@ function VideoReviewsContent() {
               </div>
 
               <div className="p-4">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-2">
                   <p className="frame-label">// {t("app.videoReviews.queue")}</p>
                   <span className="text-xs text-frame-gray-light">{reviews.length}</span>
                 </div>
+                <p className="text-[0.6rem] text-frame-gray-light mb-3 leading-relaxed">
+                  {t("app.videoReviews.queueDescription")}
+                </p>
                 {reviews.length === 0 ? (
-                  <div className="border border-dashed border-frame-gray-3 p-5 text-center text-sm text-frame-gray-light">
-                    {t("app.videoReviews.noReviewsYet")}
+                  <div className="frame-empty-state p-5 text-center space-y-3">
+                    <Video className="w-8 h-8 mx-auto text-frame-orange/60" />
+                    <p className="text-sm font-semibold text-frame-white">{t("app.videoReviews.emptyTitle")}</p>
+                    <p className="text-[0.65rem] text-frame-gray-light leading-relaxed">
+                      {t("app.videoReviews.emptyDescription")}
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 pt-2">
+                      <div className="text-center">
+                        <span className="block font-frame-mono text-[0.5rem] text-frame-orange">01</span>
+                        <span className="block text-[0.55rem] text-frame-gray-light mt-0.5">{t("app.videoReviews.step1")}</span>
+                      </div>
+                      <div className="text-center">
+                        <span className="block font-frame-mono text-[0.5rem] text-frame-orange">02</span>
+                        <span className="block text-[0.55rem] text-frame-gray-light mt-0.5">{t("app.videoReviews.step2")}</span>
+                      </div>
+                      <div className="text-center">
+                        <span className="block font-frame-mono text-[0.5rem] text-frame-orange">03</span>
+                        <span className="block text-[0.55rem] text-frame-gray-light mt-0.5">{t("app.videoReviews.step3")}</span>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -575,7 +662,7 @@ function VideoReviewsContent() {
                         <button
                           key={review.id}
                           onClick={() => loadReviewDetails(review.id)}
-                          className={`w-full text-left border p-3 transition ${active ? "border-frame-orange bg-frame-orange/5" : "border-frame-gray-3 bg-frame-black/20 hover:border-frame-gray-4"}`}
+                          className={`relative group w-full text-left border p-3 transition ${active ? "border-frame-orange bg-frame-orange/5" : "border-frame-gray-3 bg-frame-black/20 hover:border-frame-gray-4"}`}
                         >
                           <div className="flex gap-3">
                             <div className={`w-9 h-9 flex items-center justify-center shrink-0 ${st.bg} ${st.color}`}>
@@ -589,6 +676,14 @@ function VideoReviewsContent() {
                               </p>
                             </div>
                           </div>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleDeleteReview(review.id); }}
+                            className="absolute top-2 right-2 p-1 text-frame-gray-light hover:text-red-400 opacity-0 group-hover:opacity-100 transition"
+                            title={t("app.common.delete")}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
                         </button>
                       );
                     })}
@@ -597,11 +692,30 @@ function VideoReviewsContent() {
               </div>
             </aside>
 
-            <section className="relative overflow-hidden bg-[radial-gradient(circle_at_50%_38%,rgba(232,80,2,0.12),rgba(16,13,12,0.94)_46%,#050505_100%)] min-h-[420px] xl:min-h-0 flex flex-col">
+            <section className="relative overflow-hidden bg-frame-black min-h-[420px] xl:min-h-0 flex flex-col"
+              style={{ background: "radial-gradient(circle at 50% 38%, rgba(232,80,2,0.12), var(--color-frame-black, #050505) 46%)" }}
+            >
               <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.025),transparent_38%,rgba(232,80,2,0.035))]" />
               <div className="relative border-b border-frame-gray-3 px-4 py-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold truncate">{selectedReview?.title || title || t("app.videoReviews.reviewPreview")}</p>
+                  {isEditingReview && selectedReview ? (
+                    <input
+                      type="text"
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      onBlur={saveReviewEdit}
+                      onKeyDown={(e) => { if (e.key === "Enter") saveReviewEdit(); if (e.key === "Escape") setIsEditingReview(false); }}
+                      className="text-sm font-semibold bg-transparent border-b border-frame-orange outline-none w-full"
+                      autoFocus
+                    />
+                  ) : (
+                    <p
+                      className="text-sm font-semibold truncate cursor-pointer hover:text-frame-orange transition"
+                      onClick={() => { if (selectedReview) { setEditTitle(selectedReview.title); setEditDescription(selectedReview.description || ""); setIsEditingReview(true); } }}
+                    >
+                      {selectedReview?.title || title || t("app.videoReviews.reviewPreview")}
+                    </p>
+                  )}
                   <p className="text-xs text-frame-gray-light truncate">
                     {selectedReview?.description || description || t("app.videoReviews.linkHint")}
                   </p>
@@ -627,6 +741,14 @@ function VideoReviewsContent() {
                         {t(action.labelKey)}
                       </button>
                     ))}
+                    {selectedReview.status === "approved" && projectId && (
+                      <button
+                        onClick={() => setLocation(`/project/${projectId}/journey/delivery`)}
+                        className="px-3 py-2 text-[0.62rem] font-frame-mono uppercase tracking-wider border border-frame-orange bg-frame-orange/10 text-frame-orange hover:bg-frame-orange/20 transition"
+                      >
+                        Avançar para {t("app.videoReviews.delivery")} →
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -651,18 +773,31 @@ function VideoReviewsContent() {
                     <iframe src={previewUrl} title={t("app.videoReviews.videoPreview") as string} className="w-full h-full" allow="autoplay; fullscreen" />
                   </div>
                 ) : (
-                  <div className="text-center max-w-md border border-dashed border-frame-gray-3 p-10">
-                    <Video className="w-16 h-16 mx-auto mb-4 text-frame-gray-light" />
-                    <h2 className="text-xl font-bold mb-2">{t("app.videoReviews.roomReady")}</h2>
-                    <p className="text-sm text-frame-gray-light">
+                  <div className="text-center max-w-md rounded-xl p-10 space-y-4"
+                    style={{
+                      background: "linear-gradient(135deg, rgba(232,80,2,0.22) 0%, rgba(232,80,2,0.10) 100%)",
+                      border: "1px dashed rgba(232, 80, 2, 0.55)",
+                      backdropFilter: "blur(20px)",
+                    }}
+                  >
+                    <Video className="w-14 h-14 mx-auto text-frame-orange" />
+                    <h2 className="text-xl font-bold text-frame-white">{t("app.videoReviews.roomReady")}</h2>
+                    <p className="text-sm text-frame-gray-light leading-relaxed">
                       {t("app.videoReviews.roomReadyDescription")}
                     </p>
+                    <div className="border-t border-frame-orange/30 pt-4 space-y-1.5 text-left">
+                      <p className="font-frame-mono text-[0.55rem] uppercase tracking-wider text-frame-orange mb-2">{t("app.videoReviews.howItWorks")}</p>
+                      <p className="text-[0.65rem] text-frame-white/80">{t("app.videoReviews.howStep1")}</p>
+                      <p className="text-[0.65rem] text-frame-white/80">{t("app.videoReviews.howStep2")}</p>
+                      <p className="text-[0.65rem] text-frame-white/80">{t("app.videoReviews.howStep3")}</p>
+                      <p className="text-[0.65rem] text-frame-white/80">{t("app.videoReviews.howStep4")}</p>
+                    </div>
                   </div>
                 )}
               </div>
             </section>
 
-            <aside className="border-t xl:border-t-0 xl:border-l border-frame-gray-3 bg-frame-gray-1/10 flex flex-col min-h-[460px] xl:min-h-0">
+            <aside className="border-t xl:border-t-0 xl:border-l border-frame-gray-3 bg-frame-black flex flex-col min-h-[460px] xl:min-h-0">
               <div className="p-4 border-b border-frame-gray-3 space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="text-sm font-semibold flex items-center gap-2">
@@ -706,12 +841,19 @@ function VideoReviewsContent() {
                     {t("app.videoReviews.generateClientLink")}
                   </button>
                 ) : (
-                  <div className="border border-frame-gray-3 bg-frame-black/30 p-4">
-                    <FileVideo className="w-5 h-5 text-frame-orange mb-3" />
+                  <div className="border border-frame-gray-3 bg-frame-black/30 p-4 space-y-3">
+                    <FileVideo className="w-5 h-5 text-frame-orange" />
                     <p className="text-sm font-semibold text-frame-white">{t("app.videoReviews.createOrSelect")}</p>
-                    <p className="text-xs text-frame-gray-light mt-2">
-                      {t("app.videoReviews.sidePanelHint")}
+                    <p className="text-xs text-frame-gray-light leading-relaxed">
+                      {t("app.videoReviews.createOrSelectDesc")}
                     </p>
+                    <div className="border-t border-frame-gray-3 pt-3 space-y-1.5">
+                      <p className="text-[0.55rem] font-frame-mono uppercase tracking-wider text-frame-orange">{t("app.videoReviews.howItWorks")}</p>
+                      <p className="text-[0.6rem] text-frame-gray-light">{t("app.videoReviews.sidebarStep1")}</p>
+                      <p className="text-[0.6rem] text-frame-gray-light">{t("app.videoReviews.sidebarStep2")}</p>
+                      <p className="text-[0.6rem] text-frame-gray-light">{t("app.videoReviews.sidebarStep3")}</p>
+                      <p className="text-[0.6rem] text-frame-gray-light">{t("app.videoReviews.sidebarStep4")}</p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -841,7 +983,8 @@ function VideoReviewsContent() {
   );
 }
 
-export default function VideoReviews() {
+export default function VideoReviews({ embedded }: { embedded?: boolean }) {
+  if (embedded) return <VideoReviewsContent embedded />;
   return (
     <ProtectedRoute>
       <VideoReviewsContent />

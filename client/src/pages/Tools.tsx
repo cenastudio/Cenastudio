@@ -25,7 +25,7 @@ const TOOL_FOCUS: Record<string, { phase: string; outcome: string; critical?: bo
   assistente: { phase: "Apoio", outcome: "Resposta livre para decisões do job." },
 };
 
-function ToolsContent() {
+function ToolsContent({ embedded }: { embedded?: boolean }) {
   const { locale, t } = useLanguage();
   const [, setLocation] = useLocation();
   const [tools, setTools] = useState<ToolFromApi[]>([]);
@@ -46,8 +46,8 @@ function ToolsContent() {
   }, []);
 
   return (
-    <div className="app-glass-surface tools-glass-page min-h-screen text-frame-white">
-      <AppNavBar />
+    <div className={`app-glass-surface tools-glass-page ${embedded ? "" : "min-h-screen"} text-frame-white`}>
+      {!embedded && <AppNavBar />}
 
       <section className="px-4 sm:px-6 md:px-12 py-10 md:py-16">
         <div className="mb-8 grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px] xl:items-end">
@@ -132,7 +132,8 @@ function ToolsContent() {
   );
 }
 
-export default function Tools() {
+export default function Tools({ embedded }: { embedded?: boolean }) {
+  if (embedded) return <ToolsContent embedded />;
   return (
     <ProtectedRoute>
       <ToolsContent />

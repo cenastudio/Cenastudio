@@ -1,9 +1,11 @@
 import { type ToolFromApi } from "@/lib/api";
 import FormDispatcher from "./forms/FormDispatcher";
-import { Link2, Loader2 } from "lucide-react";
+import { Link2, Loader2, Layers } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import StudioTextLocalizer from "./StudioTextLocalizer";
+import { PROJECT_TEMPLATES, applyTemplateToSlug } from "@/lib/studioContext";
+import { useState } from "react";
 
 interface LinkedContextSummary {
   projectName?: string;
@@ -23,6 +25,7 @@ interface ToolWorkspaceProps {
   linkedContext?: LinkedContextSummary | null;
   onApplyLinkedContext?: () => void;
   onSetOutput?: (output: string) => void;
+  onApplyTemplate?: (fields: Record<string, string>) => void;
 }
 
 export default function ToolWorkspace({
@@ -35,9 +38,14 @@ export default function ToolWorkspace({
   linkedContext,
   onApplyLinkedContext,
   onSetOutput,
+  onApplyTemplate,
 }: ToolWorkspaceProps) {
   const { autosaveStatus, activeProject } = useProject();
   const { t } = useLanguage();
+  const [showTemplates, setShowTemplates] = useState(false);
+
+  // Filter templates that have fields for this tool
+  const relevantTemplates = PROJECT_TEMPLATES.filter(tmpl => Object.keys(tmpl.prefill[tool.slug] || {}).length > 0);
 
   const renderAutosaveStatus = () => {
     if (!activeProject) {
@@ -96,6 +104,46 @@ export default function ToolWorkspace({
           </div>
           {renderAutosaveStatus()}
         </div>
+
+        {/* Template selector — só mostra se tem templates para esta ferramenta */}
+        {relevantTemplates.length > 0 && (
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowTemplates(v => !v)}
+              className="flex items-center gap-1.5 font-frame-mono text-[0.58rem] uppercase tracking-[0.14em] text-frame-gray-light hover:text-frame-orange transition mb-2"
+            >
+              <Layers className="w-3 h-3" />
+              Templates de projeto
+              <span className="ml-1 text-[0.5rem] border border-frame-gray-3 px-1 py-0.5 rounded">
+                {showTemplates ? "▲" : "▼"}
+              </span>
+            </button>
+            {showTemplates && (
+              <div className="grid grid-cols-2 gap-1.5">
+                {relevantTemplates.map((tmpl) => (
+                  <button
+                    key={tmpl.id}
+                    type="button"
+                    onClick={() => {
+                      const { merged, applied } = applyTemplateToSlug(tmpl, tool.slug, formData);
+                      if (applied === 0) return;
+                      for (const [k, v] of Object.entries(merged)) {
+                        if (formData[k] !== v) onChangeField(k, v);
+                      }
+                      setShowTemplates(false);
+                    }}
+                    className="group text-left p-2 border border-frame-gray-3/50 hover:border-frame-orange/40 hover:bg-frame-orange/[0.04] transition rounded"
+                  >
+                    <span className="block text-base mb-0.5">{tmpl.icon}</span>
+                    <span className="block font-frame-mono text-[0.56rem] text-frame-white group-hover:text-frame-orange transition">{tmpl.label}</span>
+                    <span className="block text-[0.52rem] text-frame-gray-light">{tmpl.description}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {linkedContext && linkedContext.availableCount > 0 && (
           <div className="border border-frame-orange/30 bg-frame-orange/5 p-3 shadow-[inset_0_0_0_1px_rgba(255,77,0,0.04)]">

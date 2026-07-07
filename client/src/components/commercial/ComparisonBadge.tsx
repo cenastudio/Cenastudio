@@ -1,4 +1,5 @@
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ComparisonBadgeProps {
   change: string;
@@ -6,9 +7,11 @@ interface ComparisonBadgeProps {
   label?: string;
 }
 
-export function ComparisonBadge({ change, isPositive, label = 'vs mês anterior' }: ComparisonBadgeProps) {
+export function ComparisonBadge({ change, isPositive, label }: ComparisonBadgeProps) {
+  const { t } = useLanguage();
   const changeNum = parseFloat(change);
   const isNeutral = changeNum === 0;
+  const displayLabel = label ?? t('app.commercial.vsPrevMonth');
 
   return (
     <div className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium ${
@@ -28,7 +31,7 @@ export function ComparisonBadge({ change, isPositive, label = 'vs mês anterior'
       <span>
         {changeNum > 0 ? '+' : ''}{change}%
       </span>
-      <span className="text-[10px] opacity-70">{label}</span>
+      <span className="text-[10px] opacity-70">{displayLabel}</span>
     </div>
   );
 }

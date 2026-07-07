@@ -7,6 +7,7 @@
 import { useState, useCallback, useRef } from "react";
 import { Upload, X, FileVideo, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export interface VideoFile {
   file: File;
@@ -57,6 +58,7 @@ export function VideoUploader({
   maxSizeMB = 2000,
   acceptedFormats = DEFAULT_FORMATS,
 }: VideoUploaderProps) {
+  const { t } = useLanguage();
   const [isDragging, setIsDragging] = useState(false);
   const [videoFile, setVideoFile] = useState<VideoFile | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -68,17 +70,17 @@ export function VideoUploader({
       const acceptedExts = acceptedFormats
         .map(format => format.split('/')[1])
         .join(', ');
-      return `Formato não suportado. Aceitos: ${acceptedExts}`;
+      return t("app.videoUploader.formatNotSupported").replace("{formats}", acceptedExts);
     }
 
     // Check size
     const sizeMB = file.size / (1024 * 1024);
     if (sizeMB > maxSizeMB) {
-      return `Arquivo muito grande. Máximo: ${maxSizeMB}MB`;
+      return t("app.videoUploader.fileTooLarge").replace("{max}", String(maxSizeMB));
     }
 
     return null;
-  }, [acceptedFormats, maxSizeMB]);
+  }, [acceptedFormats, maxSizeMB, t]);
 
   // Extract video metadata
   const extractMetadata = useCallback(async (file: File): Promise<VideoMetadata> => {
@@ -175,11 +177,16 @@ export function VideoUploader({
         }),
       };
 
-      // Upload with progress simulation (real progress tracking would need streaming)
+      // Time-based progress estimation tied to file size
+      const estimateUploadTime = (fileSize: number) => Math.max(3000, (fileSize / (1024 * 1024)) * 500);
+      const totalTime = estimateUploadTime(file.size);
+      const steps = 20;
+      const stepTime = totalTime / steps;
+
       const uploadSimulation = async () => {
-        for (let i = 0; i <= 90; i += 10) {
-          await new Promise(resolve => setTimeout(resolve, 200));
-          setVideoFile(prev => prev ? { ...prev, progress: i } : null);
+        for (let i = 1; i <= steps; i++) {
+          await new Promise(resolve => setTimeout(resolve, stepTime));
+          setVideoFile(prev => prev ? { ...prev, progress: Math.min(85, Math.round((i / steps) * 85)) } : null);
         }
       };
 
@@ -201,7 +208,7 @@ export function VideoUploader({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao fazer upload');
+        throw new Error(errorData.error || t("app.videoUploader.uploadError"));
       }
 
       const data = await response.json();
@@ -209,18 +216,18 @@ export function VideoUploader({
       setVideoFile(prev => prev ? { ...prev, status: "processing", progress: 95 } : null);
 
       // Simulate final processing
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       setVideoFile(prev => prev ? { ...prev, status: "complete", progress: 100 } : null);
 
-      toast.success("Vídeo enviado com sucesso!");
+      toast.success(t("app.videoReviews.videoUploaded"));
 
       if (onUploadComplete) {
         onUploadComplete(data.data.id.toString(), metadata);
       }
 
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Erro ao fazer upload";
+      const errorMsg = error instanceof Error ? error.message : t("app.videoUploader.uploadError");
       setVideoFile(prev => prev ? { ...prev, status: "error", error: errorMsg } : null);
       toast.error(errorMsg);
       if (onUploadError) onUploadError(errorMsg);
@@ -332,16 +339,16 @@ export function VideoUploader({
           `} />
 
           <h3 className="text-lg font-semibold mb-2">
-            {isDragging ? 'Solte o vídeo aqui' : 'Arraste um vídeo ou clique para selecionar'}
+            {isDragging ? t("app.videoUploader.dropHere") : t("app.videoUploader.dragOrClick")}
           </h3>
 
           <p className="text-sm text-frame-gray-light mb-4">
-            MP4, MOV, AVI, MKV, WebM até {maxSizeMB}MB
+            {t("app.videoUploader.formatHint").replace("{max}", String(maxSizeMB))}
           </p>
 
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-frame-orange/10 border border-frame-orange/30 rounded text-sm text-frame-orange">
             <FileVideo className="w-4 h-4" />
-            Selecionar Vídeo
+            {t("app.videoUploader.selectVideo")}
           </div>
         </div>
       )}
@@ -362,13 +369,13 @@ export function VideoUploader({
                   {videoFile.status === 'uploading' && (
                     <div className="text-center">
                       <Loader2 className="w-8 h-8 text-frame-orange animate-spin mx-auto mb-2" />
-                      <p className="text-sm text-white">Enviando... {videoFile.progress}%</p>
+                      <p className="text-sm text-white">{t("app.videoUploader.uploading").replace("...", "")} {videoFile.progress}%</p>
                     </div>
                   )}
                   {videoFile.status === 'processing' && (
                     <div className="text-center">
                       <Loader2 className="w-8 h-8 text-frame-orange animate-spin mx-auto mb-2" />
-                      <p className="text-sm text-white">Processando...</p>
+                      <p className="text-sm text-white">{t("app.videoUploader.processing")}</p>
                     </div>
                   )}
                 </div>
@@ -440,7 +447,7 @@ export function VideoUploader({
                 onClick={handleRemove}
                 className="flex-1 px-3 py-2 text-sm border border-frame-gray-3 hover:border-frame-gray-4 rounded transition"
               >
-                {videoFile.status === 'complete' ? 'Remover' : 'Cancelar'}
+                {videoFile.status === 'complete' ? t("app.videoUploader.remove") : t("app.videoUploader.cancel")}
               </button>
 
               {videoFile.status === 'complete' && (
@@ -448,7 +455,7 @@ export function VideoUploader({
                   onClick={() => fileInputRef.current?.click()}
                   className="flex-1 px-3 py-2 text-sm bg-frame-orange hover:bg-frame-orange/90 text-white rounded transition"
                 >
-                  Enviar Outro
+                  {t("app.videoUploader.sendAnother")}
                 </button>
               )}
             </div>

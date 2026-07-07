@@ -92,6 +92,7 @@ export interface AuthUser {
   studioName?: string;
   studioRole?: string;
   phone?: string;
+  mustResetPassword?: boolean;
 }
 
 export interface UserPlan {
@@ -153,6 +154,13 @@ export const api = {
         method: "PUT",
         body: JSON.stringify(data),
       }),
+    changePassword: (currentPassword: string, newPassword: string) =>
+      request<{ message: string }>("/auth/change-password", {
+        method: "PUT",
+        body: JSON.stringify({ currentPassword, newPassword }),
+      }),
+    exportData: () =>
+      fetch(apiUrl("/auth/export-data"), { credentials: "include" }),
     supabase: (accessToken: string) =>
       request<{ user: AuthUser; plan: UserPlan | null }>("/auth/supabase", {
         method: "POST",
@@ -171,10 +179,10 @@ export const api = {
     lookupCnpj: (cnpj: string) => request<CnpjCompanyData>(`/clients/lookup/cnpj/${encodeURIComponent(cnpj)}`),
   },
   ai: {
-    generate: (toolId: string, input: Record<string, string>, projectId?: number | null) =>
+    generate: (toolId: string, input: Record<string, string>, projectId?: number | null, model?: string) =>
       request<{ output: string; generationId: number }>("/ai/generate", {
         method: "POST",
-        body: JSON.stringify({ toolId, input, projectId }),
+        body: JSON.stringify({ toolId, input, projectId, model }),
       }),
     history: (toolId: string, projectId?: number | null) =>
       request<
@@ -424,6 +432,55 @@ export const api = {
         };
       }>("/demo/create", {
         method: "POST",
+      }),
+  },
+  team: {
+    context: () =>
+      request<{
+        isTeamMember: boolean;
+        ownerUserId: number | null;
+        workspaceId: number | null;
+        role: string | null;
+      }>("/team/context"),
+    list: () =>
+      request<
+        Array<{
+          id: number;
+          userId: number;
+          name: string;
+          email: string;
+          role: string;
+          status: string;
+          createdAt: string;
+        }>
+      >("/team"),
+    create: (data: { name: string; email: string; password: string; role: string }) =>
+      request<{
+        id: number;
+        userId: number;
+        name: string;
+        email: string;
+        role: string;
+        status: string;
+      }>("/team", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    update: (id: number, data: { role?: string; status?: string }) =>
+      request<{
+        id: number;
+        userId: number;
+        name: string;
+        email: string;
+        role: string;
+        status: string;
+      }>(`/team/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    remove: (id: number) =>
+      request<{ message: string }>(`/team/${id}`, {
+        method: "DELETE",
       }),
   },
 };

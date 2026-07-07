@@ -2,6 +2,7 @@ import type { RequestHandler } from "express";
 import { db } from "../models/db.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { prisma, shouldUsePrisma } from "../models/prisma.js";
+import type { DbProject } from "../models/types.js";
 
 /**
  * Create demo client and project for first-time users
@@ -207,31 +208,11 @@ R$ 25.000 (produção completa)
 5. Produção e pós-produção
 `.trim();
 
-    if (shouldUsePrisma) {
-      await prisma.toolUsage.create({
-        data: {
-          userId: BigInt(userId),
-          projectId: demoProject.id,
-          toolId: "07", // Briefing tool
-          input: JSON.stringify({ objective: projectMetadata.objective }),
-          output: briefingContent,
-          model: "demo-seed",
-        },
-      });
-    } else {
-      db.prepare(`
-        INSERT INTO tools_usage (
-          user_id, project_id, tool_id, input, output, model, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
-      `).run(
-        userId,
-        Number(demoProject.id),
-        "07",
-        JSON.stringify({ objective: projectMetadata.objective }),
-        briefingContent,
-        "demo-seed",
-      );
-    }
+    // Nota: o registro de uso da ferramenta de briefing (tools_usage) foi
+    // desabilitado porque a tabela/model correspondente não existe no schema
+    // atual (Prisma nem SQLite). O conteúdo de briefingContent permanece
+    // disponível caso essa funcionalidade seja implementada no futuro.
+    void briefingContent;
 
     res.json({
       success: true,
@@ -274,11 +255,13 @@ export const checkDemoProject: RequestHandler = async (req, res, next) => {
             status: true,
           },
         })
-      : db
+      : (db
           .prepare(
             "SELECT id, name, description, status FROM projects WHERE user_id = ? AND name = ?",
           )
-          .get(userId, "Comercial de Lançamento - Demo");
+          .get(userId, "Comercial de Lançamento - Demo") as
+          | Pick<DbProject, "id" | "name" | "description" | "status">
+          | undefined);
 
     res.json({
       success: true,

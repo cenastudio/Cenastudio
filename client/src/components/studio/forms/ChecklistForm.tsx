@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { Loader2, Copy, Trash2, ListChecks, CheckSquare, Square } from "lucide-react";
+import { Loader2, Copy, Trash2, CheckSquare, Square } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const CHECKLIST_ITEMS: Record<string, string[]> = {
   camera: [
@@ -76,6 +77,7 @@ interface ChecklistFormProps {
 }
 
 export default function ChecklistForm({ data, onChange, onSetOutput }: ChecklistFormProps) {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<string>("camera");
   const [checkedState, setCheckedState] = useState<Record<string, Record<number, boolean>>>({});
   const [aiInput, setAiInput] = useState("");
@@ -115,7 +117,7 @@ export default function ChecklistForm({ data, onChange, onSetOutput }: Checklist
     const newState = { ...checkedState, [activeTab]: tabState };
     setCheckedState(newState);
     localStorage.setItem(`cl-state-${activeTab}`, JSON.stringify(tabState));
-    toast.success(v ? "Todos os itens marcados" : "Todos os itens desmarcados");
+    toast.success(v ? t("app.studio.forms.checklist.allMarked") : t("app.studio.forms.checklist.allUnmarked"));
   };
 
   const handleResetAll = () => {
@@ -125,7 +127,7 @@ export default function ChecklistForm({ data, onChange, onSetOutput }: Checklist
       localStorage.removeItem(`cl-state-${tab}`);
     });
     setCheckedState(newState);
-    toast.success("Todos os checklists foram reiniciados!");
+    toast.success(t("app.studio.forms.checklist.allReset"));
   };
 
   const handleCopyClipboard = () => {
@@ -134,14 +136,14 @@ export default function ChecklistForm({ data, onChange, onSetOutput }: Checklist
     const tabState = checkedState[activeTab] || {};
     const text = `CHECKLIST — ${activeTab.toUpperCase()}\n\n` +
       items.map((it, i) => `[${tabState[i] ? "X" : " "}] ${it}`).join("\n");
-    
+
     navigator.clipboard.writeText(text);
-    toast.success(`Checklist de ${activeTab} copiado com sucesso!`);
+    toast.success(`Checklist ${activeTab} ${t("app.studio.forms.checklist.copied")}`);
   };
 
   const handleGenerateAIList = async () => {
     if (!aiInput.trim()) {
-      toast.error("Por favor, insira o tipo de produção");
+      toast.error(t("app.studio.forms.checklist.enterType"));
       return;
     }
     setIsGenerating(true);
@@ -153,9 +155,9 @@ export default function ChecklistForm({ data, onChange, onSetOutput }: Checklist
       if (onSetOutput) {
         onSetOutput(result.output);
       }
-      toast.success("Checklist personalizado gerado com sucesso!");
+      toast.success(t("app.studio.forms.checklist.generated"));
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro ao gerar lista");
+      toast.error(e instanceof Error ? e.message : t("app.studio.forms.checklist.generateError"));
     } finally {
       setIsGenerating(false);
     }
@@ -169,19 +171,20 @@ export default function ChecklistForm({ data, onChange, onSetOutput }: Checklist
     ? Math.round((completedCount / currentItems.length) * 100)
     : 0;
 
+  const tabLabelMap: Record<string, string> = {
+    camera: t("app.studio.forms.checklist.tabCamera"),
+    audio: t("app.studio.forms.checklist.tabAudio"),
+    luz: t("app.studio.forms.checklist.tabLight"),
+    prod: t("app.studio.forms.checklist.tabProduction"),
+    pos: t("app.studio.forms.checklist.tabPost"),
+    ia: t("app.studio.forms.checklist.tabAI"),
+  };
+
   return (
     <div className="space-y-4 font-frame-body">
       {/* Título & Tabs Internas */}
       <div className="flex bg-frame-gray-1 p-0.5 border border-frame-gray-3 overflow-x-auto select-none shrink-0 scrollbar-none">
         {["camera", "audio", "luz", "prod", "pos", "ia"].map((tab) => {
-          const tabLabelMap: Record<string, string> = {
-            camera: "📷 Câmera",
-            audio: "🎙 Áudio",
-            luz: "💡 Luz",
-            prod: "🎬 Produção",
-            pos: "💻 Pós",
-            ia: "✦ Lista IA",
-          };
           return (
             <button
               key={tab}
@@ -203,12 +206,12 @@ export default function ChecklistForm({ data, onChange, onSetOutput }: Checklist
       {activeTab === "ia" ? (
         <div className="space-y-4 pt-1">
           <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-2">
-            // Checklist Customizado por IA
+            {t("app.studio.forms.checklist.sectionAI")}
           </p>
           <div className="space-y-3">
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Tipo de Produção / Detalhes do Set
+                {t("app.studio.forms.checklist.productionType")}
               </label>
               <input
                 type="text"
@@ -230,10 +233,10 @@ export default function ChecklistForm({ data, onChange, onSetOutput }: Checklist
               {isGenerating ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Gerando lista customizada...
+                  {t("app.studio.forms.checklist.generating")}
                 </>
               ) : (
-                <>▶ Gerar Lista com IA</>
+                <>{t("app.studio.forms.checklist.generateButton")}</>
               )}
             </button>
           </div>
@@ -251,7 +254,7 @@ export default function ChecklistForm({ data, onChange, onSetOutput }: Checklist
           {/* Progress bar */}
           <div className="flex items-center justify-between gap-3 text-frame-gray-light bg-frame-gray-1 border border-frame-gray-3 px-3 py-2 shrink-0">
             <span className="font-frame-mono text-[0.63rem] uppercase tracking-wider">
-              {completedCount} / {currentItems.length} concluídos
+              {completedCount} / {currentItems.length} {t("app.studio.forms.checklist.completed")}
             </span>
             <div className="flex-1 max-w-[120px] bg-frame-gray-2 h-1.5 rounded-sm overflow-hidden">
               <div
@@ -271,14 +274,14 @@ export default function ChecklistForm({ data, onChange, onSetOutput }: Checklist
               onClick={() => handleMarkAll(true)}
               className="py-1 font-frame-mono text-[0.62rem] uppercase border border-frame-gray-3 text-frame-gray-light bg-transparent hover:border-frame-gray-muted hover:text-frame-white transition"
             >
-              Marcar todos
+              {t("app.studio.forms.checklist.markAll")}
             </button>
             <button
               type="button"
               onClick={() => handleMarkAll(false)}
               className="py-1 font-frame-mono text-[0.62rem] uppercase border border-frame-gray-3 text-frame-gray-light bg-transparent hover:border-frame-gray-muted hover:text-frame-white transition"
             >
-              Desmarcar
+              {t("app.studio.forms.checklist.unmarkAll")}
             </button>
             <button
               type="button"
@@ -286,7 +289,7 @@ export default function ChecklistForm({ data, onChange, onSetOutput }: Checklist
               className="py-1 font-frame-mono text-[0.62rem] uppercase border border-frame-gray-3 text-frame-gray-light bg-transparent hover:border-frame-gray-muted hover:text-frame-white transition flex items-center justify-center gap-1"
             >
               <Copy className="w-3 h-3" />
-              Copiar
+              {t("app.studio.forms.checklist.copy")}
             </button>
             <button
               type="button"
@@ -294,7 +297,7 @@ export default function ChecklistForm({ data, onChange, onSetOutput }: Checklist
               className="py-1 font-frame-mono text-[0.62rem] uppercase border border-frame-gray-3 text-frame-gray-light bg-transparent hover:border-frame-red/45 hover:text-frame-red transition flex items-center justify-center gap-1"
             >
               <Trash2 className="w-3 h-3" />
-              Reset Geral
+              {t("app.studio.forms.checklist.resetAll")}
             </button>
           </div>
 

@@ -2,23 +2,17 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { useClientIdFromQuery } from "@/hooks/useClientIdFromQuery";
 import {
-  ArrowDownRight,
-  ArrowRight,
   ArrowUpRight,
-  Banknote,
-  CalendarClock,
+  ArrowDownRight,
+  Building2,
   Check,
-  CircleDollarSign,
   Download,
+  Pencil,
   Plus,
-  Receipt,
   RefreshCw,
   Trash2,
-  TrendingDown,
-  TrendingUp,
-  Users,
-  WalletCards,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -103,27 +97,36 @@ const initialEntry: EntryForm = {
 };
 
 const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    maximumFractionDigits: 2,
-  }).format(Number(value) || 0);
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 2 }).format(Number(value) || 0);
 
-const formatDate = (value: string | null, noDateLabel: string) => {
-  if (!value) return noDateLabel;
-  return new Date(`${value.slice(0, 10)}T12:00:00`).toLocaleDateString("pt-BR");
+const formatDate = (value: string | null, localeStr = "pt-BR") => {
+  if (!value) return localeStr === "en-US" ? "No date" : "Sem data";
+  return new Date(`${value.slice(0, 10)}T12:00:00`).toLocaleDateString(localeStr);
 };
 
-const monthLabel = (value: string) => {
+const monthLabel = (value: string, localeStr = "pt-BR") => {
   const [year, month] = value.split("-").map(Number);
   if (!year || !month) return value;
-  return new Intl.DateTimeFormat("pt-BR", { month: "short", year: "2-digit" })
-    .format(new Date(year, month - 1, 1))
-    .replace(".", "");
+  return new Intl.DateTimeFormat(localeStr, { month: "short", year: "2-digit" }).format(new Date(year, month - 1, 1)).replace(".", "");
 };
 
+
+function ClientLink({ clientId, clientName }: { clientId: number | null; clientName?: string | null }) {
+  const [, setLocation] = useLocation();
+  if (!clientId || !clientName) return null;
+  return (
+    <button
+      onClick={(e) => { e.stopPropagation(); setLocation(`/clients/${clientId}`); }}
+      className="flex items-center gap-1 text-xs text-frame-orange hover:underline"
+    >
+      <Building2 className="w-3 h-3" />
+      {clientName}
+    </button>
+  );
+}
+
 function AnalyticsContent() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const [, setLocation] = useLocation();
   const [overall, setOverall] = useState<OverallAnalytics | null>(null);
   const [finance, setFinance] = useState<FinanceOverview | null>(null);
@@ -133,8 +136,13 @@ function AnalyticsContent() {
   const [refreshing, setRefreshing] = useState(false);
   const [showEntryForm, setShowEntryForm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<FinancialEntry | null>(null);
+  const [sortField, setSortField] = useState<"date" | "amount" | "status">("date");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [contextProject, setContextProject] = useState<Project | null>(null);
   const projectIdParam = Number(new URLSearchParams(window.location.search).get("projectId") || 0);
+  const clientIdParam = useClientIdFromQuery();
+  const newEntryParam = new URLSearchParams(window.location.search).get("newEntry");
 
   const loadAnalytics = useCallback(async () => {
     try {
@@ -144,44 +152,45 @@ function AnalyticsContent() {
         fetch("/api/analytics/finance", { credentials: "include" }),
         fetch("/api/clients", { credentials: "include" }),
       ]);
-
       const [overallData, financeData, clientsData] = await Promise.all([
-        overallRes.json(),
-        financeRes.json(),
-        clientsRes.json(),
+        overallRes.json(), financeRes.json(), clientsRes.json(),
       ]);
-
       if (overallData.success) setOverall(overallData.data);
       if (financeData.success) setFinance(financeData.data);
       if (clientsData.success) setClients(Array.isArray(clientsData.data) ? clientsData.data : []);
-      if (!financeData.success) throw new Error(financeData.error || "Erro ao carregar financeiro");
     } catch (error) {
       console.error(error);
-      toast.error(t("app.errors.loadFinance"));
+      toast.error(t("app.finance.toastLoadError"));
     } finally {
       setIsLoading(false);
       setRefreshing(false);
     }
   }, []);
 
-  useEffect(() => {
-    loadAnalytics();
-  }, [loadAnalytics]);
+  useEffect(() => { loadAnalytics(); }, [loadAnalytics]);
 
   useEffect(() => {
     if (!projectIdParam) return;
     api.projects.get(projectIdParam).then(setContextProject).catch(() => setContextProject(null));
   }, [projectIdParam]);
 
+  useEffect(() => {
+    if (clientIdParam === null) return;
+    setEntry((c) => ({ ...c, clientId: String(clientIdParam) }));
+    if (newEntryParam === "1") {
+      setShowEntryForm(true);
+    }
+  }, [clientIdParam, newEntryParam]);
+
   const openProjectEntry = () => {
     if (contextProject) {
       let metadata: { commercialValue?: number } = {};
       try { metadata = JSON.parse(contextProject.metadataJson || "{}"); } catch { metadata = {}; }
-      setEntry((current) => ({
-        ...current,
+      setEntry((c) => ({
+        ...c,
         description: `Resultado do projeto: ${contextProject.name}`,
-        amount: metadata.commercialValue ? String(metadata.commercialValue) : current.amount,
-        clientId: contextProject.clientId ? String(contextProject.clientId) : current.clientId,
+        amount: metadata.commercialValue ? String(metadata.commercialValue) : c.amount,
+        clientId: contextProject.clientId ? String(contextProject.clientId) : c.clientId,
       }));
     }
     setShowEntryForm(true);
@@ -189,731 +198,687 @@ function AnalyticsContent() {
 
   useEffect(() => {
     if (!showEntryForm) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setShowEntryForm(false);
-    };
-
-    const previousOverflow = document.body.style.overflow;
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setShowEntryForm(false); setEditingEntry(null); } };
+    const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    window.addEventListener("keydown", handleKey);
+    return () => { document.body.style.overflow = prev; window.removeEventListener("keydown", handleKey); };
   }, [showEntryForm]);
 
   const maxCashflow = useMemo(() => {
     if (!finance?.monthlyCashflow.length) return 1;
-    return Math.max(
-      1,
-      ...finance.monthlyCashflow.flatMap((item) => [item.income, item.expenses]),
-    );
+    return Math.max(1, ...finance.monthlyCashflow.flatMap((i) => [i.income, i.expenses]));
   }, [finance]);
+
+  const sortedEntries = useMemo(() => {
+    if (!finance?.recentEntries) return [];
+    return [...finance.recentEntries].sort((a, b) => {
+      const dir = sortDir === "asc" ? 1 : -1;
+      if (sortField === "amount") return (a.amount - b.amount) * dir;
+      if (sortField === "status") return a.status.localeCompare(b.status) * dir;
+      // date (default)
+      const dateA = new Date(a.due_date || a.created_at).getTime();
+      const dateB = new Date(b.due_date || b.created_at).getTime();
+      return (dateA - dateB) * dir;
+    });
+  }, [finance?.recentEntries, sortField, sortDir]);
+
+  const toggleSort = (field: typeof sortField) => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("desc"); }
+  };
+
+  const startEditEntry = (item: FinancialEntry) => {
+    setEntry({
+      kind: item.kind,
+      description: item.description,
+      category: item.category,
+      amount: String(item.amount),
+      status: item.status === "settled" ? "settled" : "pending",
+      dueDate: item.due_date?.slice(0, 10) || "",
+      recurrence: item.recurrence,
+      clientId: item.client_id ? String(item.client_id) : "",
+      isFixed: Boolean(item.is_fixed),
+    });
+    setEditingEntry(item);
+    setShowEntryForm(true);
+  };
 
   const submitEntry = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!entry.description.trim() || !Number(entry.amount)) {
-      toast.error(t("app.errors.fillDescriptionAndAmount"));
+      toast.error(t("app.finance.toastFillRequired"));
       return;
     }
-
     setIsSaving(true);
     try {
-      const response = await fetch("/api/analytics/finance/entries", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...entry,
-          amount: Number(entry.amount),
-          clientId: entry.clientId ? Number(entry.clientId) : null,
-          paidAt: entry.status === "settled" ? new Date().toISOString().slice(0, 10) : null,
-        }),
-      });
-      const result = await response.json();
-      if (!result.success) throw new Error(result.error || t("app.errors.saveEntry"));
-      setEntry(initialEntry);
-      setShowEntryForm(false);
-      toast.success(t("app.analytics.entryRegistered"));
+      const payload = {
+        ...entry, amount: Number(entry.amount),
+        clientId: entry.clientId ? Number(entry.clientId) : null,
+        paidAt: entry.status === "settled" ? new Date().toISOString().slice(0, 10) : null,
+      };
+
+      if (editingEntry) {
+        const res = await fetch(`/api/analytics/finance/entries/${editingEntry.id}`, {
+          method: "PATCH", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || t("app.finance.toastSaveError"));
+        setEditingEntry(null);
+        setEntry(initialEntry);
+        setShowEntryForm(false);
+        toast.success(t("app.finance.toastUpdated"));
+      } else {
+        const res = await fetch("/api/analytics/finance/entries", {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || t("app.finance.toastSaveError"));
+        setEntry(initialEntry);
+        setShowEntryForm(false);
+        toast.success(t("app.finance.toastRegistered"));
+      }
       await loadAnalytics();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("app.errors.saveEntry"));
-    } finally {
-      setIsSaving(false);
-    }
+      toast.error(error instanceof Error ? error.message : t("app.finance.toastSaveError"));
+    } finally { setIsSaving(false); }
   };
 
   const settleEntry = async (id: number) => {
     try {
-      const response = await fetch(`/api/analytics/finance/entries/${id}`, {
-        method: "PATCH",
-        credentials: "include",
+      const res = await fetch(`/api/analytics/finance/entries/${id}`, {
+        method: "PATCH", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "settled" }),
       });
-      const result = await response.json();
-      if (!result.success) throw new Error(result.error || t("app.errors.updateEntry"));
-      toast.success(t("app.analytics.paymentConfirmed"));
+      const result = await res.json();
+      if (!result.success) throw new Error(result.error || t("app.finance.toastError"));
+      toast.success(t("app.finance.toastPaymentConfirmed"));
       await loadAnalytics();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("app.errors.updateEntry"));
+      toast.error(error instanceof Error ? error.message : t("app.finance.toastError"));
     }
   };
 
   const deleteEntry = async (id: number) => {
-    if (!window.confirm(t("app.analytics.confirmDeleteEntry"))) return;
+    if (!window.confirm(t("app.finance.toastDeleteConfirm"))) return;
     try {
-      const response = await fetch(`/api/analytics/finance/entries/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      const result = await response.json();
-      if (!result.success) throw new Error(result.error || t("app.errors.deleteEntry"));
-      toast.success(t("app.analytics.entryDeleted"));
+      const res = await fetch(`/api/analytics/finance/entries/${id}`, { method: "DELETE", credentials: "include" });
+      const result = await res.json();
+      if (!result.success) throw new Error(result.error || t("app.finance.toastError"));
+      toast.success(t("app.finance.toastDeleted"));
       await loadAnalytics();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("app.errors.deleteEntry"));
+      toast.error(error instanceof Error ? error.message : t("app.finance.toastError"));
     }
   };
 
-  const exportPipeline = () => {
-    window.open("/api/export-pipeline?format=csv", "_blank");
-  };
-
   const summary = finance?.summary;
-  const erpLanes = summary
-    ? [
-        {
-          label: "Contas a receber",
-          value: formatCurrency(summary.toReceive),
-          detail: `${formatCurrency(summary.overdueReceivables)} vencido`,
-        },
-        {
-          label: "Contas a pagar",
-          value: formatCurrency(summary.toPay),
-          detail: `${formatCurrency(summary.fixedMonthly)} fixo mensal`,
-        },
-        {
-          label: "Receita recorrente",
-          value: formatCurrency(summary.recurringRevenue),
-          detail: `${summary.recurringClients} cliente(s) recorrente(s)`,
-        },
-        {
-          label: "Previsão de novos jobs",
-          value: formatCurrency(summary.weightedPipeline),
-          detail: `${formatCurrency(summary.openPipeline)} em conversas abertas`,
-        },
-      ]
-    : [];
+
+  if (isLoading || !summary) {
+    return (
+      <div className="min-h-screen bg-frame-black text-frame-white">
+        <AppNavBar />
+        <div className="flex items-center justify-center py-32">
+          <RefreshCw className="h-7 w-7 animate-spin text-frame-orange" />
+        </div>
+      </div>
+    );
+  }
+
+  const profit = summary.receivedMonth - summary.expensesMonth;
+  const margin = summary.receivedMonth > 0 ? Math.round((profit / summary.receivedMonth) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-frame-black text-frame-white font-frame-body">
+    <div className="min-h-screen bg-frame-black text-frame-white">
       <AppNavBar />
 
-      <main id="main-content" className="mx-auto w-full max-w-[1500px] space-y-6 px-4 py-6 sm:px-6 sm:py-9">
-        <header className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-          <div>
-            <p className="frame-label mb-2">// {t("app.analytics.eyebrow")}</p>
-            <h1 className="frame-title text-[clamp(2.3rem,4.4vw,4.2rem)]">{t("app.analytics.financeTitle")}</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-frame-gray-light">
-              {t("app.analytics.financeDescription")}
-            </p>
-          </div>
+      <main id="main-content" className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-9">
 
+        {/* ═══ HEADER ═══ */}
+        <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between border-b border-frame-gray-3 pb-6">
+          <div>
+            <p className="frame-label mb-2">{t("app.finance.eyebrow")}</p>
+            <h1 className="frame-title text-[clamp(1.8rem,3.5vw,2.8rem)]">
+              {t("app.finance.title")}
+            </h1>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-frame-gray-light">
+              {t("app.finance.subtitle")}
+            </p>
+            {/* Workflow steps */}
+            <div className="flex gap-2 mt-4">
+              <div className="border border-frame-orange/30 bg-frame-orange/[0.06] px-3 py-2 text-center min-w-[90px]">
+                <span className="block font-frame-mono text-[0.5rem] text-frame-orange">01</span>
+                <span className="block text-[0.6rem] font-medium text-frame-white mt-0.5">{t("app.finance.step1")}</span>
+              </div>
+              <div className="border border-frame-gray-3/40 px-3 py-2 text-center min-w-[90px]">
+                <span className="block font-frame-mono text-[0.5rem] text-frame-gray-light">02</span>
+                <span className="block text-[0.6rem] font-medium text-frame-gray-light mt-0.5">{t("app.finance.step2")}</span>
+              </div>
+              <div className="border border-frame-gray-3/40 px-3 py-2 text-center min-w-[90px]">
+                <span className="block font-frame-mono text-[0.5rem] text-frame-gray-light">03</span>
+                <span className="block text-[0.6rem] font-medium text-frame-gray-light mt-0.5">{t("app.finance.step3")}</span>
+              </div>
+            </div>
+          </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button type="button" onClick={() => setLocation("/pipeline")} className="frame-btn-ghost inline-flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Pipeline
+            <button type="button" onClick={() => window.open("/api/export-pipeline?format=csv", "_blank")} className="frame-btn-ghost inline-flex items-center gap-2">
+              <Download className="h-4 w-4" /> {t("app.finance.export")}
             </button>
-            <button type="button" onClick={exportPipeline} className="frame-btn-ghost inline-flex items-center gap-2">
-              <Download className="h-4 w-4" />
-              CSV
+            <button type="button" onClick={loadAnalytics} disabled={refreshing} className="frame-btn-ghost inline-flex items-center gap-2">
+              <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} /> {t("app.finance.refresh")}
             </button>
-            <button
-              type="button"
-              onClick={loadAnalytics}
-              disabled={refreshing}
-              className="frame-btn-ghost inline-flex items-center gap-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-              {t("app.common.refresh")}
-            </button>
-            <button
-              type="button"
-              onClick={openProjectEntry}
-              className="frame-btn-primary inline-flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              {t("app.analytics.newEntry")}
+            <button type="button" onClick={openProjectEntry} className="frame-btn-primary inline-flex items-center gap-2">
+              <Plus className="h-4 w-4" /> {t("app.finance.newEntry")}
             </button>
           </div>
         </header>
 
+        {/* ═══ CONTEXT: Job being closed ═══ */}
         {contextProject && (
-          <section className="flex flex-col gap-4 border border-frame-orange/40 bg-frame-orange/[0.06] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <section className="border border-frame-orange/40 bg-frame-orange/[0.05] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <p className="frame-label text-frame-orange">// Fechamento do job</p>
-              <h2 className="mt-1 text-lg font-semibold">{contextProject.name}</h2>
-              <p className="mt-1 text-xs text-frame-gray-light">Registre receita e custos vinculados ao cliente antes de concluir a história.</p>
+              <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.14em] text-frame-orange">{t("app.finance.jobClose")}</p>
+              <h2 className="mt-1 text-base font-semibold">{contextProject.name}</h2>
+              <p className="text-xs text-frame-gray-light mt-1">{t("app.finance.jobCloseDesc")}</p>
             </div>
-            <button type="button" onClick={() => setLocation(`/project/${contextProject.id}/journey/closing`)} className="frame-btn-ghost shrink-0">Voltar ao fechamento</button>
+            <button type="button" onClick={() => setLocation(`/project/${contextProject.id}`)} className="frame-btn-ghost shrink-0 text-xs">
+              {t("app.finance.backToJob")}
+            </button>
           </section>
         )}
 
-        {showEntryForm && (
-          <div className="fixed inset-0 z-50 overflow-y-auto">
-            <button
-              type="button"
-              aria-label={t("app.common.close")}
-              className="fixed inset-0 bg-black/75 backdrop-blur-sm"
-              onClick={() => setShowEntryForm(false)}
-            />
-
-            <div className="relative mx-auto flex min-h-full w-full max-w-5xl items-center px-4 py-6 sm:py-10">
-              <form
-                onSubmit={submitEntry}
-                className="relative w-full overflow-hidden border border-frame-gray-3 bg-[rgba(12,8,7,0.97)] p-5 shadow-[0_26px_120px_rgba(0,0,0,0.68)] sm:p-7"
-              >
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,78,0,0.18),transparent_38%)]" aria-hidden="true" />
-
-                <div className="relative space-y-6">
-                  <div className="flex flex-col gap-4 border-b border-frame-gray-3 pb-5 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <p className="frame-label">// {t("app.analytics.registerMovement")}</p>
-                      <h2 className="frame-title mt-2 text-[clamp(2rem,4vw,3.8rem)] leading-none">{t("app.analytics.newEntry")}</h2>
-                      <p className="mt-3 max-w-2xl text-sm leading-relaxed text-frame-gray-light">
-                        {t("app.analytics.newEntryDescription")}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowEntryForm(false)}
-                      className="frame-btn-ghost inline-flex items-center justify-center gap-2 self-start"
-                    >
-                      <X className="h-4 w-4" />
-                      {t("app.common.close")}
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <label className="space-y-2 md:col-span-2">
-                      <span className="frame-label text-frame-gray-light">{t("app.analytics.movementType")}</span>
-                      <div className="grid grid-cols-2 border border-frame-gray-3 bg-frame-gray-1/50">
-                        {(["income", "expense"] as const).map((kind) => (
-                          <button
-                            key={kind}
-                            type="button"
-                            onClick={() => setEntry((current) => ({ ...current, kind }))}
-                            className={`min-h-12 px-3 text-xs font-semibold transition ${
-                              entry.kind === kind
-                                ? kind === "income"
-                                  ? "bg-green-500/14 text-green-400"
-                                  : "bg-red-500/14 text-red-400"
-                                : "text-frame-gray-light hover:text-frame-white"
-                            }`}
-                          >
-                            {kind === "income" ? t("app.analytics.income") : t("app.analytics.expense")}
-                          </button>
-                        ))}
-                      </div>
-                    </label>
-
-                    <label className="space-y-2">
-                      <span className="frame-label text-frame-gray-light">{t("app.common.description")}</span>
-                      <input
-                        className="frame-input w-full"
-                        value={entry.description}
-                        onChange={(event) => setEntry((current) => ({ ...current, description: event.target.value }))}
-                        placeholder={t("app.analytics.descriptionPlaceholder")}
-                      />
-                    </label>
-
-                    <label className="space-y-2">
-                      <span className="frame-label text-frame-gray-light">{t("app.common.value")}</span>
-                      <input
-                        className="frame-input w-full"
-                        type="number"
-                        min="1"
-                        step="0.01"
-                        value={entry.amount}
-                        onChange={(event) => setEntry((current) => ({ ...current, amount: event.target.value }))}
-                        placeholder={t("app.analytics.amountPlaceholder")}
-                      />
-                    </label>
-
-                    <label className="space-y-2">
-                      <span className="frame-label text-frame-gray-light">{t("app.analytics.category")}</span>
-                      <select
-                        className="frame-input w-full"
-                        value={entry.category}
-                        onChange={(event) => setEntry((current) => ({ ...current, category: event.target.value }))}
-                      >
-                        <option value="projeto">{t("app.analytics.categoryProject")}</option>
-                        <option value="mensalidade">{t("app.analytics.categorySubscription")}</option>
-                        <option value="equipe">{t("app.analytics.categoryCrew")}</option>
-                        <option value="equipamento">{t("app.analytics.categoryEquipment")}</option>
-                        <option value="software">{t("app.analytics.categorySoftware")}</option>
-                        <option value="impostos">{t("app.analytics.categoryTaxes")}</option>
-                        <option value="estrutura">{t("app.analytics.categoryStructure")}</option>
-                        <option value="outros">{t("app.analytics.categoryOther")}</option>
-                      </select>
-                    </label>
-
-                    <label className="space-y-2">
-                      <span className="frame-label text-frame-gray-light">{t("app.analytics.client")}</span>
-                      <select
-                        className="frame-input w-full"
-                        value={entry.clientId}
-                        onChange={(event) => setEntry((current) => ({ ...current, clientId: event.target.value }))}
-                      >
-                        <option value="">{t("app.analytics.noClientLinked")}</option>
-                        {clients.map((client) => (
-                          <option key={client.id} value={client.id}>
-                            {client.name}{client.company ? ` · ${client.company}` : ""}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-
-                    <label className="space-y-2">
-                      <span className="frame-label text-frame-gray-light">{t("app.analytics.dueDate")}</span>
-                      <input
-                        className="frame-input w-full"
-                        type="date"
-                        value={entry.dueDate}
-                        onChange={(event) => setEntry((current) => ({ ...current, dueDate: event.target.value }))}
-                      />
-                    </label>
-
-                    <label className="space-y-2">
-                      <span className="frame-label text-frame-gray-light">{t("app.analytics.status")}</span>
-                      <select
-                        className="frame-input w-full"
-                        value={entry.status}
-                        onChange={(event) => setEntry((current) => ({ ...current, status: event.target.value as EntryForm["status"] }))}
-                      >
-                        <option value="pending">{t("app.common.pending")}</option>
-                        <option value="settled">{entry.kind === "income" ? t("app.analytics.received") : t("app.analytics.paid")}</option>
-                      </select>
-                    </label>
-
-                    <label className="space-y-2">
-                      <span className="frame-label text-frame-gray-light">{t("app.analytics.recurrence")}</span>
-                      <select
-                        className="frame-input w-full"
-                        value={entry.recurrence}
-                        onChange={(event) => setEntry((current) => ({ ...current, recurrence: event.target.value as EntryForm["recurrence"] }))}
-                      >
-                        <option value="once">{t("app.analytics.once")}</option>
-                        <option value="monthly">{t("app.analytics.monthly")}</option>
-                      </select>
-                    </label>
-
-                    <label className="flex min-h-12 items-center gap-3 border border-frame-gray-3 bg-frame-gray-1/50 px-4 text-sm text-frame-gray-light">
-                      <input
-                        type="checkbox"
-                        checked={entry.isFixed}
-                        onChange={(event) => setEntry((current) => ({ ...current, isFixed: event.target.checked }))}
-                      />
-                      {t("app.analytics.fixedValue")}
-                    </label>
-                  </div>
-
-                  <div className="flex flex-col gap-3 border-t border-frame-gray-3 pt-5 sm:flex-row sm:items-center sm:justify-end">
-                    <button type="button" onClick={() => setShowEntryForm(false)} className="frame-btn-ghost">
-                      {t("app.common.cancel")}
-                    </button>
-                    <button type="submit" disabled={isSaving} className="frame-btn-primary">
-                      {isSaving ? t("app.common.saving") : t("app.analytics.saveEntry")}
-                    </button>
-                  </div>
-                </div>
-              </form>
+        {/* ═══ RESULTADO DO MÊS (4 cards principais) ═══ */}
+        <section>
+          <p className="font-frame-mono text-[0.6rem] uppercase tracking-[0.14em] text-frame-gray-light mb-3">
+            {t("app.finance.monthResult")}
+          </p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <ArrowUpRight className="w-4 h-4 text-green-400" />
+                <span className="font-frame-mono text-[0.55rem] uppercase tracking-wider text-frame-gray-light">{t("app.finance.received")}</span>
+              </div>
+              <strong className="text-xl text-frame-white">{formatCurrency(summary.receivedMonth)}</strong>
+            </div>
+            <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <ArrowDownRight className="w-4 h-4 text-red-400" />
+                <span className="font-frame-mono text-[0.55rem] uppercase tracking-wider text-frame-gray-light">{t("app.finance.expenses")}</span>
+              </div>
+              <strong className="text-xl text-frame-white">{formatCurrency(summary.expensesMonth)}</strong>
+            </div>
+            <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className={`w-2 h-2 rounded-full ${profit >= 0 ? "bg-green-400" : "bg-red-400"}`} />
+                <span className="font-frame-mono text-[0.55rem] uppercase tracking-wider text-frame-gray-light">{t("app.finance.profit")}</span>
+              </div>
+              <strong className={`text-xl ${profit >= 0 ? "text-green-400" : "text-red-400"}`}>{formatCurrency(profit)}</strong>
+              <span className="block text-[0.6rem] text-frame-gray-light mt-1">{t("app.finance.margin")} {margin}%</span>
+            </div>
+            <div className="border border-frame-orange/30 bg-frame-orange/[0.05] p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-2 h-2 rounded-full bg-frame-orange" />
+                <span className="font-frame-mono text-[0.55rem] uppercase tracking-wider text-frame-gray-light">{t("app.finance.toReceive")}</span>
+              </div>
+              <strong className="text-xl text-frame-orange">{formatCurrency(summary.toReceive)}</strong>
+              {summary.overdueReceivables > 0 && (
+                <span className="block text-[0.6rem] text-red-400 mt-1">{formatCurrency(summary.overdueReceivables)} {t("app.finance.overdue")}</span>
+              )}
             </div>
           </div>
-        )}
+        </section>
 
-        {isLoading || !summary ? (
-          <div className="flex min-h-64 items-center justify-center">
-            <RefreshCw className="h-7 w-7 animate-spin text-frame-orange" />
-          </div>
+        {/* ═══ VISÃO OPERACIONAL (a receber / a pagar / recorrente / previsão) ═══ */}
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            { label: t("app.finance.accountsReceivable"), value: formatCurrency(summary.toReceive), detail: `${formatCurrency(summary.overdueReceivables)} ${t("app.finance.overdue")}` },
+            { label: t("app.finance.accountsPayable"), value: formatCurrency(summary.toPay), detail: `${formatCurrency(summary.fixedMonthly)} ${t("app.finance.fixedMonthly")}` },
+            { label: t("app.finance.recurringRevenue"), value: formatCurrency(summary.recurringRevenue), detail: `${summary.recurringClients} ${t("app.finance.clientCount")}` },
+            { label: t("app.finance.forecast"), value: formatCurrency(summary.weightedPipeline), detail: `${formatCurrency(summary.openPipeline)} ${t("app.finance.inNegotiation")}` },
+          ].map((item) => (
+            <div key={item.label} className="border border-frame-gray-3/60 p-4">
+              <span className="font-frame-mono text-[0.55rem] uppercase tracking-[0.12em] text-frame-gray-light">{item.label}</span>
+              <strong className="block text-lg text-frame-white mt-1.5">{item.value}</strong>
+              <span className="block text-[0.6rem] text-frame-gray-light mt-1">{item.detail}</span>
+            </div>
+          ))}
+        </section>
+
+        {/* ═══ CONDITIONAL: Empty Onboarding vs Data View ═══ */}
+        {!finance.recentEntries.length && !finance.monthlyCashflow.some(m => m.income > 0 || m.expenses > 0) ? (
+          /* ═══ UNIFIED EMPTY STATE ═══ */
+          <section className="border border-frame-orange/20 bg-gradient-to-b from-frame-orange/[0.04] to-transparent p-8 sm:p-12 text-center space-y-8">
+            <div>
+              <div className="w-16 h-16 mx-auto flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-full mb-5">
+                <ArrowUpRight className="w-8 h-8 text-frame-orange" />
+              </div>
+              <h2 className="text-2xl font-bold text-frame-white">{t("app.finance.onboardTitle")}</h2>
+              <p className="text-sm text-frame-gray-light mt-2 max-w-md mx-auto leading-relaxed">{t("app.finance.onboardDesc")}</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xl mx-auto">
+              <div className="border border-frame-orange/25 bg-frame-orange/[0.06] p-4 relative">
+                <div className="absolute -top-2.5 left-3 px-2 py-0.5 bg-frame-orange text-frame-black text-[0.55rem] font-bold uppercase tracking-wider">01</div>
+                <p className="text-sm font-semibold text-frame-white mt-2">{t("app.finance.onboardStep1")}</p>
+                <p className="text-[0.65rem] text-frame-gray-light mt-1">{t("app.finance.onboardStep1Desc")}</p>
+              </div>
+              <div className="border border-frame-gray-3/50 p-4 relative">
+                <div className="absolute -top-2.5 left-3 px-2 py-0.5 bg-frame-gray-3 text-frame-gray-light text-[0.55rem] font-bold uppercase tracking-wider">02</div>
+                <p className="text-sm font-semibold text-frame-white mt-2">{t("app.finance.onboardStep2")}</p>
+                <p className="text-[0.65rem] text-frame-gray-light mt-1">{t("app.finance.onboardStep2Desc")}</p>
+              </div>
+              <div className="border border-frame-gray-3/50 p-4 relative">
+                <div className="absolute -top-2.5 left-3 px-2 py-0.5 bg-frame-gray-3 text-frame-gray-light text-[0.55rem] font-bold uppercase tracking-wider">03</div>
+                <p className="text-sm font-semibold text-frame-white mt-2">{t("app.finance.onboardStep3")}</p>
+                <p className="text-[0.65rem] text-frame-gray-light mt-1">{t("app.finance.onboardStep3Desc")}</p>
+              </div>
+            </div>
+            <div className="border-t border-frame-gray-3/40 pt-6 max-w-lg mx-auto">
+              <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-orange mb-3">{t("app.finance.onboardExamples")}</p>
+              <div className="space-y-1.5 text-left">
+                <p className="text-[0.7rem] text-frame-gray-light flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" />{t("app.finance.onboardEx1")}</p>
+                <p className="text-[0.7rem] text-frame-gray-light flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />{t("app.finance.onboardEx2")}</p>
+                <p className="text-[0.7rem] text-frame-gray-light flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />{t("app.finance.onboardEx3")}</p>
+              </div>
+            </div>
+            <button type="button" onClick={() => setShowEntryForm(true)} className="frame-btn-primary inline-flex items-center gap-2 !py-3 !px-6">
+              <Plus className="w-4 h-4" /> {t("app.finance.onboardCta")}
+            </button>
+          </section>
         ) : (
           <>
-            <section className="grid grid-cols-1 gap-3 lg:grid-cols-[0.9fr_1.1fr]">
-              <div className="app-panel p-5 sm:p-6">
-                <p className="frame-label">// FINANCEIRO DO ESTÚDIO</p>
-                <h2 className="mt-2 text-2xl font-semibold">Dinheiro conectado ao cliente e ao job</h2>
-                <p className="mt-3 text-sm leading-relaxed text-frame-gray-light">
-                  Quando a proposta fecha, ela não pode sumir numa planilha. Aqui você enxerga o que entrou, o que falta receber, o que custa manter a operação e a margem de cada movimento.
-                </p>
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {["Cliente", "Proposta", "Receita", "Custo", "Margem"].map((step, index) => (
-                    <span key={step} className="inline-flex min-h-9 items-center gap-2 border border-frame-gray-3 px-3 font-frame-mono text-[0.58rem] uppercase tracking-[0.12em] text-frame-gray-light">
-                      <span className="text-frame-orange">{index + 1}</span>
-                      {step}
-                    </span>
-                  ))}
-                </div>
+        {/* ═══ TWO COLUMNS: Cashflow + Pendentes ═══ */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_0.6fr] gap-5">
+
+          {/* Cashflow */}
+          <section className="border border-frame-gray-3 p-5">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <p className="font-frame-mono text-[0.6rem] uppercase tracking-[0.12em] text-frame-gray-light">{t("app.finance.cashflow")}</p>
+                <h3 className="text-base font-semibold mt-1">{t("app.finance.cashflowSub")}</h3>
               </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {erpLanes.map((lane) => (
-                  <div key={lane.label} className="border border-frame-gray-3 bg-frame-gray-1/20 p-4">
-                    <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.14em] text-frame-gray-light">{lane.label}</p>
-                    <strong className="mt-2 block text-xl text-frame-white">{lane.value}</strong>
-                    <span className="mt-1 block text-xs text-frame-gray-light">{lane.detail}</span>
-                  </div>
-                ))}
+              <div className="flex items-center gap-4 text-[0.6rem] font-frame-mono">
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-green-500/80" /> {t("app.finance.toggleIncome")}</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-red-500/60" /> {t("app.finance.toggleExpense")}</span>
               </div>
-            </section>
-
-            <section className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
-              <MetricCard label={t("app.analytics.receivedMonth")} value={formatCurrency(summary.receivedMonth)} icon={ArrowUpRight} tone="positive" />
-              <MetricCard label={t("app.analytics.expensesMonth")} value={formatCurrency(summary.expensesMonth)} icon={ArrowDownRight} tone="negative" />
-              <MetricCard label={t("app.analytics.profitMonth")} value={formatCurrency(summary.profitMonth)} icon={CircleDollarSign} tone={summary.profitMonth >= 0 ? "positive" : "negative"} />
-              <MetricCard label={t("app.analytics.toReceive")} value={formatCurrency(summary.toReceive)} icon={CalendarClock} tone="warning" />
-              <MetricCard label={t("app.analytics.recurringRevenue")} value={formatCurrency(summary.recurringRevenue)} icon={RefreshCw} tone="accent" />
-              <MetricCard label={t("app.analytics.registeredClients")} value={String(overall?.clients.total ?? 0)} icon={Users} tone="accent" />
-              <MetricCard label={t("app.analytics.crmWallet")} value={formatCurrency(overall?.clients.totalValue ?? 0)} icon={WalletCards} tone="positive" />
-              <MetricCard label={t("app.analytics.lossesMonth")} value={formatCurrency(summary.lossesMonth)} icon={TrendingDown} tone="negative" />
-            </section>
-
-            <section className="grid grid-cols-1 gap-4 xl:grid-cols-[1.35fr_0.65fr]">
-              <div className="app-panel p-5 sm:p-6">
-                <div className="mb-6 flex items-start justify-between gap-4">
-                  <div>
-                    <p className="frame-label">// {t("app.analytics.cashflow")}</p>
-                    <h2 className="mt-1 text-xl font-semibold">{t("app.analytics.cashflowByMonth")}</h2>
-                  </div>
-                  <span className="font-frame-mono text-[0.58rem] uppercase tracking-[0.12em] text-frame-gray-light">
-                    {t("app.analytics.lastSixMonths")}
-                  </span>
-                </div>
-
-                {finance.monthlyCashflow.length ? (
-                  <div className="grid min-h-64 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {finance.monthlyCashflow.map((item) => (
-                      <div key={item.month} className="flex min-h-52 flex-col justify-end border border-frame-gray-3 p-4">
-                        <div className="flex h-32 items-end gap-2">
-                          <div
-                            className="flex-1 bg-green-500/75"
-                            style={{ height: `${Math.max(4, (item.income / maxCashflow) * 100)}%` }}
-                            title={`${t("app.analytics.inflows")}: ${formatCurrency(item.income)}`}
-                          />
-                          <div
-                            className="flex-1 bg-red-500/65"
-                            style={{ height: `${Math.max(4, (item.expenses / maxCashflow) * 100)}%` }}
-                            title={`${t("app.analytics.outflows")}: ${formatCurrency(item.expenses)}`}
-                          />
-                        </div>
-                        <div className="mt-3 border-t border-frame-gray-3 pt-3">
-                          <p className="font-frame-mono text-[0.62rem] uppercase text-frame-gray-light">{monthLabel(item.month)}</p>
-                          <p className="mt-1 text-sm font-semibold">{formatCurrency(item.income - item.expenses)}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <FinanceEmpty
-                    title={t("app.analytics.flowStartsFirstEntry")}
-                    description={t("app.analytics.flowStartHint")}
-                    onClick={() => setShowEntryForm(true)}
-                  />
-                )}
-              </div>
-
-              <div className="app-panel flex flex-col p-5 sm:p-6">
-                <div className="mb-5 flex items-start justify-between gap-4">
-                  <div>
-                    <p className="frame-label">// {t("app.analytics.openAccounts")}</p>
-                    <h2 className="mt-1 text-xl font-semibold">{t("app.analytics.upcomingMovements")}</h2>
-                  </div>
-                  <span className="font-frame-mono text-[0.58rem] text-frame-orange">
-                    {finance.pendingEntries.length}
-                  </span>
-                </div>
-
-                <div className="space-y-2">
-                  {finance.pendingEntries.length ? finance.pendingEntries.map((item) => (
-                    <div key={item.id} className="border border-frame-gray-3 p-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold">{item.description}</p>
-                          <p className="mt-1 text-xs text-frame-gray-light">
-                            {item.client_name || item.category} · {formatDate(item.due_date, t("app.analytics.noDueDate"))}
-                          </p>
-                        </div>
-                        <p className={item.kind === "income" ? "text-green-500" : "text-red-500"}>
-                          {item.kind === "income" ? "+" : "-"} {formatCurrency(item.amount)}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => settleEntry(item.id)}
-                        className="mt-3 inline-flex min-h-8 items-center gap-1.5 border border-frame-gray-3 px-2.5 font-frame-mono text-[0.56rem] uppercase tracking-[0.1em] text-frame-gray-light transition hover:border-frame-orange hover:text-frame-orange"
-                      >
-                        <Check className="h-3 w-3" />
-                        {item.kind === "income" ? t("app.analytics.confirmReceipt") : t("app.analytics.confirmPayment")}
-                      </button>
-                    </div>
-                  )) : (
-                    <p className="border border-dashed border-frame-gray-3 p-5 text-sm text-frame-gray-light">
-                      {t("app.analytics.noPendingAccounts")}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </section>
-
-            <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <InsightCard
-                icon={WalletCards}
-                label={t("app.analytics.monthlyPredictability")}
-                value={formatCurrency(summary.recurringRevenue)}
-                detail={`${summary.recurringClients} ${t("app.analytics.recurringClientsDetail")} · ${formatCurrency(summary.fixedMonthly)} ${t("app.analytics.fixedCostsDetail")}`}
-              />
-              <InsightCard
-                icon={TrendingUp}
-                label={t("app.analytics.commercialPipeline")}
-                value={formatCurrency(summary.openPipeline)}
-                detail={`${formatCurrency(summary.weightedPipeline)} ${t("app.analytics.weightedByProbability")}`}
-                onClick={() => setLocation("/pipeline")}
-              />
-              <InsightCard
-                icon={Users}
-                label={t("app.analytics.clientsNegotiation")}
-                value={formatCurrency(summary.crmOpenValue)}
-                detail={`${formatCurrency(summary.crmWeightedValue)} ${t("app.analytics.weightedByCrmStages")}`}
-                onClick={() => setLocation("/clients")}
-              />
-              <InsightCard
-                icon={Receipt}
-                label={t("app.analytics.cashRisk")}
-                value={formatCurrency(summary.overdueReceivables)}
-                detail={`${formatCurrency(summary.toPay)} ${t("app.analytics.stillToPay")}`}
-              />
-            </section>
-
-            <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-              <div className="app-panel p-5 sm:p-6">
-                <p className="frame-label">// {t("app.analytics.revenueClients")}</p>
-                <div className="mt-5 space-y-3">
-                  {finance.topClients.length ? finance.topClients.map((client, index) => (
-                    <button
-                      key={client.id}
-                      type="button"
-                      onClick={() => setLocation(`/clients/${client.id}/editar`)}
-                      className="flex w-full items-center gap-3 border-b border-frame-gray-3 pb-3 text-left last:border-0 last:pb-0"
-                    >
-                      <span className="grid h-8 w-8 place-items-center bg-frame-orange/10 font-frame-mono text-[0.58rem] text-frame-orange">
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-semibold">{client.name}</span>
-                        <span className="block truncate text-xs text-frame-gray-light">{client.company || t("app.analytics.directClient")}</span>
-                      </span>
-                      <strong className="text-sm">{formatCurrency(client.revenue)}</strong>
-                    </button>
-                  )) : (
-                    <p className="text-sm text-frame-gray-light">{t("app.analytics.linkEntriesRanking")}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="app-panel p-5 sm:p-6">
-                <p className="frame-label">// {t("app.analytics.revenueSourcesTitle")}</p>
-                <div className="mt-5 space-y-4">
-                  {finance.revenueSources.length ? finance.revenueSources.map((source) => {
-                    const max = Math.max(...finance.revenueSources.map((item) => item.amount), 1);
+            </div>
+            {finance.monthlyCashflow.length ? (
+              <div className="space-y-1">
+                {/* Chart area */}
+                <div className="flex items-end gap-1.5 h-36 px-1">
+                  {finance.monthlyCashflow.map((item) => {
+                    const netResult = item.income - item.expenses;
+                    const incomeHeight = Math.max(4, (item.income / maxCashflow) * 100);
+                    const expenseHeight = Math.max(4, (item.expenses / maxCashflow) * 100);
                     return (
-                      <div key={source.category}>
-                        <div className="mb-1.5 flex items-center justify-between gap-3 text-sm">
-                          <span className="capitalize text-frame-gray-light">{source.category}</span>
-                          <strong>{formatCurrency(source.amount)}</strong>
+                      <div key={item.month} className="flex-1 flex flex-col items-center gap-0 group relative">
+                        {/* Tooltip on hover */}
+                        <div className="absolute -top-14 left-1/2 -translate-x-1/2 bg-frame-black border border-frame-gray-3 px-2.5 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap">
+                          <p className="text-[0.55rem] text-green-400">+{formatCurrency(item.income)}</p>
+                          <p className="text-[0.55rem] text-red-400">-{formatCurrency(item.expenses)}</p>
+                          <p className={`text-[0.55rem] font-semibold ${netResult >= 0 ? "text-frame-white" : "text-red-400"}`}>= {formatCurrency(netResult)}</p>
                         </div>
-                        <div className="h-2 bg-frame-gray-3">
-                          <div className="h-full bg-frame-orange" style={{ width: `${(source.amount / max) * 100}%` }} />
+                        {/* Bars */}
+                        <div className="flex items-end gap-[2px] w-full h-full">
+                          <div
+                            className="flex-1 bg-gradient-to-t from-green-500 to-green-400/60 rounded-t-[3px] transition-all duration-300 group-hover:from-green-400 group-hover:to-green-300/70"
+                            style={{ height: `${incomeHeight}%` }}
+                          />
+                          <div
+                            className="flex-1 bg-gradient-to-t from-red-500/80 to-red-400/40 rounded-t-[3px] transition-all duration-300 group-hover:from-red-400 group-hover:to-red-300/60"
+                            style={{ height: `${expenseHeight}%` }}
+                          />
                         </div>
                       </div>
                     );
-                  }) : (
-                    <p className="text-sm text-frame-gray-light">{t("app.analytics.categoriesAfterReceipts")}</p>
-                  )}
+                  })}
+                </div>
+                {/* X axis labels */}
+                <div className="flex gap-1.5 px-1 pt-2 border-t border-frame-gray-3/30">
+                  {finance.monthlyCashflow.map((item) => (
+                    <div key={item.month} className="flex-1 text-center">
+                      <span className="font-frame-mono text-[0.5rem] text-frame-gray-light uppercase">{monthLabel(item.month)}</span>
+                    </div>
+                  ))}
+                </div>
+                {/* Net result row */}
+                <div className="flex gap-1.5 px-1">
+                  {finance.monthlyCashflow.map((item) => {
+                    const net = item.income - item.expenses;
+                    return (
+                      <div key={`net-${item.month}`} className="flex-1 text-center">
+                        <span className={`font-frame-mono text-[0.5rem] font-semibold ${net >= 0 ? "text-green-400" : "text-red-400"}`}>
+                          {net >= 0 ? "+" : ""}{(net / 1000).toFixed(1)}k
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            </section>
-
-            <section className="app-panel overflow-hidden">
-              <div className="flex flex-col gap-2 border-b border-frame-gray-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="frame-label">// {t("app.analytics.cashbook")}</p>
-                  <h2 className="mt-1 text-xl font-semibold">{t("app.analytics.recentEntries")}</h2>
-                </div>
-                <p className="text-xs text-frame-gray-light">{t("app.analytics.recentEntriesDescription")}</p>
-              </div>
-
-              <div className="divide-y divide-frame-gray-3">
-                {finance.recentEntries.length ? finance.recentEntries.map((item) => (
-                  <div key={item.id} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-3 sm:grid-cols-[auto_1.4fr_0.8fr_0.8fr_auto] sm:px-5">
-                    <span className={`grid h-8 w-8 place-items-center ${item.kind === "income" ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}`}>
-                      {item.kind === "income" ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">{item.description}</p>
-                      <p className="truncate text-xs text-frame-gray-light">{item.client_name || item.category}</p>
-                    </div>
-                    <p className="hidden text-xs text-frame-gray-light sm:block">{formatDate(item.due_date || item.paid_at, t("app.analytics.noDueDate"))}</p>
-                    <div className="hidden sm:block">
-                      <span className={`font-frame-mono text-[0.54rem] uppercase tracking-[0.1em] ${
-                        item.status === "settled" ? "text-green-500" : "text-frame-orange"
-                      }`}>
-                        {item.status === "settled" ? t("app.analytics.settled") : t("app.common.pending")}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <strong className={item.kind === "income" ? "text-green-500" : "text-red-500"}>
-                        {item.kind === "income" ? "+" : "-"} {formatCurrency(item.amount)}
-                      </strong>
-                      <button
-                        type="button"
-                        onClick={() => deleteEntry(item.id)}
-                        className="grid h-8 w-8 place-items-center text-frame-gray-light transition hover:text-frame-red"
-                        aria-label={`${t("app.common.delete")} ${item.description}`}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
+            ) : (
+              /* Chart placeholder skeleton */
+              <div className="relative h-32 flex items-end gap-2 px-4 opacity-30">
+                {[35, 55, 45, 70, 60, 80].map((h, i) => (
+                  <div key={i} className="flex-1 flex items-end gap-0.5">
+                    <div className="flex-1 bg-gradient-to-t from-green-500/40 to-green-500/10 rounded-t-sm" style={{ height: `${h}%` }} />
+                    <div className="flex-1 bg-gradient-to-t from-red-500/30 to-red-500/10 rounded-t-sm" style={{ height: `${h * 0.6}%` }} />
                   </div>
-                )) : (
-                  <FinanceEmpty
-                    title={t("app.analytics.noEntries")}
-                    description={t("app.analytics.noEntriesHint")}
-                    onClick={() => setShowEntryForm(true)}
-                  />
-                )}
+                ))}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <p className="text-xs text-frame-gray-light bg-frame-black/80 px-3 py-1.5 border border-frame-gray-3">{t("app.finance.emptyFlow")}</p>
+                </div>
               </div>
-            </section>
-
-            {overall && (
-              <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                <OperationalMetric label={t("app.analytics.clients")} value={overall.clients.total} icon={Users} />
-                <OperationalMetric label={t("app.analytics.activeProjects")} value={overall.projects.active} icon={Banknote} />
-                <OperationalMetric label={t("app.analytics.opportunities")} value={overall.pipeline.totalOpportunities} icon={TrendingUp} />
-                <OperationalMetric label={t("app.analytics.crmHistoricalValue")} value={formatCurrency(overall.clients.totalValue)} icon={CircleDollarSign} />
-              </section>
             )}
+          </section>
+
+          {/* Contas pendentes */}
+          <section className="border border-frame-gray-3 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="font-frame-mono text-[0.6rem] uppercase tracking-[0.12em] text-frame-gray-light">{t("app.finance.nextMovements")}</p>
+              </div>
+              <span className="font-frame-mono text-[0.6rem] text-frame-orange">{finance.pendingEntries.length}</span>
+            </div>
+            <div className="space-y-2 max-h-[320px] overflow-y-auto">
+              {finance.pendingEntries.length ? finance.pendingEntries.map((item) => (
+                <div key={item.id} className="border border-frame-gray-3/50 p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-frame-white">{item.description}</p>
+                      <p className="text-[0.6rem] text-frame-gray-light mt-0.5">
+                        {item.client_name || item.category} · {formatDate(item.due_date)}
+                      </p>
+                    </div>
+                    <span className={`text-sm font-semibold shrink-0 ${item.kind === "income" ? "text-green-400" : "text-red-400"}`}>
+                      {item.kind === "income" ? "+" : "-"}{formatCurrency(item.amount)}
+                    </span>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <button type="button" onClick={() => settleEntry(item.id)} className="inline-flex items-center gap-1 border border-frame-gray-3 px-2 py-1 font-frame-mono text-[0.52rem] uppercase text-frame-gray-light hover:border-green-500/50 hover:text-green-400 transition">
+                      <Check className="w-2.5 h-2.5" /> {t("app.finance.confirm")}
+                    </button>
+                    <button type="button" onClick={() => deleteEntry(item.id)} className="inline-flex items-center gap-1 border border-frame-gray-3 px-2 py-1 font-frame-mono text-[0.52rem] uppercase text-frame-gray-light hover:border-red-500/50 hover:text-red-400 transition">
+                      <Trash2 className="w-2.5 h-2.5" /> {t("app.finance.delete")}
+                    </button>
+                  </div>
+                </div>
+              )) : (
+                <div className="frame-empty-state p-5 flex items-center gap-3 text-left">
+                  <div className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-frame-green/10 border border-frame-green/30">
+                    <Check className="w-4 h-4 text-frame-green" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-frame-white">{t("app.finance.noPending")}</p>
+                    <p className="text-[0.65rem] text-frame-gray-light mt-0.5">
+                      {t("app.finance.noPendingDesc")}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+
+        {/* ═══ CLIENTES QUE MAIS GERAM RECEITA ═══ */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <section className="border border-frame-gray-3 p-5">
+            <p className="font-frame-mono text-[0.6rem] uppercase tracking-[0.12em] text-frame-gray-light mb-4">{t("app.finance.clientsByRevenue")}</p>
+            {finance.topClients.length ? (
+              <div className="space-y-3">
+                {finance.topClients.map((client, i) => (
+                  <button key={client.id} type="button" onClick={() => setLocation(`/clients/${client.id}/editar`)} className="flex w-full items-center gap-3 text-left group">
+                    <span className="w-7 h-7 grid place-items-center bg-frame-orange/10 font-frame-mono text-[0.55rem] text-frame-orange shrink-0">{String(i + 1).padStart(2, "0")}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium text-frame-white group-hover:text-frame-orange transition">{client.name}</span>
+                      <span className="block text-[0.6rem] text-frame-gray-light truncate">{client.company || t("app.finance.direct")}</span>
+                    </span>
+                    <strong className="text-sm text-frame-white">{formatCurrency(client.revenue)}</strong>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-frame-gray-light">{t("app.finance.linkEntries")}</p>
+            )}
+          </section>
+
+          <section className="border border-frame-gray-3 p-5">
+            <p className="font-frame-mono text-[0.6rem] uppercase tracking-[0.12em] text-frame-gray-light mb-4">{t("app.finance.revenueByCategory")}</p>
+            {finance.revenueSources.length ? (
+              <div className="space-y-3">
+                {finance.revenueSources.map((source) => {
+                  const max = Math.max(...finance.revenueSources.map((s) => s.amount), 1);
+                  return (
+                    <div key={source.category}>
+                      <div className="flex items-center justify-between text-sm mb-1">
+                        <span className="capitalize text-frame-gray-light">{source.category}</span>
+                        <strong className="text-frame-white">{formatCurrency(source.amount)}</strong>
+                      </div>
+                      <div className="h-1.5 bg-frame-gray-3">
+                        <div className="h-full bg-frame-orange transition-all" style={{ width: `${(source.amount / max) * 100}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-xs text-frame-gray-light">{t("app.finance.categoriesHint")}</p>
+            )}
+          </section>
+        </div>
+
+        {/* ═══ HISTÓRICO (tabela compacta) ═══ */}
+        <section className="border border-frame-gray-3 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <p className="font-frame-mono text-[0.6rem] uppercase tracking-[0.12em] text-frame-gray-light">{t("app.finance.history")}</p>
+            <span className="font-frame-mono text-[0.6rem] text-frame-gray-light">{finance.recentEntries.length} {t("app.finance.records")}</span>
+          </div>
+          {finance.recentEntries.length ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-frame-gray-3">
+                    <th className="text-left py-2.5 px-2 font-frame-mono text-[0.58rem] uppercase tracking-wider text-frame-gray-light w-6"></th>
+                    <th className="text-left py-2.5 px-2 font-frame-mono text-[0.58rem] uppercase tracking-wider text-frame-gray-light">{t("app.finance.descLabel")}</th>
+                    <th className="text-left py-2.5 px-2 font-frame-mono text-[0.58rem] uppercase tracking-wider text-frame-gray-light hidden sm:table-cell">{t("app.finance.categoryLabel")}</th>
+                    <th className="text-right py-2.5 px-2 font-frame-mono text-[0.58rem] uppercase tracking-wider text-frame-gray-light cursor-pointer select-none hover:text-frame-orange transition" onClick={() => toggleSort("amount")}>{t("app.finance.valueLabel")} {sortField === "amount" ? (sortDir === "asc" ? "▲" : "▼") : ""}</th>
+                    <th className="text-center py-2.5 px-2 font-frame-mono text-[0.58rem] uppercase tracking-wider text-frame-gray-light hidden sm:table-cell cursor-pointer select-none hover:text-frame-orange transition" onClick={() => toggleSort("status")}>{t("app.finance.status")} {sortField === "status" ? (sortDir === "asc" ? "▲" : "▼") : ""}</th>
+                    <th className="text-right py-2.5 px-2 font-frame-mono text-[0.58rem] uppercase tracking-wider text-frame-gray-light hidden md:table-cell cursor-pointer select-none hover:text-frame-orange transition" onClick={() => toggleSort("date")}>{t("app.finance.dueDate")} {sortField === "date" ? (sortDir === "asc" ? "▲" : "▼") : ""}</th>
+                    <th className="py-2.5 px-2 w-16"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-frame-gray-3/30">
+                  {sortedEntries.map((item) => (
+                    <tr key={item.id} className="hover:bg-frame-gray-1/30 transition group">
+                      <td className="py-2.5 px-2"><span className={`w-2 h-2 rounded-full inline-block ${item.kind === "income" ? "bg-green-400" : "bg-red-400"}`} /></td>
+                      <td className="py-2.5 px-2">
+                        <p className="font-medium text-frame-white truncate max-w-[200px]">{item.description}</p>
+                        {item.client_name && <p className="text-[0.6rem] text-frame-gray-light">{item.client_name}</p>}
+                        <ClientLink clientId={item.client_id ?? null} clientName={item.client_name ?? null} />
+                      </td>
+                      <td className="py-2.5 px-2 hidden sm:table-cell"><span className="text-xs text-frame-gray-light capitalize">{item.category}</span></td>
+                      <td className="py-2.5 px-2 text-right"><span className={`font-semibold ${item.kind === "income" ? "text-green-400" : "text-red-400"}`}>{item.kind === "income" ? "+" : "-"}{formatCurrency(item.amount)}</span></td>
+                      <td className="py-2.5 px-2 text-center hidden sm:table-cell">
+                        <span className={`text-[0.6rem] font-frame-mono uppercase px-1.5 py-0.5 border ${item.status === "settled" ? "border-green-500/30 text-green-400 bg-green-500/5" : "border-yellow-500/30 text-yellow-400 bg-yellow-500/5"}`}>
+                          {item.status === "settled" ? t("app.finance.paid") : t("app.finance.pending")}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-2 text-right hidden md:table-cell"><span className="text-[0.64rem] text-frame-gray-light font-frame-mono">{formatDate(item.due_date)}</span></td>
+                      <td className="py-2.5 px-2 flex items-center gap-0.5">
+                        <button type="button" onClick={() => startEditEntry(item)} className="opacity-0 group-hover:opacity-100 text-frame-gray-light hover:text-frame-orange transition p-1"><Pencil className="w-3.5 h-3.5" /></button>
+                        <button type="button" onClick={() => deleteEntry(item.id)} className="opacity-0 group-hover:opacity-100 text-frame-gray-light hover:text-red-400 transition p-1"><Trash2 className="w-3.5 h-3.5" /></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-6 text-xs text-frame-gray-light">{t("app.finance.noEntries")}</div>
+          )}
+        </section>
           </>
         )}
+
+        {/* ═══ FAB: Novo Movimento ═══ */}
+        {finance.recentEntries.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowEntryForm(true)}
+            className="fixed bottom-6 right-6 z-40 w-14 h-14 bg-frame-orange text-frame-black rounded-full shadow-2xl shadow-frame-orange/30 flex items-center justify-center hover:scale-110 hover:shadow-frame-orange/50 transition-all"
+            aria-label={t("app.finance.newEntry")}
+          >
+            <Plus className="w-6 h-6" />
+          </button>
+        )}
       </main>
-    </div>
-  );
-}
 
-function MetricCard({
-  label,
-  value,
-  icon: Icon,
-  tone,
-}: {
-  label: string;
-  value: string;
-  icon: typeof CircleDollarSign;
-  tone: "positive" | "negative" | "warning" | "accent";
-}) {
-  const toneClass = {
-    positive: "text-green-500 bg-green-500/10",
-    negative: "text-red-500 bg-red-500/10",
-    warning: "text-amber-500 bg-amber-500/10",
-    accent: "text-frame-orange bg-frame-orange/10",
-  }[tone];
+      {/* ═══ MODAL: Novo Movimento ═══ */}
+      {showEntryForm && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <button type="button" aria-label="Fechar" className="fixed inset-0 bg-black/80 backdrop-blur-md" onClick={() => { setShowEntryForm(false); setEditingEntry(null); }} />
+          <div className="relative mx-auto flex min-h-full w-full max-w-lg items-center px-4 py-8">
+            <form onSubmit={submitEntry} className="relative w-full bg-frame-black border border-frame-gray-3/60 shadow-2xl shadow-black/40">
 
-  return (
-    <div className="app-panel min-w-0 p-4">
-      <div className={`mb-4 grid h-9 w-9 place-items-center ${toneClass}`}>
-        <Icon className="h-4 w-4" />
-      </div>
-      <p className="font-frame-mono text-[0.56rem] uppercase tracking-[0.11em] text-frame-gray-light">{label}</p>
-      <p className="mt-1 truncate text-lg font-semibold sm:text-xl" title={value}>{value}</p>
-    </div>
-  );
-}
+              {/* Color accent bar top */}
+              <div className={`h-1 w-full ${entry.kind === "income" ? "bg-green-500" : "bg-red-500"}`} />
 
-function InsightCard({
-  icon: Icon,
-  label,
-  value,
-  detail,
-  onClick,
-}: {
-  icon: typeof WalletCards;
-  label: string;
-  value: string;
-  detail: string;
-  onClick?: () => void;
-}) {
-  const content = (
-    <>
-      <div className="flex items-start justify-between gap-4">
-        <span className="grid h-9 w-9 place-items-center bg-frame-orange/10 text-frame-orange">
-          <Icon className="h-4 w-4" />
-        </span>
-        {onClick && <ArrowRight className="h-4 w-4 text-frame-gray-light" />}
-      </div>
-      <p className="mt-5 font-frame-mono text-[0.58rem] uppercase tracking-[0.12em] text-frame-gray-light">{label}</p>
-      <p className="mt-1 text-2xl font-semibold">{value}</p>
-      <p className="mt-2 text-xs leading-relaxed text-frame-gray-light">{detail}</p>
-    </>
-  );
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 pt-5 pb-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-frame-white">
+                    {editingEntry ? t("app.finance.editEntry") : t("app.finance.newEntry")}
+                  </h2>
+                </div>
+                <button type="button" onClick={() => { setShowEntryForm(false); setEditingEntry(null); }} className="text-frame-gray-light hover:text-frame-white transition p-1.5 hover:bg-frame-gray-1/30">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
 
-  return onClick ? (
-    <button type="button" onClick={onClick} className="app-panel p-5 text-left transition hover:border-frame-orange/50">
-      {content}
-    </button>
-  ) : (
-    <div className="app-panel p-5">{content}</div>
-  );
-}
+              <div className="px-6 pb-6 space-y-5">
 
-function OperationalMetric({
-  label,
-  value,
-  icon: Icon,
-}: {
-  label: string;
-  value: string | number;
-  icon: typeof Users;
-}) {
-  return (
-    <div className="app-panel flex items-center gap-3 p-4">
-      <Icon className="h-4 w-4 shrink-0 text-frame-orange" />
-      <div className="min-w-0">
-        <p className="truncate font-frame-mono text-[0.54rem] uppercase tracking-[0.1em] text-frame-gray-light">{label}</p>
-        <p className="mt-0.5 truncate font-semibold">{value}</p>
-      </div>
-    </div>
-  );
-}
+                {/* Tipo toggle — full width with strong visual feedback */}
+                <div className="grid grid-cols-2 gap-0 border border-frame-gray-3 overflow-hidden">
+                  <button type="button" onClick={() => setEntry((c) => ({ ...c, kind: "income" }))} className={`py-3 text-sm font-semibold transition-all relative ${entry.kind === "income" ? "bg-green-500/15 text-green-400" : "text-frame-gray-light hover:text-frame-white bg-frame-gray-1/10"}`}>
+                    <span className="relative z-10">↑ {t("app.finance.toggleIncome")}</span>
+                    {entry.kind === "income" && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-500" />}
+                  </button>
+                  <button type="button" onClick={() => setEntry((c) => ({ ...c, kind: "expense" }))} className={`py-3 text-sm font-semibold transition-all relative ${entry.kind === "expense" ? "bg-red-500/15 text-red-400" : "text-frame-gray-light hover:text-frame-white bg-frame-gray-1/10"}`}>
+                    <span className="relative z-10">↓ {t("app.finance.toggleExpense")}</span>
+                    {entry.kind === "expense" && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500" />}
+                  </button>
+                </div>
 
-function FinanceEmpty({
-  title,
-  description,
-  onClick,
-}: {
-  title: string;
-  description: string;
-  onClick: () => void;
-}) {
-  return (
-    <div className="flex min-h-48 flex-col items-center justify-center p-6 text-center">
-      <CircleDollarSign className="mb-3 h-7 w-7 text-frame-orange" />
-      <p className="font-semibold">{title}</p>
-      <p className="mt-1 max-w-md text-sm leading-relaxed text-frame-gray-light">{description}</p>
-      <button type="button" onClick={onClick} className="frame-btn-ghost mt-4 inline-flex items-center gap-2">
-        <Plus className="h-3.5 w-3.5" />
-        Criar lançamento
-      </button>
+                {/* Valor — hero field, grande e em destaque */}
+                <div className="text-center py-3">
+                  <span className="font-frame-mono text-[0.55rem] uppercase tracking-wider text-frame-gray-light block mb-2">{t("app.finance.valueLabel")}</span>
+                  <div className="relative inline-flex items-baseline gap-1">
+                    <span className="text-lg font-semibold text-frame-gray-light">R$</span>
+                    <input
+                      className="bg-transparent border-0 outline-none text-center text-3xl font-bold text-frame-white w-48 placeholder:text-frame-gray-3 focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      type="number" min="0" step="0.01"
+                      value={entry.amount}
+                      onChange={(e) => setEntry((c) => ({ ...c, amount: e.target.value }))}
+                      placeholder="0,00"
+                      autoFocus
+                    />
+                  </div>
+                  <div className={`h-px w-32 mx-auto mt-1 ${entry.kind === "income" ? "bg-green-500/50" : "bg-red-500/50"}`} />
+                </div>
+
+                {/* Descrição */}
+                <label className="block">
+                  <span className="font-frame-mono text-[0.55rem] uppercase tracking-wider text-frame-gray-light mb-1.5 block">{t("app.finance.descLabel")}</span>
+                  <input className="frame-input w-full" value={entry.description} onChange={(e) => setEntry((c) => ({ ...c, description: e.target.value }))} placeholder={t("app.finance.descPlaceholder")} />
+                </label>
+
+                {/* Categoria + Cliente */}
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="block">
+                    <span className="font-frame-mono text-[0.55rem] uppercase tracking-wider text-frame-gray-light mb-1.5 block">{t("app.finance.categoryLabel")}</span>
+                    <select className="frame-input w-full" value={entry.category} onChange={(e) => setEntry((c) => ({ ...c, category: e.target.value }))}>
+                      <option value="projeto">{t("app.finance.catProject")}</option>
+                      <option value="mensalidade">{t("app.finance.catSubscription")}</option>
+                      <option value="equipe">{t("app.finance.catCrew")}</option>
+                      <option value="equipamento">{t("app.finance.catEquipment")}</option>
+                      <option value="software">{t("app.finance.catSoftware")}</option>
+                      <option value="impostos">{t("app.finance.catTaxes")}</option>
+                      <option value="estrutura">{t("app.finance.catStructure")}</option>
+                      <option value="outros">{t("app.finance.catOther")}</option>
+                    </select>
+                  </label>
+                  <label className="block">
+                    <span className="font-frame-mono text-[0.55rem] uppercase tracking-wider text-frame-gray-light mb-1.5 block">{t("app.finance.linkedClient")}</span>
+                    <select className="frame-input w-full" value={entry.clientId} onChange={(e) => setEntry((c) => ({ ...c, clientId: e.target.value }))}>
+                      <option value="">{t("app.finance.noLink")}</option>
+                      {clients.map((c) => <option key={c.id} value={c.id}>{c.name}{c.company ? ` · ${c.company}` : ""}</option>)}
+                    </select>
+                  </label>
+                </div>
+
+                {/* Data + Status + Recorrência — inline */}
+                <div className="grid grid-cols-3 gap-3">
+                  <label className="block">
+                    <span className="font-frame-mono text-[0.55rem] uppercase tracking-wider text-frame-gray-light mb-1.5 block">{t("app.finance.dueDate")}</span>
+                    <input className="frame-input w-full" type="date" value={entry.dueDate} onChange={(e) => setEntry((c) => ({ ...c, dueDate: e.target.value }))} />
+                  </label>
+                  <label className="block">
+                    <span className="font-frame-mono text-[0.55rem] uppercase tracking-wider text-frame-gray-light mb-1.5 block">{t("app.finance.status")}</span>
+                    <select className="frame-input w-full" value={entry.status} onChange={(e) => setEntry((c) => ({ ...c, status: e.target.value as EntryForm["status"] }))}>
+                      <option value="pending">{t("app.finance.statusPending")}</option>
+                      <option value="settled">{entry.kind === "income" ? t("app.finance.statusReceived") : t("app.finance.statusPaid")}</option>
+                    </select>
+                  </label>
+                  <label className="block">
+                    <span className="font-frame-mono text-[0.55rem] uppercase tracking-wider text-frame-gray-light mb-1.5 block">{t("app.finance.recurrence")}</span>
+                    <select className="frame-input w-full" value={entry.recurrence} onChange={(e) => setEntry((c) => ({ ...c, recurrence: e.target.value as EntryForm["recurrence"] }))}>
+                      <option value="once">{t("app.finance.recurrenceOnce")}</option>
+                      <option value="monthly">{t("app.finance.recurrenceMonthly")}</option>
+                    </select>
+                  </label>
+                </div>
+
+                {/* Custo fixo toggle */}
+                <label className="flex items-center gap-2.5 text-xs text-frame-gray-light cursor-pointer select-none">
+                  <input type="checkbox" checked={entry.isFixed} onChange={(e) => setEntry((c) => ({ ...c, isFixed: e.target.checked }))} className="accent-frame-orange w-3.5 h-3.5" />
+                  {t("app.finance.markFixed")}
+                </label>
+
+                {/* Live preview */}
+                {(entry.description.trim() || Number(entry.amount) > 0) && (
+                  <div className={`border p-3 flex items-center gap-3 ${entry.kind === "income" ? "border-green-500/20 bg-green-500/[0.04]" : "border-red-500/20 bg-red-500/[0.04]"}`}>
+                    <span className={`text-base ${entry.kind === "income" ? "text-green-400" : "text-red-400"}`}>
+                      {entry.kind === "income" ? "↑" : "↓"}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-frame-white truncate">
+                        {entry.description || t("app.finance.noDescription")}
+                      </p>
+                      <p className="text-[0.6rem] text-frame-gray-light mt-0.5">
+                        {Number(entry.amount) > 0 && `R$ ${Number(entry.amount).toLocaleString(locale === "en" ? "en-US" : "pt-BR", { minimumFractionDigits: 2 })}`}
+                        {entry.clientId && clients.find((c) => String(c.id) === entry.clientId) && ` · ${clients.find((c) => String(c.id) === entry.clientId)!.name}`}
+                        {entry.dueDate && ` · ${formatDate(entry.dueDate, locale === "en" ? "en-US" : "pt-BR")}`}
+                        {` · ${entry.status === "settled" ? (entry.kind === "income" ? t("app.finance.statusReceived") : t("app.finance.statusPaid")) : t("app.finance.statusPending")}`}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer actions */}
+              <div className="flex justify-end gap-3 px-6 py-4 border-t border-frame-gray-3/40 bg-frame-gray-1/10">
+                <button type="button" onClick={() => { setShowEntryForm(false); setEditingEntry(null); }} className="frame-btn-ghost text-sm">{t("app.finance.cancel")}</button>
+                <button type="submit" disabled={isSaving} className="frame-btn-primary text-sm">
+                  {isSaving ? t("app.finance.saving") : (editingEntry ? t("app.finance.editEntry") : t("app.finance.register"))}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

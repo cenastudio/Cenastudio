@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useRoute } from "wouter";
 import { api, ApiError, startCheckout, type ToolFromApi } from "@/lib/api";
+import { useClientIdFromQuery } from "@/hooks/useClientIdFromQuery";
 import { cleanGeneratedText, downloadGeneratedDocx, downloadGeneratedPdf } from "@/lib/documentFormatter";
 import { toast } from "sonner";
 import ToolSidebar from "./ToolSidebar";
@@ -8,7 +9,7 @@ import ToolWorkspace from "./ToolWorkspace";
 import OutputPanel from "./OutputPanel";
 import HistoryPanel from "./HistoryPanel";
 import AppNavBar from "../AppNavBar";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronLeft } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ProjectTimeline from "./ProjectTimeline";
@@ -37,6 +38,7 @@ export default function StudioShell() {
 
   const projectIdParam = projectParams?.projectId;
   const activeToolId = params?.id || projectParams?.id || "";
+  const clientIdParam = useClientIdFromQuery();
 
   // Local States
   const [tools, setTools] = useState<ToolFromApi[]>([]);
@@ -47,7 +49,17 @@ export default function StudioShell() {
   const [error, setError] = useState<string | null>(null);
   const [limitReached, setLimitReached] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [workspaceCollapsed, setWorkspaceCollapsed] = useState(false);
   const [linkedContext, setLinkedContext] = useState<StudioLinkedContext | null>(null);
+  const [selectedModel, setSelectedModel] = useState(() => localStorage.getItem("cena-ai-model") || "");
+
+  // Listen for model changes from ContextPanel
+  useEffect(() => {
+    const handler = (e: Event) => setSelectedModel((e as CustomEvent).detail || "");
+    window.addEventListener("cena:model-change", handler);
+    return () => window.removeEventListener("cena:model-change", handler);
+  }, []);
 
   const tool = tools.find((t) => t.id === activeToolId || t.slug === activeToolId);
   const { t } = useLanguage();
@@ -121,6 +133,32 @@ export default function StudioShell() {
     };
   }, [activeToolId, activeProject, tool?.id, tool?.slug]);
 
+  // Inject client context from ?clientId query param when no active project
+  useEffect(() => {
+    if (clientIdParam && !activeProject) {
+      api.clients.get(clientIdParam).then((details) => {
+        let ctx = buildStudioLinkedContext(activeToolId, null, details.client);
+        setLinkedContext(ctx);
+        const { merged } = mergeStudioPrefill({}, ctx?.prefill || {});
+        setFormData(merged);
+
+        // Offer active project context when client has non-archived/non-cancelled projects
+        const activeProjects = (details.projects ?? []).filter(
+          (p: any) => !["archived", "cancelled"].includes(p.status)
+        );
+        if (activeProjects.length > 0) {
+          const latestProject = [...activeProjects].sort(
+            (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          )[0];
+          if (ctx) {
+            ctx = { ...ctx, sourceLabel: `${details.client.name} → ${latestProject.name}` };
+            setLinkedContext(ctx);
+          }
+        }
+      }).catch(() => { /* graceful no-op */ });
+    }
+  }, [clientIdParam, activeToolId]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-frame-black text-frame-white flex flex-col items-center justify-center gap-4">
@@ -186,7 +224,7 @@ export default function StudioShell() {
     setLimitReached(false);
 
     try {
-      const result = await api.ai.generate(tool.id, formData, activeProject?.id);
+      const result = await api.ai.generate(tool.id, formData, activeProject?.id, selectedModel || undefined);
       setOutput(result.output);
       toast.success(t("app.studio.generationComplete") as string);
       if (activeProject) {
@@ -202,7 +240,7 @@ export default function StudioShell() {
       const msg = e instanceof Error ? e.message : t("app.studio.generationError") as string;
       const isLimit =
         (e instanceof ApiError && e.status === 403) || msg.toLowerCase().includes("limite");
-      
+
       if (isLimit) {
         setLimitReached(true);
       }
@@ -269,17 +307,31 @@ export default function StudioShell() {
   };
 
   return (
-    <div className="studio-app min-h-screen bg-frame-black text-frame-white flex flex-col h-screen overflow-hidden">
+    <div className="studio-app min-h-screen bg-frame-black text-frame-white flex flex-col h-screen">
       <AppNavBar />
       <ProjectTimeline activeToolId={tool.slug} />
 
       <div className="studio-workbench flex flex-1 overflow-hidden flex-col lg:flex-row">
-        {/* Tool Sidebar */}
-        <ToolSidebar
-          tools={tools}
-          activeToolId={tool.id}
-          onSelectTool={handleSelectTool}
-        />
+        {/* Tool Sidebar — normal flow, collapsible */}
+        <div className={`transition-all duration-200 overflow-hidden shrink-0 ${sidebarCollapsed ? "w-0" : "w-auto"}`}>
+          <div className="h-full overflow-y-auto">
+            <ToolSidebar
+              tools={tools}
+              activeToolId={tool.id}
+              onSelectTool={handleSelectTool}
+            />
+          </div>
+        </div>
+
+        {/* Sidebar toggle — orange chevron icon */}
+        <button
+          type="button"
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          className="hidden lg:flex items-center justify-center w-5 shrink-0 transition-colors"
+          title={sidebarCollapsed ? "Mostrar ferramentas" : "Esconder ferramentas"}
+        >
+          <ChevronLeft className={`w-4 h-4 text-frame-orange transition-transform ${sidebarCollapsed ? "rotate-180" : ""}`} />
+        </button>
 
         {/* Studio Shell Body Container */}
         <div className="studio-main flex-1 flex overflow-hidden flex-col md:flex-row relative">
@@ -287,29 +339,41 @@ export default function StudioShell() {
             <AssistantChatWorkspace tool={tool} projectId={activeProject?.id} />
           ) : (
             <>
-              {/* Main workspace (Inputs & Forms) */}
-              <ToolWorkspace
-                tool={tool}
-                formData={formData}
-                onChangeField={handleChangeField}
-                onExecute={handleExecute}
-                isProcessing={isProcessing}
-                error={error}
-                linkedContext={linkedContext ? {
-                  projectName: linkedContext.projectName,
-                  clientName: linkedContext.clientName,
-                  availableCount: Object.keys(linkedContext.prefill).length,
-                  fillableCount: countFillableFields(formData, linkedContext.prefill),
-                  sourceLabel: linkedContext.sourceLabel,
-                } : null}
-                onApplyLinkedContext={handleApplyLinkedContext}
-                onSetOutput={(newOut) => {
-                  setOutput(newOut);
-                  if (activeProject) {
-                    saveToolStateImmediately(tool.id, formData, newOut);
-                  }
-                }}
-              />
+              {/* Main workspace (Inputs & Forms) — collapsible */}
+              <div className={`transition-all duration-200 overflow-hidden shrink-0 ${workspaceCollapsed ? "w-0" : "w-auto md:w-[380px] lg:w-[420px]"}`}>
+                <ToolWorkspace
+                  tool={tool}
+                  formData={formData}
+                  onChangeField={handleChangeField}
+                  onExecute={handleExecute}
+                  isProcessing={isProcessing}
+                  error={error}
+                  linkedContext={linkedContext ? {
+                    projectName: linkedContext.projectName,
+                    clientName: linkedContext.clientName,
+                    availableCount: Object.keys(linkedContext.prefill).length,
+                    fillableCount: countFillableFields(formData, linkedContext.prefill),
+                    sourceLabel: linkedContext.sourceLabel,
+                  } : null}
+                  onApplyLinkedContext={handleApplyLinkedContext}
+                  onSetOutput={(newOut) => {
+                    setOutput(newOut);
+                    if (activeProject) {
+                      saveToolStateImmediately(tool.id, formData, newOut);
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Workspace toggle — orange chevron icon */}
+              <button
+                type="button"
+                onClick={() => setWorkspaceCollapsed(!workspaceCollapsed)}
+                className="hidden md:flex items-center justify-center w-5 shrink-0 transition-colors"
+                title={workspaceCollapsed ? "Mostrar formulário" : "Esconder formulário"}
+              >
+                <ChevronLeft className={`w-4 h-4 text-frame-orange transition-transform ${workspaceCollapsed ? "rotate-180" : ""}`} />
+              </button>
 
               {/* Output and Refinement Chat Panel */}
               <div className="flex-1 flex flex-col overflow-hidden">

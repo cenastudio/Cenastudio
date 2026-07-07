@@ -1,4 +1,5 @@
 import { Clock3, Send, User } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ReviewCommentComposerProps {
   currentTimestamp: number;
@@ -35,6 +36,7 @@ export default function ReviewCommentComposer({
   onSubmit,
   submitting = false,
 }: ReviewCommentComposerProps) {
+  const { t } = useLanguage();
   const timestamp = anchorTimestamp ?? currentTimestamp;
   const canSubmit = comment.trim() && (onAuthorNameChange ? authorName?.trim() : true);
 
@@ -79,7 +81,7 @@ export default function ReviewCommentComposer({
             title="Fixar comentário no tempo atual"
           >
             <Clock3 className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{anchorTimestamp === null ? "Tempo atual" : "Fixado"} {formatTimestamp(timestamp)}</span>
+            <span className="truncate">{anchorTimestamp === null ? t("app.videoReviews.currentTime") : t("app.videoReviews.pinned")} {formatTimestamp(timestamp)}</span>
           </button>
           <button
             type="button"

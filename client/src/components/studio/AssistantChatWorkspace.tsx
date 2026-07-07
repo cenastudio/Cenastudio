@@ -1,8 +1,9 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ApiError, api, type ToolFromApi } from "@/lib/api";
-import { Bot, Copy, Loader2, Send, Trash2, UserRound } from "lucide-react";
+import { Bot, Copy, Loader2, Send, Trash2, UserRound, Sparkles, FolderOpen } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useProject } from "@/contexts/ProjectContext";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -14,29 +15,73 @@ interface AssistantChatWorkspaceProps {
   projectId?: number | null;
 }
 
-const starterPrompts: string[] = [];
+// Context messages that appear as pre-configured suggestions based on project state
+const CONTEXT_PROMPTS = [
+  { label: "Pré-produção", prompt: "Estou em pré-produção do meu projeto. Que documentos devo preparar primeiro e em que ordem?" },
+  { label: "No set agora", prompt: "Estou no set agora com um problema de iluminação. Precisa de uma solução rápida e prática." },
+  { label: "Como precificar", prompt: "Como devo calcular o preço de um vídeo institucional de 3 minutos com 2 dias de filmagem?" },
+  { label: "Melhorar copy", prompt: "Como posso melhorar a proposta que acabei de gerar para ser mais persuasiva para o cliente?" },
+];
 
 export default function AssistantChatWorkspace({ tool, projectId }: AssistantChatWorkspaceProps) {
   const { t } = useLanguage();
-  const starterPrompts = [
-    t("app.studio.assistant.starter1") as string,
-    t("app.studio.assistant.starter2") as string,
-    t("app.studio.assistant.starter3") as string,
-  ];
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: "assistant",
-      content: t("app.studio.assistant.greeting") as string,
-    },
-  ]);
+  const { activeProject } = useProject();
+
+  const starterPrompts: never[] = [];
+
+  // Build greeting with project context if available
+  const greeting = useMemo(() => {
+    if (activeProject) {
+      return `Olá! Sou seu assistente de produção audiovisual.\n\nEstou conectado ao projeto "${activeProject.name}". Posso ajudar com dúvidas técnicas, revisão de documentos já gerados, estratégia comercial ou qualquer questão do job.\n\nO que você precisa?`;
+    }
+    return t("app.studio.assistant.greeting") as string;
+  }, [activeProject]);
+
+  const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", content: greeting }]);
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [projectHistory, setProjectHistory] = useState<Array<{ toolId: string; output: string }>>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Load recent generations from current project for context
+  useEffect(() => {
+    if (!projectId) { setProjectHistory([]); return; }
+    api.ai.history("12", projectId).then((data) => {
+      // Get latest generation per tool from history
+      const byTool = new Map<string, string>();
+      for (const item of data) {
+        if (!byTool.has(item.toolId)) byTool.set(item.toolId, item.output);
+      }
+      setProjectHistory(Array.from(byTool.entries()).map(([toolId, output]) => ({ toolId, output })));
+    }).catch(() => {});
+  }, [projectId]);
+
+  // Build project context for AI prompts
+  const projectContextBlock = useMemo(() => {
+    if (!activeProject && projectHistory.length === 0) return "";
+    const TOOL_NAMES: Record<string, string> = {
+      "01": "Roteiro", "02": "Decupagem", "03": "Callsheet", "04": "Orçamento",
+      "05": "Proposta", "06": "Contrato", "07": "Briefing", "08": "Moodboard",
+      "09": "Checklist", "10": "Cronograma", "11": "Relatório de Entrega",
+    };
+    const lines = ["[CONTEXTO DO PROJETO ATIVO]"];
+    if (activeProject) lines.push(`Projeto: ${activeProject.name}`);
+    if (projectHistory.length > 0) {
+      lines.push("Documentos já gerados neste job:");
+      for (const doc of projectHistory.slice(0, 4)) {
+        const name = TOOL_NAMES[doc.toolId] || `Ferramenta ${doc.toolId}`;
+        const preview = doc.output.slice(0, 400).replace(/\n/g, " ");
+        lines.push(`[${name}]: ${preview}...`);
+      }
+    }
+    lines.push("[FIM DO CONTEXTO]");
+    return "\n\n" + lines.join("\n");
+  }, [activeProject, projectHistory]);
 
   const conversationPrompt = useMemo(
     () =>
       messages
-        .map((message) => `${message.role === "user" ? t("app.studio.assistant.user") as string : t("app.studio.assistant.assistant") as string}: ${message.content}`)
+        .map((message) => `${message.role === "user" ? "Usuário" : "Assistente"}: ${message.content}`)
         .join("\n\n"),
     [messages],
   );
@@ -58,7 +103,7 @@ export default function AssistantChatWorkspace({ tool, projectId }: AssistantCha
     scrollToBottom();
 
     try {
-      const context = `${conversationPrompt}\n\nUsuário: ${clean}\n\nResponda como conversa direta, objetiva e prática.`;
+      const context = `${projectContextBlock}\n\n${conversationPrompt}\n\nUsuário: ${clean}\n\nResponda como conversa direta, objetiva e prática.`;
       const result = await api.ai.generate(tool.id, { prompt: context }, projectId);
       setMessages((current) => [...current, { role: "assistant", content: result.output }]);
       scrollToBottom();
@@ -99,6 +144,15 @@ export default function AssistantChatWorkspace({ tool, projectId }: AssistantCha
         <div>
           <p className="frame-label mb-1">{t("app.studio.assistant.headerLabel") as string}</p>
           <h2 className="frame-title text-[clamp(1.6rem,3vw,2.5rem)] leading-none">{t("app.studio.assistant.headerTitle") as string}</h2>
+          {activeProject && (
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <FolderOpen className="w-3 h-3 text-frame-orange" />
+              <span className="font-frame-mono text-[0.58rem] text-frame-orange uppercase tracking-wider">
+                {activeProject.name}
+                {projectHistory.length > 0 && ` · ${projectHistory.length} doc${projectHistory.length > 1 ? "s" : ""} no contexto`}
+              </span>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -153,15 +207,17 @@ export default function AssistantChatWorkspace({ tool, projectId }: AssistantCha
 
       <div className="border-t border-[var(--ds-border)] p-4 sm:p-5">
         <div className="flex flex-wrap gap-2 mb-3">
-          {starterPrompts.map((prompt) => (
+          {/* Context prompts based on project state */}
+          {CONTEXT_PROMPTS.slice(0, activeProject ? 4 : 2).map((cp) => (
             <button
-              key={prompt}
+              key={cp.label}
               type="button"
-              onClick={() => sendMessage(prompt)}
+              onClick={() => sendMessage(cp.prompt)}
               disabled={isSending}
-              className="frame-btn-ghost text-[0.62rem] px-3 py-2"
+              className="frame-btn-ghost text-[0.6rem] px-2.5 py-1.5 flex items-center gap-1"
             >
-              {prompt}
+              <Sparkles className="w-2.5 h-2.5 text-frame-orange" />
+              {cp.label}
             </button>
           ))}
         </div>

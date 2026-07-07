@@ -4,6 +4,7 @@ import { X, ChevronRight, ChevronLeft, Check, Sparkles, Target, Zap, Rocket, Loa
 import { useLocation } from "wouter";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface WelcomeModalProps {
   isOpen: boolean;
@@ -13,56 +14,7 @@ interface WelcomeModalProps {
   userName?: string;
 }
 
-const steps = [
-  {
-    id: "welcome",
-    icon: Sparkles,
-    title: "Bem-vindo ao Cena Studio!",
-    description: "A plataforma completa para gestão de produção audiovisual com inteligência artificial.",
-    features: [
-      "Gerencie projetos do briefing à entrega",
-      "Pipeline CRM integrado",
-      "Review de vídeos com anotações",
-      "IA para roteiros e storyboards",
-    ],
-  },
-  {
-    id: "tour",
-    icon: Target,
-    title: "Vamos fazer um tour rápido?",
-    description: "Conheça as principais funcionalidades em menos de 2 minutos.",
-    features: [
-      "Dashboard com visão geral",
-      "Projetos e jornada criativa",
-      "Pipeline de oportunidades",
-      "Video Reviews colaborativo",
-    ],
-  },
-  {
-    id: "demo",
-    icon: Zap,
-    title: "Projeto Demo",
-    description: "Criamos um projeto de exemplo com dados reais para você explorar livremente.",
-    features: [
-      "Cliente demo pré-configurado",
-      "Briefing e roteiro completos",
-      "Arquivos de exemplo",
-      "Todas as features ativas",
-    ],
-  },
-  {
-    id: "start",
-    icon: Rocket,
-    title: "Pronto para começar!",
-    description: "Tudo está configurado. Crie seu primeiro projeto ou explore o sistema.",
-    features: [
-      "Crie projetos ilimitados",
-      "Convide colaboradores",
-      "Integre com seu workflow",
-      "Suporte via chat e email",
-    ],
-  },
-];
+const stepIcons = [Sparkles, Target, Zap, Rocket];
 
 export default function WelcomeModal({
   isOpen,
@@ -71,11 +23,63 @@ export default function WelcomeModal({
   onStartTour,
   userName,
 }: WelcomeModalProps) {
+  const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(0);
   const [neverShowAgain, setNeverShowAgain] = useState(false);
   const [isCreatingDemo, setIsCreatingDemo] = useState(false);
   const [demoProjectId, setDemoProjectId] = useState<number | null>(null);
   const [, setLocation] = useLocation();
+
+  const steps = [
+    {
+      id: "welcome",
+      icon: Sparkles,
+      title: t("app.onboarding.welcomeTitle"),
+      description: t("app.onboarding.welcomeDescription"),
+      features: [
+        t("app.onboarding.welcomeFeature1"),
+        t("app.onboarding.welcomeFeature2"),
+        t("app.onboarding.welcomeFeature3"),
+        t("app.onboarding.welcomeFeature4"),
+      ],
+    },
+    {
+      id: "tour",
+      icon: Target,
+      title: t("app.onboarding.tourTitle"),
+      description: t("app.onboarding.tourDescription"),
+      features: [
+        t("app.onboarding.tourFeature1"),
+        t("app.onboarding.tourFeature2"),
+        t("app.onboarding.tourFeature3"),
+        t("app.onboarding.tourFeature4"),
+      ],
+    },
+    {
+      id: "demo",
+      icon: Zap,
+      title: t("app.onboarding.demoTitle"),
+      description: t("app.onboarding.demoDescription"),
+      features: [
+        t("app.onboarding.demoFeature1"),
+        t("app.onboarding.demoFeature2"),
+        t("app.onboarding.demoFeature3"),
+        t("app.onboarding.demoFeature4"),
+      ],
+    },
+    {
+      id: "start",
+      icon: Rocket,
+      title: t("app.onboarding.startTitle"),
+      description: t("app.onboarding.startDescription"),
+      features: [
+        t("app.onboarding.startFeature1"),
+        t("app.onboarding.startFeature2"),
+        t("app.onboarding.startFeature3"),
+        t("app.onboarding.startFeature4"),
+      ],
+    },
+  ];
 
   const step = steps[currentStep];
   const isFirstStep = currentStep === 0;
@@ -155,7 +159,7 @@ export default function WelcomeModal({
       setDemoProjectId(result.data.project.id);
       toast.success(result.message);
     } catch (error: any) {
-      toast.error(error.message || "Erro ao criar projeto demo");
+      toast.error(error.message || t("app.onboarding.errorDemo"));
     } finally {
       setIsCreatingDemo(false);
     }
@@ -220,7 +224,7 @@ export default function WelcomeModal({
               <button
                 onClick={handleSkip}
                 className="absolute top-4 right-4 p-2 hover:bg-frame-gray-2 rounded transition z-10"
-                aria-label="Fechar"
+                aria-label={t("app.onboarding.close")}
               >
                 <X className="w-5 h-5 text-frame-gray-light hover:text-frame-white" />
               </button>
@@ -238,7 +242,7 @@ export default function WelcomeModal({
                         ? "bg-frame-orange/50"
                         : "bg-frame-gray-3"
                     }`}
-                    aria-label={`Ir para passo ${index + 1}`}
+                    aria-label={t("app.onboarding.goToStep").replace("{step}", String(index + 1))}
                   />
                 ))}
               </div>
@@ -264,7 +268,7 @@ export default function WelcomeModal({
                     {/* Title */}
                     <h2 className="text-3xl font-bold text-frame-white mb-3">
                       {currentStep === 0 && userName
-                        ? `Olá, ${userName}!`
+                        ? t("app.onboarding.hello").replace("{name}", userName)
                         : step.title}
                     </h2>
 
@@ -296,8 +300,8 @@ export default function WelcomeModal({
                       <div className="mb-8 border border-frame-gray-3 bg-frame-gray-2/50 p-6">
                         <p className="text-frame-gray-light text-sm mb-4">
                           {demoProjectId
-                            ? "✅ Projeto demo já existe! Você pode explorá-lo a qualquer momento."
-                            : "Criar um projeto completo com cliente, briefing e roteiro de exemplo."}
+                            ? t("app.onboarding.demoExists")
+                            : t("app.onboarding.demoCreate")}
                         </p>
                         <div className="flex gap-3">
                           {demoProjectId ? (
@@ -306,7 +310,7 @@ export default function WelcomeModal({
                               className="frame-btn-primary flex items-center gap-2"
                             >
                               <Target className="w-4 h-4" />
-                              Ver Projeto Demo
+                              {t("app.onboarding.viewDemo")}
                             </button>
                           ) : (
                             <button
@@ -317,12 +321,12 @@ export default function WelcomeModal({
                               {isCreatingDemo ? (
                                 <>
                                   <Loader2 className="w-4 h-4 animate-spin" />
-                                  Criando...
+                                  {t("app.onboarding.creating")}
                                 </>
                               ) : (
                                 <>
                                   <Zap className="w-4 h-4" />
-                                  Criar Projeto Demo
+                                  {t("app.onboarding.createDemo")}
                                 </>
                               )}
                             </button>
@@ -345,7 +349,7 @@ export default function WelcomeModal({
                         className="w-4 h-4 bg-frame-gray-2 border border-frame-gray-3 rounded accent-frame-orange cursor-pointer"
                       />
                       <span className="text-xs text-frame-gray-light group-hover:text-frame-white transition">
-                        Não mostrar novamente
+                        {t("app.onboarding.dontShowAgain")}
                       </span>
                     </label>
 
@@ -357,7 +361,7 @@ export default function WelcomeModal({
                           className="frame-btn-ghost flex items-center gap-2"
                         >
                           <ChevronLeft className="w-4 h-4" />
-                          Voltar
+                          {t("app.onboarding.back")}
                         </button>
                       )}
 
@@ -366,7 +370,7 @@ export default function WelcomeModal({
                           onClick={handleSkip}
                           className="frame-btn-ghost"
                         >
-                          Pular
+                          {t("app.onboarding.skip")}
                         </button>
                       )}
 
@@ -377,16 +381,16 @@ export default function WelcomeModal({
                         {currentStep === 1 ? (
                           <>
                             <Target className="w-4 h-4" />
-                            Começar Tour
+                            {t("app.onboarding.startTour")}
                           </>
                         ) : isLastStep ? (
                           <>
                             <Rocket className="w-4 h-4" />
-                            Começar!
+                            {t("app.onboarding.start")}
                           </>
                         ) : (
                           <>
-                            Próximo
+                            {t("app.onboarding.next")}
                             <ChevronRight className="w-4 h-4" />
                           </>
                         )}

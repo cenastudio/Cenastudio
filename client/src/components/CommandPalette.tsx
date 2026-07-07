@@ -285,7 +285,7 @@ export default function CommandPalette() {
 
         {/* PRIMARY NAVIGATION - 5 Tabs */}
         {filteredPrimary.length > 0 && (
-          <CommandGroup heading={t("app.commandPalette.primaryNav") as string || "Main Navigation"}>
+          <CommandGroup heading="Navegação">
             {filteredPrimary.map((cmd) => {
               const Icon = cmd.icon;
               return (
@@ -295,8 +295,7 @@ export default function CommandPalette() {
                   onSelect={() => handleSelect(cmd.path)}
                 >
                   <Icon className="mr-2 h-4 w-4" />
-                  <span className="font-semibold">{t(cmd.labelKey) as string}</span>
-                  <span className="ml-2 text-xs text-muted-foreground">{cmd.label}</span>
+                  <span className="font-medium">{t(cmd.labelKey) as string}</span>
                 </CommandItem>
               );
             })}
@@ -305,7 +304,7 @@ export default function CommandPalette() {
 
         {/* SECONDARY NAVIGATION */}
         {filteredSecondary.length > 0 && (
-          <CommandGroup heading={t("app.commandPalette.navigation") as string}>
+          <CommandGroup heading="Páginas">
             {filteredSecondary.map((cmd) => {
               const Icon = cmd.icon;
               return (
@@ -324,7 +323,7 @@ export default function CommandPalette() {
 
         {/* QUICK ACTIONS */}
         {filteredActions.length > 0 && (
-          <CommandGroup heading={t("app.commandPalette.actions") as string || "Actions"}>
+          <CommandGroup heading="Ações rápidas">
             {filteredActions.map((cmd) => {
               const Icon = cmd.icon;
               return (
@@ -343,7 +342,7 @@ export default function CommandPalette() {
 
         {/* RECENT PROJECTS */}
         {filteredProjects.length > 0 && (
-          <CommandGroup heading={t("app.nav.projects") as string}>
+          <CommandGroup heading="Jobs">
             {filteredProjects.map((project) => (
               <CommandItem
                 key={project.id}

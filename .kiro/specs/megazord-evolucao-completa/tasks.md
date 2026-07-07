@@ -26,8 +26,8 @@ Modo autônomo: implementar, testar, commitar, próxima task.
 - [x] 1.1 Criar database schema (notifications table)
 - [x] 1.2 Criar migration para notifications
 - [x] 1.3 Implementar model Notification (`server/models/notification.ts`)
-- [-] 1.4 Criar notificationService (`server/services/notificationService.ts`)
-- [~] 1.5 Criar notificationController (`server/controllers/notificationController.ts`)
+- [x] 1.4 Criar notificationService (`server/services/notificationService.ts`)
+- [x] 1.5 Criar notificationController (`server/controllers/notificationController.ts`)
 - [~] 1.6 Criar routes notifications (`server/routes/notifications.ts`)
 - [~] 1.7 Integrar routes no server
 - [~] 1.8 Testar endpoints com Postman/curl

@@ -44,7 +44,7 @@ export function exportToPdf(options: PdfExportOptions): Buffer {
 
   if (columns && data.length > 0) {
     // Headers
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     let xPosition = 20;
     columns.forEach((col) => {
       doc.text(col.header, xPosition, yPosition);
@@ -57,7 +57,7 @@ export function exportToPdf(options: PdfExportOptions): Buffer {
     yPosition += 7;
 
     // Dados
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     data.slice(0, 30).forEach((row) => {
       // Limitar a 30 linhas
       if (yPosition > 270) {

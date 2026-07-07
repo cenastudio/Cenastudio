@@ -1,3 +1,4 @@
+import { useLanguage } from "@/contexts/LanguageContext";
 import SessionGuide from "./SessionGuide";
 
 interface FormProps {
@@ -6,6 +7,8 @@ interface FormProps {
 }
 
 export default function BudgetForm({ data, onChange }: FormProps) {
+  const { t } = useLanguage();
+
   const completed = [
     data.tipo,
     data.dias || data.locacoes,
@@ -15,42 +18,46 @@ export default function BudgetForm({ data, onChange }: FormProps) {
   return (
     <div className="space-y-4">
       <SessionGuide
-        label="Sessão orçamento"
-        title="Transforme escopo em premissas de custo."
-        steps={["Formato e volume", "Diárias e locações", "Equipe, equipamento e pós"]}
-        output="Saída esperada: orçamento base com categorias claras para proposta e financeiro."
+        label={t("app.studio.forms.budget.sessionLabel")}
+        title={t("app.studio.forms.budget.sessionTitle")}
+        steps={[
+          t("app.studio.forms.budget.step1"),
+          t("app.studio.forms.budget.step2"),
+          t("app.studio.forms.budget.step3"),
+        ]}
+        output={t("app.studio.forms.budget.sessionOutput")}
         completed={completed}
       />
 
       {/* Seção 1: Escopo do Projeto */}
       <div>
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
-          // Escopo do Projeto
+          {t("app.studio.forms.budget.sectionScope")}
         </p>
         <div className="space-y-3">
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Tipo de Produção
+              {t("app.studio.forms.budget.productionType")}
             </label>
             <select
-              value={data.tipo || "Vídeo Institucional (1-3 min)"}
+              value={data.tipo || t("app.studio.forms.budget.optInstitutional")}
               onChange={(e) => onChange("tipo", e.target.value)}
               className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
             >
-              <option value="Vídeo Institucional (1-3 min)">Vídeo Institucional (1-3 min)</option>
-              <option value="Vídeo Publicitário / TVC 30s">Vídeo Publicitário / TVC 30s</option>
-              <option value="Curta-metragem">Curta-metragem</option>
-              <option value="Documentário">Documentário</option>
-              <option value="Vídeo para Redes Sociais">Vídeo para Redes Sociais</option>
-              <option value="Evento Corporativo">Evento Corporativo</option>
-              <option value="Videoclipe">Videoclipe</option>
+              <option value={t("app.studio.forms.budget.optInstitutional")}>{t("app.studio.forms.budget.optInstitutional")}</option>
+              <option value={t("app.studio.forms.budget.optAdvertising")}>{t("app.studio.forms.budget.optAdvertising")}</option>
+              <option value={t("app.studio.forms.budget.optShortFilm")}>{t("app.studio.forms.budget.optShortFilm")}</option>
+              <option value={t("app.studio.forms.budget.optDocumentary")}>{t("app.studio.forms.budget.optDocumentary")}</option>
+              <option value={t("app.studio.forms.budget.optSocial")}>{t("app.studio.forms.budget.optSocial")}</option>
+              <option value={t("app.studio.forms.budget.optEvent")}>{t("app.studio.forms.budget.optEvent")}</option>
+              <option value={t("app.studio.forms.budget.optMusicVideo")}>{t("app.studio.forms.budget.optMusicVideo")}</option>
             </select>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Dias de Filmagem
+                {t("app.studio.forms.budget.shootDays")}
               </label>
               <input
                 type="number"
@@ -62,7 +69,7 @@ export default function BudgetForm({ data, onChange }: FormProps) {
             </div>
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Nº de Locações
+                {t("app.studio.forms.budget.numLocations")}
               </label>
               <input
                 type="number"
@@ -79,37 +86,37 @@ export default function BudgetForm({ data, onChange }: FormProps) {
       {/* Seção 2: Recursos */}
       <div className="pt-2 border-t border-frame-gray-2">
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
-          // Recursos & Equipe
+          {t("app.studio.forms.budget.sectionResources")}
         </p>
         <div className="space-y-3">
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Tamanho da Equipe Técnica
+              {t("app.studio.forms.budget.crewSize")}
             </label>
             <select
-              value={data.equipe || "Média (5-8 pessoas)"}
+              value={data.equipe || t("app.studio.forms.budget.optCrewMedium")}
               onChange={(e) => onChange("equipe", e.target.value)}
               className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
             >
-              <option value="Pequena (2-4 pessoas)">Pequena (2-4 pessoas)</option>
-              <option value="Média (5-8 pessoas)">Média (5-8 pessoas)</option>
-              <option value="Grande (9-15 pessoas)">Grande (9-15 pessoas)</option>
+              <option value={t("app.studio.forms.budget.optCrewSmall")}>{t("app.studio.forms.budget.optCrewSmall")}</option>
+              <option value={t("app.studio.forms.budget.optCrewMedium")}>{t("app.studio.forms.budget.optCrewMedium")}</option>
+              <option value={t("app.studio.forms.budget.optCrewLarge")}>{t("app.studio.forms.budget.optCrewLarge")}</option>
             </select>
           </div>
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Elenco / Apresentadores / Atores
+              {t("app.studio.forms.budget.cast")}
             </label>
             <select
-              value={data.atores || "Não"}
+              value={data.atores || t("app.studio.forms.budget.optCastNone")}
               onChange={(e) => onChange("atores", e.target.value)}
               className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
             >
-              <option value="Não">Não</option>
-              <option value="Equipe interna do cliente">Equipe interna do cliente</option>
-              <option value="Atores contratados (2)">Atores contratados (2)</option>
-              <option value="Atores contratados (4+)">Atores contratados (4+)</option>
+              <option value={t("app.studio.forms.budget.optCastNone")}>{t("app.studio.forms.budget.optCastNone")}</option>
+              <option value={t("app.studio.forms.budget.optCastInternal")}>{t("app.studio.forms.budget.optCastInternal")}</option>
+              <option value={t("app.studio.forms.budget.optCast2")}>{t("app.studio.forms.budget.optCast2")}</option>
+              <option value={t("app.studio.forms.budget.optCast4")}>{t("app.studio.forms.budget.optCast4")}</option>
             </select>
           </div>
         </div>
@@ -118,52 +125,52 @@ export default function BudgetForm({ data, onChange }: FormProps) {
       {/* Seção 3: Equipamento */}
       <div className="pt-2 border-t border-frame-gray-2">
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
-          // Infraestrutura & Equipamento
+          {t("app.studio.forms.budget.sectionEquipment")}
         </p>
         <div className="space-y-3">
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Câmeras & Ópticas
+              {t("app.studio.forms.budget.cameras")}
             </label>
             <select
-              value={data.camera || "Câmera própria (sem custo)"}
+              value={data.camera || t("app.studio.forms.budget.optCameraOwn")}
               onChange={(e) => onChange("camera", e.target.value)}
               className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
             >
-              <option value="Câmera própria (sem custo)">Câmera própria (sem custo)</option>
-              <option value="Aluguel básico (Sony A7, Lumix S5)">Aluguel básico (Sony A7, Lumix S5)</option>
-              <option value="Aluguel cinema intermediário (FX6, C70)">Aluguel cinema intermediário (FX6, C70)</option>
-              <option value="Aluguel cinema topo (ARRI, RED, FX9)">Aluguel cinema topo (ARRI, RED, FX9)</option>
+              <option value={t("app.studio.forms.budget.optCameraOwn")}>{t("app.studio.forms.budget.optCameraOwn")}</option>
+              <option value={t("app.studio.forms.budget.optCameraBasic")}>{t("app.studio.forms.budget.optCameraBasic")}</option>
+              <option value={t("app.studio.forms.budget.optCameraIntermediate")}>{t("app.studio.forms.budget.optCameraIntermediate")}</option>
+              <option value={t("app.studio.forms.budget.optCameraHighEnd")}>{t("app.studio.forms.budget.optCameraHighEnd")}</option>
             </select>
           </div>
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Drone e Capturas Aéreas
+              {t("app.studio.forms.budget.drone")}
             </label>
             <select
-              value={data.drone || "Não"}
+              value={data.drone || t("app.studio.forms.budget.optDroneNo")}
               onChange={(e) => onChange("drone", e.target.value)}
               className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
             >
-              <option value="Não">Não</option>
-              <option value="Sim — próprio (sem custo operacional extra)">Sim — próprio (sem custo operacional extra)</option>
-              <option value="Sim — aluguel + piloto credenciado">Sim — aluguel + piloto credenciado</option>
+              <option value={t("app.studio.forms.budget.optDroneNo")}>{t("app.studio.forms.budget.optDroneNo")}</option>
+              <option value={t("app.studio.forms.budget.optDroneOwn")}>{t("app.studio.forms.budget.optDroneOwn")}</option>
+              <option value={t("app.studio.forms.budget.optDroneRental")}>{t("app.studio.forms.budget.optDroneRental")}</option>
             </select>
           </div>
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Kit de Iluminação
+              {t("app.studio.forms.budget.lighting")}
             </label>
             <select
-              value={data.luz || "Luz natural (sem custo)"}
+              value={data.luz || t("app.studio.forms.budget.optLightNatural")}
               onChange={(e) => onChange("luz", e.target.value)}
               className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
             >
-              <option value="Luz natural (sem custo)">Luz natural (sem custo)</option>
-              <option value="Kit básico próprio (LEDs leves)">Kit básico próprio (LEDs leves)</option>
-              <option value="Aluguel de kit profissional (Aputure, rebatedores)">Aluguel de kit profissional (Aputure, rebatedores)</option>
+              <option value={t("app.studio.forms.budget.optLightNatural")}>{t("app.studio.forms.budget.optLightNatural")}</option>
+              <option value={t("app.studio.forms.budget.optLightBasic")}>{t("app.studio.forms.budget.optLightBasic")}</option>
+              <option value={t("app.studio.forms.budget.optLightPro")}>{t("app.studio.forms.budget.optLightPro")}</option>
             </select>
           </div>
         </div>
@@ -172,36 +179,36 @@ export default function BudgetForm({ data, onChange }: FormProps) {
       {/* Seção 4: Pós-produção */}
       <div className="pt-2 border-t border-frame-gray-2">
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
-          // Pós-Produção & Finalização
+          {t("app.studio.forms.budget.sectionPost")}
         </p>
         <div className="space-y-3">
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Serviços de Edição / Montagem
+              {t("app.studio.forms.budget.editing")}
             </label>
             <select
-              value={data.edicao || "Básica (corte, color simples)"}
+              value={data.edicao || t("app.studio.forms.budget.optEditBasic")}
               onChange={(e) => onChange("edicao", e.target.value)}
               className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
             >
-              <option value="Básica (corte, color simples)">Básica (corte, color simples)</option>
-              <option value="Profissional (color, motion, trilha)">Profissional (color, motion, trilha)</option>
-              <option value="Premium (VFX, 3D, animação complexa)">Premium (VFX, 3D, animação complexa)</option>
+              <option value={t("app.studio.forms.budget.optEditBasic")}>{t("app.studio.forms.budget.optEditBasic")}</option>
+              <option value={t("app.studio.forms.budget.optEditPro")}>{t("app.studio.forms.budget.optEditPro")}</option>
+              <option value={t("app.studio.forms.budget.optEditPremium")}>{t("app.studio.forms.budget.optEditPremium")}</option>
             </select>
           </div>
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Trilha Sonora & Direitos
+              {t("app.studio.forms.budget.soundtrack")}
             </label>
             <select
-              value={data.trilha || "Banco royalty-free"}
+              value={data.trilha || t("app.studio.forms.budget.optMusicFree")}
               onChange={(e) => onChange("trilha", e.target.value)}
               className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
             >
-              <option value="Banco royalty-free">Banco royalty-free</option>
-              <option value="Banco premium (licenciada)">Banco premium (licenciada)</option>
-              <option value="Composição original / exclusiva">Composição original / exclusiva</option>
+              <option value={t("app.studio.forms.budget.optMusicFree")}>{t("app.studio.forms.budget.optMusicFree")}</option>
+              <option value={t("app.studio.forms.budget.optMusicPremium")}>{t("app.studio.forms.budget.optMusicPremium")}</option>
+              <option value={t("app.studio.forms.budget.optMusicOriginal")}>{t("app.studio.forms.budget.optMusicOriginal")}</option>
             </select>
           </div>
         </div>

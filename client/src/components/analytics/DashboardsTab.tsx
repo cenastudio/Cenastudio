@@ -4,6 +4,7 @@ import { Plus, LayoutDashboard, Edit, Trash2, Eye, Star } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Dashboard {
   id: string;
@@ -18,6 +19,7 @@ interface Dashboard {
 
 export default function DashboardsTab() {
   const [, setLocation] = useLocation();
+  const { t, locale } = useLanguage();
   const [dashboards, setDashboards] = useState<Dashboard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -33,11 +35,11 @@ export default function DashboardsTab() {
       if (result.success) {
         setDashboards(result.data);
       } else {
-        toast.error("Erro ao carregar dashboards");
+        toast.error(t("app.analytics.dashboardLoadError"));
       }
     } catch (error) {
       console.error("Error loading dashboards:", error);
-      toast.error("Erro ao carregar dashboards");
+      toast.error(t("app.analytics.dashboardLoadError"));
     } finally {
       setIsLoading(false);
     }
@@ -55,8 +57,8 @@ export default function DashboardsTab() {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: "Novo Dashboard",
-          description: "Dashboard customizável",
+          name: locale === "en" ? "New Dashboard" : "Novo Dashboard",
+          description: locale === "en" ? "Customizable dashboard" : "Dashboard customizável",
           isDefault: dashboards.length === 0
         })
       });
@@ -64,21 +66,21 @@ export default function DashboardsTab() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success("Dashboard criado!");
+        toast.success(t("app.analytics.dashboardCreated"));
         setLocation(`/analytics-premium/dashboard/${result.data.id}`);
       } else {
-        toast.error(result.error || "Erro ao criar dashboard");
+        toast.error(result.error || t("app.analytics.dashboardCreateError"));
       }
     } catch (error) {
       console.error("Error creating dashboard:", error);
-      toast.error("Erro ao criar dashboard");
+      toast.error(t("app.analytics.dashboardCreateError"));
     } finally {
       setIsCreating(false);
     }
   };
 
   const deleteDashboard = async (id: string, name: string) => {
-    if (!window.confirm(`Deletar dashboard "${name}"?`)) return;
+    if (!window.confirm(t("app.analytics.dashboardDeleteConfirm").replace("{name}", name))) return;
 
     try {
       const response = await fetch(`/api/analytics/dashboards/${id}`, {
@@ -89,14 +91,14 @@ export default function DashboardsTab() {
       const result = await response.json();
 
       if (result.success) {
-        toast.success("Dashboard deletado!");
+        toast.success(t("app.analytics.dashboardDeleted"));
         loadDashboards();
       } else {
-        toast.error(result.error || "Erro ao deletar dashboard");
+        toast.error(result.error || t("app.analytics.dashboardDeleteError"));
       }
     } catch (error) {
       console.error("Error deleting dashboard:", error);
-      toast.error("Erro ao deletar dashboard");
+      toast.error(t("app.analytics.dashboardDeleteError"));
     }
   };
 
@@ -113,9 +115,9 @@ export default function DashboardsTab() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold">Seus Dashboards</h2>
+          <h2 className="text-2xl font-semibold">{t("app.analytics.yourDashboards")}</h2>
           <p className="text-sm text-frame-gray-light mt-1">
-            {dashboards.length} dashboard{dashboards.length !== 1 ? 's' : ''} criado{dashboards.length !== 1 ? 's' : ''}
+            {dashboards.length} dashboard{dashboards.length !== 1 ? 's' : ''} {locale === "en" ? "created" : (dashboards.length !== 1 ? "criados" : "criado")}
           </p>
         </div>
 
@@ -125,7 +127,7 @@ export default function DashboardsTab() {
           className="frame-btn-primary"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Novo Dashboard
+          {t("app.analytics.newDashboard")}
         </Button>
       </div>
 
@@ -134,14 +136,13 @@ export default function DashboardsTab() {
         <Card className="border-frame-gray-3 bg-frame-gray-1/20">
           <CardContent className="flex flex-col items-center justify-center min-h-64 text-center">
             <LayoutDashboard className="h-12 w-12 text-frame-gray-light mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Nenhum dashboard criado</h3>
+            <h3 className="text-lg font-semibold mb-2">{t("app.analytics.noDashboards")}</h3>
             <p className="text-sm text-frame-gray-light mb-6 max-w-md">
-              Crie seu primeiro dashboard customizável com widgets drag & drop
-              para visualizar suas métricas mais importantes.
+              {t("app.analytics.noDashboardsDesc")}
             </p>
             <Button onClick={createDashboard} disabled={isCreating}>
               <Plus className="h-4 w-4 mr-2" />
-              Criar Primeiro Dashboard
+              {t("app.analytics.createFirst")}
             </Button>
           </CardContent>
         </Card>
@@ -175,7 +176,7 @@ export default function DashboardsTab() {
                 <div className="flex items-center justify-between text-xs text-frame-gray-light">
                   <span>{dashboard.widget_count} widget{dashboard.widget_count !== 1 ? 's' : ''}</span>
                   <span>
-                    {new Date(dashboard.updated_at).toLocaleDateString('pt-BR')}
+                    {new Date(dashboard.updated_at).toLocaleDateString(locale === "en" ? "en-US" : "pt-BR")}
                   </span>
                 </div>
 
@@ -190,7 +191,7 @@ export default function DashboardsTab() {
                     className="flex-1"
                   >
                     <Eye className="h-3 w-3 mr-1" />
-                    Ver
+                    {locale === "en" ? "View" : "Ver"}
                   </Button>
 
                   <Button

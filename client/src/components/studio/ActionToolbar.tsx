@@ -36,7 +36,7 @@ export default function ActionToolbar({
 
   return (
     <div className="px-6 py-3 border-b border-frame-gray-2 flex flex-wrap items-center justify-between gap-3 bg-frame-gray-1/40 shrink-0 select-none">
-      {/* Segmented Tab Selector (Document vs Refinement Chat) */}
+      {/* Segmented Tab Selector — Refinar só aparece quando tem output */}
       <div className="flex bg-frame-gray-1 p-0.5 border border-frame-gray-3">
         <button
           type="button"
@@ -50,18 +50,20 @@ export default function ActionToolbar({
           <FileText className="w-3.5 h-3.5" />
           {t("app.studio.document") as string}
         </button>
-        <button
-          type="button"
-          onClick={() => onChangeTab("refine")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase transition ${
-            activeTab === "refine"
-              ? "bg-frame-orange text-frame-black font-medium"
-              : "text-frame-gray-light hover:text-frame-white"
-          }`}
-        >
-          <MessageSquare className="w-3.5 h-3.5" />
-          {t("app.studio.refineWithAI") as string}
-        </button>
+        {hasOutput && (
+          <button
+            type="button"
+            onClick={() => onChangeTab("refine")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase transition ${
+              activeTab === "refine"
+                ? "bg-frame-orange text-frame-black font-medium"
+                : "text-frame-gray-light hover:text-frame-white"
+            }`}
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            Refinar documento
+          </button>
+        )}
       </div>
 
       {/* Operation Actions */}

@@ -1,20 +1,24 @@
+import { useLanguage } from "@/contexts/LanguageContext";
+
 interface FormProps {
   data: Record<string, string>;
   onChange: (key: string, value: string) => void;
 }
 
 export default function DecupagemForm({ data, onChange }: FormProps) {
+  const { t } = useLanguage();
+
   return (
     <div className="space-y-4">
       {/* Seção 1: Cena */}
       <div>
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
-          // Cena
+          {t("app.studio.forms.decupagem.sectionScene")}
         </p>
         <div className="space-y-3">
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Descrição da Cena
+              {t("app.studio.forms.decupagem.sceneDescription")}
             </label>
             <textarea
               value={data.cena || ""}
@@ -28,7 +32,7 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Nº Estimado de Planos
+                {t("app.studio.forms.decupagem.estimatedShots")}
               </label>
               <input
                 type="number"
@@ -40,7 +44,7 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
             </div>
             <div>
               <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-                Duração Estimada
+                {t("app.studio.forms.decupagem.estimatedDuration")}
               </label>
               <input
                 type="text"
@@ -57,12 +61,12 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
       {/* Seção 2: Câmera */}
       <div className="pt-2 border-t border-frame-gray-2">
         <p className="font-frame-mono text-[0.62rem] tracking-[0.17em] uppercase text-frame-orange mb-3">
-          // Câmera & Estilo Visual
+          {t("app.studio.forms.decupagem.sectionCamera")}
         </p>
         <div className="space-y-3">
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Modelo da Câmera / Sensor
+              {t("app.studio.forms.decupagem.cameraModel")}
             </label>
             <input
               type="text"
@@ -75,24 +79,24 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Estilo de Movimento
+              {t("app.studio.forms.decupagem.movementStyle")}
             </label>
             <select
-              value={data.estilo || "Misto"}
+              value={data.estilo || t("app.studio.forms.decupagem.optMixed")}
               onChange={(e) => onChange("estilo", e.target.value)}
               className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
             >
-              <option value="Câmera na mão (handheld)">Câmera na mão (handheld)</option>
-              <option value="Tripé — planos fixos">Tripé — planos fixos</option>
-              <option value="Steadicam / Gimbal">Steadicam / Gimbal</option>
-              <option value="Drone / aéreo">Drone / aéreo</option>
-              <option value="Misto">Misto</option>
+              <option value={t("app.studio.forms.decupagem.optHandheld")}>{t("app.studio.forms.decupagem.optHandheld")}</option>
+              <option value={t("app.studio.forms.decupagem.optTripod")}>{t("app.studio.forms.decupagem.optTripod")}</option>
+              <option value={t("app.studio.forms.decupagem.optGimbal")}>{t("app.studio.forms.decupagem.optGimbal")}</option>
+              <option value={t("app.studio.forms.decupagem.optDrone")}>{t("app.studio.forms.decupagem.optDrone")}</option>
+              <option value={t("app.studio.forms.decupagem.optMixed")}>{t("app.studio.forms.decupagem.optMixed")}</option>
             </select>
           </div>
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Referência Estética / Fotografia
+              {t("app.studio.forms.decupagem.aestheticRef")}
             </label>
             <input
               type="text"
@@ -105,7 +109,7 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Equipe Técnica Principal
+              {t("app.studio.forms.decupagem.keyCrew")}
             </label>
             <input
               type="text"
@@ -118,7 +122,7 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
 
           <div>
             <label className="block font-frame-mono text-[0.62rem] tracking-[0.11em] uppercase text-frame-gray-light mb-1">
-              Observações / Luz Disponível
+              {t("app.studio.forms.decupagem.notesLight")}
             </label>
             <textarea
               value={data.observacoes || ""}

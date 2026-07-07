@@ -50,7 +50,7 @@ export async function getCommercialDashboard(req: Request, res: Response) {
         where: {
           userId: userIdBigInt,
           kind: 'income',
-          status: 'paid',
+          status: 'settled',
         },
         select: {
           amount: true,
@@ -120,7 +120,7 @@ export async function getCommercialDashboard(req: Request, res: Response) {
       const revenueQuery = db.prepare(`
         SELECT COALESCE(SUM(amount), 0) as total_revenue
         FROM financial_entries
-        WHERE user_id = ? AND kind = 'income' AND status = 'paid'
+        WHERE user_id = ? AND kind = 'income' AND status = 'settled'
       `).get(userId) as { total_revenue: number };
 
       // Get monthly revenue
@@ -133,7 +133,7 @@ export async function getCommercialDashboard(req: Request, res: Response) {
         FROM financial_entries
         WHERE user_id = ?
           AND kind = 'income'
-          AND status = 'paid'
+          AND status = 'settled'
           AND paid_at >= ?
           AND paid_at <= ?
       `).get(userId, monthStart, monthEnd) as { monthly_revenue: number };
@@ -222,7 +222,7 @@ export async function getRevenueTracking(req: Request, res: Response) {
           where: {
             userId: BigInt(userId),
             kind: 'income',
-            status: 'paid',
+            status: 'settled',
             paidAt: { gte: monthStart, lte: monthEnd },
           },
           select: { amount: true },
@@ -235,7 +235,7 @@ export async function getRevenueTracking(req: Request, res: Response) {
           FROM financial_entries
           WHERE user_id = ?
             AND kind = 'income'
-            AND status = 'paid'
+            AND status = 'settled'
             AND paid_at >= ?
             AND paid_at <= ?
         `).get(userId, monthStart.toISOString(), monthEnd.toISOString()) as { revenue: number };
@@ -521,7 +521,7 @@ export async function getSalesForecast(req: Request, res: Response) {
           where: {
             userId: BigInt(userId),
             kind: 'income',
-            status: 'paid',
+            status: 'settled',
             paidAt: { gte: monthStart, lte: monthEnd },
           },
           select: { amount: true },
@@ -534,7 +534,7 @@ export async function getSalesForecast(req: Request, res: Response) {
           FROM financial_entries
           WHERE user_id = ?
             AND kind = 'income'
-            AND status = 'paid'
+            AND status = 'settled'
             AND paid_at >= ?
             AND paid_at <= ?
         `).get(userId, monthStart.toISOString(), monthEnd.toISOString()) as { revenue: number };
@@ -630,7 +630,7 @@ export async function getPeriodComparison(req: Request, res: Response) {
         where: {
           userId: userIdBigInt,
           kind: 'income',
-          status: 'paid',
+          status: 'settled',
           paidAt: { gte: currentMonthStart, lte: currentMonthEnd },
         },
         select: { amount: true },
@@ -642,7 +642,7 @@ export async function getPeriodComparison(req: Request, res: Response) {
         where: {
           userId: userIdBigInt,
           kind: 'income',
-          status: 'paid',
+          status: 'settled',
           paidAt: { gte: previousMonthStart, lte: previousMonthEnd },
         },
         select: { amount: true },
@@ -717,7 +717,7 @@ export async function getPeriodComparison(req: Request, res: Response) {
         FROM financial_entries
         WHERE user_id = ?
           AND kind = 'income'
-          AND status = 'paid'
+          AND status = 'settled'
           AND paid_at >= ?
           AND paid_at <= ?
       `).get(userId, currentMonthStart.toISOString(), currentMonthEnd.toISOString()) as { total: number };
@@ -727,7 +727,7 @@ export async function getPeriodComparison(req: Request, res: Response) {
         FROM financial_entries
         WHERE user_id = ?
           AND kind = 'income'
-          AND status = 'paid'
+          AND status = 'settled'
           AND paid_at >= ?
           AND paid_at <= ?
       `).get(userId, previousMonthStart.toISOString(), previousMonthEnd.toISOString()) as { total: number };

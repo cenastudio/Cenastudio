@@ -8,7 +8,7 @@ interface FAQ {
   answer: string;
 }
 
-const faqs: FAQ[] = [
+const FAQS_PT: FAQ[] = [
   {
     question: "Preciso de cartão de crédito para começar?",
     answer: "Não! O plano Iniciante é 100% gratuito e não requer cartão de crédito. Você pode criar projetos, usar ferramentas de IA e explorar a plataforma sem compromisso.",
@@ -43,8 +43,45 @@ const faqs: FAQ[] = [
   },
 ];
 
+const FAQS_EN: FAQ[] = [
+  {
+    question: "Do I need a credit card to start?",
+    answer: "No. The Starter plan is 100% free and does not require a credit card. You can create projects, use AI tools and explore the platform without any commitment.",
+  },
+  {
+    question: "How does the trial for paid plans work?",
+    answer: "The Pro and Studio plans include a 7-day free trial with full access to every feature. Cancel any time before the trial ends and you won't be charged.",
+  },
+  {
+    question: "Can I cancel my plan at any time?",
+    answer: "Yes. You can cancel any time. There are no long-term contracts or cancellation fees, and you keep access until the end of the period you already paid for.",
+  },
+  {
+    question: "How many projects can I create?",
+    answer: "The Starter plan allows 3 active projects. Pro allows 15 projects. Studio has unlimited projects. You can archive old projects to free up space.",
+  },
+  {
+    question: "Do AI tools have usage limits?",
+    answer: "Yes. Each plan includes a monthly AI generation quota: Starter (50), Pro (500), Studio (2000). Unused generations do not roll over to the next month.",
+  },
+  {
+    question: "Can I invite collaborators?",
+    answer: "Yes. The Pro plan supports up to 3 collaborators. The Studio plan has unlimited collaborators. Each collaborator gets their own login and configurable permissions.",
+  },
+  {
+    question: "Are my files safe?",
+    answer: "Absolutely. We use Supabase Storage with encryption in transit and at rest, plus automatic daily backups. You can delete your data at any time.",
+  },
+  {
+    question: "How does support work?",
+    answer: "Starter plan: FAQ and documentation. Pro plan: email within 24h. Studio plan: priority email within 4h plus a personalized onboarding session.",
+  },
+];
+
 export default function FAQSection() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
+  const isEn = locale === "en";
+  const faqs = isEn ? FAQS_EN : FAQS_PT;
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const toggleFAQ = (index: number) => {
@@ -61,12 +98,24 @@ export default function FAQSection() {
           viewport={{ once: true }}
           className="text-center mb-14"
         >
-          <p className="frame-label mb-3">// PERGUNTAS FREQUENTES</p>
+          <p className="frame-label mb-3">
+            {isEn ? "// FREQUENTLY ASKED QUESTIONS" : "// PERGUNTAS FREQUENTES"}
+          </p>
           <h2 className="frame-title text-[clamp(2.8rem,5.5vw,5rem)] mb-4">
-            Dúvidas? <span className="text-frame-orange">Respondidas.</span>
+            {isEn ? (
+              <>
+                Questions? <span className="text-frame-orange">Answered.</span>
+              </>
+            ) : (
+              <>
+                Dúvidas? <span className="text-frame-orange">Respondidas.</span>
+              </>
+            )}
           </h2>
           <p className="text-frame-gray-light text-lg max-w-2xl mx-auto">
-            Tudo o que você precisa saber sobre a plataforma, planos e funcionalidades.
+            {isEn
+              ? "Everything you need to know about the platform, plans and features."
+              : "Tudo o que você precisa saber sobre a plataforma, planos e funcionalidades."}
           </p>
         </motion.div>
 
@@ -159,10 +208,12 @@ export default function FAQSection() {
             className="mt-12 text-center border border-frame-gray-3 bg-frame-gray-1/5 p-8"
           >
             <h3 className="text-xl font-semibold text-frame-white mb-3">
-              Ainda tem dúvidas?
+              {isEn ? "Still have questions?" : "Ainda tem dúvidas?"}
             </h3>
             <p className="text-frame-gray-light mb-6">
-              Nossa equipe está pronta para te ajudar. Fale com a gente!
+              {isEn
+                ? "Our team is ready to help. Get in touch!"
+                : "Nossa equipe está pronta para te ajudar. Fale com a gente!"}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
@@ -173,13 +224,13 @@ export default function FAQSection() {
                   document.querySelector("#site-footer")?.scrollIntoView({ behavior: "smooth" });
                 }}
               >
-                Falar com Suporte
+                {isEn ? "Talk to Support" : "Falar com Suporte"}
               </a>
               <a
                 href="/register"
                 className="frame-btn-ghost"
               >
-                Testar Grátis
+                {isEn ? "Try for Free" : "Testar Grátis"}
               </a>
             </div>
           </motion.div>

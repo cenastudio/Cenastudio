@@ -187,7 +187,7 @@ export const uploadVideo: RequestHandler = async (req, res, next) => {
 
     const newFile = db
       .prepare("SELECT * FROM files WHERE id = ?")
-      .get(result.lastInsertRowid);
+      .get(result.lastInsertRowid) as any;
 
     res.json({
       success: true,
