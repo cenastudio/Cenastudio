@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
+  "engines": {
+    "node": ">=20.19.0",
+    "npm": ">=10.0.0"
+  },
   "scripts": {
     "dev": "concurrently -k \"NODE_ENV=development PORT=5001 tsx watch server/index.ts\" \"VITE_API_PROXY=http://localhost:5001 vite --host --port 5173\"",
     "build": "npm run build:client && npm run build:server",
