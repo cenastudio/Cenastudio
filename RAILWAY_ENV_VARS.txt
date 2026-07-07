@@ -43,27 +43,30 @@ CLOUDINARY_API_KEY=616546241273315
 CLOUDINARY_API_SECRET=1LR3bMh83L6kLtMxkkdII4HqFfc
 
 # -----------------------------------------------------------------------------
-# 5. AI PROVIDER - OPENROUTER
+# 5. AI PROVIDER - OPENROUTER - ✅ PRONTO!
 # -----------------------------------------------------------------------------
-# CRIAR CONTA: https://openrouter.ai
-# Depois: https://openrouter.ai/keys > Create Key
 AI_PROVIDER=openrouter
-OPENROUTER_API_KEY=<COLAR_KEY_DO_OPENROUTER>
-OPENROUTER_MODEL=anthropic/claude-3.5-sonnet
+OPENROUTER_API_KEY=<SUA_KEY_AQUI>
+OPENROUTER_MODEL=nvidia/nemotron-3-super-120b-a12b:free
 OPENROUTER_MAX_TOKENS=4096
 OPENROUTER_TEMPERATURE=0.7
+OPENROUTER_TOP_P=0.95
+OPENROUTER_TIMEOUT_MS=180000
+OPENROUTER_FREE_LIMIT=200
+FALLBACK_AI_PROVIDER=anthropic
 
 # -----------------------------------------------------------------------------
-# 6. STRIPE - PAGAMENTOS
+# 6. STRIPE - PAGAMENTOS - ✅ 100% PRONTO!
 # -----------------------------------------------------------------------------
-# CRIAR CONTA: https://dashboard.stripe.com/register
-# Developers > API Keys
-STRIPE_SECRET_KEY=<COLAR_SECRET_KEY_DO_STRIPE>
-STRIPE_PUBLISHABLE_KEY=<COLAR_PUBLISHABLE_KEY_DO_STRIPE>
+# Secret Key
+STRIPE_SECRET_KEY=<SUA_SECRET_KEY_AQUI>
 
-# Price IDs dos produtos (criar os produtos primeiro)
-STRIPE_PRICE_PRO=<COLAR_PRICE_ID_DO_PLANO_PRO>
-STRIPE_PRICE_STUDIO=<COLAR_PRICE_ID_DO_PLANO_STUDIO>
+# Publishable Key
+STRIPE_PUBLISHABLE_KEY=<SUA_PUBLISHABLE_KEY_AQUI>
+
+# Price IDs dos produtos (JÁ CRIADOS!)
+STRIPE_PRICE_PRO=price_1TqNLy1faUmxkSc94gWhv6Lr
+STRIPE_PRICE_STUDIO=price_1TqNLz1faUmxkSc9urdacAEt
 
 # Webhook Secret (configurar DEPOIS do deploy)
 STRIPE_WEBHOOK_SECRET=<CONFIGURAR_DEPOIS>

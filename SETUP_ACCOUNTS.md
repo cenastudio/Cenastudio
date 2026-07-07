@@ -93,18 +93,18 @@ Cloud Name: tlfxvneq
 API Key: 616546241273315
 API Secret: 1LR3bMh83L6kLtMxkkdII4HqFfc
 
-=== OPENROUTER ===
-Email: _______________
-API Key: _______________
-Créditos adicionados: $___
+=== OPENROUTER === ✅
+Email: (conta criada)
+API Key: (configurada localmente)
+Créditos adicionados: $0 (usando free tier)
 
-=== STRIPE ===
-Email: _______________
-Publishable Key (pk_test_...): _______________
-Secret Key (sk_test_...): _______________
-Price ID Pro: _______________
-Price ID Studio: _______________
-Webhook Secret (depois do deploy): _______________
+=== STRIPE === ✅
+Email: cenastudio@atomicmail.io
+Publishable Key: (configurada - começa com pk_test_)
+Secret Key: (configurada - começa com sk_test_)
+Price ID Pro: price_1TqNLy1faUmxkSc94gWhv6Lr
+Price ID Studio: price_1TqNLz1faUmxkSc9urdacAEt
+Webhook Secret (depois do deploy): <CONFIGURAR_DEPOIS>
 ```
 
 ---
