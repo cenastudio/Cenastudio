@@ -57,10 +57,36 @@ scripts/get-stripe-keys.ts
 .vercel
 .env*
 
-# Docs locais com secrets
+# Docs locais de trabalho (não versionar)
 VERCEL_ENV_VARS_TO_ADD.md
 SESSAO_*.md
-STATUS_COMPLETO_*.md
+STATUS_*.md
 LIMPEZA_*.md
 RESOLVER_*.md
 PUSH_*.md
+ALERTA_*.md
+ANALISE_*.md
+CHECKLIST_*.md
+COMANDOS_*.md
+CREDENCIAIS_*.md
+DECISAO_*.md
+DEPLOY_*.md
+DIAGNOSTICO_*.md
+ENV_*.md
+ERROS_*.md
+GIT_*.md
+PERMITIR_*.md
+PERFORMANCE_*.md
+PRE_*.md
+PRONTO_*.md
+PROXIMO_*.md
+RAILWAY_*.md
+RELATORIO_*.md
+RESPOSTA_*.md
+RESULTADO_*.md
+RESUMO_*.md
+ROTAS_*.md
+SITUACAO_*.md
+VERIFICAR_*.md
+*.sh
+!scripts/*.sh
