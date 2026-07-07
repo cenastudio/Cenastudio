@@ -22,13 +22,14 @@ const __dirname = path.dirname(__filename);
 
 let databaseInitialized = false;
 let prismaCoreReady: Promise<void> | null = null;
+let sqliteInitReady: Promise<void> | null = null;
 
 function ensureDatabase() {
   if (!databaseInitialized) {
     assertLaunchReadyEnvironment();
     requireEnvOrThrow();
     if (!shouldUsePrisma) {
-      initDatabase();
+      sqliteInitReady = initDatabase();
     }
     prismaCoreReady = initPrismaCoreData();
     databaseInitialized = true;
@@ -68,6 +69,7 @@ export function createApp() {
   app.use(passport.initialize());
   app.use(async (_req, _res, next) => {
     try {
+      if (sqliteInitReady) await sqliteInitReady;
       await prismaCoreReady;
       next();
     } catch (error) {

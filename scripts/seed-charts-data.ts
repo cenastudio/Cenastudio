@@ -8,7 +8,7 @@
  * Executar: npx tsx scripts/seed-charts-data.ts
  */
 
-import Database from "better-sqlite3";
+// import Database from "better-sqlite3"; // Removed: Using Prisma instead
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";

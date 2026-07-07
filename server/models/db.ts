@@ -1,5 +1,4 @@
 import bcrypt from "bcryptjs";
-import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -11,19 +10,40 @@ const defaultDbPath =
     ? path.join("/tmp", "frame.db")
     : path.join(__dirname, "..", "..", "data", "frame.db");
 const dbPath = process.env.DATABASE_PATH || defaultDbPath;
-let sqlite: Database.Database | null = null;
+let sqlite: any | null = null;
+let DatabaseCtor: any | null = null;
+
+async function loadDatabaseCtor() {
+  if (DatabaseCtor) return DatabaseCtor;
+  try {
+    // Dynamic import so the module is only loaded when SQLite is actually needed
+    // (Prisma/Postgres deployments do not have better-sqlite3 installed).
+    const mod = await import("better-sqlite3");
+    DatabaseCtor = (mod as any).default ?? mod;
+    return DatabaseCtor;
+  } catch (err) {
+    throw new Error(
+      "SQLite driver 'better-sqlite3' is not installed. Set DATABASE_URL to use Postgres/Prisma or install better-sqlite3.",
+    );
+  }
+}
 
 function getSqliteDatabase() {
   if (!sqlite) {
+    if (!DatabaseCtor) {
+      throw new Error(
+        "SQLite database was accessed before initDatabase() completed. Ensure DATABASE_URL is set for production.",
+      );
+    }
     fs.mkdirSync(path.dirname(dbPath), { recursive: true });
-    sqlite = new Database(dbPath);
+    sqlite = new DatabaseCtor(dbPath);
     sqlite.pragma("journal_mode = WAL");
     sqlite.pragma("foreign_keys = ON");
   }
   return sqlite;
 }
 
-export const db = new Proxy({} as Database.Database, {
+export const db = new Proxy({} as any, {
   get(_target, property) {
     const database = getSqliteDatabase() as any;
     const value = database[property];
@@ -349,7 +369,8 @@ function ensureWorkspaceForExistingUsers() {
   }
 }
 
-export function initDatabase() {
+export async function initDatabase() {
+  await loadDatabaseCtor();
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
