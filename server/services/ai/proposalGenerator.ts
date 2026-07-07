@@ -1,4 +1,4 @@
-import { generateWithAI } from './aiHelper';
+import { generateWithAI } from './aiHelper.js';
 
 export interface ProposalInput {
   clientName: string;
