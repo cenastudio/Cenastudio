@@ -26,8 +26,11 @@ let sqliteInitReady: Promise<void> | null = null;
 
 function ensureDatabase() {
   if (!databaseInitialized) {
-    assertLaunchReadyEnvironment();
-    requireEnvOrThrow();
+    // Skip heavy validations in serverless cold start
+    if (process.env.VERCEL !== "1") {
+      assertLaunchReadyEnvironment();
+      requireEnvOrThrow();
+    }
     if (!shouldUsePrisma) {
       sqliteInitReady = initDatabase();
     }
