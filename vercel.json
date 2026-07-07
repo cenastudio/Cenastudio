@@ -3,9 +3,14 @@
   "installCommand": "npm install",
   "framework": null,
   "outputDirectory": "dist/public",
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "dist/**"
+    }
+  },
   "rewrites": [
     {
-      "source": "/api/:path*",
+      "source": "/api/(.*)",
       "destination": "/api"
     },
     {
