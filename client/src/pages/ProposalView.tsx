@@ -2,8 +2,49 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "wouter";
 import { apiUrl } from "@/lib/api";
 import BrandLogo from "@/components/BrandLogo";
-import { CheckCircle2, AlertCircle, Loader2, FileSignature } from "lucide-react";
+import { CheckCircle2, AlertCircle, Loader2, FileSignature, Download } from "lucide-react";
 import { toast } from "sonner";
+
+/**
+ * Opens a hidden iframe with the proposal HTML and triggers the browser's
+ * native print dialog (same approach used elsewhere in the app, e.g.
+ * Proposals.tsx's printHtmlDocument). This is the most reliable way to get
+ * a real PDF on mobile: it doesn't depend on rendering the A4 document
+ * legibly on a small screen first, and works even inside restricted
+ * in-app browsers (WhatsApp, Instagram) where CSS transform/ResizeObserver
+ * based scaling can be unreliable.
+ */
+function printProposalAsPdf(html: string) {
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+  iframe.style.opacity = "0";
+  document.body.appendChild(iframe);
+
+  const cleanup = () => {
+    window.setTimeout(() => iframe.remove(), 1000);
+  };
+
+  iframe.onload = () => {
+    const frameWindow = iframe.contentWindow;
+    if (!frameWindow) {
+      cleanup();
+      return;
+    }
+    frameWindow.focus();
+    frameWindow.onafterprint = cleanup;
+    window.setTimeout(() => {
+      frameWindow.print();
+      cleanup();
+    }, 250);
+  };
+
+  iframe.srcdoc = html;
+}
 
 /**
  * The proposal document is built at a fixed A4 pixel width (~800px) so PDF
@@ -69,6 +110,19 @@ interface PublicProposal {
  * and clicking Accept records name + IP + user-agent + timestamp server-side,
  * bound to the document's hash captured at send time.
  */
+/**
+ * In-app browsers (WhatsApp, Instagram, Facebook, TikTok) use a restricted
+ * WebView that often lacks reliable support for window.print() and can
+ * behave inconsistently with iframe/ResizeObserver-based scaling. Detecting
+ * these lets us proactively suggest opening in the system browser, which is
+ * the only way to guarantee full functionality across all Android/iOS
+ * versions — trying to patch around each WebView's quirks isn't reliable.
+ */
+function isRestrictedInAppBrowser(): boolean {
+  const ua = navigator.userAgent || "";
+  return /\bFBAN|FBAV|Instagram|WhatsApp|Line\/|TikTok\b/i.test(ua);
+}
+
 export default function ProposalView() {
   const { token } = useParams<{ token: string }>();
   const [proposal, setProposal] = useState<PublicProposal | null>(null);
@@ -76,6 +130,7 @@ export default function ProposalView() {
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [isAccepting, setIsAccepting] = useState(false);
+  const [inAppBrowser] = useState(isRestrictedInAppBrowser);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const { scale, scaledHeight } = useIframeAutoScale(iframeRef, wrapRef, Boolean(proposal));
@@ -143,6 +198,35 @@ export default function ProposalView() {
         <div className="flex justify-center">
           <BrandLogo tone="onDark" />
         </div>
+
+        {inAppBrowser && (
+          <div className="border border-frame-orange/40 bg-frame-orange/[0.06] p-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-frame-orange shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-frame-white">Abra no navegador do seu celular</p>
+              <p className="text-xs text-frame-gray-light mt-1 leading-relaxed">
+                Você está vendo esta página dentro do WhatsApp/Instagram, que às vezes limita a visualização e o download do PDF.
+                Toque no menu (⋮ ou ...) no topo e escolha "Abrir no navegador" para a melhor experiência.
+              </p>
+              <button
+                type="button"
+                onClick={async () => { await navigator.clipboard.writeText(window.location.href); toast.success("Link copiado"); }}
+                className="frame-btn-ghost !py-2 !px-3 mt-3 text-xs"
+              >
+                Copiar link
+              </button>
+            </div>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => printProposalAsPdf(proposal.html)}
+          className="frame-btn-ghost w-full flex items-center justify-center gap-2"
+        >
+          <Download className="w-4 h-4" />
+          Baixar/Visualizar PDF
+        </button>
 
         <div
           ref={wrapRef}
