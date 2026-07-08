@@ -3,6 +3,7 @@ import * as clientsController from "../controllers/clientsController.js";
 import * as interactionsController from "../controllers/interactionsController.js";
 import * as opportunitiesController from "../controllers/opportunitiesController.js";
 import * as meetingsController from "../controllers/meetingsController.js";
+import * as proposalsController from "../controllers/proposalsController.js";
 import { authenticate } from "../middleware/authenticate.js";
 import { requireOperationalPlan } from "../middleware/planAccess.js";
 
@@ -35,6 +36,12 @@ router.delete("/interactions/:id", interactionsController.deleteInteraction);
 router.get("/meetings", meetingsController.listMeetings);
 router.post("/meetings", meetingsController.createMeeting);
 router.delete("/meetings/:id", meetingsController.deleteMeeting);
+
+// Proposals
+router.get("/proposals", proposalsController.listProposals);
+router.get("/proposals/:id", proposalsController.getProposal);
+router.post("/proposals", proposalsController.createProposal);
+router.delete("/proposals/:id", proposalsController.deleteProposal);
 
 // Generic client routes must stay after nested collections.
 router.get("/", clientsController.listClients);

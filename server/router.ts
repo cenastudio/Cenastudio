@@ -50,6 +50,7 @@ import {
   updateInteraction,
 } from "./controllers/interactionsController.js";
 import { getPublicMeeting, downloadPublicMeetingIcs } from "./controllers/meetingsController.js";
+import { getPublicProposal, acceptPublicProposal } from "./controllers/proposalsController.js";
 import {
   listUsers,
   updateUserPlan,
@@ -158,6 +159,8 @@ router.post("/public-review-comment", withParam("token", "token", addSharedComme
 router.patch("/public-review-status", withParam("token", "token", updateSharedReviewStatus));
 router.get("/public-meeting/:token", getPublicMeeting);
 router.get("/public-meeting/:token/ics", downloadPublicMeetingIcs);
+router.get("/public-proposal/:token", getPublicProposal);
+router.post("/public-proposal/:token/accept", acceptPublicProposal);
 router.use("/video-reviews", videoReviewsRoutes);
 router.use("/public/video-reviews", videoReviewsPublicRoutes);
 router.use("/video-upload", videoUploadRoutes);

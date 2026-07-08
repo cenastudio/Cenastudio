@@ -405,6 +405,9 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
     printHtmlDocument(html, t("app.errors.couldNotPreparePdf"));
   };
 
+  const [isSendingProposal, setIsSendingProposal] = useState(false);
+  const [sentProposalUrl, setSentProposalUrl] = useState<string | null>(null);
+
   const saveProposal = () => {
     if (!selected.length) {
       toast.error(t("app.errors.selectAtLeastOneService") as string);
@@ -420,6 +423,32 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
     };
     persistHistory([item, ...history].slice(0, 40));
     toast.success(t("app.proposals.savedToHistory") as string);
+  };
+
+  const sendProposalForAcceptance = async () => {
+    if (!selected.length) {
+      toast.error(t("app.errors.selectAtLeastOneService") as string);
+      return;
+    }
+    if (!selectedClientId) {
+      toast.error(t("app.proposals.chooseClient") as string);
+      return;
+    }
+    setIsSendingProposal(true);
+    try {
+      const created = await api.proposals.create({
+        clientId: Number(selectedClientId),
+        title: proposal.projectTitle || (t("app.proposals.audiovisualProposal") as string),
+        html: proposalHtml,
+        total,
+      });
+      setSentProposalUrl(created.proposal_url);
+      toast.success(t("app.proposals.sentForAcceptance") as string);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : (t("app.errors.couldNotPreparePdf") as string));
+    } finally {
+      setIsSendingProposal(false);
+    }
   };
 
   const copySummary = async () => {
@@ -678,11 +707,34 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
                 <Copy className="w-4 h-4" />
                 {t("app.common.copy") as string}
               </button>
-              <button type="button" onClick={() => exportPdf()} className="frame-btn-primary flex items-center justify-center gap-2 col-span-2">
+              <button type="button" onClick={() => exportPdf()} className="frame-btn-ghost flex items-center justify-center gap-2">
                 <Download className="w-4 h-4" />
                 {t("app.common.exportPdf") as string}
               </button>
+              <button type="button" onClick={sendProposalForAcceptance} disabled={isSendingProposal} className="frame-btn-primary flex items-center justify-center gap-2">
+                <FileSignature className="w-4 h-4" />
+                {isSendingProposal ? (locale === "en" ? "Sending..." : "Enviando...") : (t("app.proposals.sendForAcceptance") as string)}
+              </button>
             </div>
+
+            {sentProposalUrl && (
+              <div className="proposal-panel p-5 space-y-3 border-frame-orange/40">
+                <p className="frame-label">{t("app.proposals.acceptanceLinkReady") as string}</p>
+                <div className="flex items-center gap-2">
+                  <input readOnly value={sentProposalUrl} className="frame-input w-full text-xs" onFocus={(e) => e.target.select()} />
+                  <button
+                    type="button"
+                    onClick={async () => { await navigator.clipboard.writeText(sentProposalUrl); toast.success(t("app.common.copied") as string); }}
+                    className="frame-btn-ghost !py-2.5 !px-3 shrink-0"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-[0.68rem] text-frame-gray-light leading-relaxed">
+                  {t("app.proposals.acceptanceLinkHint") as string}
+                </p>
+              </div>
+            )}
 
             <div className="proposal-panel p-5">
               <div className="flex items-center justify-between mb-3">

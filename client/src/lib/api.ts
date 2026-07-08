@@ -196,6 +196,16 @@ export const api = {
       }),
     delete: (id: number) => request<{ id: number }>(`/clients/meetings/${id}`, { method: "DELETE" }),
   },
+  proposals: {
+    list: (clientId?: number) =>
+      request<ProposalItem[]>(`/clients/proposals${clientId ? `?clientId=${clientId}` : ""}`),
+    create: (data: { clientId: number; title: string; html: string; total: number }) =>
+      request<ProposalCreatedResponse>("/clients/proposals", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: number) => request<{ id: number }>(`/clients/proposals/${id}`, { method: "DELETE" }),
+  },
   ai: {
     generate: (toolId: string, input: Record<string, string>, projectId?: number | null, model?: string) =>
       request<{ output: string; generationId: number }>("/ai/generate", {
@@ -594,6 +604,25 @@ export interface MeetingCreatedResponse extends MeetingItem {
   whatsapp_url: string;
   email_available: boolean;
   email_configured: boolean;
+}
+
+export interface ProposalItem {
+  id: number;
+  client_id: number;
+  title: string;
+  total: number;
+  status: "sent" | "viewed" | "accepted" | "rejected";
+  share_token: string;
+  document_hash: string;
+  accepted_at?: string | null;
+  accepted_by_name?: string | null;
+  client_name?: string;
+  client_email?: string | null;
+  created_at: string;
+}
+
+export interface ProposalCreatedResponse extends ProposalItem {
+  proposal_url: string;
 }
 
 export interface CnpjCompanyData {
