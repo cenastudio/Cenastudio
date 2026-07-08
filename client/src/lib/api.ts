@@ -178,6 +178,24 @@ export const api = {
     allowance: () => request<ClientAllowance>("/clients/allowance"),
     lookupCnpj: (cnpj: string) => request<CnpjCompanyData>(`/clients/lookup/cnpj/${encodeURIComponent(cnpj)}`),
   },
+  meetings: {
+    list: (clientId?: number) =>
+      request<MeetingItem[]>(`/clients/meetings${clientId ? `?clientId=${clientId}` : ""}`),
+    create: (data: {
+      clientId: number;
+      opportunityId?: number;
+      title: string;
+      location?: string;
+      startsAt: string;
+      durationMinutes?: number;
+      notes?: string;
+    }) =>
+      request<MeetingCreatedResponse>("/clients/meetings", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    delete: (id: number) => request<{ id: number }>(`/clients/meetings/${id}`, { method: "DELETE" }),
+  },
   ai: {
     generate: (toolId: string, input: Record<string, string>, projectId?: number | null, model?: string) =>
       request<{ output: string; generationId: number }>("/ai/generate", {
@@ -550,6 +568,32 @@ export interface ClientDetails {
   projects: Project[];
   opportunities: unknown[];
   interactions: unknown[];
+}
+
+export interface MeetingItem {
+  id: number;
+  client_id: number;
+  opportunity_id?: number | null;
+  title: string;
+  location?: string | null;
+  starts_at: string;
+  duration_minutes: number;
+  notes?: string | null;
+  status: string;
+  share_token: string;
+  email_sent_at?: string | null;
+  email_error?: string | null;
+  client_name?: string;
+  client_email?: string | null;
+  client_phone?: string | null;
+  created_at: string;
+}
+
+export interface MeetingCreatedResponse extends MeetingItem {
+  meeting_url: string;
+  whatsapp_url: string;
+  email_available: boolean;
+  email_configured: boolean;
 }
 
 export interface CnpjCompanyData {

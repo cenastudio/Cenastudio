@@ -49,6 +49,7 @@ import {
   listInteractions,
   updateInteraction,
 } from "./controllers/interactionsController.js";
+import { getPublicMeeting, downloadPublicMeetingIcs } from "./controllers/meetingsController.js";
 import {
   listUsers,
   updateUserPlan,
@@ -155,6 +156,8 @@ router.get("/public-review", withParam("token", "token", accessSharedReview));
 router.get("/public-review-video", withParam("token", "token", streamSharedReviewVideo));
 router.post("/public-review-comment", withParam("token", "token", addSharedComment));
 router.patch("/public-review-status", withParam("token", "token", updateSharedReviewStatus));
+router.get("/public-meeting/:token", getPublicMeeting);
+router.get("/public-meeting/:token/ics", downloadPublicMeetingIcs);
 router.use("/video-reviews", videoReviewsRoutes);
 router.use("/public/video-reviews", videoReviewsPublicRoutes);
 router.use("/video-upload", videoUploadRoutes);

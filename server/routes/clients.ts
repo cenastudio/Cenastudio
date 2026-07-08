@@ -2,6 +2,7 @@ import express from "express";
 import * as clientsController from "../controllers/clientsController.js";
 import * as interactionsController from "../controllers/interactionsController.js";
 import * as opportunitiesController from "../controllers/opportunitiesController.js";
+import * as meetingsController from "../controllers/meetingsController.js";
 import { authenticate } from "../middleware/authenticate.js";
 import { requireOperationalPlan } from "../middleware/planAccess.js";
 
@@ -29,6 +30,11 @@ router.get("/interactions", interactionsController.listInteractions);
 router.post("/interactions", interactionsController.createInteraction);
 router.put("/interactions/:id", interactionsController.updateInteraction);
 router.delete("/interactions/:id", interactionsController.deleteInteraction);
+
+// Meetings
+router.get("/meetings", meetingsController.listMeetings);
+router.post("/meetings", meetingsController.createMeeting);
+router.delete("/meetings/:id", meetingsController.deleteMeeting);
 
 // Generic client routes must stay after nested collections.
 router.get("/", clientsController.listClients);

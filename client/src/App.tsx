@@ -55,6 +55,7 @@ const ToolDetail = lazy(() => import("@/pages/ToolDetail"));
 const Tools = lazy(() => import("@/pages/Tools"));
 const VideoReviews = lazy(() => import("@/pages/VideoReviews"));
 const SharedReview = lazy(() => import("@/pages/SharedReview"));
+const MeetingView = lazy(() => import("@/pages/MeetingView"));
 const CheckoutModal = lazy(() => import("@/components/landing/modals/CheckoutModal").then((module) => ({ default: module.CheckoutModal })));
 const DemoModal = lazy(() => import("@/components/landing/modals/DemoModal").then((module) => ({ default: module.DemoModal })));
 
@@ -91,6 +92,7 @@ function Router() {
       <Route path="/files/:projectId" component={Files} />
       <Route path="/video-reviews/:projectId" component={VideoReviews} />
       <Route path="/review/:token" component={SharedReview} />
+      <Route path="/meeting/:token" component={MeetingView} />
       <Route path="/collaborators" component={Collaborators} />
       <Route path="/team" component={TeamPage} />
       <Route path="/analytics" component={Analytics} />

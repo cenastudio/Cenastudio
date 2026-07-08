@@ -33,6 +33,7 @@ model User {
   projects       Project[]
   opportunities  Opportunity[]
   interactions   Interaction[]
+  meetings       Meeting[]
   collaborators  Collaborator[]
   projectMembers ProjectMember[]
   files          File[]
@@ -229,6 +230,7 @@ model Client {
   opportunities Opportunity[]
   interactions Interaction[]
   financialEntries FinancialEntry[]
+  meetings Meeting[]
 
   @@index([userId], map: "idx_clients_user_id")
   @@index([status], map: "idx_clients_status")
@@ -296,6 +298,7 @@ model Opportunity {
   client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
   interactions Interaction[]
   financialEntries FinancialEntry[]
+  meetings Meeting[]
 
   @@index([userId], map: "idx_opportunities_user_id")
   @@index([clientId], map: "idx_opportunities_client_id")
@@ -324,6 +327,33 @@ model Interaction {
   @@index([opportunityId], map: "idx_interactions_opportunity_id")
   @@index([createdAt], map: "idx_interactions_created_at")
   @@map("interactions")
+}
+
+model Meeting {
+  id              BigInt    @id @default(autoincrement())
+  userId          BigInt    @map("user_id")
+  clientId        BigInt    @map("client_id")
+  opportunityId   BigInt?   @map("opportunity_id")
+  title           String
+  location        String?
+  startsAt        DateTime  @map("starts_at") @db.Timestamptz
+  durationMinutes Int       @default(30) @map("duration_minutes")
+  notes           String?
+  shareToken      String    @unique @map("share_token")
+  emailSentAt     DateTime? @map("email_sent_at") @db.Timestamptz
+  emailError      String?   @map("email_error")
+  status          String    @default("scheduled")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @default(now()) @map("updated_at") @db.Timestamptz
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  owner User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  opportunity Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+
+  @@index([clientId], map: "idx_meetings_client_id")
+  @@index([userId], map: "idx_meetings_user_id")
+  @@index([startsAt], map: "idx_meetings_starts_at")
+  @@map("meetings")
 }
 
 model Collaborator {

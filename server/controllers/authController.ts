@@ -7,6 +7,11 @@ import {
 } from "../middleware/authenticate.js";
 import * as authService from "../services/authService.js";
 import { isGitHubAuthConfigured } from "../config/passport.js";
+import { sendEmail, isEmailConfigured } from "../services/emailService.js";
+
+function getClientOrigin() {
+  return process.env.CLIENT_ORIGIN || "http://localhost:5173";
+}
 
 interface SupabaseUserResponse {
   id?: string;
@@ -61,7 +66,27 @@ export const register: RequestHandler = async (req, res, next) => {
 
 export const forgotPassword: RequestHandler = async (req, res, next) => {
   try {
-    await authService.createResetToken(req.body.email);
+    const email = String(req.body.email || "").trim();
+    const token = await authService.createResetToken(email);
+
+    // Best-effort: never leak whether the email exists, and never fail the
+    // request because the email provider is unavailable.
+    if (token && isEmailConfigured) {
+      const resetUrl = `${getClientOrigin()}/reset-password?token=${token}`;
+      sendEmail({
+        to: email,
+        subject: "Redefinição de senha — Cena Studio",
+        html: `
+          <p>Recebemos uma solicitação para redefinir sua senha.</p>
+          <p><a href="${resetUrl}">Clique aqui para criar uma nova senha</a></p>
+          <p>Este link expira em 1 hora. Se você não solicitou isso, ignore este email.</p>
+        `,
+        text: `Redefina sua senha: ${resetUrl} (expira em 1 hora)`,
+      }).catch((err) => {
+        console.error("[forgotPassword] Falha ao enviar email:", err instanceof Error ? err.message : err);
+      });
+    }
+
     res.json({
       success: true,
       data: { message: "Se o e-mail existir, você receberá as instruções." },

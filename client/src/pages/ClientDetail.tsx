@@ -10,6 +10,7 @@ import {
   Mail, MessageSquare, Phone, User, Loader2, Video,
 } from "lucide-react";
 import { toast } from "sonner";
+import ScheduleMeetingModal from "@/components/ScheduleMeetingModal";
 
 interface ClientData {
   id: number;
@@ -107,6 +108,7 @@ function ClientDetailContent() {
   const [videoReviews, setVideoReviews] = useState<VideoReviewItem[]>([]);
   const [proposals, setProposals] = useState<SavedProposal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
 
   const financialSummary = useMemo(() => {
     const totalIncome = financial
@@ -306,6 +308,10 @@ function ClientDetailContent() {
             <button onClick={() => setLocation(`/interactions?new=1&clientId=${clientId}`)} className="frame-btn-ghost flex flex-col items-center gap-2 py-4 text-center">
               <MessageSquare className="w-5 h-5" />
               <span className="text-xs font-semibold">Registrar Interação</span>
+            </button>
+            <button onClick={() => setIsMeetingModalOpen(true)} className="frame-btn-ghost flex flex-col items-center gap-2 py-4 text-center">
+              <Calendar className="w-5 h-5" />
+              <span className="text-xs font-semibold">Marcar Reunião</span>
             </button>
             <button onClick={() => setLocation(`/analytics?newEntry=1&clientId=${clientId}`)} className="frame-btn-ghost flex flex-col items-center gap-2 py-4 text-center">
               <DollarSign className="w-5 h-5" />
@@ -858,6 +864,15 @@ function ClientDetailContent() {
           </div>
         )}
       </main>
+
+      <ScheduleMeetingModal
+        open={isMeetingModalOpen}
+        onOpenChange={setIsMeetingModalOpen}
+        clientId={clientId}
+        clientName={client.name}
+        clientEmail={client.email}
+        clientPhone={client.phone}
+      />
     </div>
   );
 }
