@@ -3,6 +3,7 @@ import { randomBytes, createHash } from "crypto";
 import { AppError } from "../middleware/errorHandler.js";
 import { prisma } from "../models/prisma.js";
 import { withSnakeCase } from "../utils/prismaSerialization.js";
+import { notifyUser } from "../services/notificationService.js";
 
 function hashDocument(html: string): string {
   return createHash("sha256").update(html, "utf8").digest("hex");
@@ -197,6 +198,14 @@ export const acceptPublicProposal: RequestHandler = async (req, res, next) => {
         acceptedUserAgent: String(userAgent),
       },
     });
+
+    notifyUser(
+      Number(updated.userId),
+      "Proposta aceita!",
+      `${name.trim()} aceitou a proposta "${updated.title}".`,
+      "success",
+      "/clients",
+    );
 
     res.json({
       success: true,

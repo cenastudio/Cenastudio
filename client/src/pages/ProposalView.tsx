@@ -1,9 +1,56 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "wouter";
 import { apiUrl } from "@/lib/api";
 import BrandLogo from "@/components/BrandLogo";
 import { CheckCircle2, AlertCircle, Loader2, FileSignature } from "lucide-react";
 import { toast } from "sonner";
+
+/**
+ * The proposal document is built at a fixed A4 pixel width (~800px) so PDF
+ * export stays print-accurate — we don't want to touch that HTML/CSS. To
+ * make it readable on phones, we measure the rendered content inside the
+ * iframe and scale the whole thing down visually (CSS transform), instead
+ * of relying on the document's own (nonexistent) responsiveness.
+ */
+function useIframeAutoScale(iframeRef: React.RefObject<HTMLIFrameElement | null>, wrapRef: React.RefObject<HTMLDivElement | null>, ready: boolean) {
+  const [scale, setScale] = useState(1);
+  const [scaledHeight, setScaledHeight] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!ready) return;
+    const iframe = iframeRef.current;
+    const wrap = wrapRef.current;
+    if (!iframe || !wrap) return;
+
+    const recompute = () => {
+      try {
+        const doc = iframe.contentDocument;
+        const pageEl = doc?.querySelector(".page") as HTMLElement | null;
+        const contentWidth = pageEl?.scrollWidth || iframe.clientWidth;
+        const contentHeight = pageEl?.scrollHeight || iframe.clientHeight;
+        const containerWidth = wrap.clientWidth;
+        if (!contentWidth || !containerWidth) return;
+        const nextScale = Math.min(1, containerWidth / contentWidth);
+        setScale(nextScale);
+        setScaledHeight(contentHeight * nextScale);
+      } catch {
+        // Cross-origin or not-yet-loaded — fall back to no scaling.
+      }
+    };
+
+    iframe.addEventListener("load", recompute);
+    const resizeObserver = new ResizeObserver(recompute);
+    resizeObserver.observe(wrap);
+    recompute();
+
+    return () => {
+      iframe.removeEventListener("load", recompute);
+      resizeObserver.disconnect();
+    };
+  }, [iframeRef, wrapRef, ready]);
+
+  return { scale, scaledHeight };
+}
 
 interface PublicProposal {
   title: string;
@@ -29,6 +76,9 @@ export default function ProposalView() {
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [isAccepting, setIsAccepting] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const { scale, scaledHeight } = useIframeAutoScale(iframeRef, wrapRef, Boolean(proposal));
 
   const load = () => {
     if (!token) return;
@@ -94,8 +144,23 @@ export default function ProposalView() {
           <BrandLogo tone="onDark" />
         </div>
 
-        <div className="border border-frame-gray-3 bg-frame-gray-1/10 overflow-hidden">
-          <iframe title="Proposta" srcDoc={proposal.html} className="w-full h-[70vh] bg-[#0d0d0d]" />
+        <div
+          ref={wrapRef}
+          className="border border-frame-gray-3 bg-frame-gray-1/10 overflow-hidden"
+          style={{ height: scaledHeight ? `${scaledHeight}px` : "70vh" }}
+        >
+          <iframe
+            ref={iframeRef}
+            title="Proposta"
+            srcDoc={proposal.html}
+            className="bg-[#0d0d0d] border-0"
+            style={{
+              width: scale < 1 ? `${100 / scale}%` : "100%",
+              height: scale < 1 ? `${100 / scale}%` : "70vh",
+              transform: scale < 1 ? `scale(${scale})` : undefined,
+              transformOrigin: "top left",
+            }}
+          />
         </div>
 
         <div className="glow-card p-6 space-y-4">

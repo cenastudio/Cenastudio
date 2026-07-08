@@ -6,10 +6,11 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
-  ArrowLeft, BriefcaseBusiness, Building2, Calendar, DollarSign, FileText, Film, FolderOpen,
-  Mail, MessageSquare, Phone, User, Loader2, Video,
+  ArrowLeft, BriefcaseBusiness, Building2, Calendar, Copy, DollarSign, FileText, Film, FolderOpen,
+  Mail, MessageSquare, Phone, Trash2, User, Loader2, Video,
 } from "lucide-react";
 import { toast } from "sonner";
+import { api } from "@/lib/api";
 import ScheduleMeetingModal from "@/components/ScheduleMeetingModal";
 
 interface ClientData {
@@ -89,8 +90,12 @@ interface SavedProposal {
   title: string;
   clientName: string;
   total: number;
+  html: string;
   createdAt: string;
   status?: "draft" | "sent" | "viewed" | "accepted" | "rejected";
+  acceptedByName?: string;
+  acceptedAt?: string;
+  shareToken?: string;
 }
 
 function ClientDetailContent() {
@@ -125,20 +130,34 @@ function ClientDetailContent() {
     loadAll();
   }, [clientId]);
 
-  // Load saved proposals from localStorage, filtered by client name (non-blocking)
+  // Load proposals sent for acceptance from the backend (real status: sent/viewed/accepted/rejected)
+  const loadProposals = () => {
+    if (!clientId) return;
+    api.proposals
+      .list(clientId)
+      .then((rows) =>
+        setProposals(
+          rows.map((row) => ({
+            id: String(row.id),
+            title: row.title,
+            clientName: row.client_name || "",
+            total: row.total,
+            html: "",
+            createdAt: row.created_at,
+            status: row.status,
+            acceptedByName: row.accepted_by_name ?? undefined,
+            acceptedAt: row.accepted_at ?? undefined,
+            shareToken: row.share_token,
+          })),
+        ),
+      )
+      .catch(() => setProposals([]));
+  };
+
   useEffect(() => {
-    if (!client) return;
-    try {
-      const raw = localStorage.getItem("frame.proposal.history.v1");
-      const all: SavedProposal[] = raw ? JSON.parse(raw) : [];
-      const clientProposals = all.filter(
-        (p) => p.clientName && p.clientName.toLowerCase() === client.name.toLowerCase()
-      );
-      setProposals(clientProposals);
-    } catch {
-      setProposals([]);
-    }
-  }, [client]);
+    loadProposals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clientId]);
 
   const loadAll = async () => {
     setLoading(true);
@@ -698,22 +717,12 @@ function ClientDetailContent() {
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {proposals.map((proposal) => {
-                  const isAIGenerated = proposal.template === "creative" || !proposal.template;
-                  const origin = isAIGenerated ? "AI Studio" : "Catálogo";
-
                   return (
                     <div key={proposal.id} className="glow-card p-5 flex flex-col gap-4 hover:border-frame-orange/40 transition-colors group">
                       {/* Header */}
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-2">
-                            <span className={`text-[0.55rem] font-frame-mono uppercase tracking-wider px-2 py-0.5 border ${
-                              isAIGenerated
-                                ? "border-purple-500/30 text-purple-400 bg-purple-400/[0.06]"
-                                : "border-blue-500/30 text-blue-400 bg-blue-400/[0.06]"
-                            }`}>
-                              {origin}
-                            </span>
                             {proposal.status && (
                               <span className={`text-[0.55rem] font-frame-mono uppercase tracking-wider px-2 py-0.5 border ${
                                 proposal.status === "accepted"
@@ -740,6 +749,12 @@ function ClientDetailContent() {
                           <p className="text-[0.6rem] text-frame-gray-light mt-1">
                             Criada em {proposal.createdAt ? formatDate(proposal.createdAt) : "—"}
                           </p>
+                          {proposal.status === "accepted" && proposal.acceptedByName && (
+                            <p className="text-[0.6rem] text-green-400 mt-1">
+                              Aceita por {proposal.acceptedByName}
+                              {proposal.acceptedAt ? ` em ${formatDate(proposal.acceptedAt)}` : ""}
+                            </p>
+                          )}
                         </div>
                         <div className="text-right shrink-0">
                           <span className="text-xl font-bold text-frame-orange block">
@@ -750,57 +765,37 @@ function ClientDetailContent() {
 
                       {/* Actions */}
                       <div className="flex items-center gap-2 pt-3 border-t border-frame-gray-3/40">
+                        {proposal.shareToken && (
+                          <button
+                            onClick={async () => {
+                              const url = `${window.location.origin}/proposal/${proposal.shareToken}`;
+                              await navigator.clipboard.writeText(url);
+                              toast.success("Link copiado");
+                            }}
+                            className="flex-1 frame-btn-ghost flex items-center justify-center gap-1.5 text-xs"
+                            title="Copiar link de aceite"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                            Copiar link
+                          </button>
+                        )}
                         <button
-                          onClick={() => {
-                            const iframe = document.createElement("iframe");
-                            iframe.style.position = "fixed";
-                            iframe.style.right = "0";
-                            iframe.style.bottom = "0";
-                            iframe.style.width = "0";
-                            iframe.style.height = "0";
-                            iframe.style.border = "0";
-                            iframe.style.opacity = "0";
-                            document.body.appendChild(iframe);
-                            iframe.onload = () => {
-                              const frameWindow = iframe.contentWindow;
-                              if (frameWindow) {
-                                frameWindow.focus();
-                                frameWindow.print();
-                                setTimeout(() => iframe.remove(), 1000);
-                              }
-                            };
-                            iframe.srcdoc = proposal.html;
-                          }}
+                          onClick={() => setLocation(`/proposals?clientId=${clientId}`)}
                           className="flex-1 frame-btn-ghost flex items-center justify-center gap-1.5 text-xs"
-                          title="Visualizar/Imprimir PDF"
+                          title="Criar nova proposta"
                         >
-                          <Download className="w-3.5 h-3.5" />
-                          PDF
+                          <FileText className="w-3.5 h-3.5" />
+                          Nova versão
                         </button>
                         <button
-                          onClick={() => {
-                            setLocation(isAIGenerated
-                              ? `/studio/proposta?clientId=${clientId}`
-                              : `/proposals?clientId=${clientId}`
-                            );
-                          }}
-                          className="flex-1 frame-btn-ghost flex items-center justify-center gap-1.5 text-xs"
-                          title="Duplicar e editar"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                          Duplicar
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm(`Excluir proposta "${proposal.title}"?`)) {
-                              const raw = localStorage.getItem("frame.proposal.history.v1");
-                              const all: SavedProposal[] = raw ? JSON.parse(raw) : [];
-                              const updated = all.filter(p => p.id !== proposal.id);
-                              localStorage.setItem("frame.proposal.history.v1", JSON.stringify(updated));
-                              setProposals(updated.filter(p =>
-                                p.clientName && p.clientName.toLowerCase() === client.name.toLowerCase()
-                              ));
+                          onClick={async () => {
+                            if (!confirm(`Excluir proposta "${proposal.title}"?`)) return;
+                            try {
+                              await api.proposals.delete(Number(proposal.id));
+                              loadProposals();
                               toast.success("Proposta excluída");
+                            } catch (err) {
+                              toast.error(err instanceof Error ? err.message : "Erro ao excluir proposta");
                             }
                           }}
                           className="frame-btn-ghost flex items-center justify-center gap-1.5 text-xs text-red-400 hover:text-red-300 hover:border-red-400/50"
