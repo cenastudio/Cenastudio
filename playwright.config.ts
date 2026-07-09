@@ -12,7 +12,11 @@ export default defineConfig({
     video: "retain-on-failure",
   },
   webServer: {
-    command: "DATABASE_URL= npm run dev",
+    // ADMIN_DEFAULT_PASSWORD forçado aqui para isolar os testes E2E do
+    // valor real presente no .env local. Sem isso, o admin criado no SQLite
+    // rotaciona a senha para o valor do .env, causando 401 nos testes que
+    // usam a credencial documentada `admin123`.
+    command: "DATABASE_URL= ADMIN_DEFAULT_PASSWORD=admin123 npm run dev",
     url: "http://127.0.0.1:5173",
     reuseExistingServer: true,
     timeout: 120_000,
