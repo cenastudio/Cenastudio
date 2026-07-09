@@ -6,6 +6,12 @@ import { AppProvider } from '@/contexts/AppContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { ProjectProvider } from '@/contexts/ProjectContext';
+import { api } from '@/lib/api';
+
+// The theme toggle button only renders inside the logged-in user's avatar
+// dropdown, so every test needs an authenticated user for AuthProvider to
+// pick up via api.auth.me().
+const mockUser = { id: 1, name: 'Test User', email: 'test@example.com' };
 
 // Mock wouter for navigation
 const mockSetLocation = vi.fn();
@@ -49,6 +55,22 @@ const AllProviders = ({ children }: { children: React.ReactNode }) => {
 
 describe('Theme Toggle Integration - Task 1.2.4', () => {
   beforeEach(() => {
+    // The global test setup mocks `window.localStorage` with no-op vi.fn()
+    // methods (getItem always returns undefined, setItem doesn't persist).
+    // This suite specifically tests real localStorage persistence, so we
+    // replace it with a working in-memory implementation for these tests.
+    const store = new Map<string, string>();
+    Object.defineProperty(window, 'localStorage', {
+      writable: true,
+      configurable: true,
+      value: {
+        getItem: (key: string) => (store.has(key) ? store.get(key)! : null),
+        setItem: (key: string, value: string) => store.set(key, value),
+        removeItem: (key: string) => store.delete(key),
+        clear: () => store.clear(),
+      },
+    });
+
     // Clear localStorage before each test
     localStorage.clear();
 
@@ -63,6 +85,14 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
         json: () => Promise.resolve({ success: true }),
       })
     ) as any;
+
+    // Simulate an authenticated user so AuthProvider exposes `user`, which
+    // is required for AppNavBar to render the avatar dropdown containing
+    // the theme toggle button.
+    (api.auth.me as any).mockResolvedValue({ user: mockUser, plan: null });
+    // ProjectProvider loads projects once authenticated; without a resolved
+    // array, `projects` becomes undefined and AppNavBar's `.find()` throws.
+    (api.projects.list as any).mockResolvedValue([]);
   });
 
   afterEach(() => {
@@ -70,14 +100,14 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
   });
 
   describe('AC1: Theme toggle button present in TopNav', () => {
-    it('should render theme toggle button in AppNavBar', () => {
+    it('should render theme toggle button in AppNavBar', async () => {
       render(
         <AllProviders>
           <AppNavBar />
         </AllProviders>
       );
 
-      const themeButton = screen.getByTitle(/modo/i);
+      const themeButton = await screen.findByTitle(/modo/i);
       expect(themeButton).toBeInTheDocument();
     });
   });
@@ -90,10 +120,8 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
         </AllProviders>
       );
 
-      const themeButton = screen.getByTitle(/modo escuro/i);
-
       // Initial state: dark theme shows Sun icon
-      expect(screen.getByTitle(/modo escuro/i)).toBeInTheDocument();
+      const themeButton = await screen.findByTitle(/modo escuro/i);
 
       // Click to toggle
       fireEvent.click(themeButton);
@@ -111,7 +139,7 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
         </AllProviders>
       );
 
-      const themeButton = screen.getByTitle(/modo/i);
+      const themeButton = await screen.findByTitle(/modo/i);
 
       // Click to light mode
       fireEvent.click(themeButton);
@@ -120,7 +148,7 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
       });
 
       // Click to dark mode
-      const updatedButton = screen.getByTitle(/modo/i);
+      const updatedButton = await screen.findByTitle(/modo/i);
       fireEvent.click(updatedButton);
       await waitFor(() => {
         expect(screen.getByTitle(/modo escuro/i)).toBeInTheDocument();
@@ -146,7 +174,7 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
         </AllProviders>
       );
 
-      const themeButton = screen.getByTitle(/modo/i);
+      const themeButton = await screen.findByTitle(/modo/i);
 
       // Toggle to light
       fireEvent.click(themeButton);
@@ -182,7 +210,7 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
         </AllProviders>
       );
 
-      const themeButton = screen.getByTitle(/modo/i);
+      const themeButton = await screen.findByTitle(/modo/i);
       fireEvent.click(themeButton);
 
       await waitFor(() => {
@@ -201,7 +229,7 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
         </AllProviders>
       );
 
-      const themeButton = screen.getByTitle(/modo/i);
+      const themeButton = await screen.findByTitle(/modo/i);
 
       // Toggle theme
       fireEvent.click(themeButton);
@@ -234,7 +262,7 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
         </AllProviders>
       );
 
-      const themeButton = screen.getByTitle(/modo/i);
+      const themeButton = await screen.findByTitle(/modo/i);
 
       // Toggle should still work
       fireEvent.click(themeButton);
@@ -253,7 +281,7 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
         </AllProviders>
       );
 
-      const themeButton = screen.getByTitle(/modo/i);
+      const themeButton = await screen.findByTitle(/modo/i);
       fireEvent.click(themeButton);
 
       await waitFor(() => {
@@ -278,7 +306,7 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
   });
 
   describe('AC7: Icon changes - Sun (light mode) ↔ Moon (dark mode)', () => {
-    it('should show Sun icon in dark mode (to switch to light)', () => {
+    it('should show Sun icon in dark mode (to switch to light)', async () => {
       render(
         <AllProviders>
           <AppNavBar />
@@ -286,7 +314,7 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
       );
 
       // In dark mode, button should have title indicating it switches to light
-      const themeButton = screen.getByTitle(/modo escuro/i);
+      const themeButton = await screen.findByTitle(/modo escuro/i);
       expect(themeButton).toBeInTheDocument();
     });
 
@@ -300,24 +328,24 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
         </AllProviders>
       );
 
-      await waitFor(() => {
-        const themeButton = screen.getByTitle(/modo claro/i);
-        expect(themeButton).toBeInTheDocument();
-      });
+      const themeButton = await screen.findByTitle(/modo claro/i);
+      expect(themeButton).toBeInTheDocument();
     });
   });
 
   describe('AC8: Animation - smooth color transition 300ms ease', () => {
-    it('should apply transition CSS to root element', () => {
-      render(
-        <AllProviders>
-          <AppNavBar />
-        </AllProviders>
-      );
-
-      // Check that transition styles are applied (via tokens.css)
-      const style = window.getComputedStyle(document.documentElement);
-      expect(style.getPropertyValue('transition-duration')).toBeTruthy();
+    it('should apply transition CSS to root element', async () => {
+      // The global transition rule (transition-duration: 300ms on
+      // *::before/*::after) lives in tokens.css, a real stylesheet that
+      // isn't loaded by the component test environment (no Vite CSS
+      // pipeline here). We verify the source of truth for that duration
+      // instead of a computed style that depends on the stylesheet being
+      // present.
+      const fs = await import('fs');
+      const path = await import('path');
+      const cssPath = path.resolve(__dirname, '../styles/tokens.css');
+      const css = fs.readFileSync(cssPath, 'utf-8');
+      expect(css).toMatch(/transition-duration:\s*300ms/);
     });
   });
 
@@ -350,7 +378,7 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
   });
 
   describe('Integration with Design Tokens', () => {
-    it('should work with CSS custom properties from tokens.css', () => {
+    it('should work with CSS custom properties from tokens.css', async () => {
       render(
         <AllProviders>
           <AppNavBar />
@@ -360,9 +388,15 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
       // Verify data-theme attribute is set for CSS custom properties
       expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
 
-      // CSS custom properties should be accessible
-      const style = window.getComputedStyle(document.documentElement);
-      expect(style.getPropertyValue('--duration-normal')).toBeTruthy();
+      // CSS custom properties like --duration-normal are defined in
+      // tokens.css, a real stylesheet not loaded in this component test
+      // environment. We verify it's defined at the source instead of via
+      // getComputedStyle, which would only reflect an actually loaded sheet.
+      const fs = await import('fs');
+      const path = await import('path');
+      const cssPath = path.resolve(__dirname, '../styles/tokens.css');
+      const css = fs.readFileSync(cssPath, 'utf-8');
+      expect(css).toMatch(/--duration-normal:\s*300ms/);
     });
 
     it('should switch theme which updates CSS custom properties', async () => {
@@ -372,7 +406,7 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
         </AllProviders>
       );
 
-      const themeButton = screen.getByTitle(/modo/i);
+      const themeButton = await screen.findByTitle(/modo/i);
 
       // Initial dark theme
       expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
@@ -387,7 +421,7 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
   });
 
   describe('TopNav Integration', () => {
-    it('should have theme toggle button in the correct position in TopNav', () => {
+    it('should have theme toggle button in the correct position in TopNav', async () => {
       render(
         <AllProviders>
           <AppNavBar />
@@ -395,7 +429,7 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
       );
 
       const header = screen.getByRole('banner');
-      const themeButton = screen.getByTitle(/modo/i);
+      const themeButton = await screen.findByTitle(/modo/i);
 
       // Theme button should be within the header
       expect(header).toContainElement(themeButton);
@@ -414,26 +448,26 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
   });
 
   describe('Accessibility', () => {
-    it('should have accessible title for theme toggle button', () => {
+    it('should have accessible title for theme toggle button', async () => {
       render(
         <AllProviders>
           <AppNavBar />
         </AllProviders>
       );
 
-      const themeButton = screen.getByTitle(/modo/i);
+      const themeButton = await screen.findByTitle(/modo/i);
       expect(themeButton).toHaveAttribute('title');
       expect(themeButton).toHaveAttribute('type', 'button');
     });
 
-    it('should be keyboard accessible', () => {
+    it('should be keyboard accessible', async () => {
       render(
         <AllProviders>
           <AppNavBar />
         </AllProviders>
       );
 
-      const themeButton = screen.getByTitle(/modo/i);
+      const themeButton = await screen.findByTitle(/modo/i);
 
       // Should be focusable
       themeButton.focus();

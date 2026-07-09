@@ -35,7 +35,7 @@ export default function CommercialNav() {
                 onClick={() => setLocation(tab.href)}
                 aria-current={isActive ? "page" : undefined}
                 className={`
-                  relative flex items-center gap-2 px-4 py-3 whitespace-nowrap transition-all duration-200
+                  relative flex items-center gap-2 px-4 py-3 min-h-11 whitespace-nowrap transition-all duration-200
                   font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase
                   after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:transition-all after:duration-200
                   ${isActive

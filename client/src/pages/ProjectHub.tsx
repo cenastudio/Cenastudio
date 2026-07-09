@@ -101,7 +101,7 @@ function ClientLink({ clientId, clientName }: { clientId: number | null; clientN
   return (
     <button
       onClick={(e) => { e.stopPropagation(); setLocation(`/clients/${clientId}`); }}
-      className="flex items-center gap-1 text-xs text-frame-orange hover:underline"
+      className="inline-flex items-center gap-1 text-xs text-frame-orange hover:underline min-h-11 px-2 py-2"
     >
       <Building2 className="w-3 h-3" />
       {clientName}
@@ -172,6 +172,33 @@ function ProjectHubContent() {
   const [recentReviews, setRecentReviews] = useState<ProjectReview[]>([]);
   const [populatedStates, setPopulatedStates] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [projectName, setProjectName] = useState("");
+  const [savingName, setSavingName] = useState(false);
+
+  useEffect(() => {
+    if (project?.name) setProjectName(project.name);
+  }, [project?.name]);
+
+  const saveProjectName = async () => {
+    if (!project) return;
+    const trimmed = projectName.trim();
+    if (!trimmed || trimmed === project.name) {
+      // Reverte para o valor canônico se o usuário limpar o campo.
+      if (!trimmed) setProjectName(project.name);
+      return;
+    }
+    setSavingName(true);
+    try {
+      const updated = await api.projects.update(project.id, { name: trimmed });
+      setProject((prev) => (prev ? { ...prev, ...updated } : prev));
+      toast.success(t("app.hub.toastNameSaved"));
+    } catch {
+      toast.error(t("app.hub.toastNameError"));
+      setProjectName(project.name);
+    } finally {
+      setSavingName(false);
+    }
+  };
 
   useEffect(() => {
     if (!projectId) return;
@@ -258,6 +285,34 @@ function ProjectHubContent() {
                   {metadata.projectType || "audiovisual"}
                 </span>
               </div>
+
+              {/* Editable project name — persists via api.projects.update */}
+              <div className="max-w-lg">
+                <label
+                  htmlFor="project-name-editable"
+                  className="block font-frame-mono text-[0.55rem] tracking-[0.14em] uppercase text-frame-gray-light/70 mb-1"
+                >
+                  {t("app.hub.projectNameLabel")}
+                </label>
+                <input
+                  id="project-name-editable"
+                  type="text"
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  onBlur={saveProjectName}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      (e.currentTarget as HTMLInputElement).blur();
+                    }
+                  }}
+                  data-testid="project-name-editable"
+                  aria-label={t("app.hub.projectNameLabel")}
+                  className="frame-input text-sm min-h-11 w-full"
+                  disabled={savingName}
+                />
+              </div>
+
               <ClientLink clientId={project.clientId ?? null} clientName={clientName ?? null} />
 
               {/* Origin context: client + objective */}
@@ -347,7 +402,7 @@ function ProjectHubContent() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="min-w-0">
               <p className="font-frame-mono text-[0.58rem] tracking-[0.14em] uppercase text-frame-orange mb-1">
-                {t("app.hub.nextStep")} {nextStep.label}
+                <span>{t("app.hub.nextStep")}</span> <span>{nextStep.label}</span>
               </p>
               <h2 className="text-lg font-semibold text-frame-white">{nextAction.label}</h2>
               <p className="text-sm text-frame-gray-light mt-1 leading-relaxed max-w-lg">
@@ -357,7 +412,7 @@ function ProjectHubContent() {
             <button
               type="button"
               onClick={() => setLocation(nextAction.route(projectId))}
-              className="frame-btn-primary !py-3 !px-6 flex items-center gap-2 shrink-0"
+              className="frame-btn-primary !py-3 !px-6 min-h-11 flex items-center gap-2 shrink-0"
             >
               {t("app.hub.open")} {nextAction.label}
               <ArrowRight className="w-4 h-4" />
@@ -427,7 +482,7 @@ function ProjectHubContent() {
                 <button
                   type="button"
                   onClick={() => setLocation(`/project/${projectId}/files`)}
-                  className="font-frame-mono text-[0.6rem] text-frame-orange hover:text-frame-white transition tracking-wider"
+                  className="inline-flex items-center font-frame-mono text-[0.6rem] text-frame-orange hover:text-frame-white transition tracking-wider min-h-11 px-3"
                 >
                   {t("app.hub.viewAll")}
                 </button>
@@ -465,7 +520,7 @@ function ProjectHubContent() {
                 <button
                   type="button"
                   onClick={() => setLocation(`/project/${projectId}/video-reviews`)}
-                  className="font-frame-mono text-[0.6rem] text-frame-orange hover:text-frame-white transition tracking-wider"
+                  className="inline-flex items-center font-frame-mono text-[0.6rem] text-frame-orange hover:text-frame-white transition tracking-wider min-h-11 px-3"
                 >
                   {t("app.hub.viewAll")}
                 </button>
@@ -512,7 +567,7 @@ function ProjectHubContent() {
                     <button
                       type="button"
                       onClick={() => project.clientId ? setLocation(`/clients/${project.clientId}`) : undefined}
-                      className={`text-frame-white font-medium ${project.clientId ? "hover:text-frame-orange transition" : ""}`}
+                      className={`inline-flex items-center text-frame-white font-medium min-h-11 py-2 ${project.clientId ? "hover:text-frame-orange transition" : ""}`}
                     >
                       {clientName}
                     </button>
@@ -556,7 +611,7 @@ function ProjectHubContent() {
               <button
                 type="button"
                 onClick={() => setLocation(`/project/${projectId}/studio/briefing`)}
-                className="w-full mt-3 text-[0.6rem] font-frame-mono tracking-wider text-frame-gray-light hover:text-frame-orange transition border border-dashed border-frame-gray-3/60 py-2 flex items-center justify-center gap-1"
+                className="w-full mt-3 text-[0.6rem] font-frame-mono tracking-wider text-frame-gray-light hover:text-frame-orange transition border border-dashed border-frame-gray-3/60 min-h-11 py-2 flex items-center justify-center gap-1"
               >
                 <FileText className="w-3 h-3" />
                 {t("app.hub.editBriefing")}
@@ -573,7 +628,7 @@ function ProjectHubContent() {
                 <button
                   type="button"
                   onClick={() => setLocation("/team")}
-                  className="font-frame-mono text-[0.55rem] text-frame-orange hover:text-frame-white transition"
+                  className="inline-flex items-center font-frame-mono text-[0.55rem] text-frame-orange hover:text-frame-white transition min-h-11 px-3"
                 >
                   {t("app.hub.manage")}
                 </button>
@@ -599,7 +654,7 @@ function ProjectHubContent() {
               <button
                 type="button"
                 onClick={() => setLocation("/team")}
-                className="w-full mt-3 text-[0.6rem] font-frame-mono tracking-wider text-frame-orange border border-dashed border-frame-orange/30 py-2 flex items-center justify-center gap-1 hover:bg-frame-orange/[0.04] transition"
+                className="w-full mt-3 text-[0.6rem] font-frame-mono tracking-wider text-frame-orange border border-dashed border-frame-orange/30 min-h-11 py-2 flex items-center justify-center gap-1 hover:bg-frame-orange/[0.04] transition"
               >
                 <Plus className="w-3 h-3" />
                 {t("app.hub.addMember")}
@@ -614,7 +669,7 @@ function ProjectHubContent() {
                 a.href = `/api/export/projects/${projectId}`;
                 a.click();
               }}
-              className="w-full font-frame-mono text-[0.6rem] tracking-wider text-frame-gray-light border border-frame-gray-3/50 py-2.5 hover:border-frame-orange/40 hover:text-frame-orange transition flex items-center justify-center gap-1.5"
+              className="w-full font-frame-mono text-[0.6rem] tracking-wider text-frame-gray-light border border-frame-gray-3/50 min-h-11 py-2.5 hover:border-frame-orange/40 hover:text-frame-orange transition flex items-center justify-center gap-1.5"
             >
               <ArrowRight className="w-3 h-3" />
               {t("app.hub.exportProject")}

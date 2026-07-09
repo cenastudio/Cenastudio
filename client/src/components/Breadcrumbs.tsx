@@ -77,7 +77,7 @@ export default function Breadcrumbs({ items, homeLabel = "Início" }: Breadcrumb
   }
 
   return (
-    <nav aria-label="Breadcrumb" className="mb-6">
+    <nav aria-label="Breadcrumb" data-touch-target-exempt className="mb-6">
       <ol className="flex items-center gap-2 text-sm">
         {/* Home */}
         <li>

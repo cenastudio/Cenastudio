@@ -32,7 +32,7 @@ export function WorkflowCard({
       onClick={onClick}
       className={cn(
         "glow-card flex flex-col items-start justify-between p-6",
-        "rounded-2xl border-2 transition-all duration-300 ease-out",
+        "rounded-[24px] border-2 transition-all duration-300 ease-out",
         "hover:translate-y-[-4px]",
         "cursor-pointer text-left w-full",
         "active:scale-[0.95]",

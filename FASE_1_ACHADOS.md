@@ -11,6 +11,40 @@ Determinismo: ✅ confirmado (mesmos resultados em 3 execuções seguidas).
 
 ---
 
+## Fase 2 — Concluída em 2026-07-09
+
+Todos os achados P0, P1 e P2 listados abaixo foram endereçados pela Fase 2.
+Ver [`.kiro/specs/fase-2-layout-mobile-e-tabs/`](./.kiro/specs/fase-2-layout-mobile-e-tabs/)
+para o mapeamento completo achado → task. Resumo:
+
+| Achado | Task da Fase 2 | Estado |
+|---|---|---|
+| P0.1 "Novo projeto" oculto em mobile (§4) | Task 2 (rename) + Task 9 (touch target) | ✅ |
+| P0.2 `WelcomeModal` bloqueia clicks 500ms (§7) | Task 3 | ✅ |
+| P0.3 Marcador `/admin` desatualizado (§3) | Task 1 | ✅ |
+| P1.4 Tabs manuais < 44×44 (§2.3) | Tasks 4, 5, 6, 7 (`ResponsiveTabs`) | ✅ |
+| P1.5 Header `AppNavBar` mobile (§2.1) | Task 8 + fix subpixel `min-height: 45px` | ✅ |
+| P1.6 "Completar briefing" 43.25px (§2.2) | Task 9 | ✅ |
+| P2.7 "+ Novo cliente"/"Voltar" (§2.4) | Task 10 | ✅ |
+| P2.8 Breadcrumbs (§2.5) | Task 11 (`data-touch-target-exempt`) | ✅ |
+
+**Suíte E2E ao encerrar a Fase 2:**
+
+- Vitest: 1088/1088 (adicionou 3 testes do `ResponsiveTabs`, atualizou 1 do `AppNavBar`).
+- Playwright `@fase1` isolado: 6/6 verde (~1.2 min).
+- Playwright suíte completa: 8 pass / 4 fail (~3.3 min).
+  - 3 pré-existentes documentados aqui (seções 3 e 5).
+  - 1 flakiness em `mobile-user-flow` quando co-executado com `launch.spec.ts` (passa consistentemente isolado; estado compartilhado entre suítes).
+
+**Pré-existentes remanescentes (não resolvidos, fora do escopo da Fase 2):**
+
+- Achado §5 `light theme project dialog` (desktop + mobile): teste espera cores CSS específicas de um tema light que o app usa em contextos que dependem do achado §4 (agora resolvido). Vale reavaliar em uma rodada futura, mas não bloqueia a Fase 3.
+- Achado §3 versão mobile do `critical authenticated app screens`: passa em desktop (Task 1 corrigiu marcador). Em mobile ainda dá timeout — parece ser navegação lenta ao percorrer 5 rotas sequenciais em mobile. Não é regressão, comportamento pré-Fase 1.
+
+---
+
+---
+
 ## 1. Sumário
 
 | Categoria | Total | Passou | Falhou |

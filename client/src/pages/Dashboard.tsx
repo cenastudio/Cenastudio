@@ -130,8 +130,12 @@ function DashboardContent() {
     const hasSeenWelcome = localStorage.getItem("cena-studio-welcome-completed");
     const hasSkippedWelcome = localStorage.getItem("cena-studio-welcome-dismissed");
 
+    // Sem setTimeout — o modal abre imediatamente se o usuário nunca viu.
+    // Isso evita o intervalo em que a UI já está renderizada mas o overlay
+    // ainda não montou, e é onde os cliques do usuário eram interceptados
+    // silenciosamente (achado Fase 1, seção 7).
     if (!hasSeenWelcome && !hasSkippedWelcome) {
-      setTimeout(() => setIsWelcomeOpen(true), 500);
+      setIsWelcomeOpen(true);
     }
 
     api.clients.list().then((loadedClients) => {
@@ -341,7 +345,7 @@ function DashboardContent() {
         <header className="pb-6 border-b border-frame-gray-3/50">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
-              <p className="font-frame-mono text-[0.56rem] uppercase tracking-[0.22em] text-frame-orange mb-2">{locale === "en" ? "// Operations panel" : "// Painel de operação"}</p>
+              <p className="font-frame-mono text-[0.56rem] uppercase tracking-[0.22em] text-frame-orange mb-2">{locale === "en" ? "// Operations Center" : "// Central da Operação"}</p>
               <h1 className="frame-title text-[clamp(2rem,4vw,3rem)] text-frame-white leading-tight">
                 {getGreeting(locale)}, <span className="text-frame-orange">{firstName}</span>.
               </h1>
@@ -410,7 +414,7 @@ function DashboardContent() {
                 <button
                   type="button"
                   onClick={() => focusActionRoute ? setLocation(focusActionRoute) : startProjectFromClient()}
-                  className="frame-btn-primary flex items-center gap-2 shrink-0 whitespace-nowrap px-6 py-3"
+                  className="frame-btn-primary flex items-center gap-2 shrink-0 whitespace-nowrap px-6 py-3 min-h-11"
                 >
                   {focusActionLabel} <ChevronRight className="w-4 h-4" />
                 </button>
@@ -440,7 +444,7 @@ function DashboardContent() {
                   const Icon = item.icon;
                   return (
                     <button key={item.id} type="button" onClick={item.action}
-                      className="w-full group glow-card p-3.5 text-left flex items-center gap-3">
+                      className="w-full group glow-card p-3.5 text-left flex items-center gap-3 min-h-11">
                       <div className="w-7 h-7 flex items-center justify-center border border-frame-gray-3 bg-frame-gray-2/30 shrink-0">
                         <Icon className={`w-3.5 h-3.5 ${item.tone}`} />
                       </div>
@@ -471,14 +475,14 @@ function DashboardContent() {
             <h2 className="font-frame-mono text-[0.7rem] uppercase tracking-[0.16em] text-frame-white font-semibold">{locale === "en" ? "Shortcuts" : "Atalhos"}</h2>
             <div className="space-y-2">
               {[
-                { icon: Plus, label: locale === "en" ? "New Job" : "Novo Job", sub: locale === "en" ? "Create project" : "Criar projeto", action: startProjectFromClient },
+                { icon: Plus, label: locale === "en" ? "New project" : "Novo projeto", sub: locale === "en" ? "Create project" : "Criar projeto", action: startProjectFromClient },
                 { icon: Users, label: locale === "en" ? "New Client" : "Novo Cliente", sub: locale === "en" ? "Register" : "Cadastrar", action: () => setLocation("/clients/new") },
                 { icon: FileSignature, label: locale === "en" ? "New Proposal" : "Nova Proposta", sub: locale === "en" ? "Quote" : "Orçamento", action: () => setLocation("/proposals") },
               ].map((shortcut) => {
                 const Icon = shortcut.icon;
                 return (
                   <button key={shortcut.label} type="button" onClick={shortcut.action}
-                    className="group w-full glow-card p-3.5 text-left flex items-center gap-3">
+                    className="group w-full glow-card p-3.5 text-left flex items-center gap-3 min-h-11">
                     <div className="w-8 h-8 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] group-hover:bg-frame-orange group-hover:border-frame-orange transition-all rounded shrink-0">
                       <Icon className="w-4 h-4 text-frame-orange group-hover:text-frame-black transition-colors" />
                     </div>

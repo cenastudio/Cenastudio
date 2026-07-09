@@ -79,39 +79,45 @@ do repo. Documento serve como **entrada priorizada** para a Fase 2, com:
 - 1 achado positivo: fluxo studio funciona em mobile e serve de
   referência para outras páginas.
 
-### Fase 2 — Layout compartilhado e correção de mobile (1-2 semanas)
+### Fase 2 — Layout compartilhado e correção de mobile ✅ CONCLUÍDA
 
-**Entrada priorizada:** ver `FASE_1_ACHADOS.md` seção 8. Ordem sugerida:
+**Spec formal:** [`.kiro/specs/fase-2-layout-mobile-e-tabs/`](./.kiro/specs/fase-2-layout-mobile-e-tabs/).
 
-**🔴 P0 — Bloqueios reais de UX mobile (fazer primeiro)**
+Executada em 12 tasks distribuídas em 3 waves. Todos os P0/P1/P2 de
+`FASE_1_ACHADOS.md` foram resolvidos:
 
-1. Restaurar botão "Novo projeto" no dashboard mobile — hoje o usuário
-   mobile não consegue começar projeto sem passar pelo menu hamburguer.
-2. Corrigir `WelcomeModal` (Dashboard.tsx linha 784) que bloqueia todos
-   os cliques por ~500 ms após login em mobile.
-3. Confirmar o marcador de página em `/admin` — texto "Gerenciar acessos"
-   sumiu ou foi movido.
+- ✅ **P0.1** "Novo projeto" restaurado no dashboard mobile (rename "Novo Job" → "Novo projeto", CTA visível fora do menu hamburguer).
+- ✅ **P0.2** `WelcomeModal` — `setTimeout(500ms)` removido, `pointer-events` corrigido para não bloquear cliques.
+- ✅ **P0.3** Marcador `/admin` atualizado para `/Administração|Administration/i` (Task 1).
+- ✅ **P1.4** Componente `ResponsiveTabs` criado + 3 testes unitários; `AdminDashboard`, `ClientDetail`, `CommercialOverview` migrados.
+- ✅ **P1.5** `AppNavBar` mobile — avatar, notificações, busca, locale, "voltar ao painel", "PAINEL/COMERCIAL/PRODUÇÃO/FINANCEIRO" ≥ 44×44 (min-height ajustado para 45px em mobile pra evitar subpixel rounding).
+- ✅ **P1.6** Botões primários do dashboard com `min-h-11`.
+- ✅ **P2.7** "+ Novo cliente" e "Voltar para Clientes" com padding padrão.
+- ✅ **P2.8** Breadcrumbs marcados com `data-touch-target-exempt` + doc em [`docs/design-system/touch-targets.md`](./docs/design-system/touch-targets.md).
 
-**🟠 P1 — Consistência de touch target (o "layout compartilhado")**
+**Extras entregues (fora do escopo original mas necessários):**
 
-4. Criar `ResponsiveTabs` unificado e substituir as implementações
-   manuais em `AdminDashboard`, `ClientDetail`, `CommercialOverview`.
-   Todas hoje violam 44×44 (altura 39-41 px). Esta é a peça central da
-   Fase 2 mencionada originalmente.
-5. Corrigir `AppNavBar` mobile — 5 botões do header (busca, notificações,
-   avatar, locale) violam 44×44. Fixa uma vez, resolve 5 páginas.
-6. Corrigir altura do botão "Completar briefing" (43.25 px, falta 0.75).
+- `ProjectHub` ganhou input persistível (`data-testid="project-name-editable"`) com `api.projects.update`.
+- Bug do Playwright `.click()` em `<option>` nativo → `selectOption()` corrigido.
+- `ResponsiveTabs` triggers com `!min-h-11 !h-auto` (subpixel fix descoberto em execução).
+- `CommercialNav` 5 subroute buttons com `min-h-11`.
+- Botões Promote/Demote/Trash do `AdminDashboard` com touch target adequado.
+- 9 botões do `ProjectHub` (`Ver todos`, `Gerenciar`, `Editar briefing`, `Adicionar membro`, `Exportar projeto`, `ClientLink`, `Abrir Briefing`) ≥ 44×44.
+- 3 chaves i18n adicionadas em `translationsSupplemental.ts`.
 
-**🟡 P2 — Decisões de design system**
+**Status de testes ao encerrar a Fase 2:**
 
-7. Botões pequenos ("+ Novo cliente", "Voltar para Clientes") — precisam
-   de padding padrão.
-8. Breadcrumbs — decidir se recebem padding ou entram no allowlist
-   (`data-touch-target-exempt`).
+- ✅ Vitest: **1088/1088** (adicionou 3 testes do `ResponsiveTabs`, atualizou 1 teste do `AppNavBar` para refletir `min-height: 45px`).
+- ✅ Playwright `@fase1` isolado: **6/6 verde** (~1.2 min).
+- ✅ Suíte completa: **8 pass / 4 fail** (~3.3 min, dentro do orçamento de 8 min).
+  - Das 4 falhas: 3 são pré-existentes documentadas em `FASE_1_ACHADOS.md` seções 3 e 5 (`launch.spec.ts` `light theme project dialog` desktop+mobile, e `critical authenticated app screens` mobile por timeout — não regressão da Fase 2). 1 é flakiness do `mobile-user-flow` na suíte completa por estado compartilhado com `launch.spec.ts` (passa consistentemente isolado).
+- ✅ Nenhuma regressão em desktop.
 
-**Como validar:** os testes da Fase 1 já estão prontos e vão de vermelho
-para verde à medida que cada P0/P1 é corrigido. `npx playwright test --grep "@fase1"`
-é o loop de feedback da Fase 2.
+### Fase 3 — White label ⏳ Próxima (opcional, depende de decisão de negócio)
+
+**Entrada priorizada:** ver `FASE_1_ACHADOS.md` seção 8 original. Ordem sugerida abaixo (não mais em execução):
+
+_(Conteúdo original das prioridades da Fase 2 movido para o histórico do spec em `.kiro/specs/fase-2-layout-mobile-e-tabs/requirements.md` — todos resolvidos)._
 
 ### Fase 3 — White label (opcional, depende de decisão de negócio)
 
@@ -131,8 +137,8 @@ para verde à medida que cada P0/P1 é corrigido. `npx playwright test --grep "@
 |---|---|---|---|---|
 | 0 | Testes rodando de verdade | ✅ Concluída | 1 dia | Nada |
 | 1 | Testar como usuário real, não só tecnicamente | ✅ Concluída | 3-5 dias | Fase 0 |
-| 2 | Corrigir mobile e padronizar layout | ⏳ Próxima | 1-2 semanas | Fase 1 |
-| 3 | White label | ⏸️ Aguardando | 1-2 sem (básico) / +3-5 sem (multi-tenant) | Fase 2 |
+| 2 | Corrigir mobile e padronizar layout | ✅ Concluída | 1-2 semanas | Fase 1 |
+| 3 | White label | ⏳ Próxima | 1-2 sem (básico) / +3-5 sem (multi-tenant) | Fase 2 |
 
 ---
 

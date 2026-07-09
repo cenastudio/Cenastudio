@@ -3,6 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import AppNavBar from "@/components/AppNavBar";
 import ProjectNav from "@/components/ProjectNav";
+import ProductionNav from "@/components/ProductionNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import VideoPlayer from "@/components/VideoPlayer";
 import ReviewCommentComposer from "@/components/ReviewCommentComposer";
@@ -516,7 +517,7 @@ function VideoReviewsContent({ embedded }: { embedded?: boolean }) {
   return (
     <div className={`${embedded ? "" : "min-h-screen"} bg-frame-black text-frame-white font-frame-body flex flex-col`}>
       {!embedded && <AppNavBar />}
-      {!embedded && projectId && <ProjectNav projectId={parseInt(projectId)} />}
+      {!embedded && (projectId ? <ProjectNav projectId={parseInt(projectId)} /> : <ProductionNav />)}
 
       <main id="main-content" className="flex-1 flex flex-col min-h-0">
         <div className="border-b border-frame-gray-3 bg-frame-gray-1/20 px-4 sm:px-6 py-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">

@@ -22,13 +22,16 @@ vi.mock('@/components/base/GlassCard', () => ({
     children,
     onClick,
     hover,
-    ...props
+    className,
   }: {
     children: React.ReactNode;
     onClick?: () => void;
     hover?: boolean;
+    className?: string;
+    padding?: string;
+    borderRadius?: string;
   }) => (
-    <div onClick={onClick} data-hover={hover} data-testid="glass-card" {...props}>
+    <div onClick={onClick} data-hover={hover} data-testid="glass-card" className={className}>
       {children}
     </div>
   ),
@@ -129,7 +132,7 @@ describe('JobCard', () => {
       render(<JobCard job={mockJob} />);
       const title = screen.getByText('Product Launch Video');
       expect(title).toHaveStyle({
-        fontSize: '1.5rem',
+        fontSize: '24px',
         fontWeight: '700',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
@@ -165,7 +168,7 @@ describe('JobCard', () => {
       render(<JobCard job={mockJob} />);
       const client = screen.getByText('Cliente: Acme Corp');
       expect(client).toHaveStyle({
-        fontSize: '0.875rem',
+        fontSize: '14px',
       });
     });
   });
@@ -203,7 +206,7 @@ describe('JobCard', () => {
     it('should apply red text color when urgent', () => {
       const urgentJob = { ...mockJob, urgent: true, daysLeft: 2 };
       const { container } = render(<JobCard job={urgentJob} />);
-      const deadlineText = container.querySelector('div[style*="color: rgb(239, 68, 68)"]');
+      const deadlineText = container.querySelector('div[style*="color: #ef4444"]');
       expect(deadlineText).toBeInTheDocument();
     });
 

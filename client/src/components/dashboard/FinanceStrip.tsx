@@ -30,7 +30,10 @@ export function formatCurrency(amount: number, currency: string = "BRL"): string
     maximumFractionDigits: 2,
   });
 
-  return formatter.format(amount);
+  // Normalize the non-breaking space Intl.NumberFormat inserts between the
+  // currency symbol and the value (varies by Node/ICU version) to a regular
+  // space, so the output is visually identical but deterministic.
+  return formatter.format(amount).replace(/\u00A0/g, " ");
 }
 
 /**

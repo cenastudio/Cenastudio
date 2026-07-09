@@ -4,6 +4,7 @@ import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AnimatedModal from "@/components/AnimatedModal";
 import ProjectNav from "@/components/ProjectNav";
+import ProductionNav from "@/components/ProductionNav";
 import { api } from "@/lib/api";
 import {
   CalendarDays,
@@ -696,7 +697,7 @@ function DocumentsContent() {
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body">
       <AppNavBar />
-      {projectIdParam && <ProjectNav projectId={projectIdParam} />}
+      {projectIdParam ? <ProjectNav projectId={projectIdParam} /> : <ProductionNav />}
       <main id="main-content" className="px-4 sm:px-6 py-5 sm:py-6 max-w-[1680px] mx-auto space-y-4">
 
         {/* ═══ HEADER ═══ */}

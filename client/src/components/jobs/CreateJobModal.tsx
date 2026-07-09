@@ -56,6 +56,20 @@ interface FormErrors {
 }
 
 /**
+ * Parse a "YYYY-MM-DD" date-only string as a local midnight Date.
+ *
+ * `new Date("YYYY-MM-DD")` parses the string as UTC midnight, not local
+ * midnight. In any timezone behind UTC (e.g. Brazil, UTC-3) that shifts the
+ * date backwards by a day once compared against a local `Date`, which made
+ * "today" register as a past date and skewed daysLeft calculations by one
+ * day. Parsing the parts manually keeps everything in local time.
+ */
+const parseLocalDate = (dateStr: string): Date => {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, (month || 1) - 1, day || 1);
+};
+
+/**
  * Validate form field
  */
 const validateField = (field: keyof CreateJobFormData, value: string): string | undefined => {
@@ -72,7 +86,7 @@ const validateField = (field: keyof CreateJobFormData, value: string): string | 
       return undefined;
     case 'deadline': {
       if (!value) return 'Deadline é obrigatório';
-      const selectedDate = new Date(value);
+      const selectedDate = parseLocalDate(value);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (selectedDate < today) return 'Deadline deve ser hoje ou uma data futura';
@@ -93,7 +107,7 @@ const validateField = (field: keyof CreateJobFormData, value: string): string | 
  * Calculate days left from deadline
  */
 const calculateDaysLeft = (deadline: string): number => {
-  const deadlineDate = new Date(deadline);
+  const deadlineDate = parseLocalDate(deadline);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   deadlineDate.setHours(0, 0, 0, 0);
@@ -189,7 +203,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
       formData.title.trim().length <= 200 &&
       !!formData.clientId &&
       !!formData.deadline &&
-      new Date(formData.deadline) >= new Date(new Date().setHours(0, 0, 0, 0)) &&
+      parseLocalDate(formData.deadline) >= new Date(new Date().setHours(0, 0, 0, 0)) &&
       ['briefing', 'production', 'review', 'delivered'].includes(formData.status)
     );
   };
@@ -283,7 +297,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
         </>
       }
     >
-      <form onSubmit={handleSubmit} noValidate>
+      <form onSubmit={handleSubmit} noValidate aria-label="Criar novo job">
         {/* API Error */}
         {apiError && (
           <div

@@ -363,8 +363,14 @@ function CompanySettingsContent() {
                 </div>
                 <button type="button" onClick={handleSave} disabled={saving || !isDirty}
                   className="frame-btn-primary flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
-                  {saving ? <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
-                  {saving ? t("app.company.saving") : t("app.company.saveStudio")}
+                  {saving ? (
+                    <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : isDirty ? (
+                    <Save className="w-4 h-4" />
+                  ) : (
+                    <Check className="w-4 h-4" />
+                  )}
+                  {saving ? t("app.company.saving") : isDirty ? t("app.company.saveCompany") : t("app.company.allSaved")}
                 </button>
               </div>
             </div>

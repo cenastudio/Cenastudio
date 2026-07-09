@@ -75,11 +75,12 @@ describe("apply-tokens", () => {
       // Check premium typography scale
       expect(style.getPropertyValue("--plan-typography-scale")).toBe("1.08");
 
-      // Check primary accent (only orange, no gold)
+      // Check primary accent (orange)
       expect(style.getPropertyValue("--plan-accent-primary")).toBe("#e85002");
 
-      // Check NO financial accent
-      expect(style.getPropertyValue("--plan-accent-financial")).toBe("");
+      // Studio has the dual-accent system: gold for financial context
+      // (see design-system/plan-tokens/studio.css)
+      expect(style.getPropertyValue("--plan-accent-financial")).toBe("#d8b343");
 
       // Check glow effects present
       expect(style.getPropertyValue("--plan-glow-primary")).toContain("rgba(232, 80, 2");
@@ -145,13 +146,21 @@ describe("apply-tokens", () => {
       });
     });
 
-    it("should only have orange accent in all plans", () => {
-      const plans: PlanMode[] = ["brand", "free", "pro", "studio", "studio-pending", "admin"];
-
-      plans.forEach((plan) => {
+    it("should only have the gold financial accent in Studio-tier plans", () => {
+      // Brand, Free and Pro don't have the dual-accent system (see
+      // plan-tokens/free.css and plan-tokens/pro.css: "intentionally omitted").
+      const singleAccentPlans: PlanMode[] = ["brand", "free", "pro"];
+      singleAccentPlans.forEach((plan) => {
         applyPlanTokens(plan);
-        // Only orange, no gold
         expect(document.documentElement.style.getPropertyValue("--plan-accent-financial")).toBe("");
+      });
+
+      // Studio, Studio-pending and Admin have the gold financial accent
+      // (see plan-tokens/studio.css).
+      const dualAccentPlans: PlanMode[] = ["studio", "studio-pending", "admin"];
+      dualAccentPlans.forEach((plan) => {
+        applyPlanTokens(plan);
+        expect(document.documentElement.style.getPropertyValue("--plan-accent-financial")).toBe("#d8b343");
       });
     });
 
@@ -231,10 +240,12 @@ describe("apply-tokens", () => {
       const glowMd = style.getPropertyValue("--plan-glow-md");
       const glowLg = style.getPropertyValue("--plan-glow-lg");
 
-      // Should be valid box-shadow syntax
-      expect(glowSm).toMatch(/\d+px \d+px \d+px rgba\(/);
-      expect(glowMd).toMatch(/\d+px \d+px \d+px rgba\(/);
-      expect(glowLg).toMatch(/\d+px \d+px \d+px rgba\(/);
+      // Should be valid box-shadow syntax: "<offset-x> <offset-y> <blur> rgba(...)"
+      // matching the 2-value-offset glow format already used across
+      // design-system/plan-tokens/*.css (e.g. "0 0 24px rgba(232, 80, 2, 0.3)").
+      expect(glowSm).toMatch(/^\d+ \d+ \d+px rgba\(/);
+      expect(glowMd).toMatch(/^\d+ \d+ \d+px rgba\(/);
+      expect(glowLg).toMatch(/^\d+ \d+ \d+px rgba\(/);
     });
   });
 });

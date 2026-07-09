@@ -15,7 +15,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { WorkflowCardsRow, WorkflowCardsRowProps, WorkflowStats } from './WorkflowCardsRow';
 import React from 'react';
@@ -282,19 +282,19 @@ describe('WorkflowCardsRow', () => {
       });
     });
 
-    it('cards animate to opacity 1 and translateY 0 after mount', async () => {
+    it('cards animate to opacity 1 and translateY 0 after mount', () => {
       const { container } = render(<WorkflowCardsRow {...defaultProps} />);
 
       // Fast-forward past the initial delay (50ms)
-      vi.advanceTimersByTime(50);
+      act(() => {
+        vi.advanceTimersByTime(50);
+      });
 
-      await waitFor(() => {
-        const wrappers = container.querySelectorAll('.workflow-card-wrapper');
-        wrappers.forEach((wrapper) => {
-          expect(wrapper).toHaveStyle({
-            opacity: '1',
-            transform: 'translateY(0)',
-          });
+      const wrappers = container.querySelectorAll('.workflow-card-wrapper');
+      wrappers.forEach((wrapper) => {
+        expect(wrapper).toHaveStyle({
+          opacity: '1',
+          transform: 'translateY(0)',
         });
       });
     });
@@ -361,18 +361,20 @@ describe('WorkflowCardsRow', () => {
   });
 
   describe('Animation Only on Mount', () => {
-    it('does not re-animate when workflowStats change', async () => {
+    it('does not re-animate when workflowStats change', () => {
       const { container, rerender } = render(<WorkflowCardsRow {...defaultProps} />);
 
       // Fast-forward to complete initial animation
-      vi.advanceTimersByTime(200);
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
 
-      await waitFor(() => {
+      {
         const wrappers = container.querySelectorAll('.workflow-card-wrapper');
         wrappers.forEach((wrapper) => {
           expect(wrapper).toHaveStyle({ opacity: '1' });
         });
-      });
+      }
 
       // Change stats
       const newStats: WorkflowStats = {
@@ -390,16 +392,18 @@ describe('WorkflowCardsRow', () => {
       });
     });
 
-    it('animation state persists across re-renders', async () => {
+    it('animation state persists across re-renders', () => {
       const { container, rerender } = render(<WorkflowCardsRow {...defaultProps} />);
 
       // Complete initial animation
-      vi.advanceTimersByTime(200);
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
 
-      await waitFor(() => {
+      {
         const wrappers = container.querySelectorAll('.workflow-card-wrapper');
         expect(wrappers[0]).toHaveStyle({ opacity: '1' });
-      });
+      }
 
       // Multiple re-renders
       rerender(<WorkflowCardsRow {...defaultProps} />);
@@ -447,7 +451,7 @@ describe('WorkflowCardsRow', () => {
       });
     });
 
-    it('shows cards immediately when reduced motion is preferred', async () => {
+    it('shows cards immediately when reduced motion is preferred', () => {
       // Mock matchMedia for reduced motion
       window.matchMedia = vi.fn().mockImplementation((query) => ({
         matches: query === '(prefers-reduced-motion: reduce)',
@@ -462,16 +466,13 @@ describe('WorkflowCardsRow', () => {
 
       const { container } = render(<WorkflowCardsRow {...defaultProps} />);
 
-      // No need to wait or advance timers
+      // Animation state is set synchronously via setState in useEffect
+      // (no setTimeout path when reduced motion is preferred)
       const wrappers = container.querySelectorAll('.workflow-card-wrapper');
-
-      // Animation state should be set immediately
-      await waitFor(() => {
-        wrappers.forEach((wrapper) => {
-          expect(wrapper).toHaveStyle({
-            opacity: '1',
-            transform: 'translateY(0)',
-          });
+      wrappers.forEach((wrapper) => {
+        expect(wrapper).toHaveStyle({
+          opacity: '1',
+          transform: 'translateY(0)',
         });
       });
     });
@@ -648,7 +649,7 @@ describe('WorkflowCardsRow', () => {
   });
 
   describe('Integration Tests', () => {
-    it('renders complete workflow cards row with all features', async () => {
+    it('renders complete workflow cards row with all features', () => {
       const { container } = render(<WorkflowCardsRow {...defaultProps} />);
 
       // Check layout
@@ -660,19 +661,21 @@ describe('WorkflowCardsRow', () => {
       expect(cards).toHaveLength(4);
 
       // Check animation
-      vi.advanceTimersByTime(200);
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
 
-      await waitFor(() => {
+      {
         const wrappers = container.querySelectorAll('.workflow-card-wrapper');
         expect(wrappers[0]).toHaveStyle({ opacity: '1' });
-      });
+      }
 
       // Check navigation
       fireEvent.click(cards[0]);
       expect(mockSetLocation).toHaveBeenCalledWith('/jobs');
     });
 
-    it('works correctly with dynamic data updates', async () => {
+    it('works correctly with dynamic data updates', () => {
       const { rerender } = render(<WorkflowCardsRow {...defaultProps} />);
 
       expect(screen.getByText('5')).toBeInTheDocument();
@@ -691,12 +694,12 @@ describe('WorkflowCardsRow', () => {
 
       // Animation should still be active (not reset)
       const { container } = render(<WorkflowCardsRow workflowStats={updatedStats} />);
-      vi.advanceTimersByTime(200);
-
-      await waitFor(() => {
-        const wrappers = container.querySelectorAll('.workflow-card-wrapper');
-        expect(wrappers[0]).toHaveStyle({ opacity: '1' });
+      act(() => {
+        vi.advanceTimersByTime(200);
       });
+
+      const wrappers = container.querySelectorAll('.workflow-card-wrapper');
+      expect(wrappers[0]).toHaveStyle({ opacity: '1' });
     });
   });
 });

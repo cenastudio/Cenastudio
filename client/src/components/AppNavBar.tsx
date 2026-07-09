@@ -110,7 +110,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
-        style={{ minHeight: "44px" }}
+        style={{ minHeight: "45px" }}
       >
         <span className={`mr-1.5 text-[0.45rem] ${active ? "text-frame-orange" : "text-frame-gray-muted"}`}>●</span>
         {label}
@@ -159,7 +159,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
             setLocation("/dashboard");
             setMobileMenuOpen(false);
           }}
-          className="bg-transparent border-none"
+          className="bg-transparent border-none min-h-11 flex items-center"
           aria-label={t("app.nav.backToDashboard") as string}
         >
           <BrandLogo compact className="scale-90 origin-left" />
@@ -263,10 +263,10 @@ export default function AppNavBar({ children }: AppNavBarProps) {
           <div className="relative group">
             <button
               type="button"
-              className="flex items-center gap-2 group"
+              className="flex items-center justify-center gap-2 group min-h-11 min-w-11"
               title={user.name ?? user.email}
             >
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-[0.75rem] font-bold shrink-0 transition group-hover:scale-105 bg-frame-orange text-frame-black">
+              <div className="w-11 h-11 rounded-full flex items-center justify-center text-[0.85rem] font-bold shrink-0 transition group-hover:scale-105 bg-frame-orange text-frame-black">
                 {(user.name ?? user.email).charAt(0).toUpperCase()}
               </div>
             </button>
@@ -289,7 +289,13 @@ export default function AppNavBar({ children }: AppNavBarProps) {
                 </div>
                 <div className="px-3 py-2 flex items-center justify-between">
                   <span className="text-xs text-frame-gray-light">Tema</span>
-                  <button type="button" onClick={toggleTheme} className="text-frame-gray-light hover:text-frame-orange transition">
+                  <button
+                    type="button"
+                    onClick={toggleTheme}
+                    className="text-frame-gray-light hover:text-frame-orange transition"
+                    title={theme === "dark" ? (t("app.nav.currentThemeDark") as string) : (t("app.nav.currentThemeLight") as string)}
+                    aria-label={theme === "dark" ? (t("app.nav.currentThemeDark") as string) : (t("app.nav.currentThemeLight") as string)}
+                  >
                     {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
                   </button>
                 </div>

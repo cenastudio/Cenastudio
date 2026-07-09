@@ -49,9 +49,9 @@ describe("translations", () => {
     }
 
     render(React.createElement(LanguageProvider, null, React.createElement(LanguageProbe)));
-    expect(screen.getByRole("button")).toHaveTextContent("Criar meu primeiro job");
+    expect(screen.getByRole("button")).toHaveTextContent("Experimentar grátis por 14 dias");
 
     fireEvent.click(screen.getByRole("button"));
-    expect(screen.getByRole("button")).toHaveTextContent("Create my first job");
+    expect(screen.getByRole("button")).toHaveTextContent("Try free for 14 days");
   });
 });

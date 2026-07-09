@@ -110,7 +110,7 @@ describe('ChecklistColumn', () => {
       render(<ChecklistColumn {...defaultProps} />);
 
       const title = screen.getByText('✓ MINHAS TAREFAS');
-      expect(title).toHaveStyle({ fontSize: '0.875rem' });
+      expect(title).toHaveStyle({ fontSize: '14px' });
     });
 
     it('title has correct typography classes', () => {
@@ -842,18 +842,22 @@ describe('ChecklistColumn', () => {
     });
 
     it('focus management works correctly', async () => {
-      render(<ChecklistColumn {...defaultProps} />);
+      // Use a single, link-less item so the tab order is deterministic:
+      // checkbox -> its label -> the "new task" input.
+      const singleItem: ChecklistTask[] = [{ id: '1', text: 'Task 1', checked: false }];
+      render(<ChecklistColumn {...defaultProps} items={singleItem} />);
 
-      const input = screen.getByPlaceholderText('+ Nova tarefa');
       const checkbox = screen.getAllByRole('checkbox')[0];
+      const input = screen.getByPlaceholderText('+ Nova tarefa');
 
-      // Focus input
-      input.focus();
-      expect(document.activeElement).toBe(input);
-
-      // Tab to checkbox
-      await userEvent.tab();
+      // Focus the checklist item's checkbox (it comes before the input in
+      // DOM order, since the items list renders above the input)
+      checkbox.focus();
       expect(document.activeElement).toBe(checkbox);
+
+      // Tab forward should eventually move focus to the "new task" input
+      await userEvent.tab();
+      expect(document.activeElement).toBe(input);
     });
   });
 

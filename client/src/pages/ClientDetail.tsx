@@ -4,7 +4,8 @@ import AppNavBar from "@/components/AppNavBar";
 import CommercialNav from "@/components/CommercialNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { TabsContent } from "@/components/ui/tabs";
+import { ResponsiveTabs } from "@/components/ui/responsive-tabs";
 import {
   ArrowLeft, BriefcaseBusiness, Building2, Calendar, Copy, DollarSign, FileText, Film, FolderOpen,
   Mail, MessageSquare, Phone, Trash2, User, Loader2, Video,
@@ -222,7 +223,7 @@ function ClientDetailContent() {
       <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 flex-1 space-y-8">
 
         {/* Back Button */}
-        <button onClick={() => setLocation("/clients")} className="flex items-center gap-2 text-frame-gray-light hover:text-frame-orange transition text-sm group">
+        <button onClick={() => setLocation("/clients")} className="inline-flex items-center gap-2 min-h-11 px-3 py-2 text-frame-gray-light hover:text-frame-orange transition text-sm group">
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
           <span className="font-frame-mono text-[0.65rem] uppercase tracking-wider">Voltar para Clientes</span>
         </button>
@@ -363,30 +364,18 @@ function ClientDetailContent() {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="projects" className="space-y-6">
-          <TabsList className="bg-frame-gray-3/20 rounded-none h-auto p-1 w-full justify-start gap-1 overflow-x-auto">
-            <TabsTrigger value="projects" className="data-[state=active]:bg-frame-orange data-[state=active]:text-frame-black text-frame-gray-light font-frame-mono text-[0.65rem] tracking-wider uppercase px-5 py-2.5 rounded-none data-[state=active]:shadow-none transition-all">
-              Projetos · {projects.length}
-            </TabsTrigger>
-            <TabsTrigger value="oportunidades" className="data-[state=active]:bg-frame-orange data-[state=active]:text-frame-black text-frame-gray-light font-frame-mono text-[0.65rem] tracking-wider uppercase px-5 py-2.5 rounded-none data-[state=active]:shadow-none transition-all">
-              Oportunidades · {opportunities.length}
-            </TabsTrigger>
-            <TabsTrigger value="interactions" className="data-[state=active]:bg-frame-orange data-[state=active]:text-frame-black text-frame-gray-light font-frame-mono text-[0.65rem] tracking-wider uppercase px-5 py-2.5 rounded-none data-[state=active]:shadow-none transition-all">
-              Interações · {interactions.length}
-            </TabsTrigger>
-            <TabsTrigger value="files" className="data-[state=active]:bg-frame-orange data-[state=active]:text-frame-black text-frame-gray-light font-frame-mono text-[0.65rem] tracking-wider uppercase px-5 py-2.5 rounded-none data-[state=active]:shadow-none transition-all">
-              Arquivos · {files.length}
-            </TabsTrigger>
-            <TabsTrigger value="financial" className="data-[state=active]:bg-frame-orange data-[state=active]:text-frame-black text-frame-gray-light font-frame-mono text-[0.65rem] tracking-wider uppercase px-5 py-2.5 rounded-none data-[state=active]:shadow-none transition-all">
-              Financeiro · {financial.length}
-            </TabsTrigger>
-            <TabsTrigger value="propostas" className="data-[state=active]:bg-frame-orange data-[state=active]:text-frame-black text-frame-gray-light font-frame-mono text-[0.65rem] tracking-wider uppercase px-5 py-2.5 rounded-none data-[state=active]:shadow-none transition-all">
-              Propostas · {proposals.length}
-            </TabsTrigger>
-            <TabsTrigger value="video-reviews" className="data-[state=active]:bg-frame-orange data-[state=active]:text-frame-black text-frame-gray-light font-frame-mono text-[0.65rem] tracking-wider uppercase px-5 py-2.5 rounded-none data-[state=active]:shadow-none transition-all">
-              Vídeo Reviews · {videoReviews.length}
-            </TabsTrigger>
-          </TabsList>
+        <ResponsiveTabs
+          defaultValue="projects"
+          tabs={[
+            { value: "projects", label: "Projetos", count: projects.length },
+            { value: "oportunidades", label: "Oportunidades", count: opportunities.length },
+            { value: "interactions", label: "Interações", count: interactions.length },
+            { value: "files", label: "Arquivos", count: files.length },
+            { value: "financial", label: "Financeiro", count: financial.length },
+            { value: "propostas", label: "Propostas", count: proposals.length },
+            { value: "video-reviews", label: "Vídeo Reviews", count: videoReviews.length },
+          ]}
+        >
 
           {/* PROJETOS */}
           <TabsContent value="projects">
@@ -846,7 +835,7 @@ function ClientDetailContent() {
               </div>
             )}
           </TabsContent>
-        </Tabs>
+        </ResponsiveTabs>
 
         {/* Notes Section */}
         {client.notes && (

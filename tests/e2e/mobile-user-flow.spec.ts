@@ -74,19 +74,37 @@ test.describe("@fase1 mobile user flow", () => {
       await expect(nameInput).toBeVisible({ timeout: 5_000 });
       await nameInput.fill(projectName);
 
-      // Cliente: pode ser combobox custom (Radix) ou select nativo.
-      const clientCombo = dialog.getByRole("combobox").first();
-      const comboCount = await clientCombo.count();
-      if (comboCount > 0 && (await clientCombo.isVisible())) {
-        await clientCombo.click();
-        await page
-          .getByRole("option", { name: new RegExp(client.name, "i") })
-          .first()
-          .click();
+      // Cliente: o modal atual usa <select> nativo (Dashboard.tsx). Preferimos
+      // selectOption() porque .click() em <option> nativo NÃO funciona no
+      // Playwright — a API correta para <select> nativo é selectOption().
+      // Fallback para combobox custom (Radix Select) permanece caso o modal
+      // mude no futuro para um combobox baseado em role="listbox".
+      //
+      // Observações sobre o modal atual:
+      // - Há dois <select> no dialog: projectType (primeiro) e client (segundo).
+      //   Identificamos o client select pela presença de <option value=""> de
+      //   placeholder (o de projectType não tem).
+      // - O label do <option> é `${client.name} (${client.company})`, então
+      //   selecionar por `value` (client.id) é mais robusto do que por label.
+      const clientSelect = dialog
+        .locator("select")
+        .filter({ has: page.locator('option[value=""]') })
+        .first();
+      const clientSelectCount = await clientSelect.count();
+
+      if (clientSelectCount > 0 && (await clientSelect.isVisible())) {
+        await clientSelect.selectOption(client.id);
       } else {
-        const selectEl = dialog.locator("select").first();
-        if ((await selectEl.count()) > 0) {
-          await selectEl.selectOption({ label: client.name });
+        // Fallback: combobox custom (Radix Select ou similar). Nesse caso as
+        // opções são elementos com role="option" clicáveis (não <option> nativos).
+        const clientCombo = dialog.getByRole("combobox").first();
+        const comboCount = await clientCombo.count();
+        if (comboCount > 0 && (await clientCombo.isVisible())) {
+          await clientCombo.click();
+          await page
+            .getByRole("option", { name: new RegExp(client.name, "i") })
+            .first()
+            .click();
         }
       }
 
@@ -138,23 +156,26 @@ test.describe("@fase1 mobile user flow", () => {
       // ============================================================
       // Passo 4: Localizar um campo persistível e editar
       // ============================================================
+      // Sempre navegar explicitamente para o hub do projeto — após criar,
+      // o app pode redirecionar para uma sub-rota (ex.:
+      // /project/:id/studio/briefing). Um simples `url.includes("/project/:id")`
+      // dá falso-positivo nesse caso e nunca chega ao hub, que é onde o
+      // input persistível vive.
       const projectHubUrl = `/project/${projectId}`;
-      if (!page.url().includes(projectHubUrl)) {
-        await page.goto(projectHubUrl);
-      }
+      await page.goto(projectHubUrl);
       await page.waitForLoadState("networkidle");
 
-      // Procura o primeiro input text/textarea visível na página. Assumimos
-      // que o hub do projeto expõe um campo editável (ex.: nome do projeto).
-      const editableInput = page
-        .locator('input[type="text"], input:not([type]), textarea')
-        .filter({ hasNot: page.locator('[type="hidden"]') })
-        .first();
+      // Fase 2 expõe explicitamente o input editável do nome do projeto
+      // via `data-testid="project-name-editable"`. Selector genérico
+      // (input[type=text]) foi trocado por este testid porque a página
+      // tinha múltiplos inputs (client.company, filtros, etc.), o que
+      // fazia o teste editar o campo errado e falhar após o reload.
+      const editableInput = page.locator('[data-testid="project-name-editable"]');
 
       const editableCount = await editableInput.count();
       if (editableCount === 0) {
         throw new Error(
-          "nenhum campo persistível encontrado em /project/:id — Fase 2 precisa expor um",
+          'campo `[data-testid="project-name-editable"]` não encontrado em /project/:id — Fase 2 precisa expor um',
         );
       }
 
@@ -196,10 +217,7 @@ test.describe("@fase1 mobile user flow", () => {
       // ============================================================
       // Passo 7: Confirmar que o valor persistiu
       // ============================================================
-      const persistedInput = page
-        .locator('input[type="text"], input:not([type]), textarea')
-        .filter({ hasNot: page.locator('[type="hidden"]') })
-        .first();
+      const persistedInput = page.locator('[data-testid="project-name-editable"]');
 
       await expect(persistedInput).toHaveValue(newValue, { timeout: 10_000 });
     } finally {

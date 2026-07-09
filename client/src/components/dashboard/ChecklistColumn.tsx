@@ -25,7 +25,7 @@ export function ChecklistColumn({
   const [inputValue, setInputValue] = React.useState("");
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       const trimmedValue = inputValue.trim();
 

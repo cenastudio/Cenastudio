@@ -166,15 +166,15 @@ describe('extractTabIdFromPath', () => {
   });
 });
 
-describe('manageNavigationState', () => {
-  const createTestTabs = (): NavTab[] => [
-    { id: 'home', label: 'HOME', icon: '🏠', path: '/dashboard', isActive: false },
-    { id: 'clients', label: 'CLIENTS', icon: '👥', path: '/clients', isActive: false },
-    { id: 'jobs', label: 'JOBS', icon: '🎬', path: '/projects', isActive: false },
-    { id: 'studio', label: 'STUDIO', icon: '🤖', path: '/tools', isActive: false },
-    { id: 'finance', label: 'FINANCE', icon: '💰', path: '/analytics', isActive: false },
-  ];
+const createTestTabs = (): NavTab[] => [
+  { id: 'home', label: 'HOME', icon: '🏠', path: '/dashboard', isActive: false },
+  { id: 'clients', label: 'CLIENTS', icon: '👥', path: '/clients', isActive: false },
+  { id: 'jobs', label: 'JOBS', icon: '🎬', path: '/projects', isActive: false },
+  { id: 'studio', label: 'STUDIO', icon: '🤖', path: '/tools', isActive: false },
+  { id: 'finance', label: 'FINANCE', icon: '💰', path: '/analytics', isActive: false },
+];
 
+describe('manageNavigationState', () => {
   describe('single active tab property (∃! tab where isActive=true)', () => {
     it('should activate only home tab for /home path', () => {
       const tabs = createTestTabs();

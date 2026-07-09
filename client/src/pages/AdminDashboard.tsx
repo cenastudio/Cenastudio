@@ -8,7 +8,8 @@ import {
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AnimatedModal from "@/components/AnimatedModal";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { TabsContent } from "@/components/ui/tabs";
+import { ResponsiveTabs } from "@/components/ui/responsive-tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ApiError, api, ToolFromApi } from "@/lib/api";
@@ -218,27 +219,15 @@ function AdminContent() {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="gap-0">
-          <TabsList className="bg-transparent border-b border-frame-gray-3 rounded-none h-auto p-0 w-full justify-start gap-0 overflow-x-auto scrollbar-none">
-            <TabsTrigger
-              value="overview"
-              className="rounded-none border-0 border-b-2 border-transparent data-[state=active]:border-frame-orange data-[state=active]:bg-transparent data-[state=active]:text-frame-orange text-frame-gray-light font-frame-mono text-[0.68rem] tracking-[0.12em] uppercase px-4 py-3 data-[state=active]:shadow-none"
-            >
-              {t("app.admin.tabOverview")}
-            </TabsTrigger>
-            <TabsTrigger
-              value="users"
-              className="rounded-none border-0 border-b-2 border-transparent data-[state=active]:border-frame-orange data-[state=active]:bg-transparent data-[state=active]:text-frame-orange text-frame-gray-light font-frame-mono text-[0.68rem] tracking-[0.12em] uppercase px-4 py-3 data-[state=active]:shadow-none"
-            >
-              {t("app.admin.users")}
-            </TabsTrigger>
-            <TabsTrigger
-              value="tools"
-              className="rounded-none border-0 border-b-2 border-transparent data-[state=active]:border-frame-orange data-[state=active]:bg-transparent data-[state=active]:text-frame-orange text-frame-gray-light font-frame-mono text-[0.68rem] tracking-[0.12em] uppercase px-4 py-3 data-[state=active]:shadow-none"
-            >
-              {t("app.admin.tabTools")}
-            </TabsTrigger>
-          </TabsList>
+        <ResponsiveTabs
+          tabs={[
+            { value: "overview", label: t("app.admin.tabOverview") as string },
+            { value: "users", label: t("app.admin.users") as string },
+            { value: "tools", label: t("app.admin.tabTools") as string },
+          ]}
+          value={activeTab}
+          onValueChange={setActiveTab}
+        >
 
           {/* ═══ TAB: OVERVIEW ═══ */}
           <TabsContent value="overview" className="mt-6">
@@ -370,7 +359,7 @@ function AdminContent() {
                           type="button"
                           onClick={() => toggleRole(u)}
                           disabled={isCurrentUser}
-                          className={`px-3 py-1.5 text-xs border transition disabled:opacity-40 disabled:cursor-not-allowed ${
+                          className={`px-3 py-1.5 min-h-11 text-xs border transition disabled:opacity-40 disabled:cursor-not-allowed ${
                             u.role === "admin"
                               ? "border-frame-orange/30 text-frame-orange hover:bg-frame-orange/10"
                               : "border-frame-gray-3 text-frame-gray-light hover:border-frame-orange/50"
@@ -383,7 +372,7 @@ function AdminContent() {
                           onClick={() => { setDeleteTarget(u); setDeleteConfirm(""); }}
                           disabled={isCurrentUser}
                           title={isCurrentUser ? t("app.admin.cannotDeleteSelf") as string : t("app.admin.deleteAccount") as string}
-                          className="h-8 w-8 border border-red-500/30 text-red-300 hover:bg-red-500/10 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition"
+                          className="h-11 w-11 border border-red-500/30 text-red-300 hover:bg-red-500/10 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -417,6 +406,7 @@ function AdminContent() {
                     <button
                       type="button"
                       onClick={() => toggleTool(tool)}
+                      data-touch-target-exempt
                       className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
                         tool.isActive ? "bg-frame-orange" : "bg-frame-gray-3"
                       }`}
@@ -433,7 +423,7 @@ function AdminContent() {
               </div>
             )}
           </TabsContent>
-        </Tabs>
+        </ResponsiveTabs>
       </main>
 
       {/* ═══ CREATE USER MODAL ═══ */}

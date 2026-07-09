@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { DollarSign, TrendingUp, Target, Calendar, Download, Loader2, LineChart as LineChartIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TabsContent } from "@/components/ui/tabs";
+import { ResponsiveTabs } from "@/components/ui/responsive-tabs";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { RevenueChart } from "@/components/commercial/RevenueChart";
@@ -497,13 +498,17 @@ td{padding:10px 12px;border-top:1px solid #252525;color:#ddd;font-size:12px}
 
       {/* Content */}
       <div className="mx-auto max-w-7xl px-6 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-8 w-full flex-wrap justify-start gap-2 md:flex-nowrap overflow-x-auto scrollbar-none">
-            <TabsTrigger value="dashboard" className="flex-1 md:flex-initial">{t("app.commercial.tabDashboard")}</TabsTrigger>
-            <TabsTrigger value="metrics" className="flex-1 md:flex-initial">{t("app.commercial.tabMetrics")}</TabsTrigger>
-            <TabsTrigger value="funnel" className="flex-1 md:flex-initial">{t("app.commercial.tabFunnel")}</TabsTrigger>
-            <TabsTrigger value="reports" className="flex-1 md:flex-initial">{t("app.commercial.tabReports")}</TabsTrigger>
-          </TabsList>
+        <ResponsiveTabs
+          tabs={[
+            { value: "dashboard", label: t("app.commercial.tabDashboard") as string },
+            { value: "metrics", label: t("app.commercial.tabMetrics") as string },
+            { value: "funnel", label: t("app.commercial.tabFunnel") as string },
+            { value: "reports", label: t("app.commercial.tabReports") as string },
+          ]}
+          value={activeTab}
+          onValueChange={setActiveTab}
+          listClassName="mb-8"
+        >
 
           {/* Dashboard Tab */}
           <TabsContent value="dashboard">
@@ -1151,7 +1156,7 @@ td{padding:10px 12px;border-top:1px solid #252525;color:#ddd;font-size:12px}
               </Card>
             </div>
           </TabsContent>
-        </Tabs>
+        </ResponsiveTabs>
       </div>
     </>
   );

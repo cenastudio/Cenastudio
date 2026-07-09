@@ -1,4 +1,5 @@
 import AppNavBar from "@/components/AppNavBar";
+import ProductionNav from "@/components/ProductionNav";
 import EmptyState from "@/components/EmptyState";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { SkeletonCardGrid } from "@/components/skeletons";
@@ -48,6 +49,7 @@ function ProjectsContent({ embedded }: { embedded?: boolean }) {
   return (
     <div className={`${embedded ? "" : "min-h-screen"} bg-frame-black text-frame-white`}>
       {!embedded && <AppNavBar />}
+      {!embedded && <ProductionNav />}
       <main id="main-content" className="mx-auto w-full max-w-7xl space-y-6 px-4 py-8 sm:px-6">
 
         {/* Header */}

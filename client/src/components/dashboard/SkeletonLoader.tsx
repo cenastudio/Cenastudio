@@ -155,7 +155,7 @@ export const WorkflowCardSkeleton: React.FC<SkeletonLoaderProps> = ({
   return (
     <div
       className={cn(
-        "flex flex-col items-start justify-between p-6 rounded-2xl",
+        "flex flex-col items-start justify-between p-6 rounded-[24px]",
         "border border-frame-gray-3 bg-frame-gray-2/40",
         className
       )}
@@ -267,7 +267,7 @@ export const JobCardSkeleton: React.FC<SkeletonLoaderProps> = ({
   return (
     <div
       className={cn(
-        "p-6 rounded-2xl border border-frame-gray-3 bg-frame-gray-2/40",
+        "p-6 rounded-[16px] border border-frame-gray-3 bg-frame-gray-2/40",
         className
       )}
       style={{

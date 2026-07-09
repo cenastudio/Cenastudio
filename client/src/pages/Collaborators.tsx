@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "wouter";
 import AppNavBar from "@/components/AppNavBar";
+import ProductionNav from "@/components/ProductionNav";
 import ProjectNav from "@/components/ProjectNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import {
@@ -300,7 +301,7 @@ function CollaboratorsContent() {
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
       <AppNavBar />
-      {projectIdNumber && <ProjectNav projectId={projectIdNumber} />}
+      {projectIdNumber ? <ProjectNav projectId={projectIdNumber} /> : <ProductionNav />}
 
       <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-6 py-10 space-y-8">
         <section className="relative overflow-hidden border border-frame-gray-3 bg-frame-gray-1/35 p-6 md:p-8">

@@ -1,4 +1,5 @@
 import AppNavBar from "@/components/AppNavBar";
+import ProductionNav from "@/components/ProductionNav";
 import { api } from "@/lib/api";
 import { getToolIcon } from "@/lib/toolIcons";
 import { localizeTools } from "@/lib/toolTranslations";
@@ -48,6 +49,7 @@ function ToolsContent({ embedded }: { embedded?: boolean }) {
   return (
     <div className={`app-glass-surface tools-glass-page ${embedded ? "" : "min-h-screen"} text-frame-white`}>
       {!embedded && <AppNavBar />}
+      {!embedded && <ProductionNav />}
 
       <section className="px-4 sm:px-6 md:px-12 py-10 md:py-16">
         <div className="mb-8 grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px] xl:items-end">

@@ -37,47 +37,41 @@ interface CommandItemDef {
   keywords: string[]; // For enhanced fuzzy matching
 }
 
-// 5 PRIMARY NAVIGATION TABS per design spec
+// 4 PRIMARY NAVIGATION TABS — mirrors AppNavBar's job-story order:
+// Painel → Comercial → Produção → Financeiro. Kept in sync with
+// AppNavBar.tsx's primaryNavItems; update both if this ever changes.
 const PRIMARY_TABS: CommandItemDef[] = [
   {
-    labelKey: "app.nav.home",
-    label: "HOME",
+    labelKey: "app.nav.panel",
+    label: "PAINEL",
     path: "/dashboard",
     icon: Home,
     category: "primary",
-    keywords: ["home", "dashboard", "inicio", "painel"]
+    keywords: ["painel", "panel", "dashboard", "inicio", "home"]
   },
   {
-    labelKey: "app.nav.clients",
-    label: "CLIENTS",
+    labelKey: "app.nav.commercial",
+    label: "COMERCIAL",
     path: "/commercial",
     icon: Users,
     category: "primary",
-    keywords: ["clients", "clientes", "commercial", "crm"]
+    keywords: ["comercial", "commercial", "clientes", "clients", "crm"]
   },
   {
-    labelKey: "app.nav.jobs",
-    label: "JOBS",
+    labelKey: "app.nav.production",
+    label: "PRODUÇÃO",
     path: "/projects",
     icon: Clapperboard,
     category: "primary",
-    keywords: ["jobs", "projects", "projetos", "trabalhos"]
+    keywords: ["produção", "production", "jobs", "projects", "projetos", "studio", "ia", "ai"]
   },
   {
-    labelKey: "app.nav.studio",
-    label: "STUDIO",
-    path: "/tools",
-    icon: Bot,
-    category: "primary",
-    keywords: ["studio", "ai", "ia", "tools", "ferramentas"]
-  },
-  {
-    labelKey: "app.nav.finance",
-    label: "FINANCE",
+    labelKey: "app.nav.financeTab",
+    label: "FINANCEIRO",
     path: "/analytics",
     icon: DollarSign,
     category: "primary",
-    keywords: ["finance", "financeiro", "analytics", "money", "dinheiro"]
+    keywords: ["financeiro", "finance", "analytics", "money", "dinheiro"]
   },
 ];
 
@@ -283,7 +277,7 @@ export default function CommandPalette() {
       <CommandList>
         <CommandEmpty>{t("app.commandPalette.noResults") as string}</CommandEmpty>
 
-        {/* PRIMARY NAVIGATION - 5 Tabs */}
+        {/* PRIMARY NAVIGATION - 4 Tabs (Painel, Comercial, Produção, Financeiro) */}
         {filteredPrimary.length > 0 && (
           <CommandGroup heading="Navegação">
             {filteredPrimary.map((cmd) => {

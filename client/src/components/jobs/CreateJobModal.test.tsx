@@ -543,12 +543,20 @@ describe('CreateJobModal', () => {
           clients={mockClients}
         />
       );
-      const statusSelect = screen.getByLabelText(/status/i);
-      // Manually set invalid value (simulation)
+      const statusSelect = screen.getByLabelText(/status/i) as HTMLSelectElement;
+      // A native <select> can only ever hold a value that matches one of its
+      // declared <option> elements. Setting a value that isn't one of the 4
+      // valid options ("invalid" here) makes the underlying onChange event
+      // fire with an empty string (no option matches "invalid"), so the
+      // controlled value becomes "" — functionally identical to the field
+      // being left empty. The reachable validation message here is
+      // therefore the "required" one, not a dedicated "invalid value"
+      // message: there's no way to make this control hold a truly invalid,
+      // non-empty value through user interaction.
       fireEvent.change(statusSelect, { target: { value: 'invalid' } });
       fireEvent.blur(statusSelect);
       await waitFor(() => {
-        expect(screen.getByText('Status inválido')).toBeInTheDocument();
+        expect(screen.getByText('Status é obrigatório')).toBeInTheDocument();
       });
     });
   });

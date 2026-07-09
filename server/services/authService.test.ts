@@ -27,7 +27,7 @@ describe("authService", () => {
     delete process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     const dbModule = await import("../models/db.js");
-    dbModule.initDatabase();
+    await dbModule.initDatabase();
     initDatabase = dbModule.initDatabase;
     database = dbModule.db;
     authService = await import("./authService.js");
@@ -102,7 +102,9 @@ describe("authService", () => {
   it("reconciles configured admin and demo passwords for existing seed accounts", async () => {
     process.env.ADMIN_DEFAULT_PASSWORD = "admin-rotated-password";
     process.env.DEMO_USER_PASSWORD = "demo-rotated-password";
-    initDatabase();
+    // initDatabase is async — awaiting it is required so the password
+    // reconciliation below actually completes before we try to log in.
+    await initDatabase();
 
     await expect(
       authService.loginUser("admin@cenastudio.com.br", "admin-rotated-password"),

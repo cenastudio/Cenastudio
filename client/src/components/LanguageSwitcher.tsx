@@ -7,7 +7,7 @@ export default function LanguageSwitcher({ compact = false }: { compact?: boolea
   const ariaLabel = t("language.label");
 
   const base =
-    "min-h-8 px-2.5 text-[0.62rem] font-frame-mono font-semibold uppercase tracking-[0.12em] transition focus:outline-none focus:ring-2 focus:ring-frame-orange/50";
+    "min-h-11 min-w-11 inline-flex items-center justify-center px-2.5 text-[0.62rem] font-frame-mono font-semibold uppercase tracking-[0.12em] transition focus:outline-none focus:ring-2 focus:ring-frame-orange/50";
 
   const inactive =
     "bg-transparent text-frame-gray-light hover:bg-frame-gray-2/50 hover:text-frame-white";

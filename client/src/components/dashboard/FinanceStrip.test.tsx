@@ -143,11 +143,6 @@ describe("FinanceStrip", () => {
     });
 
     it("should navigate to /finance by default when no callback provided", () => {
-      const mockSetLocation = vi.fn();
-      vi.mock("wouter", () => ({
-        useLocation: () => ["/", mockSetLocation],
-      }));
-
       render(<FinanceStrip {...defaultProps} />);
 
       const link = screen.getByRole("link", { name: /→ Ver Finance/i });
@@ -161,16 +156,16 @@ describe("FinanceStrip", () => {
       render(<FinanceStrip {...defaultProps} />);
       const link = screen.getByRole("link", { name: /→ Ver Finance/i });
 
-      // Initial state
-      expect(link).toHaveStyle({ opacity: "1" });
+      // Initial state: no inline opacity override (CSS default is fully visible)
+      expect(link.style.opacity).toBe("");
 
       // Hover state
       fireEvent.mouseEnter(link);
-      expect(link).toHaveStyle({ opacity: "0.8" });
+      expect(link.style.opacity).toBe("0.8");
 
       // Leave hover
       fireEvent.mouseLeave(link);
-      expect(link).toHaveStyle({ opacity: "1" });
+      expect(link.style.opacity).toBe("1");
     });
 
     it("should be keyboard accessible", () => {
@@ -201,7 +196,10 @@ describe("FinanceStrip", () => {
       const section = container.querySelector("section");
 
       expect(section).toHaveStyle({
-        padding: "1rem 1.5rem",
+        paddingTop: "16px",
+        paddingRight: "24px",
+        paddingBottom: "16px",
+        paddingLeft: "24px",
       });
     });
 
@@ -210,7 +208,7 @@ describe("FinanceStrip", () => {
       const section = container.querySelector("section");
 
       expect(section).toHaveStyle({
-        fontSize: "0.875rem",
+        fontSize: "14px",
       });
     });
 

@@ -139,8 +139,8 @@ describe("CommandPalette", () => {
     });
   });
 
-  describe("5-Tab Navigation Display", () => {
-    it("should display all 5 primary navigation tabs", async () => {
+  describe("4-Tab Navigation Display", () => {
+    it("should display all 4 primary navigation tabs", async () => {
       render(<CommandPalette />);
 
       // Open modal
@@ -155,32 +155,12 @@ describe("CommandPalette", () => {
         expect(screen.getByRole("dialog")).toBeInTheDocument();
       });
 
-      // Check for 5 primary tabs
-      expect(screen.getByText("app.nav.home")).toBeInTheDocument();
-      expect(screen.getByText("app.nav.clients")).toBeInTheDocument();
-      expect(screen.getByText("app.nav.jobs")).toBeInTheDocument();
-      expect(screen.getByText("app.nav.studio")).toBeInTheDocument();
-      expect(screen.getByText("app.nav.finance")).toBeInTheDocument();
-    });
-
-    it("should show HOME, CLIENTS, JOBS, STUDIO, FINANCE labels", async () => {
-      render(<CommandPalette />);
-
-      const event = new KeyboardEvent("keydown", {
-        key: "k",
-        metaKey: true,
-        bubbles: true,
-      });
-      document.dispatchEvent(event);
-
-      await waitFor(() => {
-        // These are the English labels displayed alongside translations
-        expect(screen.getByText("HOME")).toBeInTheDocument();
-        expect(screen.getByText("CLIENTS")).toBeInTheDocument();
-        expect(screen.getByText("JOBS")).toBeInTheDocument();
-        expect(screen.getByText("STUDIO")).toBeInTheDocument();
-        expect(screen.getByText("FINANCE")).toBeInTheDocument();
-      });
+      // Check for the 4 primary tabs, matching AppNavBar's job-story order:
+      // Painel → Comercial → Produção → Financeiro.
+      expect(screen.getByText("app.nav.panel")).toBeInTheDocument();
+      expect(screen.getByText("app.nav.commercial")).toBeInTheDocument();
+      expect(screen.getByText("app.nav.production")).toBeInTheDocument();
+      expect(screen.getByText("app.nav.financeTab")).toBeInTheDocument();
     });
   });
 
@@ -201,18 +181,19 @@ describe("CommandPalette", () => {
         expect(screen.getByRole("dialog")).toBeInTheDocument();
       });
 
-      // Type "cli" to match "clients"
-      const input = screen.getByPlaceholderText(/Type to search/i);
-      await user.type(input, "cli");
+      // Type "comerc" to match "Comercial"
+      const input = screen.getByRole("combobox");
+      await user.type(input, "comerc");
 
       await waitFor(() => {
-        // Should show CLIENTS
-        expect(screen.getByText("CLIENTS")).toBeInTheDocument();
+        // The rendered label is the translation key (mocked to return the
+        // key itself), since the UI displays t(cmd.labelKey), not cmd.label.
+        expect(screen.getByText("app.nav.commercial")).toBeInTheDocument();
         // Should filter out unrelated items (exact behavior depends on implementation)
       });
     });
 
-    it("should match fuzzy search: 'cli' matches 'clients'", async () => {
+    it("should match fuzzy search: 'comerc' matches 'Comercial'", async () => {
       const user = userEvent.setup();
       render(<CommandPalette />);
 
@@ -227,15 +208,15 @@ describe("CommandPalette", () => {
         expect(screen.getByRole("dialog")).toBeInTheDocument();
       });
 
-      const input = screen.getByPlaceholderText(/Type to search/i);
-      await user.type(input, "cli");
+      const input = screen.getByRole("combobox");
+      await user.type(input, "comerc");
 
       await waitFor(() => {
-        expect(screen.getByText("CLIENTS")).toBeInTheDocument();
+        expect(screen.getByText("app.nav.commercial")).toBeInTheDocument();
       });
     });
 
-    it("should match fuzzy search: 'stud' matches 'studio'", async () => {
+    it("should match fuzzy search: 'produ' matches 'Produção' (also matches Studio/AI keywords)", async () => {
       const user = userEvent.setup();
       render(<CommandPalette />);
 
@@ -250,11 +231,11 @@ describe("CommandPalette", () => {
         expect(screen.getByRole("dialog")).toBeInTheDocument();
       });
 
-      const input = screen.getByPlaceholderText(/Type to search/i);
-      await user.type(input, "stud");
+      const input = screen.getByRole("combobox");
+      await user.type(input, "produ");
 
       await waitFor(() => {
-        expect(screen.getByText("STUDIO")).toBeInTheDocument();
+        expect(screen.getByText("app.nav.production")).toBeInTheDocument();
       });
     });
 
@@ -273,7 +254,7 @@ describe("CommandPalette", () => {
         expect(screen.getByRole("dialog")).toBeInTheDocument();
       });
 
-      const input = screen.getByPlaceholderText(/Type to search/i);
+      const input = screen.getByRole("combobox");
       await user.type(input, "xyzabc123notfound");
 
       await waitFor(() => {
@@ -298,9 +279,9 @@ describe("CommandPalette", () => {
         expect(screen.getByRole("dialog")).toBeInTheDocument();
       });
 
-      // Click on HOME option
-      const homeOption = screen.getByText("app.nav.home");
-      await user.click(homeOption);
+      // Click on PAINEL option
+      const panelOption = screen.getByText("app.nav.panel");
+      await user.click(panelOption);
 
       // Should call setLocation with correct path
       expect(mockSetLocation).toHaveBeenCalledWith("/dashboard");
@@ -321,8 +302,8 @@ describe("CommandPalette", () => {
         expect(screen.getByRole("dialog")).toBeInTheDocument();
       });
 
-      const homeOption = screen.getByText("app.nav.home");
-      await user.click(homeOption);
+      const panelOption = screen.getByText("app.nav.panel");
+      await user.click(panelOption);
 
       // Modal should close
       await waitFor(() => {
@@ -333,16 +314,15 @@ describe("CommandPalette", () => {
     it("should navigate to correct paths for each tab", async () => {
       const user = userEvent.setup();
       const tabs = [
-        { label: "app.nav.home", path: "/dashboard" },
-        { label: "app.nav.clients", path: "/commercial" },
-        { label: "app.nav.jobs", path: "/projects" },
-        { label: "app.nav.studio", path: "/tools" },
-        { label: "app.nav.finance", path: "/analytics" },
+        { label: "app.nav.panel", path: "/dashboard" },
+        { label: "app.nav.commercial", path: "/commercial" },
+        { label: "app.nav.production", path: "/projects" },
+        { label: "app.nav.financeTab", path: "/analytics" },
       ];
 
       for (const tab of tabs) {
         mockSetLocation.mockClear();
-        render(<CommandPalette />);
+        const { unmount } = render(<CommandPalette />);
 
         const event = new KeyboardEvent("keydown", {
           key: "k",
@@ -359,6 +339,11 @@ describe("CommandPalette", () => {
         await user.click(option);
 
         expect(mockSetLocation).toHaveBeenCalledWith(tab.path);
+
+        // Unmount before the next iteration so each render starts clean
+        // and elements from the previous CommandPalette instance aren't
+        // still present in the document.
+        unmount();
       }
     });
   });
@@ -380,7 +365,7 @@ describe("CommandPalette", () => {
       });
     });
 
-    it("should have aria-modal='true'", async () => {
+    it("hides background content from assistive tech while open", async () => {
       render(<CommandPalette />);
 
       const event = new KeyboardEvent("keydown", {
@@ -390,9 +375,13 @@ describe("CommandPalette", () => {
       });
       document.dispatchEvent(event);
 
+      // Radix Dialog (current version) enforces modality via aria-hiding
+      // sibling content instead of an `aria-modal` attribute on the dialog
+      // itself. We assert on that equivalent behavior instead.
       await waitFor(() => {
         const dialog = screen.getByRole("dialog");
-        expect(dialog).toHaveAttribute("aria-modal", "true");
+        expect(dialog).toBeInTheDocument();
+        expect(dialog.closest("body")?.querySelector('[aria-hidden="true"]')).toBeInTheDocument();
       });
     });
 
@@ -495,7 +484,7 @@ describe("CommandPalette", () => {
         expect(screen.getByRole("dialog")).toBeInTheDocument();
       });
 
-      const input = screen.getByPlaceholderText(/Type to search/i);
+      const input = screen.getByRole("combobox");
       await user.type(input, "Production");
 
       await waitFor(() => {

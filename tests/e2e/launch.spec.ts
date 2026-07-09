@@ -33,8 +33,8 @@ test("critical authenticated app screens render without layout breaks", async ({
 
   const routes = [
     ["/dashboard", /Central da Operação|Operations Center/i, "dashboard"],
-    ["/admin", /Gerenciar acessos|Manage access/i, "admin"],
-    ["/admin/gerenciar", /Gerenciar usuários|Manage users/i, "admin-users"],
+    ["/admin", /Administração|Administration/i, "admin"],
+    ["/admin/gerenciar", /Administração|Administration/i, "admin-users"],
     ["/proposals", /Propostas|Proposals/i, "proposals"],
     ["/documents", /Documentos|Documents/i, "documents"],
   ] as const;

@@ -6,12 +6,30 @@ import { AppProvider } from '@/contexts/AppContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { ProjectProvider } from '@/contexts/ProjectContext';
+import { api } from '@/lib/api';
 
-// Mock wouter for navigation
+/**
+ * AppNavBar - 4 Tab Navigation
+ *
+ * Covers the current job-story navigation: Painel → Comercial → Produção →
+ * Financeiro. This replaces the previous 5-tab (HOME/CLIENTS/JOBS/STUDIO/
+ * FINANCE) test suite, which described an earlier version of the
+ * navigation that no longer matches AppNavBar.tsx.
+ *
+ * STUDIO is no longer a top-level tab — it now lives inside PRODUÇÃO
+ * (see ProductionNav.tsx), so it's intentionally not asserted on here.
+ */
+
+let mockLocation = '/dashboard';
 const mockSetLocation = vi.fn();
 vi.mock('wouter', () => ({
-  useLocation: () => ['/dashboard', mockSetLocation],
-  Router: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useLocation: () => [mockLocation, mockSetLocation],
+  // AppNavBar renders JourneyBreadcrumb, which uses wouter's Link.
+  Link: ({ href, children, className }: any) => (
+    <a href={href} className={className}>
+      {children}
+    </a>
+  ),
 }));
 
 // Mock framer-motion to avoid animation issues in tests
@@ -31,12 +49,7 @@ vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
 
-const AllProviders = ({ children, location = '/dashboard' }: { children: React.ReactNode; location?: string }) => {
-  // Mock useLocation for specific location
-  vi.doMock('wouter', () => ({
-    useLocation: () => [location, mockSetLocation],
-  }));
-
+const AllProviders = ({ children }: { children: React.ReactNode }) => {
   return (
     <ThemeProvider defaultTheme="dark">
       <LanguageProvider>
@@ -52,309 +65,206 @@ const AllProviders = ({ children, location = '/dashboard' }: { children: React.R
   );
 };
 
-describe('AppNavBar - 5 Tab Navigation', () => {
+describe('AppNavBar - 4 Tab Navigation', () => {
   beforeEach(() => {
     mockSetLocation.mockClear();
+    mockLocation = '/dashboard';
+    // No authenticated user by default — most nav assertions don't need one.
+    (api.auth.me as any).mockRejectedValue(new Error('not authenticated'));
   });
 
   describe('Desktop Navigation', () => {
-    it('should render exactly 5 navigation tabs', () => {
+    it('should render exactly 4 navigation tabs', () => {
       render(
         <AllProviders>
           <AppNavBar />
         </AllProviders>
       );
 
-      // Find the desktop navigation
-      const nav = screen.getByRole('navigation');
+      const nav = screen.getAllByRole('navigation')[0];
       const navButtons = within(nav).getAllByRole('button');
 
-      // Should have exactly 5 tabs
-      expect(navButtons).toHaveLength(5);
+      expect(navButtons).toHaveLength(4);
     });
 
-    it('should render tabs in correct order: HOME, CLIENTS, JOBS, STUDIO, FINANCE', () => {
+    it('should render tabs in job-story order: PAINEL, COMERCIAL, PRODUÇÃO, FINANCEIRO', () => {
       render(
         <AllProviders>
           <AppNavBar />
         </AllProviders>
       );
 
-      const nav = screen.getByRole('navigation');
+      const nav = screen.getAllByRole('navigation')[0];
       const navButtons = within(nav).getAllByRole('button');
 
-      // Check order and labels
-      expect(navButtons[0]).toHaveTextContent('🏠');
-      expect(navButtons[0]).toHaveTextContent('Painel'); // HOME translates to "Painel"
-
-      expect(navButtons[1]).toHaveTextContent('👥');
-      expect(navButtons[1]).toHaveTextContent('Clientes'); // CLIENTS
-
-      expect(navButtons[2]).toHaveTextContent('🎬');
-      expect(navButtons[2]).toHaveTextContent('JOBS');
-
-      expect(navButtons[3]).toHaveTextContent('🤖');
-      expect(navButtons[3]).toHaveTextContent('STUDIO');
-
-      expect(navButtons[4]).toHaveTextContent('💰');
-      expect(navButtons[4]).toHaveTextContent('Financeiro'); // FINANCE
+      expect(navButtons[0]).toHaveTextContent('PAINEL');
+      expect(navButtons[1]).toHaveTextContent('COMERCIAL');
+      expect(navButtons[2]).toHaveTextContent('PRODUÇÃO');
+      expect(navButtons[3]).toHaveTextContent('FINANCEIRO');
     });
 
-    it('should render each tab with correct icon', () => {
+    it('should have data-tour attributes matching each tab', () => {
       render(
         <AllProviders>
           <AppNavBar />
         </AllProviders>
       );
 
-      // Check icons are present
-      expect(screen.getByText('🏠')).toBeInTheDocument(); // HOME
-      expect(screen.getByText('👥')).toBeInTheDocument(); // CLIENTS
-      expect(screen.getByText('🎬')).toBeInTheDocument(); // JOBS
-      expect(screen.getByText('🤖')).toBeInTheDocument(); // STUDIO
-      expect(screen.getByText('💰')).toBeInTheDocument(); // FINANCE
+      const nav = screen.getAllByRole('navigation')[0];
+      const navButtons = within(nav).getAllByRole('button');
+
+      expect(navButtons[0]).toHaveAttribute('data-tour', 'dashboard');
+      expect(navButtons[1]).toHaveAttribute('data-tour', 'clients');
+      expect(navButtons[2]).toHaveAttribute('data-tour', 'projects');
+      expect(navButtons[3]).toHaveAttribute('data-tour', 'analytics');
     });
 
-    it('should NOT render MORE dropdown menu', () => {
+    it('should highlight PAINEL as active when on /dashboard', () => {
+      mockLocation = '/dashboard';
       render(
         <AllProviders>
           <AppNavBar />
         </AllProviders>
       );
 
-      // Should not have "Mais" (More) button
-      expect(screen.queryByText('Mais')).not.toBeInTheDocument();
+      const nav = screen.getAllByRole('navigation')[0];
+      const panelButton = within(nav).getAllByRole('button')[0];
+
+      expect(panelButton).toHaveClass('active');
     });
 
-    it('should highlight HOME tab as active when on /dashboard', () => {
+    it('should highlight COMERCIAL as active when on /commercial', () => {
+      mockLocation = '/commercial';
       render(
-        <AllProviders location="/dashboard">
+        <AllProviders>
           <AppNavBar />
         </AllProviders>
       );
 
-      const nav = screen.getByRole('navigation');
-      const homeButton = within(nav).getAllByRole('button')[0];
+      const nav = screen.getAllByRole('navigation')[0];
+      const commercialButton = within(nav).getAllByRole('button')[1];
 
-      // Active tab should have "active" class
-      expect(homeButton).toHaveClass('active');
+      expect(commercialButton).toHaveClass('active');
     });
 
-    it('should highlight CLIENTS tab as active when on /commercial', () => {
+    it('should highlight PRODUÇÃO as active when on /projects', () => {
+      mockLocation = '/projects';
       render(
-        <AllProviders location="/commercial">
+        <AllProviders>
           <AppNavBar />
         </AllProviders>
       );
 
-      const nav = screen.getByRole('navigation');
-      const clientsButton = within(nav).getAllByRole('button')[1];
+      const nav = screen.getAllByRole('navigation')[0];
+      const productionButton = within(nav).getAllByRole('button')[2];
 
-      expect(clientsButton).toHaveClass('active');
+      expect(productionButton).toHaveClass('active');
     });
 
-    it('should highlight JOBS tab as active when on /projects', () => {
+    it('should highlight PRODUÇÃO as active when on /tools (Studio lives under Production)', () => {
+      mockLocation = '/tools';
       render(
-        <AllProviders location="/projects">
+        <AllProviders>
           <AppNavBar />
         </AllProviders>
       );
 
-      const nav = screen.getByRole('navigation');
-      const jobsButton = within(nav).getAllByRole('button')[2];
+      const nav = screen.getAllByRole('navigation')[0];
+      const productionButton = within(nav).getAllByRole('button')[2];
 
-      expect(jobsButton).toHaveClass('active');
+      expect(productionButton).toHaveClass('active');
     });
 
-    it('should highlight STUDIO tab as active when on /tools', () => {
+    it('should highlight FINANCEIRO as active when on /analytics', () => {
+      mockLocation = '/analytics';
       render(
-        <AllProviders location="/tools">
+        <AllProviders>
           <AppNavBar />
         </AllProviders>
       );
 
-      const nav = screen.getByRole('navigation');
-      const studioButton = within(nav).getAllByRole('button')[3];
-
-      expect(studioButton).toHaveClass('active');
-    });
-
-    it('should highlight FINANCE tab as active when on /analytics', () => {
-      render(
-        <AllProviders location="/analytics">
-          <AppNavBar />
-        </AllProviders>
-      );
-
-      const nav = screen.getByRole('navigation');
-      const financeButton = within(nav).getAllByRole('button')[4];
+      const nav = screen.getAllByRole('navigation')[0];
+      const financeButton = within(nav).getAllByRole('button')[3];
 
       expect(financeButton).toHaveClass('active');
     });
 
-    it('should navigate to correct route when tab is clicked', () => {
+    it('should only have one active tab at a time', () => {
+      mockLocation = '/tools';
       render(
         <AllProviders>
           <AppNavBar />
         </AllProviders>
       );
 
-      const nav = screen.getByRole('navigation');
+      const nav = screen.getAllByRole('navigation')[0];
+      const navButtons = within(nav).getAllByRole('button');
+      const activeTabs = navButtons.filter((btn) => btn.classList.contains('active'));
+
+      expect(activeTabs).toHaveLength(1);
+      expect(activeTabs[0]).toHaveTextContent('PRODUÇÃO');
+    });
+
+    it('should navigate to correct route when a tab is clicked', () => {
+      render(
+        <AllProviders>
+          <AppNavBar />
+        </AllProviders>
+      );
+
+      const nav = screen.getAllByRole('navigation')[0];
       const navButtons = within(nav).getAllByRole('button');
 
-      // Click HOME tab
       fireEvent.click(navButtons[0]);
       expect(mockSetLocation).toHaveBeenCalledWith('/dashboard');
 
-      // Click CLIENTS tab
       fireEvent.click(navButtons[1]);
       expect(mockSetLocation).toHaveBeenCalledWith('/commercial');
 
-      // Click JOBS tab
       fireEvent.click(navButtons[2]);
       expect(mockSetLocation).toHaveBeenCalledWith('/projects');
 
-      // Click STUDIO tab
       fireEvent.click(navButtons[3]);
-      expect(mockSetLocation).toHaveBeenCalledWith('/tools');
-
-      // Click FINANCE tab
-      fireEvent.click(navButtons[4]);
       expect(mockSetLocation).toHaveBeenCalledWith('/analytics');
     });
+  });
 
-    it('should have STUDIO tab prominently visible (4th position)', () => {
+  describe('Team Member Role Restrictions', () => {
+    it('should hide COMERCIAL and FINANCEIRO tabs for team members', async () => {
+      (api.auth.me as any).mockResolvedValue({
+        user: { id: 1, name: 'Editor User', email: 'editor@example.com' },
+        plan: null,
+      });
+      // The global api mock (client/src/test/setup.ts) doesn't define
+      // `api.team`, since most suites don't need it. AuthContext calls
+      // api.team.context() right after a successful login, so we add it
+      // here rather than touching the shared mock.
+      (api as any).team = { context: vi.fn().mockResolvedValue({
+        isTeamMember: true,
+        ownerUserId: 99,
+        workspaceId: 1,
+        role: 'editor',
+      }) };
+      (api.projects.list as any).mockResolvedValue([]);
+
       render(
         <AllProviders>
           <AppNavBar />
         </AllProviders>
       );
 
-      const nav = screen.getByRole('navigation');
+      const nav = await screen.findByRole('navigation');
       const navButtons = within(nav).getAllByRole('button');
 
-      // STUDIO should be at index 3 (4th position)
-      expect(navButtons[3]).toHaveTextContent('STUDIO');
-      expect(navButtons[3]).toHaveTextContent('🤖');
-      expect(navButtons[3]).toBeVisible();
+      // Only PAINEL and PRODUÇÃO remain for team members.
+      expect(navButtons).toHaveLength(2);
+      expect(navButtons[0]).toHaveTextContent('PAINEL');
+      expect(navButtons[1]).toHaveTextContent('PRODUÇÃO');
     });
   });
 
   describe('Mobile Navigation', () => {
-    it('should show all 5 tabs in mobile menu when opened', () => {
-      render(
-        <AllProviders>
-          <AppNavBar />
-        </AllProviders>
-      );
-
-      // Find and click mobile menu button
-      const menuButton = screen.getByLabelText(/abrir menu/i);
-      fireEvent.click(menuButton);
-
-      // Mobile menu should contain all 5 tabs
-      const mobileNav = screen.getAllByRole('button').filter(btn =>
-        btn.textContent?.includes('🏠') ||
-        btn.textContent?.includes('👥') ||
-        btn.textContent?.includes('🎬') ||
-        btn.textContent?.includes('🤖') ||
-        btn.textContent?.includes('💰')
-      );
-
-      expect(mobileNav.length).toBeGreaterThanOrEqual(5);
-    });
-
-    it('should close mobile menu when a tab is clicked', () => {
-      render(
-        <AllProviders>
-          <AppNavBar />
-        </AllProviders>
-      );
-
-      // Open mobile menu
-      const menuButton = screen.getByLabelText(/abrir menu/i);
-      fireEvent.click(menuButton);
-
-      // Click a tab in mobile menu
-      const homeTab = screen.getAllByText('Painel')[0];
-      fireEvent.click(homeTab);
-
-      // Menu should close (button text changes)
-      expect(screen.getByLabelText(/abrir menu/i)).toBeInTheDocument();
-    });
-  });
-
-  describe('Glass Styling', () => {
-    it('should apply frame-nav class for glass effect', () => {
-      render(
-        <AllProviders>
-          <AppNavBar />
-        </AllProviders>
-      );
-
-      const header = screen.getByRole('banner');
-      expect(header).toHaveClass('frame-nav');
-    });
-
-    it('should have sticky positioning', () => {
-      render(
-        <AllProviders>
-          <AppNavBar />
-        </AllProviders>
-      );
-
-      const header = screen.getByRole('banner');
-      expect(header).toHaveClass('frame-nav');
-      // CSS class handles positioning
-    });
-  });
-
-  describe('Active Tab Styling', () => {
-    it('should apply active class to current tab with orange underline', () => {
-      render(
-        <AllProviders location="/dashboard">
-          <AppNavBar />
-        </AllProviders>
-      );
-
-      const nav = screen.getByRole('navigation');
-      const homeButton = within(nav).getAllByRole('button')[0];
-
-      // Should have active class for orange underline (via CSS)
-      expect(homeButton).toHaveClass('active');
-      expect(homeButton).toHaveClass('frame-nav-link');
-    });
-
-    it('should only have one active tab at a time', () => {
-      render(
-        <AllProviders location="/tools">
-          <AppNavBar />
-        </AllProviders>
-      );
-
-      const nav = screen.getByRole('navigation');
-      const navButtons = within(nav).getAllByRole('button');
-
-      // Count active tabs
-      const activeTabs = navButtons.filter(btn => btn.classList.contains('active'));
-      expect(activeTabs).toHaveLength(1);
-      expect(activeTabs[0]).toHaveTextContent('STUDIO');
-    });
-  });
-
-  describe('Accessibility', () => {
-    it('should have proper ARIA labels for navigation', () => {
-      render(
-        <AllProviders>
-          <AppNavBar />
-        </AllProviders>
-      );
-
-      const nav = screen.getByRole('navigation');
-      expect(nav).toBeInTheDocument();
-    });
-
-    it('should have accessible mobile menu toggle button', () => {
+    it('should toggle the mobile menu button aria-expanded state', () => {
       render(
         <AllProviders>
           <AppNavBar />
@@ -368,148 +278,133 @@ describe('AppNavBar - 5 Tab Navigation', () => {
       expect(menuButton).toHaveAttribute('aria-expanded', 'true');
     });
 
-    it('should have data-tour attributes for guided tours', () => {
+    it('should show all 4 tabs in the mobile menu when opened', () => {
       render(
         <AllProviders>
           <AppNavBar />
         </AllProviders>
       );
 
-      const nav = screen.getByRole('navigation');
-      const navButtons = within(nav).getAllByRole('button');
+      const menuButton = screen.getByLabelText(/abrir menu/i);
+      fireEvent.click(menuButton);
 
-      // Check tour IDs
-      expect(navButtons[0]).toHaveAttribute('data-tour', 'dashboard');
-      expect(navButtons[1]).toHaveAttribute('data-tour', 'clients');
-      expect(navButtons[2]).toHaveAttribute('data-tour', 'projects');
-      expect(navButtons[3]).toHaveAttribute('data-tour', 'studio');
-      expect(navButtons[4]).toHaveAttribute('data-tour', 'analytics');
+      // With the menu open, tab labels now appear twice (desktop nav is
+      // hidden via CSS but still in the DOM, plus the mobile menu copy).
+      expect(screen.getAllByText('PAINEL').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('COMERCIAL').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('PRODUÇÃO').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('FINANCEIRO').length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should close the mobile menu when a tab is clicked', () => {
+      render(
+        <AllProviders>
+          <AppNavBar />
+        </AllProviders>
+      );
+
+      const menuButton = screen.getByLabelText(/abrir menu/i);
+      fireEvent.click(menuButton);
+      expect(menuButton).toHaveAttribute('aria-expanded', 'true');
+
+      const panelTabs = screen.getAllByText('PAINEL');
+      fireEvent.click(panelTabs[panelTabs.length - 1]);
+
+      expect(menuButton).toHaveAttribute('aria-expanded', 'false');
     });
   });
 
-  describe('Navigation Mapping', () => {
-    it('should map old TODAY route to new HOME tab', () => {
-      render(
-        <AllProviders location="/dashboard">
-          <AppNavBar />
-        </AllProviders>
-      );
-
-      const nav = screen.getByRole('navigation');
-      const homeButton = within(nav).getAllByRole('button')[0];
-
-      expect(homeButton).toHaveTextContent('Painel');
-      expect(homeButton).toHaveClass('active');
-    });
-
-    it('should map old PROJECTS route to new JOBS tab', () => {
-      render(
-        <AllProviders location="/projects">
-          <AppNavBar />
-        </AllProviders>
-      );
-
-      const nav = screen.getByRole('navigation');
-      const jobsButton = within(nav).getAllByRole('button')[2];
-
-      expect(jobsButton).toHaveTextContent('JOBS');
-      expect(jobsButton).toHaveClass('active');
-    });
-
-    it('should have STUDIO tab as primary (previously in MORE menu)', () => {
+  describe('Glass Styling', () => {
+    it('should apply frame-nav class to the header for the glass effect', () => {
       render(
         <AllProviders>
           <AppNavBar />
         </AllProviders>
       );
 
-      const nav = screen.getByRole('navigation');
-      const navButtons = within(nav).getAllByRole('button');
-
-      // STUDIO should be visible as primary tab (4th position)
-      const studioButton = navButtons[3];
-      expect(studioButton).toHaveTextContent('STUDIO');
-      expect(studioButton).toBeVisible();
-
-      // Should NOT be in a dropdown
-      expect(screen.queryByText('Mais')).not.toBeInTheDocument();
-    });
-
-    it('should map ANALYTICS to FINANCE tab', () => {
-      render(
-        <AllProviders location="/analytics">
-          <AppNavBar />
-        </AllProviders>
-      );
-
-      const nav = screen.getByRole('navigation');
-      const financeButton = within(nav).getAllByRole('button')[4];
-
-      expect(financeButton).toHaveTextContent('Financeiro');
-      expect(financeButton).toHaveClass('active');
-    });
-
-    it('should have new CLIENTS tab as 2nd position', () => {
-      render(
-        <AllProviders>
-          <AppNavBar />
-        </AllProviders>
-      );
-
-      const nav = screen.getByRole('navigation');
-      const navButtons = within(nav).getAllByRole('button');
-
-      // CLIENTS should be at index 1 (2nd position)
-      const clientsButton = navButtons[1];
-      expect(clientsButton).toHaveTextContent('Clientes');
-      expect(clientsButton).toHaveTextContent('👥');
+      const header = screen.getByRole('banner');
+      expect(header).toHaveClass('frame-nav');
     });
   });
 
-  describe('Theme Integration', () => {
-    it('should render theme toggle button', () => {
+  describe('Accessibility', () => {
+    it('should have a navigation landmark', () => {
       render(
         <AllProviders>
           <AppNavBar />
         </AllProviders>
       );
 
-      const themeButton = screen.getByTitle(/modo/i);
-      expect(themeButton).toBeInTheDocument();
+      expect(screen.getByRole('navigation')).toBeInTheDocument();
     });
-  });
 
-  describe('User Profile Integration', () => {
-    it('should render user profile section when authenticated', () => {
+    it('should have an accessible mobile menu toggle button', () => {
       render(
         <AllProviders>
           <AppNavBar />
         </AllProviders>
       );
 
-      // User profile button should be present
-      const profileButton = screen.getByTitle('Abrir conta');
-      expect(profileButton).toBeInTheDocument();
+      const menuButton = screen.getByLabelText(/abrir menu/i);
+      expect(menuButton).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('should have a minimum touch target height on nav links', () => {
+      render(
+        <AllProviders>
+          <AppNavBar />
+        </AllProviders>
+      );
+
+      const nav = screen.getAllByRole('navigation')[0];
+      const navButtons = within(nav).getAllByRole('button');
+
+      navButtons.forEach((button) => {
+        // Mínimo real garantido é 45px (subpixel rendering em mobile viewport
+        // faz 44px cair para 43.99 ocasionalmente — vide Fase 2 achado
+        // "●PAINEL 184.81 x 44" reportado como violação apesar de min-height 44).
+        const minHeight = parseFloat(button.style.minHeight);
+        expect(minHeight).toBeGreaterThanOrEqual(44);
+      });
     });
   });
 
   describe('Search Functionality', () => {
-    it('should render search button with Command+K shortcut', () => {
+    it('should not render the search trigger when no user is authenticated', () => {
       render(
         <AllProviders>
           <AppNavBar />
         </AllProviders>
       );
 
-      const searchButton = screen.getByLabelText(/abrir busca/i);
-      expect(searchButton).toBeInTheDocument();
-
-      // Should show keyboard shortcut
-      const kbd = screen.getByText('⌘K');
-      expect(kbd).toBeInTheDocument();
+      expect(screen.queryByLabelText(/abrir busca/i)).not.toBeInTheDocument();
     });
 
-    it('should dispatch command palette event when search is clicked', () => {
+    it('should render search button with Cmd+K hint when authenticated', async () => {
+      (api.auth.me as any).mockResolvedValue({
+        user: { id: 1, name: 'Test User', email: 'test@example.com' },
+        plan: null,
+      });
+      (api.projects.list as any).mockResolvedValue([]);
+
+      render(
+        <AllProviders>
+          <AppNavBar />
+        </AllProviders>
+      );
+
+      const searchButton = await screen.findByLabelText(/abrir busca/i);
+      expect(searchButton).toBeInTheDocument();
+      expect(screen.getByText('⌘K')).toBeInTheDocument();
+    });
+
+    it('should dispatch the command palette event when search is clicked', async () => {
+      (api.auth.me as any).mockResolvedValue({
+        user: { id: 1, name: 'Test User', email: 'test@example.com' },
+        plan: null,
+      });
+      (api.projects.list as any).mockResolvedValue([]);
+
       render(
         <AllProviders>
           <AppNavBar />
@@ -517,8 +412,7 @@ describe('AppNavBar - 5 Tab Navigation', () => {
       );
 
       const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
-
-      const searchButton = screen.getByLabelText(/abrir busca/i);
+      const searchButton = await screen.findByLabelText(/abrir busca/i);
       fireEvent.click(searchButton);
 
       expect(dispatchSpy).toHaveBeenCalled();

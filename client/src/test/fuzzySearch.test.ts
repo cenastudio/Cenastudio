@@ -170,7 +170,11 @@ describe("Fuzzy Search Algorithm", () => {
 
     it("should match first occurrence of characters", () => {
       expect(fuzzyMatch("oi", "options", [])).toBe(true);
-      expect(fuzzyMatch("oo", "options", [])).toBe(false);
+      // "options" has two 'o's (index 0 and 4), so "oo" is a valid
+      // in-order subsequence match — consistent with the "aaa" matching
+      // "aardvark" case above, which also relies on a repeated,
+      // non-adjacent character.
+      expect(fuzzyMatch("oo", "options", [])).toBe(true);
     });
   });
 });

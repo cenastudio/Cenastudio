@@ -16,6 +16,11 @@ describe("health routes", () => {
     process.env.DATABASE_PATH = `/tmp/cena-health-${process.pid}.db`;
     process.env.LOG_LEVEL = "error";
 
+    // The readiness check runs a real query against the SQLite database, so
+    // it must be initialized first (mirrors what happens at server boot).
+    const { initDatabase } = await import("../models/db.js");
+    await initDatabase();
+
     const { buildReadinessPayload } = await import("./health.js");
     const payload = await buildReadinessPayload();
 

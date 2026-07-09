@@ -7,6 +7,7 @@
 
 import { useEffect, useState } from "react";
 import AppNavBar from "@/components/AppNavBar";
+import ProductionNav from "@/components/ProductionNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -167,6 +168,7 @@ function TeamContent() {
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
       <AppNavBar />
+      <ProductionNav />
 
       <main id="main-content" className="flex-1 max-w-4xl w-full mx-auto px-6 py-12 md:py-16 space-y-10">
 

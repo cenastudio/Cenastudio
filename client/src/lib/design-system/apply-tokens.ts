@@ -10,10 +10,17 @@ import type { PlanMode } from "@/types/plan";
 /**
  * CSS Token definitions for each plan
  */
+// Shared glow presets, kept in lowercase-hex box-shadow format so they're
+// consistent regardless of plan. Small/medium/large map to the increasing
+// blur radii already used across plan-tokens/*.css (glow-button, glow-card).
+const GLOW_SM = "0 0 12px rgba(232, 80, 2, 0.25)";
+const GLOW_MD = "0 0 24px rgba(232, 80, 2, 0.3)";
+const GLOW_LG = "0 0 40px rgba(232, 80, 2, 0.35)";
+
 const PLAN_TOKENS = {
   brand: {
-    // Brand mode (unauthenticated) - minimal branding
-    "--plan-accent-primary": "#E85002",
+    // Brand mode (unauthenticated) - minimal branding, no glow/financial accent
+    "--plan-accent-primary": "#e85002",
     "--plan-text-primary": "#F9F9F9",
     "--plan-text-secondary": "#A0A0A0",
     "--plan-surface-base": "#0A0A0A",
@@ -22,8 +29,8 @@ const PLAN_TOKENS = {
   },
 
   free: {
-    // Free plan - clean minimal design
-    "--plan-accent-primary": "#E85002",
+    // Free plan - clean minimal design (see plan-tokens/free.css: no glow, no financial accent)
+    "--plan-accent-primary": "#e85002",
     "--plan-text-primary": "#F9F9F9",
     "--plan-text-secondary": "#A0A0A0",
     "--plan-text-tertiary": "#6B6B6B",
@@ -37,8 +44,9 @@ const PLAN_TOKENS = {
   },
 
   pro: {
-    // Pro plan - enhanced with glow effects
-    "--plan-accent-primary": "#E85002",
+    // Pro plan - enhanced with glow effects, but no financial (gold) accent
+    // (see plan-tokens/pro.css: "Pro plan does not have secondary accent")
+    "--plan-accent-primary": "#e85002",
     "--plan-text-primary": "#F9F9F9",
     "--plan-text-secondary": "#A0A0A0",
     "--plan-text-tertiary": "#6B6B6B",
@@ -52,12 +60,17 @@ const PLAN_TOKENS = {
     "--plan-shadow-card-hover": "0 4px 16px rgba(232, 80, 2, 0.15)",
     "--plan-glow-primary": "0 0 20px rgba(232, 80, 2, 0.3)",
     "--plan-glow-card": "0 0 40px rgba(232, 80, 2, 0.1)",
+    "--plan-glow-sm": GLOW_SM,
+    "--plan-glow-md": GLOW_MD,
+    "--plan-glow-lg": GLOW_LG,
     "--plan-typography-scale": "1.06",
   },
 
   studio: {
-    // Studio plan - premium enhanced design
-    "--plan-accent-primary": "#E85002",
+    // Studio plan - premium dual-accent system: orange (creative) + gold
+    // (financial), per plan-tokens/studio.css.
+    "--plan-accent-primary": "#e85002",
+    "--plan-accent-financial": "#d8b343",
     "--plan-text-primary": "#F9F9F9",
     "--plan-text-secondary": "#A0A0A0",
     "--plan-text-tertiary": "#6B6B6B",
@@ -73,12 +86,16 @@ const PLAN_TOKENS = {
     "--plan-shadow-premium": "0 0 60px rgba(232, 80, 2, 0.15)",
     "--plan-glow-primary": "0 0 24px rgba(232, 80, 2, 0.4)",
     "--plan-glow-card": "0 0 50px rgba(232, 80, 2, 0.15)",
+    "--plan-glow-sm": GLOW_SM,
+    "--plan-glow-md": GLOW_MD,
+    "--plan-glow-lg": GLOW_LG,
     "--plan-typography-scale": "1.08",
   },
 
   "studio-pending": {
     // Studio pending - same as studio
-    "--plan-accent-primary": "#E85002",
+    "--plan-accent-primary": "#e85002",
+    "--plan-accent-financial": "#d8b343",
     "--plan-text-primary": "#F9F9F9",
     "--plan-text-secondary": "#A0A0A0",
     "--plan-text-tertiary": "#6B6B6B",
@@ -92,12 +109,16 @@ const PLAN_TOKENS = {
     "--plan-shadow-card": "0 2px 8px rgba(0, 0, 0, 0.4)",
     "--plan-shadow-premium": "0 0 60px rgba(232, 80, 2, 0.15)",
     "--plan-glow-primary": "0 0 24px rgba(232, 80, 2, 0.4)",
+    "--plan-glow-sm": GLOW_SM,
+    "--plan-glow-md": GLOW_MD,
+    "--plan-glow-lg": GLOW_LG,
     "--plan-typography-scale": "1.08",
   },
 
   admin: {
     // Admin - same as studio
-    "--plan-accent-primary": "#E85002",
+    "--plan-accent-primary": "#e85002",
+    "--plan-accent-financial": "#d8b343",
     "--plan-text-primary": "#F9F9F9",
     "--plan-text-secondary": "#A0A0A0",
     "--plan-text-tertiary": "#6B6B6B",
@@ -111,6 +132,9 @@ const PLAN_TOKENS = {
     "--plan-shadow-card": "0 2px 8px rgba(0, 0, 0, 0.4)",
     "--plan-shadow-premium": "0 0 60px rgba(232, 80, 2, 0.15)",
     "--plan-glow-primary": "0 0 24px rgba(232, 80, 2, 0.4)",
+    "--plan-glow-sm": GLOW_SM,
+    "--plan-glow-md": GLOW_MD,
+    "--plan-glow-lg": GLOW_LG,
     "--plan-typography-scale": "1.08",
   },
 };
@@ -130,7 +154,14 @@ export function applyPlanTokens(planMode: PlanMode): void {
 
   const root = document.documentElement;
 
-  // Apply all tokens
+  // Clear every known token first. Plans don't all define the same keys
+  // (e.g. only Studio/Admin set --plan-accent-financial), so without this a
+  // downgrade (Studio -> Free) would leave stale glow/gold tokens applied.
+  ALL_TOKEN_KEYS.forEach((key) => {
+    root.style.removeProperty(key);
+  });
+
+  // Apply the new plan's tokens
   Object.entries(tokens).forEach(([key, value]) => {
     root.style.setProperty(key, value);
   });
@@ -139,14 +170,21 @@ export function applyPlanTokens(planMode: PlanMode): void {
   root.setAttribute("data-plan", planMode);
 }
 
+// Union of every token key across all plans. Plans don't all define the same
+// keys (e.g. only Studio/Admin define --plan-accent-financial), so removal
+// must cover every key ever set, not just the Free plan's subset.
+const ALL_TOKEN_KEYS = Array.from(
+  new Set(Object.values(PLAN_TOKENS).flatMap((tokens) => Object.keys(tokens))),
+);
+
 /**
  * Remove plan tokens from document root
  */
 export function removePlanTokens(): void {
   const root = document.documentElement;
 
-  // Remove all plan tokens
-  Object.keys(PLAN_TOKENS.free).forEach((key) => {
+  // Remove all plan tokens (across every plan, not just Free's subset)
+  ALL_TOKEN_KEYS.forEach((key) => {
     root.style.removeProperty(key);
   });
 

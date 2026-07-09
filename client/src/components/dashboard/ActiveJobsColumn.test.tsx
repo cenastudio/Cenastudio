@@ -152,7 +152,7 @@ describe('ActiveJobsColumn', () => {
       const title = screen.getByText('🎬 JOBS ATIVOS');
       expect(title.tagName).toBe('H2');
       expect(title).toHaveStyle({
-        fontSize: '0.875rem',
+        fontSize: '14px',
         textTransform: 'uppercase',
       });
     });

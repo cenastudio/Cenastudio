@@ -2,6 +2,7 @@ import React from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { DEFAULT_STUDIO_SETTINGS } from "@/lib/studioSettings";
 
@@ -30,7 +31,14 @@ vi.mock("@/contexts/ProjectContext", () => ({
 }));
 
 function renderWithLanguage(component: React.ReactElement) {
-  return render(<LanguageProvider>{component}</LanguageProvider>);
+  // AuthProvider is required because pages like Collaborators/Tools now
+  // render ProductionNav (the Production area sub-navigation), which calls
+  // useAuth() to determine role-based tab visibility.
+  return render(
+    <AuthProvider>
+      <LanguageProvider>{component}</LanguageProvider>
+    </AuthProvider>,
+  );
 }
 
 function jsonResponse(data: unknown, ok = true) {
@@ -135,7 +143,7 @@ describe("operational UI and UX flows", () => {
     const { default: CompanySettings } = await import("@/pages/CompanySettings");
     renderWithLanguage(<CompanySettings />);
 
-    const studioName = await screen.findByRole("textbox", { name: "Nome da produtora" });
+    const studioName = await screen.findByRole("textbox", { name: "Nome do estúdio *" });
     const savedButtons = await screen.findAllByRole("button", { name: "Tudo salvo" });
     expect(savedButtons[0]).toBeDisabled();
 
@@ -212,7 +220,9 @@ describe("operational UI and UX flows", () => {
     renderWithLanguage(<ProjectHub />);
 
     await screen.findByText("Campanha Aurora");
-    expect(screen.getByText("Próximo movimento operacional")).toBeInTheDocument();
+    // ProjectHub renders "Próximo passo →" followed by the current stage
+    // label, then the recommended action's title/description.
+    expect(screen.getByText("Próximo passo →")).toBeInTheDocument();
     expect(screen.getAllByText("Orçamento").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Custos, margem e premissas do job.").length).toBeGreaterThan(0);
   });
@@ -235,7 +245,7 @@ describe("operational UI and UX flows", () => {
     const retry = await screen.findByRole("button", { name: "Tentar novamente" });
     fireEvent.click(retry);
 
-    await screen.findByText("Sua carteira ainda está vazia");
+    await screen.findByText("Sua carteira está vazia");
     expect(clientAttempts).toBeGreaterThanOrEqual(3);
   });
 
@@ -325,7 +335,7 @@ describe("operational UI and UX flows", () => {
     const onChange = vi.fn();
     const { default: ProposalForm } = await import("@/components/studio/forms/ProposalForm");
 
-    render(<ProposalForm data={{ cliente: "Aurora", escopo: "Filme manifesto", prazo: "15 dias" }} onChange={onChange} />);
+    renderWithLanguage(<ProposalForm data={{ cliente: "Aurora", escopo: "Filme manifesto", prazo: "15 dias" }} onChange={onChange} />);
 
     expect(screen.getByText("Sessão proposta")).toBeInTheDocument();
     expect(screen.getByText("3/3")).toBeInTheDocument();

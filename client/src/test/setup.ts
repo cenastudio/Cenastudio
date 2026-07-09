@@ -29,17 +29,26 @@ HTMLCanvasElement.prototype.getContext = vi.fn();
 HTMLCanvasElement.prototype.toDataURL = vi.fn(() => 'data:image/png;base64,');
 HTMLCanvasElement.prototype.toBlob = vi.fn((cb) => cb(new Blob()));
 
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+// Mock ResizeObserver/IntersectionObserver on both `global` and `window`.
+// happy-dom keeps its own `window` reference that isn't always the same
+// object as `globalThis`, so libraries (like cmdk) reading `window.ResizeObserver`
+// would otherwise miss a mock that's only assigned to `global`.
+class MockResizeObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
 
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+class MockIntersectionObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+
+global.ResizeObserver = MockResizeObserver as any;
+global.IntersectionObserver = MockIntersectionObserver as any;
+window.ResizeObserver = MockResizeObserver as any;
+window.IntersectionObserver = MockIntersectionObserver as any;
 
 vi.mock('sonner', () => ({
   toast: {

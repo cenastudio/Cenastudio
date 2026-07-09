@@ -173,7 +173,7 @@ test.describe("@fase1 critical pages on mobile", () => {
   }) => {
     await page.goto("/admin");
     await expect(
-      page.getByText(/Gerenciar acessos|Manage access/i).first(),
+      page.getByText(/Administração|Administration/i).first(),
     ).toBeVisible();
 
     const tabs = page.getByRole("tab");

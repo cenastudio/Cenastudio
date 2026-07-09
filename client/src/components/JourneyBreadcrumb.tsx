@@ -40,6 +40,7 @@ export default function JourneyBreadcrumb() {
   return (
     <nav
       aria-label="Breadcrumb contextual"
+      data-touch-target-exempt
       className="border-b border-frame-gray-3/50 bg-frame-black/80 backdrop-blur-sm"
     >
       <div className="mx-auto max-w-7xl px-4 md:px-6">
@@ -62,6 +63,7 @@ export default function JourneyBreadcrumb() {
                 ) : (
                   <Link
                     href={crumb.href}
+                    data-touch-target-exempt
                     className="font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase text-frame-gray-light hover:text-frame-orange transition"
                   >
                     {crumb.label}

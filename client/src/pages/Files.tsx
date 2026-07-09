@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useLocation } from "wouter";
 import AppNavBar from "@/components/AppNavBar";
 import ProjectNav from "@/components/ProjectNav";
+import ProductionNav from "@/components/ProductionNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import {
   Upload, Download, Trash2, FileText,
@@ -330,7 +331,7 @@ function FilesContent() {
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
       <AppNavBar />
-      {isProjectScoped && projectId && <ProjectNav projectId={projectId} />}
+      {isProjectScoped && projectId ? <ProjectNav projectId={projectId} /> : <ProductionNav />}
 
       <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-6 py-10 space-y-8">
         {/* Header com seletor de projeto */}

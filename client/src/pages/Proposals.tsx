@@ -564,7 +564,7 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
                 <p className="text-[0.65rem] text-frame-gray-light">
                   {clients.length} {t("app.proposals.clientsRegistered") as string}
                 </p>
-                <button type="button" onClick={() => setLocation("/clients/new")} className="text-[0.65rem] font-frame-mono text-frame-orange hover:text-frame-white transition tracking-wider">
+                <button type="button" onClick={() => setLocation("/clients/new")} className="inline-flex items-center min-h-11 px-3 py-2 text-[0.65rem] font-frame-mono text-frame-orange hover:text-frame-white transition tracking-wider">
                   {t("app.proposals.newClient") as string}
                 </button>
               </div>
