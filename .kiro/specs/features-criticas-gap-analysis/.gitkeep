@@ -1,0 +1,18 @@
+# Spec: Features Críticas - Gap Analysis Competitivo
+# 
+# 📁 Estrutura:
+# - EXECUTIVE_SUMMARY.md (239 linhas) — Resumo executivo para decisão
+# - README.md (140 linhas) — Guia de navegação e início rápido
+# - requirements.md (225 linhas) — 8 requirements com acceptance criteria
+# - design.md (1064 linhas) — Arquitetura completa (models, APIs, components)
+# - tasks.md (473 linhas) — 32 tasks executáveis em 4 fases
+# - PROGRESS.md (198 linhas) — Tracker de progresso e notas
+#
+# 📊 Totals:
+# - 2,339 linhas de especificação
+# - 8 features críticas
+# - 4 fases de implementação
+# - ~28 dias de desenvolvimento
+# - $0.20/mês de custo adicional
+#
+# Status: ⏸️ Aguardando aprovação para início

@@ -1,6 +1,7 @@
 import Footer from "@/components/landing/Footer";
 import Hero from "@/components/landing/Hero";
 import Navigation from "@/components/landing/Navigation";
+import WhatsNewSection from "@/components/landing/WhatsNewSection";
 import PricingSection from "@/components/landing/PricingSection";
 import ToolsSection from "@/components/landing/ToolsSection";
 import ProductProofSection from "@/components/landing/ProductProofSection";
@@ -30,6 +31,7 @@ export default function Landing() {
     <div className="cena-landing min-h-screen overflow-x-hidden bg-frame-black">
       <Navigation />
       <Hero />
+      <WhatsNewSection />
       <ProductProofSection />
       <ToolsSection />
       <ObjectionsSection />
