@@ -11,10 +11,11 @@ import {
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
+import { SITE_CONFIG } from "@shared/site";
 
 // Preview mini-doc component
 function DocPreview({ settings }: { settings: StudioSettings }) {
-  const color = settings.primaryColor || "#e85002";
+  const color = settings.primaryColor || SITE_CONFIG.primaryColor;
   return (
     <div className="rounded-lg overflow-hidden border border-frame-gray-3/50 shadow-2xl"
       style={{ background: "linear-gradient(180deg, #111 0%, #0a0a0a 100%)" }}>
@@ -135,7 +136,7 @@ function CompanySettingsContent() {
     }
   };
 
-  const color = settings.primaryColor || "#e85002";
+  const color = settings.primaryColor || SITE_CONFIG.primaryColor;
 
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
@@ -313,13 +314,13 @@ function CompanySettingsContent() {
                     <Palette className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
                     <input className="frame-input w-full pl-10 font-mono" value={settings.primaryColor}
                       onChange={(e) => update("primaryColor", e.target.value)}
-                      placeholder="#e85002" />
+                      placeholder={SITE_CONFIG.primaryColor} />
                   </div>
                   <div className="w-10 h-10 rounded-lg border border-frame-gray-3 shrink-0"
                     style={{ background: color }} />
                 </div>
                 <div className="flex gap-2 flex-wrap mt-2">
-                  {["#e85002", "#FF6B00", "#e63946", "#2563eb", "#7c3aed", "#059669"].map((c) => (
+                  {[SITE_CONFIG.primaryColor, "#FF6B00", "#e63946", "#2563eb", "#7c3aed", "#059669"].map((c) => (
                     <button key={c} type="button" onClick={() => update("primaryColor", c)}
                       className="w-7 h-7 rounded-full border-2 transition-transform hover:scale-110"
                       style={{ background: c, borderColor: settings.primaryColor === c ? "#fff" : "transparent" }} />

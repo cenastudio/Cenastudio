@@ -122,11 +122,20 @@ describe('CreateJobModal', () => {
     return new Date().toISOString().split('T')[0];
   };
 
-  // Helper to get future date string
+  // Helper to get future date string.
+  // Uses local date components (not toISOString) so the returned string
+  // matches the "YYYY-MM-DD" local representation the component expects.
+  // Fixes a subtle bug where `date.toISOString().split('T')[0]` shifted
+  // the date forward by one day whenever the test ran after ~21:00 in
+  // BRT (UTC-3), producing a UTC-representation of tomorrow instead of
+  // the intended local +N days.
   const getFutureDateString = (daysFromNow: number) => {
     const date = new Date();
     date.setDate(date.getDate() + daysFromNow);
-    return date.toISOString().split('T')[0];
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
   };
 
   // 1. Modal opens on button click (tested by parent component)

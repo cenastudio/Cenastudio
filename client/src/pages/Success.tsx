@@ -39,7 +39,7 @@ export default function Success() {
           setSyncing(true);
           const result = await api.checkout.syncSession(sessionId);
           if (result.synced) {
-            toast.success("Assinatura confirmada no Cena Studio.");
+            toast.success(`Assinatura confirmada no ${SITE_CONFIG.brandName}.`);
           }
         }
         await refresh();

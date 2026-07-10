@@ -5,6 +5,7 @@ import VideoPlayer from "@/components/VideoPlayer";
 import ReviewCommentComposer from "@/components/ReviewCommentComposer";
 import BrandLogo from "@/components/BrandLogo";
 import { readStudioSettings } from "@/lib/studioSettings";
+import { SITE_CONFIG } from "@shared/site";
 import {
   AlertCircle,
   CheckCircle2,
@@ -168,7 +169,7 @@ export default function SharedReview() {
       ``,
       `💬 Você pode assistir o vídeo, adicionar comentários em momentos específicos e aprovar ou solicitar alterações diretamente na plataforma.`,
       ``,
-      `_Enviado via Cena Studio_`
+      `_Enviado via ${SITE_CONFIG.brandName}_`
     ].join("\n");
   }, [review, status.labelKey, t]);
 

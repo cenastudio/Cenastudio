@@ -3,7 +3,7 @@
  * Visual Identity: "Command Center"
  * 
  * Design Philosophy:
- * - Premium dual-accent system (Orange #E85002 + Gold #D8B343)
+ * - Premium dual-accent system (Orange var(--ds-orange) + Gold #D8B343)
  * - Maximum information density
  * - Multi-layer shadows with inset borders
  * - Enterprise-grade visual language
@@ -21,7 +21,7 @@
      Dual-Accent Color System
      Orange for creative, Gold for financial
      ======================================== */
-  --plan-accent-primary: #e85002;          /* Orange: Creative modules */
+  --plan-accent-primary: var(--ds-orange);          /* Orange: Creative modules */
   --plan-accent-secondary: #d8b343;        /* Gold: Financial/Business modules */
   --plan-accent-tertiary: #f16001;         /* Lighter orange for highlights */
   --plan-accent-financial: #d8b343;        /* Explicit financial accent (gold) */
@@ -80,7 +80,7 @@
      ======================================== */
   --plan-state-hover: rgba(255, 255, 255, 0.09);
   --plan-state-active: rgba(255, 255, 255, 0.16);
-  --plan-state-focus: #e85002;
+  --plan-state-focus: var(--ds-orange);
   --plan-state-focus-gold: #d8b343;
 
   /* ========================================

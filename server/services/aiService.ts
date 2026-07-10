@@ -3,6 +3,7 @@ import { getToolById } from "../../shared/tools.js";
 import { db } from "../models/db.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { prisma, shouldUsePrisma } from "../models/prisma.js";
+import { SITE_CONFIG } from "@shared/site";
 
 interface NvidiaChatResponse {
   choices?: Array<{
@@ -159,7 +160,7 @@ async function generateWithOpenRouter(system: string, userText: string, modelOve
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "HTTP-Referer": process.env.CLIENT_ORIGIN || "http://localhost:5173",
-        "X-OpenRouter-Title": "Cena Studio",
+        "X-OpenRouter-Title": SITE_CONFIG.brandName,
         Accept: "application/json",
         "Content-Type": "application/json",
       },

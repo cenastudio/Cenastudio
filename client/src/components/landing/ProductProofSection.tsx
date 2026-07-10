@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Play, Pause, ChevronLeft, ChevronRight, CheckCircle2, Sparkles, Zap, Video } from "lucide-react";
+import { SITE_CONFIG } from "@shared/site";
 
 interface ProductScene {
   id: string;
@@ -165,11 +166,11 @@ export default function ProductProofSection() {
           <h2 className="frame-title text-[clamp(2.8rem,5.5vw,5rem)] mb-4">
             {isEn ? (
               <>
-                See <span className="text-frame-orange">Cena Studio</span> in action
+                See <span className="text-frame-orange">{SITE_CONFIG.brandName}</span> in action
               </>
             ) : (
               <>
-                Veja o <span className="text-frame-orange">Cena Studio</span> funcionando
+                Veja o <span className="text-frame-orange">{SITE_CONFIG.brandName}</span> funcionando
               </>
             )}
           </h2>

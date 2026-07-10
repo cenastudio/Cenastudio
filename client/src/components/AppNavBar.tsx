@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import NotificationsPopover from "@/components/NotificationsPopover";
 import BrandLogo from "@/components/BrandLogo";
 import AccessibilityFontControls from "@/components/AccessibilityFontControls";
+import { SITE_CONFIG } from "@shared/site";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useProject } from "@/contexts/ProjectContext";
 import JourneyBreadcrumb from "@/components/JourneyBreadcrumb";
@@ -89,7 +90,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
     }
 
     window.open(
-      `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Olá! Quero falar sobre meu plano Cena Studio.")}`,
+      `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Olá! Quero falar sobre meu plano ${SITE_CONFIG.brandName}.`)}`,
       "_blank",
     );
   };
@@ -357,7 +358,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
 
               {/* Additional mobile-only controls */}
               <div className="mt-3 grid grid-cols-2 gap-2 sm:hidden">
-                <div className="min-h-[44px] border border-frame-gray-3 px-2 flex items-center justify-center">
+                <div className="min-h-[45px] border border-frame-gray-3 px-2 flex items-center justify-center">
                   <LanguageSwitcher compact />
                 </div>
                 <button
@@ -366,7 +367,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
                     setLocation("/profile");
                     setMobileMenuOpen(false);
                   }}
-                  className="min-h-[44px] border border-frame-gray-3 px-3 font-frame-mono text-[0.62rem] uppercase tracking-[0.1em] text-frame-gray-light hover:text-frame-orange hover:border-frame-orange transition"
+                  className="min-h-[45px] border border-frame-gray-3 px-3 font-frame-mono text-[0.62rem] uppercase tracking-[0.1em] text-frame-gray-light hover:text-frame-orange hover:border-frame-orange transition"
                 >
                   {t("app.nav.myAccount") as string}
                 </button>
@@ -376,7 +377,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
                 <button
                   type="button"
                   onClick={handleBadgeClick}
-                  className="min-h-[44px] border border-frame-orange/50 px-3 font-frame-mono text-[0.62rem] uppercase tracking-[0.1em] text-frame-orange hover:bg-frame-orange/10 transition"
+                  className="min-h-[45px] border border-frame-orange/50 px-3 font-frame-mono text-[0.62rem] uppercase tracking-[0.1em] text-frame-orange hover:bg-frame-orange/10 transition"
                 >
                   {t("app.nav.plan") as string} {planLabel}
                 </button>
@@ -385,7 +386,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="mt-3 w-full min-h-[44px] font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase bg-transparent border border-frame-gray-3 text-frame-gray-light px-3 py-2.5 transition hover:border-frame-red hover:text-frame-red flex items-center justify-center gap-2"
+                className="mt-3 w-full min-h-[45px] font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase bg-transparent border border-frame-gray-3 text-frame-gray-light px-3 py-2.5 transition hover:border-frame-red hover:text-frame-red flex items-center justify-center gap-2"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 {t("app.nav.logout") as string}

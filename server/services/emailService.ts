@@ -1,7 +1,8 @@
 import { Resend } from "resend";
+import { SITE_CONFIG } from "@shared/site";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const EMAIL_FROM = process.env.EMAIL_FROM || "Cena Studio <onboarding@resend.dev>";
+const EMAIL_FROM = process.env.EMAIL_FROM || `${SITE_CONFIG.brandName} <onboarding@resend.dev>`;
 
 export const isEmailConfigured = Boolean(RESEND_API_KEY);
 

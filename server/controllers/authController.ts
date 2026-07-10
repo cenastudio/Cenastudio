@@ -8,6 +8,7 @@ import {
 import * as authService from "../services/authService.js";
 import { isGitHubAuthConfigured } from "../config/passport.js";
 import { sendEmail, isEmailConfigured } from "../services/emailService.js";
+import { SITE_CONFIG } from "@shared/site";
 
 function getClientOrigin() {
   return process.env.CLIENT_ORIGIN || "http://localhost:5173";
@@ -75,7 +76,7 @@ export const forgotPassword: RequestHandler = async (req, res, next) => {
       const resetUrl = `${getClientOrigin()}/reset-password?token=${token}`;
       sendEmail({
         to: email,
-        subject: "Redefinição de senha — Cena Studio",
+        subject: `Redefinição de senha — ${SITE_CONFIG.brandName}`,
         html: `
           <p>Recebemos uma solicitação para redefinir sua senha.</p>
           <p><a href="${resetUrl}">Clique aqui para criar uma nova senha</a></p>

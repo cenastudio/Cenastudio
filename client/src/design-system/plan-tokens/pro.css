@@ -5,7 +5,7 @@
  * Design Philosophy:
  * - Enhanced visual richness with subtle animations
  * - Medium shadows (8-24px blur with orange tint)
- * - Prominent accent color usage (#E85002)
+ * - Prominent accent color usage (var(--ds-orange))
  * - Glow effects on interactive elements
  * - Typography scale: 1.06x (slightly larger)
  * - Refined interactions and micro-animations
@@ -20,7 +20,7 @@
      Accent Colors
      More prominent usage than Free plan
      ======================================== */
-  --plan-accent-primary: #e85002;
+  --plan-accent-primary: var(--ds-orange);
   --plan-accent-secondary: #f16001;        /* Lighter orange for highlights */
   --plan-accent-tertiary: #ff8740;         /* Even lighter for energy */
   --plan-accent-contrast: #000000;         /* Text color on accent backgrounds */

@@ -543,6 +543,7 @@ model StudioSetting {
   website      String   @default("")
   signature    String   @default("Responsavel comercial")
   primaryColor String   @default("#ff4d1d") @map("primary_color")
+  logoUrl      String?  @map("logo_url")
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz
 

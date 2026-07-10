@@ -15,6 +15,7 @@ import {
   PLAN_HIERARCHY,
 } from "@/lib/plan-config";
 import type { PlanMode } from "@/types/plan";
+import { SITE_CONFIG } from "@shared/site";
 
 describe("plan-config", () => {
   describe("PLAN_HIERARCHY", () => {
@@ -39,7 +40,9 @@ describe("plan-config", () => {
       expect(metadata.id).toBe("free");
       expect(metadata.displayName).toBe("Free");
       expect(metadata.visualIdentity).toBe("minimal");
-      expect(metadata.accentColor).toBe("#E85002");
+      // Fase 3: accentColor is env-driven via SITE_CONFIG.primaryColor
+      // (lowercased on load). Default is the pre-Fase-3 orange.
+      expect(metadata.accentColor).toBe(SITE_CONFIG.primaryColor);
       expect(metadata.supportsCommercialHub).toBe(false);
       expect(metadata.supportsPipeline).toBe(false);
     });
@@ -247,7 +250,8 @@ describe("plan-config", () => {
 
     it("should have consistent primary accent color", () => {
       const plans: PlanMode[] = ["brand", "free", "pro", "studio", "admin"];
-      const expectedColor = "#E85002";
+      // Fase 3: accent is env-driven — derives from SITE_CONFIG.primaryColor.
+      const expectedColor = SITE_CONFIG.primaryColor;
 
       plans.forEach((plan) => {
         expect(getPlanMetadata(plan).accentColor).toBe(expectedColor);

@@ -1,4 +1,5 @@
 import { AppError } from '../../middleware/errorHandler.js';
+import { SITE_CONFIG } from '@shared/site';
 
 interface OpenRouterResponse {
   choices?: Array<{
@@ -50,7 +51,7 @@ export async function generateWithAI(system: string, userPrompt: string): Promis
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'HTTP-Referer': process.env.CLIENT_ORIGIN || 'http://localhost:5173',
-        'X-OpenRouter-Title': 'Cena Studio',
+        'X-OpenRouter-Title': SITE_CONFIG.brandName,
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },

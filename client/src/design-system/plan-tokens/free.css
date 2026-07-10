@@ -5,7 +5,7 @@
  * Design Philosophy:
  * - Clean, high-contrast aesthetic
  * - Simple shadows (4-12px blur)
- * - Single accent color (#E85002)
+ * - Single accent color (var(--ds-orange))
  * - Minimal decorative elements
  * - Typography scale: 1.0x (baseline)
  * 
@@ -18,7 +18,7 @@
   /* ========================================
      Accent Colors
      ======================================== */
-  --plan-accent-primary: #e85002;
+  --plan-accent-primary: var(--ds-orange);
   --plan-accent-secondary: #c10801;        /* Darker orange for contrast */
   --plan-accent-tertiary: #f16001;         /* Lighter orange for highlights */
   --plan-accent-contrast: #000000;         /* Text color on accent backgrounds */
@@ -50,7 +50,7 @@
      ======================================== */
   --plan-state-hover: rgba(255, 255, 255, 0.06);
   --plan-state-active: rgba(255, 255, 255, 0.12);
-  --plan-state-focus: #e85002;
+  --plan-state-focus: var(--ds-orange);
 
   /* ========================================
      Typography Scale

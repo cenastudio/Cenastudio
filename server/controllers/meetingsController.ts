@@ -5,8 +5,9 @@ import { prisma } from "../models/prisma.js";
 import { withSnakeCase } from "../utils/prismaSerialization.js";
 import { buildIcsEvent } from "../services/icsService.js";
 import { sendEmail, isEmailConfigured } from "../services/emailService.js";
+import { SITE_CONFIG } from "@shared/site";
 
-const CONTACT_EMAIL = "cenastudio@atomicmail.io";
+const CONTACT_EMAIL = process.env.SUPPORT_EMAIL || SITE_CONFIG.supportEmail || "cenastudio@atomicmail.io";
 
 function getClientOrigin() {
   return process.env.CLIENT_ORIGIN || "http://localhost:5173";
@@ -125,12 +126,12 @@ export const createMeeting: RequestHandler = async (req, res, next) => {
     const meetingUrl = `${getClientOrigin()}/meeting/${shareToken}`;
     const owner_ = req.user!;
     const studioSettings = await prisma.studioSetting.findUnique({ where: { userId: owner } });
-    const studioName = studioSettings?.studioName || owner_.name || "Cena Studio";
+    const studioName = studioSettings?.studioName || owner_.name || SITE_CONFIG.brandName;
     const studioSignature = studioSettings?.signature || owner_.name || studioName;
     const studioReplyTo = studioSettings?.email?.trim() || CONTACT_EMAIL;
     const studioPhone = studioSettings?.phone?.trim();
     const studioWebsite = studioSettings?.website?.trim();
-    const brandColor = studioSettings?.primaryColor || "#ff4d1d";
+    const brandColor = studioSettings?.primaryColor || SITE_CONFIG.primaryColor;
 
     let emailSentAt: Date | null = null;
     let emailError: string | null = null;
@@ -242,7 +243,7 @@ export const getPublicMeeting: RequestHandler = async (req, res, next) => {
         duration_minutes: meeting.durationMinutes,
         notes: meeting.notes,
         client_name: meeting.client.name,
-        studio_name: studioSettings?.studioName || meeting.owner.studioName || meeting.owner.name || "Cena Studio",
+        studio_name: studioSettings?.studioName || meeting.owner.studioName || meeting.owner.name || SITE_CONFIG.brandName,
       },
     });
   } catch (e) {
@@ -263,7 +264,7 @@ export const downloadPublicMeetingIcs: RequestHandler = async (req, res, next) =
     });
     if (!meeting) throw new AppError("Reunião não encontrada", 404);
     const studioSettings = await prisma.studioSetting.findUnique({ where: { userId: meeting.owner.id } });
-    const studioName = studioSettings?.studioName || meeting.owner.name || "Cena Studio";
+    const studioName = studioSettings?.studioName || meeting.owner.name || SITE_CONFIG.brandName;
     const studioReplyTo = studioSettings?.email?.trim() || CONTACT_EMAIL;
 
     const ics = buildIcsEvent({

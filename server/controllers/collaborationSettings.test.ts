@@ -219,10 +219,13 @@ describe("collaboration, notifications and studio settings", () => {
 
   it("returns defaults, sanitizes updates and isolates studio settings", async () => {
     const defaults = await invoke(studioSettingsController.getStudioSettings, { user });
+    // Fase 3: defaults derivam de SITE_CONFIG.brandName / .primaryColor (env-driven).
+    // Sem env definida, o default é o Cena Studio original.
+    const { SITE_CONFIG } = await import("@shared/site");
     expect(defaults.body.data).toMatchObject({
-      studioName: "Cena Studio",
+      studioName: SITE_CONFIG.brandName,
       signature: "Responsavel comercial",
-      primaryColor: "#ff4d1d",
+      primaryColor: SITE_CONFIG.primaryColor,
     });
 
     const updated = await invoke(studioSettingsController.updateStudioSettings, {
@@ -236,17 +239,19 @@ describe("collaboration, notifications and studio settings", () => {
         primaryColor: "not-a-color",
       },
     });
+    const { SITE_CONFIG: SITE_CONFIG_FOR_UPDATED } = await import("@shared/site");
     expect(updated.body.data).toMatchObject({
       studioName: "Aurora Filmes",
       email: "contato@aurora.example",
       signature: "Direcao comercial",
-      primaryColor: "#ff4d1d",
+      // Invalid color falls back to the env-driven default.
+      primaryColor: SITE_CONFIG_FOR_UPDATED.primaryColor,
     });
 
     const persisted = await invoke(studioSettingsController.getStudioSettings, { user });
     expect(persisted.body.data.studioName).toBe("Aurora Filmes");
 
     const otherDefaults = await invoke(studioSettingsController.getStudioSettings, { user: otherUser });
-    expect(otherDefaults.body.data.studioName).toBe("Cena Studio");
+    expect(otherDefaults.body.data.studioName).toBe(SITE_CONFIG_FOR_UPDATED.brandName);
   });
 });

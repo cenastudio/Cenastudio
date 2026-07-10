@@ -26,6 +26,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { getStageForTool, getWorkflowStage } from "@/lib/workflow";
+import { SITE_CONFIG } from "@shared/site";
+import { hexToRgba } from "@shared/color";
 import {
   Dialog,
   DialogContent,
@@ -262,7 +264,7 @@ function DashboardContent() {
 
   const handleWelcomeComplete = () => {
     setIsWelcomeOpen(false);
-    toast.success(locale === "en" ? "Welcome to Cena Studio! 🎬" : "Bem-vindo ao Cena Studio! 🎬");
+    toast.success(locale === "en" ? `Welcome to ${SITE_CONFIG.brandName}! 🎬` : `Bem-vindo ao ${SITE_CONFIG.brandName}! 🎬`);
   };
 
   const getActivityLabel = (act: RecentActivity) => {
@@ -375,13 +377,13 @@ function DashboardContent() {
           <section
             className="relative overflow-hidden animate-stagger-1"
             style={{
-              background: "linear-gradient(135deg, rgba(232,80,2,0.10) 0%, rgba(232,80,2,0.03) 60%, transparent 100%)",
-              border: "1px solid rgba(232,80,2,0.25)",
-              borderLeft: "3px solid #e85002",
+              background: `linear-gradient(135deg, ${hexToRgba(SITE_CONFIG.primaryColor, 0.10)} 0%, ${hexToRgba(SITE_CONFIG.primaryColor, 0.03)} 60%, transparent 100%)`,
+              border: `1px solid ${hexToRgba(SITE_CONFIG.primaryColor, 0.25)}`,
+              borderLeft: `3px solid ${SITE_CONFIG.primaryColor}`,
             }}
           >
             <div className="absolute top-0 right-0 w-48 h-48 rounded-full pointer-events-none opacity-[0.06]"
-              style={{ background: "radial-gradient(circle, #e85002 0%, transparent 70%)" }}
+              style={{ background: `radial-gradient(circle, ${SITE_CONFIG.primaryColor} 0%, transparent 70%)` }}
             />
             <div className="relative p-5 sm:p-7">
               <p className="font-frame-mono text-[0.56rem] uppercase tracking-[0.22em] text-frame-orange mb-4">⚡ {locale === "en" ? "Focus job" : "Job em foco"}</p>

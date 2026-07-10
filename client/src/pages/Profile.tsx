@@ -9,6 +9,8 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { readStudioSettings, type StudioSettings } from "@/lib/studioSettings";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
+import { SITE_CONFIG } from "@shared/site";
+import { hexToRgba } from "@shared/color";
 import { useEffect, useState, useRef } from "react";
 import {
   CalendarClock, Crown, LogOut, ShieldCheck, UserRound, Zap, Settings,
@@ -40,7 +42,8 @@ interface ReceiptData {
 
 function buildReceiptHtml(data: ReceiptData): string {
   const L = (key: string) => translate(data.locale, key);
-  const color = data.studio.primaryColor || "#FF6B00";
+  const color = data.studio.primaryColor || SITE_CONFIG.primaryColor;
+  const brandFadeRgba = hexToRgba(color, 0.08);
   const currencyLocale = data.locale === "en" ? "en-US" : "pt-BR";
   const formattedAmount = new Intl.NumberFormat(currencyLocale, { style: "currency", currency: "BRL" }).format(data.amount);
   const formattedDate = new Intl.DateTimeFormat(currencyLocale, { day: "2-digit", month: "long", year: "numeric" }).format(new Date(data.paidAt));
@@ -56,7 +59,7 @@ function buildReceiptHtml(data: ReceiptData): string {
     html,body{margin:0;min-height:100%;background:#0d0d0d;color:#e8e8e8;font-family:Arial,sans-serif}
     body{background:radial-gradient(circle at 88% 5%,${color}2e,transparent 34%),linear-gradient(135deg,#15100d 0%,#0d0d0d 42%,#050505 100%)}
     .page{width:210mm;min-height:297mm;margin:0 auto;padding:18mm;background:radial-gradient(circle at 92% 4%,${color}30,transparent 33%),linear-gradient(180deg,#111 0%,#0d0d0d 100%);position:relative;overflow:visible}
-    .page:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(232,80,2,.08),transparent 32%),radial-gradient(circle at 10% 92%,rgba(217,195,171,.08),transparent 32%);pointer-events:none}
+    .page:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,${brandFadeRgba},transparent 32%),radial-gradient(circle at 10% 92%,rgba(217,195,171,.08),transparent 32%);pointer-events:none}
     .page>*{position:relative;z-index:1}
     .header{display:flex;justify-content:space-between;gap:32px;padding-bottom:28px;border-bottom:3px solid ${color}}
     .brand{font-size:34px;font-weight:900;letter-spacing:.06em;color:#fff}.brand span{color:${color}}
@@ -121,14 +124,14 @@ function buildReceiptHtml(data: ReceiptData): string {
     <div class="grid">
       <div class="field"><div class="label">${L("app.receipt.client")}</div><div class="value">${esc(data.userName)}</div></div>
       <div class="field"><div class="label">Email</div><div class="value">${esc(data.userEmail)}</div></div>
-      <div class="field"><div class="label">${L("app.receipt.plan")}</div><div class="value">Cena Studio ${esc(data.planName)}</div></div>
+      <div class="field"><div class="label">${L("app.receipt.plan")}</div><div class="value">${esc(SITE_CONFIG.brandName)} ${esc(data.planName)}</div></div>
       <div class="field"><div class="label">${L("app.receipt.paymentDate")}</div><div class="value">${formattedDate}</div></div>
       <div class="field"><div class="label">${L("app.receipt.accessPeriod")}</div><div class="value">${L("app.receipt.accessValue")}</div></div>
       <div class="field"><div class="label">${L("app.receipt.receiptNumber")}</div><div class="value">#${esc(data.receiptNumber)}</div></div>
     </div>
 
     <div class="breakdown">
-      <div class="breakdown-row"><span>${L("app.receipt.subscription")} Cena Studio ${esc(data.planName)}</span><strong>${formattedAmount}</strong></div>
+      <div class="breakdown-row"><span>${L("app.receipt.subscription")} ${esc(SITE_CONFIG.brandName)} ${esc(data.planName)}</span><strong>${formattedAmount}</strong></div>
       <div class="breakdown-row"><span>${L("app.receipt.discount")}</span><strong>R$ 0,00</strong></div>
     </div>
 
@@ -678,7 +681,7 @@ function ProfileContent() {
                   <span className="frame-label text-frame-gray-light">{t("app.profile.studioName")}</span>
                   <div className="relative">
                     <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
-                    <input value={studioName} onChange={(e) => setStudioName(e.target.value)} className="frame-input w-full pl-10" placeholder="Ex: Cena Studio" />
+                    <input value={studioName} onChange={(e) => setStudioName(e.target.value)} className="frame-input w-full pl-10" placeholder={`Ex: ${SITE_CONFIG.brandName}`} />
                   </div>
                 </label>
                 <label className="space-y-1.5">
@@ -901,16 +904,16 @@ function ProfileContent() {
             <div
               className="plan-card plan-card-studio relative overflow-hidden p-6 md:p-8"
             >
-              <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl opacity-15 pointer-events-none" style={{ background: "#e85002" }} />
+              <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl opacity-15 pointer-events-none" style={{ background: SITE_CONFIG.primaryColor }} />
 
               <div className="relative flex flex-col md:flex-row md:items-start justify-between gap-6">
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 flex-wrap">
                     <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider"
                       style={{
-                        background: "rgba(232,80,2,0.15)",
-                        color: "#e85002",
-                        border: "1px solid rgba(232,80,2,0.35)",
+                        background: `${hexToRgba(SITE_CONFIG.primaryColor, 0.15)}`,
+                        color: SITE_CONFIG.primaryColor,
+                        border: `1px solid ${hexToRgba(SITE_CONFIG.primaryColor, 0.35)}`,
                       }}>
                       {plan?.planId === "studio" ? <Crown className="w-3.5 h-3.5" /> : plan?.planId === "pro" ? <Zap className="w-3.5 h-3.5" /> : <Shield className="w-3.5 h-3.5" />}
                       {planLabel}
@@ -993,7 +996,7 @@ function ProfileContent() {
                 <div className={`plan-card plan-card-free relative p-5 ${plan?.planId === "free" ? "ring-2 ring-frame-orange" : ""}`}>
                   {plan?.planId === "free" && <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-frame-orange text-frame-black text-[0.6rem] font-bold uppercase tracking-wider rounded-full">{t("app.profile.yourPlan")}</div>}
                   <div className="text-center pt-2">
-                    <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: "rgba(232,80,2,0.15)", border: "1px solid rgba(232,80,2,0.40)" }}>
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: `${hexToRgba(SITE_CONFIG.primaryColor, 0.15)}`, border: `1px solid ${hexToRgba(SITE_CONFIG.primaryColor, 0.40)}` }}>
                       <Shield className="w-6 h-6 text-frame-orange" />
                     </div>
                     <h4 className="text-xl font-bold">Free</h4>
@@ -1017,7 +1020,7 @@ function ProfileContent() {
                     {plan?.planId === "pro" ? t("app.profile.yourPlan") : t("app.profile.popular")}
                   </div>
                   <div className="text-center pt-2">
-                    <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: "rgba(232,80,2,0.20)", border: "1px solid rgba(232,80,2,0.55)" }}>
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: `${hexToRgba(SITE_CONFIG.primaryColor, 0.20)}`, border: `1px solid ${hexToRgba(SITE_CONFIG.primaryColor, 0.55)}` }}>
                       <Zap className="w-6 h-6 text-frame-orange" />
                     </div>
                     <h4 className="text-xl font-bold">Pro</h4>
@@ -1043,7 +1046,7 @@ function ProfileContent() {
                     {plan?.planId === "studio" ? t("app.profile.yourPlan") : t("app.profile.complete")}
                   </div>
                   <div className="text-center pt-2">
-                    <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: "rgba(232,80,2,0.28)", border: "1px solid rgba(232,80,2,0.70)" }}>
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: `${hexToRgba(SITE_CONFIG.primaryColor, 0.28)}`, border: `1px solid ${hexToRgba(SITE_CONFIG.primaryColor, 0.70)}` }}>
                       <Crown className="w-6 h-6 text-frame-orange" />
                     </div>
                     <h4 className="text-xl font-bold">Studio</h4>

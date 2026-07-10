@@ -1,6 +1,7 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
 import { ArrowRight, MonitorPlay, Play, CircleDot } from "lucide-react";
+import { SITE_CONFIG } from "@shared/site";
 
 function HeroTitleLine({ children }: { children: string }) {
   // Destaca última palavra em laranja
@@ -132,7 +133,7 @@ export default function Hero() {
             </div>
             <img
               src="/landing/product/project-hub.png"
-              alt="Tela real do centro de projeto no Cena Studio"
+              alt={`Tela real do centro de projeto no ${SITE_CONFIG.brandName}`}
               className="block w-full object-cover object-top"
               fetchPriority="high"
             />
@@ -144,7 +145,7 @@ export default function Hero() {
             </p>
             <img
               src="/landing/product/studio.png"
-              alt="Tela real do Studio IA no Cena Studio"
+              alt={`Tela real do Studio IA no ${SITE_CONFIG.brandName}`}
               className="block w-full object-cover object-top"
               loading="lazy"
             />

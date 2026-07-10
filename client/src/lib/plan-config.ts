@@ -3,9 +3,16 @@
  *
  * Central configuration for all plan tiers.
  * Defines metadata, features, and navigation for each plan.
+ *
+ * Fase 3 (white label): `accentColor` de cada plano deriva de
+ * `SITE_CONFIG.primaryColor` — env `APP_PRIMARY_COLOR` — para que
+ * o rebrand troque a cor em toda a UI sem editar código.
  */
 
 import type { PlanMode, PlanMetadata, VisualIdentity, NavItem } from "@/types/plan";
+import { SITE_CONFIG } from "@shared/site";
+
+const BRAND_ACCENT = SITE_CONFIG.primaryColor;
 
 /**
  * Plan hierarchy for access comparison
@@ -27,7 +34,7 @@ const PLAN_METADATA: Record<PlanMode, PlanMetadata> = {
     id: "brand",
     displayName: "Brand",
     visualIdentity: "minimal" as VisualIdentity,
-    accentColor: "#E85002",
+    accentColor: BRAND_ACCENT,
     featureCount: 0,
     maxTeamMembers: 0,
     workflowSteps: [],
@@ -44,7 +51,7 @@ const PLAN_METADATA: Record<PlanMode, PlanMetadata> = {
     id: "free",
     displayName: "Free",
     visualIdentity: "minimal" as VisualIdentity,
-    accentColor: "#E85002",
+    accentColor: BRAND_ACCENT,
     featureCount: 8,
     maxProjects: 5,
     maxTeamMembers: 1,
@@ -62,7 +69,7 @@ const PLAN_METADATA: Record<PlanMode, PlanMetadata> = {
     id: "pro",
     displayName: "Pro",
     visualIdentity: "cockpit" as VisualIdentity,
-    accentColor: "#E85002",
+    accentColor: BRAND_ACCENT,
     featureCount: 12,
     maxProjects: 50,
     maxTeamMembers: 5,
@@ -80,7 +87,7 @@ const PLAN_METADATA: Record<PlanMode, PlanMetadata> = {
     id: "studio",
     displayName: "Studio",
     visualIdentity: "command-center" as VisualIdentity,
-    accentColor: "#E85002",
+    accentColor: BRAND_ACCENT,
     featureCount: -1, // unlimited
     maxTeamMembers: -1, // unlimited
     workflowSteps: ["entry", "planning", "production", "revision", "delivery", "closure"],
@@ -97,7 +104,7 @@ const PLAN_METADATA: Record<PlanMode, PlanMetadata> = {
     id: "studio-pending",
     displayName: "Studio (Pending)",
     visualIdentity: "command-center" as VisualIdentity,
-    accentColor: "#E85002",
+    accentColor: BRAND_ACCENT,
     featureCount: -1,
     maxTeamMembers: -1,
     workflowSteps: ["entry", "planning", "production", "revision", "delivery", "closure"],
@@ -114,7 +121,7 @@ const PLAN_METADATA: Record<PlanMode, PlanMetadata> = {
     id: "admin",
     displayName: "Admin",
     visualIdentity: "command-center" as VisualIdentity,
-    accentColor: "#E85002",
+    accentColor: BRAND_ACCENT,
     featureCount: -1,
     maxTeamMembers: -1,
     workflowSteps: ["entry", "planning", "production", "revision", "delivery", "closure"],

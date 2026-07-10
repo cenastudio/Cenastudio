@@ -1,4 +1,5 @@
 import { generateWithAI } from './aiHelper.js';
+import { SITE_CONFIG } from '@shared/site';
 
 export interface ChatbotInput {
   question: string;
@@ -19,9 +20,9 @@ export async function chatbotHelp(input: ChatbotInput): Promise<string> {
     contextInfo += `Página atual: ${input.context.currentPage}\n`;
   }
 
-  const system = `Você é o assistente virtual do Cena Studio, uma plataforma de gestão para produção audiovisual.
+  const system = `Você é o assistente virtual do ${SITE_CONFIG.brandName}, uma plataforma de gestão para produção audiovisual.
 
-O Cena Studio oferece:
+O ${SITE_CONFIG.brandName} oferece:
 - Gestão de Projetos (criar, editar, acompanhar status)
 - Gestão de Clientes (CRM)
 - Pipeline de Oportunidades (Kanban)

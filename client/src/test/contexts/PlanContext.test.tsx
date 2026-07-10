@@ -9,6 +9,7 @@ import { render, screen } from "@testing-library/react";
 import { PlanProvider, usePlanContext, PlanGate } from "@/contexts/PlanContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import type { PlanMode } from "@/types/plan";
+import { SITE_CONFIG } from "@shared/site";
 
 // Mock AuthContext
 vi.mock("@/contexts/AuthContext", () => ({
@@ -85,7 +86,8 @@ describe("PlanContext", () => {
       );
 
       expect(screen.getByTestId("display-name")).toHaveTextContent("Free");
-      expect(screen.getByTestId("accent-color")).toHaveTextContent("#E85002");
+      // Fase 3: accent color is env-driven via SITE_CONFIG.primaryColor.
+      expect(screen.getByTestId("accent-color")).toHaveTextContent(SITE_CONFIG.primaryColor);
     });
 
     it("should provide accent colors", () => {
@@ -102,7 +104,7 @@ describe("PlanContext", () => {
         </AuthProvider>
       );
 
-      expect(screen.getByTestId("accent")).toHaveTextContent("#E85002");
+      expect(screen.getByTestId("accent")).toHaveTextContent(SITE_CONFIG.primaryColor);
     });
 
     it("should provide visual identity", () => {

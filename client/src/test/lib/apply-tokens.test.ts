@@ -5,7 +5,9 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { applyPlanTokens } from "@/lib/design-system/apply-tokens";
+import { applyPlanTokens, applyBrandTokens } from "@/lib/design-system/apply-tokens";
+import { SITE_CONFIG } from "@shared/site";
+import { colorToRgbString } from "@shared/color";
 import type { PlanMode } from "@/types/plan";
 
 describe("apply-tokens", () => {
@@ -204,6 +206,37 @@ describe("apply-tokens", () => {
     });
   });
 
+  describe("applyBrandTokens (Fase 3 white label)", () => {
+    it("writes --ds-orange and --ds-orange-rgb from SITE_CONFIG.primaryColor", () => {
+      applyBrandTokens();
+      const style = document.documentElement.style;
+      expect(style.getPropertyValue("--ds-orange")).toBe(SITE_CONFIG.primaryColor);
+      expect(style.getPropertyValue("--ds-orange-rgb")).toBe(
+        colorToRgbString(SITE_CONFIG.primaryColor),
+      );
+    });
+
+    it("accepts a custom root element", () => {
+      const root = document.createElement("div");
+      applyBrandTokens(root);
+      expect(root.style.getPropertyValue("--ds-orange")).toBe(SITE_CONFIG.primaryColor);
+      expect(root.style.getPropertyValue("--ds-orange-rgb")).toBe(
+        colorToRgbString(SITE_CONFIG.primaryColor),
+      );
+    });
+
+    it("PLAN_TOKENS derive their primary accent from SITE_CONFIG.primaryColor (not a hardcoded literal)", () => {
+      applyPlanTokens("free");
+      // In the default (unset APP_PRIMARY_COLOR) test environment, the
+      // fallback is "#e85002" — same as the pre-Fase-3 literal. The point
+      // of this assertion is *not* to check the value, but to prove the
+      // token is derived from SITE_CONFIG rather than a duplicate literal.
+      expect(document.documentElement.style.getPropertyValue("--plan-accent-primary")).toBe(
+        SITE_CONFIG.primaryColor,
+      );
+    });
+  });
+
   describe("Token format", () => {
     it("should use correct CSS custom property names", () => {
       applyPlanTokens("studio");
@@ -246,6 +279,60 @@ describe("apply-tokens", () => {
       expect(glowSm).toMatch(/^\d+ \d+ \d+px rgba\(/);
       expect(glowMd).toMatch(/^\d+ \d+ \d+px rgba\(/);
       expect(glowLg).toMatch(/^\d+ \d+ \d+px rgba\(/);
+    });
+  });
+
+  // ---------------------------------------------------------------------
+  // White label (Fase 3) — brand tokens derive from SITE_CONFIG, not
+  // hardcoded literals.
+  // ---------------------------------------------------------------------
+  describe("applyBrandTokens", () => {
+    it("writes --ds-orange and --ds-orange-rgb on the given root", () => {
+      applyBrandTokens();
+      const style = document.documentElement.style;
+      expect(style.getPropertyValue("--ds-orange")).toBe(SITE_CONFIG.primaryColor);
+      expect(style.getPropertyValue("--ds-orange-rgb")).toBe(
+        colorToRgbString(SITE_CONFIG.primaryColor),
+      );
+    });
+
+    it("accepts a custom root element", () => {
+      const el = document.createElement("div");
+      applyBrandTokens(el);
+      expect(el.style.getPropertyValue("--ds-orange")).toBe(SITE_CONFIG.primaryColor);
+      expect(el.style.getPropertyValue("--ds-orange-rgb")).toBe(
+        colorToRgbString(SITE_CONFIG.primaryColor),
+      );
+    });
+
+    it("is idempotent — repeated calls keep the same value", () => {
+      applyBrandTokens();
+      applyBrandTokens();
+      applyBrandTokens();
+      const style = document.documentElement.style;
+      expect(style.getPropertyValue("--ds-orange")).toBe(SITE_CONFIG.primaryColor);
+    });
+  });
+
+  describe("brand color derivation", () => {
+    it("plan --plan-accent-primary matches SITE_CONFIG.primaryColor (not a literal)", () => {
+      const plans: PlanMode[] = ["brand", "free", "pro", "studio", "studio-pending", "admin"];
+      for (const plan of plans) {
+        applyPlanTokens(plan);
+        expect(document.documentElement.style.getPropertyValue("--plan-accent-primary")).toBe(
+          SITE_CONFIG.primaryColor,
+        );
+      }
+    });
+
+    it("pro plan glows use the brand rgb triplet from SITE_CONFIG", () => {
+      applyPlanTokens("pro");
+      const style = document.documentElement.style;
+      const rgb = colorToRgbString(SITE_CONFIG.primaryColor);
+      // Glows are formatted as `rgba(R, G, B, α)` (with the shared triplet).
+      expect(style.getPropertyValue("--plan-glow-sm")).toContain(`rgba(${rgb}`);
+      expect(style.getPropertyValue("--plan-glow-md")).toContain(`rgba(${rgb}`);
+      expect(style.getPropertyValue("--plan-glow-lg")).toContain(`rgba(${rgb}`);
     });
   });
 });

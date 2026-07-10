@@ -113,21 +113,74 @@ Executada em 12 tasks distribuídas em 3 waves. Todos os P0/P1/P2 de
   - Das 4 falhas: 3 são pré-existentes documentadas em `FASE_1_ACHADOS.md` seções 3 e 5 (`launch.spec.ts` `light theme project dialog` desktop+mobile, e `critical authenticated app screens` mobile por timeout — não regressão da Fase 2). 1 é flakiness do `mobile-user-flow` na suíte completa por estado compartilhado com `launch.spec.ts` (passa consistentemente isolado).
 - ✅ Nenhuma regressão em desktop.
 
-### Fase 3 — White label ⏳ Próxima (opcional, depende de decisão de negócio)
+### Fase 3 — White Label básico (Nível 1) ✅ CONCLUÍDA
 
-**Entrada priorizada:** ver `FASE_1_ACHADOS.md` seção 8 original. Ordem sugerida abaixo (não mais em execução):
+**Spec formal:** [`.kiro/specs/fase-3-white-label/`](./.kiro/specs/fase-3-white-label/).
 
-_(Conteúdo original das prioridades da Fase 2 movido para o histórico do spec em `.kiro/specs/fase-2-layout-mobile-e-tabs/requirements.md` — todos resolvidos)._
+Executada em 17 tasks efetivas (18 planejadas — Task 17 upload endpoint
+diferido para Fase 4). Um deploy da plataforma agora vira uma marca
+diferente apenas trocando 6 env vars, sem editar código.
 
-### Fase 3 — White label (opcional, depende de decisão de negócio)
+**O que foi entregue:**
 
-- Seguir o `WHITE_LABEL_PLAN.md`:
-  - Nível 1 (1-2 semanas): variáveis de marca, logo dinâmico, remover
-    hardcode de "Cena Studio".
-  - Nível 2 (3-5 semanas, opcional): multi-tenant real, se a estratégia for
-    centralizar operação numa única instalação servindo várias marcas.
-- Só vale começar depois da Fase 2 — White label sobre uma base de layout
-  inconsistente só multiplica o problema por marca.
+- ✅ **`shared/site.ts`** estendido com `SiteConfig`: `brandName`,
+  `brandNameParts` (wordmark de 2 partes), `seoTitle`, `title` alias
+  deprecated, `domain`, `primaryColor`, `logoUrl`, `supportEmail`. Lê
+  `process.env.APP_*` no server e `import.meta.env.VITE_APP_*` no
+  client, com defaults preservando o comportamento "Cena Studio" atual.
+- ✅ **`shared/color.ts`** — utilitários `isValidHex`, `parseHexColor`,
+  `colorToRgbString`, `hexToRgba`. Robusto contra inputs inválidos.
+- ✅ **`shared/slug.ts`** — `slugify()` reutilizável server + client.
+- ✅ **`applyBrandTokens()`** em `apply-tokens.ts` injeta a cor primária
+  em `--ds-orange` e `--ds-orange-rgb` **antes do primeiro React
+  paint** (chamado em `main.tsx`) — evita FOUC em deploys re-branded.
+- ✅ **`BrandLogo`** dinâmico com prop `variant="wordmark" | "image"` e
+  fallback `onError` para wordmark quando `logoUrl` falha.
+- ✅ **`AuthLayout`** agora usa `BrandLogo` em vez de duplicar markup.
+- ✅ **`PLAN_TOKENS`** em `apply-tokens.ts` derivam da env; `plan-config`,
+  `token-resolver`, `shadows`, `tokens/colors`, `tokens/spacing` idem.
+- ✅ **CSS**: `client/src/index.css`, `design-system/tokens.css`,
+  `plan-tokens/{free,pro,studio}.css`, `styles/tokens.css` sem hex
+  literal `#e85002` (exceto L15 de `tokens.css`, fonte da verdade).
+  Todas as `rgba(232, 80, 2, α)` viraram `rgba(var(--ds-orange-rgb), α)`.
+- ✅ **Textos "Cena Studio"** eliminados em `AIChatbot`, `AppNavBar`,
+  `AuthLayout`, `BrandLogo`, `Hero`, `ProductProofSection`, `Dashboard`,
+  `Success`, `SharedReview`, `Profile`, `CommercialOverview`, `CompanySettings`.
+- ✅ **Emails, ICS, PDFs**: `emailService`, `icsService`,
+  `authController` (reset), `meetingsController` (fallback),
+  `helpChatbot`, `aiHelper`/`aiService` (X-OpenRouter-Title),
+  `documentFormatter` (PDF/DOCX header, cor de linha, footer, filename).
+- ✅ **Prisma migration `add_studio_logo_url`** aditiva + coluna
+  `logo_url TEXT` no fallback SQLite. `StudioSettings` (client + server)
+  expõe `logoUrl` no shape. `PUT /api/studio-settings` aceita `logoUrl`.
+- ✅ **`client/index.html`** com placeholders `%VITE_APP_NAME%` (Vite
+  substitui em build/dev).
+- ✅ **`.env.example`** com bloco "White Label" documentado
+  (6 server + 6 duplicatas `VITE_*`).
+- ✅ **Docs**: [`docs/white-label/setup-guide.md`](./docs/white-label/setup-guide.md)
+  com checklist de deploy em 5 passos, tabela de env vars, o que é/não
+  é dinâmico, contraste WCAG, precedência user > env > default.
+
+**Deferido para Fase 4 (opcional):**
+
+- Endpoint `POST /api/studio-settings/logo` com upload multipart e
+  bucket Supabase `studio-branding` — operador seta via env
+  `APP_LOGO_URL` ou via `PUT /api/studio-settings` com `logoUrl` no
+  body por enquanto.
+- i18n com placeholder `{{brand}}` auto-injetado — as strings de
+  landing/SEO usam `SITE_CONFIG.brandName` direto por enquanto.
+- Templates HTML legais dinâmicos (`terms-of-use.html`,
+  `privacy-policy.html`) — operador substitui manualmente.
+- Multi-tenant real (Nível 2 do `WHITE_LABEL_PLAN.md`) — model `Tenant`,
+  subdomain routing, Stripe Connect.
+
+**Status de testes ao encerrar a Fase 3:**
+
+- ✅ Vitest: **1133/1133** (era 1088 antes da Fase 3 — 45 novos entre
+  color, slug, site, BrandLogo, apply-tokens estendido, e correções de
+  timezone-flaky em `CreateJobModal.test.tsx`).
+- ✅ Playwright `@fase1`: 6/6 verde (Fase 2 sem regressão).
+- ✅ Nenhuma regressão em desktop.
 
 ---
 
@@ -138,7 +191,8 @@ _(Conteúdo original das prioridades da Fase 2 movido para o histórico do spec 
 | 0 | Testes rodando de verdade | ✅ Concluída | 1 dia | Nada |
 | 1 | Testar como usuário real, não só tecnicamente | ✅ Concluída | 3-5 dias | Fase 0 |
 | 2 | Corrigir mobile e padronizar layout | ✅ Concluída | 1-2 semanas | Fase 1 |
-| 3 | White label | ⏳ Próxima | 1-2 sem (básico) / +3-5 sem (multi-tenant) | Fase 2 |
+| 3 | White label básico (Nível 1) | ✅ Concluída | 1 dia | Fase 2 |
+| 4 | White label multi-tenant (Nível 2) | ⏸️ Aguardando decisão | 3-5 semanas | Fase 3 |
 
 ---
 

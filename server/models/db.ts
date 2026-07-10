@@ -256,10 +256,18 @@ function ensureStudioSettingsColumns() {
       website TEXT DEFAULT '',
       signature TEXT DEFAULT 'Responsavel comercial',
       primary_color TEXT DEFAULT '#ff4d1d',
+      logo_url TEXT,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     );
   `);
+  // Backfill for existing DBs created before Fase 3 (nullable, no default).
+  const cols = (db.prepare("PRAGMA table_info(studio_settings)").all() as { name: string }[]).map(
+    (c) => c.name,
+  );
+  if (!cols.includes("logo_url")) {
+    db.prepare("ALTER TABLE studio_settings ADD COLUMN logo_url TEXT").run();
+  }
 }
 
 function ensureWorkspaceTables() {

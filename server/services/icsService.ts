@@ -4,6 +4,8 @@
  * and every mainstream calendar app (Google, Outlook, Apple) reads this format.
  */
 
+import { SITE_CONFIG } from "@shared/site";
+
 function pad(value: number, length = 2): string {
   return String(value).padStart(length, "0");
 }
@@ -67,7 +69,7 @@ export function buildIcsEvent(event: IcsEventInput): string {
   const lines: string[] = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Cena Studio//Meetings//PT-BR",
+    `PRODID:-//${SITE_CONFIG.brandName}//Meetings//PT-BR`,
     "CALSCALE:GREGORIAN",
     "METHOD:REQUEST",
     "BEGIN:VEVENT",

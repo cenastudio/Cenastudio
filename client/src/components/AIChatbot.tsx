@@ -3,6 +3,7 @@ import { Bot, X, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { SITE_CONFIG } from '@shared/site';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -14,7 +15,7 @@ export function AIChatbot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Olá! Sou o assistente do Cena Studio. Como posso ajudar?',
+      content: `Olá! Sou o assistente do ${SITE_CONFIG.brandName}. Como posso ajudar?`,
     },
   ]);
   const [input, setInput] = useState('');
@@ -101,7 +102,7 @@ export function AIChatbot() {
               <Bot className="h-5 w-5 text-primary" />
               <div>
                 <h3 className="font-semibold">Assistente IA</h3>
-                <p className="text-xs text-muted-foreground">Cena Studio</p>
+                <p className="text-xs text-muted-foreground">{SITE_CONFIG.brandName}</p>
               </div>
             </div>
             <Button

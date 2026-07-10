@@ -1,5 +1,6 @@
 import { useLocation } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
+import BrandLogo from "@/components/BrandLogo";
 
 interface AuthLayoutProps {
   title: string;
@@ -20,8 +21,7 @@ export default function AuthLayout({ title, subtitle, children, mode }: AuthLayo
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_42%_38%,rgba(232,80,2,0.2),transparent_34%)]" />
         <div className="relative z-10 max-w-[520px]">
           <div className="flex items-baseline gap-3">
-            <span className="text-3xl font-semibold leading-none text-frame-white">Cena</span>
-            <span className="font-frame-mono text-[0.72rem] uppercase tracking-[0.22em] text-frame-orange">Studio</span>
+            <BrandLogo tone="onDark" className="text-3xl font-semibold" />
           </div>
           <h1 className="mt-10 max-w-[480px] font-frame-body text-[clamp(3.2rem,5vw,5.7rem)] font-light leading-[0.94] tracking-normal text-frame-white">
             {t("app.auth.studioReadyTitle")}

@@ -1,4 +1,6 @@
 import { SITE_CONFIG } from "@shared/site";
+import { parseHexColor } from "@shared/color";
+import { slugify } from "@shared/slug";
 
 const stripInlineMarkdown = (value: string) =>
   value
@@ -46,7 +48,7 @@ export function formatGeneratedDocumentText(raw: string, title: string) {
   }).format(new Date());
   const body = cleanGeneratedText(raw);
 
-  return ["CENA STUDIO", title.toUpperCase(), `Gerado em ${date}`, "", body].filter(Boolean).join("\n");
+  return [SITE_CONFIG.brandName.toUpperCase(), title.toUpperCase(), `Gerado em ${date}`, "", body].filter(Boolean).join("\n");
 }
 
 type DocumentBlock = { type: "heading" | "bullet" | "paragraph" | "space"; text: string };
@@ -73,6 +75,11 @@ function safeFilename(value: string) {
     .replace(/^-|-$/g, "") || "documento";
 }
 
+/** Convert #RRGGBB to "RRGGBB" (no `#`) for docx which expects hex-without-hash. */
+function hexNoHash(hex: string): string {
+  return hex.replace(/^#/, "").toUpperCase();
+}
+
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
@@ -96,11 +103,12 @@ export async function downloadGeneratedDocx(raw: string, title: string) {
   } = await import("docx");
 
   const date = new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(new Date());
+  const brandColorHex = hexNoHash(SITE_CONFIG.primaryColor);
   const children = [
     new Paragraph({
-      children: [new TextRun({ text: "CENA STUDIO", bold: true, color: "FF4D00", size: 20, characterSpacing: 80 })],
+      children: [new TextRun({ text: SITE_CONFIG.brandName.toUpperCase(), bold: true, color: brandColorHex, size: 20, characterSpacing: 80 })],
       spacing: { after: 260 },
-      border: { bottom: { color: "FF4D00", style: BorderStyle.SINGLE, size: 10, space: 10 } },
+      border: { bottom: { color: brandColorHex, style: BorderStyle.SINGLE, size: 10, space: 10 } },
     }),
     new Paragraph({
       text: title,
@@ -143,7 +151,7 @@ export async function downloadGeneratedDocx(raw: string, title: string) {
           children: [new Paragraph({
             alignment: AlignmentType.RIGHT,
             children: [
-              new TextRun({ text: `${SITE_CONFIG.title}  ·  `, color: "777777", size: 16 }),
+              new TextRun({ text: `${SITE_CONFIG.brandName}  ·  `, color: "777777", size: 16 }),
               new TextRun({ children: [PageNumber.CURRENT], color: "777777", size: 16 }),
             ],
           })],
@@ -152,7 +160,7 @@ export async function downloadGeneratedDocx(raw: string, title: string) {
     }],
   });
 
-  downloadBlob(await Packer.toBlob(doc), `${SITE_CONFIG.title.toLowerCase().replace(/\s+/g, "-")}-${safeFilename(title)}.docx`);
+  downloadBlob(await Packer.toBlob(doc), `${slugify(SITE_CONFIG.brandName)}-${safeFilename(title)}.docx`);
 }
 
 export async function downloadGeneratedPdf(raw: string, title: string) {
@@ -170,12 +178,13 @@ export async function downloadGeneratedPdf(raw: string, title: string) {
     y = 22;
   };
 
-  pdf.setTextColor(255, 77, 0);
+  const [brandR, brandG, brandB] = parseHexColor(SITE_CONFIG.primaryColor) ?? [232, 80, 2];
+  pdf.setTextColor(brandR, brandG, brandB);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(9);
-  pdf.text(SITE_CONFIG.title.toUpperCase(), margin, y);
+  pdf.text(SITE_CONFIG.brandName.toUpperCase(), margin, y);
   y += 5;
-  pdf.setDrawColor(255, 77, 0);
+  pdf.setDrawColor(brandR, brandG, brandB);
   pdf.setLineWidth(0.6);
   pdf.line(margin, y, pageWidth - margin, y);
   y += 13;
@@ -217,8 +226,8 @@ export async function downloadGeneratedPdf(raw: string, title: string) {
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(8);
     pdf.setTextColor(125, 125, 125);
-    pdf.text(`${SITE_CONFIG.title}  ·  ${page}/${totalPages}`, pageWidth - margin, pageHeight - 10, { align: "right" });
+    pdf.text(`${SITE_CONFIG.brandName}  ·  ${page}/${totalPages}`, pageWidth - margin, pageHeight - 10, { align: "right" });
   }
 
-  pdf.save(`${SITE_CONFIG.title.toLowerCase().replace(/\s+/g, "-")}-${safeFilename(title)}.pdf`);
+  pdf.save(`${slugify(SITE_CONFIG.brandName)}-${safeFilename(title)}.pdf`);
 }

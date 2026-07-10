@@ -14,6 +14,8 @@ import { SkeletonChart } from "@/components/commercial/SkeletonChart";
 import { SkeletonTable } from "@/components/commercial/SkeletonTable";
 import { motion, type Variants } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { SITE_CONFIG } from "@shared/site";
+import { hexToRgba } from "@shared/color";
 
 
 interface CommercialStats {
@@ -355,7 +357,8 @@ export default function CommercialOverview() {
 
   function exportToDetailedCSV(data: any) {
     // Generate a beautiful dark-theme PDF report via print
-    const color = "#e85002";
+    const color = SITE_CONFIG.primaryColor;
+    const brandFadeRgba = hexToRgba(color, 0.06);
     const formattedDate = new Date().toLocaleDateString(locale === "en" ? "en-US" : "pt-BR", { day: "2-digit", month: "long", year: "numeric" });
     const stageLabels: Record<string, string> = { prospect: t("app.commercial.stageProspect"), qualified: t("app.commercial.stageQualified"), proposal: t("app.commercial.stageProposal"), negotiation: t("app.commercial.stageNegotiation"), won: t("app.commercial.stageWon"), lost: t("app.commercial.stageLost") };
 
@@ -374,7 +377,7 @@ export default function CommercialOverview() {
 html,body{margin:0;min-height:100%;background:#0d0d0d;color:#e8e8e8;font-family:Arial,sans-serif}
 body{background:radial-gradient(circle at 88% 5%,${color}2e,transparent 34%),linear-gradient(135deg,#15100d 0%,#0d0d0d 42%,#050505 100%)}
 .page{width:210mm;min-height:297mm;margin:0 auto;padding:18mm;position:relative}
-.page:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(232,80,2,.06),transparent 32%);pointer-events:none}
+.page:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,${brandFadeRgba},transparent 32%);pointer-events:none}
 .page>*{position:relative;z-index:1}
 .header{display:flex;justify-content:space-between;padding-bottom:24px;border-bottom:3px solid ${color}}
 .brand{font-size:30px;font-weight:900;letter-spacing:.06em;color:#fff}.brand span{color:${color}}
@@ -409,7 +412,7 @@ td{padding:10px 12px;border-top:1px solid #252525;color:#ddd;font-size:12px}
 <div class="divider"></div>
 <section class="section"><div class="section-title">${t("app.commercial.chartRevenue")}</div>
 <table><thead><tr><th>${t("app.commercial.exportDocMonth")}</th><th>${t("app.commercial.exportDocRevenue")}</th></tr></thead><tbody>${revenueRows}</tbody></table></section>
-<footer class="footer"><span>Cena Studio · cenastudio.com.br</span><span>${formattedDate}</span></footer>
+<footer class="footer"><span>${SITE_CONFIG.brandName} · ${SITE_CONFIG.domain}</span><span>${formattedDate}</span></footer>
 </main></body></html>`;
 
     // Open print dialog (save as PDF)
@@ -834,7 +837,7 @@ td{padding:10px 12px;border-top:1px solid #252525;color:#ddd;font-size:12px}
                       { key: 'prospect',    label: t('app.commercial.stageProspect'),  step: '01', color: '#6366f1' },
                       { key: 'qualified',   label: t('app.commercial.stageQualified'), step: '02', color: '#8b5cf6' },
                       { key: 'proposal',    label: t('app.commercial.stageProposal'),    step: '03', color: '#a855f7' },
-                      { key: 'negotiation', label: t('app.commercial.stageNegotiation'),  step: '04', color: '#e85002' },
+                      { key: 'negotiation', label: t('app.commercial.stageNegotiation'),  step: '04', color: SITE_CONFIG.primaryColor },
                       { key: 'won',         label: t('app.commercial.stageWon'),       step: '05', color: '#22c55e' },
                     ];
                     const firstStage = funnelData.find(f => f.stage === 'prospect');

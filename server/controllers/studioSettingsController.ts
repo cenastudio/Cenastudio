@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 import { db } from "../models/db.js";
 import { prisma, shouldUsePrisma } from "../models/prisma.js";
+import { SITE_CONFIG } from "@shared/site";
 
 interface StudioSettingsRow {
   studio_name: string;
@@ -12,10 +13,11 @@ interface StudioSettingsRow {
   website: string | null;
   signature: string | null;
   primary_color: string | null;
+  logo_url: string | null;
 }
 
 const DEFAULT_SETTINGS = {
-  studioName: "Cena Studio",
+  studioName: SITE_CONFIG.brandName,
   legalName: "",
   document: "",
   email: "",
@@ -23,7 +25,8 @@ const DEFAULT_SETTINGS = {
   city: "",
   website: "",
   signature: "Responsavel comercial",
-  primaryColor: "#ff4d1d",
+  primaryColor: SITE_CONFIG.primaryColor,
+  logoUrl: null as string | null,
 };
 
 function toClient(row?: StudioSettingsRow | null) {
@@ -38,6 +41,7 @@ function toClient(row?: StudioSettingsRow | null) {
     website: row.website || "",
     signature: row.signature || DEFAULT_SETTINGS.signature,
     primaryColor: row.primary_color || DEFAULT_SETTINGS.primaryColor,
+    logoUrl: row.logo_url ?? null,
   };
 }
 
@@ -54,12 +58,13 @@ export const getStudioSettings: RequestHandler = async (req, res, next) => {
         studioName: row.studioName, legalName: row.legalName, document: row.document,
         email: row.email, phone: row.phone, city: row.city, website: row.website,
         signature: row.signature, primaryColor: row.primaryColor,
+        logoUrl: row.logoUrl ?? null,
       } : DEFAULT_SETTINGS });
       return;
     }
     const row = db
       .prepare(
-        `SELECT studio_name, legal_name, document, email, phone, city, website, signature, primary_color
+        `SELECT studio_name, legal_name, document, email, phone, city, website, signature, primary_color, logo_url
          FROM studio_settings WHERE user_id = ?`,
       )
       .get(userId) as StudioSettingsRow | undefined;
@@ -73,6 +78,11 @@ export const getStudioSettings: RequestHandler = async (req, res, next) => {
 export const updateStudioSettings: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
+    const rawLogoUrl = req.body.logoUrl;
+    const logoUrl: string | null =
+      typeof rawLogoUrl === "string" && rawLogoUrl.trim().length > 0 && rawLogoUrl.length < 2000
+        ? rawLogoUrl.trim()
+        : null;
     const settings = {
       studioName: clean(req.body.studioName, DEFAULT_SETTINGS.studioName) || DEFAULT_SETTINGS.studioName,
       legalName: clean(req.body.legalName),
@@ -85,6 +95,7 @@ export const updateStudioSettings: RequestHandler = async (req, res, next) => {
       primaryColor: /^#[0-9a-f]{6}$/i.test(String(req.body.primaryColor || ""))
         ? String(req.body.primaryColor)
         : DEFAULT_SETTINGS.primaryColor,
+      logoUrl,
     };
 
     if (shouldUsePrisma) {
@@ -99,8 +110,8 @@ export const updateStudioSettings: RequestHandler = async (req, res, next) => {
 
     db.prepare(
       `INSERT INTO studio_settings (
-        user_id, studio_name, legal_name, document, email, phone, city, website, signature, primary_color
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        user_id, studio_name, legal_name, document, email, phone, city, website, signature, primary_color, logo_url
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(user_id) DO UPDATE SET
         studio_name = excluded.studio_name,
         legal_name = excluded.legal_name,
@@ -111,6 +122,7 @@ export const updateStudioSettings: RequestHandler = async (req, res, next) => {
         website = excluded.website,
         signature = excluded.signature,
         primary_color = excluded.primary_color,
+        logo_url = excluded.logo_url,
         updated_at = datetime('now')`,
     ).run(
       userId,
@@ -123,6 +135,7 @@ export const updateStudioSettings: RequestHandler = async (req, res, next) => {
       settings.website,
       settings.signature,
       settings.primaryColor,
+      settings.logoUrl,
     );
 
     res.json({ success: true, data: settings });
