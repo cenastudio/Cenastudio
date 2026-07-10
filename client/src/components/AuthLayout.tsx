@@ -18,7 +18,7 @@ export default function AuthLayout({ title, subtitle, children, mode }: AuthLayo
     <div className="cena-auth cinematic-theme dark min-h-screen flex flex-col lg:flex-row text-frame-white">
       <div className="relative hidden overflow-hidden lg:flex lg:w-[52%] items-center p-14 xl:p-20">
         <div className="landing-glow-orbit -left-36 top-12" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_42%_38%,rgba(232,80,2,0.2),transparent_34%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_42%_38%,rgba(var(--ds-orange-rgb),0.2),transparent_34%)]" />
         <div className="relative z-10 max-w-[520px]">
           <div className="flex items-baseline gap-3">
             <BrandLogo tone="onDark" className="text-3xl font-semibold" />

@@ -75,7 +75,7 @@ export function ForcePasswordReset() {
           background: "linear-gradient(160deg, rgba(20,16,12,0.96) 0%, rgba(10,8,6,0.98) 100%)",
           border: "1px solid rgba(255,107,0,0.35)",
           borderRadius: "16px",
-          boxShadow: "0 32px 100px rgba(0,0,0,0.7), 0 0 60px rgba(232,80,2,0.08)",
+          boxShadow: "0 32px 100px rgba(0,0,0,0.7), 0 0 60px rgba(var(--ds-orange-rgb),0.08)",
           padding: "2.5rem",
         }}
       >
@@ -92,7 +92,7 @@ export function ForcePasswordReset() {
           </div>
           <div
             className="text-xs font-frame-mono text-frame-orange py-1.5 px-3 border border-frame-orange/20 rounded"
-            style={{ background: "rgba(232,80,2,0.06)" }}
+            style={{ background: "rgba(var(--ds-orange-rgb),0.06)" }}
           >
             {t("app.forceReset.loggedAs").replace("{name}", user.name || user.email)}
           </div>

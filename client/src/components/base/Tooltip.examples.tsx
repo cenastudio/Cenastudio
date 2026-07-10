@@ -144,7 +144,7 @@ export function TooltipExamples() {
         </div>
       </section>
 
-      <section style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(232, 80, 2, 0.1)', borderRadius: '8px' }}>
+      <section style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(var(--ds-orange-rgb), 0.1)', borderRadius: '8px' }}>
         <h3>Accessibility Notes</h3>
         <ul style={{ marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
           <li>Tooltips show on both hover and keyboard focus</li>

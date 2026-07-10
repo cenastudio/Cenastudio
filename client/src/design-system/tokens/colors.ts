@@ -86,10 +86,10 @@ export const colors = {
 
   // Opacity Variations (for overlays, backgrounds)
   opacity: {
-    orange5: 'rgba(232, 80, 2, 0.05)',
-    orange10: 'rgba(232, 80, 2, 0.10)',
-    orange20: 'rgba(232, 80, 2, 0.20)',
-    orange30: 'rgba(232, 80, 2, 0.30)',
+    orange5: 'rgba(var(--ds-orange-rgb), 0.05)',
+    orange10: 'rgba(var(--ds-orange-rgb), 0.10)',
+    orange20: 'rgba(var(--ds-orange-rgb), 0.20)',
+    orange30: 'rgba(var(--ds-orange-rgb), 0.30)',
     black50: 'rgba(10, 10, 10, 0.50)',
     black80: 'rgba(10, 10, 10, 0.80)',
     white10: 'rgba(249, 249, 249, 0.10)',

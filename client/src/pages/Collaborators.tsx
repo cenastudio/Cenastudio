@@ -305,7 +305,7 @@ function CollaboratorsContent() {
 
       <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-6 py-10 space-y-8">
         <section className="relative overflow-hidden border border-frame-gray-3 bg-frame-gray-1/35 p-6 md:p-8">
-          <div className="absolute right-0 top-0 h-full w-1/2 bg-[radial-gradient(circle_at_top_right,rgba(232,80,2,0.14),transparent_52%)] pointer-events-none" />
+          <div className="absolute right-0 top-0 h-full w-1/2 bg-[radial-gradient(circle_at_top_right,rgba(var(--ds-orange-rgb),0.14),transparent_52%)] pointer-events-none" />
           <div className="relative grid gap-7 lg:grid-cols-[1fr_420px] lg:items-end">
             <div>
               <p className="frame-label mb-3">// {t("app.collaborators.teamOps") as string}</p>

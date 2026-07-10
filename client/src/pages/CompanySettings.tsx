@@ -352,7 +352,7 @@ function CompanySettingsContent() {
             {/* Save bar */}
             <div className="sticky bottom-4 z-10">
               <div className="liquid-glass p-4 flex items-center justify-between gap-4 shadow-2xl border-frame-orange/20"
-                style={{ borderColor: isDirty ? "rgba(232,80,2,0.4)" : undefined }}>
+                style={{ borderColor: isDirty ? "rgba(var(--ds-orange-rgb),0.4)" : undefined }}>
                 <div className="flex items-center gap-2">
                   {isDirty ? (
                     <span className="text-[0.6rem] font-mono uppercase tracking-wider text-frame-orange">{t("app.company.unsavedChanges")}</span>

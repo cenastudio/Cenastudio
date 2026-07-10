@@ -382,7 +382,7 @@ export default function SharedReview() {
             </span>
           </div>
 
-          <div className="border border-frame-gray-3 bg-[radial-gradient(circle_at_50%_38%,rgba(232,80,2,0.11),rgba(16,13,12,0.96)_50%,#050505_100%)] p-2 sm:p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
+          <div className="border border-frame-gray-3 bg-[radial-gradient(circle_at_50%_38%,rgba(var(--ds-orange-rgb),0.11),rgba(16,13,12,0.96)_50%,#050505_100%)] p-2 sm:p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
             <VideoPlayer
               url={resolveVideoUrl(review)}
               onProgress={handlePlayerProgress}

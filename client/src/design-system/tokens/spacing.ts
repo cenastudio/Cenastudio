@@ -107,8 +107,8 @@ export const shadows = {
   inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)',
 
   // Custom Frame Shadows
-  glow: '0 0 20px rgba(232, 80, 2, 0.3)',
-  glowLarge: '0 0 40px rgba(232, 80, 2, 0.4)',
+  glow: '0 0 20px rgba(var(--ds-orange-rgb), 0.3)',
+  glowLarge: '0 0 40px rgba(var(--ds-orange-rgb), 0.4)',
   card: '0 4px 16px rgba(0, 0, 0, 0.2)',
   modal: '0 20px 60px rgba(0, 0, 0, 0.5)',
 } as const;

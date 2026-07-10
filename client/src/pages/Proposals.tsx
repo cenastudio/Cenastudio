@@ -201,7 +201,7 @@ function buildProposalHtml(form: ProposalForm, lines: ProposalLine[], studio: St
     html,body{margin:0;min-height:100%;background:#0d0d0d;color:#e8e8e8;font-family:Arial,sans-serif}
     body{background:radial-gradient(circle at 88% 5%,${studio.primaryColor}2e,transparent 34%),linear-gradient(135deg,#15100d 0%,#0d0d0d 42%,#050505 100%)}
     .page{width:210mm;min-height:297mm;margin:0 auto;padding:18mm;background:radial-gradient(circle at 92% 4%,${studio.primaryColor}30,transparent 33%),linear-gradient(180deg,#111 0%,#0d0d0d 100%);position:relative;overflow:visible}
-    .page:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(232,80,2,.08),transparent 32%),radial-gradient(circle at 10% 92%,rgba(217,195,171,.08),transparent 32%);pointer-events:none}
+    .page:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,${studio.primaryColor}14,transparent 32%),radial-gradient(circle at 10% 92%,rgba(217,195,171,.08),transparent 32%);pointer-events:none}
     .page>*{position:relative;z-index:1}.header{display:flex;justify-content:space-between;gap:32px;padding-bottom:28px;border-bottom:3px solid ${studio.primaryColor}}
     .brand{font-size:34px;font-weight:900;letter-spacing:.06em;color:#fff}.brand span{color:${studio.primaryColor}}.sub{font-size:11px;color:${studio.primaryColor};font-weight:900;letter-spacing:.18em;text-transform:uppercase;margin-top:5px}
     .doc{text-align:right}.doc small{display:block;color:#777;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.doc strong{display:block;color:${studio.primaryColor};font-size:28px;margin-top:4px}

@@ -694,9 +694,9 @@ function VideoReviewsContent({ embedded }: { embedded?: boolean }) {
             </aside>
 
             <section className="relative overflow-hidden bg-frame-black min-h-[420px] xl:min-h-0 flex flex-col"
-              style={{ background: "radial-gradient(circle at 50% 38%, rgba(232,80,2,0.12), var(--color-frame-black, #050505) 46%)" }}
+              style={{ background: "radial-gradient(circle at 50% 38%, rgba(var(--ds-orange-rgb),0.12), var(--color-frame-black, #050505) 46%)" }}
             >
-              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.025),transparent_38%,rgba(232,80,2,0.035))]" />
+              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.025),transparent_38%,rgba(var(--ds-orange-rgb),0.035))]" />
               <div className="relative border-b border-frame-gray-3 px-4 py-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                 <div className="min-w-0">
                   {isEditingReview && selectedReview ? (
@@ -776,8 +776,8 @@ function VideoReviewsContent({ embedded }: { embedded?: boolean }) {
                 ) : (
                   <div className="text-center max-w-md rounded-xl p-10 space-y-4"
                     style={{
-                      background: "linear-gradient(135deg, rgba(232,80,2,0.22) 0%, rgba(232,80,2,0.10) 100%)",
-                      border: "1px dashed rgba(232, 80, 2, 0.55)",
+                      background: "linear-gradient(135deg, rgba(var(--ds-orange-rgb),0.22) 0%, rgba(var(--ds-orange-rgb),0.10) 100%)",
+                      border: "1px dashed rgba(var(--ds-orange-rgb), 0.55)",
                       backdropFilter: "blur(20px)",
                     }}
                   >
