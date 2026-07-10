@@ -1,0 +1,24 @@
+# Nixpacks configuration for Railway deployment
+# Production uses ONLY Postgres via Prisma (no SQLite, no better-sqlite3)
+
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+# Install all dependencies (npm ci handles devDependencies correctly)
+cmds = ["npm ci --legacy-peer-deps"]
+
+[phases.build]
+# Generate Prisma client and build the app
+cmds = [
+  "npx prisma generate",
+  "npm run build:client",
+  "npm run build:server"
+]
+
+[phases.prune]
+# Remove devDependencies after build to save space
+cmds = ["npm prune --production"]
+
+[start]
+cmd = "npm run start:prod"
