@@ -39,30 +39,30 @@
      ======================================== */
   --plan-border-subtle: rgba(249, 249, 249, 0.08);
   --plan-border-default: rgba(249, 249, 249, 0.12);
-  --plan-border-strong: rgba(232, 80, 2, 0.45);
+  --plan-border-strong: rgba(var(--ds-orange-rgb), 0.45);
 
   /* ========================================
      Shadow Tokens
      Enhanced shadows: card (8px blur), hover (16px blur with orange tint), elevated (24px blur)
      ======================================== */
   --plan-shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
-  --plan-shadow-hover: 0 16px 48px rgba(232, 80, 2, 0.15);
+  --plan-shadow-hover: 0 16px 48px rgba(var(--ds-orange-rgb), 0.15);
   --plan-shadow-elevated: 0 24px 64px rgba(0, 0, 0, 0.42);
 
   /* ========================================
      Glow Effects
      Glow effects for cards and buttons with orange
      ======================================== */
-  --plan-glow-card: 0 0 0 1px rgba(232, 80, 2, 0.2), 0 0 24px rgba(232, 80, 2, 0.1);
-  --plan-glow-button: 0 0 32px rgba(232, 80, 2, 0.3);
+  --plan-glow-card: 0 0 0 1px rgba(var(--ds-orange-rgb), 0.2), 0 0 24px rgba(var(--ds-orange-rgb), 0.1);
+  --plan-glow-button: 0 0 32px rgba(var(--ds-orange-rgb), 0.3);
 
   /* ========================================
      State Tokens
      Enhanced hover/active states
      ======================================== */
-  --plan-state-hover: rgba(232, 80, 2, 0.08);
-  --plan-state-active: rgba(232, 80, 2, 0.14);
-  --plan-state-focus: rgba(232, 80, 2, 0.24);
+  --plan-state-hover: rgba(var(--ds-orange-rgb), 0.08);
+  --plan-state-active: rgba(var(--ds-orange-rgb), 0.14);
+  --plan-state-focus: rgba(var(--ds-orange-rgb), 0.24);
 
   /* ========================================
      Typography Scale
@@ -105,7 +105,7 @@
   /* Navigation */
   --plan-nav-bg: var(--plan-surface-base);
   --plan-nav-item-hover: var(--plan-state-hover);
-  --plan-nav-item-active: rgba(232, 80, 2, 0.14);
+  --plan-nav-item-active: rgba(var(--ds-orange-rgb), 0.14);
   --plan-nav-item-active-glow: var(--plan-glow-card);
   --plan-nav-accent: var(--plan-accent-primary);
 
@@ -114,14 +114,14 @@
   --plan-input-bg: var(--plan-surface-elevated);
   --plan-input-border: var(--plan-border-default);
   --plan-input-focus-border: var(--plan-accent-primary);
-  --plan-input-focus-glow: 0 0 8px rgba(232, 80, 2, 0.25);
+  --plan-input-focus-glow: 0 0 8px rgba(var(--ds-orange-rgb), 0.25);
   --plan-input-text: var(--plan-text-primary);
-  --plan-shadow-input-focus: 0 0 0 3px rgba(232, 80, 2, 0.15), 0 0 12px rgba(232, 80, 2, 0.2);
+  --plan-shadow-input-focus: 0 0 0 3px rgba(var(--ds-orange-rgb), 0.15), 0 0 12px rgba(var(--ds-orange-rgb), 0.2);
   --plan-border-input: var(--plan-border-default);
 
   /* Buttons */
   --plan-shadow-button-rest: 0 2px 4px rgba(0, 0, 0, 0.12);
-  --plan-shadow-button-hover: 0 4px 12px rgba(232, 80, 2, 0.2);
+  --plan-shadow-button-hover: 0 4px 12px rgba(var(--ds-orange-rgb), 0.2);
 
   /* Modals */
   --plan-modal-backdrop: rgba(0, 0, 0, 0.75);

@@ -7,6 +7,7 @@
 
 import React from 'react';
 import { QuickActionButton } from './QuickActionButton';
+import { SITE_CONFIG } from '@shared/site';
 
 // Mock icons for examples (in real usage, import from lucide-react or other icon library)
 const PlayIcon = () => (
@@ -57,7 +58,7 @@ export const QuickActionButtonExamples: React.FC = () => {
           QuickActionButton Component Examples
         </h1>
         <p className="text-[var(--text-secondary)] mb-8">
-          Foundation component for the Cena Studio rebrand with Liquid Glass aesthetic
+          Foundation component for the {SITE_CONFIG.brandName} rebrand with Liquid Glass aesthetic
         </p>
       </div>
 
