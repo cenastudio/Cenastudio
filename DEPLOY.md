@@ -1,15 +1,24 @@
 # Deploy — Cena Studio
 
-Guia único para levar o Cena Studio ao ar. Consolida Vercel (recomendado) e Railway como alternativa self-hosted.
+Guia único para levar o Cena Studio ao ar. Consolida Railway (**atual em
+produção**), Vercel e VPS como alternativas.
+
+> **Estado atual da produção (09-jul-2026):** o app está hospedado no
+> **Railway** (project `cena-studio-prod`, environment `production`) com
+> **Railway Postgres** como banco de dados (service `Postgres`, host
+> interno `postgres.railway.internal:5432`). As seções sobre Supabase
+> Postgres abaixo permanecem válidas como alternativa se você quiser
+> migrar o banco, mas **hoje não são o caminho ativo**. Supabase é usado
+> apenas opcionalmente para social auth / storage — não como DB primário.
 
 ## Sumário
 
 - [Pré-requisitos](#pré-requisitos)
 - [Variáveis de ambiente](#variáveis-de-ambiente)
-- [Deploy na Vercel (recomendado)](#deploy-na-vercel-recomendado)
-- [Deploy no Railway](#deploy-no-railway)
+- [Deploy no Railway (atual)](#deploy-no-railway)
+- [Deploy na Vercel (alternativa)](#deploy-na-vercel-recomendado)
 - [Self-hosted (VPS + PM2 + Nginx)](#self-hosted-vps--pm2--nginx)
-- [Banco de dados (Supabase Postgres)](#banco-de-dados-supabase-postgres)
+- [Banco de dados — Railway Postgres (atual) e Supabase Postgres (alternativa)](#banco-de-dados-supabase-postgres)
 - [Stripe (webhook)](#stripe-webhook)
 - [Smoke tests pós-deploy](#smoke-tests-pós-deploy)
 - [Rollback](#rollback)
@@ -21,7 +30,9 @@ Guia único para levar o Cena Studio ao ar. Consolida Vercel (recomendado) e Rai
 
 - Node.js **20.19+** (ver `.nvmrc`)
 - npm **10+**
-- Conta Supabase com projeto Postgres provisionado
+- **Conta Railway com Postgres service provisionado** (recomendado
+  hoje). Alternativa: conta Supabase com projeto Postgres (ver seção
+  final).
 - Conta Stripe (produção ou teste)
 - Provedor de IA configurado (OpenRouter, Anthropic ou NVIDIA)
 - Cloudinary (opcional, para uploads)
@@ -45,13 +56,23 @@ ADMIN_EMAILS=admin@seudominio.com
 ADMIN_DEFAULT_PASSWORD=<mínimo 12 chars>
 DEMO_USER_PASSWORD=<mínimo 12 chars>
 
-# Database (Supabase Postgres)
-DATABASE_URL=postgresql://postgres.<project-ref>:<db-password>@aws-1-us-east-1.pooler.supabase.com:5432/postgres?pgbouncer=true&connection_limit=1
-SUPABASE_URL=https://<project-ref>.supabase.co
-SUPABASE_ANON_KEY=<anon key>
-SUPABASE_SERVICE_ROLE_KEY=<service role key>
-VITE_SUPABASE_URL=https://<project-ref>.supabase.co
-VITE_SUPABASE_ANON_KEY=<anon key>
+# Database (Railway Postgres — atual em produção)
+# No Railway com Postgres service vinculado, o valor abaixo é
+# interpolado automaticamente pelo próprio Railway ao fazer deploy:
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+# (equivale a algo como: postgresql://postgres:<pass>@postgres.railway.internal:5432/railway)
+
+# Supabase é OPCIONAL — usado apenas para social auth ou storage
+# de assets (não como DB primário). Deixe vazio se não vai usar.
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+
+# Alternativa (fora de uso hoje): Supabase Postgres como DB primário.
+# Se um dia migrar, o DATABASE_URL seria assim:
+# DATABASE_URL=postgresql://postgres.<project-ref>:<db-password>@aws-1-us-east-1.pooler.supabase.com:5432/postgres?pgbouncer=true&connection_limit=1
 
 # AI
 AI_PROVIDER=openrouter
@@ -101,7 +122,10 @@ npm run validate:env
 - Output Directory: `dist/public`
 - Install Command: `npm install`
 
-### 2. Banco (integração Supabase)
+### 2. Banco (integração Supabase — alternativa à Railway Postgres)
+
+> Este bloco é para o cenário Vercel + Supabase. **Se estiver no Railway
+> hoje, ignorar** — Railway auto-injeta `${{Postgres.DATABASE_URL}}`.
 
 Storage → Create Database → Supabase → conecta ao projeto. A integração cria `POSTGRES_PRISMA_URL` automaticamente. Prisma aceita `DATABASE_URL`, `POSTGRES_PRISMA_URL` ou `POSTGRES_URL`.
 
@@ -220,9 +244,34 @@ sudo certbot --nginx -d seu-dominio.com
 
 ---
 
-## Banco de dados (Supabase Postgres)
+## Banco de dados
 
-### Aplicar migrations
+### Setup atual: Railway Postgres
+
+O banco em produção é um Postgres provisionado no Railway (service
+`Postgres` no mesmo project da app). Comunicação service-to-service via
+`postgres.railway.internal:5432`, database `railway`. A env `DATABASE_URL`
+é interpolada pelo Railway como `${{Postgres.DATABASE_URL}}` — não
+precisa colar valores literais no dashboard.
+
+**Aplicar migrations em produção:** feito automaticamente no deploy
+via `npx prisma migrate deploy` (verifique se está no `postinstall` ou
+`start` do `package.json`; senão adicione manualmente ao pipeline).
+
+**Aplicar migrations manualmente (localmente contra Railway):**
+
+```bash
+# Use DATABASE_URL do proxy público do Railway (não o interno)
+# Copiar da dashboard: Postgres → Data → "Public Connection String"
+export DATABASE_URL="postgresql://postgres:<pass>@hayabusa.proxy.rlwy.net:<porta>/railway"
+npx prisma migrate deploy
+npx prisma validate
+npx prisma generate
+```
+
+### Alternativa (fora de uso hoje): Supabase Postgres
+
+Se um dia quiser migrar de Railway pra Supabase, o setup é:
 
 ```bash
 export SUPABASE_DB_PASSWORD="<senha do banco>"
@@ -233,9 +282,14 @@ npx prisma generate
 
 Migrations existentes: `20260630010000_initial_frame_schema.sql`, `20260630011500_enable_rls_policies.sql`.
 
-### RLS
+### RLS (só se estiver em Supabase)
 
-As políticas em `supabase-rls-policies.sql` já foram aplicadas. Não desabilite RLS em produção.
+**Não se aplica ao Railway Postgres atual** — RLS (Row-Level Security)
+é um recurso Postgres nativo mas nas políticas do repo
+(`supabase-rls-policies.sql`) foram desenhadas para o modelo de auth do
+Supabase (`auth.uid()`). Se um dia migrar pra Supabase, aplicar essas
+políticas. Enquanto o DB for Railway Postgres, a segurança de row-level
+é feita na camada da app (server/controllers), não no DB.
 
 ---
 
@@ -294,7 +348,15 @@ pm2 reload cena-studio
 
 ## Backup
 
-**Supabase:** backups diários automáticos no plano. Manual:
+**Railway Postgres (atual):** backups automáticos dependendo do plano
+(verificar em Postgres service → Backups). Manual:
+
+```bash
+# Conectar ao Postgres do Railway via URL pública (não interna) e dumpar:
+pg_dump "postgresql://postgres:<pass>@hayabusa.proxy.rlwy.net:<porta>/railway" > backup.sql
+```
+
+**Alternativa Supabase:** backups diários automáticos no plano. Manual:
 
 ```bash
 supabase db dump -f backup.sql
@@ -312,10 +374,12 @@ tar -czf uploads-$(date +%Y%m%d).tar.gz uploads/
 
 - [ ] `npm run validate:env` passa
 - [ ] `JWT_SECRET` com 32+ caracteres
-- [ ] `DATABASE_URL` aponta pro Supabase pooler
+- [ ] `DATABASE_URL` aponta pro Railway Postgres (interpolação
+  `${{Postgres.DATABASE_URL}}`) — ou pooler Supabase se migrou
 - [ ] `ALLOW_EPHEMERAL_SQLITE` removido em produção
 - [ ] Stripe webhook configurado e `STRIPE_WEBHOOK_SECRET` setado
 - [ ] `/health` e `/ready` respondem 200
 - [ ] Smoke `npm run smoke:prisma` passa
 - [ ] Domínio com HTTPS
-- [ ] RLS ativo no Supabase
+- [ ] RLS ativo (só se estiver em Supabase; no Railway Postgres não se
+  aplica — a app faz segurança row-level na camada de aplicação)

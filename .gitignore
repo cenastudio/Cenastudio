@@ -56,6 +56,9 @@ scripts/create-stripe-products.ts
 scripts/get-stripe-keys.ts
 # One-off debug scripts contêm credenciais hardcoded — não versionar.
 scripts/oneoff/
+# Pasta pessoal do operador: credenciais, notas de segurança, dossiês
+# de deploy real. NUNCA versionar. Nomeada com ponto para ser óbvia.
+.private/
 .vercel
 .env*
 
