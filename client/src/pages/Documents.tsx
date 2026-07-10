@@ -428,7 +428,10 @@ function readSavedDocs(): StudioDocument[] {
   }
 }
 
-function printHtmlDocument(docHtml: string) {
+// `t` é passado como parâmetro porque esta função vive fora do escopo
+// do componente React (não pode chamar `useLanguage()` diretamente).
+// O componente que chama `printHtmlDocument` injeta seu próprio `t`.
+function printHtmlDocument(docHtml: string, t: (key: string) => string) {
   const iframe = document.createElement("iframe");
   iframe.style.position = "fixed";
   iframe.style.right = "0";
@@ -648,7 +651,7 @@ function DocumentsContent() {
   };
 
   const exportPdf = (docHtml = html) => {
-    printHtmlDocument(docHtml);
+    printHtmlDocument(docHtml, t);
   };
 
   const copyText = async () => {

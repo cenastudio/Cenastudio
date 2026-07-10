@@ -357,7 +357,7 @@ function ProfileContent() {
 
   // Studio extended info
   const [legalName, setLegalName] = useState("");
-  const [document, setDocument] = useState(""); // CNPJ/CPF
+  const [taxDocument, setTaxDocument] = useState(""); // CNPJ/CPF
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [website, setWebsite] = useState("");
@@ -694,7 +694,7 @@ function ProfileContent() {
                 </label>
                 <label className="space-y-1.5">
                   <span className="frame-label text-frame-gray-light">{t("app.profile.cnpjCpf")} <span className="text-frame-gray-light/50">{t("app.profile.optional")}</span></span>
-                  <input value={document} onChange={(e) => setDocument(e.target.value)} className="frame-input w-full" placeholder="00.000.000/0001-00" />
+                  <input value={taxDocument} onChange={(e) => setTaxDocument(e.target.value)} className="frame-input w-full" placeholder="00.000.000/0001-00" />
                 </label>
                 <label className="space-y-1.5">
                   <span className="frame-label text-frame-gray-light">{t("app.profile.city")} <span className="text-frame-gray-light/50">{t("app.profile.optional")}</span></span>

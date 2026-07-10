@@ -91,7 +91,7 @@ function Router() {
       <Route path="/company" component={CompanySettings} />
       <Route path="/files" component={Files} />
       <Route path="/files/:projectId" component={Files} />
-      <Route path="/video-reviews/:projectId" component={VideoReviews} />
+      <Route path="/video-reviews/:projectId">{() => <VideoReviews />}</Route>
       <Route path="/review/:token" component={SharedReview} />
       <Route path="/meeting/:token" component={MeetingView} />
       <Route path="/proposal/:token" component={ProposalView} />
@@ -108,7 +108,7 @@ function Router() {
       <Route path="/project/:projectId/studio/:id" component={Studio} />
       <Route path="/project/:projectId/documents" component={Documents} />
       <Route path="/project/:projectId/files" component={Files} />
-      <Route path="/project/:projectId/video-reviews" component={VideoReviews} />
+      <Route path="/project/:projectId/video-reviews">{() => <VideoReviews />}</Route>
       <Route path="/project/:projectId/collaborators" component={Collaborators} />
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/gerenciar" component={AdminUsers} />

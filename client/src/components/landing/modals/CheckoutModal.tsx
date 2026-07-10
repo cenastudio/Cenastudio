@@ -21,6 +21,10 @@ const PLANS = [
     colorBg: "rgba(167,167,167,0.06)",
     colorBorder: "rgba(167,167,167,0.2)",
     description: "Para explorar a plataforma",
+    // No badge — kept explicit so the union type of PLANS includes
+    // `badge?: string | undefined` for all entries (avoids TS2339 when
+    // reading `plan.badge` in the render below).
+    badge: undefined as string | undefined,
     features: [
       "5 clientes",
       "5 gerações IA/mês",
@@ -144,7 +148,6 @@ export function CheckoutModal() {
             <div className="grid grid-cols-3 gap-2 p-1 rounded-lg" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
               {PLANS.map((plan) => {
                 const Icon = plan.icon;
-                const isActive = activePlan === plan.id || (plan.id === "free" && activePlan === "free");
                 const isFree = plan.id === "free";
                 return (
                   <button
