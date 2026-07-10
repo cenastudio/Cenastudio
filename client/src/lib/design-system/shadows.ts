@@ -14,6 +14,7 @@
 
 import { resolvePlanToken, hasGlowEffects, hasDualAccent } from './token-resolver';
 import { SITE_CONFIG } from "@shared/site";
+import { hexToRgba } from "@shared/color";
 
 /**
  * Shadow elevation levels

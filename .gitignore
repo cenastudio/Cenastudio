@@ -54,6 +54,8 @@ CREDENCIAIS_TEMPLATE.md
 CREDENCIAIS_PRODUCAO.md
 scripts/create-stripe-products.ts
 scripts/get-stripe-keys.ts
+# One-off debug scripts contêm credenciais hardcoded — não versionar.
+scripts/oneoff/
 .vercel
 .env*
 
