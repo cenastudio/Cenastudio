@@ -413,6 +413,9 @@ export const api = {
     getReport: () =>
       request<Array<{ projectId: number | null; totalDurationSec: number; totalCost: number }>>("/timesheets/report"),
   },
+  calendar: {
+    projectIcsUrl: (projectId: number) => apiUrl(`/calendar/project/${projectId}.ics`),
+  },
   assets: {
     list: () =>
       request<

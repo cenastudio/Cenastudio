@@ -155,14 +155,21 @@ Frontend
 ### F5 — Google Calendar / Agenda (.ics) (Pro+) [Req 5]
 
 Backend
-- [ ] 5.1 Estender `server/services/icsService.ts` com `buildIcsCalendar(events[])` (multi-evento, reusa `buildIcsEvent`). [Req 5.1, 5.2]
-- [ ] 5.2 `server/controllers/calendarController.ts`: agrega deadline do projeto + reuniões vinculadas; mensagem/404 se sem eventos; `server/routes/calendar.ts` + registrar (`GET /api/calendar/project/:projectId.ics`). [Req 5.1, 5.3]
-- [ ] 5.3 Teste: projeto com deadline + 1 reunião → `.ics` contém 2 VEVENT. [Req 5.2]
+- [x] 5.1 Estendido `server/services/icsService.ts` com `buildIcsCalendar(events[])` (multi-evento, reusa a mesma lógica de VEVENT de `buildIcsEvent` via helper interno `buildVEventLines`). [Req 5.1, 5.2]
+- [x] 5.2 `server/services/calendarService.ts` (agrega deadline do projeto + reuniões vinculadas via `project.clientId` — não há link direto meeting→project no schema) + `server/controllers/calendarController.ts` + `server/routes/calendar.ts` + registrado em `server/router.ts` (`GET /api/calendar/project/:projectId.ics`). [Req 5.1, 5.3]
+- [x] 5.3 Teste: projeto com deadline + 1 reunião → `.ics` contém 2 VEVENT (título "Prazo final" + título da reunião); projeto sem deadline/reunião → 404. [Req 5.2]
+
+**Bugs de paridade dual-DB corrigidos durante este trabalho (pré-existentes, não introduzidos por este spec):**
+`projects.deadline`/`projects.progress` e a tabela `meetings` inteira existiam no
+Prisma mas nunca tinham sido espelhadas no SQLite (`server/models/db.ts`) — o
+teste do F5 expôs isso ao tentar rodar contra SQLite. Corrigido: colunas
+adicionadas em `ensureProjectColumns()`, tabela `meetings` + índices
+adicionados ao `initDatabase()`/`createIndexes()`.
 
 Frontend
-- [ ] 5.4 `api.calendar.projectIcs(projectId)` em `api.ts` (URL de download). [Req 6.4]
-- [ ] 5.5 Botão "Exportar para agenda (.ics)" em `ProjectHub` — rótulo honesto (não "sync"). [Req 5.4]
-- [ ] 5.6 `npm run build` + commit `feat(calendar): project schedule .ics export`.
+- [x] 5.4 `api.calendar.projectIcsUrl(projectId)` em `api.ts` (retorna URL de download, padrão de `api.assets.download`). [Req 6.4]
+- [x] 5.5 Link "Exportar para agenda (.ics)" em `ProjectHub` (meta strip, junto ao prazo) — rótulo honesto via `title` explicando que é download único, não sync. [Req 5.4]
+- [x] 5.6 `npm run build` + `npm run check` + testes verdes (9/9).
 
 ### Fechamento — sincronia landing + validação [Req 7]
 

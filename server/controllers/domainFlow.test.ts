@@ -9,10 +9,14 @@ type MockResponse = {
   body: any;
   redirectedTo?: string;
   downloaded?: { filePath: string; filename?: string };
+  headers: Record<string, string>;
+  sent?: string;
   status: (code: number) => MockResponse;
   json: (body: unknown) => MockResponse;
   redirect: (url: string) => MockResponse;
   download: (filePath: string, filename?: string) => MockResponse;
+  setHeader: (name: string, value: string) => MockResponse;
+  send: (body: string) => MockResponse;
 };
 
 let authService: typeof import("../services/authService.js");
@@ -26,17 +30,22 @@ let budgetController: typeof import("./budgetController.js");
 let equipmentController: typeof import("./equipmentController.js");
 let shotListController: typeof import("./shotListController.js");
 let timesheetController: typeof import("./timesheetController.js");
+let calendarController: typeof import("./calendarController.js");
 let planAccess: typeof import("../middleware/planAccess.js");
+let sqliteDb: typeof import("../models/db.js").db;
 let user: { id: number; email: string; role: "user" };
 
 function response(): MockResponse {
   return {
     statusCode: 200,
     body: undefined,
+    headers: {},
     status(code) { this.statusCode = code; return this; },
     json(body) { this.body = body; return this; },
     redirect(url) { this.redirectedTo = url; return this; },
     download(filePath, filename) { this.downloaded = { filePath, filename }; return this; },
+    setHeader(name, value) { this.headers[name] = value; return this; },
+    send(body) { this.sent = body; return this; },
   };
 }
 
@@ -72,7 +81,9 @@ describe("CRM, files and finance controller flow", () => {
     equipmentController = await import("./equipmentController.js");
     shotListController = await import("./shotListController.js");
     timesheetController = await import("./timesheetController.js");
+    calendarController = await import("./calendarController.js");
     planAccess = await import("../middleware/planAccess.js");
+    sqliteDb = dbModule.db;
     user = await authService.registerUser(`Domain Flow`, `domain-${Date.now()}@example.com`, "password-123");
   });
 
@@ -407,5 +418,58 @@ describe("CRM, files and finance controller flow", () => {
 
     const afterDelete = await invoke(timesheetController.listEntries, { user, query: {} });
     expect(afterDelete.body.data.entries.some((e: any) => e.id === manual.body.data.id)).toBe(false);
+  });
+
+  it("covers project schedule .ics export with deadline + meeting (F5)", async () => {
+    const client = await invoke(clientsController.createClient, {
+      user,
+      body: { name: "Cliente Calendário", email: "calendario@example.com" },
+    });
+    const clientId = client.body.data.id;
+
+    const project = await invoke(projectsController.createProject, {
+      user,
+      body: { name: "Projeto Calendário", metadataJson: "{}" },
+    });
+    const projectId = project.body.data.id;
+
+    // Link the project to the client and set a deadline directly (no dual-path
+    // controller exists for this in the test's forced-SQLite environment).
+    sqliteDb.prepare("UPDATE projects SET client_id = ?, deadline = ? WHERE id = ?").run(
+      clientId,
+      "2026-09-01",
+      projectId,
+    );
+
+    // No events yet (no deadline visible via ownership check path before update lands,
+    // but we already set it above) — insert a meeting for this client directly.
+    sqliteDb
+      .prepare(
+        `INSERT INTO meetings (user_id, client_id, title, location, starts_at, duration_minutes, share_token, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+      )
+      .run(user.id, clientId, "Reunião de briefing", "Escritório", "2026-08-15T14:00:00.000Z", 45, `token-${Date.now()}`);
+
+    const exported = await invoke(calendarController.exportProjectSchedule, {
+      user,
+      params: { projectId: String(projectId) },
+    });
+
+    expect(exported.headers["Content-Type"]).toContain("text/calendar");
+    const veventCount = (exported.sent?.match(/BEGIN:VEVENT/g) ?? []).length;
+    expect(veventCount).toBe(2);
+    expect(exported.sent).toContain("Reunião de briefing");
+    expect(exported.sent).toContain("Prazo final");
+  });
+
+  it("returns 404 when a project has no deadline or meetings to export (F5)", async () => {
+    const project = await invoke(projectsController.createProject, {
+      user,
+      body: { name: "Projeto Sem Agenda", metadataJson: "{}" },
+    });
+
+    await expect(
+      invoke(calendarController.exportProjectSchedule, { user, params: { projectId: String(project.body.data.id) } }),
+    ).rejects.toMatchObject({ status: 404 });
   });
 });

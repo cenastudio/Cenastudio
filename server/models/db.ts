@@ -100,6 +100,12 @@ function ensureProjectColumns() {
   if (!projCols.includes("status")) {
     db.prepare("ALTER TABLE projects ADD COLUMN status TEXT DEFAULT 'active'").run();
   }
+  if (!projCols.includes("deadline")) {
+    db.prepare("ALTER TABLE projects ADD COLUMN deadline TEXT").run();
+  }
+  if (!projCols.includes("progress")) {
+    db.prepare("ALTER TABLE projects ADD COLUMN progress INTEGER DEFAULT 0").run();
+  }
 }
 
 function ensureClientColumns() {
@@ -347,6 +353,9 @@ function createIndexes() {
     "CREATE INDEX IF NOT EXISTS idx_shots_shot_list_id ON shots(shot_list_id)",
     "CREATE INDEX IF NOT EXISTS idx_time_entries_user_id ON time_entries(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_time_entries_project_id ON time_entries(project_id)",
+    "CREATE INDEX IF NOT EXISTS idx_meetings_client_id ON meetings(client_id)",
+    "CREATE INDEX IF NOT EXISTS idx_meetings_user_id ON meetings(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_meetings_starts_at ON meetings(starts_at)",
     "CREATE INDEX IF NOT EXISTS idx_collaborators_user_id ON collaborators(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_project_members_project_id ON project_members(project_id)",
     "CREATE INDEX IF NOT EXISTS idx_project_members_collaborator_id ON project_members(collaborator_id)",
@@ -727,6 +736,24 @@ export async function initDatabase() {
       duration_sec INTEGER DEFAULT 0,
       hourly_rate INTEGER,
       created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS meetings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+      opportunity_id INTEGER REFERENCES opportunities(id) ON DELETE SET NULL,
+      title TEXT NOT NULL,
+      location TEXT,
+      starts_at TEXT NOT NULL,
+      duration_minutes INTEGER DEFAULT 30,
+      notes TEXT,
+      share_token TEXT UNIQUE,
+      email_sent_at TEXT,
+      email_error TEXT,
+      status TEXT DEFAULT 'scheduled',
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
     );
 
     CREATE TABLE IF NOT EXISTS financial_entries (

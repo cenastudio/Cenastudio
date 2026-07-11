@@ -19,6 +19,7 @@ import {
   ExternalLink,
   Plus,
   Building2,
+  CalendarPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
@@ -347,6 +348,18 @@ function ProjectHubContent() {
                     {locale === "en" ? "Deadline" : "Prazo"} {new Date(`${metadata.deadline}T00:00:00`).toLocaleDateString(locale === "en" ? "en-US" : "pt-BR")}
                   </span>
                 )}
+                <a
+                  href={api.calendar.projectIcsUrl(projectId)}
+                  className="flex items-center gap-1.5 text-frame-gray-light hover:text-frame-orange transition"
+                  title={
+                    locale === "en"
+                      ? "Export to calendar (.ics) — one-way download, not a live sync"
+                      : "Exportar para agenda (.ics) — download único, não é sincronização automática"
+                  }
+                >
+                  <CalendarPlus className="w-3 h-3" />
+                  {locale === "en" ? "Export to calendar (.ics)" : "Exportar para agenda (.ics)"}
+                </a>
               </div>
             </div>
 

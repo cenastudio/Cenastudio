@@ -61,17 +61,11 @@ export interface IcsEventInput {
   attendeeName?: string;
 }
 
-/** Builds a single-event .ics file as a UTF-8 string. */
-export function buildIcsEvent(event: IcsEventInput): string {
+/** Builds the raw VEVENT lines (no VCALENDAR wrapper) for a single event. */
+function buildVEventLines(event: IcsEventInput, now: Date): string[] {
   const endsAt = new Date(event.startsAt.getTime() + event.durationMinutes * 60_000);
-  const now = new Date();
 
   const lines: string[] = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    `PRODID:-//${SITE_CONFIG.brandName}//Meetings//PT-BR`,
-    "CALSCALE:GREGORIAN",
-    "METHOD:REQUEST",
     "BEGIN:VEVENT",
     `UID:${event.uid}`,
     `DTSTAMP:${toIcsDate(now)}`,
@@ -95,7 +89,42 @@ export function buildIcsEvent(event: IcsEventInput): string {
     lines.push(`ATTENDEE;${cn}RSVP=TRUE:mailto:${event.attendeeEmail}`);
   }
 
-  lines.push("STATUS:CONFIRMED", "SEQUENCE:0", "END:VEVENT", "END:VCALENDAR");
+  lines.push("STATUS:CONFIRMED", "SEQUENCE:0", "END:VEVENT");
+  return lines;
+}
+
+/** Builds a single-event .ics file as a UTF-8 string. */
+export function buildIcsEvent(event: IcsEventInput): string {
+  const now = new Date();
+  const lines: string[] = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    `PRODID:-//${SITE_CONFIG.brandName}//Meetings//PT-BR`,
+    "CALSCALE:GREGORIAN",
+    "METHOD:REQUEST",
+    ...buildVEventLines(event, now),
+    "END:VCALENDAR",
+  ];
+
+  return lines.map(foldLine).join("\r\n") + "\r\n";
+}
+
+/**
+ * Builds a multi-event .ics calendar (e.g. project deadline + linked
+ * meetings) as a single VCALENDAR with one VEVENT per entry. Reuses the
+ * same VEVENT builder as buildIcsEvent for identical field handling.
+ */
+export function buildIcsCalendar(events: IcsEventInput[]): string {
+  const now = new Date();
+  const lines: string[] = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    `PRODID:-//${SITE_CONFIG.brandName}//Schedule//PT-BR`,
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    ...events.flatMap((event) => buildVEventLines(event, now)),
+    "END:VCALENDAR",
+  ];
 
   return lines.map(foldLine).join("\r\n") + "\r\n";
 }

@@ -79,6 +79,7 @@ import budgetsRoutes from "./routes/budgets.js";
 import equipmentRoutes from "./routes/equipment.js";
 import shotlistsRoutes from "./routes/shotlists.js";
 import timesheetsRoutes from "./routes/timesheets.js";
+import calendarRoutes from "./routes/calendar.js";
 
 const router = Router();
 
@@ -178,5 +179,6 @@ router.use("/budgets", budgetsRoutes);
 router.use("/equipment", equipmentRoutes);
 router.use("/shotlists", shotlistsRoutes);
 router.use("/timesheets", timesheetsRoutes);
+router.use("/calendar", calendarRoutes);
 
 export default router;
