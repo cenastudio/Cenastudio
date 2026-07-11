@@ -1,11 +1,9 @@
 import Footer from "@/components/landing/Footer";
 import Hero from "@/components/landing/Hero";
 import Navigation from "@/components/landing/Navigation";
-import WhatsNewSection from "@/components/landing/WhatsNewSection";
 import PricingSection from "@/components/landing/PricingSection";
 import ToolsSection from "@/components/landing/ToolsSection";
 import ProductProofSection from "@/components/landing/ProductProofSection";
-import ObjectionsSection from "@/components/landing/ObjectionsSection";
 import FAQSection from "@/components/landing/FAQSection";
 import FinalCTASection from "@/components/landing/FinalCTASection";
 import { CheckoutModal } from "@/components/landing/modals/CheckoutModal";
@@ -31,10 +29,8 @@ export default function Landing() {
     <div className="cena-landing min-h-screen overflow-x-hidden bg-frame-black">
       <Navigation />
       <Hero />
-      <WhatsNewSection />
       <ProductProofSection />
       <ToolsSection />
-      <ObjectionsSection />
       <PricingSection />
       <FAQSection />
       <FinalCTASection />

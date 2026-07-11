@@ -41,7 +41,7 @@ export default function FinalCTASection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="frame-title text-[clamp(2.8rem,5.5vw,5rem)] mb-6"
+            className="landing-heading text-[clamp(2.8rem,5.5vw,5rem)] mb-6"
           >
             {isEn ? (
               <>
@@ -69,8 +69,8 @@ export default function FinalCTASection() {
             className="text-frame-gray-light text-lg mb-8 max-w-2xl mx-auto"
           >
             {isEn
-              ? "Join hundreds of filmmakers already delivering projects faster and with higher quality."
-              : "Junte-se a centenas de filmmakers que já estão criando projetos mais rápido e com mais qualidade."}
+              ? "14 days free, full access. See if it fits your workflow before you decide."
+              : "14 dias grátis, com acesso completo. Veja se encaixa no seu fluxo antes de decidir."}
           </motion.p>
 
           {/* Benefits */}
@@ -127,28 +127,6 @@ export default function FinalCTASection() {
             </motion.button>
           </motion.div>
 
-          {/* Social Proof */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.6 }}
-            className="mt-8 text-sm text-frame-gray-light"
-          >
-            {isEn ? (
-              <>
-                <span className="text-frame-orange font-semibold">500+</span> projects created •{" "}
-                <span className="text-frame-orange font-semibold">30+</span> active filmmakers •{" "}
-                <span className="text-frame-orange font-semibold">4.8/5</span> average rating
-              </>
-            ) : (
-              <>
-                <span className="text-frame-orange font-semibold">500+</span> projetos criados •{" "}
-                <span className="text-frame-orange font-semibold">30+</span> filmmakers ativos •{" "}
-                <span className="text-frame-orange font-semibold">4.8/5</span> rating médio
-              </>
-            )}
-          </motion.p>
         </motion.div>
 
         {/* Decorative Elements */}

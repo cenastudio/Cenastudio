@@ -11,48 +11,90 @@ import { useState } from "react";
 
 // EN translations for plan descriptions and features from shared/site.ts (which is PT).
 // Keyed by the original PT string. When locale === 'en', we look up the EN version.
+// IMPORTANT: keep this dictionary's keys in sync with the PT strings in
+// shared/site.ts PRICING — mismatched keys silently fall back to PT text
+// for English users (see translatePlanText below).
 const PLAN_TEXT_EN: Record<string, string> = {
-  // Descriptions
-  "Para freelancers validarem o fluxo com até 5 clientes": "For freelancers validating the workflow with up to 5 clients",
-  "Para profissionais operarem até 15 clientes ativos": "For professionals running up to 15 active clients",
-  "Para produtoras com equipe, 50 clientes e operação compartilhada":
-    "For production companies with a team, 50 clients and shared operations",
-  // ROI
-  "💡 Economize 10h/mês em burocracia": "💡 Save 10h/month on paperwork",
-  "🚀 Ganhe 20% mais capacidade operacional sem contratar": "🚀 Gain 20% more operational capacity without hiring",
   // Periods
   "/mês": "/mo",
   "/mês — mais popular": "/mo — most popular",
-  "/mês — ativação após pagamento": "/mo — activated after payment",
+  "/mês — consulta": "/mo — custom quote",
+  // Descriptions
+  "Teste o Cena por 14 dias com tudo liberado": "Try Cena for 14 days with everything unlocked",
+  "Para freelancers e produtoras pequenas (1-3 pessoas)": "For freelancers and small production companies (1-3 people)",
+  "Para produtoras médias com controle operacional (5-15 pessoas)": "For mid-size production companies with operational control (5-15 people)",
+  "Para produtoras estabelecidas que querem marca própria (15-50 pessoas)": "For established production companies that want their own brand (15-50 people)",
+  "Para redes de produtoras, holdings, agências grandes (50+ pessoas)": "For production networks, holdings, large agencies (50+ people)",
+  // Note
+  "1 projeto ativo após trial": "1 active project after trial",
+  // ROI
+  "💡 Economize 10h/mês em burocracia": "💡 Save 10h/month on paperwork",
+  "🚀 Ganhe 20% mais capacidade operacional sem contratar": "🚀 Gain 20% more operational capacity without hiring",
+  "💎 Posicionamento premium, sem custos de desenvolvimento": "💎 Premium positioning, no development costs",
+  "🏢 Múltiplas marcas, API privada, SLA 99.9%": "🏢 Multiple brands, private API, 99.9% SLA",
   // Features - Free
   "5 gerações com IA/mês": "5 AI generations/month",
   "Acesso inicial às ferramentas": "Starter access to tools",
+  "Templates básicos de projeto": "Basic project templates",
   "Export .txt": ".txt export",
-  "Projetos para teste": "Test projects",
   "CRM básico de clientes": "Basic client CRM",
   "Até 5 clientes cadastrados": "Up to 5 registered clients",
   "Suporte por email": "Email support",
   // Features - Pro
-  "15 clientes": "15 clients",
-  "+ Clientes adicionais": "+ Additional clients",
+  "15 clientes ativos": "15 active clients",
   "100 gerações com IA/mês": "100 AI generations/month",
-  "50 gerações com IA/mês": "50 AI generations/month",
-  "Fluxos principais de produção": "Main production workflows",
-  "Histórico completo": "Full history",
-  "Export PDF e DOCX": "PDF and DOCX export",
+  "Templates profissionais de projeto": "Professional project templates",
+  "Shot list com drag-and-drop": "Drag-and-drop shot list",
+  "Decupagem com IA": "AI shot breakdown",
+  "Timesheet e controle de horas": "Timesheet and time tracking",
   "Review de vídeos com anotações": "Video reviews with annotations",
-  "CRM completo + pipeline": "Full CRM + pipeline",
-  "Até 50 clientes cadastrados": "Up to 50 registered clients",
-  "Suporte prioritário": "Priority support",
+  "Portal do cliente com aprovações": "Client portal with approvals",
+  "CRM completo + pipeline comercial": "Full CRM + sales pipeline",
+  "Export PDF e DOCX": "PDF and DOCX export",
+  "Biblioteca de assets (10GB)": "Asset library (10GB)",
+  "Suporte prioritário (48h)": "Priority support (48h)",
   // Features - Studio
-  "50 clientes": "50 clients",
-  "Tudo do Profissional": "Everything in Pro",
-  "Gerações ilimitadas": "Unlimited generations",
-  "Projetos e pastas": "Projects and folders",
-  "Equipe e colaboradores": "Team and collaborators",
-  "Arquivos e aprovações por projeto": "Files and approvals per project",
-  "Relatórios operacionais": "Operational reports",
-  "Clientes ilimitados após ativação": "Unlimited clients after activation",
+  "50 clientes ativos": "50 active clients",
+  "500 gerações IA/mês": "500 AI generations/month",
+  "Tudo do Pro +": "Everything in Pro +",
+  "Templates customizados ilimitados": "Unlimited custom templates",
+  "Shot list avançado com cenas": "Advanced scene-based shot list",
+  "Equipe e colaboradores (3 usuários)": "Team and collaborators (3 users)",
+  "Webhooks para automação": "Webhooks for automation",
+  "Exportar cronograma para agenda (.ics)": "Export schedule to calendar (.ics)",
+  "Gerenciamento de sessões avançado": "Advanced session management",
+  "Budget Tracking & Control 🔥": "Budget Tracking & Control 🔥",
+  "Equipment Inventory 🔥": "Equipment Inventory 🔥",
+  "Biblioteca de assets (100GB)": "Asset library (100GB)",
+  "Relatórios operacionais completos": "Complete operational reports",
+  "Suporte prioritário (24h)": "Priority support (24h)",
+  // Features - White-Label
+  "Clientes ilimitados": "Unlimited clients",
+  "2.000 gerações IA/mês": "2,000 AI generations/month",
+  "Tudo do Studio +": "Everything in Studio +",
+  "Domínio customizado (seu-site.com)": "Custom domain (your-site.com)",
+  "Logo e cores personalizadas": "Custom logo and colors",
+  "Email personalizado": "Custom email",
+  "Portal 100% white-label": "100% white-label portal",
+  "Remoção de marca Cena Studio": "Cena Studio branding removed",
+  "Equipe e colaboradores (10 usuários)": "Team and collaborators (10 users)",
+  "Biblioteca de assets (500GB)": "Asset library (500GB)",
+  "Onboarding dedicado (2h)": "Dedicated onboarding (2h)",
+  "Suporte prioritário (4h)": "Priority support (4h)",
+  "SLA 99.5%": "99.5% SLA",
+  // Features - Enterprise
+  "Tudo ilimitado": "Everything unlimited",
+  "Gerações IA ilimitadas": "Unlimited AI generations",
+  "Múltiplas marcas white-label": "Multiple white-label brands",
+  "API privada para integrações": "Private API for integrations",
+  "Assets ilimitados (custom storage)": "Unlimited assets (custom storage)",
+  "Usuários ilimitados": "Unlimited users",
+  "Integração Stripe 1% fee": "Stripe integration, 1% fee",
+  "Onboarding dedicado (8h)": "Dedicated onboarding (8h)",
+  "Suporte telefônico 24/7": "24/7 phone support",
+  "SLA 99.9%": "99.9% SLA",
+  "Account manager dedicado": "Dedicated account manager",
+  "Custom features sob demanda": "Custom features on demand",
 };
 
 function translatePlanText(text: string, isEn: boolean): string {

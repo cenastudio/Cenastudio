@@ -160,10 +160,10 @@ export default function ProductProofSection() {
           viewport={{ once: true }}
           className="text-center mb-14"
         >
-          <p className="frame-label mb-3">
+          <p className="landing-eyebrow mb-3">
             {isEn ? "// PRODUCT IN ACTION" : "// PRODUTO EM AÇÃO"}
           </p>
-          <h2 className="frame-title text-[clamp(2.8rem,5.5vw,5rem)] mb-4">
+          <h2 className="landing-heading text-[clamp(2.8rem,5.5vw,5rem)] mb-4">
             {isEn ? (
               <>
                 See <span className="text-frame-orange">{SITE_CONFIG.brandName}</span> in action

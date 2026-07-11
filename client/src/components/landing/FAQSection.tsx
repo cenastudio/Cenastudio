@@ -10,71 +10,71 @@ interface FAQ {
 
 const FAQS_PT: FAQ[] = [
   {
+    question: "Já uso Drive + planilhas, por que mudar?",
+    answer: "Porque cliente, projeto, arquivo e aprovação ficam no mesmo lugar — sem alternar entre 4 ferramentas para achar uma informação. Você pode importar seus dados atuais e continuar de onde parou.",
+  },
+  {
     question: "Preciso de cartão de crédito para começar?",
-    answer: "Não! O plano Iniciante é 100% gratuito e não requer cartão de crédito. Você pode criar projetos, usar ferramentas de IA e explorar a plataforma sem compromisso.",
+    answer: "Não. O plano Free é gratuito e não pede cartão. Você cria projetos, usa as ferramentas de IA e testa a plataforma sem compromisso.",
   },
   {
     question: "Como funciona o trial dos planos pagos?",
-    answer: "Os planos Pro e Studio incluem 7 dias de trial gratuito. Durante o trial, você tem acesso completo a todas as features do plano. Cancele a qualquer momento antes do fim do trial sem cobranças.",
+    answer: "Pro e Studio têm 14 dias de trial gratuito com acesso completo ao plano. Cancele antes do fim do trial e não é cobrado nada.",
   },
   {
-    question: "Posso cancelar meu plano a qualquer momento?",
-    answer: "Sim! Você pode cancelar seu plano a qualquer momento. Não há contratos de longo prazo ou taxas de cancelamento. Seu acesso continua até o fim do período já pago.",
+    question: "E se eu precisar cancelar depois?",
+    answer: "Cancele quando quiser, sem contrato de longo prazo ou taxa de cancelamento. Seus dados continuam exportáveis (PDF, DOCX) mesmo depois do cancelamento.",
   },
   {
-    question: "Quantos projetos posso criar?",
-    answer: "O plano Iniciante permite 3 projetos ativos. Pro permite 15 projetos. Studio tem projetos ilimitados. Você pode arquivar projetos antigos para liberar espaço.",
+    question: "Quantos clientes posso cadastrar?",
+    answer: "Free permite até 5 clientes ativos, Pro até 15, Studio até 50. Você pode arquivar clientes antigos para liberar espaço.",
   },
   {
     question: "As ferramentas de IA têm limite de uso?",
-    answer: "Sim. Cada plano tem um número de gerações de IA por mês: Iniciante (50), Pro (500), Studio (2000). Gerações não utilizadas não acumulam para o próximo mês.",
+    answer: "Sim — cada plano tem um número de gerações de IA por mês: Free (5), Pro (100), Studio (ilimitado). Gerações não usadas não acumulam para o mês seguinte.",
   },
   {
-    question: "Posso convidar colaboradores?",
-    answer: "Sim! No plano Pro você pode ter até 3 colaboradores. No plano Studio, colaboradores são ilimitados. Cada colaborador tem login próprio e permissões configuráveis.",
+    question: "Posso convidar colaboradores ou equipe?",
+    answer: "No plano Studio você pode ter até 5 membros de equipe com login próprio e permissões configuráveis, além de cadastrar equipe externa (freelancers) sem limite.",
   },
   {
     question: "Meus arquivos ficam seguros?",
-    answer: "Absolutamente. Usamos Supabase Storage com criptografia em trânsito e em repouso. Backup automático diário. Você pode deletar seus dados a qualquer momento.",
-  },
-  {
-    question: "Como funciona o suporte?",
-    answer: "Plano Iniciante: FAQ e documentação. Plano Pro: email em até 24h. Plano Studio: email prioritário em até 4h + sessão de onboarding personalizada.",
+    answer: "Sim. Armazenamento com criptografia em trânsito e em repouso, backup automático. Você pode deletar seus dados quando quiser.",
   },
 ];
 
 const FAQS_EN: FAQ[] = [
   {
+    question: "I already use Drive + spreadsheets, why change?",
+    answer: "Because clients, projects, files and approvals live in one place — no switching between 4 tools to find one piece of information. You can import your current data and pick up where you left off.",
+  },
+  {
     question: "Do I need a credit card to start?",
-    answer: "No. The Starter plan is 100% free and does not require a credit card. You can create projects, use AI tools and explore the platform without any commitment.",
+    answer: "No. The Free plan is free and doesn't require a card. You can create projects, use AI tools and explore the platform without any commitment.",
   },
   {
     question: "How does the trial for paid plans work?",
-    answer: "The Pro and Studio plans include a 7-day free trial with full access to every feature. Cancel any time before the trial ends and you won't be charged.",
+    answer: "Pro and Studio include a 14-day free trial with full access to the plan. Cancel before the trial ends and you won't be charged.",
   },
   {
-    question: "Can I cancel my plan at any time?",
-    answer: "Yes. You can cancel any time. There are no long-term contracts or cancellation fees, and you keep access until the end of the period you already paid for.",
+    question: "What if I need to cancel later?",
+    answer: "Cancel any time, no long-term contract or cancellation fee. Your data stays exportable (PDF, DOCX) even after cancelling.",
   },
   {
-    question: "How many projects can I create?",
-    answer: "The Starter plan allows 3 active projects. Pro allows 15 projects. Studio has unlimited projects. You can archive old projects to free up space.",
+    question: "How many clients can I register?",
+    answer: "Free allows up to 5 active clients, Pro up to 15, Studio up to 50. You can archive old clients to free up space.",
   },
   {
     question: "Do AI tools have usage limits?",
-    answer: "Yes. Each plan includes a monthly AI generation quota: Starter (50), Pro (500), Studio (2000). Unused generations do not roll over to the next month.",
+    answer: "Yes — each plan includes a monthly AI generation quota: Free (5), Pro (100), Studio (unlimited). Unused generations don't roll over to the next month.",
   },
   {
-    question: "Can I invite collaborators?",
-    answer: "Yes. The Pro plan supports up to 3 collaborators. The Studio plan has unlimited collaborators. Each collaborator gets their own login and configurable permissions.",
+    question: "Can I invite collaborators or team members?",
+    answer: "The Studio plan supports up to 5 team members with their own login and configurable permissions, plus unlimited external crew (freelancers).",
   },
   {
     question: "Are my files safe?",
-    answer: "Absolutely. We use Supabase Storage with encryption in transit and at rest, plus automatic daily backups. You can delete your data at any time.",
-  },
-  {
-    question: "How does support work?",
-    answer: "Starter plan: FAQ and documentation. Pro plan: email within 24h. Studio plan: priority email within 4h plus a personalized onboarding session.",
+    answer: "Yes. Storage with encryption in transit and at rest, automatic backups. You can delete your data whenever you want.",
   },
 ];
 
@@ -98,10 +98,10 @@ export default function FAQSection() {
           viewport={{ once: true }}
           className="text-center mb-14"
         >
-          <p className="frame-label mb-3">
+          <p className="landing-eyebrow mb-3">
             {isEn ? "// FREQUENTLY ASKED QUESTIONS" : "// PERGUNTAS FREQUENTES"}
           </p>
-          <h2 className="frame-title text-[clamp(2.8rem,5.5vw,5rem)] mb-4">
+          <h2 className="landing-heading text-[clamp(2.8rem,5.5vw,5rem)] mb-4">
             {isEn ? (
               <>
                 Questions? <span className="text-frame-orange">Answered.</span>

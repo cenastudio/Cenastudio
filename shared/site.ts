@@ -211,22 +211,6 @@ export const NAVIGATION = [
   { label: "navigation.contact", href: "#contact" },
 ];
 
-export const HERO = {
-  tag: "Feito por filmmakers, para filmmakers",
-  title: ["DO BRIEFING", "À ENTREGA", "EM UM SÓ LUGAR"],
-  subtitle:
-    "Pare de perder tempo entre WhatsApp, Drive, planilhas e e-mails. Centralize cliente, equipe, arquivos e aprovações em um único lugar — pra você voltar a fazer cinema.",
-  cta: {
-    primary: { label: "Experimentar grátis por 14 dias", href: "/login" },
-    secondary: { label: "Ver produto funcionando", href: "#product-proof" },
-  },
-  stats: [
-    { number: "87+", label: "Produtoras ativas" },
-    { number: "10h", label: "Economizadas/semana" },
-    { number: "4.8★", label: "Avaliação média" },
-  ],
-};
-
 export type PlanTier = "iniciante" | "profissional" | "produtora" | "whitelabel" | "enterprise";
 
 export const PRICING = [
@@ -376,40 +360,4 @@ export const MARQUEE_ITEMS = [
   "ANALYTICS",
 ];
 
-export const FOOTER_LINKS = {
-  tools: {
-    title: "Plataforma",
-    links: [
-      { label: "Produto real", href: "#product-proof" },
-      { label: "Estúdio IA", href: "#tools" },
-      { label: "Arquivos", href: "#tools" },
-      { label: "Review de Vídeo", href: "#tools" },
-    ],
-  },
-  company: {
-    title: "Operação",
-    links: [
-      { label: "Sobre", href: "#about" },
-      { label: "Fluxo", href: "#about" },
-      { label: "Preços", href: "#pricing" },
-      { label: "Contato", href: "#contact" },
-    ],
-  },
-  legal: {
-    title: "Legal",
-    links: [
-      { label: "Termos", href: "#" },
-      { label: "Privacidade", href: "#" },
-      { label: "Cookies", href: "#" },
-    ],
-  },
-  support: {
-    title: "Suporte",
-    links: [
-      { label: "Agendar demo", href: "#contact" },
-      { label: "Central do produto", href: "#product-proof" },
-      { label: "Planos", href: "#pricing" },
-      { label: "Login", href: "/login" },
-    ],
-  },
-};
+
