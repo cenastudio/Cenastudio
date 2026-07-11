@@ -353,6 +353,9 @@ function createIndexes() {
     "CREATE INDEX IF NOT EXISTS idx_shots_shot_list_id ON shots(shot_list_id)",
     "CREATE INDEX IF NOT EXISTS idx_time_entries_user_id ON time_entries(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_time_entries_project_id ON time_entries(project_id)",
+    "CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON tasks(project_id)",
+    "CREATE INDEX IF NOT EXISTS idx_tasks_assignee_user_id ON tasks(assignee_user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)",
     "CREATE INDEX IF NOT EXISTS idx_meetings_client_id ON meetings(client_id)",
     "CREATE INDEX IF NOT EXISTS idx_meetings_user_id ON meetings(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_meetings_starts_at ON meetings(starts_at)",
@@ -736,6 +739,22 @@ export async function initDatabase() {
       duration_sec INTEGER DEFAULT 0,
       hourly_rate INTEGER,
       created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      assignee_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_by_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      title TEXT NOT NULL,
+      description TEXT,
+      due_date TEXT,
+      status TEXT DEFAULT 'pending',
+      stage_id TEXT,
+      tool_slug TEXT,
+      completed_at TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
     );
 
     CREATE TABLE IF NOT EXISTS meetings (

@@ -48,6 +48,8 @@ model User {
   equipment      Equipment[]
   shotLists      ShotList[]
   timeEntries    TimeEntry[]
+  tasksAssigned  Task[] @relation("TaskAssignee")
+  tasksCreated   Task[] @relation("TaskCreator")
   financialEntries FinancialEntry[]
   studioSettings StudioSetting?
   checklistItems ChecklistItem[]
@@ -271,6 +273,7 @@ model Project {
   equipmentBookings EquipmentBooking[]
   shotLists     ShotList[]
   timeEntries   TimeEntry[]
+  tasks         Task[]
 
   @@index([userId], map: "idx_projects_user_id")
   @@index([clientId], map: "idx_projects_client_id")
@@ -852,4 +855,35 @@ model TimeEntry {
   @@index([userId], map: "idx_time_entries_user_id")
   @@index([projectId], map: "idx_time_entries_project_id")
   @@map("time_entries")
+}
+
+// ===============================================
+// TASKS (spec: team-task-delegation)
+// Delegação de demandas para team members dentro de um projeto,
+// com vínculo opcional a uma etapa/ferramenta do workflow.
+// ===============================================
+
+model Task {
+  id              BigInt    @id @default(autoincrement())
+  projectId       BigInt    @map("project_id")
+  assigneeUserId  BigInt    @map("assignee_user_id")
+  createdByUserId BigInt    @map("created_by_user_id")
+  title           String
+  description     String?
+  dueDate         DateTime? @map("due_date") @db.Timestamptz
+  status          String    @default("pending") // pending | in_progress | done
+  stageId         String?   @map("stage_id")
+  toolSlug        String?   @map("tool_slug")
+  completedAt     DateTime? @map("completed_at") @db.Timestamptz
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @default(now()) @map("updated_at") @db.Timestamptz
+
+  project  Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee User    @relation("TaskAssignee", fields: [assigneeUserId], references: [id], onDelete: Cascade)
+  creator  User    @relation("TaskCreator", fields: [createdByUserId], references: [id], onDelete: Cascade)
+
+  @@index([projectId], map: "idx_tasks_project_id")
+  @@index([assigneeUserId], map: "idx_tasks_assignee_user_id")
+  @@index([status], map: "idx_tasks_status")
+  @@map("tasks")
 }
