@@ -23,6 +23,7 @@ let projectsController: typeof import("./projectsController.js");
 let filesController: typeof import("./filesController.js");
 let analyticsController: typeof import("./analyticsController.js");
 let budgetController: typeof import("./budgetController.js");
+let equipmentController: typeof import("./equipmentController.js");
 let planAccess: typeof import("../middleware/planAccess.js");
 let user: { id: number; email: string; role: "user" };
 
@@ -66,6 +67,7 @@ describe("CRM, files and finance controller flow", () => {
     filesController = await import("./filesController.js");
     analyticsController = await import("./analyticsController.js");
     budgetController = await import("./budgetController.js");
+    equipmentController = await import("./equipmentController.js");
     planAccess = await import("../middleware/planAccess.js");
     user = await authService.registerUser(`Domain Flow`, `domain-${Date.now()}@example.com`, "password-123");
   });
@@ -225,5 +227,62 @@ describe("CRM, files and finance controller flow", () => {
 
     const overviewAfterDelete = await invoke(budgetController.getOverview, { user, params: { projectId } });
     expect(overviewAfterDelete.body.data.totalSpent).toBe(250000);
+  });
+
+  it("covers equipment inventory + booking overlap rejection (F2)", async () => {
+    // `user` was upgraded to studio by the budget test above (shared fixture);
+    // equipmentInventory is also Studio-only so this exercises the real gate too.
+    const equipmentGate = planAccess.requireStudioPlan("equipmentInventory");
+    await invoke(equipmentGate, { user }); // studio already active — should not throw
+
+    const project = await invoke(projectsController.createProject, {
+      user,
+      body: { name: "Projeto Equipamento", metadataJson: "{}" },
+    });
+    const projectId = project.body.data.id;
+
+    const camera = await invoke(equipmentController.createEquipment, {
+      user,
+      body: { name: "Sony FX6", category: "camera", costPerDay: 50000 },
+    });
+    expect(camera.body.data.category).toBe("camera");
+
+    const booking1 = await invoke(equipmentController.createBooking, {
+      user,
+      params: { id: String(camera.body.data.id) },
+      body: { projectId, startDate: "2026-08-01", endDate: "2026-08-03" },
+    });
+    expect(booking1.body.data.status).toBe("booked");
+
+    // Overlapping range on the same equipment must be rejected with 409.
+    await expect(
+      invoke(equipmentController.createBooking, {
+        user,
+        params: { id: String(camera.body.data.id) },
+        body: { projectId, startDate: "2026-08-02", endDate: "2026-08-05" },
+      }),
+    ).rejects.toMatchObject({ status: 409 });
+
+    // Non-overlapping range is accepted.
+    const booking2 = await invoke(equipmentController.createBooking, {
+      user,
+      params: { id: String(camera.body.data.id) },
+      body: { projectId, startDate: "2026-08-10", endDate: "2026-08-12" },
+    });
+    expect(booking2.body.data.id).not.toBe(booking1.body.data.id);
+
+    const cancelled = await invoke(equipmentController.cancelBooking, {
+      user,
+      params: { id: String(booking1.body.data.id) },
+    });
+    expect(cancelled.body.success).toBe(true);
+
+    // After cancelling booking1, its range is free again — no longer rejected.
+    const booking3 = await invoke(equipmentController.createBooking, {
+      user,
+      params: { id: String(camera.body.data.id) },
+      body: { projectId, startDate: "2026-08-01", endDate: "2026-08-03" },
+    });
+    expect(booking3.body.data.status).toBe("booked");
   });
 });

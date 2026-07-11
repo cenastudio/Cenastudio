@@ -106,18 +106,18 @@ polish (adicionar ao Dialog de "Lançar gasto" reusando `storageObjectPath`/
 ### F2 — Equipment Inventory (Studio+) [Req 2]
 
 Backend
-- [ ] 2.1 Models `Equipment` + `EquipmentBooking` em schema (+ relações reversas); validate + generate. [Req 2.2]
-- [ ] 2.2 Migration `<ts>_add_equipment` (SQL real). [Req 6.2]
-- [ ] 2.3 Espelho SQLite `equipment` + `equipment_bookings` + índices. [Req 6.2]
-- [ ] 2.4 `server/services/equipmentService.ts` (dual-path): CRUD, `checkAvailability` (overlap), `createBooking` (rejeita conflito → 409), `cancelBooking`. [Req 2.3, 2.4]
-- [ ] 2.5 `server/controllers/equipmentController.ts` + `server/routes/equipment.ts` (`requireStudioPlan`) + registrar (`/api/equipment`). [Req 2.1, 2.5]
-- [ ] 2.6 Teste: create → booking ok → booking sobreposto rejeitado (409) → cancel. [Req 2.4]
+- [x] 2.1 Models `Equipment` + `EquipmentBooking` em schema (+ relações reversas); validate + generate. [Req 2.2]
+- [x] 2.2 Migration `prisma/migrations/20260711050000_add_equipment/migration.sql` (SQL real). [Req 6.2]
+- [x] 2.3 Espelho SQLite `equipment` + `equipment_bookings` + índices. [Req 6.2]
+- [x] 2.4 `server/services/equipmentService.ts` (dual-path): CRUD, `checkAvailability` (overlap), `createBooking` (rejeita conflito → 409), `cancelBooking`. [Req 2.3, 2.4]
+- [x] 2.5 `server/controllers/equipmentController.ts` + `server/routes/equipment.ts` (`requireStudioPlan`) + registrar (`/api/equipment`). [Req 2.1, 2.5]
+- [x] 2.6 Teste: create → booking ok → booking sobreposto rejeitado (409) → cancel → reserva liberada após cancel. [Req 2.4]
 
 Frontend
-- [ ] 2.7 Bloco `api.equipment.*` em `api.ts`. [Req 6.4]
-- [ ] 2.8 `client/src/pages/Equipment.tsx`: grid + filtros (categoria/status), Dialog cadastro/edição, seção bookings, empty-state 01/02/03, gate Studio. [Req 2.1, 2.6]
-- [ ] 2.9 Rota `/equipment` em `App.tsx` + tab "Equipamento" (ícone `Camera`) em `ProductionNav`. [Req 2.1]
-- [ ] 2.10 `npm run build` + commit `feat(equipment): inventory + bookings end-to-end`.
+- [x] 2.7 Bloco `api.equipment.*` em `api.ts`. [Req 6.4]
+- [x] 2.8 `client/src/pages/Equipment.tsx`: grid + filtros (categoria/status), Dialog cadastro/edição, Dialog de reservas por projeto/data, empty-state 01/02/03, `FeatureUpgradeRequired`. [Req 2.1, 2.6]
+- [x] 2.9 Rota `/equipment` em `App.tsx` + tab "Equipamento" (ícone `Camera`) no dropdown "Mais" de `ProductionNav`, gated por `canAccessFeature("equipment-inventory")`. [Req 2.1]
+- [x] 2.10 `npm run build` + `npm run check` + testes verdes (5/5).
 
 ### F3 — Shot List (Pro+) [Req 3]
 

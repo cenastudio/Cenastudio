@@ -38,6 +38,7 @@ const ProductionShell = lazy(() => import("@/pages/ProductionShell"));
 const CommercialHub = lazy(() => import("@/pages/CommercialHub"));
 const Documents = lazy(() => import("@/pages/Documents"));
 const Budget = lazy(() => import("@/pages/Budget"));
+const Equipment = lazy(() => import("@/pages/Equipment"));
 const Files = lazy(() => import("@/pages/Files"));
 const Interactions = lazy(() => import("@/pages/Interactions"));
 const Landing = lazy(() => import("@/pages/Landing"));
@@ -113,6 +114,7 @@ function Router() {
       <Route path="/project/:projectId/studio/:id" component={Studio} />
       <Route path="/project/:projectId/documents" component={Documents} />
       <Route path="/project/:projectId/budget" component={Budget} />
+      <Route path="/equipment">{() => <Equipment />}</Route>
       <Route path="/project/:projectId/files" component={Files} />
       <Route path="/project/:projectId/video-reviews">{() => <VideoReviews />}</Route>
       <Route path="/project/:projectId/collaborators" component={Collaborators} />

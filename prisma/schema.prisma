@@ -45,6 +45,7 @@ model User {
   webhooks       Webhook[]
   budgets        Budget[]
   budgetEntries  BudgetEntry[]
+  equipment      Equipment[]
   financialEntries FinancialEntry[]
   studioSettings StudioSetting?
   checklistItems ChecklistItem[]
@@ -265,6 +266,7 @@ model Project {
   files         File[]
   videoReviews  VideoReview[]
   budget        Budget?
+  equipmentBookings EquipmentBooking[]
 
   @@index([userId], map: "idx_projects_user_id")
   @@index([clientId], map: "idx_projects_client_id")
@@ -742,4 +744,44 @@ model BudgetEntry {
 
   @@index([budgetId], map: "idx_budget_entries_budget_id")
   @@map("budget_entries")
+}
+
+// ===============================================
+// EQUIPMENT INVENTORY (spec: landing-features-implementation, F2)
+// ===============================================
+
+model Equipment {
+  id         BigInt   @id @default(autoincrement())
+  userId     BigInt   @map("user_id")
+  name       String
+  category   String   // camera|lens|light|audio|accessory
+  specs      Json     @default("{}")
+  status     String   @default("available") // available|in_use|maintenance|rented
+  costPerDay Int?     @map("cost_per_day")
+  isOwned    Boolean  @default(true) @map("is_owned")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookings EquipmentBooking[]
+
+  @@index([userId], map: "idx_equipment_user_id")
+  @@map("equipment")
+}
+
+model EquipmentBooking {
+  id          BigInt   @id @default(autoincrement())
+  equipmentId BigInt   @map("equipment_id")
+  projectId   BigInt   @map("project_id")
+  startDate   DateTime @map("start_date") @db.Date
+  endDate     DateTime @map("end_date") @db.Date
+  status      String   @default("booked")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  equipment Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([equipmentId], map: "idx_equipment_bookings_equipment_id")
+  @@index([projectId], map: "idx_equipment_bookings_project_id")
+  @@map("equipment_bookings")
 }

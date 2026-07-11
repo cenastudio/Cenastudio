@@ -339,6 +339,9 @@ function createIndexes() {
     "CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_webhook_id ON webhook_deliveries(webhook_id)",
     "CREATE INDEX IF NOT EXISTS idx_budgets_user_id ON budgets(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_budget_entries_budget_id ON budget_entries(budget_id)",
+    "CREATE INDEX IF NOT EXISTS idx_equipment_user_id ON equipment(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_equipment_bookings_equipment_id ON equipment_bookings(equipment_id)",
+    "CREATE INDEX IF NOT EXISTS idx_equipment_bookings_project_id ON equipment_bookings(project_id)",
     "CREATE INDEX IF NOT EXISTS idx_collaborators_user_id ON collaborators(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_project_members_project_id ON project_members(project_id)",
     "CREATE INDEX IF NOT EXISTS idx_project_members_collaborator_id ON project_members(collaborator_id)",
@@ -659,6 +662,29 @@ export async function initDatabase() {
       amount INTEGER DEFAULT 0,
       entry_date TEXT NOT NULL,
       receipt_url TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS equipment (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      category TEXT NOT NULL,
+      specs TEXT DEFAULT '{}',
+      status TEXT DEFAULT 'available',
+      cost_per_day INTEGER,
+      is_owned INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS equipment_bookings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      equipment_id INTEGER NOT NULL REFERENCES equipment(id) ON DELETE CASCADE,
+      project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      start_date TEXT NOT NULL,
+      end_date TEXT NOT NULL,
+      status TEXT DEFAULT 'booked',
       created_at TEXT DEFAULT (datetime('now'))
     );
 

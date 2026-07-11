@@ -326,6 +326,34 @@ export const api = {
       }),
     deleteEntry: (id: number) => request<null>(`/budgets/entries/${id}`, { method: "DELETE" }),
   },
+  equipment: {
+    list: () => request<EquipmentItem[]>("/equipment"),
+    create: (data: {
+      name: string;
+      category: string;
+      specs?: Record<string, string | number | boolean>;
+      costPerDay?: number | null;
+      isOwned?: boolean;
+    }) => request<EquipmentItem>("/equipment", { method: "POST", body: JSON.stringify(data) }),
+    update: (
+      id: number,
+      data: Partial<{
+        name: string;
+        category: string;
+        specs: Record<string, string | number | boolean>;
+        status: string;
+        costPerDay: number | null;
+        isOwned: boolean;
+      }>,
+    ) => request<EquipmentItem>(`/equipment/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    delete: (id: number) => request<null>(`/equipment/${id}`, { method: "DELETE" }),
+    checkAvailability: (id: number, start: string, end: string) =>
+      request<{ available: boolean }>(`/equipment/${id}/availability?start=${start}&end=${end}`),
+    listBookings: (id: number) => request<EquipmentBookingItem[]>(`/equipment/${id}/bookings`),
+    createBooking: (id: number, data: { projectId: number; startDate: string; endDate: string }) =>
+      request<EquipmentBookingItem>(`/equipment/${id}/bookings`, { method: "POST", body: JSON.stringify(data) }),
+    cancelBooking: (bookingId: number) => request<null>(`/equipment/bookings/${bookingId}`, { method: "DELETE" }),
+  },
   assets: {
     list: () =>
       request<
@@ -784,5 +812,28 @@ export interface BudgetEntryItem {
   amount: number;
   entry_date: string;
   receipt_url: string | null;
+  created_at: string;
+}
+
+export interface EquipmentItem {
+  id: number;
+  user_id: number;
+  name: string;
+  category: string;
+  specs: Record<string, string | number | boolean>;
+  status: "available" | "in_use" | "maintenance" | "rented" | string;
+  cost_per_day: number | null;
+  is_owned: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EquipmentBookingItem {
+  id: number;
+  equipment_id: number;
+  project_id: number;
+  start_date: string;
+  end_date: string;
+  status: string;
   created_at: string;
 }

@@ -12,6 +12,7 @@ import {
   Webhook,
   UserCircle2,
   MoreHorizontal,
+  Camera,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import {
@@ -20,6 +21,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { usePlanContext } from "@/contexts/PlanContext";
+import { canAccessFeature } from "@/lib/feature-gating";
+import type { FeatureName } from "@/types/plan";
 
 type TeamRole = "admin" | "editor" | "member";
 
@@ -32,6 +36,8 @@ interface ProductionTab {
   highlight?: boolean;
   /** Restrict visibility to these team roles. Omit to show to everyone. */
   roles?: TeamRole[];
+  /** Hide the tab unless the current plan has access to this feature flag. */
+  requiresFeature?: FeatureName;
 }
 
 /** Always-visible primary tabs — the areas used every day. */
@@ -48,15 +54,15 @@ const PRIMARY_TABS: ProductionTab[] = [
  * — both used the word "Equipe"/"Team" with genuinely different meanings
  * (freelancers/crew vs. system accounts with plan-based permissions).
  *
- * NOTE: When F2 (Equipment Inventory, /equipment) and F4 (Timesheet,
- * /timesheet) ship (see .kiro/specs/landing-features-implementation), add
- * their tabs here (e.g. `Camera`/`Clock` icons from lucide-react), gated
- * behind the same feature-flag pattern used by `gate.ts`/`canAccessFeature`.
+ * NOTE: When F4 (Timesheet, /timesheet) ships (see
+ * .kiro/specs/landing-features-implementation), add its tab here (`Clock`
+ * icon from lucide-react), gated the same way Equipment is below.
  */
 const SECONDARY_TABS: ProductionTab[] = [
   { href: "/files", labelPt: "Arquivos", labelEn: "Files", icon: FolderKanban },
   { href: "/assets", labelPt: "Assets", labelEn: "Assets", icon: Package },
   { href: "/documents", labelPt: "Documentos", labelEn: "Documents", icon: FileText },
+  { href: "/equipment", labelPt: "Equipamento", labelEn: "Equipment", icon: Camera, requiresFeature: "equipment-inventory" },
   { href: "/webhooks", labelPt: "Webhooks", labelEn: "Webhooks", icon: Webhook },
   { href: "/collaborators", labelPt: "Equipe Externa", labelEn: "External Crew", icon: UserCircle2 },
   { href: "/team", labelPt: "Equipe", labelEn: "Team", icon: Users, roles: ["admin"] },
@@ -94,10 +100,13 @@ export default function ProductionNav() {
   // Don't show inside a specific project (ProjectHub has its own context)
   if (location.startsWith("/project/")) return null;
 
+  const { planMode } = usePlanContext();
   const effectiveRole: TeamRole | null = isAdmin ? "admin" : isTeamMember ? (teamRole as TeamRole | null) : "admin";
-  const visibleSecondaryTabs = SECONDARY_TABS.filter(
-    (tab) => !tab.roles || (effectiveRole && tab.roles.includes(effectiveRole)),
-  );
+  const visibleSecondaryTabs = SECONDARY_TABS.filter((tab) => {
+    if (tab.roles && !(effectiveRole && tab.roles.includes(effectiveRole))) return false;
+    if (tab.requiresFeature && !canAccessFeature(tab.requiresFeature, planMode).hasAccess) return false;
+    return true;
+  });
   const visibleAllTabs = [...PRIMARY_TABS, ...visibleSecondaryTabs];
 
   const activeTab = visibleAllTabs.find((tab) => isTabActive(location, tab.href)) || visibleAllTabs[0];
