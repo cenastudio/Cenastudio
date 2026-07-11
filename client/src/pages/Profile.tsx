@@ -16,7 +16,7 @@ import {
   CalendarClock, Crown, LogOut, ShieldCheck, UserRound, Zap, Settings,
   Users, Save, Building2, Phone, MessageCircle, Bug, Megaphone, ExternalLink,
   Lock, Eye, EyeOff, KeyRound, Check, Globe, Bell, Clock, Camera, Upload,
-  FileText, Trash2, Download, History, Shield, Smartphone, Monitor, MapPin,
+  FileText, Trash2, Download, Shield, Smartphone, Monitor, MapPin,
   Mail, CreditCard, Receipt, TrendingUp, ChevronRight, AlertTriangle, X,
   Palette, Languages, Sparkles
 } from "lucide-react";
@@ -300,27 +300,31 @@ function UsageBar({ used, total, label }: { used: number; total: number; label: 
 }
 
 // Session card
-function SessionCard({ device, location, lastActive, current }: {
+function SessionCard({ device, ipAddress, lastActive, current, onRevoke, revoking }: {
   device: string;
-  location: string;
+  ipAddress?: string | null;
   lastActive: string;
   current?: boolean;
+  onRevoke?: () => void;
+  revoking?: boolean;
 }) {
   const { t } = useLanguage();
   return (
     <div className={`glow-card p-4 ${current ? "border-frame-green/40" : ""}`}>
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          {device.toLowerCase().includes("mobile") ? (
+          {device.toLowerCase().includes("ios") || device.toLowerCase().includes("android") ? (
             <Smartphone className="w-5 h-5 text-frame-orange" />
           ) : (
             <Monitor className="w-5 h-5 text-frame-orange" />
           )}
           <div>
             <p className="text-sm font-medium text-frame-white">{device}</p>
-            <p className="text-xs text-frame-gray-light flex items-center gap-1">
-              <MapPin className="w-3 h-3" /> {location}
-            </p>
+            {ipAddress && (
+              <p className="text-xs text-frame-gray-light flex items-center gap-1">
+                <MapPin className="w-3 h-3" /> {ipAddress}
+              </p>
+            )}
           </div>
         </div>
         {current ? (
@@ -328,7 +332,14 @@ function SessionCard({ device, location, lastActive, current }: {
             {t("app.profile.currentSession")}
           </span>
         ) : (
-          <button className="text-frame-red/70 hover:text-frame-red text-xs">{t("app.profile.endSession")}</button>
+          <button
+            type="button"
+            onClick={onRevoke}
+            disabled={revoking}
+            className="text-frame-red/70 hover:text-frame-red text-xs disabled:opacity-50"
+          >
+            {revoking ? "..." : t("app.profile.endSession")}
+          </button>
         )}
       </div>
       <p className="text-[0.65rem] text-frame-gray-light mt-2">{t("app.profile.lastAccess")} {lastActive}</p>
@@ -522,19 +533,54 @@ function ProfileContent() {
 
   const avatarChar = (user?.name ?? user?.email ?? "U").charAt(0).toUpperCase();
 
+  // Real sessions, loaded from the API — replaces the previous hardcoded mock.
+  const [sessions, setSessions] = useState<
+    Array<{ id: number; deviceLabel: string; ipAddress: string | null; lastActiveAt: string; current: boolean }>
+  >([]);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [revokingId, setRevokingId] = useState<number | null>(null);
+  const [revokingAll, setRevokingAll] = useState(false);
 
-  // Mock data for sessions (would come from API)
-  const sessions = [
-    { device: "Chrome no macOS", location: "São Paulo, BR", lastActive: "Agora", current: true },
-    { device: "Safari no iPhone", location: "São Paulo, BR", lastActive: "Há 2 horas", current: false },
-  ];
+  const loadSessions = () => {
+    setSessionsLoading(true);
+    api.sessions
+      .list()
+      .then(setSessions)
+      .catch(() => {
+        // Non-critical: profile page still works without the session list.
+      })
+      .finally(() => setSessionsLoading(false));
+  };
 
-  // Mock activity data
-  const recentActivity = [
-    { action: "Login realizado", date: new Date().toISOString() },
-    { action: "Projeto criado: Demo", date: new Date(Date.now() - 86400000).toISOString() },
-    { action: "Senha alterada", date: new Date(Date.now() - 172800000).toISOString() },
-  ];
+  useEffect(() => {
+    loadSessions();
+  }, []);
+
+  const handleRevokeSession = async (sessionId: number) => {
+    setRevokingId(sessionId);
+    try {
+      await api.sessions.revoke(sessionId);
+      setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+      toast.success(t("app.profile.sessionEnded"));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("app.profile.sessionEndError"));
+    } finally {
+      setRevokingId(null);
+    }
+  };
+
+  const handleRevokeAllOthers = async () => {
+    setRevokingAll(true);
+    try {
+      await api.sessions.revokeOthers();
+      setSessions((prev) => prev.filter((s) => s.current));
+      toast.success(t("app.profile.allSessionsEnded"));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("app.profile.sessionEndError"));
+    } finally {
+      setRevokingAll(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
@@ -857,38 +903,35 @@ function ProfileContent() {
                     <p className="text-frame-gray-light text-xs">{t("app.profile.activeSessionsDesc")}</p>
                   </div>
                 </div>
-                <button className="frame-btn-ghost text-xs text-frame-red/70 hover:text-frame-red">
-                  {t("app.profile.endAll")}
+                <button
+                  type="button"
+                  onClick={handleRevokeAllOthers}
+                  disabled={revokingAll || sessions.filter((s) => !s.current).length === 0}
+                  className="frame-btn-ghost text-xs text-frame-red/70 hover:text-frame-red disabled:opacity-40"
+                >
+                  {revokingAll ? "..." : t("app.profile.endAll")}
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {sessions.map((session, idx) => (
-                  <SessionCard key={idx} {...session} />
-                ))}
-              </div>
-            </div>
-
-            {/* Histórico de atividade */}
-            <div className="liquid-glass p-6 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg">
-                  <History className="w-5 h-5 text-frame-orange" />
+              {sessionsLoading ? (
+                <p className="text-xs text-frame-gray-light">{t("app.profile.loadingSessions")}</p>
+              ) : sessions.length === 0 ? (
+                <p className="text-xs text-frame-gray-light">{t("app.profile.noSessions")}</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {sessions.map((session) => (
+                    <SessionCard
+                      key={session.id}
+                      device={session.deviceLabel}
+                      ipAddress={session.ipAddress}
+                      lastActive={formatDateTime(session.lastActiveAt, locale)}
+                      current={session.current}
+                      revoking={revokingId === session.id}
+                      onRevoke={() => handleRevokeSession(session.id)}
+                    />
+                  ))}
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold">{t("app.profile.recentActivity")}</h3>
-                  <p className="text-frame-gray-light text-xs">{t("app.profile.recentActivityDesc")}</p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                {recentActivity.map((activity, idx) => (
-                  <div key={idx} className="flex items-center justify-between py-2 border-b border-frame-gray-3/30 last:border-0">
-                    <span className="text-sm text-frame-white">{activity.action}</span>
-                    <span className="text-xs text-frame-gray-light">{formatDateTime(activity.date, locale)}</span>
-                  </div>
-                ))}
-              </div>
+              )}
             </div>
           </div>
         )}

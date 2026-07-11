@@ -250,6 +250,14 @@ export const api = {
     populatedStates: (id: number) =>
       request<Array<{ toolId: string; updatedAt: string }>>(`/projects/${id}/states`),
   },
+  sessions: {
+    list: () =>
+      request<
+        Array<{ id: number; deviceLabel: string; ipAddress: string | null; lastActiveAt: string; createdAt: string; current: boolean }>
+      >("/sessions"),
+    revoke: (id: number) => request<null>(`/sessions/${id}`, { method: "DELETE" }),
+    revokeOthers: () => request<{ revokedCount: number }>("/sessions/revoke-others", { method: "POST" }),
+  },
   webhooks: {
     listEvents: () => request<Array<{ id: string; label: string }>>("/webhooks/events"),
     list: () =>
