@@ -342,6 +342,9 @@ function createIndexes() {
     "CREATE INDEX IF NOT EXISTS idx_equipment_user_id ON equipment(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_equipment_bookings_equipment_id ON equipment_bookings(equipment_id)",
     "CREATE INDEX IF NOT EXISTS idx_equipment_bookings_project_id ON equipment_bookings(project_id)",
+    "CREATE INDEX IF NOT EXISTS idx_shot_lists_user_id ON shot_lists(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_shot_lists_project_id ON shot_lists(project_id)",
+    "CREATE INDEX IF NOT EXISTS idx_shots_shot_list_id ON shots(shot_list_id)",
     "CREATE INDEX IF NOT EXISTS idx_collaborators_user_id ON collaborators(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_project_members_project_id ON project_members(project_id)",
     "CREATE INDEX IF NOT EXISTS idx_project_members_collaborator_id ON project_members(collaborator_id)",
@@ -685,6 +688,30 @@ export async function initDatabase() {
       start_date TEXT NOT NULL,
       end_date TEXT NOT NULL,
       status TEXT DEFAULT 'booked',
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS shot_lists (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      title TEXT DEFAULT 'Shot List',
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS shots (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      shot_list_id INTEGER NOT NULL REFERENCES shot_lists(id) ON DELETE CASCADE,
+      order_index INTEGER DEFAULT 0,
+      scene TEXT DEFAULT '',
+      shot_type TEXT DEFAULT '',
+      description TEXT DEFAULT '',
+      camera TEXT DEFAULT '',
+      lens TEXT DEFAULT '',
+      movement TEXT DEFAULT '',
+      duration_sec INTEGER,
+      status TEXT DEFAULT 'pending',
       created_at TEXT DEFAULT (datetime('now'))
     );
 

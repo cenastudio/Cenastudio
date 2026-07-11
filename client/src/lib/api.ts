@@ -354,6 +354,38 @@ export const api = {
       request<EquipmentBookingItem>(`/equipment/${id}/bookings`, { method: "POST", body: JSON.stringify(data) }),
     cancelBooking: (bookingId: number) => request<null>(`/equipment/bookings/${bookingId}`, { method: "DELETE" }),
   },
+  shotlists: {
+    get: (projectId: number) =>
+      request<{ shotList: ShotListItem; shots: ShotItem[] }>(`/shotlists/${projectId}`),
+    addShot: (
+      projectId: number,
+      data: {
+        scene?: string;
+        shotType?: string;
+        description?: string;
+        camera?: string;
+        lens?: string;
+        movement?: string;
+        durationSec?: number | null;
+      },
+    ) => request<ShotItem>(`/shotlists/${projectId}/shots`, { method: "POST", body: JSON.stringify(data) }),
+    updateShot: (
+      shotId: number,
+      data: Partial<{
+        scene: string;
+        shotType: string;
+        description: string;
+        camera: string;
+        lens: string;
+        movement: string;
+        durationSec: number | null;
+        status: "pending" | "shot";
+      }>,
+    ) => request<ShotItem>(`/shotlists/shots/${shotId}`, { method: "PATCH", body: JSON.stringify(data) }),
+    deleteShot: (shotId: number) => request<null>(`/shotlists/shots/${shotId}`, { method: "DELETE" }),
+    reorder: (projectId: number, orderedIds: number[]) =>
+      request<ShotItem[]>(`/shotlists/${projectId}/reorder`, { method: "PUT", body: JSON.stringify({ orderedIds }) }),
+  },
   assets: {
     list: () =>
       request<
@@ -835,5 +867,29 @@ export interface EquipmentBookingItem {
   start_date: string;
   end_date: string;
   status: string;
+  created_at: string;
+}
+
+export interface ShotListItem {
+  id: number;
+  user_id: number;
+  project_id: number;
+  title: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ShotItem {
+  id: number;
+  shot_list_id: number;
+  order_index: number;
+  scene: string;
+  shot_type: string;
+  description: string;
+  camera: string;
+  lens: string;
+  movement: string;
+  duration_sec: number | null;
+  status: "pending" | "shot" | string;
   created_at: string;
 }

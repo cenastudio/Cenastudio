@@ -77,6 +77,7 @@ import sessionsRoutes from "./routes/sessions.js";
 import webhooksRoutes from "./routes/webhooks.js";
 import budgetsRoutes from "./routes/budgets.js";
 import equipmentRoutes from "./routes/equipment.js";
+import shotlistsRoutes from "./routes/shotlists.js";
 
 const router = Router();
 
@@ -174,5 +175,6 @@ router.use("/sessions", sessionsRoutes);
 router.use("/webhooks", webhooksRoutes);
 router.use("/budgets", budgetsRoutes);
 router.use("/equipment", equipmentRoutes);
+router.use("/shotlists", shotlistsRoutes);
 
 export default router;

@@ -122,19 +122,19 @@ Frontend
 ### F3 — Shot List (Pro+) [Req 3]
 
 Backend
-- [ ] 3.1 Models `ShotList` + `Shot` em schema (+ relações reversas); validate + generate. [Req 3.2]
-- [ ] 3.2 Migration `<ts>_add_shotlist` (SQL real). [Req 6.2]
-- [ ] 3.3 Espelho SQLite `shot_lists` + `shots` + índices. [Req 6.2]
-- [ ] 3.4 `server/services/shotListService.ts` (dual-path): `getOrCreateForProject`, `addShot` (append orderIndex), `updateShot`, `deleteShot`, `reorderShots` (transação, orderIndex contíguo). [Req 3.2, 3.3, 3.4]
-- [ ] 3.5 `server/controllers/shotListController.ts` + `server/routes/shotlists.ts` (`requireOperationalPlan`) + registrar (`/api/shotlists`). [Req 3.1]
-- [ ] 3.6 Teste: create×3 → reorder → ordem persiste → update status → delete. [Req 3.3, 3.4]
+- [x] 3.1 Models `ShotList` + `Shot` em schema (+ relações reversas); validate + generate. [Req 3.2]
+- [x] 3.2 Migration `prisma/migrations/20260711060000_add_shotlist/migration.sql` (SQL real). [Req 6.2]
+- [x] 3.3 Espelho SQLite `shot_lists` + `shots` + índices. [Req 6.2]
+- [x] 3.4 `server/services/shotListService.ts` (dual-path): `getOrCreateForProject`, `addShot` (append orderIndex), `updateShot`, `deleteShot`, `reorderShots` (transação, orderIndex contíguo, all-or-nothing). [Req 3.2, 3.3, 3.4]
+- [x] 3.5 `server/controllers/shotListController.ts` + `server/routes/shotlists.ts` (`requireStudioPlan("shotList")`, Pro+ via flag) + registrar (`/api/shotlists`). [Req 3.1]
+- [x] 3.6 Teste: create×3 → get reflete ordem inicial → reorder → ordem contígua e exata (Property 5) → update status → delete → lista final correta. [Req 3.3, 3.4]
 
 Frontend
-- [ ] 3.7 Bloco `api.shotlists.*` em `api.ts`. [Req 6.4]
-- [ ] 3.8 `client/src/pages/ShotList.tsx`: lista drag-and-drop com `@dnd-kit` (já instalado), form add, edição inline/Dialog, marcar filmado, empty-state 01/02/03. [Req 3.1, 3.2, 3.3, 3.4, 3.6]
-- [ ] 3.9 Export imprimível/PDF reusando `printHtmlDocument` (`Documents`/`Proposals`). [Req 3.7]
-- [ ] 3.10 Rota `/project/:projectId/shotlist` + tab "Shot List" (ícone `Clapperboard`) em `ProjectNav`. [Req 3.1]
-- [ ] 3.11 `npm run build` + commit `feat(shotlist): drag-and-drop shot list end-to-end`.
+- [x] 3.7 Bloco `api.shotlists.*` em `api.ts`. [Req 6.4]
+- [x] 3.8 `client/src/pages/ShotList.tsx`: lista drag-and-drop com `@dnd-kit` (`DndContext`+`SortableContext`+`useSortable`), Dialog add/edit, marcar filmado (toggle), empty-state 01/02/03, `FeatureUpgradeRequired`. [Req 3.1, 3.2, 3.3, 3.4, 3.6]
+- [x] 3.9 Export imprimível via `printShotList()` local (iframe + tabela HTML) — `printHtmlDocument` de Documents/Proposals é uma função local não exportada em cada página (confirmado durante o levantamento), então foi replicado o padrão em vez de importar um módulo inexistente. [Req 3.7]
+- [x] 3.10 Rota `/project/:projectId/shotlist` em `App.tsx` + tab "Shot List" (ícone `Clapperboard`) em `ProjectNav`, gated por `canAccessFeature("shot-list")`. [Req 3.1]
+- [x] 3.11 `npm run build` + `npm run check` + testes verdes (6/6).
 
 ### F4 — Timesheet (Pro+ timer / Studio+ custo) [Req 4]
 

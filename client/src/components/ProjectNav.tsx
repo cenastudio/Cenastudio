@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
-import { BookOpen, ChevronLeft, Wallet } from "lucide-react";
+import { BookOpen, ChevronLeft, Wallet, Clapperboard } from "lucide-react";
 import { getStageForLocation, WORKFLOW_STAGES } from "@/lib/workflow";
 import { usePlanContext } from "@/contexts/PlanContext";
 import { canAccessFeature } from "@/lib/feature-gating";
@@ -18,6 +18,8 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
   const activeStage = getStageForLocation(location);
   const canAccessBudget = canAccessFeature("budget-tracking", planMode).hasAccess;
   const isBudgetActive = location === `/project/${projectId}/budget`;
+  const canAccessShotList = canAccessFeature("shot-list", planMode).hasAccess;
+  const isShotListActive = location === `/project/${projectId}/shotlist`;
 
   useEffect(() => {
     fetch(`/api/projects/${projectId}`, { credentials: "include" })
@@ -77,6 +79,22 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
             >
               <Wallet className="h-3.5 w-3.5" />
               Orçamento
+            </button>
+          )}
+          {canAccessShotList && (
+            <button
+              type="button"
+              onClick={() => setLocation(`/project/${projectId}/shotlist`)}
+              className={`flex min-h-10 shrink-0 items-center gap-1.5 px-3 py-1.5 font-frame-mono text-xs tracking-wider transition-all duration-200
+                relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:transition-all
+                ${isShotListActive
+                  ? "text-frame-orange after:bg-frame-orange"
+                  : "text-frame-gray-light hover:text-frame-white after:bg-transparent"
+                }`}
+              aria-current={isShotListActive ? "page" : undefined}
+            >
+              <Clapperboard className="h-3.5 w-3.5" />
+              Shot List
             </button>
           )}
           <nav className="flex items-center gap-0 overflow-x-auto scrollbar-none" aria-label={t("app.nav.projectJourney") as string}>

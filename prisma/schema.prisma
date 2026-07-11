@@ -46,6 +46,7 @@ model User {
   budgets        Budget[]
   budgetEntries  BudgetEntry[]
   equipment      Equipment[]
+  shotLists      ShotList[]
   financialEntries FinancialEntry[]
   studioSettings StudioSetting?
   checklistItems ChecklistItem[]
@@ -267,6 +268,7 @@ model Project {
   videoReviews  VideoReview[]
   budget        Budget?
   equipmentBookings EquipmentBooking[]
+  shotLists     ShotList[]
 
   @@index([userId], map: "idx_projects_user_id")
   @@index([clientId], map: "idx_projects_client_id")
@@ -784,4 +786,45 @@ model EquipmentBooking {
   @@index([equipmentId], map: "idx_equipment_bookings_equipment_id")
   @@index([projectId], map: "idx_equipment_bookings_project_id")
   @@map("equipment_bookings")
+}
+
+// ===============================================
+// SHOT LIST (spec: landing-features-implementation, F3)
+// ===============================================
+
+model ShotList {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt   @map("user_id")
+  projectId BigInt   @map("project_id")
+  title     String   @default("Shot List")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  shots   Shot[]
+
+  @@index([userId], map: "idx_shot_lists_user_id")
+  @@index([projectId], map: "idx_shot_lists_project_id")
+  @@map("shot_lists")
+}
+
+model Shot {
+  id          BigInt   @id @default(autoincrement())
+  shotListId  BigInt   @map("shot_list_id")
+  orderIndex  Int      @default(0) @map("order_index")
+  scene       String   @default("")
+  shotType    String   @default("") @map("shot_type")
+  description String   @default("")
+  camera      String   @default("")
+  lens        String   @default("")
+  movement    String   @default("")
+  durationSec Int?     @map("duration_sec")
+  status      String   @default("pending") // pending|shot
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  shotList ShotList @relation(fields: [shotListId], references: [id], onDelete: Cascade)
+
+  @@index([shotListId], map: "idx_shots_shot_list_id")
+  @@map("shots")
 }

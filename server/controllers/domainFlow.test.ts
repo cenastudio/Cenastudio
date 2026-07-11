@@ -24,6 +24,7 @@ let filesController: typeof import("./filesController.js");
 let analyticsController: typeof import("./analyticsController.js");
 let budgetController: typeof import("./budgetController.js");
 let equipmentController: typeof import("./equipmentController.js");
+let shotListController: typeof import("./shotListController.js");
 let planAccess: typeof import("../middleware/planAccess.js");
 let user: { id: number; email: string; role: "user" };
 
@@ -68,6 +69,7 @@ describe("CRM, files and finance controller flow", () => {
     analyticsController = await import("./analyticsController.js");
     budgetController = await import("./budgetController.js");
     equipmentController = await import("./equipmentController.js");
+    shotListController = await import("./shotListController.js");
     planAccess = await import("../middleware/planAccess.js");
     user = await authService.registerUser(`Domain Flow`, `domain-${Date.now()}@example.com`, "password-123");
   });
@@ -284,5 +286,64 @@ describe("CRM, files and finance controller flow", () => {
       body: { projectId, startDate: "2026-08-01", endDate: "2026-08-03" },
     });
     expect(booking3.body.data.status).toBe("booked");
+  });
+
+  it("covers shot list lifecycle with stable reordering (F3)", async () => {
+    // shotList entitlement is Pro+ (already satisfied — user is on studio from the budget test).
+    const shotListGate = planAccess.requireStudioPlan("shotList");
+    await invoke(shotListGate, { user }); // should not throw
+
+    const project = await invoke(projectsController.createProject, {
+      user,
+      body: { name: "Projeto Shot List", metadataJson: "{}" },
+    });
+    const projectId = String(project.body.data.id);
+
+    const shot1 = await invoke(shotListController.addShot, {
+      user,
+      params: { projectId },
+      body: { scene: "1A", shotType: "wide", description: "Estabelecimento" },
+    });
+    const shot2 = await invoke(shotListController.addShot, {
+      user,
+      params: { projectId },
+      body: { scene: "1B", shotType: "close", description: "Reação" },
+    });
+    const shot3 = await invoke(shotListController.addShot, {
+      user,
+      params: { projectId },
+      body: { scene: "1C", shotType: "medium", description: "Diálogo" },
+    });
+
+    const listed = await invoke(shotListController.getShotList, { user, params: { projectId } });
+    expect(listed.body.data.shots.map((s: any) => s.id)).toEqual([
+      shot1.body.data.id,
+      shot2.body.data.id,
+      shot3.body.data.id,
+    ]);
+    expect(listed.body.data.shots.map((s: any) => s.order_index)).toEqual([0, 1, 2]);
+
+    // Reorder: 3, 1, 2 — orderIndex must become contiguous 0..n-1 reflecting this exact order.
+    const newOrder = [shot3.body.data.id, shot1.body.data.id, shot2.body.data.id];
+    const reordered = await invoke(shotListController.reorderShots, {
+      user,
+      params: { projectId },
+      body: { orderedIds: newOrder },
+    });
+    expect(reordered.body.data.map((s: any) => s.id)).toEqual(newOrder);
+    expect(reordered.body.data.map((s: any) => s.order_index)).toEqual([0, 1, 2]);
+
+    const updated = await invoke(shotListController.updateShot, {
+      user,
+      params: { id: String(shot3.body.data.id) },
+      body: { status: "shot" },
+    });
+    expect(updated.body.data.status).toBe("shot");
+
+    await invoke(shotListController.deleteShot, { user, params: { id: String(shot2.body.data.id) } });
+
+    const afterDelete = await invoke(shotListController.getShotList, { user, params: { projectId } });
+    expect(afterDelete.body.data.shots).toHaveLength(2);
+    expect(afterDelete.body.data.shots.map((s: any) => s.id)).toEqual([shot3.body.data.id, shot1.body.data.id]);
   });
 });
