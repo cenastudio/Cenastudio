@@ -89,6 +89,7 @@ describe("core controller flow", () => {
   it("registers, authenticates and persists client/project records", async () => {
     const email = `flow-${Date.now()}@example.com`;
     const register = await invoke(authController.register, {
+      headers: {},
       body: {
         name: "Core Flow",
         email,
@@ -100,7 +101,10 @@ describe("core controller flow", () => {
     expect(register.body.success).toBe(true);
     expect(register.cookies[authMiddleware.COOKIE_NAME]).toBeTruthy();
 
-    const authReq = { cookies: { [authMiddleware.COOKIE_NAME]: register.cookies[authMiddleware.COOKIE_NAME] } };
+    const authReq = {
+      cookies: { [authMiddleware.COOKIE_NAME]: register.cookies[authMiddleware.COOKIE_NAME] },
+      headers: {},
+    };
     await invoke(authMiddleware.authenticate, authReq);
     expect(authReq).toHaveProperty("user.email", email);
 

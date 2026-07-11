@@ -50,7 +50,7 @@ const NEW_FEATURES = [
   {
     icon: FileText,
     title: "Decupagem com IA",
-    description: "Extraia automaticamente personagens, cenários e elementos do roteiro",
+    description: "Gere a decupagem técnica do seu roteiro com IA — planos, lentes e movimentos sugeridos",
     tag: "NOVO",
     gradient: "from-indigo-500 to-purple-500",
   },
@@ -63,8 +63,8 @@ const NEW_FEATURES = [
   },
   {
     icon: Calendar,
-    title: "Google Calendar",
-    description: "Sincronize cronogramas e deadlines automaticamente com seu calendário",
+    title: "Exportar para Agenda",
+    description: "Exporte prazos e reuniões do projeto em .ics, compatível com Google, Outlook e Apple Calendar",
     tag: "NOVO",
     gradient: "from-teal-500 to-cyan-500",
   },

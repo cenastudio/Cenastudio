@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { PlanProvider } from "@/contexts/PlanContext";
 import { api } from "@/lib/api";
 import { DEFAULT_STUDIO_SETTINGS } from "@/lib/studioSettings";
 
@@ -33,10 +34,15 @@ vi.mock("@/contexts/ProjectContext", () => ({
 function renderWithLanguage(component: React.ReactElement) {
   // AuthProvider is required because pages like Collaborators/Tools now
   // render ProductionNav (the Production area sub-navigation), which calls
-  // useAuth() to determine role-based tab visibility.
+  // useAuth() to determine role-based tab visibility. PlanProvider is
+  // required for the same reason since ProductionNav also calls
+  // usePlanContext() to gate feature-flagged tabs (e.g. Equipment,
+  // Timesheet — see .kiro/specs/landing-features-implementation).
   return render(
     <AuthProvider>
-      <LanguageProvider>{component}</LanguageProvider>
+      <PlanProvider>
+        <LanguageProvider>{component}</LanguageProvider>
+      </PlanProvider>
     </AuthProvider>,
   );
 }

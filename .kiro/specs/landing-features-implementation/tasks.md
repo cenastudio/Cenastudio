@@ -156,7 +156,7 @@ Frontend
 
 Backend
 - [x] 5.1 Estendido `server/services/icsService.ts` com `buildIcsCalendar(events[])` (multi-evento, reusa a mesma lógica de VEVENT de `buildIcsEvent` via helper interno `buildVEventLines`). [Req 5.1, 5.2]
-- [x] 5.2 `server/services/calendarService.ts` (agrega deadline do projeto + reuniões vinculadas via `project.clientId` — não há link direto meeting→project no schema) + `server/controllers/calendarController.ts` + `server/routes/calendar.ts` + registrado em `server/router.ts` (`GET /api/calendar/project/:projectId.ics`). [Req 5.1, 5.3]
+- [x] 5.2 `server/services/calendarService.ts` (agrega deadline do projeto + reuniões vinculadas via `project.clientId` — não há link direto meeting→project no schema) + `server/controllers/calendarController.ts` + `server/routes/calendar.ts` (gate `requireOperationalPlan`, Pro+ — corrigido no Fechamento: rota tinha ficado sem gate de plano, violando Req 5/Property 2) + registrado em `server/router.ts` (`GET /api/calendar/project/:projectId.ics`). [Req 5.1, 5.3]
 - [x] 5.3 Teste: projeto com deadline + 1 reunião → `.ics` contém 2 VEVENT (título "Prazo final" + título da reunião); projeto sem deadline/reunião → 404. [Req 5.2]
 
 **Bugs de paridade dual-DB corrigidos durante este trabalho (pré-existentes, não introduzidos por este spec):**
@@ -173,10 +173,15 @@ Frontend
 
 ### Fechamento — sincronia landing + validação [Req 7]
 
-- [ ] 6.1 Atualizar `client/src/components/landing/WhatsNewSection.tsx`: refletir estado real; remover "NOVO" de item ainda inexistente. [Req 7.1, 7.2]
-- [ ] 6.2 Ajustar tabela de pricing em `shared/site.ts` se algum item Studio não foi entregue. [Req 7.2]
-- [ ] 6.3 Atualizar `.private/ESTADO_REAL_2026-07-11.md` seção 4 (mover entregues → "✅ Existe"). [Req 7.3]
-- [ ] 6.4 Rodar suite completa `npm run test`; `npm run build` final; push; confirmar deploy Railway (migrations via P0). [Req 6.6]
+- [x] 6.1 `client/src/components/landing/WhatsNewSection.tsx` atualizado: todas as 9 features agora existem de fato (F1-F5 implementados). Copy de "Decupagem com IA" ajustado para não prometer extração estruturada que não existe; "Google Calendar" renomeado para "Exportar para Agenda" (rótulo honesto, one-way `.ics`). [Req 7.1, 7.2]
+- [x] 6.2 `shared/site.ts` ajustado: removido "Shot list simples" do plano Free (gating bloqueia Shot List para Free — só Pro+); "Integração Google Calendar" (Studio) reescrito para "Exportar cronograma para agenda (.ics)"; marquee "GOOGLE CALENDAR" → "EXPORTAR AGENDA". Budget Tracking/Equipment Inventory (Studio) e Shot List/Timesheet (Pro) já batiam com o gating real. [Req 7.2]
+- [x] 6.3 `.private/ESTADO_REAL_2026-07-11.md` seção 4 atualizada: Webhooks/Sessions/Budget/Equipment/ShotList/Timesheet/Calendar movidos de "❌ Não existe" para "✅ Existe agora"; seção de Riscos Críticos atualizada (propaganda enganosa, login em produção, e tabelas fantasma — todos marcados ✅ RESOLVIDO com detalhes do que foi feito). [Req 7.3]
+- [x] 6.4 Suite completa validada: `npm run check` limpo, `npm run test` **1139/1139 testes passando** (50 arquivos), `npm run build` limpo (client+server). Push feito a cada feature (F1-F5) com deploy Railway confirmado via `prisma migrate deploy` automático + testes manuais em produção (login, `/api/budgets`, `/api/equipment`, `/api/shotlists`, `/api/timesheets`, `/api/calendar` todos 200). [Req 6.6]
+
+**Bugs reais encontrados e corrigidos durante a validação final (não introduzidos por F1-F5, mas expostos por rodar a suite completa):**
+- `server/routes/calendar.ts` tinha ficado sem gate de plano (só `authenticate`, sem `requireOperationalPlan`) — corrigido para Pro+, conforme Requisito 5 e Property 2 do design.
+- `server/controllers/coreFlow.test.ts` e `client/src/test/operationsUx.test.tsx` quebravam por falta de `headers`/`PlanProvider` nos fixtures — pré-existente ao P0/F1-F5 (introduzido pelo commit `d6876c8` de Session Management), exposto agora porque a suite completa nunca tinha sido rodada do início ao fim nesta sessão. Corrigido nos fixtures de teste.
+- `client/src/test/setup.ts`: o mock global de `api` não incluía os blocos `budgets`/`equipment`/`shotlists`/`timesheets`/`calendar` — isso quebrava qualquer teste que renderizasse `ProjectHub` (usa `api.calendar.projectIcsUrl`). Corrigido adicionando os blocos ao mock.
 
 ### P3 — Polish / dívida técnica (não bloqueia)
 
