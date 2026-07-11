@@ -25,6 +25,7 @@ let analyticsController: typeof import("./analyticsController.js");
 let budgetController: typeof import("./budgetController.js");
 let equipmentController: typeof import("./equipmentController.js");
 let shotListController: typeof import("./shotListController.js");
+let timesheetController: typeof import("./timesheetController.js");
 let planAccess: typeof import("../middleware/planAccess.js");
 let user: { id: number; email: string; role: "user" };
 
@@ -70,6 +71,7 @@ describe("CRM, files and finance controller flow", () => {
     budgetController = await import("./budgetController.js");
     equipmentController = await import("./equipmentController.js");
     shotListController = await import("./shotListController.js");
+    timesheetController = await import("./timesheetController.js");
     planAccess = await import("../middleware/planAccess.js");
     user = await authService.registerUser(`Domain Flow`, `domain-${Date.now()}@example.com`, "password-123");
   });
@@ -345,5 +347,65 @@ describe("CRM, files and finance controller flow", () => {
     const afterDelete = await invoke(shotListController.getShotList, { user, params: { projectId } });
     expect(afterDelete.body.data.shots).toHaveLength(2);
     expect(afterDelete.body.data.shots.map((s: any) => s.id)).toEqual([shot3.body.data.id, shot1.body.data.id]);
+  });
+
+  it("covers timesheet timer + manual entries with single-open-timer gating (F4)", async () => {
+    // timesheet entitlement is Pro+ (already satisfied — user is on studio from the budget test).
+    const timesheetGate = planAccess.requireStudioPlan("timesheet");
+    await invoke(timesheetGate, { user }); // should not throw
+
+    const noRunning = await invoke(timesheetController.getRunningTimer, { user });
+    expect(noRunning.body.data).toBeNull();
+
+    const started = await invoke(timesheetController.startTimer, {
+      user,
+      body: { description: "Edição bruta" },
+    });
+    expect(started.body.data.ended_at).toBeNull();
+
+    // Starting a second timer while one is open must be rejected with 409 (Property 6).
+    await expect(
+      invoke(timesheetController.startTimer, { user, body: { description: "Outro timer" } }),
+    ).rejects.toMatchObject({ status: 409 });
+
+    const stopped = await invoke(timesheetController.stopTimer, {
+      user,
+      params: { id: String(started.body.data.id) },
+      body: { hourlyRate: 5000 },
+    });
+    expect(stopped.body.data.ended_at).not.toBeNull();
+    expect(stopped.body.data.duration_sec).toBeGreaterThanOrEqual(0);
+
+    // Stopping an already-closed entry must be rejected.
+    await expect(
+      invoke(timesheetController.stopTimer, { user, params: { id: String(started.body.data.id) }, body: {} }),
+    ).rejects.toMatchObject({ status: 409 });
+
+    // After stopping, a new timer can be started again.
+    const startedAgain = await invoke(timesheetController.startTimer, { user, body: {} });
+    expect(startedAgain.body.data.ended_at).toBeNull();
+    await invoke(timesheetController.stopTimer, { user, params: { id: String(startedAgain.body.data.id) }, body: {} });
+
+    // Manual entry: exactly 2 hours at R$50/h (5000 cents) => cost = 10000 cents.
+    const manual = await invoke(timesheetController.addManualEntry, {
+      user,
+      body: {
+        description: "Revisão com cliente",
+        startedAt: "2026-07-01T10:00:00.000Z",
+        endedAt: "2026-07-01T12:00:00.000Z",
+        hourlyRate: 5000,
+      },
+    });
+    expect(manual.body.data.duration_sec).toBe(7200);
+
+    const listed = await invoke(timesheetController.listEntries, { user, query: {} });
+    expect(listed.body.data.entries.length).toBeGreaterThanOrEqual(3);
+    expect(listed.body.data.totals.totalCost).toBeGreaterThanOrEqual(10000 + 5000 * (0 / 3600)); // manual entry cost alone
+
+    const deleted = await invoke(timesheetController.deleteEntry, { user, params: { id: String(manual.body.data.id) } });
+    expect(deleted.body.success).toBe(true);
+
+    const afterDelete = await invoke(timesheetController.listEntries, { user, query: {} });
+    expect(afterDelete.body.data.entries.some((e: any) => e.id === manual.body.data.id)).toBe(false);
   });
 });

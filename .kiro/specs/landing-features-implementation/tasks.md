@@ -139,18 +139,18 @@ Frontend
 ### F4 — Timesheet (Pro+ timer / Studio+ custo) [Req 4]
 
 Backend
-- [~] 4.1 Model `TimeEntry` em schema (+ relações reversas); validate + generate. [Req 4.3]
-- [~] 4.2 Migration `<ts>_add_time_entries` (SQL real). [Req 6.2]
-- [ ] 4.3 Espelho SQLite `time_entries` + índices. [Req 6.2]
-- [ ] 4.4 `server/services/timesheetService.ts` (dual-path): `listEntries`(+totais), `getRunningTimer`, `startTimer` (409 se já aberto), `stopTimer` (calcula durationSec/custo), `addManualEntry`, `deleteEntry`, `getReport`. [Req 4.1, 4.2, 4.3, 4.5]
-- [ ] 4.5 `server/controllers/timesheetController.ts` + `server/routes/timesheets.ts` + registrar (`/api/timesheets`). [Req 4.4]
-- [ ] 4.6 Teste: start → stop calcula duração/custo → start duplicado rejeitado (409) → manual entry → totais → delete. [Req 4.2, 4.3, 4.5]
+- [x] 4.1 Model `TimeEntry` em schema (+ relações reversas); validate + generate. [Req 4.3]
+- [x] 4.2 Migration `prisma/migrations/20260711070000_add_time_entries/migration.sql` (SQL real). [Req 6.2]
+- [x] 4.3 Espelho SQLite `time_entries` + índices. [Req 6.2]
+- [x] 4.4 `server/services/timesheetService.ts` (dual-path): `listEntries`(+totais), `getRunningTimer`, `startTimer` (409 se já aberto), `stopTimer` (calcula durationSec/custo), `addManualEntry`, `deleteEntry`, `getReport`. [Req 4.1, 4.2, 4.3, 4.5]
+- [x] 4.5 `server/controllers/timesheetController.ts` + `server/routes/timesheets.ts` (`requireStudioPlan("timesheet")`, Pro+ via flag) + registrar (`/api/timesheets`). [Req 4.4]
+- [x] 4.6 Teste: start → start duplicado rejeitado (409, Property 6) → stop calcula duração/custo → stop de entry já fechada rejeitado (409) → novo timer após stop → manual entry (2h @ R$50/h) → totais → delete recalcula. [Req 4.2, 4.3, 4.5]
 
 Frontend
-- [ ] 4.7 Bloco `api.timesheets.*` em `api.ts`. [Req 6.4]
-- [ ] 4.8 `client/src/pages/Timesheet.tsx`: timer start/stop, lista de registros, total horas + custo, form manual (projeto, início, fim, taxa), empty-state 01/02/03, gate. [Req 4.1, 4.2, 4.3, 4.6]
-- [ ] 4.9 Rota `/timesheet` em `App.tsx` + tab "Timesheet" (ícone `Clock`) em `ProductionNav`. [Req 4.1]
-- [ ] 4.10 `npm run build` + commit `feat(timesheet): timer + cost report end-to-end`.
+- [x] 4.7 Bloco `api.timesheets.*` em `api.ts`. [Req 6.4]
+- [x] 4.8 `client/src/pages/Timesheet.tsx`: timer start/stop com relógio ao vivo, lista de registros, total horas + custo, Dialog de registro manual (projeto, início, fim, taxa), empty-state 01/02/03, `FeatureUpgradeRequired`. [Req 4.1, 4.2, 4.3, 4.6]
+- [x] 4.9 Rota `/timesheet` em `App.tsx` + tab "Timesheet" (ícone `Clock`) no dropdown "Mais" de `ProductionNav`, gated por `canAccessFeature("timesheet")`. [Req 4.1]
+- [x] 4.10 `npm run build` + `npm run check` + testes verdes (7/7).
 
 ### F5 — Google Calendar / Agenda (.ics) (Pro+) [Req 5]
 

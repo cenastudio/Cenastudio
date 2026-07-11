@@ -13,6 +13,7 @@ import {
   UserCircle2,
   MoreHorizontal,
   Camera,
+  Clock,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import {
@@ -53,16 +54,13 @@ const PRIMARY_TABS: ProductionTab[] = [
  * to "Equipe Externa" to disambiguate from "Equipe" (/team, login accounts)
  * — both used the word "Equipe"/"Team" with genuinely different meanings
  * (freelancers/crew vs. system accounts with plan-based permissions).
- *
- * NOTE: When F4 (Timesheet, /timesheet) ships (see
- * .kiro/specs/landing-features-implementation), add its tab here (`Clock`
- * icon from lucide-react), gated the same way Equipment is below.
  */
 const SECONDARY_TABS: ProductionTab[] = [
   { href: "/files", labelPt: "Arquivos", labelEn: "Files", icon: FolderKanban },
   { href: "/assets", labelPt: "Assets", labelEn: "Assets", icon: Package },
   { href: "/documents", labelPt: "Documentos", labelEn: "Documents", icon: FileText },
   { href: "/equipment", labelPt: "Equipamento", labelEn: "Equipment", icon: Camera, requiresFeature: "equipment-inventory" },
+  { href: "/timesheet", labelPt: "Timesheet", labelEn: "Timesheet", icon: Clock, requiresFeature: "timesheet" },
   { href: "/webhooks", labelPt: "Webhooks", labelEn: "Webhooks", icon: Webhook },
   { href: "/collaborators", labelPt: "Equipe Externa", labelEn: "External Crew", icon: UserCircle2 },
   { href: "/team", labelPt: "Equipe", labelEn: "Team", icon: Users, roles: ["admin"] },

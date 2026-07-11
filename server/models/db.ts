@@ -345,6 +345,8 @@ function createIndexes() {
     "CREATE INDEX IF NOT EXISTS idx_shot_lists_user_id ON shot_lists(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_shot_lists_project_id ON shot_lists(project_id)",
     "CREATE INDEX IF NOT EXISTS idx_shots_shot_list_id ON shots(shot_list_id)",
+    "CREATE INDEX IF NOT EXISTS idx_time_entries_user_id ON time_entries(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_time_entries_project_id ON time_entries(project_id)",
     "CREATE INDEX IF NOT EXISTS idx_collaborators_user_id ON collaborators(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_project_members_project_id ON project_members(project_id)",
     "CREATE INDEX IF NOT EXISTS idx_project_members_collaborator_id ON project_members(collaborator_id)",
@@ -712,6 +714,18 @@ export async function initDatabase() {
       movement TEXT DEFAULT '',
       duration_sec INTEGER,
       status TEXT DEFAULT 'pending',
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS time_entries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      project_id INTEGER REFERENCES projects(id) ON DELETE SET NULL,
+      description TEXT DEFAULT '',
+      started_at TEXT NOT NULL,
+      ended_at TEXT,
+      duration_sec INTEGER DEFAULT 0,
+      hourly_rate INTEGER,
       created_at TEXT DEFAULT (datetime('now'))
     );
 

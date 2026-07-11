@@ -78,6 +78,7 @@ import webhooksRoutes from "./routes/webhooks.js";
 import budgetsRoutes from "./routes/budgets.js";
 import equipmentRoutes from "./routes/equipment.js";
 import shotlistsRoutes from "./routes/shotlists.js";
+import timesheetsRoutes from "./routes/timesheets.js";
 
 const router = Router();
 
@@ -176,5 +177,6 @@ router.use("/webhooks", webhooksRoutes);
 router.use("/budgets", budgetsRoutes);
 router.use("/equipment", equipmentRoutes);
 router.use("/shotlists", shotlistsRoutes);
+router.use("/timesheets", timesheetsRoutes);
 
 export default router;

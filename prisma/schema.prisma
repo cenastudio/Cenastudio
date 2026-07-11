@@ -47,6 +47,7 @@ model User {
   budgetEntries  BudgetEntry[]
   equipment      Equipment[]
   shotLists      ShotList[]
+  timeEntries    TimeEntry[]
   financialEntries FinancialEntry[]
   studioSettings StudioSetting?
   checklistItems ChecklistItem[]
@@ -269,6 +270,7 @@ model Project {
   budget        Budget?
   equipmentBookings EquipmentBooking[]
   shotLists     ShotList[]
+  timeEntries   TimeEntry[]
 
   @@index([userId], map: "idx_projects_user_id")
   @@index([clientId], map: "idx_projects_client_id")
@@ -827,4 +829,27 @@ model Shot {
 
   @@index([shotListId], map: "idx_shots_shot_list_id")
   @@map("shots")
+}
+
+// ===============================================
+// TIMESHEET (spec: landing-features-implementation, F4)
+// ===============================================
+
+model TimeEntry {
+  id          BigInt    @id @default(autoincrement())
+  userId      BigInt    @map("user_id")
+  projectId   BigInt?   @map("project_id")
+  description String    @default("")
+  startedAt   DateTime  @map("started_at") @db.Timestamptz
+  endedAt     DateTime? @map("ended_at") @db.Timestamptz
+  durationSec Int       @default(0) @map("duration_sec")
+  hourlyRate  Int?      @map("hourly_rate")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([userId], map: "idx_time_entries_user_id")
+  @@index([projectId], map: "idx_time_entries_project_id")
+  @@map("time_entries")
 }

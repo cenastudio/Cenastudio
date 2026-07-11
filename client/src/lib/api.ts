@@ -386,6 +386,33 @@ export const api = {
     reorder: (projectId: number, orderedIds: number[]) =>
       request<ShotItem[]>(`/shotlists/${projectId}/reorder`, { method: "PUT", body: JSON.stringify({ orderedIds }) }),
   },
+  timesheets: {
+    list: (filters?: { projectId?: number; from?: string; to?: string }) => {
+      const params = new URLSearchParams();
+      if (filters?.projectId) params.set("projectId", String(filters.projectId));
+      if (filters?.from) params.set("from", filters.from);
+      if (filters?.to) params.set("to", filters.to);
+      const qs = params.toString();
+      return request<{ entries: TimeEntryItem[]; totals: { totalDurationSec: number; totalCost: number } }>(
+        `/timesheets${qs ? `?${qs}` : ""}`,
+      );
+    },
+    getRunning: () => request<TimeEntryItem | null>("/timesheets/running"),
+    start: (data: { projectId?: number | null; description?: string }) =>
+      request<TimeEntryItem>("/timesheets/start", { method: "POST", body: JSON.stringify(data) }),
+    stop: (id: number, hourlyRate?: number | null) =>
+      request<TimeEntryItem>(`/timesheets/${id}/stop`, { method: "POST", body: JSON.stringify({ hourlyRate }) }),
+    addManualEntry: (data: {
+      projectId?: number | null;
+      description?: string;
+      startedAt: string;
+      endedAt: string;
+      hourlyRate?: number | null;
+    }) => request<TimeEntryItem>("/timesheets", { method: "POST", body: JSON.stringify(data) }),
+    deleteEntry: (id: number) => request<null>(`/timesheets/${id}`, { method: "DELETE" }),
+    getReport: () =>
+      request<Array<{ projectId: number | null; totalDurationSec: number; totalCost: number }>>("/timesheets/report"),
+  },
   assets: {
     list: () =>
       request<
@@ -891,5 +918,17 @@ export interface ShotItem {
   movement: string;
   duration_sec: number | null;
   status: "pending" | "shot" | string;
+  created_at: string;
+}
+
+export interface TimeEntryItem {
+  id: number;
+  user_id: number;
+  project_id: number | null;
+  description: string;
+  started_at: string;
+  ended_at: string | null;
+  duration_sec: number;
+  hourly_rate: number | null;
   created_at: string;
 }
