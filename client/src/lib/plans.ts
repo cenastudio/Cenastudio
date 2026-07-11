@@ -1,11 +1,13 @@
 import type { PlanTier } from "@shared/site";
 
-export type StripePlanId = "pro" | "studio";
+export type StripePlanId = "pro" | "studio" | "whitelabel" | "enterprise";
 
 /** Maps landing checkout plan IDs to Stripe subscription plan IDs */
 export function toStripePlanId(planId: string): StripePlanId | null {
   if (planId === "profissional" || planId === "pro") return "pro";
   if (planId === "produtora" || planId === "studio") return "studio";
+  if (planId === "whitelabel") return "whitelabel";
+  if (planId === "enterprise") return "enterprise";
   return null;
 }
 

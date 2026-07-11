@@ -140,19 +140,21 @@ export default function PricingSection() {
           </p>
         </motion.div>
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
-        >
+        <div className="relative -mx-4 px-4 md:mx-0 md:px-0">
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory md:grid md:grid-cols-2 md:overflow-visible lg:grid-cols-3 xl:grid-cols-5"
+            style={{ scrollbarWidth: 'thin' }}
+          >
           {PRICING.map((plan, idx) => (
             <motion.div
               key={idx}
               variants={cardVariants}
               whileHover={{ y: -8 }}
-              className={`landing-card relative overflow-hidden ${plan.highlight ? "md:scale-[1.03] border-frame-orange/70" : ""}`}
+              className={`landing-card relative overflow-hidden min-w-[280px] flex-shrink-0 snap-center md:min-w-0 ${plan.highlight ? "md:scale-[1.03] border-frame-orange/70" : ""}`}
             >
               <div className="relative z-10 p-8 md:p-10">
                 <div className="mb-4 font-frame-mono text-[0.64rem] uppercase tracking-[0.2em] text-frame-orange">
@@ -205,7 +207,8 @@ export default function PricingSection() {
               )}
             </motion.div>
           ))}
-        </motion.div>
+          </motion.div>
+        </div>
 
         <motion.p
           initial={{ opacity: 0 }}
