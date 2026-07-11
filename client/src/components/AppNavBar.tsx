@@ -29,7 +29,9 @@ export default function AppNavBar({ children }: AppNavBarProps) {
   const [location, setLocation] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
+  const [productionDropdownOpen, setProductionDropdownOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const productionDropdownRef = useRef<HTMLDivElement>(null);
 
   // Close mobile menu on Esc key
   useEffect(() => {
@@ -168,9 +170,101 @@ export default function AppNavBar({ children }: AppNavBarProps) {
       </div>
 
       <nav className="hidden xl:flex items-center gap-4">
-        {primaryNavItems.map(([href, label, icon, tourId, active]) => (
-          <span key={href}>{navLink(href, label, icon, tourId, active as boolean)}</span>
-        ))}
+        {primaryNavItems.map(([href, label, icon, tourId, active]) => {
+          // Special handling for Production - add dropdown
+          if (href === "/projects") {
+            return (
+              <div key={href} className="relative" ref={productionDropdownRef}>
+                <motion.button
+                  type="button"
+                  onClick={() => {
+                    setLocation(href);
+                    setMobileMenuOpen(false);
+                  }}
+                  onMouseEnter={() => setProductionDropdownOpen(true)}
+                  onMouseLeave={() => setProductionDropdownOpen(false)}
+                  className={`frame-nav-link ${active ? "active" : ""}`}
+                  data-tour={tourId}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  style={{ minHeight: "45px" }}
+                >
+                  <span className={`mr-1.5 text-[0.45rem] ${active ? "text-frame-orange" : "text-frame-gray-muted"}`}>●</span>
+                  {label}
+                  <ChevronDown className={`ml-1 w-3 h-3 transition-transform ${productionDropdownOpen ? "rotate-180" : ""}`} />
+                </motion.button>
+
+                {/* Production dropdown */}
+                {productionDropdownOpen && (
+                  <div
+                    onMouseEnter={() => setProductionDropdownOpen(true)}
+                    onMouseLeave={() => setProductionDropdownOpen(false)}
+                    className="absolute top-full left-0 mt-2 w-56 z-50 border border-frame-gray-3/60 bg-frame-black/98 backdrop-blur-xl shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200"
+                  >
+                    <div className="p-1.5 space-y-0.5">
+                      <button
+                        type="button"
+                        onClick={() => { setLocation("/projects"); setProductionDropdownOpen(false); }}
+                        className="w-full text-left px-3 py-2 text-xs text-frame-gray-light hover:text-frame-white hover:bg-frame-orange/10 transition"
+                      >
+                        <span className="font-semibold">Projetos</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setLocation("/tools"); setProductionDropdownOpen(false); }}
+                        className="w-full text-left px-3 py-2 text-xs text-frame-gray-light hover:text-frame-white hover:bg-frame-orange/10 transition"
+                      >
+                        Ferramentas IA
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setLocation("/documents"); setProductionDropdownOpen(false); }}
+                        className="w-full text-left px-3 py-2 text-xs text-frame-gray-light hover:text-frame-white hover:bg-frame-orange/10 transition"
+                      >
+                        📄 Documentos <span className="text-[0.6rem] text-frame-orange ml-1">NOVO</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setLocation("/assets"); setProductionDropdownOpen(false); }}
+                        className="w-full text-left px-3 py-2 text-xs text-frame-gray-light hover:text-frame-white hover:bg-frame-orange/10 transition"
+                      >
+                        📦 Assets <span className="text-[0.6rem] text-frame-orange ml-1">NOVO</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setLocation("/collaborators"); setProductionDropdownOpen(false); }}
+                        className="w-full text-left px-3 py-2 text-xs text-frame-gray-light hover:text-frame-white hover:bg-frame-orange/10 transition"
+                      >
+                        👥 Colaboradores <span className="text-[0.6rem] text-frame-orange ml-1">NOVO</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setLocation("/video-reviews"); setProductionDropdownOpen(false); }}
+                        className="w-full text-left px-3 py-2 text-xs text-frame-gray-light hover:text-frame-white hover:bg-frame-orange/10 transition"
+                      >
+                        🎬 Video Reviews
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setLocation("/team"); setProductionDropdownOpen(false); }}
+                        className="w-full text-left px-3 py-2 text-xs text-frame-gray-light hover:text-frame-white hover:bg-frame-orange/10 transition"
+                      >
+                        Equipe
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          return (
+            <span key={href}>{navLink(href, label, icon, tourId, active as boolean)}</span>
+          );
+        })}
       </nav>
 
       <div className="flex items-center gap-2">

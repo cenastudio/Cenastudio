@@ -3,10 +3,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { startCheckout } from "@/lib/api";
 import { toStripePlanId } from "@/lib/plans";
-import { motion } from "framer-motion";
-import { Check, CreditCard } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Check, CreditCard, ChevronDown } from "lucide-react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
+import { useState } from "react";
 
 // EN translations for plan descriptions and features from shared/site.ts (which is PT).
 // Keyed by the original PT string. When locale === 'en', we look up the EN version.
@@ -64,10 +65,17 @@ export default function PricingSection() {
   const isEn = locale === "en";
   const [, setLocation] = useLocation();
   const { isAuthenticated } = useAuth();
+  const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
 
   const handleSelectPlan = async (planId: string) => {
     if (planId === "iniciante") {
       setLocation("/register");
+      return;
+    }
+
+    // White-label and Enterprise redirect to contact
+    if (planId === "whitelabel" || planId === "enterprise") {
+      document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' });
       return;
     }
 
@@ -92,6 +100,9 @@ export default function PricingSection() {
 
   const ctaLabel = (planId: string) => {
     if (planId === "iniciante") return t("app.landing.pricing.freeCta") as string;
+    if (planId === "whitelabel" || planId === "enterprise") {
+      return isEn ? "Contact Sales" : "Solicitar Proposta";
+    }
     if (planId === "produtora") {
       return isAuthenticated
         ? t("app.landing.pricing.activateStudio") as string
@@ -191,12 +202,46 @@ export default function PricingSection() {
                 </button>
 
                 <ul className="space-y-4">
-                  {plan.features.map((feature: string, fidx: number) => (
+                  {plan.features.slice(0, 5).map((feature: string, fidx: number) => (
                     <li key={fidx} className="flex items-start gap-3">
                       <Check size={18} className="text-frame-orange flex-shrink-0 mt-0.5" />
                       <span className="text-sm font-light text-[var(--landing-subtle)]">{translatePlanText(feature, isEn)}</span>
                     </li>
                   ))}
+
+                  {/* Collapsible features for mobile */}
+                  <AnimatePresence>
+                    {expandedPlan === plan.id && plan.features.slice(5).map((feature: string, fidx: number) => (
+                      <motion.li
+                        key={`expanded-${fidx}`}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="flex items-start gap-3"
+                      >
+                        <Check size={18} className="text-frame-orange flex-shrink-0 mt-0.5" />
+                        <span className="text-sm font-light text-[var(--landing-subtle)]">{translatePlanText(feature, isEn)}</span>
+                      </motion.li>
+                    ))}
+                  </AnimatePresence>
+
+                  {/* Show more/less button */}
+                  {plan.features.length > 5 && (
+                    <li className="pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedPlan(expandedPlan === plan.id ? null : plan.id)}
+                        className="flex items-center gap-2 text-sm text-frame-orange hover:text-frame-orange/80 transition-colors"
+                      >
+                        <span>{expandedPlan === plan.id ? (isEn ? "Show less" : "Ver menos") : (isEn ? "Show all features" : "Ver todas as features")}</span>
+                        <ChevronDown
+                          size={16}
+                          className={`transition-transform duration-200 ${expandedPlan === plan.id ? "rotate-180" : ""}`}
+                        />
+                      </button>
+                    </li>
+                  )}
                 </ul>
               </div>
 
