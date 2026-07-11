@@ -333,6 +333,10 @@ function createIndexes() {
     "CREATE INDEX IF NOT EXISTS idx_video_comments_review_id ON video_comments(review_id)",
     "CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read)",
+    "CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_user_sessions_token_hash ON user_sessions(token_hash)",
+    "CREATE INDEX IF NOT EXISTS idx_webhooks_user_id ON webhooks(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_webhook_id ON webhook_deliveries(webhook_id)",
     "CREATE INDEX IF NOT EXISTS idx_collaborators_user_id ON collaborators(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_project_members_project_id ON project_members(project_id)",
     "CREATE INDEX IF NOT EXISTS idx_project_members_collaborator_id ON project_members(collaborator_id)",
@@ -595,6 +599,44 @@ export async function initDatabase() {
       created_at TEXT DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS user_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token_hash TEXT NOT NULL UNIQUE,
+      user_agent TEXT,
+      device_label TEXT,
+      ip_address TEXT,
+      last_active_at TEXT DEFAULT (datetime('now')),
+      created_at TEXT DEFAULT (datetime('now')),
+      revoked_at TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS webhooks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      url TEXT NOT NULL,
+      label TEXT DEFAULT '',
+      events TEXT DEFAULT '[]',
+      secret TEXT NOT NULL,
+      active INTEGER DEFAULT 1,
+      last_status INTEGER,
+      last_fired_at TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS webhook_deliveries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      webhook_id INTEGER NOT NULL REFERENCES webhooks(id) ON DELETE CASCADE,
+      event TEXT NOT NULL,
+      payload TEXT NOT NULL,
+      status_code INTEGER,
+      success INTEGER DEFAULT 0,
+      error TEXT,
+      attempt INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
     CREATE TABLE IF NOT EXISTS financial_entries (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -635,30 +677,39 @@ export async function initDatabase() {
       "Free",
       0,
       5,
-      JSON.stringify(["5 gerações/mês", "Acesso a 6 ferramentas", "Export .txt"]),
+      JSON.stringify(["5 clientes", "5 gerações/mês", "8 ferramentas IA", "Export .txt"]),
     );
     insertPlan.run(
       "pro",
       "Pro",
-      4900,
-      50,
+      14900,
+      100,
       JSON.stringify([
-        "50 gerações/mês",
-        "Fluxos principais de produção",
-        "Export PDF e DOCX",
-        "Histórico completo",
+        "15 clientes",
+        "+ Clientes adicionais",
+        "100 gerações/mês",
+        "12 ferramentas IA",
+        "Pipeline",
+        "Video Reviews",
+        "Export PDF/DOCX",
+        "Colaboração (5 membros)",
       ]),
     );
     insertPlan.run(
       "studio",
       "Studio",
-      9900,
+      39900,
       -1,
       JSON.stringify([
+        "50 clientes",
+        "+ Clientes adicionais",
         "Gerações ilimitadas",
-        "Fluxos principais de produção",
-        "Projetos e pastas",
-        "Suporte prioritário",
+        "12 ferramentas IA",
+        "Commercial Hub",
+        "Módulo Financeiro",
+        "Equipe ilimitada",
+        "API Access",
+        "Suporte premium",
       ]),
     );
   }

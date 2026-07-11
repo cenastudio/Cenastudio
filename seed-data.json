@@ -8,7 +8,7 @@
 
   "plans": [
     { "id": "free", "name": "Free", "priceBrl": 0, "generationLimit": 5, "features": ["5 clientes", "Projetos de teste", "8 ferramentas IA", "Export .txt"] },
-    { "id": "pro", "name": "Pro", "priceBrl": 19900, "generationLimit": 100, "features": ["15 clientes", "+ Clientes adicionais", "Projetos ilimitados", "12 ferramentas IA", "Pipeline", "Video Reviews", "Export PDF/DOCX", "Colaboração (5 membros)"] },
+    { "id": "pro", "name": "Pro", "priceBrl": 14900, "generationLimit": 100, "features": ["15 clientes", "+ Clientes adicionais", "Projetos ilimitados", "12 ferramentas IA", "Pipeline", "Video Reviews", "Export PDF/DOCX", "Colaboração (5 membros)"] },
     { "id": "studio", "name": "Studio", "priceBrl": 39900, "generationLimit": -1, "features": ["50 clientes", "+ Clientes adicionais", "Projetos ilimitados", "Gerações ilimitadas", "Commercial Hub", "Módulo Financeiro", "Equipe ilimitada", "API Access", "Suporte premium"] }
   ],
 

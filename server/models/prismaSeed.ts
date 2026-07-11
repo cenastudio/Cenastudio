@@ -13,7 +13,7 @@ const plans = [
   {
     id: "pro",
     name: "Pro",
-    priceBrl: 19900,
+    priceBrl: 14900,
     generationLimit: 100,
     features: ["15 clientes", "+ Clientes adicionais", "100 gerações/mês", "12 ferramentas IA", "Pipeline", "Video Reviews", "Export PDF/DOCX", "Colaboração (5 membros)"],
   },
