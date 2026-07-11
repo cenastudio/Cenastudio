@@ -2,6 +2,7 @@ import type { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 import { AppError } from "./errorHandler.js";
 import { ensureUserFromToken, getUserById } from "../services/authService.js";
+import { isTokenRevoked, trackSession } from "../services/sessionService.js";
 
 export interface AuthUser {
   id: number;
@@ -59,13 +60,16 @@ export const authenticate: RequestHandler = async (req, res, next) => {
   }
   try {
     const payload = jwt.verify(token, getJwtSecret()) as AuthUser;
-    const currentUser = await getUserById(payload.id);
-    if (!currentUser) {
-      req.user = await ensureUserFromToken(payload);
-      next();
-      return;
+
+    if (await isTokenRevoked(token)) {
+      return next(new AppError("Invalid or expired session", 401));
     }
-    req.user = currentUser;
+
+    const currentUser = await getUserById(payload.id);
+    const resolvedUser = currentUser ?? (await ensureUserFromToken(payload));
+    req.user = resolvedUser;
+
+    trackSession(resolvedUser.id, token, req.headers["user-agent"], req.ip);
     next();
   } catch {
     next(new AppError("Invalid or expired session", 401));

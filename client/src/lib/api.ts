@@ -250,6 +250,53 @@ export const api = {
     populatedStates: (id: number) =>
       request<Array<{ toolId: string; updatedAt: string }>>(`/projects/${id}/states`),
   },
+  webhooks: {
+    listEvents: () => request<Array<{ id: string; label: string }>>("/webhooks/events"),
+    list: () =>
+      request<
+        Array<{
+          id: number;
+          url: string;
+          label: string;
+          events: string[];
+          active: boolean;
+          lastStatus: number | null;
+          lastFiredAt: string | null;
+          createdAt: string;
+        }>
+      >("/webhooks"),
+    create: (data: { url: string; label: string; events: string[] }) =>
+      request<{
+        id: number;
+        url: string;
+        label: string;
+        events: string[];
+        active: boolean;
+        lastStatus: number | null;
+        lastFiredAt: string | null;
+        createdAt: string;
+        secret: string;
+      }>("/webhooks", { method: "POST", body: JSON.stringify(data) }),
+    update: (id: number, data: { url?: string; label?: string; events?: string[]; active?: boolean }) =>
+      request<null>(`/webhooks/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    delete: (id: number) => request<null>(`/webhooks/${id}`, { method: "DELETE" }),
+    test: (id: number) =>
+      request<{ success: boolean; statusCode: number | null; error: string | null }>(`/webhooks/${id}/test`, {
+        method: "POST",
+      }),
+    deliveries: (id: number) =>
+      request<
+        Array<{
+          id: number;
+          event: string;
+          statusCode: number | null;
+          success: boolean;
+          error: string | null;
+          attempt: number;
+          createdAt: string;
+        }>
+      >(`/webhooks/${id}/deliveries`),
+  },
   assets: {
     list: () =>
       request<

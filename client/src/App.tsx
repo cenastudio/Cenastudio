@@ -31,6 +31,7 @@ const Collaborators = lazy(() => import("@/pages/Collaborators"));
 const TeamPage = lazy(() => import("@/pages/Team"));
 const CompanySettings = lazy(() => import("@/pages/CompanySettings"));
 const Assets = lazy(() => import("@/pages/Assets"));
+const Webhooks = lazy(() => import("@/pages/Webhooks"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Projects = lazy(() => import("@/pages/Projects"));
 const ProductionShell = lazy(() => import("@/pages/ProductionShell"));
@@ -91,6 +92,7 @@ function Router() {
       <Route path="/documents" component={Documents} />
       <Route path="/company" component={CompanySettings} />
       <Route path="/assets">{() => <Assets />}</Route>
+      <Route path="/webhooks">{() => <Webhooks />}</Route>
       <Route path="/files" component={Files} />
       <Route path="/files/:projectId" component={Files} />
       <Route path="/video-reviews/:projectId">{() => <VideoReviews />}</Route>

@@ -9,6 +9,9 @@ import * as authService from "../services/authService.js";
 import { isGitHubAuthConfigured } from "../config/passport.js";
 import { sendEmail, isEmailConfigured } from "../services/emailService.js";
 import { SITE_CONFIG } from "@shared/site";
+import { trackSession, hashToken, revokeSession } from "../services/sessionService.js";
+import { db } from "../models/db.js";
+import { prisma, shouldUsePrisma } from "../models/prisma.js";
 
 function getClientOrigin() {
   return process.env.CLIENT_ORIGIN || "http://localhost:5173";
@@ -34,6 +37,7 @@ export const login: RequestHandler = async (req, res, next) => {
     const user = await authService.loginUser(email, password);
     const token = signToken(user);
     res.cookie(COOKIE_NAME, token, cookieOptions);
+    trackSession(user.id, token, req.headers["user-agent"], req.ip);
     res.json({ success: true, data: { user } });
   } catch (e) {
     next(e);
@@ -59,6 +63,7 @@ export const register: RequestHandler = async (req, res, next) => {
     const user = await authService.registerUser(name, email, password, desiredPlan);
     const token = signToken(user);
     res.cookie(COOKIE_NAME, token, cookieOptions);
+    trackSession(user.id, token, req.headers["user-agent"], req.ip);
     res.status(201).json({ success: true, data: { user } });
   } catch (e) {
     next(e);
@@ -109,7 +114,26 @@ export const resetPassword: RequestHandler = async (req, res, next) => {
   }
 };
 
-export const logout: RequestHandler = (_req, res) => {
+export const logout: RequestHandler = async (req, res) => {
+  const token = req.cookies?.[COOKIE_NAME];
+  if (token) {
+    const tokenHash = hashToken(token);
+    // No JWT verification here on purpose: logout should always succeed and
+    // clear the cookie even if the token is expired/malformed. We only try
+    // to mark the matching session row revoked, best-effort.
+    try {
+      if (shouldUsePrisma) {
+        await prisma.userSession.updateMany({
+          where: { tokenHash },
+          data: { revokedAt: new Date() },
+        });
+      } else {
+        db.prepare("UPDATE user_sessions SET revoked_at = datetime('now') WHERE token_hash = ?").run(tokenHash);
+      }
+    } catch (error) {
+      console.error("[logout] Falha ao revogar sessão:", error);
+    }
+  }
   res.clearCookie(COOKIE_NAME, { path: "/" });
   res.json({ success: true, data: null });
 };

@@ -73,6 +73,8 @@ import {
 import { authenticate, requireAdmin } from "./middleware/authenticate.js";
 import notificationsRoutes from "./routes/notifications.js";
 import aiFeaturesRoutes from "./routes/aiFeatures.js";
+import sessionsRoutes from "./routes/sessions.js";
+import webhooksRoutes from "./routes/webhooks.js";
 
 const router = Router();
 
@@ -166,5 +168,7 @@ router.use("/public/video-reviews", videoReviewsPublicRoutes);
 router.use("/video-upload", videoUploadRoutes);
 router.use("/notifications", notificationsRoutes);
 router.use("/ai-features", aiFeaturesRoutes);
+router.use("/sessions", sessionsRoutes);
+router.use("/webhooks", webhooksRoutes);
 
 export default router;

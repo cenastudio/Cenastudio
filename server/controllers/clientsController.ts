@@ -7,6 +7,7 @@ import { lookupCnpj } from "../services/cnpjService.js";
 import { prisma, shouldUsePrisma } from "../models/prisma.js";
 import { jsonSafe, withSnakeCase } from "../utils/prismaSerialization.js";
 import { assertClientCapacity, getClientAllowance } from "../services/entitlementService.js";
+import { dispatchWebhookEvent } from "../services/webhookService.js";
 
 const clientFields = {
   userId: "user_id",
@@ -341,6 +342,7 @@ export const createClient: RequestHandler = async (req, res, next) => {
           workflowStage: workflow_stage || "prospect", firstContactAt: now, lastContactAt: now,
         },
       });
+      dispatchWebhookEvent(userId, "client.created", { id: Number(created.id), name: created.name });
       res.json({ success: true, data: serializeClient(created) });
       return;
     }
@@ -389,7 +391,7 @@ export const createClient: RequestHandler = async (req, res, next) => {
         workflow_stage || "prospect",
       );
 
-    const newClient = db.prepare("SELECT * FROM clients WHERE id = ?").get(result.lastInsertRowid);
+    const newClient = db.prepare("SELECT * FROM clients WHERE id = ?").get(result.lastInsertRowid) as { id: number };
     const clientName = name.trim();
     notifyUser(userId, "Cliente cadastrado", `${clientName} entrou no seu CRM.`, "client", "/clients");
     notifyAdmins(
@@ -398,6 +400,7 @@ export const createClient: RequestHandler = async (req, res, next) => {
       "client",
       "/clients",
     );
+    dispatchWebhookEvent(userId, "client.created", { id: newClient.id, name: clientName });
 
     res.json({ success: true, data: newClient });
   } catch (e) {

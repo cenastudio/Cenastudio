@@ -4,6 +4,7 @@ import { AppError } from "../middleware/errorHandler.js";
 import { prisma } from "../models/prisma.js";
 import { withSnakeCase } from "../utils/prismaSerialization.js";
 import { notifyUser } from "../services/notificationService.js";
+import { dispatchWebhookEvent } from "../services/webhookService.js";
 
 function hashDocument(html: string): string {
   return createHash("sha256").update(html, "utf8").digest("hex");
@@ -206,6 +207,9 @@ export const acceptPublicProposal: RequestHandler = async (req, res, next) => {
       "success",
       "/clients",
     );
+    dispatchWebhookEvent(Number(updated.userId), "proposal.accepted", {
+      proposalId: Number(updated.id), title: updated.title, acceptedByName: name.trim(),
+    });
 
     res.json({
       success: true,

@@ -8,6 +8,7 @@ import { notifyUser } from "../services/notificationService.js";
 import { prisma, shouldUsePrisma } from "../models/prisma.js";
 import { withSnakeCase } from "../utils/prismaSerialization.js";
 import { createProjectFileUrl } from "../services/supabaseStorage.js";
+import { dispatchWebhookEvent } from "../services/webhookService.js";
 
 function serializeComment(value: any) {
   return withSnakeCase(value, {
@@ -239,8 +240,8 @@ export const getVideoReview: RequestHandler = async (req, res, next) => {
     // Get comments for this review
     const comments = (db
       .prepare(
-        `SELECT * FROM video_comments 
-         WHERE review_id = ? 
+        `SELECT * FROM video_comments
+         WHERE review_id = ?
          ORDER BY timestamp_seconds ASC`,
       )
       .all(reviewId) as any[]).map((c) => ({
@@ -411,7 +412,7 @@ export const updateVideoReview: RequestHandler = async (req, res, next) => {
 
     db
       .prepare(
-        `UPDATE video_reviews 
+        `UPDATE video_reviews
          SET title = ?, description = ?, status = ?, video_url = ?, updated_at = datetime('now')
          WHERE id = ?`,
       )
@@ -526,7 +527,7 @@ export const generateShareLink: RequestHandler = async (req, res, next) => {
 
     db
       .prepare(
-        `UPDATE video_reviews 
+        `UPDATE video_reviews
          SET share_token = ?, expires_at = ?, updated_at = datetime('now')
          WHERE id = ?`,
       )
@@ -618,8 +619,8 @@ export const accessSharedReview: RequestHandler = async (req, res, next) => {
     // Get comments for this review
     const comments = (db
       .prepare(
-        `SELECT * FROM video_comments 
-         WHERE review_id = ? 
+        `SELECT * FROM video_comments
+         WHERE review_id = ?
          ORDER BY timestamp_seconds ASC`,
       )
       .all(review.id) as any[]).map((c) => ({
@@ -871,6 +872,11 @@ export const updateSharedReviewStatus: RequestHandler = async (req, res, next) =
         `${authorName?.trim() || "Cliente"} atualizou o status de "${review.title}".`,
         status === "approved" ? "success" : status === "changes_requested" ? "warning" : "error",
         reviewLink({ project_id: Number(review.projectId), id: Number(review.id) }));
+      if (status === "approved" || status === "changes_requested") {
+        dispatchWebhookEvent(Number(review.userId), status === "approved" ? "video_review.approved" : "video_review.changes_requested", {
+          reviewId: Number(review.id), title: review.title, authorName: authorName?.trim() || "Cliente",
+        });
+      }
       const updated = await prisma.videoReview.findUnique({
         where: { id: review.id }, include: { file: true, project: { select: { name: true } }, comments: { orderBy: [{ timestampSeconds: "asc" }, { createdAt: "asc" }] } },
       });
@@ -927,6 +933,11 @@ export const updateSharedReviewStatus: RequestHandler = async (req, res, next) =
       status === "approved" ? "success" : status === "changes_requested" ? "warning" : "error",
       reviewLink(review),
     );
+    if (status === "approved" || status === "changes_requested") {
+      dispatchWebhookEvent(review.user_id, status === "approved" ? "video_review.approved" : "video_review.changes_requested", {
+        reviewId: review.id, title: review.title, authorName: authorName?.trim() || "Cliente",
+      });
+    }
 
     const updatedReview = db
       .prepare(
@@ -981,7 +992,7 @@ export const resolveComment: RequestHandler = async (req, res, next) => {
 
     const comment = db
       .prepare(
-        `SELECT vc.*, vr.project_id 
+        `SELECT vc.*, vr.project_id
          FROM video_comments vc
          LEFT JOIN video_reviews vr ON vc.review_id = vr.id
          WHERE vc.id = ?`,
@@ -1003,7 +1014,7 @@ export const resolveComment: RequestHandler = async (req, res, next) => {
 
     db
       .prepare(
-        `UPDATE video_comments 
+        `UPDATE video_comments
          SET resolved = ?, updated_at = datetime('now')
          WHERE id = ?`,
       )
@@ -1037,7 +1048,7 @@ export const deleteComment: RequestHandler = async (req, res, next) => {
 
     const comment = db
       .prepare(
-        `SELECT vc.*, vr.project_id 
+        `SELECT vc.*, vr.project_id
          FROM video_comments vc
          LEFT JOIN video_reviews vr ON vc.review_id = vr.id
          WHERE vc.id = ?`,

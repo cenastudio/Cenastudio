@@ -4,6 +4,7 @@ import { AppError } from "../middleware/errorHandler.js";
 import type { DbProject, DbProjectState } from "../models/types.js";
 import { prisma, shouldUsePrisma } from "../models/prisma.js";
 import { jsonSafe } from "../utils/prismaSerialization.js";
+import { dispatchWebhookEvent } from "../services/webhookService.js";
 
 function serializeProject(project: DbProject) {
   const withClient = project as DbProject & { client_name?: string | null };
@@ -122,7 +123,9 @@ export const createProject: RequestHandler = async (req, res, next) => {
         },
         include: { client: { select: { name: true, company: true } } },
       });
-      res.json({ success: true, data: serializePrismaProject(created) });
+      const serialized = serializePrismaProject(created);
+      dispatchWebhookEvent(userId, "project.created", { id: serialized.id, name: serialized.name });
+      res.json({ success: true, data: serialized });
       return;
     }
 
@@ -141,6 +144,7 @@ export const createProject: RequestHandler = async (req, res, next) => {
       )
       .get(result.lastInsertRowid) as DbProject;
 
+    dispatchWebhookEvent(userId, "project.created", { id: newProject.id, name: newProject.name });
     res.json({ success: true, data: serializeProject(newProject) });
   } catch (e) {
     next(e);

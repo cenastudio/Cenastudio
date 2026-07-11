@@ -1,7 +1,7 @@
 import { useLocation } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { FolderKanban, Sparkles, Video, FileText, Users, ChevronDown, Package } from "lucide-react";
+import { FolderKanban, Sparkles, Video, FileText, Users, ChevronDown, Package, Webhook } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 type TeamRole = "admin" | "editor" | "member";
@@ -23,6 +23,7 @@ const PRODUCTION_TABS: ProductionTab[] = [
   { href: "/video-reviews", labelPt: "Aprovações", labelEn: "Approvals", icon: Video },
   { href: "/files", labelPt: "Arquivos", labelEn: "Files", icon: FolderKanban },
   { href: "/assets", labelPt: "Assets", labelEn: "Assets", icon: Package },
+  { href: "/webhooks", labelPt: "Webhooks", labelEn: "Webhooks", icon: Webhook },
   { href: "/documents", labelPt: "Documentos", labelEn: "Documents", icon: FileText },
   { href: "/collaborators", labelPt: "Colaboradores", labelEn: "Collaborators", icon: Users },
   { href: "/team", labelPt: "Equipe", labelEn: "Team", icon: Users, roles: ["admin"] },
