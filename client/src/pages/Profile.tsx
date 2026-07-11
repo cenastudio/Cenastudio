@@ -1067,7 +1067,7 @@ function ProfileContent() {
                       <Zap className="w-6 h-6 text-frame-orange" />
                     </div>
                     <h4 className="text-xl font-bold">Pro</h4>
-                    <p className="text-3xl font-bold mt-2">R$ 149<span className="plan-muted text-base font-normal">{t("app.profile.perMonth")}</span></p>
+                    <p className="text-3xl font-bold mt-2">R$ 199<span className="plan-muted text-base font-normal">{t("app.profile.perMonth")}</span></p>
                   </div>
                   <p className="plan-muted text-sm text-center mt-4">{t("app.profile.proDesc")}</p>
                   <ul className="mt-6 space-y-3">

@@ -801,7 +801,7 @@ export async function initDatabase() {
     insertPlan.run(
       "pro",
       "Pro",
-      14900,
+      19900,
       100,
       JSON.stringify([
         "15 clientes",

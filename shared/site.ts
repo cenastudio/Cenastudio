@@ -236,7 +236,7 @@ export const PRICING = [
   {
     id: "profissional" as PlanTier,
     tier: "// Pro",
-    price: "R$149",
+    price: "R$199",
     period: "/mês — mais popular",
     description: "Para freelancers e produtoras pequenas (1-3 pessoas)",
     roi: "💡 Economize 10h/mês em burocracia",
