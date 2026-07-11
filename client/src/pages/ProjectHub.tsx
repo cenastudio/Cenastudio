@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import AppNavBar from "@/components/AppNavBar";
+import ProjectNav from "@/components/ProjectNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import {
   Film,
@@ -228,6 +229,7 @@ function ProjectHubContent() {
     return (
       <div className="min-h-screen bg-frame-black text-frame-white flex flex-col">
         <AppNavBar />
+        {projectId ? <ProjectNav projectId={projectId} /> : null}
         <div className="flex-1 flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-frame-orange" />
         </div>
@@ -239,6 +241,7 @@ function ProjectHubContent() {
     return (
       <div className="min-h-screen bg-frame-black text-frame-white flex flex-col">
         <AppNavBar />
+        {projectId ? <ProjectNav projectId={projectId} /> : null}
         <div className="flex-1 flex items-center justify-center flex-col gap-4">
           <p className="frame-label">{t("app.hub.notFound")}</p>
           <button type="button" onClick={() => setLocation("/projects")} className="frame-btn-ghost text-xs">
@@ -270,6 +273,7 @@ function ProjectHubContent() {
   return (
     <div className="min-h-screen bg-frame-black text-frame-white flex flex-col">
       <AppNavBar />
+      <ProjectNav projectId={projectId} />
 
       <main id="main-content" className="max-w-7xl w-full mx-auto px-4 md:px-6 py-6 flex-1 space-y-6">
 
