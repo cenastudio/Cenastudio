@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
-import { BookOpen, ChevronLeft } from "lucide-react";
+import { BookOpen, ChevronLeft, Wallet } from "lucide-react";
 import { getStageForLocation, WORKFLOW_STAGES } from "@/lib/workflow";
+import { usePlanContext } from "@/contexts/PlanContext";
+import { canAccessFeature } from "@/lib/feature-gating";
 
 interface ProjectNavProps {
   projectId: number;
@@ -12,7 +14,10 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
   const { t } = useLanguage();
   const [location, setLocation] = useLocation();
   const [projectName, setProjectName] = useState("");
+  const { planMode } = usePlanContext();
   const activeStage = getStageForLocation(location);
+  const canAccessBudget = canAccessFeature("budget-tracking", planMode).hasAccess;
+  const isBudgetActive = location === `/project/${projectId}/budget`;
 
   useEffect(() => {
     fetch(`/api/projects/${projectId}`, { credentials: "include" })
@@ -58,6 +63,22 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
             <BookOpen className="h-3.5 w-3.5" />
             {t("app.common.overview") as string}
           </button>
+          {canAccessBudget && (
+            <button
+              type="button"
+              onClick={() => setLocation(`/project/${projectId}/budget`)}
+              className={`flex min-h-10 shrink-0 items-center gap-1.5 px-3 py-1.5 font-frame-mono text-xs tracking-wider transition-all duration-200
+                relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:transition-all
+                ${isBudgetActive
+                  ? "text-frame-orange after:bg-frame-orange"
+                  : "text-frame-gray-light hover:text-frame-white after:bg-transparent"
+                }`}
+              aria-current={isBudgetActive ? "page" : undefined}
+            >
+              <Wallet className="h-3.5 w-3.5" />
+              Orçamento
+            </button>
+          )}
           <nav className="flex items-center gap-0 overflow-x-auto scrollbar-none" aria-label={t("app.nav.projectJourney") as string}>
             {WORKFLOW_STAGES.map((stage) => {
               const isActive = activeStage === stage.id && location !== `/project/${projectId}`;

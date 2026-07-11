@@ -305,6 +305,27 @@ export const api = {
         }>
       >(`/webhooks/${id}/deliveries`),
   },
+  budgets: {
+    getOverview: (projectId: number) =>
+      request<BudgetOverview>(`/budgets/${projectId}`),
+    updateBaseline: (
+      projectId: number,
+      data: { totalAmount: number; currency: string; categories: Array<{ name: string; budgeted: number }> },
+    ) =>
+      request<{ id: number; total_amount: number; currency: string; categories: unknown }>(`/budgets/${projectId}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    addEntry: (
+      projectId: number,
+      data: { category: string; description: string; amount: number; entryDate: string; receiptUrl?: string | null },
+    ) =>
+      request<BudgetEntryItem>(`/budgets/${projectId}/entries`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    deleteEntry: (id: number) => request<null>(`/budgets/entries/${id}`, { method: "DELETE" }),
+  },
   assets: {
     list: () =>
       request<
@@ -732,4 +753,36 @@ export interface RecentActivity {
   createdAt: string;
   projectId: number | null;
   projectName: string | null;
+}
+
+export interface BudgetCategoryOverview {
+  name: string;
+  budgeted: number;
+  spent: number;
+  pct: number;
+}
+
+export interface BudgetAlert {
+  category: string;
+  level: "warn" | "over";
+}
+
+export interface BudgetOverview {
+  budgetId: number;
+  totalBudgeted: number;
+  totalSpent: number;
+  currency: string;
+  byCategory: BudgetCategoryOverview[];
+  alerts: BudgetAlert[];
+}
+
+export interface BudgetEntryItem {
+  id: number;
+  budget_id: number;
+  category: string;
+  description: string;
+  amount: number;
+  entry_date: string;
+  receipt_url: string | null;
+  created_at: string;
 }

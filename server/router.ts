@@ -75,6 +75,7 @@ import notificationsRoutes from "./routes/notifications.js";
 import aiFeaturesRoutes from "./routes/aiFeatures.js";
 import sessionsRoutes from "./routes/sessions.js";
 import webhooksRoutes from "./routes/webhooks.js";
+import budgetsRoutes from "./routes/budgets.js";
 
 const router = Router();
 
@@ -170,5 +171,6 @@ router.use("/notifications", notificationsRoutes);
 router.use("/ai-features", aiFeaturesRoutes);
 router.use("/sessions", sessionsRoutes);
 router.use("/webhooks", webhooksRoutes);
+router.use("/budgets", budgetsRoutes);
 
 export default router;

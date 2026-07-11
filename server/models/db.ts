@@ -337,6 +337,8 @@ function createIndexes() {
     "CREATE INDEX IF NOT EXISTS idx_user_sessions_token_hash ON user_sessions(token_hash)",
     "CREATE INDEX IF NOT EXISTS idx_webhooks_user_id ON webhooks(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_webhook_id ON webhook_deliveries(webhook_id)",
+    "CREATE INDEX IF NOT EXISTS idx_budgets_user_id ON budgets(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_budget_entries_budget_id ON budget_entries(budget_id)",
     "CREATE INDEX IF NOT EXISTS idx_collaborators_user_id ON collaborators(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_project_members_project_id ON project_members(project_id)",
     "CREATE INDEX IF NOT EXISTS idx_project_members_collaborator_id ON project_members(collaborator_id)",
@@ -634,6 +636,29 @@ export async function initDatabase() {
       success INTEGER DEFAULT 0,
       error TEXT,
       attempt INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS budgets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      project_id INTEGER NOT NULL UNIQUE REFERENCES projects(id) ON DELETE CASCADE,
+      total_amount INTEGER DEFAULT 0,
+      currency TEXT DEFAULT 'BRL',
+      categories TEXT DEFAULT '[]',
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS budget_entries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      budget_id INTEGER NOT NULL REFERENCES budgets(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      category TEXT NOT NULL,
+      description TEXT NOT NULL,
+      amount INTEGER DEFAULT 0,
+      entry_date TEXT NOT NULL,
+      receipt_url TEXT,
       created_at TEXT DEFAULT (datetime('now'))
     );
 

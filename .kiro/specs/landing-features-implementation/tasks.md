@@ -83,18 +83,25 @@ com segurança).
 ### F1 — Budget Tracking (Studio+) [Req 1]
 
 Backend
-- [ ] 1.1 Models `Budget` + `BudgetEntry` em `prisma/schema.prisma` (+ relações reversas em `User`/`Project`); `npx prisma validate` + `generate`. [Req 1.2]
-- [ ] 1.2 Migration `prisma/migrations/<ts>_add_budget/migration.sql` (SQL real, padrão `add_webhooks`). [Req 6.2]
-- [ ] 1.3 Espelho SQLite em `server/models/db.ts`: `budgets` + `budget_entries` + índices em `createIndexes()`. [Req 6.2]
-- [ ] 1.4 `server/services/budgetService.ts` (dual-path): `getOverview` (spent/pct/alert warn≥80% over≥100%), `updateBudgetBaseline`, `addEntry`, `deleteEntry`; valores em centavos. [Req 1.3, 1.4]
-- [ ] 1.5 `server/controllers/budgetController.ts` + `server/routes/budgets.ts` (guard `requireStudioPlan`) + registrar em `server/router.ts` (`/api/budgets`). [Req 1.1, 1.5]
-- [ ] 1.6 Teste ponta-a-ponta em `server/controllers/domainFlow.test.ts`: upsert baseline → addEntry → overview reflete alert → deleteEntry. [Req 1.3, 1.4]
+- [x] 1.1 Models `Budget` + `BudgetEntry` em `prisma/schema.prisma` (+ relações reversas em `User`/`Project`); `npx prisma validate` + `generate`. [Req 1.2]
+- [x] 1.2 Migration `prisma/migrations/20260711040000_add_budget/migration.sql` (SQL real, padrão `add_webhooks`). [Req 6.2]
+- [x] 1.3 Espelho SQLite em `server/models/db.ts`: `budgets` + `budget_entries` + índices em `createIndexes()`. [Req 6.2]
+- [x] 1.4 `server/services/budgetService.ts` (dual-path): `getOverview` (spent/pct/alert warn≥80% over≥100%), `updateBudgetBaseline`, `addEntry`, `deleteEntry`; valores em centavos. [Req 1.3, 1.4]
+- [x] 1.5 `server/controllers/budgetController.ts` + `server/routes/budgets.ts` (guard `requireStudioPlan`) + registrar em `server/router.ts` (`/api/budgets`). [Req 1.1, 1.5]
+- [x] 1.6 Teste ponta-a-ponta em `server/controllers/domainFlow.test.ts`: 402 sem Studio → upgrade → updateBaseline → addEntry → overview reflete alert warn/over → deleteEntry recalcula. [Req 1.3, 1.4]
 
 Frontend
-- [ ] 1.7 Bloco `api.budgets.*` em `client/src/lib/api.ts`. [Req 6.4]
-- [ ] 1.8 `client/src/pages/Budget.tsx`: barras previsto×realizado (Recharts), tabela de lançamentos, Dialog add com upload de comprovante (reusar fluxo Supabase de files), alertas amarelo/vermelho, empty-state 01/02/03. [Req 1.1, 1.3, 1.4, 1.7]
-- [ ] 1.9 Rota `/project/:projectId/budget` em `client/src/App.tsx` + tab "Orçamento" em `ProjectNav` (só Studio+) + gate de upgrade. [Req 1.1, 1.5]
-- [ ] 1.10 `npm run build` + commit `feat(budget): budget tracking end-to-end`.
+- [x] 1.7 Bloco `api.budgets.*` em `client/src/lib/api.ts`. [Req 6.4]
+- [x] 1.8 `client/src/pages/Budget.tsx`: barras previsto×realizado, ledger de lançamentos, Dialog baseline + Dialog add entry, alertas amarelo/vermelho, empty-state 01/02/03, `FeatureUpgradeRequired` (upsell). [Req 1.1, 1.3, 1.4, 1.7]
+- [x] 1.9 Rota `/project/:projectId/budget` em `client/src/App.tsx` + tab "Orçamento" em `ProjectNav` (gated por `canAccessFeature("budget-tracking")`). [Req 1.1, 1.5]
+- [x] 1.10 `npm run build` + `npm run check` + testes verdes.
+
+**Nota:** upload de comprovante (receipt) via Supabase (`filesController` flow) NÃO
+foi implementado nesta passada — o campo `receiptUrl` existe no schema/service
+(`addEntry` aceita `receiptUrl?`), mas a UI de upload ficou de fora do MVP inicial
+para não bloquear o restante do vertical. Ficou documentado como pendência de
+polish (adicionar ao Dialog de "Lançar gasto" reusando `storageObjectPath`/
+`uploadProjectFile` como em `filesController.uploadFile`).
 
 ### F2 — Equipment Inventory (Studio+) [Req 2]
 

@@ -22,6 +22,8 @@ let interactionsController: typeof import("./interactionsController.js");
 let projectsController: typeof import("./projectsController.js");
 let filesController: typeof import("./filesController.js");
 let analyticsController: typeof import("./analyticsController.js");
+let budgetController: typeof import("./budgetController.js");
+let planAccess: typeof import("../middleware/planAccess.js");
 let user: { id: number; email: string; role: "user" };
 
 function response(): MockResponse {
@@ -63,6 +65,8 @@ describe("CRM, files and finance controller flow", () => {
     projectsController = await import("./projectsController.js");
     filesController = await import("./filesController.js");
     analyticsController = await import("./analyticsController.js");
+    budgetController = await import("./budgetController.js");
+    planAccess = await import("../middleware/planAccess.js");
     user = await authService.registerUser(`Domain Flow`, `domain-${Date.now()}@example.com`, "password-123");
   });
 
@@ -158,5 +162,68 @@ describe("CRM, files and finance controller flow", () => {
 
     const removed = await invoke(analyticsController.deleteFinancialEntry, { user, params: { id: String(expense.body.data.id) } });
     expect(removed.body.data.id).toBe(expense.body.data.id);
+  });
+
+  it("covers budget tracking lifecycle with plan gating (F1)", async () => {
+    const project = await invoke(projectsController.createProject, {
+      user,
+      body: { name: "Projeto Orçamento", metadataJson: "{}" },
+    });
+    const projectId = String(project.body.data.id);
+
+    // Test user starts on the Pro trial (registerUser default) — budgetTracking is Studio-only.
+    // Exercise the actual route guard (requireStudioPlan), not just the controller.
+    const budgetGate = planAccess.requireStudioPlan("budgetTracking");
+    await expect(
+      invoke(budgetGate, { user, params: { projectId } }),
+    ).rejects.toMatchObject({ status: 402 });
+
+    await authService.updateUserPlan(user.id, "studio");
+    await invoke(budgetGate, { user, params: { projectId } }); // now passes (no throw)
+
+    const baseline = await invoke(budgetController.updateBudgetBaseline, {
+      user,
+      params: { projectId },
+      body: {
+        totalAmount: 500000,
+        currency: "BRL",
+        categories: [
+          { name: "Equipe", budgeted: 300000 },
+          { name: "Equipamento", budgeted: 200000 },
+        ],
+      },
+    });
+    expect(baseline.body.data.total_amount ?? baseline.body.data.totalAmount).toBe(500000);
+
+    const entry1 = await invoke(budgetController.addEntry, {
+      user,
+      params: { projectId },
+      body: { category: "Equipe", description: "Diária cinegrafista", amount: 250000, entryDate: "2026-07-15" },
+    });
+    expect(entry1.body.data.category).toBe("Equipe");
+
+    const entry2 = await invoke(budgetController.addEntry, {
+      user,
+      params: { projectId },
+      body: { category: "Equipamento", description: "Aluguel câmera", amount: 220000, entryDate: "2026-07-16" },
+    });
+
+    const overview = await invoke(budgetController.getOverview, { user, params: { projectId } });
+    expect(overview.body.data.totalSpent).toBe(470000);
+    const equipeCategory = overview.body.data.byCategory.find((c: any) => c.name === "Equipe");
+    expect(equipeCategory.pct).toBeCloseTo(250000 / 300000, 5);
+    // Equipe at 83% -> warn; Equipamento at 110% -> over (Property 3).
+    expect(overview.body.data.alerts).toEqual(
+      expect.arrayContaining([
+        { category: "Equipe", level: "warn" },
+        { category: "Equipamento", level: "over" },
+      ]),
+    );
+
+    const deleted = await invoke(budgetController.deleteEntry, { user, params: { id: String(entry2.body.data.id) } });
+    expect(deleted.body.success).toBe(true);
+
+    const overviewAfterDelete = await invoke(budgetController.getOverview, { user, params: { projectId } });
+    expect(overviewAfterDelete.body.data.totalSpent).toBe(250000);
   });
 });
