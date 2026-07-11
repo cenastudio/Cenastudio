@@ -244,6 +244,54 @@ export function FeatureUpgradeRequired({
       benefits: [],
       requiredPlan: "pro",
     },
+    "budget-tracking": {
+      icon: <Crown className="h-8 w-8" />,
+      title: t("app.upgrade.budgetTrackingTitle"),
+      description: t("app.upgrade.budgetTrackingDesc"),
+      benefits: [
+        t("app.upgrade.budgetTrackingBenefit1"),
+        t("app.upgrade.budgetTrackingBenefit2"),
+        t("app.upgrade.budgetTrackingBenefit3"),
+        t("app.upgrade.budgetTrackingBenefit4"),
+      ],
+      requiredPlan: "studio",
+    },
+    "equipment-inventory": {
+      icon: <Crown className="h-8 w-8" />,
+      title: t("app.upgrade.equipmentInventoryTitle"),
+      description: t("app.upgrade.equipmentInventoryDesc"),
+      benefits: [
+        t("app.upgrade.equipmentInventoryBenefit1"),
+        t("app.upgrade.equipmentInventoryBenefit2"),
+        t("app.upgrade.equipmentInventoryBenefit3"),
+        t("app.upgrade.equipmentInventoryBenefit4"),
+      ],
+      requiredPlan: "studio",
+    },
+    "shot-list": {
+      icon: <Zap className="h-8 w-8" />,
+      title: t("app.upgrade.shotListTitle"),
+      description: t("app.upgrade.shotListDesc"),
+      benefits: [
+        t("app.upgrade.shotListBenefit1"),
+        t("app.upgrade.shotListBenefit2"),
+        t("app.upgrade.shotListBenefit3"),
+        t("app.upgrade.shotListBenefit4"),
+      ],
+      requiredPlan: "pro",
+    },
+    "timesheet": {
+      icon: <Zap className="h-8 w-8" />,
+      title: t("app.upgrade.timesheetTitle"),
+      description: t("app.upgrade.timesheetDesc"),
+      benefits: [
+        t("app.upgrade.timesheetBenefit1"),
+        t("app.upgrade.timesheetBenefit2"),
+        t("app.upgrade.timesheetBenefit3"),
+        t("app.upgrade.timesheetBenefit4"),
+      ],
+      requiredPlan: "pro",
+    },
   };
 
   // Check if user has access

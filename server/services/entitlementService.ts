@@ -1,3 +1,4 @@
+import type { FeatureFlagId } from "../../shared/planEntitlements.js";
 import { getPlanEntitlement, isPlanOperational } from "../../shared/planEntitlements.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { db } from "../models/db.js";
@@ -47,5 +48,25 @@ export async function assertClientCapacity(userId: number, role?: "user" | "admi
       `Seu plano ${allowance.planId.toUpperCase()} permite até ${allowance.limit} clientes. Faça upgrade para continuar.`,
       402,
     );
+  }
+}
+
+const FEATURE_REQUIREMENTS: Record<FeatureFlagId, { label: string; planLabel: string }> = {
+  budgetTracking: { label: "Orçamento", planLabel: "Studio" },
+  equipmentInventory: { label: "Equipamento", planLabel: "Studio" },
+  shotList: { label: "Shot List", planLabel: "Pro" },
+  timesheet: { label: "Timesheet", planLabel: "Pro" },
+};
+
+/**
+ * Gate a feature behind the caller's plan entitlements. Admins always bypass.
+ * Throws AppError(402) with an upgrade message when the plan doesn't include it.
+ */
+export async function requireFeature(userId: number, role: "user" | "admin" | undefined, feature: FeatureFlagId) {
+  if (role === "admin") return;
+  const entitlement = await getUserEntitlements(userId);
+  const { label, planLabel } = FEATURE_REQUIREMENTS[feature];
+  if (!entitlement.operational || !entitlement[feature]) {
+    throw new AppError(`Ative o plano ${planLabel} para liberar ${label}.`, 402);
   }
 }

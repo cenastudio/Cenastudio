@@ -1,8 +1,25 @@
 import { useLocation } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { FolderKanban, Sparkles, Video, FileText, Users, ChevronDown, Package, Webhook } from "lucide-react";
+import {
+  FolderKanban,
+  Sparkles,
+  Video,
+  FileText,
+  Users,
+  ChevronDown,
+  Package,
+  Webhook,
+  UserCircle2,
+  MoreHorizontal,
+} from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type TeamRole = "admin" | "editor" | "member";
 
@@ -17,15 +34,31 @@ interface ProductionTab {
   roles?: TeamRole[];
 }
 
-const PRODUCTION_TABS: ProductionTab[] = [
+/** Always-visible primary tabs — the areas used every day. */
+const PRIMARY_TABS: ProductionTab[] = [
   { href: "/projects", labelPt: "Jobs", labelEn: "Jobs", icon: FolderKanban },
   { href: "/tools", labelPt: "Estúdio IA", labelEn: "AI Studio", icon: Sparkles, highlight: true },
   { href: "/video-reviews", labelPt: "Aprovações", labelEn: "Approvals", icon: Video },
+];
+
+/**
+ * Secondary tabs — grouped under a "Mais" dropdown to keep the primary row
+ * from growing unbounded as new verticals ship. "Colaboradores" was renamed
+ * to "Equipe Externa" to disambiguate from "Equipe" (/team, login accounts)
+ * — both used the word "Equipe"/"Team" with genuinely different meanings
+ * (freelancers/crew vs. system accounts with plan-based permissions).
+ *
+ * NOTE: When F2 (Equipment Inventory, /equipment) and F4 (Timesheet,
+ * /timesheet) ship (see .kiro/specs/landing-features-implementation), add
+ * their tabs here (e.g. `Camera`/`Clock` icons from lucide-react), gated
+ * behind the same feature-flag pattern used by `gate.ts`/`canAccessFeature`.
+ */
+const SECONDARY_TABS: ProductionTab[] = [
   { href: "/files", labelPt: "Arquivos", labelEn: "Files", icon: FolderKanban },
   { href: "/assets", labelPt: "Assets", labelEn: "Assets", icon: Package },
-  { href: "/webhooks", labelPt: "Webhooks", labelEn: "Webhooks", icon: Webhook },
   { href: "/documents", labelPt: "Documentos", labelEn: "Documents", icon: FileText },
-  { href: "/collaborators", labelPt: "Colaboradores", labelEn: "Collaborators", icon: Users },
+  { href: "/webhooks", labelPt: "Webhooks", labelEn: "Webhooks", icon: Webhook },
+  { href: "/collaborators", labelPt: "Equipe Externa", labelEn: "External Crew", icon: UserCircle2 },
   { href: "/team", labelPt: "Equipe", labelEn: "Team", icon: Users, roles: ["admin"] },
 ];
 
@@ -36,17 +69,20 @@ function isTabActive(location: string, href: string) {
 /**
  * Sub-navigation for the Production area.
  * Appears below AppNavBar on every production page (jobs, studio, approvals,
- * files, documents, team) so all 6 sub-areas stay one click away instead of
- * being hidden behind whichever page happens to load first.
+ * files, documents, team) so all sub-areas stay reachable without the tab
+ * row growing unbounded as new verticals ship.
  *
+ * - Primary tabs (Jobs, AI Studio, Approvals) are always visible — daily use.
+ * - Secondary tabs (Files, Assets, Documents, Webhooks, External Crew, Team)
+ *   live under a "Mais"/"More" dropdown on desktop.
  * - The AI Studio tab is visually highlighted since it's the product's key
  *   differentiator and would otherwise lose visibility now that it's no
  *   longer a top-level nav tab.
  * - "Equipe" is restricted to admins — team members shouldn't need to see
  *   a management area they can't act on.
- * - Desktop uses a horizontal tab row; mobile uses a compact dropdown
- *   instead of horizontal-scrolling tabs (which don't give a reliable,
- *   discoverable way to see every option on small screens).
+ * - Desktop uses primary tabs + a dropdown; mobile uses a single compact
+ *   dropdown listing every tab (which don't give a reliable, discoverable
+ *   way to see every option on small screens if left as scrolling tabs).
  */
 export default function ProductionNav() {
   const [location, setLocation] = useLocation();
@@ -59,9 +95,13 @@ export default function ProductionNav() {
   if (location.startsWith("/project/")) return null;
 
   const effectiveRole: TeamRole | null = isAdmin ? "admin" : isTeamMember ? (teamRole as TeamRole | null) : "admin";
-  const visibleTabs = PRODUCTION_TABS.filter((tab) => !tab.roles || (effectiveRole && tab.roles.includes(effectiveRole)));
+  const visibleSecondaryTabs = SECONDARY_TABS.filter(
+    (tab) => !tab.roles || (effectiveRole && tab.roles.includes(effectiveRole)),
+  );
+  const visibleAllTabs = [...PRIMARY_TABS, ...visibleSecondaryTabs];
 
-  const activeTab = visibleTabs.find((tab) => isTabActive(location, tab.href)) || visibleTabs[0];
+  const activeTab = visibleAllTabs.find((tab) => isTabActive(location, tab.href)) || visibleAllTabs[0];
+  const activeSecondaryTab = visibleSecondaryTabs.find((tab) => isTabActive(location, tab.href));
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -75,13 +115,14 @@ export default function ProductionNav() {
   }, [mobileOpen]);
 
   const navLabel = locale === "en" ? "Production navigation" : "Navegação de produção";
+  const moreLabel = locale === "en" ? "More" : "Mais";
 
   return (
     <nav aria-label={navLabel} className="border-b border-frame-gray-3/50 bg-frame-black/60 backdrop-blur-sm">
       <div className="mx-auto max-w-7xl px-4 md:px-6">
-        {/* Desktop: full tab row */}
+        {/* Desktop: primary tabs + "More" dropdown for secondary areas */}
         <div className="hidden sm:flex items-center">
-          {visibleTabs.map((tab) => {
+          {PRIMARY_TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = isTabActive(location, tab.href);
             const label = locale === "en" ? tab.labelEn : tab.labelPt;
@@ -115,6 +156,52 @@ export default function ProductionNav() {
               </button>
             );
           })}
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-current={activeSecondaryTab ? "page" : undefined}
+                className={`
+                  relative flex items-center gap-2 px-4 py-3 whitespace-nowrap transition-all duration-200
+                  font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase
+                  after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:transition-all after:duration-200
+                  ${activeSecondaryTab
+                    ? "text-frame-orange after:bg-frame-orange"
+                    : "text-frame-gray-light hover:text-frame-white after:bg-transparent"
+                  }
+                `}
+              >
+                {activeSecondaryTab ? (
+                  <activeSecondaryTab.icon className="w-3.5 h-3.5 text-frame-orange" />
+                ) : (
+                  <MoreHorizontal className="w-3.5 h-3.5" />
+                )}
+                {activeSecondaryTab ? (locale === "en" ? activeSecondaryTab.labelEn : activeSecondaryTab.labelPt) : moreLabel}
+                <ChevronDown className="w-3 h-3" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="bg-frame-black border-frame-gray-3 rounded-none min-w-[180px]">
+              {visibleSecondaryTabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = isTabActive(location, tab.href);
+                const label = locale === "en" ? tab.labelEn : tab.labelPt;
+
+                return (
+                  <DropdownMenuItem
+                    key={tab.href}
+                    onClick={() => setLocation(tab.href)}
+                    className={`gap-2.5 font-frame-mono text-[0.62rem] tracking-[0.1em] uppercase cursor-pointer ${
+                      isActive ? "text-frame-orange" : "text-frame-gray-light"
+                    }`}
+                  >
+                    <Icon className={`w-3.5 h-3.5 ${isActive ? "text-frame-orange" : ""}`} />
+                    {label}
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Mobile: compact dropdown instead of horizontal-scroll tabs */}
@@ -134,7 +221,7 @@ export default function ProductionNav() {
 
           {mobileOpen && (
             <div className="mt-1 border border-frame-gray-3/60 bg-frame-black/95 backdrop-blur-xl divide-y divide-frame-gray-3/30">
-              {visibleTabs.map((tab) => {
+              {visibleAllTabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = isTabActive(location, tab.href);
                 const label = locale === "en" ? tab.labelEn : tab.labelPt;

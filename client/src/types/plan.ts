@@ -366,7 +366,11 @@ export type FeatureName =
   | "analytics"
   | "api"
   | "custom-branding"
-  | "priority-support";
+  | "priority-support"
+  | "budget-tracking"
+  | "equipment-inventory"
+  | "shot-list"
+  | "timesheet";
 
 /**
  * Feature Access Result

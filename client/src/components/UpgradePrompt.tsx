@@ -134,6 +134,26 @@ const FEATURE_INFO: Record<FeatureName, { name: string; benefit: string; icon: R
     benefit: "Access all 12 AI-powered tools",
     icon: <Sparkles className="h-5 w-5" />,
   },
+  "budget-tracking": {
+    name: "Budget Tracking & Control",
+    benefit: "Track budgeted vs actual spend per category, with automatic overspend alerts",
+    icon: <Zap className="h-5 w-5" />,
+  },
+  "equipment-inventory": {
+    name: "Equipment Inventory",
+    benefit: "Register your gear and book it per project with automatic conflict blocking",
+    icon: <Zap className="h-5 w-5" />,
+  },
+  "shot-list": {
+    name: "Professional Shot List",
+    benefit: "Build and reorder your shot list with drag-and-drop, then export for the crew",
+    icon: <Sparkles className="h-5 w-5" />,
+  },
+  "timesheet": {
+    name: "Smart Timesheet",
+    benefit: "Track worked hours with a timer and calculate real labor cost automatically",
+    icon: <Sparkles className="h-5 w-5" />,
+  },
 };
 
 /**
