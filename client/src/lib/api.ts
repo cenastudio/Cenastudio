@@ -250,6 +250,24 @@ export const api = {
     populatedStates: (id: number) =>
       request<Array<{ toolId: string; updatedAt: string }>>(`/projects/${id}/states`),
   },
+  assets: {
+    list: () =>
+      request<
+        Array<{
+          id: number;
+          project_id: number | null;
+          project_name: string | null;
+          filename: string;
+          original_name: string;
+          mime_type: string | null;
+          size: number | null;
+          path: string;
+          created_at: string;
+        }>
+      >("/files/all"),
+    download: (id: number) => apiUrl(`/files/${id}/download`),
+    delete: (id: number) => request<{ success: boolean }>(`/files/${id}`, { method: "DELETE" }),
+  },
   studioSettings: {
     get: () => request<StudioSettingsPayload>("/studio-settings"),
     update: (data: StudioSettingsPayload) =>

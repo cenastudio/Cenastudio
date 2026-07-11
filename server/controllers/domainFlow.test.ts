@@ -120,6 +120,10 @@ describe("CRM, files and finance controller flow", () => {
     const listed = await invoke(filesController.listFiles, { user, params: { projectId: String(project.body.data.id) } });
     expect(listed.body.data).toHaveLength(1);
 
+    const allFiles = await invoke(filesController.listAllFiles, { user });
+    expect(allFiles.body.data.some((f: any) => f.id === uploaded.body.data.id)).toBe(true);
+    expect(allFiles.body.data.find((f: any) => f.id === uploaded.body.data.id)?.project_name).toBe("Projeto Arquivos");
+
     const downloaded = await invoke(filesController.downloadFile, { user, params: { id: String(uploaded.body.data.id) } });
     expect(downloaded.redirectedTo).toBeUndefined();
     expect(downloaded.downloaded?.filename).toBe("roteiro.txt");

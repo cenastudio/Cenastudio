@@ -90,7 +90,7 @@ function Router() {
       <Route path="/interactions" component={CommercialHub} />
       <Route path="/documents" component={Documents} />
       <Route path="/company" component={CompanySettings} />
-      <Route path="/assets" component={Assets} />
+      <Route path="/assets">{() => <Assets />}</Route>
       <Route path="/files" component={Files} />
       <Route path="/files/:projectId" component={Files} />
       <Route path="/video-reviews/:projectId">{() => <VideoReviews />}</Route>

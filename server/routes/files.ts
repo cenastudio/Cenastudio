@@ -3,6 +3,7 @@ import { authenticate } from "../middleware/authenticate.js";
 import { requireOperationalPlan } from "../middleware/planAccess.js";
 import {
   listFiles,
+  listAllFiles,
   uploadFile,
   deleteFile,
   getFile,
@@ -14,6 +15,9 @@ const router = Router();
 
 // All file routes require authentication
 router.use(authenticate, requireOperationalPlan);
+
+// List all files across all projects (Assets library)
+router.get("/all", listAllFiles);
 
 // List files for a project
 router.get("/projects/:projectId", listFiles);

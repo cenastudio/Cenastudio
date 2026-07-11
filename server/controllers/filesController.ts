@@ -62,6 +62,41 @@ export const listFiles: RequestHandler = async (req, res, next) => {
   }
 };
 
+// List all files across all of the user's projects — powers the /assets library page.
+export const listAllFiles: RequestHandler = async (req, res, next) => {
+  try {
+    const userId = req.user!.id;
+
+    if (shouldUsePrisma) {
+      const files = await prisma.file.findMany({
+        where: { userId: BigInt(userId) },
+        orderBy: { createdAt: "desc" },
+        include: { project: { select: { name: true } } },
+      });
+      const data = files.map((file) => ({
+        ...serializeFile(file),
+        project_name: file.project?.name ?? null,
+      }));
+      res.json({ success: true, data });
+      return;
+    }
+
+    const files = db
+      .prepare(
+        `SELECT files.*, projects.name AS project_name
+         FROM files
+         LEFT JOIN projects ON projects.id = files.project_id
+         WHERE files.user_id = ?
+         ORDER BY files.created_at DESC`,
+      )
+      .all(userId);
+
+    res.json({ success: true, data: files });
+  } catch (e) {
+    next(e);
+  }
+};
+
 // Upload a file
 export const uploadFile: RequestHandler = async (req, res, next) => {
   try {
