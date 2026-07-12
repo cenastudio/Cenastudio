@@ -39,20 +39,33 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   DndContext,
-  closestCenter,
+  DragOverlay,
+  closestCorners,
   PointerSensor,
   TouchSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
+  useDroppable,
+  type DragStartEvent,
   type DragEndEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
+  sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   useSortable,
-  arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import {
+  groupShotsByScene,
+  moveShotBetweenGroups,
+  flattenGroups,
+  totalDurationSec,
+  formatDuration,
+  UNASSIGNED_SCENE,
+  type ShotGroup,
+} from "@/lib/shotListGrouping";
 
 const SHOT_TYPES_PT = ["Wide", "Médio", "Close", "Detalhe", "Plongée", "Contra-plongée"];
 const SHOT_TYPES_EN = ["Wide", "Medium", "Close", "Detail", "High angle", "Low angle"];
@@ -69,44 +82,54 @@ interface ShotFormState {
 
 const emptyForm: ShotFormState = { scene: "", shotType: "", description: "", camera: "", lens: "", movement: "", durationSec: "" };
 
-function SortableShotRow({
+/**
+ * Pure visual row — no dnd-kit hooks. Reused by both the sortable row (in
+ * the list) and the DragOverlay (the floating copy that follows the
+ * pointer/finger while dragging), so the overlay always looks identical to
+ * the real row instead of a generic placeholder.
+ */
+function ShotRowContent({
   shot,
   onToggleStatus,
   onEdit,
   onDelete,
   t,
+  dragHandleProps,
+  isOverlay = false,
 }: {
   shot: ShotItem;
-  onToggleStatus: (shot: ShotItem) => void;
-  onEdit: (shot: ShotItem) => void;
-  onDelete: (shot: ShotItem) => void;
+  onToggleStatus?: (shot: ShotItem) => void;
+  onEdit?: (shot: ShotItem) => void;
+  onDelete?: (shot: ShotItem) => void;
   t: (key: string) => string;
+  dragHandleProps?: { attributes: React.HTMLAttributes<HTMLButtonElement>; listeners: Record<string, unknown> | undefined };
+  isOverlay?: boolean;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: shot.id });
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
   return (
     <div
-      ref={setNodeRef}
-      style={style}
-      className={`flex items-center gap-3 border p-3 transition ${
+      className={`flex items-center gap-3 border p-3 transition bg-frame-black ${
         shot.status === "shot" ? "border-green-500/30 bg-green-500/5" : "border-frame-gray-3/60 bg-frame-gray-1/10"
-      }`}
+      } ${isOverlay ? "shadow-[0_8px_24px_rgba(0,0,0,0.5)] border-frame-orange/50" : ""}`}
     >
-      <button
-        {...attributes}
-        {...listeners}
-        className="p-1.5 text-frame-gray-light hover:text-frame-orange cursor-grab active:cursor-grabbing shrink-0"
-        aria-label={t("app.shotlist.dragToReorder")}
-      >
-        <GripVertical className="w-4 h-4" />
-      </button>
+      {dragHandleProps && (
+        <button
+          type="button"
+          {...dragHandleProps.attributes}
+          {...(dragHandleProps.listeners as object)}
+          className="p-1.5 text-frame-gray-light hover:text-frame-orange cursor-grab active:cursor-grabbing shrink-0 touch-none"
+          aria-label={t("app.shotlist.dragToReorder")}
+        >
+          <GripVertical className="w-4 h-4" />
+        </button>
+      )}
 
-      <button type="button" onClick={() => onToggleStatus(shot)} className="shrink-0" title={t("app.shotlist.markShot")}>
+      <button
+        type="button"
+        onClick={() => onToggleStatus?.(shot)}
+        className="shrink-0"
+        title={t("app.shotlist.markShot")}
+        disabled={isOverlay}
+      >
         {shot.status === "shot" ? (
           <CheckCircle2 className="w-5 h-5 text-green-400" />
         ) : (
@@ -131,24 +154,120 @@ function SortableShotRow({
         </p>
       </div>
 
-      <div className="flex items-center gap-1.5 shrink-0">
-        <button
-          type="button"
-          onClick={() => onEdit(shot)}
-          className="p-2 border border-frame-gray-3/50 hover:border-frame-orange hover:text-frame-orange transition"
-          title={t("app.shotlist.edit")}
-        >
-          <Edit className="w-3.5 h-3.5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => onDelete(shot)}
-          className="p-2 border border-frame-gray-3/50 hover:border-red-500 hover:text-red-500 transition"
-          title={t("app.shotlist.delete")}
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
+      {!isOverlay && (
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            type="button"
+            onClick={() => onEdit?.(shot)}
+            className="p-2 border border-frame-gray-3/50 hover:border-frame-orange hover:text-frame-orange transition"
+            title={t("app.shotlist.edit")}
+          >
+            <Edit className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onDelete?.(shot)}
+            className="p-2 border border-frame-gray-3/50 hover:border-red-500 hover:text-red-500 transition"
+            title={t("app.shotlist.delete")}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SortableShotRow({
+  shot,
+  onToggleStatus,
+  onEdit,
+  onDelete,
+  t,
+}: {
+  shot: ShotItem;
+  onToggleStatus: (shot: ShotItem) => void;
+  onEdit: (shot: ShotItem) => void;
+  onDelete: (shot: ShotItem) => void;
+  t: (key: string) => string;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: shot.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.3 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <ShotRowContent
+        shot={shot}
+        onToggleStatus={onToggleStatus}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        t={t}
+        dragHandleProps={{ attributes, listeners }}
+      />
+    </div>
+  );
+}
+
+/**
+ * One scene's drop zone. Wraps its shots in their own SortableContext so
+ * items can be reordered within the scene, and in a useDroppable zone
+ * (with a stable id prefixed to disambiguate from shot ids) so a shot can
+ * be dragged in from a different scene even when this scene is empty.
+ */
+function SceneGroup({
+  group,
+  onToggleStatus,
+  onEdit,
+  onDelete,
+  t,
+}: {
+  group: ShotGroup;
+  onToggleStatus: (shot: ShotItem) => void;
+  onEdit: (shot: ShotItem) => void;
+  onDelete: (shot: ShotItem) => void;
+  t: (key: string) => string;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: `scene:${group.scene}` });
+  const sceneLabel = group.scene === UNASSIGNED_SCENE ? t("app.shotlist.unassignedScene") : group.scene;
+  const durationLabel = formatDuration(group.totalDurationSec);
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`border transition ${isOver ? "border-frame-orange/60 bg-frame-orange/[0.03]" : "border-frame-gray-3/40"}`}
+    >
+      <div className="flex items-center justify-between gap-3 px-3 py-2 border-b border-frame-gray-3/40 bg-frame-gray-1/20">
+        <span className="font-frame-mono text-[0.65rem] uppercase tracking-wider text-frame-white">
+          {group.scene === UNASSIGNED_SCENE ? sceneLabel : `${t("app.shotlist.scene")} ${sceneLabel}`}
+        </span>
+        <span className="font-frame-mono text-[0.6rem] text-frame-gray-light shrink-0">
+          {group.shots.length} · {durationLabel}
+        </span>
       </div>
+      <SortableContext items={group.shots.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+        <div className="p-2 space-y-2 min-h-[3rem]">
+          {group.shots.length === 0 ? (
+            <p className="text-[0.65rem] text-frame-gray-light/60 italic text-center py-2">
+              {t("app.shotlist.dropHereToMove")}
+            </p>
+          ) : (
+            group.shots.map((shot) => (
+              <SortableShotRow
+                key={shot.id}
+                shot={shot}
+                onToggleStatus={onToggleStatus}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                t={t}
+              />
+            ))
+          )}
+        </div>
+      </SortableContext>
     </div>
   );
 }
@@ -243,7 +362,24 @@ function ShotListContent() {
   const [deleteTarget, setDeleteTarget] = useState<ShotItem | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const sensors = useSensors(useSensor(PointerSensor), useSensor(TouchSensor));
+  // Mobile-first sensor tuning (spec: shot list improvements, step 2):
+  // - PointerSensor needs a small activation distance so a plain tap (e.g.
+  //   the status toggle) doesn't get hijacked as a drag start.
+  // - TouchSensor needs a short delay + tolerance so the browser has a
+  //   chance to treat a vertical finger movement as a page scroll instead
+  //   of always starting a drag — without this, dragging on a phone fights
+  //   the page's own scroll.
+  // - KeyboardSensor makes reordering (within and across scenes) usable
+  //   without a pointer at all.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const [activeShotId, setActiveShotId] = useState<number | null>(null);
+  const shotGroups = groupShotsByScene(shots);
+  const activeShot = activeShotId != null ? shots.find((s) => s.id === activeShotId) ?? null : null;
 
   const load = () => {
     if (!projectId) return;
@@ -341,20 +477,56 @@ function ShotListContent() {
     }
   };
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveShotId(Number(event.active.id));
+  };
+
+  /**
+   * Resolves the target scene + "insert before" shot id from wherever the
+   * drag ended: either directly over another shot (same scene as that
+   * shot) or over an empty/partial scene's droppable zone (id prefixed
+   * "scene:").
+   */
+  const resolveDropTarget = (overId: string | number, groups: ShotGroup[]): { scene: string; overShotId: number | null } | null => {
+    if (typeof overId === "string" && overId.startsWith("scene:")) {
+      return { scene: overId.slice("scene:".length), overShotId: null };
+    }
+    const overShotId = Number(overId);
+    const group = groups.find((g) => g.shots.some((s) => s.id === overShotId));
+    if (!group) return null;
+    return { scene: group.scene, overShotId };
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
+    setActiveShotId(null);
     const { active, over } = event;
-    if (!over || active.id === over.id) return;
+    if (!over) return;
 
-    const oldIndex = shots.findIndex((s) => s.id === active.id);
-    const newIndex = shots.findIndex((s) => s.id === over.id);
-    if (oldIndex === -1 || newIndex === -1) return;
+    const groups = groupShotsByScene(shots);
+    const target = resolveDropTarget(over.id, groups);
+    if (!target) return;
 
-    const reordered = arrayMove(shots, oldIndex, newIndex);
+    const activeId = Number(active.id);
+    const sourceGroup = groups.find((g) => g.shots.some((s) => s.id === activeId));
+    if (!sourceGroup) return;
+    if (sourceGroup.scene === target.scene && target.overShotId === activeId) return;
+
+    const movedGroups = moveShotBetweenGroups(groups, activeId, target.scene, target.overShotId);
+    const reordered = flattenGroups(movedGroups);
     setShots(reordered); // optimistic
 
     try {
       const persisted = await api.shotlists.reorder(projectId, reordered.map((s) => s.id));
-      setShots(persisted);
+      // The reorder endpoint doesn't take a scene, only order — persist the
+      // possibly-changed scene separately when the shot moved groups.
+      const movedShot = reordered.find((s) => s.id === activeId)!;
+      const original = shots.find((s) => s.id === activeId)!;
+      if (movedShot.scene !== original.scene) {
+        const updated = await api.shotlists.updateShot(activeId, { scene: movedShot.scene });
+        setShots(persisted.map((s) => (s.id === activeId ? updated : s)));
+      } else {
+        setShots(persisted);
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("app.shotlist.errorReorder"));
       load();
@@ -454,15 +626,24 @@ function ShotListContent() {
           </section>
         )}
 
-        {/* Drag-and-drop list */}
+        {/* Grouped by scene, drag within and across groups */}
         {!loading && shots.length > 0 && (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={shots.map((s) => s.id)} strategy={verticalListSortingStrategy}>
-              <div className="space-y-2">
-                {shots.map((shot) => (
-                  <SortableShotRow
-                    key={shot.id}
-                    shot={shot}
+          <>
+            <div className="flex items-center justify-between font-frame-mono text-[0.6rem] text-frame-gray-light uppercase tracking-wider">
+              <span>{shotGroups.length} {t("app.shotlist.scenesCount")}</span>
+              <span>{t("app.shotlist.totalDuration")}: {formatDuration(totalDurationSec(shots))}</span>
+            </div>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCorners}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
+              <div className="space-y-3">
+                {shotGroups.map((group) => (
+                  <SceneGroup
+                    key={group.scene}
+                    group={group}
                     onToggleStatus={handleToggleStatus}
                     onEdit={openEditDialog}
                     onDelete={setDeleteTarget}
@@ -470,8 +651,11 @@ function ShotListContent() {
                   />
                 ))}
               </div>
-            </SortableContext>
-          </DndContext>
+              <DragOverlay dropAnimation={{ duration: 150, easing: "ease" }}>
+                {activeShot ? <ShotRowContent shot={activeShot} t={t} isOverlay /> : null}
+              </DragOverlay>
+            </DndContext>
+          </>
         )}
       </main>
 
