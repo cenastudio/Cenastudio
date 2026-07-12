@@ -162,31 +162,6 @@ function ensureClientColumns() {
   }
 }
 
-function ensureCollaboratorColumns() {
-  const collaboratorCols = (
-    db.prepare("PRAGMA table_info(collaborators)").all() as { name: string }[]
-  ).map((c) => c.name);
-
-  if (!collaboratorCols.includes("phone")) {
-    db.prepare("ALTER TABLE collaborators ADD COLUMN phone TEXT DEFAULT ''").run();
-  }
-  if (!collaboratorCols.includes("skills")) {
-    db.prepare("ALTER TABLE collaborators ADD COLUMN skills TEXT").run();
-  }
-  if (!collaboratorCols.includes("daily_rate")) {
-    db.prepare("ALTER TABLE collaborators ADD COLUMN daily_rate INTEGER DEFAULT 0").run();
-  }
-  if (!collaboratorCols.includes("status")) {
-    db.prepare("ALTER TABLE collaborators ADD COLUMN status TEXT DEFAULT 'active'").run();
-  }
-  if (!collaboratorCols.includes("availability")) {
-    db.prepare("ALTER TABLE collaborators ADD COLUMN availability TEXT").run();
-  }
-  if (!collaboratorCols.includes("updated_at")) {
-    db.prepare("ALTER TABLE collaborators ADD COLUMN updated_at TEXT DEFAULT (datetime('now'))").run();
-  }
-}
-
 function ensureVideoReviewColumns() {
   const reviewsCols = (db.prepare("PRAGMA table_info(video_reviews)").all() as { name: string }[]).map(
     (c) => c.name,
@@ -359,9 +334,8 @@ function createIndexes() {
     "CREATE INDEX IF NOT EXISTS idx_meetings_client_id ON meetings(client_id)",
     "CREATE INDEX IF NOT EXISTS idx_meetings_user_id ON meetings(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_meetings_starts_at ON meetings(starts_at)",
-    "CREATE INDEX IF NOT EXISTS idx_collaborators_user_id ON collaborators(user_id)",
+
     "CREATE INDEX IF NOT EXISTS idx_project_members_project_id ON project_members(project_id)",
-    "CREATE INDEX IF NOT EXISTS idx_project_members_collaborator_id ON project_members(collaborator_id)",
     "CREATE INDEX IF NOT EXISTS idx_financial_entries_user_id ON financial_entries(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_financial_entries_due_date ON financial_entries(due_date)",
     "CREATE INDEX IF NOT EXISTS idx_financial_entries_status ON financial_entries(status)",
@@ -544,26 +518,10 @@ export async function initDatabase() {
       created_at TEXT DEFAULT (datetime('now'))
     );
 
-    CREATE TABLE IF NOT EXISTS collaborators (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      name TEXT NOT NULL,
-      email TEXT NOT NULL,
-      role TEXT DEFAULT 'member',
-      phone TEXT DEFAULT '',
-      skills TEXT,
-      daily_rate INTEGER DEFAULT 0,
-      status TEXT DEFAULT 'active',
-      availability TEXT,
-      created_at TEXT DEFAULT (datetime('now')),
-      updated_at TEXT DEFAULT (datetime('now'))
-    );
-
     CREATE TABLE IF NOT EXISTS project_members (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
       user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-      collaborator_id INTEGER REFERENCES collaborators(id) ON DELETE CASCADE,
       role TEXT DEFAULT 'member',
       permissions TEXT DEFAULT '[]',
       created_at TEXT DEFAULT (datetime('now')),
@@ -799,7 +757,6 @@ export async function initDatabase() {
   ensureSubscriptionColumns();
   ensureProjectColumns();
   ensureClientColumns();
-  ensureCollaboratorColumns();
   ensureVideoReviewColumns();
   ensureStudioSettingsColumns();
   ensureWorkspaceTables();

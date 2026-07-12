@@ -106,27 +106,10 @@ export interface DbInteraction {
   created_at: string;
 }
 
-export interface DbCollaborator {
-  id: number;
-  user_id: number;
-  name: string;
-  email: string;
-  role: string | null;
-  phone: string | null;
-  skills: string | null;
-  daily_rate: number | null;
-  hourly_rate?: number;
-  availability: string | null;
-  status?: string;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface DbProjectMember {
   id: number;
   project_id: number;
   user_id: number | null;
-  collaborator_id: number | null;
   role: string;
   permissions: string;
   created_at: string;

@@ -979,11 +979,9 @@ export interface ProjectMemberItem {
   id: number;
   project_id: number;
   user_id: number | null;
-  collaborator_id: number | null;
   role: string;
   name?: string;
   email?: string;
-  collaborator_role?: string;
   created_at: string;
 }
 

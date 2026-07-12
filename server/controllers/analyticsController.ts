@@ -40,7 +40,7 @@ export const getOverallAnalytics: RequestHandler = async (req, res, next) => {
     if (shouldUsePrisma) {
       const owner = BigInt(userId);
       const start = new Date(); start.setUTCDate(1); start.setUTCHours(0, 0, 0, 0);
-      const [totalProjects, activeProjects, totalClients, clientValue, totalOpportunities, pipeline, won, generations, collaborators] = await Promise.all([
+      const [totalProjects, activeProjects, totalClients, clientValue, totalOpportunities, pipeline, won, generations, teamMemberCount] = await Promise.all([
         prisma.project.count({ where: { userId: owner } }), prisma.project.count({ where: { userId: owner, status: "active" } }),
         prisma.client.count({ where: { userId: owner } }), prisma.client.aggregate({ where: { userId: owner }, _sum: { totalSpent: true } }),
         prisma.opportunity.count({ where: { userId: owner } }), prisma.opportunity.aggregate({ where: { userId: owner, stage: { not: "lost" } }, _sum: { estimatedValue: true } }),
@@ -54,7 +54,7 @@ export const getOverallAnalytics: RequestHandler = async (req, res, next) => {
         projects: { total: totalProjects, active: activeProjects },
         clients: { total: totalClients, totalValue: clientValue._sum.totalSpent || 0 },
         pipeline: { totalOpportunities, pipelineValue: pipeline._sum.estimatedValue || 0, wonThisMonth: won._sum.estimatedValue || 0 },
-        ai: { totalGenerations: generations }, team: { totalCollaborators: collaborators },
+        ai: { totalGenerations: generations }, team: { totalCollaborators: teamMemberCount },
       } });
       return;
     }

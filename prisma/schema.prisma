@@ -35,7 +35,6 @@ model User {
   interactions   Interaction[]
   meetings       Meeting[]
   proposals      Proposal[]
-  collaborators  Collaborator[]
   projectMembers ProjectMember[]
   files          File[]
   videoReviews   VideoReview[]
@@ -397,32 +396,10 @@ model Meeting {
   @@map("meetings")
 }
 
-model Collaborator {
-  id           BigInt   @id @default(autoincrement())
-  userId       BigInt   @map("user_id")
-  name         String
-  email        String
-  role         String   @default("member")
-  phone        String   @default("")
-  skills       String?
-  dailyRate    Int      @default(0) @map("daily_rate")
-  status       String   @default("active")
-  availability String?
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  projectMembers ProjectMember[]
-
-  @@index([userId], map: "idx_collaborators_user_id")
-  @@map("collaborators")
-}
-
 model ProjectMember {
   id             BigInt   @id @default(autoincrement())
   projectId      BigInt   @map("project_id")
   userId         BigInt?  @map("user_id")
-  collaboratorId BigInt?  @map("collaborator_id")
   role           String   @default("member")
   permissions    Json     @default("[]")
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
@@ -430,10 +407,8 @@ model ProjectMember {
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
-  collaborator Collaborator? @relation(fields: [collaboratorId], references: [id], onDelete: Cascade)
 
   @@index([projectId], map: "idx_project_members_project_id")
-  @@index([collaboratorId], map: "idx_project_members_collaborator_id")
   @@map("project_members")
 }
 
