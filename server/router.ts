@@ -80,6 +80,7 @@ import equipmentRoutes from "./routes/equipment.js";
 import shotlistsRoutes from "./routes/shotlists.js";
 import timesheetsRoutes from "./routes/timesheets.js";
 import calendarRoutes from "./routes/calendar.js";
+import tasksRoutes from "./routes/tasks.js";
 
 const router = Router();
 
@@ -180,5 +181,6 @@ router.use("/equipment", equipmentRoutes);
 router.use("/shotlists", shotlistsRoutes);
 router.use("/timesheets", timesheetsRoutes);
 router.use("/calendar", calendarRoutes);
+router.use("/tasks", tasksRoutes);
 
 export default router;
