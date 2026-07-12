@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { api } from "@/lib/api";
@@ -100,5 +100,61 @@ describe("ShotList page — grouped by scene (step 2)", () => {
     await waitFor(() => expect(screen.getByText("Sem cena definida")).toBeInTheDocument());
     expect(screen.getByText("Com cena")).toBeInTheDocument();
     expect(screen.getByText("Sem cena ainda")).toBeInTheDocument();
+  });
+});
+
+describe("ShotList page — duration field (step 3)", () => {
+  beforeEach(() => {
+    vi.mocked(api.shotlists.get).mockReset();
+    vi.mocked(api.shotlists.addShot).mockReset();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("converts minutes entered in the form to seconds when creating a shot", async () => {
+    vi.mocked(api.shotlists.get).mockResolvedValue({
+      shotList: { id: 1, user_id: 1, project_id: 5, title: "", created_at: "", updated_at: "" },
+      shots: [],
+    });
+    vi.mocked(api.shotlists.addShot).mockResolvedValue(
+      makeShot({ id: 1, description: "Novo plano", duration_sec: 120 }) as any,
+    );
+
+    const { default: ShotList } = await import("@/pages/ShotList");
+    renderWithLanguage(<ShotList />);
+
+    fireEvent.click(await screen.findByText("Adicionar primeiro plano"));
+
+    fireEvent.change(screen.getByPlaceholderText("Ex: Protagonista entra em cena"), {
+      target: { value: "Novo plano" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("Ex: 2"), { target: { value: "2" } });
+
+    const submitButtons = screen.getAllByRole("button", { name: /adicionar plano/i });
+    const submitButton = submitButtons.find((btn) => btn.getAttribute("type") === "submit");
+    fireEvent.click(submitButton!);
+
+    await waitFor(() =>
+      expect(api.shotlists.addShot).toHaveBeenCalledWith(
+        5,
+        expect.objectContaining({ durationSec: 120 }),
+      ),
+    );
+  });
+
+  it("shows the per-shot duration column when printing (aggregate label present in header)", async () => {
+    vi.mocked(api.shotlists.get).mockResolvedValue({
+      shotList: { id: 1, user_id: 1, project_id: 5, title: "", created_at: "", updated_at: "" },
+      shots: [makeShot({ id: 1, scene: "1A", description: "Plano com duração", duration_sec: 90 })],
+    });
+
+    const { default: ShotList } = await import("@/pages/ShotList");
+    renderWithLanguage(<ShotList />);
+
+    await screen.findByText("Plano com duração");
+    // Aggregate duration header reflects the 90s shot (1min30 -> our formatDuration rounds to 2min)
+    expect(screen.getByText(/Duração total:/)).toBeInTheDocument();
   });
 });

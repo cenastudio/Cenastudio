@@ -77,10 +77,10 @@ interface ShotFormState {
   camera: string;
   lens: string;
   movement: string;
-  durationSec: string;
+  durationMinutes: string;
 }
 
-const emptyForm: ShotFormState = { scene: "", shotType: "", description: "", camera: "", lens: "", movement: "", durationSec: "" };
+const emptyForm: ShotFormState = { scene: "", shotType: "", description: "", camera: "", lens: "", movement: "", durationMinutes: "" };
 
 /**
  * Pure visual row — no dnd-kit hooks. Reused by both the sortable row (in
@@ -287,12 +287,15 @@ function printShotList(shots: ShotItem[], projectId: number, t: (key: string) =>
         <td>${s.camera || "—"}</td>
         <td>${s.lens || "—"}</td>
         <td>${s.movement || "—"}</td>
+        <td>${s.duration_sec != null ? formatDuration(s.duration_sec) : "—"}</td>
         <td>${s.status === "shot" ? statusShot : statusPending}</td>
       </tr>`,
     )
     .join("");
 
   const title = `${t("app.shotlist.title")} — ${t("app.shotlist.project")} ${projectId}`;
+  const groupCount = groupShotsByScene(shots).length;
+  const totalLabel = `${groupCount} ${t("app.shotlist.scenesCount")} · ${t("app.shotlist.totalDuration")}: ${formatDuration(totalDurationSec(shots))}`;
 
   const html = `
     <html>
@@ -300,7 +303,8 @@ function printShotList(shots: ShotItem[], projectId: number, t: (key: string) =>
         <title>${title}</title>
         <style>
           body { font-family: sans-serif; padding: 24px; color: #111; }
-          h1 { font-size: 18px; margin-bottom: 12px; }
+          h1 { font-size: 18px; margin-bottom: 4px; }
+          p.summary { font-size: 12px; color: #555; margin: 0 0 12px; }
           table { width: 100%; border-collapse: collapse; font-size: 12px; }
           th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
           th { background: #f3f3f3; }
@@ -308,6 +312,7 @@ function printShotList(shots: ShotItem[], projectId: number, t: (key: string) =>
       </head>
       <body>
         <h1>${title}</h1>
+        <p class="summary">${totalLabel}</p>
         <table>
           <thead>
             <tr>
@@ -318,6 +323,7 @@ function printShotList(shots: ShotItem[], projectId: number, t: (key: string) =>
               <th>${t("app.shotlist.camera")}</th>
               <th>${t("app.shotlist.lens")}</th>
               <th>${t("app.shotlist.movement")}</th>
+              <th>${t("app.shotlist.durationMinutes")}</th>
               <th>${t("app.shotlist.status")}</th>
             </tr>
           </thead>
@@ -411,7 +417,7 @@ function ShotListContent() {
       camera: shot.camera,
       lens: shot.lens,
       movement: shot.movement,
-      durationSec: shot.duration_sec != null ? String(shot.duration_sec) : "",
+      durationMinutes: shot.duration_sec != null ? String(Math.round(shot.duration_sec / 60)) : "",
     });
     setFormOpen(true);
   };
@@ -422,7 +428,7 @@ function ShotListContent() {
       toast.error(t("app.shotlist.errorDescribeShot"));
       return;
     }
-    const durationSec = form.durationSec.trim() ? Number.parseInt(form.durationSec, 10) : null;
+    const durationSec = form.durationMinutes.trim() ? Number.parseInt(form.durationMinutes, 10) * 60 : null;
 
     setSaving(true);
     try {
@@ -739,6 +745,19 @@ function ShotListContent() {
                   className="frame-input w-full"
                 />
               </div>
+            </div>
+
+            <div className="max-w-[10rem]">
+              <label className="block text-xs font-medium text-frame-gray-light mb-1.5">{t("app.shotlist.durationMinutes")}</label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={form.durationMinutes}
+                onChange={(e) => setForm((f) => ({ ...f, durationMinutes: e.target.value }))}
+                placeholder={t("app.shotlist.durationPlaceholder")}
+                className="frame-input w-full"
+              />
             </div>
 
             <DialogFooter className="gap-2 pt-4 border-t border-frame-gray-3">
