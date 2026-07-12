@@ -143,6 +143,13 @@ vi.mock('@/lib/api', () => ({
     calendar: {
       projectIcsUrl: vi.fn((projectId: number) => `/api/calendar/project/${projectId}.ics`),
     },
+    tasks: {
+      listMine: vi.fn(),
+      listByProject: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      remove: vi.fn(),
+    },
     admin: {
       listTools: vi.fn(),
       updateTool: vi.fn(),

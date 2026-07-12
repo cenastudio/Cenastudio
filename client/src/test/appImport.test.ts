@@ -84,6 +84,7 @@ describe("application module", () => {
     vi.mocked(api.projects.list).mockResolvedValue([]);
     vi.mocked(api.projects.activity).mockResolvedValue([]);
     vi.mocked(api.clients.list).mockResolvedValue([]);
+    vi.mocked(api.tasks.listMine).mockResolvedValue([]);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
       json: vi.fn().mockResolvedValue({ success: true, data: [] }),
     }));

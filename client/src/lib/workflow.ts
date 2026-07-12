@@ -130,6 +130,28 @@ export function getWorkflowStage(id: string | null | undefined): WorkflowStage {
   return WORKFLOW_STAGES.find((stage) => stage.id === id) || WORKFLOW_STAGES[0];
 }
 
+/**
+ * Resolves the route for a Task's optional workflow link (spec:
+ * team-task-delegation). Priority: exact toolSlug match (most specific) →
+ * stage's journey page → the project overview as a last resort.
+ */
+export function getRouteForTaskLink(
+  projectId: number,
+  stageId?: string | null,
+  toolSlug?: string | null,
+): string {
+  if (toolSlug) {
+    for (const stage of WORKFLOW_STAGES) {
+      const action = stage.actions.find((a) => a.toolSlug === toolSlug);
+      if (action) return action.route(projectId);
+    }
+  }
+  if (stageId && WORKFLOW_STAGES.some((stage) => stage.id === stageId)) {
+    return `/project/${projectId}/journey/${stageId}`;
+  }
+  return `/project/${projectId}`;
+}
+
 export function getStageForTool(tool: string | null | undefined): WorkflowStageId {
   return TOOL_STAGE.get(tool || "") || "planning";
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Bell, CheckCheck, CheckCircle, AlertTriangle, Inbox, Trash2 } from "lucide-react";
+import { Bell, CheckCheck, CheckCircle, AlertTriangle, Inbox, Trash2, ListTodo } from "lucide-react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -62,12 +62,14 @@ const typeIcons: Record<string, typeof Bell> = {
   info: Bell,
   success: CheckCircle,
   warning: AlertTriangle,
+  task_assigned: ListTodo,
 };
 
 const typeColors: Record<string, string> = {
   info: "text-frame-orange",
   success: "text-green-500",
   warning: "text-yellow-500",
+  task_assigned: "text-frame-orange",
 };
 
 export default function NotificationsPopover() {

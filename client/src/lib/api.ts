@@ -416,6 +416,32 @@ export const api = {
   calendar: {
     projectIcsUrl: (projectId: number) => apiUrl(`/calendar/project/${projectId}.ics`),
   },
+  tasks: {
+    listMine: () => request<TaskItem[]>("/tasks/mine"),
+    listByProject: (projectId: number) => request<TaskItem[]>(`/tasks/projects/${projectId}`),
+    create: (
+      projectId: number,
+      data: {
+        title: string;
+        description?: string | null;
+        assigneeUserId: number;
+        dueDate?: string | null;
+        stageId?: string | null;
+        toolSlug?: string | null;
+      },
+    ) => request<TaskItem>(`/tasks/projects/${projectId}`, { method: "POST", body: JSON.stringify(data) }),
+    update: (
+      id: number,
+      data: Partial<{
+        title: string;
+        description: string | null;
+        dueDate: string | null;
+        status: "pending" | "in_progress" | "done";
+        assigneeUserId: number;
+      }>,
+    ) => request<TaskItem>(`/tasks/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    remove: (id: number) => request<null>(`/tasks/${id}`, { method: "DELETE" }),
+  },
   assets: {
     list: () =>
       request<
@@ -934,4 +960,23 @@ export interface TimeEntryItem {
   duration_sec: number;
   hourly_rate: number | null;
   created_at: string;
+}
+
+export interface TaskItem {
+  id: number;
+  project_id: number;
+  assignee_user_id: number;
+  created_by_user_id: number;
+  title: string;
+  description: string | null;
+  due_date: string | null;
+  status: "pending" | "in_progress" | "done";
+  stage_id: string | null;
+  tool_slug: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  assignee_name?: string;
+  assignee_email?: string;
+  project_name?: string;
 }

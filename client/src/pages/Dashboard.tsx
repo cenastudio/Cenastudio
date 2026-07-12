@@ -9,6 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import WelcomeModal from "@/components/onboarding/WelcomeModal";
 import ProductTour from "@/components/onboarding/ProductTour";
+import MyTasksPanel from "@/components/MyTasksPanel";
 import {
   Plus,
   ChevronRight,
@@ -499,6 +500,9 @@ function DashboardContent() {
             </div>
           </section>
         </div>
+
+        {/* ─── MINHAS TAREFAS (spec: team-task-delegation) ─── */}
+        <MyTasksPanel />
 
         {/* ─── ATIVIDADES RECENTES ─── */}
         <section className="space-y-3 animate-stagger-3">
