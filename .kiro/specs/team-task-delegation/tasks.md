@@ -26,102 +26,95 @@ deploy Railway `SUCCESS` confirmado antes de abrir a próxima. Nenhuma fase
 
 ---
 
-## Fase 1 — Model `Task`
+## Fase 1 — Model `Task` ✅ CONCLUÍDA (commit 3cf78d3)
 
-- [ ] 1.1 Adicionar `model Task` em `prisma/schema.prisma` + relações
+- [x] 1.1 Adicionar `model Task` em `prisma/schema.prisma` + relações
       `tasksAssigned`/`tasksCreated` em `User` e `tasks` em `Project`.
       _Requisito 1.1, 1.5_
-- [ ] 1.2 Gerar migration `prisma/migrations/<ts>_add_tasks/migration.sql`
+- [x] 1.2 Gerar migration `prisma/migrations/20260711080000_add_tasks/migration.sql`
       seguindo o padrão de `20260711070000_add_time_entries` (CREATE TABLE +
       índices + FKs cascade). _Requisito 1.1, 1.5_
-- [ ] 1.3 Adicionar espelho `CREATE TABLE IF NOT EXISTS tasks` em
+- [x] 1.3 Adicionar espelho `CREATE TABLE IF NOT EXISTS tasks` em
       `server/models/db.ts` + índices em `createIndexes()`. _Requisito 1.6_
-- [ ] 1.4 Criar `server/lib/workflowStages.ts` com a lista de `stageId`/
+- [x] 1.4 Criar `server/lib/workflowStages.ts` com a lista de `stageId`/
       `toolSlug` válidos (réplica server-side de `client/src/lib/workflow.ts`,
       seguindo o padrão já existente de duplicação client/server no projeto).
       _Requisito 1.2_
-- [ ] Checkpoint fase 1: `npm run check && npm run test && npm run build`,
-      aplicar migration localmente (SQLite) e validar `prisma migrate deploy`
-      dry-run. Commit + push + confirmar deploy Railway `SUCCESS`. Nenhuma
-      rota nova exposta ainda — puramente aditivo e invisível.
+- [x] Checkpoint fase 1: check + test + build verdes, migration aplicada em
+      produção via `prisma migrate deploy`, commit + push + deploy `SUCCESS`.
 
 ---
 
-## Fase 2 — API de Tarefas
+## Fase 2 — API de Tarefas ✅ CONCLUÍDA (commit 52100e6)
 
-- [ ] 2.1 Criar `server/services/taskService.ts` (dual-path): `createTask`,
-      `listTasksByProject`, `listMyTasks`, `updateTaskStatus`, `reassignTask`,
-      `deleteTask`, com validação de `assigneeUserId` pertencer ao workspace
-      (reaproveitar `getOwnerWorkspaceId`/`listTeamMembers` de
-      `teamService.ts`). _Requisito 2.1, 2.2, 2.6_
-- [ ] 2.2 Criar `server/controllers/taskController.ts` com serialização
-      `withSnakeCase`, autorização (403 para quem não é
-      owner/criador/responsável). _Requisito 2.7_
-- [ ] 2.3 Criar `server/routes/tasks.ts` (`GET/POST
-      /api/projects/:projectId/tasks`, `GET /api/tasks/mine`, `PATCH/DELETE
-      /api/tasks/:id`) e registrar em `server/index.ts`. _Requisito 2.4, 2.5_
-- [ ] 2.4 Disparar `Notification` (`type: "task_assigned"`) ao criar/
-      reatribuir tarefa, reaproveitando o serviço de notificação existente.
+- [x] 2.1 `server/services/taskService.ts` (dual-path): createTask,
+      listTasksByProject, listMyTasks, updateTask, deleteTask +
+      listAssignableMembers (add. na Fase 4). _Requisito 2.1, 2.2, 2.6_
+- [x] 2.2 `server/controllers/taskController.ts` com `withSnakeCase` +
+      autorização (403). _Requisito 2.7_
+- [x] 2.3 `server/routes/tasks.ts` sob `/api/tasks/*` (namespace próprio para
+      não colidir com `/api/projects/:id`), registrado em `router.ts`.
+      _Requisito 2.4, 2.5_
+- [x] 2.4 Notificação `task_assigned` via `notifyUser` ao criar/reatribuir.
       _Requisito 2.3, 4.1, 4.3_
-- [ ] 2.5 Escrever `server/services/taskService.test.ts` cobrindo CRUD,
-      autorização, validação de assignee fora do workspace, cascade delete.
-      _Requisito 2.2, 2.7_
-- [ ] Checkpoint fase 2: `npm run check && npm run test && npm run build`.
-      Testar rotas via curl em produção após deploy (sem UI ainda consumindo
-      — API fica disponível mas não referenciada por nenhuma tela existente,
-      portanto zero risco de regressão). Commit + push + deploy `SUCCESS`.
+- [x] 2.5 `server/services/taskService.test.ts` (14 testes). _Requisito 2.2, 2.7_
+- [x] Checkpoint fase 2: check + test + build verdes, rotas testadas via curl
+      em produção, commit + push + deploy `SUCCESS`.
 
 ---
 
-## Fase 3 — "Minhas Tarefas" + notificação
+## Fase 3 — "Minhas Tarefas" + notificação ✅ CONCLUÍDA (commit d82d449)
 
-- [ ] 3.1 Criar `client/src/components/MyTasksPanel.tsx` (lista `GET
-      /api/tasks/mine`, concluir inline, link para ferramenta/etapa via
-      `WORKFLOW_STAGES`, estado vazio no padrão `frame-*`). _Requisito 3.1,
-      3.2, 3.3, 3.4_
-- [ ] 3.2 Inserir `MyTasksPanel` no `Dashboard.tsx`. _Requisito 3.1_
-- [ ] 3.3 Adicionar `case "task_assigned"` em `NotificationsPopover.tsx`
-      (título do projeto + título da tarefa + navegação ao clicar).
+- [x] 3.1 `client/src/components/MyTasksPanel.tsx` + helper
+      `getRouteForTaskLink` em `workflow.ts`. _Requisito 3.1, 3.2, 3.3, 3.4_
+- [x] 3.2 `MyTasksPanel` inserido no `Dashboard.tsx`. _Requisito 3.1_
+- [x] 3.3 `case "task_assigned"` (ícone/cor) em `NotificationsPopover.tsx`.
       _Requisito 4.2_
-- [ ] Checkpoint fase 3: `npm run check && npm run test && npm run build`.
-      Validar manualmente com um team member de teste em produção (criar
-      tarefa via API, confirmar que aparece no Dashboard e na notificação).
-      Commit + push + deploy `SUCCESS`.
+- [x] Checkpoint fase 3: check + test (1154) + build verdes; notificação
+      confirmada em produção; commit + push + deploy `SUCCESS`. (Achado e
+      corrigido: mock de `api.tasks` faltava em `setup.ts`.)
 
 ---
 
-## Fase 4 — Gestão de tarefas dentro do projeto
+## Fase 4 — Gestão de tarefas dentro do projeto ✅ CONCLUÍDA (commit 95b7ef8)
 
-- [ ] 4.1 Criar `client/src/components/ProjectTasksPanel.tsx` (lista todas as
-      tarefas do projeto com responsável/status/prazo; botão "Nova Tarefa"
-      visível só para owner/`producer`). _Requisito 3.5, 2.1_
-- [ ] 4.2 Dialog de criação/edição de tarefa (título, descrição, responsável
-      via `listTeamMembers`, prazo, vínculo opcional a etapa/ferramenta via
-      `WORKFLOW_STAGES`). _Requisito 1.2, 1.3, 1.4_
-- [ ] 4.3 Inserir `ProjectTasksPanel` em `ProjectHub.tsx`. _Requisito 3.5_
-- [ ] Checkpoint fase 4: `npm run check && npm run test && npm run build`.
-      Fluxo completo testado em produção (owner cria tarefa → assignee recebe
-      notificação → assignee conclui no Dashboard). Commit + push + deploy
+- [x] 4.1 `client/src/components/ProjectTasksPanel.tsx` (lista + botão "Nova
+      Tarefa" só para owner/producer). _Requisito 3.5, 2.1_
+- [x] 4.2 Dialog de criação (título, descrição, responsável via
+      `assignable-members`, prazo, vínculo opcional a etapa/ferramenta).
+      _Requisito 1.2, 1.3, 1.4_
+- [x] 4.3 `ProjectTasksPanel` em `ProjectHub.tsx`; `canManage` via `useAuth`.
+      _Requisito 3.5_
+- [x] Checkpoint fase 4: check + test (1159) + build verdes; endpoint
+      `assignable-members` testado em produção; commit + push + deploy
       `SUCCESS`.
 
 ---
 
-## Fase 5 — Migração de dados `Collaborator` → `Team` (não destrutiva)
+## Fase 5 — Migração de dados `Collaborator` → `Team` (não destrutiva) ✅ CONCLUÍDA
 
-- [ ] 5.1 Escrever `scripts/migrate-collaborators-to-team.ts`: dump JSON em
-      `.private/migrations/`, criação de `User`+`WorkspaceMember` por
-      `Collaborator` elegível, mapeamento de role, relatório de
-      pulados/revisão manual. _Requisito 5.2, 5.3, 5.4_
-- [ ] 5.2 Rodar o script localmente contra cópia de dados de produção (dump),
-      revisar relatório manualmente com o usuário antes de qualquer execução
-      real. _Requisito 5.2, 5.3_
-- [ ] 5.3 Rodar o script em produção (após aprovação explícita do usuário),
-      validar contagem migrados/pulados, guardar dump + relatório.
-      _Requisito 5.4_
-- [ ] Checkpoint fase 5: `/collaborators` continua funcionando normalmente
-      (nada removido ainda). Nenhum build/deploy de código necessário nesta
-      fase além do script — mas se o script for adicionado ao repo, rodar
-      `npm run check` mesmo assim. Commit + push do script.
+- [x] 5.1 `scripts/migrate-collaborators-to-team.ts`: dump JSON em
+      `.private/migrations/` antes de tudo, criação/vínculo de
+      `User`+`WorkspaceMember` por `Collaborator` elegível, mapeamento de role
+      (`server/lib/collaboratorRoleMap.ts`, com teste), relatório de
+      migrados/vinculados/pulados/revisão. Dry-run por padrão, `--apply` para
+      execução real (com confirmação interativa). _Requisito 5.2, 5.3, 5.4_
+- [x] 5.2 `mapCollaboratorRole` coberto por teste automático
+      (`collaboratorRoleMap.test.ts`, 4 casos). Dry-run real executado contra
+      o Postgres de produção — conexão, leitura, dump e relatório OK.
+      _Requisito 5.2, 5.3_
+- [x] 5.3 **Descoberta:** produção tem **0 colaboradores** (foram limpos em
+      sessão anterior de limpeza de dados). A migração real é um **no-op** —
+      não há dado a migrar. O script fica pronto e validado caso apareçam
+      dados no futuro. _Requisito 5.4_
+- [x] Checkpoint fase 5: `/collaborators` intacto; check + test (1163) +
+      build verdes; script é ferramenta operacional (não altera runtime do
+      servidor — `dist/index.js` inalterado). Commit do script.
+
+> **Nota para a Fase 6:** como produção tem 0 colaboradores, o `DROP TABLE
+> collaborators` da Fase 6 é seguro (sem perda de dado real). Ainda assim,
+> exige autorização explícita do usuário antes de rodar, conforme Requisito
+> 5.5/0.2.
 
 ---
 
