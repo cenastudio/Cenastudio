@@ -4,6 +4,7 @@ import AppNavBar from "@/components/AppNavBar";
 import ProjectNav from "@/components/ProjectNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { api, type ShotItem } from "@/lib/api";
 import {
   Clapperboard,
@@ -53,7 +54,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-const SHOT_TYPES = ["Wide", "Médio", "Close", "Detalhe", "Plongée", "Contra-plongée"];
+const SHOT_TYPES_PT = ["Wide", "Médio", "Close", "Detalhe", "Plongée", "Contra-plongée"];
+const SHOT_TYPES_EN = ["Wide", "Medium", "Close", "Detail", "High angle", "Low angle"];
 
 interface ShotFormState {
   scene: string;
@@ -72,11 +74,13 @@ function SortableShotRow({
   onToggleStatus,
   onEdit,
   onDelete,
+  t,
 }: {
   shot: ShotItem;
   onToggleStatus: (shot: ShotItem) => void;
   onEdit: (shot: ShotItem) => void;
   onDelete: (shot: ShotItem) => void;
+  t: (key: string) => string;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: shot.id });
   const style = {
@@ -97,12 +101,12 @@ function SortableShotRow({
         {...attributes}
         {...listeners}
         className="p-1.5 text-frame-gray-light hover:text-frame-orange cursor-grab active:cursor-grabbing shrink-0"
-        aria-label="Arrastar para reordenar"
+        aria-label={t("app.shotlist.dragToReorder")}
       >
         <GripVertical className="w-4 h-4" />
       </button>
 
-      <button type="button" onClick={() => onToggleStatus(shot)} className="shrink-0" title="Marcar como filmado">
+      <button type="button" onClick={() => onToggleStatus(shot)} className="shrink-0" title={t("app.shotlist.markShot")}>
         {shot.status === "shot" ? (
           <CheckCircle2 className="w-5 h-5 text-green-400" />
         ) : (
@@ -120,10 +124,10 @@ function SortableShotRow({
           )}
         </div>
         <p className={`text-sm text-frame-white truncate ${shot.status === "shot" ? "line-through opacity-60" : ""}`}>
-          {shot.description || "Sem descrição"}
+          {shot.description || t("app.shotlist.noDescription")}
         </p>
         <p className="text-[0.65rem] text-frame-gray-light truncate">
-          {[shot.camera, shot.lens, shot.movement].filter(Boolean).join(" · ") || "Sem detalhes técnicos"}
+          {[shot.camera, shot.lens, shot.movement].filter(Boolean).join(" · ") || t("app.shotlist.noTechDetails")}
         </p>
       </div>
 
@@ -132,7 +136,7 @@ function SortableShotRow({
           type="button"
           onClick={() => onEdit(shot)}
           className="p-2 border border-frame-gray-3/50 hover:border-frame-orange hover:text-frame-orange transition"
-          title="Editar"
+          title={t("app.shotlist.edit")}
         >
           <Edit className="w-3.5 h-3.5" />
         </button>
@@ -140,7 +144,7 @@ function SortableShotRow({
           type="button"
           onClick={() => onDelete(shot)}
           className="p-2 border border-frame-gray-3/50 hover:border-red-500 hover:text-red-500 transition"
-          title="Excluir"
+          title={t("app.shotlist.delete")}
         >
           <Trash2 className="w-3.5 h-3.5" />
         </button>
@@ -150,7 +154,9 @@ function SortableShotRow({
 }
 
 /** Opens a hidden iframe with the shot list rendered as a simple printable table. */
-function printShotList(shots: ShotItem[], projectId: number) {
+function printShotList(shots: ShotItem[], projectId: number, t: (key: string) => string) {
+  const statusShot = t("app.shotlist.statusShot");
+  const statusPending = t("app.shotlist.statusPending");
   const rows = shots
     .map(
       (s, i) => `
@@ -162,15 +168,17 @@ function printShotList(shots: ShotItem[], projectId: number) {
         <td>${s.camera || "—"}</td>
         <td>${s.lens || "—"}</td>
         <td>${s.movement || "—"}</td>
-        <td>${s.status === "shot" ? "Filmado" : "Pendente"}</td>
+        <td>${s.status === "shot" ? statusShot : statusPending}</td>
       </tr>`,
     )
     .join("");
 
+  const title = `${t("app.shotlist.title")} — ${t("app.shotlist.project")} ${projectId}`;
+
   const html = `
     <html>
       <head>
-        <title>Shot List — Projeto ${projectId}</title>
+        <title>${title}</title>
         <style>
           body { font-family: sans-serif; padding: 24px; color: #111; }
           h1 { font-size: 18px; margin-bottom: 12px; }
@@ -180,10 +188,19 @@ function printShotList(shots: ShotItem[], projectId: number) {
         </style>
       </head>
       <body>
-        <h1>Shot List — Projeto ${projectId}</h1>
+        <h1>${title}</h1>
         <table>
           <thead>
-            <tr><th>#</th><th>Cena</th><th>Tipo</th><th>Descrição</th><th>Câmera</th><th>Lente</th><th>Movimento</th><th>Status</th></tr>
+            <tr>
+              <th>#</th>
+              <th>${t("app.shotlist.scene")}</th>
+              <th>${t("app.shotlist.shotType")}</th>
+              <th>${t("app.shotlist.descriptionLabel")}</th>
+              <th>${t("app.shotlist.camera")}</th>
+              <th>${t("app.shotlist.lens")}</th>
+              <th>${t("app.shotlist.movement")}</th>
+              <th>${t("app.shotlist.status")}</th>
+            </tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>
@@ -210,8 +227,10 @@ function printShotList(shots: ShotItem[], projectId: number) {
 }
 
 function ShotListContent() {
+  const { t, locale } = useLanguage();
   const [, params] = useRoute("/project/:projectId/shotlist");
   const projectId = Number(params?.projectId);
+  const SHOT_TYPES = locale === "en" ? SHOT_TYPES_EN : SHOT_TYPES_PT;
 
   const [shots, setShots] = useState<ShotItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -232,7 +251,7 @@ function ShotListContent() {
     api.shotlists
       .get(projectId)
       .then(({ shots: loaded }) => setShots(loaded))
-      .catch((e) => toast.error(e instanceof Error ? e.message : "Falha ao carregar shot list"))
+      .catch((e) => toast.error(e instanceof Error ? e.message : t("app.shotlist.errorLoad")))
       .finally(() => setLoading(false));
   };
 
@@ -264,7 +283,7 @@ function ShotListContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.description.trim()) {
-      toast.error("Descreva o plano");
+      toast.error(t("app.shotlist.errorDescribeShot"));
       return;
     }
     const durationSec = form.durationSec.trim() ? Number.parseInt(form.durationSec, 10) : null;
@@ -283,15 +302,15 @@ function ShotListContent() {
       if (editingId) {
         const updated = await api.shotlists.updateShot(editingId, payload);
         setShots((prev) => prev.map((s) => (s.id === editingId ? updated : s)));
-        toast.success("Plano atualizado");
+        toast.success(t("app.shotlist.successUpdated"));
       } else {
         const created = await api.shotlists.addShot(projectId, payload);
         setShots((prev) => [...prev, created]);
-        toast.success("Plano adicionado");
+        toast.success(t("app.shotlist.successAdded"));
       }
       setFormOpen(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao salvar plano");
+      toast.error(err instanceof Error ? err.message : t("app.shotlist.errorSave"));
     } finally {
       setSaving(false);
     }
@@ -303,7 +322,7 @@ function ShotListContent() {
       const updated = await api.shotlists.updateShot(shot.id, { status: nextStatus });
       setShots((prev) => prev.map((s) => (s.id === shot.id ? updated : s)));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao atualizar status");
+      toast.error(err instanceof Error ? err.message : t("app.shotlist.errorStatus"));
     }
   };
 
@@ -313,10 +332,10 @@ function ShotListContent() {
     try {
       await api.shotlists.deleteShot(deleteTarget.id);
       setShots((prev) => prev.filter((s) => s.id !== deleteTarget.id));
-      toast.success("Plano removido");
+      toast.success(t("app.shotlist.successDeleted"));
       setDeleteTarget(null);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao remover plano");
+      toast.error(err instanceof Error ? err.message : t("app.shotlist.errorDelete"));
     } finally {
       setDeleting(false);
     }
@@ -337,7 +356,7 @@ function ShotListContent() {
       const persisted = await api.shotlists.reorder(projectId, reordered.map((s) => s.id));
       setShots(persisted);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao reordenar — desfazendo");
+      toast.error(err instanceof Error ? err.message : t("app.shotlist.errorReorder"));
       load();
     }
   };
@@ -349,22 +368,21 @@ function ShotListContent() {
       <main id="main-content" className="px-4 sm:px-6 py-5 sm:py-6 max-w-[1200px] mx-auto space-y-6">
         <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-frame-gray-3 pb-4">
           <div>
-            <p className="frame-label mb-1">// Produção</p>
-            <h1 className="frame-title text-[clamp(1.5rem,3vw,2.2rem)] leading-none">Shot List</h1>
+            <p className="frame-label mb-1">{t("app.shotlist.eyebrow")}</p>
+            <h1 className="frame-title text-[clamp(1.5rem,3vw,2.2rem)] leading-none">{t("app.shotlist.title")}</h1>
             <p className="text-xs text-frame-gray-light mt-2 max-w-lg leading-relaxed">
-              Monte a lista de planos do projeto, ordene arrastando e marque cada um como filmado durante o
-              set.
+              {t("app.shotlist.description")}
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0 self-start">
             {shots.length > 0 && (
               <button
                 type="button"
-                onClick={() => printShotList(shots, projectId)}
+                onClick={() => printShotList(shots, projectId, t)}
                 className="frame-btn-ghost inline-flex items-center gap-2"
               >
                 <Printer className="w-4 h-4" />
-                Exportar
+                {t("app.shotlist.export")}
               </button>
             )}
             <button
@@ -373,7 +391,7 @@ function ShotListContent() {
               className="frame-btn-primary inline-flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
-              Adicionar plano
+              {t("app.shotlist.addShot")}
             </button>
           </div>
         </header>
@@ -392,10 +410,9 @@ function ShotListContent() {
                 <Clapperboard className="w-8 h-8 text-frame-orange" />
               </div>
               <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-frame-white">Organize os planos do projeto</h2>
+                <h2 className="text-2xl font-bold text-frame-white">{t("app.shotlist.emptyTitle")}</h2>
                 <p className="text-sm text-frame-gray-light max-w-md mx-auto leading-relaxed">
-                  Adicione cada plano com cena, tipo, câmera, lente e movimento. Depois arraste para
-                  ordenar e exporte para a equipe.
+                  {t("app.shotlist.emptyDesc")}
                 </p>
               </div>
               <button
@@ -404,7 +421,7 @@ function ShotListContent() {
                 className="frame-btn-primary inline-flex items-center gap-2 !py-3 !px-6"
               >
                 <Plus className="w-4 h-4" />
-                Adicionar primeiro plano
+                {t("app.shotlist.addFirstShot")}
               </button>
             </div>
 
@@ -412,25 +429,25 @@ function ShotListContent() {
               <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
                 <span className="font-frame-mono text-[0.6rem] text-frame-orange tracking-wider block mb-2">01</span>
-                <p className="text-sm font-semibold text-frame-white">Adicione planos</p>
+                <p className="text-sm font-semibold text-frame-white">{t("app.shotlist.step1Title")}</p>
                 <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
-                  Cena, tipo, descrição, câmera, lente e movimento de cada plano.
+                  {t("app.shotlist.step1Desc")}
                 </p>
               </div>
               <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
                 <span className="font-frame-mono text-[0.6rem] text-frame-orange tracking-wider block mb-2">02</span>
-                <p className="text-sm font-semibold text-frame-white">Ordene arrastando</p>
+                <p className="text-sm font-semibold text-frame-white">{t("app.shotlist.step2Title")}</p>
                 <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
-                  Arraste os planos para a ordem de filmagem que faz sentido no set.
+                  {t("app.shotlist.step2Desc")}
                 </p>
               </div>
               <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
                 <span className="font-frame-mono text-[0.6rem] text-frame-orange tracking-wider block mb-2">03</span>
-                <p className="text-sm font-semibold text-frame-white">Marque filmado/exporte</p>
+                <p className="text-sm font-semibold text-frame-white">{t("app.shotlist.step3Title")}</p>
                 <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
-                  Confira o que já foi capturado e exporte a lista para a equipe.
+                  {t("app.shotlist.step3Desc")}
                 </p>
               </div>
             </div>
@@ -449,6 +466,7 @@ function ShotListContent() {
                     onToggleStatus={handleToggleStatus}
                     onEdit={openEditDialog}
                     onDelete={setDeleteTarget}
+                    t={t}
                   />
                 ))}
               </div>
@@ -461,55 +479,57 @@ function ShotListContent() {
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-lg rounded-none p-6">
           <DialogHeader>
-            <DialogTitle className="frame-title text-2xl">{editingId ? "Editar plano" : "Novo plano"}</DialogTitle>
+            <DialogTitle className="frame-title text-2xl">
+              {editingId ? t("app.shotlist.editShot") : t("app.shotlist.newShot")}
+            </DialogTitle>
             <DialogDescription className="text-frame-gray-light text-sm">
-              Detalhes técnicos e narrativos do plano.
+              {t("app.shotlist.formDescription")}
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-3 mt-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-frame-gray-light mb-1.5">Cena</label>
+                <label className="block text-xs font-medium text-frame-gray-light mb-1.5">{t("app.shotlist.scene")}</label>
                 <input
                   type="text"
                   value={form.scene}
                   onChange={(e) => setForm((f) => ({ ...f, scene: e.target.value }))}
-                  placeholder="Ex: 1A"
+                  placeholder={t("app.shotlist.scenePlaceholder")}
                   className="frame-input w-full"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-frame-gray-light mb-1.5">Tipo de plano</label>
+                <label className="block text-xs font-medium text-frame-gray-light mb-1.5">{t("app.shotlist.shotType")}</label>
                 <input
                   type="text"
                   value={form.shotType}
                   onChange={(e) => setForm((f) => ({ ...f, shotType: e.target.value }))}
-                  placeholder="Ex: Wide"
+                  placeholder={t("app.shotlist.shotTypePlaceholder")}
                   list="shot-types"
                   className="frame-input w-full"
                 />
                 <datalist id="shot-types">
-                  {SHOT_TYPES.map((t) => (
-                    <option key={t} value={t} />
+                  {SHOT_TYPES.map((type) => (
+                    <option key={type} value={type} />
                   ))}
                 </datalist>
               </div>
             </div>
             <div>
-              <label className="block text-xs font-medium text-frame-gray-light mb-1.5">Descrição</label>
+              <label className="block text-xs font-medium text-frame-gray-light mb-1.5">{t("app.shotlist.descriptionLabel")}</label>
               <input
                 type="text"
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                placeholder="Ex: Protagonista entra em cena"
+                placeholder={t("app.shotlist.descriptionPlaceholder")}
                 required
                 className="frame-input w-full"
               />
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-medium text-frame-gray-light mb-1.5">Câmera</label>
+                <label className="block text-xs font-medium text-frame-gray-light mb-1.5">{t("app.shotlist.camera")}</label>
                 <input
                   type="text"
                   value={form.camera}
@@ -518,7 +538,7 @@ function ShotListContent() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-frame-gray-light mb-1.5">Lente</label>
+                <label className="block text-xs font-medium text-frame-gray-light mb-1.5">{t("app.shotlist.lens")}</label>
                 <input
                   type="text"
                   value={form.lens}
@@ -527,7 +547,7 @@ function ShotListContent() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-frame-gray-light mb-1.5">Movimento</label>
+                <label className="block text-xs font-medium text-frame-gray-light mb-1.5">{t("app.shotlist.movement")}</label>
                 <input
                   type="text"
                   value={form.movement}
@@ -539,11 +559,11 @@ function ShotListContent() {
 
             <DialogFooter className="gap-2 pt-4 border-t border-frame-gray-3">
               <button type="button" onClick={() => setFormOpen(false)} className="frame-btn-ghost" disabled={saving}>
-                Cancelar
+                {t("app.shotlist.cancel")}
               </button>
               <button type="submit" className="frame-btn-primary inline-flex items-center gap-2" disabled={saving}>
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
-                {editingId ? "Salvar alterações" : "Adicionar plano"}
+                {editingId ? t("app.shotlist.saveChanges") : t("app.shotlist.addShot")}
               </button>
             </DialogFooter>
           </form>
@@ -554,15 +574,15 @@ function ShotListContent() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir plano?</AlertDialogTitle>
+            <AlertDialogTitle>{t("app.shotlist.deleteConfirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              "{deleteTarget?.description}" será removido da shot list.
+              {t("app.shotlist.deleteConfirmDesc").replace("{description}", deleteTarget?.description || "")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>{t("app.shotlist.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-red-600 hover:bg-red-700">
-              {deleting ? "Excluindo..." : "Excluir"}
+              {deleting ? t("app.shotlist.deleting") : t("app.shotlist.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
