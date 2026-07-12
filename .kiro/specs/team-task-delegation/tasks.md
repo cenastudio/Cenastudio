@@ -159,13 +159,25 @@ deploy Railway `SUCCESS` confirmado antes de abrir a próxima. Nenhuma fase
       deploy `SUCCESS`. Tabela `collaborators` órfã no banco mas nada no
       código a usa.
 
-### Checkpoint 6-C — DROP destrutivo (SÓ com autorização explícita)
-- [ ] 6C.1 Schema: remover `model Collaborator`, `collaboratorId`/relação de
-      `ProjectMember`, relação de `User`.
-- [ ] 6C.2 Migration: drop FK + `DROP COLUMN collaborator_id` +
-      `DROP TABLE collaborators`; atualizar espelho SQLite.
-- [ ] Checkpoint 6-C: check + test + build + commit + push + deploy; confirmar
-      `/collaborators` → 404 e nenhuma tela quebrada. _Requisito 5.5, 5.6, 0.2_
+### Checkpoint 6-C — DROP destrutivo ✅ CONCLUÍDO (commit f856ed0, autorizado pelo usuário)
+- [x] 6C.1 Schema: removido `model Collaborator`, `collaboratorId`/relação de
+      `ProjectMember` (fica só `userId`), relação `collaborators` de `User`.
+- [x] 6C.2 Migration `20260712190000_drop_collaborators`: drop FK + drop
+      index + `DROP COLUMN collaborator_id` + `DROP TABLE collaborators`;
+      espelho SQLite atualizado (tabela, coluna, função
+      `ensureCollaboratorColumns`, índices removidos).
+- [x] Reescrito `projectMembersController.ts` sem o legacy path de
+      `collaboratorId`. Removidos tipos órfãos `DbCollaborator` e
+      `collaborator_id`/`collaborator_role` de `DbProjectMember`/
+      `ProjectMemberItem`.
+- [x] Checkpoint 6-C: check + test (1182) + build ok (`dist/index.js`
+      609.6kb → 604.7kb). Migration aplicada e confirmada em produção
+      (`collaborators` não existe mais; `project_members` sem
+      `collaborator_id`). Membros de projeto criados na Fase 6-A (por
+      `userId`) confirmados intactos após o DROP. Commit + push + deploy
+      `SUCCESS`. _Requisito 5.5, 5.6, 0.2_
+
+## Spec concluído — 6 de 6 fases entregues.
 
 ---
 
