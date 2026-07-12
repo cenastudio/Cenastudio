@@ -45,7 +45,10 @@ export const getOverallAnalytics: RequestHandler = async (req, res, next) => {
         prisma.client.count({ where: { userId: owner } }), prisma.client.aggregate({ where: { userId: owner }, _sum: { totalSpent: true } }),
         prisma.opportunity.count({ where: { userId: owner } }), prisma.opportunity.aggregate({ where: { userId: owner, stage: { not: "lost" } }, _sum: { estimatedValue: true } }),
         prisma.opportunity.aggregate({ where: { userId: owner, stage: "won", createdAt: { gte: start } }, _sum: { estimatedValue: true } }),
-        prisma.generation.count({ where: { userId: owner } }), prisma.collaborator.count({ where: { userId: owner } }),
+        prisma.generation.count({ where: { userId: owner } }),
+        (prisma as any).workspaceMember.count({
+          where: { workspace: { ownerUserId: owner }, role: { not: "owner" }, status: "active" },
+        }),
       ]);
       res.json({ success: true, data: {
         projects: { total: totalProjects, active: activeProjects },
@@ -69,7 +72,12 @@ export const getOverallAnalytics: RequestHandler = async (req, res, next) => {
     const wonThisMonth = db.prepare("SELECT COALESCE(SUM(estimated_value), 0) as total FROM opportunities WHERE user_id = ? AND stage = 'won' AND strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now')").get(userId) as { total: number };
 
     const totalGenerations = db.prepare("SELECT COUNT(*) as count FROM generations WHERE user_id = ?").get(userId) as DbCountByCount;
-    const totalCollaborators = db.prepare("SELECT COUNT(*) as count FROM collaborators WHERE user_id = ?").get(userId) as DbCountByCount;
+    const totalCollaborators = db.prepare(
+      `SELECT COUNT(*) as count
+       FROM workspace_members wm
+       JOIN workspaces w ON w.id = wm.workspace_id
+       WHERE w.owner_user_id = ? AND wm.role != 'owner' AND wm.status = 'active'`,
+    ).get(userId) as DbCountByCount;
 
     res.json({
       success: true,

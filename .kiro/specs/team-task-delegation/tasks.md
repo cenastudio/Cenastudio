@@ -118,23 +118,45 @@ deploy Railway `SUCCESS` confirmado antes de abrir a próxima. Nenhuma fase
 
 ---
 
-## Fase 6 — Remoção de `/collaborators` (destrutiva — requer autorização explícita do usuário antes de iniciar)
+## Fase 6 — Fusão completa Collaborator → Team (Opção B + Opção 2, 3 checkpoints)
 
-- [ ] 6.1 Remover tab "Equipe Externa" de `ProductionNav.tsx`
-      (`SECONDARY_TABS`). _Requisito 6.1_
-- [ ] 6.2 Remover rota `/collaborators` de `App.tsx`,
-      `Collaborators.tsx`, `collaboratorsController.ts`,
-      `server/routes/collaborators.ts`, `server/routes/projectMembers.ts`
-      (endpoint `getCollaboratorProjects`, se não usado por mais nada).
-      _Requisito 6.1_
-- [ ] 6.3 Atualizar `WORKFLOW_STAGES` (`production.actions.team.route`) para
-      apontar para a nova seção de equipe/tarefas em vez de
-      `/project/:id/collaborators`. _Requisito 6.4_
-- [ ] 6.4 Migration final `DROP TABLE collaborators` (só depois de 5.3
-      confirmada e dump salvo). _Requisito 5.5, 5.6, 0.2_
-- [ ] Checkpoint fase 6: `npm run check && npm run test && npm run build`.
-      Confirmar em produção que `/collaborators` retorna 404 esperado e que
-      nenhuma outra tela quebrou. Commit + push + deploy `SUCCESS`.
+> Revisada após investigação: `Collaborator` sustenta o sistema de membros de
+> projeto (`ProjectMember.collaboratorId`, `projectMembersController`,
+> analytics). Produção tem 0 collaborators e 0 project_members → sem risco de
+> perda. Ver design.md seção "Fase 6" para o racional completo.
+
+### Checkpoint 6-A — Membros de projeto por `userId` (aditivo)
+- [ ] 6A.1 `projectMembersController`: `addProjectMember` aceita `userId`
+      (team member do workspace, validado); `listProjectMembers` inclui
+      dados do `user`; `serializeMember` lida com user e collaborator.
+      `collaboratorId` continua funcionando em paralelo.
+- [ ] 6A.2 `api.ts`: bloco `projectMembers` + mock em `setup.ts`.
+- [ ] 6A.3 `ProjectHub`: seção "Equipe do Projeto" (listar/alocar/remover
+      team member; select via `assignable-members`).
+- [ ] 6A.4 `analyticsController`: stat de equipe conta `workspace_members`
+      ativos (role≠owner) em vez de `collaborators`.
+- [ ] Checkpoint 6-A: check + test + build + commit + push + deploy.
+      `/collaborators` intacto.
+
+### Checkpoint 6-B — Remover UI/rota de `/collaborators` (reversível via git)
+- [ ] 6B.1 Remover aba "Equipe Externa" de `ProductionNav.tsx`.
+- [ ] 6B.2 Remover rotas `/collaborators` e `/project/:id/collaborators` de
+      `App.tsx`; deletar `Collaborators.tsx`, `collaboratorsController.ts`,
+      `server/routes/collaborators.ts`; remover `getCollaboratorProjects` +
+      rota; remover `api.collaborators` + mock.
+- [ ] 6B.3 Repontar `WORKFLOW_STAGES` (`production.actions.team.route`).
+- [ ] 6B.4 Reescrever `collaborationSettings.test.ts` (project members por
+      `userId`, sem `collaboratorsController`).
+- [ ] Checkpoint 6-B: check + test + build + commit + push + deploy. Tabela
+      `collaborators` órfã mas presente; nada no código a usa.
+
+### Checkpoint 6-C — DROP destrutivo (SÓ com autorização explícita)
+- [ ] 6C.1 Schema: remover `model Collaborator`, `collaboratorId`/relação de
+      `ProjectMember`, relação de `User`.
+- [ ] 6C.2 Migration: drop FK + `DROP COLUMN collaborator_id` +
+      `DROP TABLE collaborators`; atualizar espelho SQLite.
+- [ ] Checkpoint 6-C: check + test + build + commit + push + deploy; confirmar
+      `/collaborators` → 404 e nenhuma tela quebrada. _Requisito 5.5, 5.6, 0.2_
 
 ---
 

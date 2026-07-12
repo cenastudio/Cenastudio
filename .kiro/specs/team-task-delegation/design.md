@@ -189,18 +189,70 @@ surpresa em deploy)
    ficam "órfãos" do ponto de vista de UI nova, mas nada quebra porque
    `Collaborators.tsx`/rotas antigas continuam no ar (Requisito 0.1).
 
-## Fase 6 — Remoção de `/collaborators` e cleanup de nav (só após confirmação
-manual do usuário de que o relatório da Fase 5 foi revisado)
-1. Remove tab "Equipe Externa" de `ProductionNav.tsx` (`SECONDARY_TABS`).
-2. Remove rota `/collaborators` de `App.tsx`, remove `Collaborators.tsx`,
-   `collaboratorsController.ts`, `server/routes/collaborators.ts`.
-3. Migration final `DROP TABLE collaborators` **apenas** nesta fase, e apenas
-   depois de o usuário confirmar explicitamente (Requisito 0.2 — é a única
-   fase com permissão de operação destrutiva, e mesmo assim com dump já
-   salvo na Fase 5).
-4. Atualiza `WORKFLOW_STAGES` (`production.actions.team.route`) que hoje
-   aponta para `/project/:id/collaborators` — passa a apontar para o novo
-   `ProjectTasksPanel`/seção de equipe dentro de `ProjectHub`.
+## Fase 6 — Fusão completa Collaborator → Team (REVISADA, Opção B)
+
+### Contexto que mudou o plano original (descoberto ao investigar antes de executar)
+O design original assumiu que `Collaborator` era uma agenda isolada de
+freelancers. **Não é.** `Collaborator` também é a espinha dorsal de "membros
+de projeto":
+- `ProjectMember.collaboratorId` é FK direta para `collaborators`.
+- `projectMembersController` (add/list/update/remove membro de projeto)
+  depende de `collaboratorId`.
+- `ProjectHub` lê `/api/project-members/projects/:id` para a stat "EQUIPE".
+- `analyticsController` conta `collaborators` para stats de equipe.
+
+**Estado real dos dados (verificado 12-jul):** produção tem **0
+collaborators e 0 project_members** — a migração de dados é no-op e não há
+risco de perda. Isso viabiliza a fusão completa com segurança.
+
+**Decisões de produto confirmadas pelo usuário:**
+- Opção B: fundir de vez, eliminar o conceito de freelancer-sem-login.
+- Opção 2 para membros de projeto: manter `project_members`, mas vinculado
+  por `userId` (team member) em vez de `collaboratorId`. Alocar team members
+  ao projeto explicitamente; tarefas são atribuídas dentro disso.
+
+### Execução em 3 checkpoints (cada um aditivo/reversível até o 6-C)
+
+**Checkpoint 6-A — Membros de projeto por `userId` (100% ADITIVO, nada removido)**
+- `projectMembersController`: `addProjectMember` passa a aceitar `userId`
+  (team member do workspace, validado via `getTeamMemberContext`/roster do
+  owner+membros ativos). `listProjectMembers` inclui dados do `user`
+  (`select name/email`) além de `collaborator`. `serializeMember` lida com
+  ambos. `collaboratorId` continua funcionando em paralelo (não quebra nada).
+- `api.ts`: bloco `projectMembers` (list/add/update/remove).
+- `ProjectHub`: nova seção "Equipe do Projeto" — lista membros (nome/role) e
+  permite alocar um team member (select de `assignable-members`, reusado) e
+  remover. Owner/producer gerenciam.
+- `analyticsController`: a stat de equipe passa a contar membros ativos do
+  workspace (`workspace_members` role≠owner status=active) em vez de
+  `collaborators`.
+- Checkpoint: check + test + build + commit + push + deploy. `collaborators`
+  e `/collaborators` continuam intactos e funcionais.
+
+**Checkpoint 6-B — Remover a UI/rota de `/collaborators` (reversível via git)**
+- Remove aba "Equipe Externa" de `ProductionNav.tsx` (`SECONDARY_TABS`).
+- Remove rota `/collaborators` e `/project/:id/collaborators` de `App.tsx`;
+  deleta `Collaborators.tsx`, `collaboratorsController.ts`,
+  `server/routes/collaborators.ts`; remove `getCollaboratorProjects` de
+  `projectMembersController` + sua rota.
+- Repontar `WORKFLOW_STAGES` (`production.actions.team.route`) de
+  `/project/:id/collaborators` → seção de equipe/tarefas do `ProjectHub`.
+- Reescrever `collaborationSettings.test.ts` para não depender de
+  `collaboratorsController` (cobrir project members por `userId`).
+- Remove bloco `api.collaborators` do `api.ts` e mock em `setup.ts`.
+- Checkpoint: check + test + build + commit + push + deploy. A tabela
+  `collaborators` ainda existe no banco (órfã), mas nada no código a usa.
+
+**Checkpoint 6-C — DROP destrutivo (SÓ com autorização explícita do usuário)**
+- Schema: remove `model Collaborator` + `collaboratorId`/relação de
+  `ProjectMember` + relação `collaborators` de `User`.
+- Migration: `ALTER TABLE project_members DROP CONSTRAINT ...collaborator_id_fkey`,
+  `DROP COLUMN collaborator_id`, `DROP TABLE collaborators`.
+- Espelho SQLite (`db.ts`): remover coluna/tabela equivalente.
+- Dump de segurança já é gerado pelo script da Fase 5 antes de qualquer
+  operação (produção tem 0 registros, mas a regra se mantém).
+- Checkpoint: check + test + build + commit + push + deploy + confirmar
+  `/collaborators` → 404 e nenhuma outra tela quebrada.
 
 ## Testes
 - `server/services/taskService.test.ts` (novo): CRUD, autorização (403 para

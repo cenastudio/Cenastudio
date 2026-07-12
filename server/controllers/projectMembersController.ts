@@ -4,15 +4,23 @@ import { AppError } from "../middleware/errorHandler.js";
 import type { DbProjectMember, DbProject } from "../models/types.js";
 import { prisma, shouldUsePrisma } from "../models/prisma.js";
 import { withSnakeCase } from "../utils/prismaSerialization.js";
+import { listAssignableMembers } from "../services/taskService.js";
 
 function serializeMember(value: any) {
   const result = withSnakeCase(value, {
     projectId: "project_id", userId: "user_id", collaboratorId: "collaborator_id",
     createdAt: "created_at", updatedAt: "updated_at",
   }) as any;
+  // Team member (userId) takes precedence — the new model post-fusion.
+  if (result.user) {
+    result.name = result.user.name || result.user.email;
+    result.email = result.user.email;
+    delete result.user;
+  }
   if (result.collaborator) {
-    result.name = result.collaborator.name;
-    result.email = result.collaborator.email;
+    // Legacy freelancer link (kept working during the additive migration).
+    if (!result.name) result.name = result.collaborator.name;
+    if (!result.email) result.email = result.collaborator.email;
     result.collaborator_role = result.collaborator.role;
     delete result.collaborator;
   }
@@ -32,7 +40,11 @@ export const listProjectMembers: RequestHandler = async (req, res, next) => {
       const project = await prisma.project.findFirst({ where: { id: BigInt(projectId), userId: BigInt(userId) }, select: { id: true } });
       if (!project) throw new AppError("Project not found", 404);
       const members = await prisma.projectMember.findMany({
-        where: { projectId: project.id }, include: { collaborator: { select: { name: true, email: true, role: true } } },
+        where: { projectId: project.id },
+        include: {
+          collaborator: { select: { name: true, email: true, role: true } },
+          user: { select: { name: true, email: true } },
+        },
       });
       res.json({ success: true, data: members.map(serializeMember) });
       return;
@@ -49,9 +61,13 @@ export const listProjectMembers: RequestHandler = async (req, res, next) => {
 
     const members = db
       .prepare(
-        `SELECT pm.*, c.name, c.email, c.role as collaborator_role
+        `SELECT pm.*,
+                COALESCE(u.name, c.name) AS name,
+                COALESCE(u.email, c.email) AS email,
+                c.role as collaborator_role
          FROM project_members pm
          LEFT JOIN collaborators c ON pm.collaborator_id = c.id
+         LEFT JOIN users u ON pm.user_id = u.id
          WHERE pm.project_id = ?`,
       )
       .all(projectId);
@@ -62,18 +78,63 @@ export const listProjectMembers: RequestHandler = async (req, res, next) => {
   }
 };
 
-// Add a member to a project
+// Add a member to a project.
+// Preferred path: userId (team member of the workspace). Legacy path
+// (collaboratorId) kept working during the additive migration to Team.
 export const addProjectMember: RequestHandler = async (req, res, next) => {
   try {
-    const userId = req.user!.id;
+    const actingUserId = req.user!.id;
     const projectId = parseInt(req.params.projectId);
-    const { collaboratorId, role } = req.body;
+    const { userId: memberUserIdRaw, collaboratorId, role } = req.body;
+    const memberUserId = memberUserIdRaw !== undefined ? Number(memberUserIdRaw) : null;
 
-    if (!projectId || !collaboratorId) {
-      throw new AppError("Project ID and Collaborator ID are required", 400);
+    if (!projectId || (!memberUserId && !collaboratorId)) {
+      throw new AppError("Project ID and a member (userId or collaboratorId) are required", 400);
     }
+
+    // ── New path: team member by userId ──
+    if (memberUserId) {
+      // Validate the target user is the owner or an active team member of the
+      // project's workspace (reuses the same roster used by task assignment).
+      const roster = await listAssignableMembers(actingUserId, projectId);
+      if (!roster.some((m) => m.id === memberUserId)) {
+        throw new AppError("Usuário não é um membro válido deste workspace.", 400);
+      }
+
+      if (shouldUsePrisma) {
+        const project = await prisma.project.findFirst({ where: { id: BigInt(projectId), userId: BigInt(actingUserId) }, select: { id: true } });
+        if (!project) throw new AppError("Project not found", 404);
+        const existing = await prisma.projectMember.findFirst({ where: { projectId: project.id, userId: BigInt(memberUserId) } });
+        if (existing) throw new AppError("Este membro já está no projeto", 400);
+        const created = await prisma.projectMember.create({
+          data: { projectId: project.id, userId: BigInt(memberUserId), role: role || "member" },
+          include: { user: { select: { name: true, email: true } } },
+        });
+        res.json({ success: true, data: serializeMember(created) });
+        return;
+      }
+
+      const project = db.prepare("SELECT id FROM projects WHERE id = ? AND user_id = ?").get(projectId, actingUserId);
+      if (!project) throw new AppError("Project not found", 404);
+      const existing = db.prepare("SELECT id FROM project_members WHERE project_id = ? AND user_id = ?").get(projectId, memberUserId);
+      if (existing) throw new AppError("Este membro já está no projeto", 400);
+      const result = db
+        .prepare("INSERT INTO project_members (project_id, user_id, role, created_at) VALUES (?, ?, ?, datetime('now'))")
+        .run(projectId, memberUserId, role || "member");
+      const newMember = db
+        .prepare(
+          `SELECT pm.*, u.name, u.email
+           FROM project_members pm LEFT JOIN users u ON pm.user_id = u.id
+           WHERE pm.id = ?`,
+        )
+        .get(result.lastInsertRowid);
+      res.json({ success: true, data: newMember });
+      return;
+    }
+
+    // ── Legacy path: freelancer by collaboratorId ──
     if (shouldUsePrisma) {
-      const owner = BigInt(userId);
+      const owner = BigInt(actingUserId);
       const [project, collaborator] = await Promise.all([
         prisma.project.findFirst({ where: { id: BigInt(projectId), userId: owner }, select: { id: true } }),
         prisma.collaborator.findFirst({ where: { id: BigInt(collaboratorId), userId: owner }, select: { id: true } }),
@@ -90,49 +151,22 @@ export const addProjectMember: RequestHandler = async (req, res, next) => {
       return;
     }
 
-    // Verify user owns the project
-    const project = db
-      .prepare("SELECT id FROM projects WHERE id = ? AND user_id = ?")
-      .get(projectId, userId);
-
-    if (!project) {
-      throw new AppError("Project not found", 404);
-    }
-
-    // Verify collaborator exists and belongs to user
-    const collaborator = db
-      .prepare("SELECT * FROM collaborators WHERE id = ? AND user_id = ?")
-      .get(collaboratorId, userId);
-
-    if (!collaborator) {
-      throw new AppError("Collaborator not found", 404);
-    }
-
-    // Check if already a member
-    const existing = db
-      .prepare("SELECT * FROM project_members WHERE project_id = ? AND collaborator_id = ?")
-      .get(projectId, collaboratorId);
-
-    if (existing) {
-      throw new AppError("Collaborator is already a member of this project", 400);
-    }
-
+    const project = db.prepare("SELECT id FROM projects WHERE id = ? AND user_id = ?").get(projectId, actingUserId);
+    if (!project) throw new AppError("Project not found", 404);
+    const collaborator = db.prepare("SELECT * FROM collaborators WHERE id = ? AND user_id = ?").get(collaboratorId, actingUserId);
+    if (!collaborator) throw new AppError("Collaborator not found", 404);
+    const existing = db.prepare("SELECT * FROM project_members WHERE project_id = ? AND collaborator_id = ?").get(projectId, collaboratorId);
+    if (existing) throw new AppError("Collaborator is already a member of this project", 400);
     const result = db
-      .prepare(
-        `INSERT INTO project_members (project_id, collaborator_id, role, created_at)
-         VALUES (?, ?, ?, datetime('now'))`,
-      )
+      .prepare("INSERT INTO project_members (project_id, collaborator_id, role, created_at) VALUES (?, ?, ?, datetime('now'))")
       .run(projectId, collaboratorId, role || "member");
-
     const newMember = db
       .prepare(
         `SELECT pm.*, c.name, c.email, c.role as collaborator_role
-         FROM project_members pm
-         LEFT JOIN collaborators c ON pm.collaborator_id = c.id
+         FROM project_members pm LEFT JOIN collaborators c ON pm.collaborator_id = c.id
          WHERE pm.id = ?`,
       )
       .get(result.lastInsertRowid);
-
     res.json({ success: true, data: newMember });
   } catch (e) {
     next(e);
@@ -157,7 +191,10 @@ export const updateProjectMember: RequestHandler = async (req, res, next) => {
       if (Number(member.project.userId) !== userId) throw new AppError("You don't have permission to update this member", 403);
       const updated = await prisma.projectMember.update({
         where: { id: member.id }, data: { role: role || "member", updatedAt: new Date() },
-        include: { collaborator: { select: { name: true, email: true, role: true } } },
+        include: {
+          collaborator: { select: { name: true, email: true, role: true } },
+          user: { select: { name: true, email: true } },
+        },
       });
       res.json({ success: true, data: serializeMember(updated) });
       return;
@@ -186,9 +223,13 @@ export const updateProjectMember: RequestHandler = async (req, res, next) => {
 
     const updatedMember = db
       .prepare(
-        `SELECT pm.*, c.name, c.email, c.role as collaborator_role
+        `SELECT pm.*,
+                COALESCE(u.name, c.name) AS name,
+                COALESCE(u.email, c.email) AS email,
+                c.role as collaborator_role
          FROM project_members pm
          LEFT JOIN collaborators c ON pm.collaborator_id = c.id
+         LEFT JOIN users u ON pm.user_id = u.id
          WHERE pm.id = ?`,
       )
       .get(memberId);

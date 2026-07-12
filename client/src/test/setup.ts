@@ -151,6 +151,12 @@ vi.mock('@/lib/api', () => ({
       update: vi.fn(),
       remove: vi.fn(),
     },
+    projectMembers: {
+      list: vi.fn(),
+      add: vi.fn(),
+      updateRole: vi.fn(),
+      remove: vi.fn(),
+    },
     admin: {
       listTools: vi.fn(),
       updateTool: vi.fn(),

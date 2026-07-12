@@ -444,6 +444,17 @@ export const api = {
     ) => request<TaskItem>(`/tasks/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
     remove: (id: number) => request<null>(`/tasks/${id}`, { method: "DELETE" }),
   },
+  projectMembers: {
+    list: (projectId: number) => request<ProjectMemberItem[]>(`/project-members/projects/${projectId}`),
+    add: (projectId: number, data: { userId: number; role?: string }) =>
+      request<ProjectMemberItem>(`/project-members/projects/${projectId}`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    updateRole: (id: number, role: string) =>
+      request<ProjectMemberItem>(`/project-members/${id}`, { method: "PUT", body: JSON.stringify({ role }) }),
+    remove: (id: number) => request<{ message: string }>(`/project-members/${id}`, { method: "DELETE" }),
+  },
   assets: {
     list: () =>
       request<
@@ -961,6 +972,18 @@ export interface TimeEntryItem {
   ended_at: string | null;
   duration_sec: number;
   hourly_rate: number | null;
+  created_at: string;
+}
+
+export interface ProjectMemberItem {
+  id: number;
+  project_id: number;
+  user_id: number | null;
+  collaborator_id: number | null;
+  role: string;
+  name?: string;
+  email?: string;
+  collaborator_role?: string;
   created_at: string;
 }
 

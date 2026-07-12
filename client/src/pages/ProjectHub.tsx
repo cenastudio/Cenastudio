@@ -23,6 +23,7 @@ import {
   Plus,
   Building2,
   CalendarPlus,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
@@ -180,6 +181,38 @@ function ProjectHubContent() {
   const [loading, setLoading] = useState(true);
   const [projectName, setProjectName] = useState("");
   const [savingName, setSavingName] = useState(false);
+
+  // Project team (spec team-task-delegation, Fase 6-A): allocate team members
+  // to the project by userId. Owner/producer manage; reuses the workspace
+  // roster endpoint used by task assignment.
+  const [assignableMembers, setAssignableMembers] = useState<Array<{ id: number; name: string; email: string }>>([]);
+  const [addingMember, setAddingMember] = useState(false);
+
+  const loadAssignableMembers = () => {
+    if (assignableMembers.length > 0) return;
+    api.tasks.listAssignableMembers(projectId).then(setAssignableMembers).catch(() => {});
+  };
+
+  const handleAddMember = async (memberUserId: number) => {
+    try {
+      const created = await api.projectMembers.add(projectId, { userId: memberUserId });
+      setMembers((prev) => [...prev, { id: created.id, name: created.name || created.email || "", email: created.email || "", role: created.role }]);
+      setAddingMember(false);
+      toast.success(t("app.hub.memberAdded"));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("app.hub.memberAddError"));
+    }
+  };
+
+  const handleRemoveMember = async (memberId: number) => {
+    try {
+      await api.projectMembers.remove(memberId);
+      setMembers((prev) => prev.filter((m) => m.id !== memberId));
+      toast.success(t("app.hub.memberRemoved"));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("app.hub.memberRemoveError"));
+    }
+  };
 
   useEffect(() => {
     if (project?.name) setProjectName(project.name);
@@ -642,7 +675,7 @@ function ProjectHubContent() {
               </button>
             </div>
 
-            {/* Team */}
+            {/* Team — allocate workspace team members to this project */}
             <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-gray-light flex items-center gap-2">
@@ -661,28 +694,56 @@ function ProjectHubContent() {
                 <p className="text-[0.65rem] text-frame-gray-light/60 italic">{t("app.hub.noMembers")}</p>
               ) : (
                 <div className="space-y-1.5">
-                  {members.slice(0, 4).map((m) => (
-                    <div key={m.id} className="flex items-center gap-2 text-xs">
+                  {members.map((m) => (
+                    <div key={m.id} className="flex items-center gap-2 text-xs group/member">
                       <div className="w-5 h-5 rounded-full bg-frame-orange/20 border border-frame-orange/30 flex items-center justify-center text-[0.55rem] font-frame-mono shrink-0 text-frame-orange">
                         {(m.name || m.email)[0].toUpperCase()}
                       </div>
                       <span className="truncate text-frame-white">{m.name || m.email}</span>
                       <span className="ml-auto text-[0.55rem] font-frame-mono text-frame-gray-light shrink-0">{m.role || "member"}</span>
+                      {canManageTasks && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveMember(m.id)}
+                          className="shrink-0 text-frame-gray-light hover:text-frame-red transition opacity-0 group-hover/member:opacity-100"
+                          title={t("app.hub.removeMember")}
+                          aria-label={t("app.hub.removeMember")}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
                     </div>
                   ))}
-                  {members.length > 4 && (
-                    <span className="block text-[0.6rem] text-frame-gray-light">+{members.length - 4} {t("app.hub.more")}</span>
-                  )}
                 </div>
               )}
-              <button
-                type="button"
-                onClick={() => setLocation("/team")}
-                className="w-full mt-3 text-[0.6rem] font-frame-mono tracking-wider text-frame-orange border border-dashed border-frame-orange/30 min-h-11 py-2 flex items-center justify-center gap-1 hover:bg-frame-orange/[0.04] transition"
-              >
-                <Plus className="w-3 h-3" />
-                {t("app.hub.addMember")}
-              </button>
+              {canManageTasks && (
+                addingMember ? (
+                  <select
+                    autoFocus
+                    defaultValue=""
+                    onChange={(e) => { if (e.target.value) handleAddMember(Number(e.target.value)); }}
+                    onBlur={() => setAddingMember(false)}
+                    className="frame-input w-full mt-3 text-xs"
+                    aria-label={t("app.hub.addMember")}
+                  >
+                    <option value="" disabled>{t("app.hub.selectMember")}</option>
+                    {assignableMembers
+                      .filter((am) => !members.some((mm) => mm.email === am.email))
+                      .map((am) => (
+                        <option key={am.id} value={am.id}>{am.name || am.email}</option>
+                      ))}
+                  </select>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { loadAssignableMembers(); setAddingMember(true); }}
+                    className="w-full mt-3 text-[0.6rem] font-frame-mono tracking-wider text-frame-orange border border-dashed border-frame-orange/30 min-h-11 py-2 flex items-center justify-center gap-1 hover:bg-frame-orange/[0.04] transition"
+                  >
+                    <Plus className="w-3 h-3" />
+                    {t("app.hub.addMember")}
+                  </button>
+                )
+              )}
             </div>
 
             {/* Export */}
