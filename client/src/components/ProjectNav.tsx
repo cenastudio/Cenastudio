@@ -37,8 +37,9 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
           <button
             type="button"
             onClick={() => setLocation("/dashboard")}
-            className="flex h-9 w-9 shrink-0 items-center justify-center text-frame-gray-light hover:text-frame-orange transition"
+            className="flex min-h-11 min-w-11 shrink-0 items-center justify-center text-frame-gray-light hover:text-frame-orange transition"
             title={t("app.common.backToDashboard") as string}
+            aria-label={t("app.common.backToDashboard") as string}
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -55,7 +56,7 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
           <button
             type="button"
             onClick={() => setLocation(`/project/${projectId}`)}
-            className={`flex min-h-10 shrink-0 items-center gap-1.5 px-3 py-1.5 font-frame-mono text-xs tracking-wider transition-all duration-200
+            className={`flex min-h-11 shrink-0 items-center gap-1.5 px-3 py-1.5 font-frame-mono text-xs tracking-wider transition-all duration-200
               relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:transition-all
               ${location === `/project/${projectId}`
                 ? "text-frame-orange after:bg-frame-orange"
@@ -69,7 +70,7 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
             <button
               type="button"
               onClick={() => setLocation(`/project/${projectId}/budget`)}
-              className={`flex min-h-10 shrink-0 items-center gap-1.5 px-3 py-1.5 font-frame-mono text-xs tracking-wider transition-all duration-200
+              className={`flex min-h-11 shrink-0 items-center gap-1.5 px-3 py-1.5 font-frame-mono text-xs tracking-wider transition-all duration-200
                 relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:transition-all
                 ${isBudgetActive
                   ? "text-frame-orange after:bg-frame-orange"
@@ -85,7 +86,7 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
             <button
               type="button"
               onClick={() => setLocation(`/project/${projectId}/shotlist`)}
-              className={`flex min-h-10 shrink-0 items-center gap-1.5 px-3 py-1.5 font-frame-mono text-xs tracking-wider transition-all duration-200
+              className={`flex min-h-11 shrink-0 items-center gap-1.5 px-3 py-1.5 font-frame-mono text-xs tracking-wider transition-all duration-200
                 relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:transition-all
                 ${isShotListActive
                   ? "text-frame-orange after:bg-frame-orange"
@@ -105,7 +106,7 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
                   key={stage.id}
                   type="button"
                   onClick={() => setLocation(`/project/${projectId}/journey/${stage.id}`)}
-                  className={`flex min-h-10 items-center gap-1.5 px-3 py-1.5 text-xs font-frame-mono tracking-wider transition-all duration-200 whitespace-nowrap
+                  className={`flex min-h-11 items-center gap-1.5 px-3 py-1.5 text-xs font-frame-mono tracking-wider transition-all duration-200 whitespace-nowrap
                     relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:transition-all
                     ${isActive
                       ? "text-frame-orange after:bg-frame-orange"

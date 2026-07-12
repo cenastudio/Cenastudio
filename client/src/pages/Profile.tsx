@@ -208,7 +208,9 @@ function TabButton({ active, onClick, icon: Icon, label }: {
     <button
       type="button"
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all rounded-lg ${
+      aria-label={label}
+      title={label}
+      className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all rounded-lg min-h-11 ${
         active
           ? "bg-frame-orange/15 text-frame-orange border border-frame-orange/30"
           : "text-frame-gray-light hover:text-frame-white hover:bg-frame-gray-2/50"

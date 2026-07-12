@@ -293,6 +293,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
                   <span className="text-xs text-frame-gray-light">Tema</span>
                   <button
                     type="button"
+                    data-testid="theme-toggle"
                     onClick={toggleTheme}
                     className="text-frame-gray-light hover:text-frame-orange transition"
                     title={theme === "dark" ? (t("app.nav.currentThemeDark") as string) : (t("app.nav.currentThemeLight") as string)}

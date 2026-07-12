@@ -126,7 +126,7 @@ export default function ProjectTasksPanel({ projectId, canManage }: ProjectTasks
           <button
             type="button"
             onClick={openCreate}
-            className="frame-btn-primary !py-2 !px-3 !text-xs flex items-center gap-1.5 shrink-0"
+            className="frame-btn-primary !py-2 !px-3 !text-xs min-h-11 flex items-center gap-1.5 shrink-0"
           >
             <Plus className="w-3.5 h-3.5" />
             {t("app.tasks.newTask") as string}

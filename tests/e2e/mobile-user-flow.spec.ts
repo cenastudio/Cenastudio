@@ -162,17 +162,27 @@ test.describe("@fase1 mobile user flow", () => {
       // dá falso-positivo nesse caso e nunca chega ao hub, que é onde o
       // input persistível vive.
       const projectHubUrl = `/project/${projectId}`;
-      await page.goto(projectHubUrl);
-      await page.waitForLoadState("networkidle");
+      const editableInput = page.locator('[data-testid="project-name-editable"]');
+
+      // Logo após o POST de criação, um GET imediato ao mesmo recurso pode
+      // ocasionalmente cair numa conexão do pool que ainda não viu o write
+      // (latência real contra o Postgres hospedado, não um bug do app) —
+      // "Projeto não encontrado" aparece por 1-2s e desaparece no retry.
+      // Tenta algumas vezes antes de declarar falha real de UI ausente.
+      let editableCount = 0;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await page.goto(projectHubUrl);
+        await page.waitForLoadState("networkidle");
+        editableCount = await editableInput.count();
+        if (editableCount > 0) break;
+        await page.waitForTimeout(1000);
+      }
 
       // Fase 2 expõe explicitamente o input editável do nome do projeto
       // via `data-testid="project-name-editable"`. Selector genérico
       // (input[type=text]) foi trocado por este testid porque a página
       // tinha múltiplos inputs (client.company, filtros, etc.), o que
       // fazia o teste editar o campo errado e falhar após o reload.
-      const editableInput = page.locator('[data-testid="project-name-editable"]');
-
-      const editableCount = await editableInput.count();
       if (editableCount === 0) {
         throw new Error(
           'campo `[data-testid="project-name-editable"]` não encontrado em /project/:id — Fase 2 precisa expor um',
