@@ -146,6 +146,7 @@ vi.mock('@/lib/api', () => ({
     tasks: {
       listMine: vi.fn(),
       listByProject: vi.fn(),
+      listAssignableMembers: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       remove: vi.fn(),

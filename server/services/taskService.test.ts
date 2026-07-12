@@ -157,6 +157,18 @@ describe("taskService", () => {
     expect(task).toMatchObject({ stage_id: "planning", tool_slug: "callsheet" });
   });
 
+  it("lists assignable members including the owner and active team members", async () => {
+    const roster = await taskService.listAssignableMembers(producer.id, projectId);
+    const ids = roster.map((m) => m.id);
+    expect(ids).toContain(owner.id);
+    expect(ids).toContain(producer.id);
+    expect(ids).toContain(editor.id);
+  });
+
+  it("denies listing assignable members to users outside the workspace", async () => {
+    await expect(taskService.listAssignableMembers(outsider.id, projectId)).rejects.toMatchObject({ status: 404 });
+  });
+
   it("lists tasks by project including assignee display fields", async () => {
     const tasks = await taskService.listTasksByProject(owner.id, projectId);
     expect(tasks.length).toBeGreaterThan(0);

@@ -419,6 +419,8 @@ export const api = {
   tasks: {
     listMine: () => request<TaskItem[]>("/tasks/mine"),
     listByProject: (projectId: number) => request<TaskItem[]>(`/tasks/projects/${projectId}`),
+    listAssignableMembers: (projectId: number) =>
+      request<Array<{ id: number; name: string; email: string }>>(`/tasks/projects/${projectId}/assignable-members`),
     create: (
       projectId: number,
       data: {

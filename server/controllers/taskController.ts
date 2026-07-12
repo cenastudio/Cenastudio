@@ -45,6 +45,16 @@ export const listMyTasks: RequestHandler = async (req, res, next) => {
   }
 };
 
+export const listAssignableMembers: RequestHandler = async (req, res, next) => {
+  try {
+    const projectId = parseId(req.params.projectId, "ID de projeto");
+    const members = await taskService.listAssignableMembers(req.user!.id, projectId);
+    res.json({ success: true, data: members });
+  } catch (e) {
+    next(e);
+  }
+};
+
 export const updateTask: RequestHandler = async (req, res, next) => {
   try {
     const taskId = parseId(req.params.id);

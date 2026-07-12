@@ -5,6 +5,7 @@ import {
   listProjectTasks,
   createProjectTask,
   listMyTasks,
+  listAssignableMembers,
   updateTask,
   deleteTask,
 } from "../controllers/taskController.js";
@@ -16,6 +17,7 @@ router.use(authenticate, requireOperationalPlan);
 router.get("/mine", listMyTasks);
 router.get("/projects/:projectId", listProjectTasks);
 router.post("/projects/:projectId", createProjectTask);
+router.get("/projects/:projectId/assignable-members", listAssignableMembers);
 router.patch("/:id", updateTask);
 router.delete("/:id", deleteTask);
 

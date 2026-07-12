@@ -3,6 +3,8 @@ import { useParams, useLocation } from "wouter";
 import AppNavBar from "@/components/AppNavBar";
 import ProjectNav from "@/components/ProjectNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import ProjectTasksPanel from "@/components/ProjectTasksPanel";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Film,
   FileText,
@@ -167,6 +169,8 @@ function ProjectHubContent() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const projectId = parseInt(id || "0");
+  const { isTeamMember, teamRole } = useAuth();
+  const canManageTasks = !isTeamMember || teamRole === "producer";
 
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [members, setMembers] = useState<ProjectMember[]>([]);
@@ -488,6 +492,9 @@ function ProjectHubContent() {
                 })}
               </div>
             </section>
+
+            {/* Tarefas do Projeto (spec: team-task-delegation) */}
+            <ProjectTasksPanel projectId={projectId} canManage={canManageTasks} />
 
             {/* Recent Files */}
             <section>

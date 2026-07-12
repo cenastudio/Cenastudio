@@ -118,6 +118,46 @@ async function assertCanManageTasks(actingUserId: number, ownerId: number): Prom
   throw new AppError("Você não tem permissão para criar ou atribuir tarefas.", 403);
 }
 
+export interface AssignableMember {
+  id: number;
+  name: string;
+  email: string;
+}
+
+/**
+ * Lightweight roster of who can be assigned a task in a given project —
+ * the workspace owner plus its active team members. Unlike GET /team
+ * (owner-only, full management view), this is readable by any team member
+ * of the workspace so a "producer" can populate the assignee picker
+ * without needing owner-level access.
+ */
+export async function listAssignableMembers(actingUserId: number, projectId: number): Promise<AssignableMember[]> {
+  const { ownerId } = await assertProjectAccess(actingUserId, projectId);
+
+  let ownerName = "Responsável do estúdio";
+  let ownerEmail = "";
+  if (shouldUsePrisma) {
+    const owner = await prisma.user.findUnique({ where: { id: BigInt(ownerId) }, select: { name: true, email: true } });
+    ownerName = owner?.name || owner?.email || ownerName;
+    ownerEmail = owner?.email || "";
+  } else {
+    const owner = db.prepare("SELECT name, email FROM users WHERE id = ?").get(ownerId) as
+      | { name: string | null; email: string }
+      | undefined;
+    ownerName = owner?.name || owner?.email || ownerName;
+    ownerEmail = owner?.email || "";
+  }
+
+  const members = await listTeamMembers(ownerId);
+  const roster: AssignableMember[] = [{ id: ownerId, name: ownerName, email: ownerEmail }];
+  for (const member of members) {
+    if (member.status === "active") {
+      roster.push({ id: member.userId, name: member.name, email: member.email });
+    }
+  }
+  return roster;
+}
+
 export async function createTask(
   actingUserId: number,
   projectId: number,

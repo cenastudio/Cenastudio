@@ -200,6 +200,7 @@ describe("operational UI and UX flows", () => {
 
   it("guides the next operational move in the project hub", async () => {
     vi.mocked(api.projects.populatedStates).mockResolvedValue([{ toolId: "briefing", updatedAt: "2026-06-30T12:00:00.000Z" }]);
+    vi.mocked(api.tasks.listByProject).mockResolvedValue([]);
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url.includes("/api/projects/7")) {
