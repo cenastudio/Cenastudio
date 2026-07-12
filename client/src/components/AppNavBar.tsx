@@ -264,6 +264,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
           <div className="relative group">
             <button
               type="button"
+              data-tour="profile"
               className="flex items-center justify-center gap-2 group min-h-11 min-w-11"
               title={user.name ?? user.email}
             >

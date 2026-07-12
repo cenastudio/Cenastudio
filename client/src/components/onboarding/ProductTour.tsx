@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -8,12 +8,12 @@ import {
   LayoutDashboard,
   FolderKanban,
   Building2,
-  Video,
-  Zap,
+  CheckSquare,
+  BarChart3,
   Settings,
 } from "lucide-react";
-import { useLocation } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface TourStep {
   id: string;
@@ -38,59 +38,71 @@ export default function ProductTour({
   onComplete,
 }: ProductTourProps) {
   const { t } = useLanguage();
+  const { isTeamMember } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const [, setLocation] = useLocation();
 
-  const tourSteps: TourStep[] = [
-    {
-      id: "dashboard",
-      target: '[data-tour="dashboard"]',
-      title: t("app.onboarding.tour.dashboardTitle"),
-      description: t("app.onboarding.tour.dashboardDesc"),
-      icon: LayoutDashboard,
-      position: "bottom",
-      highlightPadding: 8,
-    },
-    {
-      id: "projects",
-      target: '[data-tour="projects"]',
-      title: t("app.onboarding.tour.projectsTitle"),
-      description: t("app.onboarding.tour.projectsDesc"),
-      icon: FolderKanban,
-      position: "bottom",
-      highlightPadding: 8,
-    },
-    {
-      id: "clients",
-      target: '[data-tour="clients"]',
-      title: t("app.onboarding.tour.clientsTitle"),
-      description: t("app.onboarding.tour.clientsDesc"),
-      icon: Building2,
-      position: "bottom",
-      highlightPadding: 8,
-    },
-    {
-      id: "reviews",
-      target: '[data-tour="reviews"]',
-      title: t("app.onboarding.tour.reviewsTitle"),
-      description: t("app.onboarding.tour.reviewsDesc"),
-      icon: Video,
-      position: "bottom",
-      highlightPadding: 8,
-    },
-    {
-      id: "studio",
-      target: '[data-tour="studio"]',
-      title: t("app.onboarding.tour.studioTitle"),
-      description: t("app.onboarding.tour.studioDesc"),
-      icon: Zap,
-      position: "bottom",
-      highlightPadding: 8,
-    },
-    {
+  // O tour roda apenas no Dashboard (ver Dashboard.tsx) — por isso todo alvo
+  // aqui precisa existir de fato nessa página. "Comercial" e "Financeiro"
+  // ficam de fora para membros de equipe porque AppNavBar já os esconde
+  // nesse caso (ver primaryNavItems em AppNavBar.tsx).
+  const tourSteps: TourStep[] = useMemo(() => {
+    const steps: TourStep[] = [
+      {
+        id: "dashboard",
+        target: '[data-tour="dashboard"]',
+        title: t("app.onboarding.tour.dashboardTitle"),
+        description: t("app.onboarding.tour.dashboardDesc"),
+        icon: LayoutDashboard,
+        position: "bottom",
+        highlightPadding: 8,
+      },
+      {
+        id: "mytasks",
+        target: '[data-tour="mytasks"]',
+        title: t("app.onboarding.tour.myTasksTitle"),
+        description: t("app.onboarding.tour.myTasksDesc"),
+        icon: CheckSquare,
+        position: "top",
+        highlightPadding: 8,
+      },
+      {
+        id: "projects",
+        target: '[data-tour="projects"]',
+        title: t("app.onboarding.tour.projectsTitle"),
+        description: t("app.onboarding.tour.projectsDesc"),
+        icon: FolderKanban,
+        position: "bottom",
+        highlightPadding: 8,
+      },
+    ];
+
+    if (!isTeamMember) {
+      steps.push(
+        {
+          id: "clients",
+          target: '[data-tour="clients"]',
+          title: t("app.onboarding.tour.clientsTitle"),
+          description: t("app.onboarding.tour.clientsDesc"),
+          icon: Building2,
+          position: "bottom",
+          highlightPadding: 8,
+        },
+        {
+          id: "analytics",
+          target: '[data-tour="analytics"]',
+          title: t("app.onboarding.tour.analyticsTitle"),
+          description: t("app.onboarding.tour.analyticsDesc"),
+          icon: BarChart3,
+          position: "bottom",
+          highlightPadding: 8,
+        },
+      );
+    }
+
+    steps.push({
       id: "profile",
       target: '[data-tour="profile"]',
       title: t("app.onboarding.tour.profileTitle"),
@@ -98,8 +110,10 @@ export default function ProductTour({
       icon: Settings,
       position: "left",
       highlightPadding: 8,
-    },
-  ];
+    });
+
+    return steps;
+  }, [isTeamMember, t]);
 
   const step = tourSteps[currentStep];
   const isFirstStep = currentStep === 0;
@@ -177,10 +191,12 @@ export default function ProductTour({
     };
   }, [isOpen, step, currentStep]);
 
-  // Prevent body scroll when open
+  // Prevent body scroll when open, and reset to the first step each time
+  // the tour is (re)opened.
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      setCurrentStep(0);
     } else {
       document.body.style.overflow = "";
     }
