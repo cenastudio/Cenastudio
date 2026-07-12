@@ -125,30 +125,39 @@ deploy Railway `SUCCESS` confirmado antes de abrir a próxima. Nenhuma fase
 > analytics). Produção tem 0 collaborators e 0 project_members → sem risco de
 > perda. Ver design.md seção "Fase 6" para o racional completo.
 
-### Checkpoint 6-A — Membros de projeto por `userId` (aditivo)
-- [ ] 6A.1 `projectMembersController`: `addProjectMember` aceita `userId`
+### Checkpoint 6-A — Membros de projeto por `userId` (aditivo) ✅ CONCLUÍDO (commit ce62d53)
+- [x] 6A.1 `projectMembersController`: `addProjectMember` aceita `userId`
       (team member do workspace, validado); `listProjectMembers` inclui
       dados do `user`; `serializeMember` lida com user e collaborator.
       `collaboratorId` continua funcionando em paralelo.
-- [ ] 6A.2 `api.ts`: bloco `projectMembers` + mock em `setup.ts`.
-- [ ] 6A.3 `ProjectHub`: seção "Equipe do Projeto" (listar/alocar/remover
-      team member; select via `assignable-members`).
-- [ ] 6A.4 `analyticsController`: stat de equipe conta `workspace_members`
+- [x] 6A.2 `api.ts`: bloco `projectMembers` + mock em `setup.ts`.
+- [x] 6A.3 `ProjectHub`: seção "Equipe" (listar/alocar/remover team member;
+      select via `assignable-members`).
+- [x] 6A.4 `analyticsController`: stat de equipe conta `workspace_members`
       ativos (role≠owner) em vez de `collaborators`.
-- [ ] Checkpoint 6-A: check + test + build + commit + push + deploy.
-      `/collaborators` intacto.
+- [x] Checkpoint 6-A: check + test (1163) + build ok; testado em produção
+      (add/list/remove por userId funcionando). Commit + push + deploy
+      `SUCCESS`.
 
-### Checkpoint 6-B — Remover UI/rota de `/collaborators` (reversível via git)
-- [ ] 6B.1 Remover aba "Equipe Externa" de `ProductionNav.tsx`.
-- [ ] 6B.2 Remover rotas `/collaborators` e `/project/:id/collaborators` de
-      `App.tsx`; deletar `Collaborators.tsx`, `collaboratorsController.ts`,
-      `server/routes/collaborators.ts`; remover `getCollaboratorProjects` +
-      rota; remover `api.collaborators` + mock.
-- [ ] 6B.3 Repontar `WORKFLOW_STAGES` (`production.actions.team.route`).
-- [ ] 6B.4 Reescrever `collaborationSettings.test.ts` (project members por
-      `userId`, sem `collaboratorsController`).
-- [ ] Checkpoint 6-B: check + test + build + commit + push + deploy. Tabela
-      `collaborators` órfã mas presente; nada no código a usa.
+### Checkpoint 6-B — Remover UI/rota de `/collaborators` ✅ CONCLUÍDO (reversível via git)
+- [x] 6B.1 Removida aba "Equipe Externa" de `ProductionNav.tsx`.
+- [x] 6B.2 Removidas rotas `/collaborators` e `/project/:id/collaborators`
+      de `App.tsx`; deletados `Collaborators.tsx`, `collaboratorsController.ts`,
+      `server/routes/collaborators.ts`; removido `getCollaboratorProjects` +
+      rota. Também corrigidas 4 referências residuais não previstas no plano
+      original: `Breadcrumbs.tsx`, `CommandPalette.tsx` (repontado p/ `/team`),
+      `JourneyBreadcrumb.tsx` (2 ocorrências), `AppNavBar.tsx` (productionRoutes).
+- [x] 6B.3 Repontado `WORKFLOW_STAGES` (`production.actions.team.route` →
+      `/project/:id`; removida referência a `/collaborators` em
+      `getStageForLocation`).
+- [x] 6B.4 Reescrito `collaborationSettings.test.ts` (project members via
+      `teamService.createTeamMember` + `userId`, sem `collaboratorsController`;
+      +1 teste novo de rejeição de userId fora do workspace). Removidos 2
+      testes de `operationsUx.test.tsx` que só testavam a página deletada.
+- [x] Checkpoint 6-B: check + test (1161) + build ok (`dist/index.js`
+      619.7kb → 609.6kb, confirma remoção real de código). Commit + push +
+      deploy `SUCCESS`. Tabela `collaborators` órfã no banco mas nada no
+      código a usa.
 
 ### Checkpoint 6-C — DROP destrutivo (SÓ com autorização explícita)
 - [ ] 6C.1 Schema: remover `model Collaborator`, `collaboratorId`/relação de

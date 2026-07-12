@@ -12,7 +12,7 @@ type MockResponse = {
 };
 
 let authService: typeof import("../services/authService.js");
-let collaboratorsController: typeof import("./collaboratorsController.js");
+let teamService: typeof import("../services/teamService.js");
 let projectMembersController: typeof import("./projectMembersController.js");
 let projectsController: typeof import("./projectsController.js");
 let notificationsController: typeof import("./notificationsController.js");
@@ -53,7 +53,7 @@ describe("collaboration, notifications and studio settings", () => {
     dbModule = await import("../models/db.js");
     dbModule.initDatabase();
     authService = await import("../services/authService.js");
-    collaboratorsController = await import("./collaboratorsController.js");
+    teamService = await import("../services/teamService.js");
     projectMembersController = await import("./projectMembersController.js");
     projectsController = await import("./projectsController.js");
     notificationsController = await import("./notificationsController.js");
@@ -61,76 +61,37 @@ describe("collaboration, notifications and studio settings", () => {
     notificationService = await import("../services/notificationService.js");
 
     const stamp = Date.now();
-    user = await authService.registerUser("Studio Owner", `studio-owner-${stamp}@example.com`, "password-123");
+    user = await authService.createManagedUser({
+      name: "Studio Owner",
+      email: `studio-owner-${stamp}@example.com`,
+      password: "password-123",
+      role: "user",
+      planId: "studio",
+    });
     otherUser = await authService.registerUser("Other Studio", `other-studio-${stamp}@example.com`, "password-123");
   });
 
-  it("covers collaborator lifecycle, statistics and account isolation", async () => {
-    const created = await invoke(collaboratorsController.createCollaborator, {
-      user,
-      body: {
-        name: "  Ana Fotografia  ",
-        email: "  ana@example.com  ",
-        role: "photographer",
-        skills: "camera, light",
-        daily_rate: 1800,
-      },
-    });
-    const collaboratorId = String(created.body.data.id);
-    expect(created.body.data).toMatchObject({
-      name: "Ana Fotografia",
-      email: "ana@example.com",
-      role: "photographer",
-      daily_rate: 1800,
-    });
-
-    const listed = await invoke(collaboratorsController.listCollaborators, { user });
-    expect(listed.body.data.some((item: any) => item.id === created.body.data.id)).toBe(true);
-
-    const updated = await invoke(collaboratorsController.updateCollaborator, {
-      user,
-      params: { id: collaboratorId },
-      body: { role: "director_of_photography", daily_rate: 2200, status: "inactive" },
-    });
-    expect(updated.body.data).toMatchObject({
-      role: "director_of_photography",
-      daily_rate: 2200,
-      status: "inactive",
-    });
-
-    const stats = await invoke(collaboratorsController.getCollaboratorStats, { user });
-    expect(stats.body.data.totalCollaborators).toBeGreaterThanOrEqual(1);
-    expect(stats.body.data.activeCollaborators).toBe(0);
-    expect(stats.body.data.byRole).toContainEqual({ role: "director_of_photography", count: 1 });
-
-    await expect(invoke(collaboratorsController.getCollaborator, {
-      user: otherUser,
-      params: { id: collaboratorId },
-    })).rejects.toMatchObject({ status: 404 });
-
-    const removed = await invoke(collaboratorsController.deleteCollaborator, {
-      user,
-      params: { id: collaboratorId },
-    });
-    expect(removed.body.success).toBe(true);
-  });
-
-  it("covers project membership and protects owner-only mutations", async () => {
+  // Spec: team-task-delegation, Fase 6 — Collaborator (freelancer sem login)
+  // foi fundido em Team. Membros de projeto agora são team members (userId),
+  // não mais collaboratorId.
+  it("covers project membership via team members and protects owner-only mutations", async () => {
     const project = await invoke(projectsController.createProject, {
       user,
       body: { name: "Equipe Comercial", metadataJson: "{}" },
     });
-    const collaborator = await invoke(collaboratorsController.createCollaborator, {
-      user,
-      body: { name: "Bruno Som", email: "bruno@example.com", role: "sound" },
+    const stamp = Date.now();
+    const bruno = await teamService.createTeamMember(user.id, {
+      name: "Bruno Som",
+      email: `bruno-${stamp}@example.com`,
+      password: "password-123",
+      role: "editor",
     });
     const projectId = String(project.body.data.id);
-    const collaboratorId = String(collaborator.body.data.id);
 
     const added = await invoke(projectMembersController.addProjectMember, {
       user,
       params: { projectId },
-      body: { collaboratorId: collaborator.body.data.id, role: "sound_mixer" },
+      body: { userId: bruno.userId, role: "sound_mixer" },
     });
     const memberId = String(added.body.data.id);
     expect(added.body.data).toMatchObject({ name: "Bruno Som", role: "sound_mixer" });
@@ -138,7 +99,7 @@ describe("collaboration, notifications and studio settings", () => {
     await expect(invoke(projectMembersController.addProjectMember, {
       user,
       params: { projectId },
-      body: { collaboratorId: collaborator.body.data.id, role: "member" },
+      body: { userId: bruno.userId, role: "member" },
     })).rejects.toMatchObject({ status: 400 });
 
     const members = await invoke(projectMembersController.listProjectMembers, {
@@ -146,13 +107,6 @@ describe("collaboration, notifications and studio settings", () => {
       params: { projectId },
     });
     expect(members.body.data).toHaveLength(1);
-
-    const projects = await invoke(projectMembersController.getCollaboratorProjects, {
-      user,
-      params: { collaboratorId },
-    });
-    expect(projects.body.data).toHaveLength(1);
-    expect(projects.body.data[0]).toMatchObject({ id: project.body.data.id, member_role: "sound_mixer" });
 
     await expect(invoke(projectMembersController.updateProjectMember, {
       user: otherUser,
@@ -177,6 +131,20 @@ describe("collaboration, notifications and studio settings", () => {
       params: { id: memberId },
     });
     expect(removed.body.success).toBe(true);
+  });
+
+  it("rejects adding a member whose userId is outside the workspace", async () => {
+    const project = await invoke(projectsController.createProject, {
+      user,
+      body: { name: "Job Isolado", metadataJson: "{}" },
+    });
+    const projectId = String(project.body.data.id);
+
+    await expect(invoke(projectMembersController.addProjectMember, {
+      user,
+      params: { projectId },
+      body: { userId: otherUser.id, role: "member" },
+    })).rejects.toMatchObject({ status: 400 });
   });
 
   it("scopes notification reads and cleanup to the authenticated user", async () => {

@@ -69,78 +69,10 @@ describe("operational UI and UX flows", () => {
     vi.unstubAllGlobals();
   });
 
-  it("searches collaborators across identity and skills", async () => {
-    const collaborators = [
-      {
-        id: 1,
-        user_id: 1,
-        name: "Ana Fotografia",
-        email: "ana@example.com",
-        role: "camera",
-        phone: "11999990000",
-        skills: "luz e camera",
-        daily_rate: 1800,
-        status: "active",
-        created_at: "2026-06-30T12:00:00.000Z",
-        updated_at: "2026-06-30T12:00:00.000Z",
-      },
-      {
-        id: 2,
-        user_id: 1,
-        name: "Bruno Som",
-        email: "bruno@example.com",
-        role: "member",
-        phone: "",
-        skills: "captacao de audio",
-        daily_rate: 1200,
-        status: "active",
-        created_at: "2026-06-30T12:00:00.000Z",
-        updated_at: "2026-06-30T12:00:00.000Z",
-      },
-    ];
-    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
-      const url = String(input);
-      if (url.endsWith("/stats")) {
-        return jsonResponse({ success: true, data: { totalCollaborators: 2, activeCollaborators: 2, byRole: [], totalProjects: 0 } });
-      }
-      return jsonResponse({ success: true, data: collaborators });
-    }));
-
-    const { default: Collaborators } = await import("@/pages/Collaborators");
-    renderWithLanguage(<Collaborators />);
-
-    const search = await screen.findByPlaceholderText("Buscar por nome, contato ou habilidade");
-    await screen.findByText("Ana Fotografia");
-    fireEvent.change(search, { target: { value: "audio" } });
-
-    expect(screen.queryByText("Ana Fotografia")).not.toBeInTheDocument();
-    expect(screen.getByText("Bruno Som")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Ações para Bruno Som" })).toBeInTheDocument();
-  });
-
-  it("offers a retry when the collaborators request fails", async () => {
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    let collaboratorAttempts = 0;
-    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
-      const url = String(input);
-      if (url.endsWith("/stats")) {
-        return jsonResponse({ success: true, data: { totalCollaborators: 0, activeCollaborators: 0, byRole: [], totalProjects: 0 } });
-      }
-      collaboratorAttempts += 1;
-      if (collaboratorAttempts === 1) return jsonResponse({ success: false, error: "offline" }, false);
-      return jsonResponse({ success: true, data: [] });
-    }));
-
-    const { default: Collaborators } = await import("@/pages/Collaborators");
-    renderWithLanguage(<Collaborators />);
-
-    const retry = await screen.findByRole("button", { name: "Tentar novamente" });
-    fireEvent.click(retry);
-
-    await waitFor(() => expect(screen.getByText("Nenhum colaborador")).toBeInTheDocument());
-    expect(collaboratorAttempts).toBe(2);
-    consoleError.mockRestore();
-  });
+  // NOTE: os testes de busca/retry da página standalone de "Colaboradores"
+  // (freelancer sem login) foram removidos junto com a página em si —
+  // spec team-task-delegation, Fase 6 (fundida em Team/membros de projeto
+  // por userId, cobertos em server/controllers/collaborationSettings.test.ts).
 
   it("shows pending company changes and disables saving after synchronization", async () => {
     vi.mocked(api.studioSettings.get).mockResolvedValue(DEFAULT_STUDIO_SETTINGS);

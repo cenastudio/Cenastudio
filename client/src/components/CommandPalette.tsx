@@ -128,10 +128,10 @@ const SECONDARY_COMMANDS: CommandItemDef[] = [
   {
     labelKey: "app.commandPalette.cmd.team",
     label: "Team",
-    path: "/collaborators",
+    path: "/team",
     icon: UserCheck,
     category: "secondary",
-    keywords: ["team", "equipe", "collaborators", "colaboradores"]
+    keywords: ["team", "equipe"]
   },
   {
     labelKey: "app.commandPalette.cmd.profile",

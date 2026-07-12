@@ -27,7 +27,7 @@ const Clients = lazy(() => import("@/pages/Clients"));
 const NewClient = lazy(() => import("@/pages/NewClient"));
 const EditClient = lazy(() => import("@/pages/EditClient"));
 const ClientDetail = lazy(() => import("@/pages/ClientDetail"));
-const Collaborators = lazy(() => import("@/pages/Collaborators"));
+
 const TeamPage = lazy(() => import("@/pages/Team"));
 const CompanySettings = lazy(() => import("@/pages/CompanySettings"));
 const Assets = lazy(() => import("@/pages/Assets"));
@@ -103,7 +103,7 @@ function Router() {
       <Route path="/review/:token" component={SharedReview} />
       <Route path="/meeting/:token" component={MeetingView} />
       <Route path="/proposal/:token" component={ProposalView} />
-      <Route path="/collaborators" component={Collaborators} />
+
       <Route path="/team" component={TeamPage} />
       <Route path="/analytics" component={Analytics} />
       <Route path="/analytics-premium" component={AnalyticsPremium} />
@@ -121,7 +121,7 @@ function Router() {
       <Route path="/timesheet">{() => <Timesheet />}</Route>
       <Route path="/project/:projectId/files" component={Files} />
       <Route path="/project/:projectId/video-reviews">{() => <VideoReviews />}</Route>
-      <Route path="/project/:projectId/collaborators" component={Collaborators} />
+
       <Route path="/admin" component={AdminDashboard} />
       <Route path="/admin/gerenciar" component={AdminUsers} />
       <Route path="/404" component={NotFound} />

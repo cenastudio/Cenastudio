@@ -160,8 +160,6 @@ function buildCrumbs(
       crumbs.push({ label: t("app.breadcrumb.files") });
     } else if (subPath === "/video-reviews") {
       crumbs.push({ label: t("app.breadcrumb.approvals") });
-    } else if (subPath === "/collaborators") {
-      crumbs.push({ label: t("app.breadcrumb.team") });
     } else if (subPath === "/documents") {
       crumbs.push({ label: t("app.breadcrumb.documents") });
     }
@@ -218,12 +216,6 @@ function buildCrumbs(
   if (location === "/video-reviews" || location.startsWith("/video-reviews/")) {
     crumbs.push({ label: t("app.breadcrumb.production"), href: "/projects" });
     crumbs.push({ label: t("app.breadcrumb.approvals") });
-    return crumbs;
-  }
-
-  if (location === "/collaborators") {
-    crumbs.push({ label: t("app.breadcrumb.production"), href: "/projects" });
-    crumbs.push({ label: t("app.breadcrumb.team") });
     return crumbs;
   }
 

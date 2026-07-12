@@ -6,7 +6,6 @@ import {
   addProjectMember,
   updateProjectMember,
   removeProjectMember,
-  getCollaboratorProjects,
 } from "../controllers/projectMembersController.js";
 
 const router = Router();
@@ -25,8 +24,5 @@ router.put("/:id", updateProjectMember);
 
 // Remove a member from a project
 router.delete("/:id", removeProjectMember);
-
-// Get projects for a collaborator
-router.get("/collaborators/:collaboratorId/projects", getCollaboratorProjects);
 
 export default router;

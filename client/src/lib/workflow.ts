@@ -69,7 +69,7 @@ export const WORKFLOW_STAGES: WorkflowStage[] = [
     outcome: "Material captado e organizado para pós-produção.",
     actions: [
       { id: "files", label: "Materiais", description: "Uploads, referências e arquivos de produção.", route: (id) => `/project/${id}/files` },
-      { id: "team", label: "Equipe", description: "Responsáveis e colaboradores do job.", route: (id) => `/project/${id}/collaborators` },
+      { id: "team", label: "Equipe", description: "Responsáveis e equipe do job.", route: (id) => `/project/${id}` },
       { id: "assistant", label: "Assistente", description: "Apoio transversal para decisões de produção.", toolId: "12", toolSlug: "assistente", route: (id) => `/project/${id}/studio/assistente` },
     ],
   },
@@ -162,7 +162,7 @@ export function getStageForLocation(location: string): WorkflowStageId {
   const studioTool = location.match(/\/studio\/([^/?#]+)/)?.[1];
   if (studioTool) return getStageForTool(studioTool);
   if (location.includes("video-reviews")) return "review";
-  if (location.includes("/files") || location.includes("/collaborators")) return "production";
+  if (location.includes("/files")) return "production";
   if (location.includes("/documents")) return "review";
   return "entry";
 }

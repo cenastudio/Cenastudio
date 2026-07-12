@@ -10,7 +10,6 @@ import {
   ChevronDown,
   Package,
   Webhook,
-  UserCircle2,
   MoreHorizontal,
   Camera,
   Clock,
@@ -50,10 +49,11 @@ const PRIMARY_TABS: ProductionTab[] = [
 
 /**
  * Secondary tabs — grouped under a "Mais" dropdown to keep the primary row
- * from growing unbounded as new verticals ship. "Colaboradores" was renamed
- * to "Equipe Externa" to disambiguate from "Equipe" (/team, login accounts)
- * — both used the word "Equipe"/"Team" with genuinely different meanings
- * (freelancers/crew vs. system accounts with plan-based permissions).
+ * from growing unbounded as new verticals ship.
+ *
+ * "Colaboradores" (freelancer sem login) foi extinto e fundido em "Equipe"
+ * (spec: team-task-delegation, Fase 6). Alocação de membros a um projeto
+ * específico agora acontece dentro do próprio ProjectHub.
  */
 const SECONDARY_TABS: ProductionTab[] = [
   { href: "/files", labelPt: "Arquivos", labelEn: "Files", icon: FolderKanban },
@@ -62,7 +62,6 @@ const SECONDARY_TABS: ProductionTab[] = [
   { href: "/equipment", labelPt: "Equipamento", labelEn: "Equipment", icon: Camera, requiresFeature: "equipment-inventory" },
   { href: "/timesheet", labelPt: "Timesheet", labelEn: "Timesheet", icon: Clock, requiresFeature: "timesheet" },
   { href: "/webhooks", labelPt: "Webhooks", labelEn: "Webhooks", icon: Webhook },
-  { href: "/collaborators", labelPt: "Equipe Externa", labelEn: "External Crew", icon: UserCircle2 },
   { href: "/team", labelPt: "Equipe", labelEn: "Team", icon: Users, roles: ["admin"] },
 ];
 

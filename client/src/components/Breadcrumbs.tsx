@@ -24,7 +24,6 @@ const routeLabels: Record<string, string> = {
   documents: "Documentos",
   proposals: "Propostas",
   analytics: "Analytics",
-  collaborators: "Colaboradores",
   "commercial-hub": "Hub Comercial",
   settings: "Configurações",
   profile: "Perfil",
