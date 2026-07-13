@@ -72,8 +72,9 @@ import {
   type ShotGroup,
 } from "@/lib/shotListGrouping";
 
-const SHOT_TYPES_PT = ["Wide", "Médio", "Close", "Detalhe", "Plongée", "Contra-plongée"];
-const SHOT_TYPES_EN = ["Wide", "Medium", "Close", "Detail", "High angle", "Low angle"];
+// Default shot types (fallback if API fails)
+const DEFAULT_SHOT_TYPES_PT = ["Wide", "Médio", "Close", "Detalhe", "Plongée", "Contra-plongée"];
+const DEFAULT_SHOT_TYPES_EN = ["Wide", "Medium", "Close", "Detail", "High angle", "Low angle"];
 
 interface ShotFormState {
   scene: string;
@@ -434,10 +435,34 @@ function ShotListContent() {
   const { planMode } = usePlanContext();
   const [, params] = useRoute("/project/:projectId/shotlist");
   const projectId = Number(params?.projectId);
-  const SHOT_TYPES = locale === "en" ? SHOT_TYPES_EN : SHOT_TYPES_PT;
+  const DEFAULT_SHOT_TYPES = locale === "en" ? DEFAULT_SHOT_TYPES_EN : DEFAULT_SHOT_TYPES_PT;
 
   const [shots, setShots] = useState<ShotItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Custom shot types
+  const [shotTypes, setShotTypes] = useState<Array<{ id: number; name: string; isDefault: boolean }>>([]);
+  const [loadingTypes, setLoadingTypes] = useState(true);
+
+  // Load custom shot types
+  const loadShotTypes = async () => {
+    try {
+      setLoadingTypes(true);
+      const types = await api.shotTypes.list();
+      setShotTypes(types);
+    } catch (error) {
+      console.error("Failed to load shot types:", error);
+      // Fallback to defaults
+      setShotTypes(DEFAULT_SHOT_TYPES.map((name, i) => ({ id: i, name, isDefault: true })));
+    } finally {
+      setLoadingTypes(false);
+    }
+  };
+
+  useEffect(() => {
+    loadShotTypes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Shot limits by plan
   const SHOT_LIMITS: Record<string, number> = {
@@ -457,6 +482,11 @@ function ShotListContent() {
 
   const [deleteTarget, setDeleteTarget] = useState<ShotItem | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Shot types manager
+  const [showTypesManager, setShowTypesManager] = useState(false);
+  const [newTypeName, setNewTypeName] = useState("");
+  const [savingType, setSavingType] = useState(false);
 
   // Mobile-first sensor tuning (spec: shot list improvements, step 2):
   // - PointerSensor needs a small activation distance so a plain tap (e.g.
@@ -651,6 +681,41 @@ function ShotListContent() {
       toast.success("Plano duplicado com sucesso");
     } catch (err) {
       toast.error("Erro ao duplicar plano");
+    }
+  };
+
+  const handleAddShotType = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTypeName.trim()) return;
+
+    try {
+      setSavingType(true);
+      const newType = await api.shotTypes.create(newTypeName.trim());
+      setShotTypes((prev) => [...prev, newType]);
+      setNewTypeName("");
+      toast.success(`Tipo "${newType.name}" adicionado`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao adicionar tipo");
+    } finally {
+      setSavingType(false);
+    }
+  };
+
+  const handleDeleteShotType = async (typeId: number) => {
+    const type = shotTypes.find((t) => t.id === typeId);
+    if (!type) return;
+
+    if (type.isDefault) {
+      toast.error("Não é possível deletar tipos padrão");
+      return;
+    }
+
+    try {
+      await api.shotTypes.delete(typeId);
+      setShotTypes((prev) => prev.filter((t) => t.id !== typeId));
+      toast.success(`Tipo "${type.name}" removido`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao remover tipo");
     }
   };
 
@@ -998,7 +1063,16 @@ function ShotListContent() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-frame-gray-light mb-1.5">{t("app.shotlist.shotType")}</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-medium text-frame-gray-light">{t("app.shotlist.shotType")}</label>
+                <button
+                  type="button"
+                  onClick={() => setShowTypesManager(true)}
+                  className="text-[0.65rem] text-frame-orange hover:underline"
+                >
+                  Gerenciar tipos
+                </button>
+              </div>
               <input
                 type="text"
                 value={form.shotType}
@@ -1008,8 +1082,8 @@ function ShotListContent() {
                 className="frame-input w-full"
               />
               <datalist id="shot-types">
-                {SHOT_TYPES.map((type) => (
-                  <option key={type} value={type} />
+                {shotTypes.map((type) => (
+                  <option key={type.id} value={type.name} />
                 ))}
               </datalist>
             </div>
@@ -1150,6 +1224,78 @@ function ShotListContent() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Shot Types Manager */}
+      <Dialog open={showTypesManager} onOpenChange={setShowTypesManager}>
+        <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-md rounded-none p-6">
+          <DialogHeader>
+            <DialogTitle className="frame-title text-xl">Gerenciar Tipos de Plano</DialogTitle>
+            <DialogDescription className="text-frame-gray-light text-sm">
+              Adicione tipos personalizados ou remova os que não usa. Tipos padrão não podem ser removidos.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-4">
+            {/* Add new type */}
+            <form onSubmit={handleAddShotType} className="flex gap-2">
+              <input
+                type="text"
+                value={newTypeName}
+                onChange={(e) => setNewTypeName(e.target.value)}
+                placeholder="Nome do novo tipo..."
+                className="frame-input flex-1"
+                disabled={savingType}
+              />
+              <button
+                type="submit"
+                className="frame-btn-primary"
+                disabled={savingType || !newTypeName.trim()}
+              >
+                {savingType ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              </button>
+            </form>
+
+            {/* List of types */}
+            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+              {shotTypes.map((type) => (
+                <div
+                  key={type.id}
+                  className="flex items-center justify-between p-2 border border-frame-gray-3/50 bg-frame-gray-1/10"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-frame-white">{type.name}</span>
+                    {type.isDefault && (
+                      <span className="text-[0.6rem] px-1.5 py-0.5 bg-frame-orange/20 text-frame-orange rounded">
+                        Padrão
+                      </span>
+                    )}
+                  </div>
+                  {!type.isDefault && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteShotType(type.id)}
+                      className="p-1 text-frame-gray-light hover:text-red-500 transition"
+                      title="Remover"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <DialogFooter className="pt-4 border-t border-frame-gray-3">
+            <button
+              type="button"
+              onClick={() => setShowTypesManager(false)}
+              className="frame-btn-primary"
+            >
+              Fechar
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

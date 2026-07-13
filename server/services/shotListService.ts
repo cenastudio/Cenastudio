@@ -460,112 +460,156 @@ export async function generateShotListPdf(userId: number, projectId: number): Pr
   const jsPDF = (await import("jspdf")).default;
   const doc = new jsPDF();
 
-  // Title page
-  doc.setFontSize(20);
-  doc.text("SHOT LIST", 105, 30, { align: "center" });
-  doc.setFontSize(14);
-  doc.text(projectName, 105, 40, { align: "center" });
-  doc.setFontSize(10);
-  doc.text(new Date().toLocaleDateString('pt-BR'), 105, 50, { align: "center" });
-
-  // Summary
-  doc.setFontSize(10);
-  doc.text(`Total de planos: ${shots.length}`, 20, 70);
   const totalDuration = shots.reduce((sum, s) => sum + (s.duration_sec || 0), 0);
   const totalMinutes = Math.round(totalDuration / 60);
-  doc.text(`Duração estimada: ${totalMinutes} minutos`, 20, 76);
 
-  // Group by scene
-  const grouped: Record<string, typeof shots> = {};
-  for (const shot of shots) {
-    const scene = shot.scene || "Sem cena";
-    if (!grouped[scene]) grouped[scene] = [];
-    grouped[scene].push(shot);
-  }
+  // Title page
+  doc.setFontSize(24);
+  doc.setFont(undefined, "bold");
+  doc.text("SHOT LIST", 105, 60, { align: "center" });
 
-  let yPos = 90;
-  let pageNum = 1;
+  doc.setFontSize(16);
+  doc.setFont(undefined, "normal");
+  doc.text(projectName, 105, 75, { align: "center" });
 
-  for (const [scene, sceneShots] of Object.entries(grouped)) {
-    // Scene header
-    if (yPos > 250) {
-      doc.addPage();
-      yPos = 20;
-      pageNum++;
+  doc.setFontSize(11);
+  doc.setTextColor(80);
+  doc.text(new Date().toLocaleDateString('pt-BR', { dateStyle: 'long' }), 105, 90, { align: "center" });
+
+  doc.setFontSize(10);
+  doc.text(`${shots.length} planos · ${totalMinutes} minutos estimados`, 105, 100, { align: "center" });
+  doc.setTextColor(0);
+
+  // Draw decorative line
+  doc.setDrawColor(255, 107, 0); // frame-orange
+  doc.setLineWidth(0.5);
+  doc.line(60, 110, 150, 110);
+
+  // ONE PAGE PER SHOT (professional format for set use)
+  for (let i = 0; i < shots.length; i++) {
+    const shot = shots[i];
+    doc.addPage();
+
+    // Header with shot number
+    doc.setFillColor(255, 107, 0); // frame-orange
+    doc.rect(0, 0, 210, 25, "F");
+
+    doc.setFontSize(18);
+    doc.setFont(undefined, "bold");
+    doc.setTextColor(255, 255, 255);
+    const shotTitle = shot.shot_number ? `PLANO ${shot.shot_number}` : `PLANO ${i + 1}`;
+    doc.text(shotTitle, 20, 15);
+
+    doc.setFontSize(10);
+    doc.setFont(undefined, "normal");
+    if (shot.scene) {
+      doc.text(`Cena: ${shot.scene}`, 150, 12);
+    }
+    if (shot.shot_type) {
+      doc.text(`Tipo: ${shot.shot_type}`, 150, 18);
     }
 
-    doc.setFontSize(12);
+    doc.setTextColor(0);
+
+    let y = 35;
+
+    // Thumbnail (large, centered) if available
+    if (shot.thumbnail_url) {
+      try {
+        // Add thumbnail as image (120x90mm, centered)
+        doc.addImage(shot.thumbnail_url, "JPEG", 45, y, 120, 90);
+        y += 95;
+      } catch (err) {
+        // If thumbnail fails to load, add placeholder
+        doc.setDrawColor(200);
+        doc.setLineWidth(0.5);
+        doc.rect(45, y, 120, 90);
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text("Thumbnail indisponível", 105, y + 45, { align: "center" });
+        doc.setTextColor(0);
+        y += 95;
+      }
+    }
+
+    // Description box
+    doc.setFontSize(10);
     doc.setFont(undefined, "bold");
-    doc.text(`CENA: ${scene}`, 20, yPos);
-    yPos += 8;
+    doc.text("DESCRIÇÃO:", 20, y);
+    y += 6;
 
     doc.setFont(undefined, "normal");
+    doc.setFontSize(11);
+    const descLines = doc.splitTextToSize(shot.description || "—", 170);
+    doc.text(descLines, 20, y);
+    y += descLines.length * 6 + 5;
+
+    // Technical specs in a box
+    doc.setDrawColor(200);
+    doc.setLineWidth(0.3);
+    doc.rect(20, y, 170, 30);
+
+    y += 6;
     doc.setFontSize(9);
+    doc.setFont(undefined, "bold");
+    doc.text("ESPECIFICAÇÕES TÉCNICAS:", 22, y);
+    y += 5;
 
-    for (const shot of sceneShots) {
-      // Check if need new page
-      if (yPos > 260) {
-        doc.addPage();
-        yPos = 20;
-        pageNum++;
-      }
-
-      // Shot header
-      const shotHeader = [
-        shot.shot_number && `#${shot.shot_number}`,
-        shot.shot_type && `[${shot.shot_type}]`,
-        shot.status === "shot" ? "✓ FILMADO" : "○ Pendente"
-      ].filter(Boolean).join(" · ");
-
-      doc.setFont(undefined, "bold");
-      doc.text(shotHeader, 20, yPos);
-      yPos += 5;
-
-      // Description
-      doc.setFont(undefined, "normal");
-      doc.text(`Descrição: ${shot.description || "—"}`, 20, yPos);
-      yPos += 5;
-
-      // Technical specs
-      const specs = [
-        shot.camera && `Câmera: ${shot.camera}`,
-        shot.lens && `Lente: ${shot.lens}`,
-        shot.movement && `Movimento: ${shot.movement}`,
-        shot.duration_sec && `Duração: ${Math.round(shot.duration_sec / 60)}min`
-      ].filter(Boolean).join(" | ");
-
-      if (specs) {
-        doc.setFontSize(8);
-        doc.setTextColor(100);
-        doc.text(specs, 20, yPos);
-        doc.setTextColor(0);
-        doc.setFontSize(9);
-        yPos += 5;
-      }
-
-      // Production notes
-      if (shot.production_notes) {
-        doc.setTextColor(80);
-        const lines = doc.splitTextToSize(`Notas: ${shot.production_notes}`, 170);
-        doc.text(lines, 20, yPos);
-        yPos += lines.length * 4;
-        doc.setTextColor(0);
-      }
-
-      yPos += 4; // Space between shots
+    doc.setFont(undefined, "normal");
+    doc.setFontSize(10);
+    if (shot.camera) {
+      doc.text(`Câmera: ${shot.camera}`, 22, y);
+      y += 5;
+    }
+    if (shot.lens) {
+      doc.text(`Lente: ${shot.lens}`, 22, y);
+      y += 5;
+    }
+    if (shot.movement) {
+      doc.text(`Movimento: ${shot.movement}`, 22, y);
+      y += 5;
+    }
+    if (shot.duration_sec) {
+      doc.text(`Duração estimada: ${Math.round(shot.duration_sec / 60)} minutos`, 22, y);
+      y += 5;
     }
 
-    yPos += 6; // Space between scenes
-  }
+    y += 3;
 
-  // Footer on all pages
-  const totalPages = doc.internal.pages.length - 1;
-  for (let i = 1; i <= totalPages; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(150);
-    doc.text(`${projectName} - Shot List`, 20, 287);
-    doc.text(`Página ${i} de ${totalPages}`, 170, 287);
+    // Production notes
+    if (shot.production_notes) {
+      y += 3;
+      doc.setFontSize(9);
+      doc.setFont(undefined, "bold");
+      doc.text("NOTAS DE PRODUÇÃO:", 20, y);
+      y += 5;
+
+      doc.setFont(undefined, "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(60);
+      const notesLines = doc.splitTextToSize(shot.production_notes, 170);
+      doc.text(notesLines, 20, y);
+      doc.setTextColor(0);
+      y += notesLines.length * 5 + 5;
+    }
+
+    // Space for handwritten notes on set
+    if (y < 230) {
+      doc.setDrawColor(220);
+      doc.setLineWidth(0.2);
+      doc.rect(20, 230, 170, 45);
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text("NOTAS DE SET (espaço para anotações durante filmagem):", 22, 227);
+      doc.setTextColor(0);
+    }
+
+    // Footer
+    doc.setFontSize(7);
+    doc.setTextColor(120);
+    doc.text(`${projectName}`, 20, 287);
+    doc.text(`Plano ${i + 1} de ${shots.length}`, 105, 287, { align: "center" });
+    doc.text(shot.status === "shot" ? "✓ FILMADO" : "○ PENDENTE", 180, 287, { align: "right" });
     doc.setTextColor(0);
   }
 
