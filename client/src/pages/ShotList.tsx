@@ -5,6 +5,7 @@ import ProjectNav from "@/components/ProjectNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { usePlanContext } from "@/contexts/PlanContext";
 import { api, type ShotItem } from "@/lib/api";
 import {
   Clapperboard,
@@ -412,12 +413,24 @@ function printShotList(shots: ShotItem[], projectId: number, t: (key: string) =>
 
 function ShotListContent() {
   const { t, locale } = useLanguage();
+  const { planMode } = usePlanContext();
   const [, params] = useRoute("/project/:projectId/shotlist");
   const projectId = Number(params?.projectId);
   const SHOT_TYPES = locale === "en" ? SHOT_TYPES_EN : SHOT_TYPES_PT;
 
   const [shots, setShots] = useState<ShotItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Shot limits by plan
+  const SHOT_LIMITS: Record<string, number> = {
+    free: 20,
+    pro: 100,
+    studio: -1, // unlimited
+  };
+  const shotLimit = SHOT_LIMITS[planMode] ?? 20;
+  const shotCount = shots.length;
+  const isAtLimit = shotLimit !== -1 && shotCount >= shotLimit;
+  const isNearLimit = shotLimit !== -1 && shotCount >= shotLimit * 0.8; // 80% warning
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -730,12 +743,38 @@ function ShotListContent() {
               type="button"
               onClick={openCreateDialog}
               className="frame-btn-primary inline-flex items-center gap-2"
+              disabled={isAtLimit}
+              title={isAtLimit ? `Limite de ${shotLimit} shots atingido` : undefined}
             >
               <Plus className="w-4 h-4" />
               {t("app.shotlist.addShot")}
             </button>
           </div>
         </header>
+
+        {/* Shot Limit Banner */}
+        {isNearLimit && (
+          <div className={`p-4 border rounded-lg ${isAtLimit ? 'border-red-500/50 bg-red-500/10' : 'border-frame-orange/30 bg-frame-orange/10'}`}>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-frame-white">
+                  {isAtLimit ? "Limite de shots atingido" : "Você está próximo do limite"}
+                </p>
+                <p className="text-xs text-frame-gray-light mt-0.5">
+                  {shotLimit === -1 ? "Shots ilimitados" : `${shotCount}/${shotLimit} shots usados no plano ${planMode === 'free' ? 'Free' : planMode === 'pro' ? 'Pro' : 'Studio'}`}
+                </p>
+              </div>
+              {isAtLimit && (
+                <button
+                  onClick={() => window.location.href = '/pricing'}
+                  className="frame-btn-primary text-sm whitespace-nowrap"
+                >
+                  Fazer Upgrade
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {loading && (
           <div className="flex items-center justify-center py-20">
@@ -760,6 +799,7 @@ function ShotListContent() {
                 type="button"
                 onClick={openCreateDialog}
                 className="frame-btn-primary inline-flex items-center gap-2 !py-3 !px-6"
+                disabled={isAtLimit}
               >
                 <Plus className="w-4 h-4" />
                 {t("app.shotlist.addFirstShot")}

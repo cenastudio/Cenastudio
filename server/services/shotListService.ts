@@ -293,8 +293,8 @@ export async function reorderShots(userId: number, projectId: number, orderedIds
 }
 
 /**
- * Upload thumbnail for a shot to Cloudinary with transformation.
- * Returns the Cloudinary URL.
+ * Upload thumbnail for a shot to Supabase Storage.
+ * Returns the storage URL.
  */
 export async function uploadShotThumbnail(
   userId: number,
@@ -304,33 +304,44 @@ export async function uploadShotThumbnail(
 ): Promise<string> {
   const shot = await getShotOwnedByUser(userId, shotId);
 
-  // For now, use existing storage service pattern
-  // In production, this would upload to Cloudinary with transformation:
-  // - resize to 400x300
-  // - quality 80
-  // - format webp
+  // Import storage service
+  const { uploadProjectFile, createProjectFileUrl } = await import("./supabaseStorage.js");
 
-  // Placeholder: In real implementation, use Cloudinary SDK
-  // const cloudinary = require('cloudinary').v2;
-  // const result = await cloudinary.uploader.upload_stream({
-  //   folder: 'shotlist-thumbnails',
-  //   transformation: [{ width: 400, height: 300, crop: 'fill', quality: 80 }]
-  // }, (error, result) => result.secure_url);
+  // Get shot list ID to find project ID
+  let projectId = 0;
+  if (shouldUsePrisma) {
+    const shotList = await prisma.shotList.findFirst({
+      where: { id: shot.shotListId },
+      select: { projectId: true },
+    });
+    projectId = shotList ? Number(shotList.projectId) : 0;
+  } else {
+    const shotList = db.prepare("SELECT project_id FROM shot_lists WHERE id = ?").get((shot as any).shot_list_id) as { project_id: number } | undefined;
+    projectId = shotList?.project_id || 0;
+  }
 
-  // For now, return a mock URL (will be replaced with real Cloudinary integration)
-  const mockUrl = `https://res.cloudinary.com/demo/image/upload/w_400,h_300,q_80/shot_${shotId}.jpg`;
+  // Generate storage path
+  const ext = mimeType.split('/')[1] || 'jpg';
+  const filename = `shot-${shotId}-${Date.now()}.${ext}`;
+  const storagePath = `${userId}/${projectId}/thumbnails/${filename}`;
+
+  // Upload to Supabase Storage
+  await uploadProjectFile(storagePath, fileBuffer, mimeType);
+
+  // Get signed URL (valid for 1 year for thumbnails)
+  const thumbnailUrl = await createProjectFileUrl(storagePath, 31536000); // 1 year
 
   // Update shot with thumbnail URL
   if (shouldUsePrisma) {
     await prisma.shot.update({
       where: { id: BigInt(shotId) },
-      data: { thumbnailUrl: mockUrl },
+      data: { thumbnailUrl },
     });
   } else {
-    db.prepare("UPDATE shots SET thumbnail_url = ? WHERE id = ?").run(mockUrl, shotId);
+    db.prepare("UPDATE shots SET thumbnail_url = ? WHERE id = ?").run(thumbnailUrl, shotId);
   }
 
-  return mockUrl;
+  return thumbnailUrl;
 }
 
 /**
@@ -401,7 +412,7 @@ export async function duplicateShot(userId: number, shotId: number): Promise<Sho
 }
 
 /**
- * Generate PDF export of shot list.
+ * Generate PDF export of shot list using jsPDF.
  * Returns PDF buffer.
  */
 export async function generateShotListPdf(userId: number, projectId: number): Promise<Buffer> {
@@ -420,17 +431,120 @@ export async function generateShotListPdf(userId: number, projectId: number): Pr
     if (project) projectName = project.name;
   }
 
-  // TODO: Implement actual PDF generation with jsPDF
-  // For now, return a placeholder buffer
-  // In production, this would use jsPDF to create:
-  // - 1 page per shot
-  // - Large thumbnail (if exists)
-  // - Shot specs (number, scene, type, camera, lens, movement, duration)
-  // - Production notes
-  // - Space for manual notes
-  // - Header with project name + date
-  // - Footer with page numbers
+  // Dynamic import of jsPDF
+  const jsPDF = (await import("jspdf")).default;
+  const doc = new jsPDF();
 
-  const placeholder = `Shot List - ${projectName}\n\n${shots.length} shots\n\nPDF generation coming soon...`;
-  return Buffer.from(placeholder, "utf-8");
+  // Title page
+  doc.setFontSize(20);
+  doc.text("SHOT LIST", 105, 30, { align: "center" });
+  doc.setFontSize(14);
+  doc.text(projectName, 105, 40, { align: "center" });
+  doc.setFontSize(10);
+  doc.text(new Date().toLocaleDateString('pt-BR'), 105, 50, { align: "center" });
+
+  // Summary
+  doc.setFontSize(10);
+  doc.text(`Total de planos: ${shots.length}`, 20, 70);
+  const totalDuration = shots.reduce((sum, s) => sum + (s.duration_sec || 0), 0);
+  const totalMinutes = Math.round(totalDuration / 60);
+  doc.text(`Duração estimada: ${totalMinutes} minutos`, 20, 76);
+
+  // Group by scene
+  const grouped: Record<string, typeof shots> = {};
+  for (const shot of shots) {
+    const scene = shot.scene || "Sem cena";
+    if (!grouped[scene]) grouped[scene] = [];
+    grouped[scene].push(shot);
+  }
+
+  let yPos = 90;
+  let pageNum = 1;
+
+  for (const [scene, sceneShots] of Object.entries(grouped)) {
+    // Scene header
+    if (yPos > 250) {
+      doc.addPage();
+      yPos = 20;
+      pageNum++;
+    }
+
+    doc.setFontSize(12);
+    doc.setFont(undefined, "bold");
+    doc.text(`CENA: ${scene}`, 20, yPos);
+    yPos += 8;
+
+    doc.setFont(undefined, "normal");
+    doc.setFontSize(9);
+
+    for (const shot of sceneShots) {
+      // Check if need new page
+      if (yPos > 260) {
+        doc.addPage();
+        yPos = 20;
+        pageNum++;
+      }
+
+      // Shot header
+      const shotHeader = [
+        shot.shot_number && `#${shot.shot_number}`,
+        shot.shot_type && `[${shot.shot_type}]`,
+        shot.status === "shot" ? "✓ FILMADO" : "○ Pendente"
+      ].filter(Boolean).join(" · ");
+
+      doc.setFont(undefined, "bold");
+      doc.text(shotHeader, 20, yPos);
+      yPos += 5;
+
+      // Description
+      doc.setFont(undefined, "normal");
+      doc.text(`Descrição: ${shot.description || "—"}`, 20, yPos);
+      yPos += 5;
+
+      // Technical specs
+      const specs = [
+        shot.camera && `Câmera: ${shot.camera}`,
+        shot.lens && `Lente: ${shot.lens}`,
+        shot.movement && `Movimento: ${shot.movement}`,
+        shot.duration_sec && `Duração: ${Math.round(shot.duration_sec / 60)}min`
+      ].filter(Boolean).join(" | ");
+
+      if (specs) {
+        doc.setFontSize(8);
+        doc.setTextColor(100);
+        doc.text(specs, 20, yPos);
+        doc.setTextColor(0);
+        doc.setFontSize(9);
+        yPos += 5;
+      }
+
+      // Production notes
+      if (shot.production_notes) {
+        doc.setTextColor(80);
+        const lines = doc.splitTextToSize(`Notas: ${shot.production_notes}`, 170);
+        doc.text(lines, 20, yPos);
+        yPos += lines.length * 4;
+        doc.setTextColor(0);
+      }
+
+      yPos += 4; // Space between shots
+    }
+
+    yPos += 6; // Space between scenes
+  }
+
+  // Footer on all pages
+  const totalPages = doc.internal.pages.length - 1;
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150);
+    doc.text(`${projectName} - Shot List`, 20, 287);
+    doc.text(`Página ${i} de ${totalPages}`, 170, 287);
+    doc.setTextColor(0);
+  }
+
+  // Convert to buffer
+  const pdfData = doc.output("arraybuffer");
+  return Buffer.from(pdfData);
 }
