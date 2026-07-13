@@ -7,6 +7,10 @@ import { useProject } from "@/contexts/ProjectContext";
 import { api, type EquipmentItem, type EquipmentBookingItem } from "@/lib/api";
 import {
   Camera,
+  Aperture,
+  Lightbulb,
+  Mic,
+  Wrench,
   Plus,
   Trash2,
   Edit,
@@ -36,11 +40,11 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const CATEGORIES = [
-  { id: "camera", label: "Câmera" },
-  { id: "lens", label: "Lente" },
-  { id: "light", label: "Iluminação" },
-  { id: "audio", label: "Áudio" },
-  { id: "accessory", label: "Acessório" },
+  { id: "camera", label: "Câmera", icon: Camera, className: "border-frame-orange/30 bg-frame-orange/10 text-frame-orange" },
+  { id: "lens", label: "Lente", icon: Aperture, className: "border-blue-500/30 bg-blue-500/10 text-blue-400" },
+  { id: "light", label: "Iluminação", icon: Lightbulb, className: "border-yellow-500/30 bg-yellow-500/10 text-yellow-400" },
+  { id: "audio", label: "Áudio", icon: Mic, className: "border-purple-500/30 bg-purple-500/10 text-purple-400" },
+  { id: "accessory", label: "Acessório", icon: Wrench, className: "border-frame-gray-3 bg-frame-gray-2/40 text-frame-gray-light" },
 ];
 
 const STATUSES: Record<string, { label: string; className: string }> = {
@@ -52,6 +56,10 @@ const STATUSES: Record<string, { label: string; className: string }> = {
 
 function categoryLabel(id: string) {
   return CATEGORIES.find((c) => c.id === id)?.label ?? id;
+}
+
+function categoryInfo(id: string) {
+  return CATEGORIES.find((c) => c.id === id) ?? CATEGORIES[CATEGORIES.length - 1];
 }
 
 function formatDate(iso: string) {
@@ -334,12 +342,14 @@ function EquipmentContent() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {filtered.map((item) => {
               const statusInfo = STATUSES[item.status] ?? { label: item.status, className: "border-frame-gray-3/50 text-frame-gray-light" };
+              const catInfo = categoryInfo(item.category);
+              const CategoryIcon = catInfo.icon;
               return (
                 <div key={item.id} className="border border-frame-gray-3/60 bg-frame-gray-1/10 p-4 space-y-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-start gap-3 min-w-0">
-                      <div className="w-10 h-10 shrink-0 border border-frame-orange/30 bg-frame-orange/10 flex items-center justify-center">
-                        <Camera className="w-5 h-5 text-frame-orange" />
+                      <div className={`w-10 h-10 shrink-0 border flex items-center justify-center ${catInfo.className}`}>
+                        <CategoryIcon className="w-5 h-5" />
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-frame-white truncate">{item.name}</p>
