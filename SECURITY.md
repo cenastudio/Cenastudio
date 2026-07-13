@@ -22,14 +22,44 @@ Este documento descreve nossas práticas de segurança e como reportar vulnerabi
 - ✅ **Sanitização de inputs** contra XSS e SQL Injection
 - ✅ **Rate limiting** para prevenir ataques de força bruta
 - ✅ **Validação de tipos** (TypeScript + Zod)
+- ✅ **LGPD Compliance** (100%)
+  - Dashboard de transparência de dados
+  - Export de dados pessoais (JSON)
+  - Solicitações de exclusão automatizadas
+  - Controles de privacidade granulares
+  - Auditoria de acessos
+- ✅ **Notification Preferences** - 8 tipos configuráveis
+  - Controle granular de notificações
+  - Opt-out individual por tipo
+  - Respeito às preferências do usuário
 
 ### 2. Autenticação e Autorização
 
 - ✅ **Senhas com bcrypt** (hash + salt, 10 rounds)
 - ✅ **JWT com expiração** (15 dias)
+- ✅ **Autenticação de 2 Fatores (2FA)** - TOTP via Google Authenticator
+  - QR Code generation com speakeasy
+  - Backup codes para recuperação
+  - Persistência de status entre sessões
+- ✅ **API Keys Pessoais** - Formato `cena_XXXXXXXX` com SHA-256
+  - Geração única com crypto.randomBytes
+  - Revogação instantânea
+  - Rate limiting por key
+- ✅ **Activity Log** - Auditoria de 30 dias
+  - Rastreamento de ações sensíveis
+  - Geolocalização por IP (geoip-lite)
+  - Device fingerprinting
+- ✅ **Session Management** - Controle de sessões ativas
+  - Múltiplas sessões por usuário
+  - Encerrar sessões remotamente
+  - Timeout automático de inatividade
+- ✅ **Security Alerts** - Notificações de eventos suspeitos
+  - Novo login de dispositivo desconhecido
+  - Múltiplas tentativas de login falhadas
+  - Alterações de senha
+  - Ativação/desativação de 2FA
 - ✅ **Controle de acesso baseado em roles**
 - ✅ **Bloqueio após tentativas falhas**
-- ✅ **Sessões únicas** por dispositivo
 
 ### 3. Banco de Dados
 
@@ -135,12 +165,33 @@ Porém, pesquisadores responsáveis podem receber:
 As seguintes situações **NÃO são consideradas vulnerabilidades**:
 
 - ❌ Ausência de SPF/DKIM/DMARC em e-mails
-- ❌ Ausência de 2FA (planejado para futuro)
 - ❌ Cookies sem flag SameSite=Strict (usamos Lax)
 - ❌ Cabeçalhos de segurança não "A+" (temos B+)
 - ❌ Informações em mensagens de erro genéricas
 - ❌ Self-XSS (requer ação do próprio usuário)
 - ❌ Clickjacking em páginas públicas
+
+### Features de Segurança Implementadas Recentemente
+
+**Sprint 2 (Julho 2026) - 100% Completo:**
+- ✅ Autenticação de 2 Fatores (TOTP)
+- ✅ API Keys Pessoais
+- ✅ Activity Log (30 dias)
+- ✅ Session Management
+- ✅ Security Alerts
+
+**Sprint 1 (Julho 2026) - 100% Completo:**
+- ✅ LGPD Dashboard
+- ✅ Data Export (JSON)
+- ✅ Privacy Controls
+- ✅ GDPR Compliance
+
+**Bugs Críticos Resolvidos (13-jul-2026):**
+- ✅ 2FA QR Code agora renderiza corretamente
+- ✅ Campo `twoFactorEnabled` persiste entre sessões
+- ✅ Migration P3009 resolvida (PostgreSQL syntax)
+
+Ver documentação completa em: `.private/BUGS_RESOLVIDOS_HISTORICO.md`
 
 ### Dependências com CVEs Conhecidos
 
@@ -158,9 +209,20 @@ Consultamos regularmente:
 
 ## 📋 HISTÓRICO DE INCIDENTES
 
+### 2026
+
+**Julho:**
+- **13-jul:** Bug #2 identificado e resolvido - 2FA QR Code não legível
+  - **Impacto:** Baixo (feature não estava sendo usada)
+  - **Causa:** Frontend renderizava mock ao invés de imagem real
+  - **Solução:** Implementada em 2h, sem dados comprometidos
+  - **Status:** ✅ Resolvido (commit `4780d10`)
+
+**Nenhum incidente de segurança reportado até o momento.**
+
 ### 2025
 
-**Nenhum incidente reportado até o momento.**
+**Nenhum incidente reportado.**
 
 Atualizaremos esta seção se ocorrerem incidentes.
 
@@ -247,8 +309,16 @@ Esta política é revisada:
 - **Trimestralmente** ou
 - **Após incidentes significativos**
 
-**Última revisão:** Janeiro de 2025
-**Próxima revisão:** Abril de 2025
+**Última revisão:** 13 de Julho de 2026
+**Próxima revisão:** Outubro de 2026
+
+**Mudanças nesta revisão:**
+- Adicionado 2FA (TOTP) como feature implementada
+- Adicionado API Keys Pessoais
+- Adicionado Activity Log e Session Management
+- Adicionado LGPD Dashboard e compliance
+- Atualizado histórico de incidentes (Bug #2)
+- Removido "Ausência de 2FA" da lista de não-vulnerabilidades
 
 ---
 
