@@ -56,8 +56,7 @@ const PRIMARY_TABS: ProductionTab[] = [
  * específico agora acontece dentro do próprio ProjectHub.
  */
 const SECONDARY_TABS: ProductionTab[] = [
-  { href: "/files", labelPt: "Arquivos", labelEn: "Files", icon: FolderKanban },
-  { href: "/assets", labelPt: "Assets", labelEn: "Assets", icon: Package },
+  { href: "/files-unified", labelPt: "Arquivos", labelEn: "Files", icon: FolderKanban },
   { href: "/documents", labelPt: "Documentos", labelEn: "Documents", icon: FileText },
   { href: "/equipment", labelPt: "Equipamento", labelEn: "Equipment", icon: Camera, requiresFeature: "equipment-inventory" },
   { href: "/timesheet", labelPt: "Timesheet", labelEn: "Timesheet", icon: Clock, requiresFeature: "timesheet" },

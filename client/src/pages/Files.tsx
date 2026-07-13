@@ -40,7 +40,11 @@ type FileFilter = "all" | "images" | "videos" | "documents" | "audio";
 
 type UploadTab = "file" | "link";
 
-function FilesContent() {
+interface FilesContentProps {
+  embedded?: boolean;
+}
+
+function FilesContent({ embedded }: FilesContentProps) {
   const { t } = useLanguage();
   const params = useParams();
   const [location, setLocation] = useLocation();
@@ -330,8 +334,8 @@ function FilesContent() {
 
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
-      <AppNavBar />
-      {isProjectScoped && projectId ? <ProjectNav projectId={projectId} /> : <ProductionNav />}
+      {!embedded && <AppNavBar />}
+      {!embedded && (isProjectScoped && projectId ? <ProjectNav projectId={projectId} /> : <ProductionNav />)}
 
       <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-6 py-10 space-y-8">
         {/* Header com seletor de projeto */}
@@ -861,7 +865,9 @@ function FilesContent() {
   );
 }
 
-export default function Files() {
+export default function Files({ embedded }: { embedded?: boolean }) {
+  if (embedded) return <FilesContent embedded />;
+
   return (
     <ProtectedRoute>
       <FilesContent />

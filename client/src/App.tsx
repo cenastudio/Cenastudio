@@ -31,6 +31,7 @@ const ClientDetail = lazy(() => import("@/pages/ClientDetail"));
 const TeamPage = lazy(() => import("@/pages/Team"));
 const CompanySettings = lazy(() => import("@/pages/CompanySettings"));
 const Assets = lazy(() => import("@/pages/Assets"));
+const FilesUnified = lazy(() => import("@/pages/FilesUnified"));
 const Webhooks = lazy(() => import("@/pages/Webhooks"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Projects = lazy(() => import("@/pages/Projects"));
@@ -95,10 +96,11 @@ function Router() {
       <Route path="/interactions" component={CommercialHub} />
       <Route path="/documents" component={Documents} />
       <Route path="/company" component={CompanySettings} />
-      <Route path="/assets">{() => <Assets />}</Route>
+      <Route path="/assets">{() => <Redirect to="/files-unified?tab=all" />}</Route>
+      <Route path="/files-unified" component={FilesUnified} />
       <Route path="/webhooks">{() => <Webhooks />}</Route>
-      <Route path="/files" component={Files} />
-      <Route path="/files/:projectId" component={Files} />
+      <Route path="/files">{() => <Redirect to="/files-unified?tab=project" />}</Route>
+      <Route path="/files/:projectId">{() => <Redirect to="/files-unified?tab=project" />}</Route>
       <Route path="/video-reviews/:projectId">{() => <VideoReviews />}</Route>
       <Route path="/review/:token" component={SharedReview} />
       <Route path="/meeting/:token" component={MeetingView} />
