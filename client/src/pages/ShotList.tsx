@@ -76,6 +76,41 @@ import {
 const DEFAULT_SHOT_TYPES_PT = ["Wide", "Médio", "Close", "Detalhe", "Plongée", "Contra-plongée"];
 const DEFAULT_SHOT_TYPES_EN = ["Wide", "Medium", "Close", "Detail", "High angle", "Low angle"];
 
+// Common camera movements
+const CAMERA_MOVEMENTS_PT = [
+  "Estático",
+  "Pan (horizontal)",
+  "Tilt (vertical)",
+  "Dolly in",
+  "Dolly out",
+  "Tracking lateral",
+  "Crane up",
+  "Crane down",
+  "Handheld",
+  "Steadicam",
+  "Gimbal",
+  "Drone",
+  "Zoom in",
+  "Zoom out",
+];
+
+const CAMERA_MOVEMENTS_EN = [
+  "Static",
+  "Pan (horizontal)",
+  "Tilt (vertical)",
+  "Dolly in",
+  "Dolly out",
+  "Tracking shot",
+  "Crane up",
+  "Crane down",
+  "Handheld",
+  "Steadicam",
+  "Gimbal",
+  "Drone",
+  "Zoom in",
+  "Zoom out",
+];
+
 interface ShotFormState {
   scene: string;
   shotType: string;
@@ -436,6 +471,7 @@ function ShotListContent() {
   const [, params] = useRoute("/project/:projectId/shotlist");
   const projectId = Number(params?.projectId);
   const DEFAULT_SHOT_TYPES = locale === "en" ? DEFAULT_SHOT_TYPES_EN : DEFAULT_SHOT_TYPES_PT;
+  const CAMERA_MOVEMENTS = locale === "en" ? CAMERA_MOVEMENTS_EN : CAMERA_MOVEMENTS_PT;
 
   const [shots, setShots] = useState<ShotItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1125,8 +1161,15 @@ function ShotListContent() {
                   type="text"
                   value={form.movement}
                   onChange={(e) => setForm((f) => ({ ...f, movement: e.target.value }))}
+                  placeholder="Ex: Dolly in, Pan..."
+                  list="camera-movements"
                   className="frame-input w-full"
                 />
+                <datalist id="camera-movements">
+                  {CAMERA_MOVEMENTS.map((movement) => (
+                    <option key={movement} value={movement} />
+                  ))}
+                </datalist>
               </div>
             </div>
 
