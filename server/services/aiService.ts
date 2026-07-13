@@ -128,7 +128,32 @@ async function generateWithAnthropic(system: string, userText: string): Promise<
     : "Não foi possível gerar conteúdo.";
 }
 
-async function generateWithOpenRouter(system: string, userText: string, modelOverride?: string): Promise<string> {
+// Free OpenRouter models to try, in order, when the primary choice is
+// unavailable (discontinued) or temporarily rate-limited upstream. OpenRouter's
+// `:free` tier is a shared pool across all of its users, not a dedicated quota
+// for this app, so any single free model can go down or get rate-limited
+// without warning — this list is what makes the AI features resilient to that
+// instead of failing the whole request on one provider's bad day.
+const OPENROUTER_FREE_FALLBACK_CHAIN = [
+  "nvidia/nemotron-3-super-120b-a12b:free",
+  "meta-llama/llama-3.3-70b-instruct:free",
+  "qwen/qwen3-next-80b-a3b-instruct:free",
+  "nvidia/nemotron-3-ultra-550b-a55b:free",
+  "google/gemma-4-31b-it:free",
+];
+
+// Errors worth retrying with a different model: rate limiting (429) and
+// upstream provider failures (5xx). Anything else (bad request, auth, etc.)
+// is a real error that switching models won't fix.
+function isRetryableOpenRouterStatus(status: number): boolean {
+  return status === 429 || status >= 500;
+}
+
+async function callOpenRouterOnce(
+  system: string,
+  userText: string,
+  model: string,
+): Promise<{ ok: true; output: string } | { ok: false; status: number; message: string }> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     throw new AppError("OPENROUTER_API_KEY not configured", 503);
@@ -140,7 +165,6 @@ async function generateWithOpenRouter(system: string, userText: string, modelOve
     Number(process.env.OPENROUTER_TIMEOUT_MS || 90000),
   );
 
-  const model = modelOverride || process.env.OPENROUTER_MODEL || "deepseek/deepseek-chat-v3-0324:free";
   const body = {
     model,
     messages: [
@@ -181,15 +205,47 @@ async function generateWithOpenRouter(system: string, userText: string, modelOve
 
   const payload = (await response.json().catch(() => ({}))) as OpenRouterChatResponse;
   if (!response.ok) {
-    throw new AppError(payload.error?.message || "OpenRouter AI request failed", response.status);
+    return {
+      ok: false,
+      status: response.status,
+      message: payload.error?.message || "OpenRouter AI request failed",
+    };
   }
 
   const output = payload.choices?.[0]?.message?.content?.trim();
   if (!output) {
-    throw new AppError("OpenRouter AI returned an empty response", 502);
+    return { ok: false, status: 502, message: "OpenRouter AI returned an empty response" };
   }
 
-  return output;
+  return { ok: true, output };
+}
+
+async function generateWithOpenRouter(system: string, userText: string, modelOverride?: string): Promise<string> {
+  const primaryModel = modelOverride || process.env.OPENROUTER_MODEL || OPENROUTER_FREE_FALLBACK_CHAIN[0];
+
+  // Try the requested/default model first, then fall back through the free
+  // chain (skipping the primary if it's already in the chain) on
+  // rate-limit/provider-outage errors only.
+  const modelsToTry = [primaryModel, ...OPENROUTER_FREE_FALLBACK_CHAIN.filter((m) => m !== primaryModel)];
+
+  let lastError: { status: number; message: string } | null = null;
+  for (const model of modelsToTry) {
+    const result = await callOpenRouterOnce(system, userText, model);
+    if (result.ok) {
+      return result.output;
+    }
+    lastError = { status: result.status, message: result.message };
+    if (!isRetryableOpenRouterStatus(result.status)) {
+      // Not a "model unavailable" situation (e.g. bad request) — fail fast.
+      throw new AppError(result.message, result.status);
+    }
+    // Otherwise, loop and try the next model in the chain.
+  }
+
+  throw new AppError(
+    lastError?.message || "Todos os modelos de IA gratuitos estão indisponíveis no momento. Tente novamente em alguns minutos.",
+    lastError?.status || 503,
+  );
 }
 
 // Build a rich project context string to inject into the AI system prompt
