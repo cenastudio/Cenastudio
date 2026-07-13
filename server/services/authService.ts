@@ -46,6 +46,7 @@ type PrismaUserWithProfile = {
   studioRole?: string | null;
   phone?: string | null;
   mustResetPassword?: boolean | null;
+  twoFactorEnabled?: boolean | null;
 };
 
 export interface FormattedUserPlan {
@@ -82,6 +83,7 @@ function toAuthUser(row: PrismaUserWithProfile): AuthUser {
     studioRole: row.studioRole ?? undefined,
     phone: row.phone ?? undefined,
     mustResetPassword: row.mustResetPassword ?? false,
+    twoFactorEnabled: row.twoFactorEnabled ?? false,
   };
 }
 
@@ -352,7 +354,8 @@ export async function getUserById(id: number): Promise<AuthUser | null> {
               studio_name as studioName,
               studio_role as studioRole,
               phone,
-              must_reset_password as mustResetPassword
+              must_reset_password as mustResetPassword,
+              two_factor_enabled as twoFactorEnabled
        FROM users WHERE id = ?`,
     )
     .get(id) as any;
@@ -365,7 +368,8 @@ export async function getUserById(id: number): Promise<AuthUser | null> {
     studioName: row.studioName,
     studioRole: row.studioRole,
     phone: row.phone,
-    mustResetPassword: Boolean(row.mustResetPassword)
+    mustResetPassword: Boolean(row.mustResetPassword),
+    twoFactorEnabled: Boolean(row.twoFactorEnabled)
   };
 }
 

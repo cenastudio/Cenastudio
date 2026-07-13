@@ -565,6 +565,7 @@ function ProfileContent() {
   useEffect(() => {
     setName(user?.name || "");
     setPhone(user?.phone || "");
+    setTwoFactorEnabled(user?.twoFactorEnabled || false);
   }, [user]);
 
   const planLabel = plan
@@ -1439,12 +1440,22 @@ function ProfileContent() {
                         Use Google Authenticator, Authy ou similar
                       </p>
 
-                      {/* QR Code Mock */}
-                      <div className="bg-white p-4 rounded-lg inline-block mb-4">
-                        <div className="w-40 h-40 bg-frame-gray-2 flex items-center justify-center">
-                          <QrCode className="w-16 h-16 text-frame-gray-3" />
+                      {/* QR Code */}
+                      {qrCode ? (
+                        <div className="bg-white p-4 rounded-lg inline-block mb-4">
+                          <img
+                            src={qrCode}
+                            alt="QR Code 2FA"
+                            className="w-40 h-40"
+                          />
                         </div>
-                      </div>
+                      ) : (
+                        <div className="bg-white p-4 rounded-lg inline-block mb-4">
+                          <div className="w-40 h-40 bg-frame-gray-2 flex items-center justify-center animate-pulse">
+                            <QrCode className="w-16 h-16 text-frame-gray-3" />
+                          </div>
+                        </div>
+                      )}
 
                       {/* Secret manual */}
                       <div className="mb-4">

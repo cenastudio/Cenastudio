@@ -16,9 +16,6 @@ import * as lgpdService from "../services/lgpdService.js";
 import * as twoFactorService from "../services/twoFactorService.js";
 import * as apiKeyService from "../services/apiKeyService.js";
 import * as activityLogService from "../services/activityLogService.js";
-import * as twoFactorService from "../services/twoFactorService.js";
-import * as apiKeyService from "../services/apiKeyService.js";
-import * as activityLogService from "../services/activityLogService.js";
 
 function getClientOrigin() {
   return process.env.CLIENT_ORIGIN || "http://localhost:5173";

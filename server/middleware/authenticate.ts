@@ -13,6 +13,7 @@ export interface AuthUser {
   studioRole?: string;
   phone?: string;
   mustResetPassword?: boolean;
+  twoFactorEnabled?: boolean;
 }
 
 declare global {
