@@ -5,8 +5,9 @@
 🔒 **CÓDIGO PROPRIETÁRIO - TODOS OS DIREITOS RESERVADOS**
 
 [![Deploy Status](https://img.shields.io/badge/deploy-online-success)](https://cenastudio-production.up.railway.app)
-[![Feature Completion](https://img.shields.io/badge/features-76%25-yellow)](/.private/AUDITORIA_FEATURES_COMPLETA_2026-07-13.md)
+[![Feature Completion](https://img.shields.io/badge/features-77%25-yellow)](/.private/AUDITORIA_FEATURES_COMPLETA_2026-07-13.md)
 [![Shot List](https://img.shields.io/badge/shot%20list-100%25-success)](/.private/SHOTLIST_100_COMPLETO_2026-07-13.md)
+[![Video Reviews](https://img.shields.io/badge/video%20reviews-100%25-success)](/.private/BUGS_RESOLVIDOS_HISTORICO.md)
 
 ---
 
@@ -14,14 +15,14 @@
 
 Cena Studio é uma plataforma SaaS completa para gestão de produtoras de vídeo, desenvolvida do zero por nossa equipe.
 
-### Features Principais (76% Completo)
+### Features Principais (77% Completo)
 
 #### ✅ 100% Funcionais
 - 🎬 **Shot List Profissional** - PDF para set, tipos customizáveis, scene groups
 - 🕐 **Timesheet** - Timer em tempo real, taxa horária, export CSV
 - 🔒 **Session Management** - Rastreamento, geolocalização, encerrar sessões
 - 💰 **Budget Tracking** - Orçado vs realizado, alertas 80%/100%
-- 🎥 **Video Reviews** - Client Portal, aprovações, comentários em vídeo
+- 🎥 **Video Reviews** - Client Portal, aprovações, timestamps precisos (bug #4 resolvido)
 - ⚙️ **Webhooks** - CRUD, retry exponencial, HMAC signature
 - 📦 **Equipment Inventory** - CRUD, bookings, detecção de conflitos
 
