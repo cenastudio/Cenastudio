@@ -191,6 +191,104 @@ railway up
 
 O `railway.json` na raiz já define `startCommand: npm run start:prod`, healthcheck `/health` e restart on failure.
 
+### 4. Como o Deploy Funciona no Railway
+
+**Fluxo Completo:**
+
+1. **Build Phase** (definido em `nixpacks.toml`):
+   ```bash
+   # setup: instala Node.js 20
+   # install: npm ci --legacy-peer-deps
+   # build:
+   npx prisma generate        # Gera Prisma Client
+   npm run build:client       # Build Vite (frontend)
+   npm run build:server       # Build esbuild (backend)
+   # prune: npm prune --production  # Remove devDependencies
+   ```
+
+2. **Start Phase** (comando `start:prod` no package.json):
+   ```bash
+   prisma migrate resolve --rolled-back 20260713_shotlist_complete || true &&
+   prisma migrate deploy &&
+   npm run start
+   ```
+
+   **Explicação:**
+   - `prisma migrate resolve --rolled-back <name>`: Marca migrations failed como "rolled back" para permitir retry
+   - `|| true`: Ignora erro se a migration não existir ou já estiver resolvida
+   - `prisma migrate deploy`: Aplica todas as pending migrations
+   - `npm run start`: Inicia o servidor Express
+
+3. **Healthcheck**:
+   - Railway faz GET para `/health` a cada 10s
+   - Se falhar por 1m40s (6 tentativas), o deploy é marcado como failed
+   - Deploy anterior continua rodando até o novo passar no healthcheck
+
+**Importante:**
+- `prisma generate` **DEVE** rodar no build, antes de qualquer import do `@prisma/client`
+- Nunca importe `PrismaClient` em scripts que rodam antes do `prisma generate`
+- O `postinstall` do package.json roda `prisma generate` automaticamente após `npm install`
+
+### 5. Troubleshooting Migrations
+
+**Erro P3009 (Migration Failed):**
+
+```
+Error: P3009
+migrate found failed migrations in the target database, new migrations will not be applied.
+```
+
+**Causa:** Uma migration falhou anteriormente e ficou marcada como "failed" no banco.
+
+**Solução:** O comando `prisma migrate resolve --rolled-back <migration-name>` no `start:prod` resolve automaticamente.
+
+**Manualmente (se necessário):**
+
+```bash
+# Via Railway CLI
+railway run npx prisma migrate resolve --rolled-back 20260713_shotlist_complete
+railway run npx prisma migrate deploy
+```
+
+**Sintaxe PostgreSQL vs SQLite:**
+
+⚠️ **CRÍTICO**: PostgreSQL **NÃO** suporta `IF NOT EXISTS` em `ALTER TABLE ... ADD CONSTRAINT`.
+
+❌ **ERRADO** (funciona no SQLite, falha no PostgreSQL):
+```sql
+ALTER TABLE "shot_types" ADD CONSTRAINT IF NOT EXISTS "shot_types_user_id_fkey"
+    FOREIGN KEY ("user_id") REFERENCES "users"("id");
+```
+
+✅ **CORRETO** (funciona em ambos):
+```sql
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'shot_types_user_id_fkey'
+    ) THEN
+        ALTER TABLE "shot_types" ADD CONSTRAINT "shot_types_user_id_fkey"
+            FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
+    END IF;
+END $$;
+```
+
+### 6. Logs e Debugging
+
+```bash
+# Ver logs em tempo real
+railway logs
+
+# Ver últimos 100 logs
+railway logs | tail -100
+
+# Filtrar por erro
+railway logs | grep -i error
+
+# Ver status do deployment
+railway status
+```
+
 ---
 
 ## Self-hosted (VPS + PM2 + Nginx)
