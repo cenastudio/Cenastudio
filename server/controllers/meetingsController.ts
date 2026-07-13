@@ -160,23 +160,88 @@ export const createMeeting: RequestHandler = async (req, res, next) => {
         await sendEmail({
           to: client.email,
           replyTo: studioReplyTo,
-          subject: `Reunião agendada com ${studioName}: ${meeting.title}`,
+          subject: `${studioName} convida você: ${meeting.title}`,
           html: `
-            <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
-              <p style="color: ${brandColor}; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px;">${studioName}</p>
-              <p>Olá, ${firstName}!</p>
-              <p>Sua reunião <strong>${meeting.title}</strong> com <strong>${studioName}</strong> foi agendada:</p>
-              <table style="margin: 16px 0; border-collapse: collapse;">
-                <tr><td style="padding: 4px 12px 4px 0; color: #666;">Data</td><td style="padding: 4px 0;"><strong>${dateStr}</strong></td></tr>
-                <tr><td style="padding: 4px 12px 4px 0; color: #666;">Horário</td><td style="padding: 4px 0;"><strong>${timeStr}</strong></td></tr>
-                ${meeting.location ? `<tr><td style="padding: 4px 12px 4px 0; color: #666;">Local/Link</td><td style="padding: 4px 0;">${meeting.location}</td></tr>` : ""}
-              </table>
-              <p>Anexamos um arquivo de convite (.ics) para adicionar este evento à sua agenda (Google, Outlook, Apple Calendar).</p>
-              <p>Qualquer dúvida, responda este email${studioSignature ? ` — ${studioSignature}` : ""}.</p>
-              ${contactLine ? `<p style="color: #999; font-size: 12px; margin-top: 24px; border-top: 1px solid #eee; padding-top: 12px;">${studioName} · ${contactLine}</p>` : ""}
-            </div>
+            <!DOCTYPE html>
+            <html lang="pt-BR">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Convite de Reunião</title>
+            </head>
+            <body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;">
+              <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+                <!-- Header with brand -->
+                <div style="background: linear-gradient(135deg, ${brandColor} 0%, ${brandColor}dd 100%); padding: 32px; text-align: center; border-radius: 12px 12px 0 0;">
+                  <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">${studioName}</h1>
+                  <p style="color: #ffffff; opacity: 0.9; margin: 8px 0 0; font-size: 14px;">convida você para uma reunião</p>
+                </div>
+
+                <!-- Content card -->
+                <div style="background: #ffffff; padding: 32px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+                  <p style="color: #333; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">Olá, <strong>${firstName}</strong>!</p>
+
+                  <p style="color: #333; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
+                    Confirmamos o agendamento da reunião <strong style="color: ${brandColor};">${meeting.title}</strong>
+                  </p>
+
+                  <!-- Meeting details box -->
+                  <div style="background: #f9fafb; border-left: 4px solid ${brandColor}; padding: 20px; margin: 0 0 24px; border-radius: 4px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                      <tr>
+                        <td style="padding: 8px 0; color: #666; font-size: 14px; width: 100px;">📅 Data</td>
+                        <td style="padding: 8px 0; color: #111; font-size: 14px; font-weight: 600;">${dateStr}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #666; font-size: 14px;">⏰ Horário</td>
+                        <td style="padding: 8px 0; color: #111; font-size: 14px; font-weight: 600;">${timeStr}</td>
+                      </tr>
+                      ${meeting.location ? `
+                      <tr>
+                        <td style="padding: 8px 0; color: #666; font-size: 14px;">📍 Local</td>
+                        <td style="padding: 8px 0; color: #111; font-size: 14px;">${meeting.location.startsWith("http") ? `<a href="${meeting.location}" style="color: ${brandColor}; text-decoration: none;">Clique para acessar</a>` : meeting.location}</td>
+                      </tr>` : ""}
+                    </table>
+                  </div>
+
+                  ${meeting.notes ? `
+                  <div style="margin: 0 0 24px;">
+                    <p style="color: #666; font-size: 13px; font-weight: 600; margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.5px;">Observações</p>
+                    <p style="color: #333; font-size: 14px; line-height: 1.6; margin: 0;">${meeting.notes}</p>
+                  </div>
+                  ` : ""}
+
+                  <!-- Call to action -->
+                  <div style="background: #f0f9ff; border: 1px solid #bae6fd; padding: 16px; border-radius: 8px; margin: 0 0 24px;">
+                    <p style="color: #0369a1; font-size: 14px; line-height: 1.5; margin: 0;">
+                      📎 <strong>Adicione à sua agenda:</strong> Anexamos um convite em formato .ics compatível com Google Calendar, Outlook e Apple Calendar.
+                    </p>
+                  </div>
+
+                  <!-- Link to meeting page -->
+                  <div style="text-align: center; margin: 32px 0;">
+                    <a href="${meetingUrl}" style="display: inline-block; background: ${brandColor}; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600; box-shadow: 0 2px 8px ${brandColor}40;">
+                      Ver Detalhes da Reunião
+                    </a>
+                  </div>
+
+                  <p style="color: #666; font-size: 14px; line-height: 1.6; margin: 24px 0 0; text-align: center;">
+                    Dúvidas? Responda este e-mail ou entre em contato com <strong>${studioSignature}</strong>.
+                  </p>
+                </div>
+
+                <!-- Footer -->
+                ${contactLine ? `
+                <div style="text-align: center; padding: 24px 20px; color: #999; font-size: 12px;">
+                  <p style="margin: 0;">${studioName}</p>
+                  <p style="margin: 4px 0 0;">${contactLine}</p>
+                </div>
+                ` : ""}
+              </div>
+            </body>
+            </html>
           `,
-          text: `Reunião agendada com ${studioName}: ${meeting.title} em ${dateStr} às ${timeStr}.`,
+          text: `${studioName} convida você: ${meeting.title}\n\nData: ${dateStr}\nHorário: ${timeStr}${meeting.location ? `\nLocal: ${meeting.location}` : ""}\n\nAcesse os detalhes: ${meetingUrl}\n\nDúvidas? Responda este e-mail.`,
           attachments: [{ filename: "reuniao.ics", content: ics, contentType: "text/calendar" }],
         });
         emailSentAt = new Date();
