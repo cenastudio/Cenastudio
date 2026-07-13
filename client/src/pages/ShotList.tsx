@@ -1072,7 +1072,7 @@ function ShotListContent() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-3 mt-4">
+          <form onSubmit={handleSubmit} className="space-y-3 mt-4" autoComplete="off" data-lpignore="true" data-1p-ignore>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-frame-gray-light mb-1.5">
@@ -1083,7 +1083,10 @@ function ShotListContent() {
                   value={form.shotNumber}
                   onChange={(e) => setForm((f) => ({ ...f, shotNumber: e.target.value }))}
                   placeholder="Ex: 1A, 2B"
+                  name="shot-number-field"
                   autoComplete="off"
+                  data-1p-ignore
+                  data-lpignore="true"
                   className="frame-input w-full"
                 />
               </div>
@@ -1094,7 +1097,10 @@ function ShotListContent() {
                   value={form.scene}
                   onChange={(e) => setForm((f) => ({ ...f, scene: e.target.value }))}
                   placeholder={t("app.shotlist.scenePlaceholder")}
+                  name="scene-field"
                   autoComplete="off"
+                  data-1p-ignore
+                  data-lpignore="true"
                   className="frame-input w-full"
                 />
               </div>
@@ -1117,7 +1123,10 @@ function ShotListContent() {
                 onChange={(e) => setForm((f) => ({ ...f, shotType: e.target.value }))}
                 placeholder={t("app.shotlist.shotTypePlaceholder")}
                 list="shot-types"
+                name="shot-type-field"
                 autoComplete="off"
+                data-1p-ignore
+                data-lpignore="true"
                 className="frame-input w-full"
               />
               <datalist id="shot-types">
@@ -1135,7 +1144,10 @@ function ShotListContent() {
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 placeholder={t("app.shotlist.descriptionPlaceholder")}
                 required
+                name="description-field"
                 autoComplete="off"
+                data-1p-ignore
+                data-lpignore="true"
                 className="frame-input w-full"
               />
             </div>
@@ -1147,7 +1159,10 @@ function ShotListContent() {
                   type="text"
                   value={form.camera}
                   onChange={(e) => setForm((f) => ({ ...f, camera: e.target.value }))}
+                  name="camera-field"
                   autoComplete="off"
+                  data-1p-ignore
+                  data-lpignore="true"
                   className="frame-input w-full"
                 />
               </div>
@@ -1157,7 +1172,10 @@ function ShotListContent() {
                   type="text"
                   value={form.lens}
                   onChange={(e) => setForm((f) => ({ ...f, lens: e.target.value }))}
+                  name="lens-field"
                   autoComplete="off"
+                  data-1p-ignore
+                  data-lpignore="true"
                   className="frame-input w-full"
                 />
               </div>
@@ -1169,7 +1187,10 @@ function ShotListContent() {
                   onChange={(e) => setForm((f) => ({ ...f, movement: e.target.value }))}
                   placeholder="Ex: Dolly in, Pan..."
                   list="camera-movements"
+                  name="movement-field"
                   autoComplete="off"
+                  data-1p-ignore
+                  data-lpignore="true"
                   className="frame-input w-full"
                 />
                 <datalist id="camera-movements">
