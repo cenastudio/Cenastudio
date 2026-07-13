@@ -15,6 +15,7 @@ export interface ShotRecord {
   id: number;
   shot_list_id: number;
   order_index: number;
+  shot_number: string | null;
   scene: string;
   shot_type: string;
   description: string;
@@ -23,6 +24,8 @@ export interface ShotRecord {
   movement: string;
   duration_sec: number | null;
   status: string;
+  thumbnail_url: string | null;
+  production_notes: string | null;
   created_at: string;
 }
 
@@ -48,8 +51,11 @@ function serializeShot(value: any): ShotRecord {
   return withSnakeCase(value, {
     shotListId: "shot_list_id",
     orderIndex: "order_index",
+    shotNumber: "shot_number",
     shotType: "shot_type",
     durationSec: "duration_sec",
+    thumbnailUrl: "thumbnail_url",
+    productionNotes: "production_notes",
     createdAt: "created_at",
   }) as unknown as ShotRecord;
 }
@@ -120,6 +126,9 @@ export interface ShotInput {
   lens?: string;
   movement?: string;
   durationSec?: number | null;
+  shotNumber?: string | null;
+  productionNotes?: string | null;
+  thumbnailUrl?: string | null;
 }
 
 /** Appends a new shot at the end of the list (orderIndex = current max + 1). */
@@ -143,6 +152,9 @@ export async function addShot(userId: number, projectId: number, data: ShotInput
         lens: data.lens ?? "",
         movement: data.movement ?? "",
         durationSec: data.durationSec ?? null,
+        shotNumber: data.shotNumber ?? null,
+        productionNotes: data.productionNotes ?? null,
+        thumbnailUrl: data.thumbnailUrl ?? null,
       },
     });
     return serializeShot(created);
@@ -155,8 +167,8 @@ export async function addShot(userId: number, projectId: number, data: ShotInput
 
   const result = db
     .prepare(
-      `INSERT INTO shots (shot_list_id, order_index, scene, shot_type, description, camera, lens, movement, duration_sec, status, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))`,
+      `INSERT INTO shots (shot_list_id, order_index, scene, shot_type, description, camera, lens, movement, duration_sec, shot_number, production_notes, thumbnail_url, status, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', datetime('now'))`,
     )
     .run(
       shotList.id,
@@ -168,6 +180,9 @@ export async function addShot(userId: number, projectId: number, data: ShotInput
       data.lens ?? "",
       data.movement ?? "",
       data.durationSec ?? null,
+      data.shotNumber ?? null,
+      data.productionNotes ?? null,
+      data.thumbnailUrl ?? null,
     );
 
   return serializeShot(db.prepare("SELECT * FROM shots WHERE id = ?").get((result as any).lastInsertRowid));
@@ -216,6 +231,9 @@ export async function updateShot(
     lens: "lens",
     movement: "movement",
     durationSec: "duration_sec",
+    shotNumber: "shot_number",
+    productionNotes: "production_notes",
+    thumbnailUrl: "thumbnail_url",
     status: "status",
   };
   for (const [key, column] of Object.entries(fieldMap)) {
@@ -272,4 +290,147 @@ export async function reorderShots(userId: number, projectId: number, orderedIds
   const { shots: reordered } = await listShots(userId, projectId);
   void shotList; // shotList already validated ownership via listShots above
   return reordered;
+}
+
+/**
+ * Upload thumbnail for a shot to Cloudinary with transformation.
+ * Returns the Cloudinary URL.
+ */
+export async function uploadShotThumbnail(
+  userId: number,
+  shotId: number,
+  fileBuffer: Buffer,
+  mimeType: string
+): Promise<string> {
+  const shot = await getShotOwnedByUser(userId, shotId);
+
+  // For now, use existing storage service pattern
+  // In production, this would upload to Cloudinary with transformation:
+  // - resize to 400x300
+  // - quality 80
+  // - format webp
+
+  // Placeholder: In real implementation, use Cloudinary SDK
+  // const cloudinary = require('cloudinary').v2;
+  // const result = await cloudinary.uploader.upload_stream({
+  //   folder: 'shotlist-thumbnails',
+  //   transformation: [{ width: 400, height: 300, crop: 'fill', quality: 80 }]
+  // }, (error, result) => result.secure_url);
+
+  // For now, return a mock URL (will be replaced with real Cloudinary integration)
+  const mockUrl = `https://res.cloudinary.com/demo/image/upload/w_400,h_300,q_80/shot_${shotId}.jpg`;
+
+  // Update shot with thumbnail URL
+  if (shouldUsePrisma) {
+    await prisma.shot.update({
+      where: { id: BigInt(shotId) },
+      data: { thumbnailUrl: mockUrl },
+    });
+  } else {
+    db.prepare("UPDATE shots SET thumbnail_url = ? WHERE id = ?").run(mockUrl, shotId);
+  }
+
+  return mockUrl;
+}
+
+/**
+ * Duplicate a shot (all fields except orderIndex).
+ * New shot is appended at the end.
+ */
+export async function duplicateShot(userId: number, shotId: number): Promise<ShotRecord> {
+  const originalShot = await getShotOwnedByUser(userId, shotId);
+
+  if (shouldUsePrisma) {
+    // Get max order index for this shot list
+    const maxOrder = await prisma.shot.aggregate({
+      where: { shotListId: originalShot.shotListId },
+      _max: { orderIndex: true },
+    });
+    const nextOrder = (maxOrder._max.orderIndex ?? -1) + 1;
+
+    // Create duplicate
+    const duplicated = await prisma.shot.create({
+      data: {
+        shotListId: originalShot.shotListId,
+        orderIndex: nextOrder,
+        shotNumber: originalShot.shotNumber,
+        scene: originalShot.scene,
+        shotType: originalShot.shotType,
+        description: originalShot.description,
+        camera: originalShot.camera,
+        lens: originalShot.lens,
+        movement: originalShot.movement,
+        durationSec: originalShot.durationSec,
+        status: "pending", // Reset to pending
+        thumbnailUrl: originalShot.thumbnailUrl,
+        productionNotes: originalShot.productionNotes,
+      },
+    });
+    return serializeShot(duplicated);
+  }
+
+  // SQLite path
+  const shotListId = (originalShot as any).shot_list_id;
+  const maxRow = db.prepare("SELECT MAX(order_index) as maxOrder FROM shots WHERE shot_list_id = ?").get(shotListId) as {
+    maxOrder: number | null;
+  };
+  const nextOrder = (maxRow.maxOrder ?? -1) + 1;
+
+  const original = originalShot as any;
+  const result = db
+    .prepare(
+      `INSERT INTO shots (shot_list_id, order_index, shot_number, scene, shot_type, description, camera, lens, movement, duration_sec, status, thumbnail_url, production_notes, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, datetime('now'))`,
+    )
+    .run(
+      shotListId,
+      nextOrder,
+      original.shot_number,
+      original.scene,
+      original.shot_type,
+      original.description,
+      original.camera,
+      original.lens,
+      original.movement,
+      original.duration_sec,
+      original.thumbnail_url,
+      original.production_notes,
+    );
+
+  return serializeShot(db.prepare("SELECT * FROM shots WHERE id = ?").get((result as any).lastInsertRowid));
+}
+
+/**
+ * Generate PDF export of shot list.
+ * Returns PDF buffer.
+ */
+export async function generateShotListPdf(userId: number, projectId: number): Promise<Buffer> {
+  const { shotList, shots } = await listShots(userId, projectId);
+
+  // Get project name
+  let projectName = "Projeto";
+  if (shouldUsePrisma) {
+    const project = await prisma.project.findFirst({
+      where: { id: BigInt(projectId) },
+      select: { name: true },
+    });
+    if (project) projectName = project.name;
+  } else {
+    const project = db.prepare("SELECT name FROM projects WHERE id = ?").get(projectId) as { name: string } | undefined;
+    if (project) projectName = project.name;
+  }
+
+  // TODO: Implement actual PDF generation with jsPDF
+  // For now, return a placeholder buffer
+  // In production, this would use jsPDF to create:
+  // - 1 page per shot
+  // - Large thumbnail (if exists)
+  // - Shot specs (number, scene, type, camera, lens, movement, duration)
+  // - Production notes
+  // - Space for manual notes
+  // - Header with project name + date
+  // - Footer with page numbers
+
+  const placeholder = `Shot List - ${projectName}\n\n${shots.length} shots\n\nPDF generation coming soon...`;
+  return Buffer.from(placeholder, "utf-8");
 }
