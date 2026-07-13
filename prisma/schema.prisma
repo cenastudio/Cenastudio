@@ -48,6 +48,7 @@ model User {
   clients        Client[]
   projects       Project[]
   opportunities  Opportunity[]
+  shotTypes      ShotType[] // Custom shot types
   interactions   Interaction[]
   meetings       Meeting[]
   proposals      Proposal[]
@@ -809,23 +810,43 @@ model ShotList {
 }
 
 model Shot {
-  id          BigInt   @id @default(autoincrement())
-  shotListId  BigInt   @map("shot_list_id")
-  orderIndex  Int      @default(0) @map("order_index")
-  scene       String   @default("")
-  shotType    String   @default("") @map("shot_type")
-  description String   @default("")
-  camera      String   @default("")
-  lens        String   @default("")
-  movement    String   @default("")
-  durationSec Int?     @map("duration_sec")
-  status      String   @default("pending") // pending|shot
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  id              BigInt   @id @default(autoincrement())
+  shotListId      BigInt   @map("shot_list_id")
+  orderIndex      Int      @default(0) @map("order_index")
+  shotNumber      String?  @map("shot_number") // e.g. "1A", "2B"
+  scene           String   @default("")
+  shotType        String   @default("") @map("shot_type")
+  description     String   @default("")
+  camera          String   @default("")
+  lens            String   @default("")
+  movement        String   @default("")
+  durationSec     Int?     @map("duration_sec")
+  status          String   @default("pending") // pending|shot
+  thumbnailUrl    String?  @map("thumbnail_url") // Cloudinary URL
+  productionNotes String?  @map("production_notes") // Observações de lighting, arte, etc
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   shotList ShotList @relation(fields: [shotListId], references: [id], onDelete: Cascade)
 
   @@index([shotListId], map: "idx_shots_shot_list_id")
   @@map("shots")
+}
+
+// ===============================================
+// SHOT TYPES (custom types per user)
+// ===============================================
+
+model ShotType {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt   @map("user_id")
+  name      String
+  isDefault Boolean  @default(false) @map("is_default")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "idx_shot_types_user_id")
+  @@map("shot_types")
 }
 
 // ===============================================
