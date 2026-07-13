@@ -19,9 +19,17 @@ CREATE TABLE IF NOT EXISTS "shot_types" (
 -- CreateIndex
 CREATE INDEX IF NOT EXISTS "idx_shot_types_user_id" ON "shot_types"("user_id");
 
--- AddForeignKey
-ALTER TABLE "shot_types" ADD CONSTRAINT IF NOT EXISTS "shot_types_user_id_fkey"
-    FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- AddForeignKey (PostgreSQL doesn't support IF NOT EXISTS for ADD CONSTRAINT)
+-- Check if constraint exists before adding
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'shot_types_user_id_fkey'
+    ) THEN
+        ALTER TABLE "shot_types" ADD CONSTRAINT "shot_types_user_id_fkey"
+            FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
 
 -- Seed default shot types for existing users (PT and EN)
 INSERT INTO "shot_types" ("user_id", "name", "is_default")
