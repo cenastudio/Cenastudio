@@ -1083,6 +1083,7 @@ function ShotListContent() {
                   value={form.shotNumber}
                   onChange={(e) => setForm((f) => ({ ...f, shotNumber: e.target.value }))}
                   placeholder="Ex: 1A, 2B"
+                  autoComplete="off"
                   className="frame-input w-full"
                 />
               </div>
@@ -1093,6 +1094,7 @@ function ShotListContent() {
                   value={form.scene}
                   onChange={(e) => setForm((f) => ({ ...f, scene: e.target.value }))}
                   placeholder={t("app.shotlist.scenePlaceholder")}
+                  autoComplete="off"
                   className="frame-input w-full"
                 />
               </div>
@@ -1115,6 +1117,7 @@ function ShotListContent() {
                 onChange={(e) => setForm((f) => ({ ...f, shotType: e.target.value }))}
                 placeholder={t("app.shotlist.shotTypePlaceholder")}
                 list="shot-types"
+                autoComplete="off"
                 className="frame-input w-full"
               />
               <datalist id="shot-types">
@@ -1132,6 +1135,7 @@ function ShotListContent() {
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 placeholder={t("app.shotlist.descriptionPlaceholder")}
                 required
+                autoComplete="off"
                 className="frame-input w-full"
               />
             </div>
@@ -1143,6 +1147,7 @@ function ShotListContent() {
                   type="text"
                   value={form.camera}
                   onChange={(e) => setForm((f) => ({ ...f, camera: e.target.value }))}
+                  autoComplete="off"
                   className="frame-input w-full"
                 />
               </div>
@@ -1152,6 +1157,7 @@ function ShotListContent() {
                   type="text"
                   value={form.lens}
                   onChange={(e) => setForm((f) => ({ ...f, lens: e.target.value }))}
+                  autoComplete="off"
                   className="frame-input w-full"
                 />
               </div>
@@ -1163,6 +1169,7 @@ function ShotListContent() {
                   onChange={(e) => setForm((f) => ({ ...f, movement: e.target.value }))}
                   placeholder="Ex: Dolly in, Pan..."
                   list="camera-movements"
+                  autoComplete="off"
                   className="frame-input w-full"
                 />
                 <datalist id="camera-movements">
