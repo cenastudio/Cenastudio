@@ -10,6 +10,7 @@ import ConfirmDialog from "@/components/ConfirmDialog";
 import WelcomeModal from "@/components/onboarding/WelcomeModal";
 import ProductTour from "@/components/onboarding/ProductTour";
 import MyTasksPanel from "@/components/MyTasksPanel";
+import { PROJECT_TEMPLATES, type ProjectTemplate } from "@/lib/studioContext";
 import {
   Plus,
   ChevronRight,
@@ -105,6 +106,7 @@ function DashboardContent() {
   const [isTourOpen, setIsTourOpen] = useState(false);
 
   // Form states for Create Project
+  const [selectedTemplate, setSelectedTemplate] = useState<ProjectTemplate | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [clientId, setClientId] = useState("");
@@ -117,6 +119,7 @@ function DashboardContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const resetCreateForm = () => {
+    setSelectedTemplate(null);
     setName("");
     setDescription("");
     setClientId("");
@@ -623,6 +626,43 @@ function DashboardContent() {
           </DialogHeader>
 
           <form onSubmit={handleCreateSubmit} className="space-y-4 mt-2">
+            {/* Template Selection */}
+            <div className="space-y-2 pb-4 border-b border-frame-gray-3/50">
+              <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
+                {locale === "en" ? "Start from template (optional)" : "Começar de template (opcional)"}
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {PROJECT_TEMPLATES.map((template) => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    onClick={() => setSelectedTemplate(template.id === selectedTemplate?.id ? null : template)}
+                    className={`p-3 border text-left transition-all group ${
+                      selectedTemplate?.id === template.id
+                        ? "border-frame-orange bg-frame-orange/10"
+                        : "border-frame-gray-3 hover:border-frame-orange/50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xl">{template.icon}</span>
+                      <span className="text-sm font-semibold text-frame-white">{template.label}</span>
+                    </div>
+                    <p className="text-[0.65rem] text-frame-gray-light line-clamp-2">
+                      {template.description}
+                    </p>
+                  </button>
+                ))}
+              </div>
+              {selectedTemplate && (
+                <p className="text-[0.65rem] text-frame-orange flex items-center gap-1.5 mt-2">
+                  <Sparkles className="w-3 h-3" />
+                  {locale === "en"
+                    ? `${selectedTemplate.label} template selected — project fields will be pre-filled`
+                    : `Template ${selectedTemplate.label} selecionado — campos do projeto serão pré-preenchidos`}
+                </p>
+              )}
+            </div>
+
             <div className="space-y-1.5">
               <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] text-frame-orange uppercase">
                 {t("app.studio.projectSelector.projectName") as string}
