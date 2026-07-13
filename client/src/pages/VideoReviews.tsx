@@ -418,7 +418,7 @@ function VideoReviewsContent({ embedded }: { embedded?: boolean }) {
   };
 
   const captureCommentTime = () => {
-    setCommentAnchor(Math.floor(newCommentTimestamp ?? 0));
+    setCommentAnchor(newCommentTimestamp ?? 0);
     setPauseRequest((request) => request + 1);
   };
 
@@ -759,7 +759,7 @@ function VideoReviewsContent({ embedded }: { embedded?: boolean }) {
                   <div className="w-full max-w-5xl">
                     <VideoPlayer
                       url={resolveVideoUrl(selectedReview)}
-                      onProgress={(seconds) => setNewCommentTimestamp(Math.floor(seconds))}
+                      onProgress={(seconds) => setNewCommentTimestamp(seconds)}
                       seekTo={seekTo}
                       commentMarkers={commentMarkers}
                       onAddAnnotatedComment={handleAddAnnotatedComment}

@@ -234,7 +234,7 @@ export default function VideoPlayer({
 
   const handleSubmitAnnotation = () => {
     if (!commentText.trim()) return;
-    const timestamp = Math.floor(currentTime);
+    const timestamp = currentTime;
     onAddAnnotatedComment?.(annotations, timestamp, commentText.trim());
     setAnnotations([]);
     setCommentText("");
