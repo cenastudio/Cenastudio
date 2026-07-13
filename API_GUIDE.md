@@ -59,7 +59,7 @@ Todas as respostas seguem este padrão:
 
 ### Versão da API
 
-Versão atual: `v1`  
+Versão atual: `v1`
 URL inclui versão: `/api/v1/...` (planejado para futuro)
 
 ---
@@ -201,6 +201,573 @@ Cookie: frame_token=jwt_token_here
 ```http
 POST /api/auth/logout
 ```
+
+---
+
+### 🆕 Autenticação Avançada (v2.1.0)
+
+#### LGPD/GDPR Compliance
+
+##### Dashboard de Transparência de Dados
+```http
+GET /api/auth/data-stats
+Cookie: frame_token=jwt_token_here
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "projects": { "count": 45, "size": 12.3 },
+    "files": { "count": 234, "size": 456 },
+    "clients": { "count": 18, "size": 2.1 },
+    "reviews": { "count": 89, "size": 34.5 },
+    "totalSize": 502.9
+  }
+}
+```
+
+##### Obter Configurações de Privacidade
+```http
+GET /api/auth/privacy-settings
+Cookie: frame_token=jwt_token_here
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "profileVisibility": "team",
+    "allowSearchEngineIndexing": true,
+    "shareAnalyticsWithTeam": true
+  }
+}
+```
+
+##### Atualizar Configurações de Privacidade
+```http
+PUT /api/auth/privacy-settings
+Content-Type: application/json
+Cookie: frame_token=jwt_token_here
+
+{
+  "profileVisibility": "private",
+  "allowSearchEngineIndexing": false,
+  "shareAnalyticsWithTeam": false
+}
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Configurações de privacidade atualizadas"
+  }
+}
+```
+
+##### Criar Solicitação LGPD
+```http
+POST /api/auth/lgpd-request
+Content-Type: application/json
+Cookie: frame_token=jwt_token_here
+
+{
+  "type": "copy"  // ou "correct" ou "delete"
+}
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "requestId": "req_abc123",
+    "status": "pending",
+    "estimatedDays": 30
+  }
+}
+```
+
+**Tipos de solicitação:**
+- `copy` - Cópia de dados (Art. 18, II LGPD) - 30 dias
+- `correct` - Correção de dados (Art. 18, III LGPD) - 5 dias
+- `delete` - Exclusão de dados (Art. 18, IV LGPD) - 7 dias
+
+##### Listar Solicitações LGPD
+```http
+GET /api/auth/lgpd-requests
+Cookie: frame_token=jwt_token_here
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "requests": [
+      {
+        "id": "req_abc123",
+        "type": "copy",
+        "status": "pending",
+        "createdAt": "2026-07-12T10:00:00Z",
+        "processedAt": null,
+        "notes": null
+      }
+    ]
+  }
+}
+```
+
+---
+
+#### Segurança Enterprise
+
+##### Setup 2FA (Two-Factor Authentication)
+```http
+POST /api/auth/2fa/setup
+Cookie: frame_token=jwt_token_here
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "qrCode": "data:image/png;base64,iVBORw0KGg...",
+    "secret": "JBSWY3DPEHPK3PXP",
+    "backupCodes": [
+      "ABCD-1234",
+      "EFGH-5678",
+      "IJKL-9012",
+      "MNOP-3456",
+      "QRST-7890"
+    ]
+  }
+}
+```
+
+**Uso:**
+1. Escanear QR Code com Google Authenticator/Authy
+2. Salvar backup codes em local seguro
+3. Chamar `/api/auth/2fa/verify` com código gerado
+
+##### Verificar e Ativar 2FA
+```http
+POST /api/auth/2fa/verify
+Content-Type: application/json
+Cookie: frame_token=jwt_token_here
+
+{
+  "code": "123456"  // 6 dígitos do app
+}
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "2FA ativado com sucesso"
+  }
+}
+```
+
+##### Desativar 2FA
+```http
+POST /api/auth/2fa/disable
+Cookie: frame_token=jwt_token_here
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "2FA desativado"
+  }
+}
+```
+
+##### Criar API Key
+```http
+POST /api/auth/api-keys
+Content-Type: application/json
+Cookie: frame_token=jwt_token_here
+
+{
+  "name": "Integração Produção"
+}
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "key_abc123",
+    "name": "Integração Produção",
+    "key": "cena_1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+    "keyPrefix": "cena_1234567890abcd",
+    "createdAt": "2026-07-12T10:00:00Z"
+  }
+}
+```
+
+**⚠️ IMPORTANTE:** A chave completa (`key`) só é exibida uma vez. Salve em local seguro!
+
+##### Listar API Keys
+```http
+GET /api/auth/api-keys
+Cookie: frame_token=jwt_token_here
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "keys": [
+      {
+        "id": "key_abc123",
+        "name": "Integração Produção",
+        "keyPrefix": "cena_1234567890abcd...••••••",
+        "createdAt": "2026-07-12T10:00:00Z",
+        "lastUsed": "2026-07-12T15:30:00Z"
+      }
+    ]
+  }
+}
+```
+
+##### Revogar API Key
+```http
+DELETE /api/auth/api-keys/:id
+Cookie: frame_token=jwt_token_here
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "API Key revogada"
+  }
+}
+```
+
+##### Listar Activity Log
+```http
+GET /api/auth/activity?limit=50&days=30
+Cookie: frame_token=jwt_token_here
+```
+
+**Query Parameters:**
+- `limit` - Máximo 100 itens (default: 50)
+- `days` - Máximo 90 dias (default: 30)
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "activities": [
+      {
+        "id": 123,
+        "action": "Login realizado",
+        "ipAddress": "192.168.1.1",
+        "location": "São Paulo, BR",
+        "timestamp": "2026-07-12T10:00:00Z",
+        "suspicious": false
+      },
+      {
+        "id": 124,
+        "action": "Senha alterada",
+        "ipAddress": "203.0.113.42",
+        "location": "Nova York, US",
+        "timestamp": "2026-07-12T09:30:00Z",
+        "suspicious": true
+      }
+    ]
+  }
+}
+```
+
+**Ações monitoradas:**
+- Login realizado
+- Senha alterada
+- 2FA ativado/desativado
+- API Key criada/revogada
+- Projeto criado
+- Configurações alteradas
+
+**Flag `suspicious`:**
+- Novo IP detectado
+- Novo dispositivo (User-Agent diferente)
+- Mudança de senha sem 2FA
+
+##### Obter Security Alerts
+```http
+GET /api/auth/security-alerts
+Cookie: frame_token=jwt_token_here
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "emailOnNewLogin": true,
+    "emailOnPasswordChange": true,
+    "emailOnNewDevice": true
+  }
+}
+```
+
+##### Atualizar Security Alerts
+```http
+PUT /api/auth/security-alerts
+Content-Type: application/json
+Cookie: frame_token=jwt_token_here
+
+{
+  "emailOnNewLogin": true,
+  "emailOnPasswordChange": true,
+  "emailOnNewDevice": false
+}
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Alertas de segurança atualizados"
+  }
+}
+```
+
+---
+
+#### Preferências Avançadas
+
+##### Notificações Granulares
+
+###### Obter Preferências de Notificação
+```http
+GET /api/auth/notification-preferences
+Cookie: frame_token=jwt_token_here
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "newComments": true,
+    "clientUploads": true,
+    "projectDeadlines": true,
+    "weeklyNewsletter": false,
+    "mentions": true,
+    "newProjects": false,
+    "reviewApproved": true,
+    "paymentSuccess": true
+  }
+}
+```
+
+###### Atualizar Preferências de Notificação
+```http
+PUT /api/auth/notification-preferences
+Content-Type: application/json
+Cookie: frame_token=jwt_token_here
+
+{
+  "newComments": true,
+  "clientUploads": false,
+  "projectDeadlines": true,
+  "weeklyNewsletter": false,
+  "mentions": true,
+  "newProjects": false,
+  "reviewApproved": true,
+  "paymentSuccess": true
+}
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Preferências de notificação atualizadas"
+  }
+}
+```
+
+**Tipos de notificação:**
+- `newComments` - Novos comentários em reviews
+- `clientUploads` - Cliente enviou arquivos
+- `projectDeadlines` - Projeto próximo do prazo
+- `weeklyNewsletter` - Newsletter semanal
+- `mentions` - Menções (@você)
+- `newProjects` - Novos projetos criados
+- `reviewApproved` - Review aprovada
+- `paymentSuccess` - Pagamento confirmado
+
+##### Preferências Regionais
+
+###### Obter Preferências Regionais
+```http
+GET /api/auth/regional-preferences
+Cookie: frame_token=jwt_token_here
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "locale": "pt",
+    "timezone": "America/Sao_Paulo",
+    "dateFormat": "DD/MM/YYYY",
+    "currency": "BRL"
+  }
+}
+```
+
+###### Atualizar Preferências Regionais
+```http
+PUT /api/auth/regional-preferences
+Content-Type: application/json
+Cookie: frame_token=jwt_token_here
+
+{
+  "locale": "en",
+  "timezone": "America/New_York",
+  "dateFormat": "MM/DD/YYYY",
+  "currency": "USD"
+}
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Preferências regionais atualizadas"
+  }
+}
+```
+
+**Valores aceitos:**
+- `locale`: "pt" ou "en"
+- `timezone`: String válida de timezone (ex: "America/Sao_Paulo")
+- `dateFormat`: "DD/MM/YYYY" ou "MM/DD/YYYY"
+- `currency`: "BRL", "USD" ou "EUR"
+
+##### Preferências Visuais
+
+###### Obter Preferências Visuais
+```http
+GET /api/auth/visual-preferences
+Cookie: frame_token=jwt_token_here
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "themeMode": "dark",
+    "density": "normal",
+    "fontFamily": "inter",
+    "reduceAnimations": false
+  }
+}
+```
+
+###### Atualizar Preferências Visuais
+```http
+PUT /api/auth/visual-preferences
+Content-Type: application/json
+Cookie: frame_token=jwt_token_here
+
+{
+  "themeMode": "light",
+  "density": "compact",
+  "fontFamily": "mono",
+  "reduceAnimations": true
+}
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Preferências visuais atualizadas"
+  }
+}
+```
+
+**Valores aceitos:**
+- `themeMode`: "dark", "light" ou "auto"
+- `density`: "compact", "normal" ou "spacious"
+- `fontFamily`: "inter", "system" ou "mono"
+- `reduceAnimations`: boolean
+
+##### Preferências de Comportamento
+
+###### Obter Preferências de Comportamento
+```http
+GET /api/auth/behavior-preferences
+Cookie: frame_token=jwt_token_here
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "defaultProjectSort": "recent",
+    "defaultView": "grid",
+    "autoplayVideos": true
+  }
+}
+```
+
+###### Atualizar Preferências de Comportamento
+```http
+PUT /api/auth/behavior-preferences
+Content-Type: application/json
+Cookie: frame_token=jwt_token_here
+
+{
+  "defaultProjectSort": "deadline",
+  "defaultView": "list",
+  "autoplayVideos": false
+}
+```
+
+**Resposta:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Comportamentos padrão atualizados"
+  }
+}
+```
+
+**Valores aceitos:**
+- `defaultProjectSort`: "recent", "alphabetical" ou "deadline"
+- `defaultView`: "grid" ou "list"
+- `autoplayVideos`: boolean
+
+---
 
 ### Ferramentas IA
 
@@ -574,6 +1141,142 @@ project_data = project_response.json()
 {
   "success": false,
   "error": "Serviço de IA indisponível. Tente novamente mais tarde."
+}
+```
+
+### 🆕 Erros Específicos v2.1.0
+
+#### LGPD/GDPR
+
+**400 - Tipo de solicitação inválido:**
+```json
+{
+  "success": false,
+  "error": "type deve ser 'copy', 'correct' ou 'delete'"
+}
+```
+
+**400 - Privacy visibility inválida:**
+```json
+{
+  "success": false,
+  "error": "profileVisibility deve ser 'public', 'team' ou 'private'"
+}
+```
+
+#### Segurança
+
+**400 - Código 2FA inválido:**
+```json
+{
+  "success": false,
+  "error": "Código deve ter 6 dígitos"
+}
+```
+
+**400 - Código 2FA incorreto:**
+```json
+{
+  "success": false,
+  "error": "Código inválido"
+}
+```
+
+**400 - Nome de API Key obrigatório:**
+```json
+{
+  "success": false,
+  "error": "Nome da chave é obrigatório"
+}
+```
+
+**400 - Nome de API Key muito longo:**
+```json
+{
+  "success": false,
+  "error": "Nome muito longo (máximo 100 caracteres)"
+}
+```
+
+**400 - Limite de activities excedido:**
+```json
+{
+  "success": false,
+  "error": "Limite máximo: 100 itens"
+}
+```
+
+**400 - Período de activities excedido:**
+```json
+{
+  "success": false,
+  "error": "Período máximo: 90 dias"
+}
+```
+
+#### Preferências
+
+**400 - Locale inválido:**
+```json
+{
+  "success": false,
+  "error": "locale deve ser 'pt' ou 'en'"
+}
+```
+
+**400 - Date format inválido:**
+```json
+{
+  "success": false,
+  "error": "dateFormat deve ser 'DD/MM/YYYY' ou 'MM/DD/YYYY'"
+}
+```
+
+**400 - Currency inválida:**
+```json
+{
+  "success": false,
+  "error": "currency deve ser 'BRL', 'USD' ou 'EUR'"
+}
+```
+
+**400 - Theme mode inválido:**
+```json
+{
+  "success": false,
+  "error": "themeMode deve ser 'dark', 'light' ou 'auto'"
+}
+```
+
+**400 - Density inválida:**
+```json
+{
+  "success": false,
+  "error": "density deve ser 'compact', 'normal' ou 'spacious'"
+}
+```
+
+**400 - Font family inválida:**
+```json
+{
+  "success": false,
+  "error": "fontFamily deve ser 'inter', 'system' ou 'mono'"
+}
+```
+
+**400 - Project sort inválido:**
+```json
+{
+  "success": false,
+  "error": "defaultProjectSort deve ser 'recent', 'alphabetical' ou 'deadline'"
+}
+```
+
+**400 - Default view inválida:**
+```json
+{
+  "success": false,
+  "error": "defaultView deve ser 'grid' ou 'list'"
 }
 ```
 
