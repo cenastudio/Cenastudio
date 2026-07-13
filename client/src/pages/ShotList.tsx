@@ -17,6 +17,10 @@ import {
   CheckCircle2,
   Circle,
   Printer,
+  Copy,
+  FileText,
+  Upload,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -78,9 +82,25 @@ interface ShotFormState {
   lens: string;
   movement: string;
   durationMinutes: string;
+  shotNumber: string;
+  productionNotes: string;
+  thumbnailPreview: string;
+  thumbnailFile: File | null;
 }
 
-const emptyForm: ShotFormState = { scene: "", shotType: "", description: "", camera: "", lens: "", movement: "", durationMinutes: "" };
+const emptyForm: ShotFormState = {
+  scene: "",
+  shotType: "",
+  description: "",
+  camera: "",
+  lens: "",
+  movement: "",
+  durationMinutes: "",
+  shotNumber: "",
+  productionNotes: "",
+  thumbnailPreview: "",
+  thumbnailFile: null,
+};
 
 /**
  * Pure visual row — no dnd-kit hooks. Reused by both the sortable row (in
@@ -93,6 +113,7 @@ function ShotRowContent({
   onToggleStatus,
   onEdit,
   onDelete,
+  onDuplicate,
   t,
   dragHandleProps,
   isOverlay = false,
@@ -101,16 +122,24 @@ function ShotRowContent({
   onToggleStatus?: (shot: ShotItem) => void;
   onEdit?: (shot: ShotItem) => void;
   onDelete?: (shot: ShotItem) => void;
+  onDuplicate?: (shot: ShotItem) => void;
   t: (key: string) => string;
   dragHandleProps?: { attributes: React.HTMLAttributes<HTMLButtonElement>; listeners: Record<string, unknown> | undefined };
   isOverlay?: boolean;
 }) {
   return (
     <div
-      className={`flex items-center gap-3 border p-3 transition bg-frame-black ${
+      className={`flex items-center gap-3 border p-3 transition bg-frame-black relative ${
         shot.status === "shot" ? "border-green-500/30 bg-green-500/5" : "border-frame-gray-3/60 bg-frame-gray-1/10"
       } ${isOverlay ? "shadow-[0_8px_24px_rgba(0,0,0,0.5)] border-frame-orange/50" : ""}`}
     >
+      {/* Shot Number Badge */}
+      {shot.shot_number && (
+        <div className="absolute top-2 right-2 bg-frame-orange text-frame-black px-2 py-0.5 rounded text-[0.65rem] font-bold font-frame-mono">
+          {shot.shot_number}
+        </div>
+      )}
+
       {dragHandleProps && (
         <button
           type="button"
@@ -137,6 +166,17 @@ function ShotRowContent({
         )}
       </button>
 
+      {/* Thumbnail */}
+      {shot.thumbnail_url && (
+        <div className="shrink-0 w-16 h-12 border border-frame-gray-3/50 overflow-hidden bg-frame-gray-1">
+          <img
+            src={shot.thumbnail_url}
+            alt={shot.description}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-frame-mono text-frame-orange">{shot.scene || "—"}</span>
@@ -152,6 +192,11 @@ function ShotRowContent({
         <p className="text-[0.65rem] text-frame-gray-light truncate">
           {[shot.camera, shot.lens, shot.movement].filter(Boolean).join(" · ") || t("app.shotlist.noTechDetails")}
         </p>
+        {shot.production_notes && (
+          <p className="text-[0.6rem] text-frame-gray-light/70 italic mt-0.5 line-clamp-1">
+            {shot.production_notes}
+          </p>
+        )}
       </div>
 
       {!isOverlay && (
@@ -163,6 +208,14 @@ function ShotRowContent({
             title={t("app.shotlist.edit")}
           >
             <Edit className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onDuplicate?.(shot)}
+            className="p-2 border border-frame-gray-3/50 hover:border-frame-orange hover:text-frame-orange transition"
+            title="Duplicar plano"
+          >
+            <Copy className="w-3.5 h-3.5" />
           </button>
           <button
             type="button"
@@ -183,12 +236,14 @@ function SortableShotRow({
   onToggleStatus,
   onEdit,
   onDelete,
+  onDuplicate,
   t,
 }: {
   shot: ShotItem;
   onToggleStatus: (shot: ShotItem) => void;
   onEdit: (shot: ShotItem) => void;
   onDelete: (shot: ShotItem) => void;
+  onDuplicate: (shot: ShotItem) => void;
   t: (key: string) => string;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: shot.id });
@@ -205,6 +260,7 @@ function SortableShotRow({
         onToggleStatus={onToggleStatus}
         onEdit={onEdit}
         onDelete={onDelete}
+        onDuplicate={onDuplicate}
         t={t}
         dragHandleProps={{ attributes, listeners }}
       />
@@ -223,12 +279,14 @@ function SceneGroup({
   onToggleStatus,
   onEdit,
   onDelete,
+  onDuplicate,
   t,
 }: {
   group: ShotGroup;
   onToggleStatus: (shot: ShotItem) => void;
   onEdit: (shot: ShotItem) => void;
   onDelete: (shot: ShotItem) => void;
+  onDuplicate: (shot: ShotItem) => void;
   t: (key: string) => string;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `scene:${group.scene}` });
@@ -262,6 +320,7 @@ function SceneGroup({
                 onToggleStatus={onToggleStatus}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onDuplicate={onDuplicate}
                 t={t}
               />
             ))
@@ -418,6 +477,10 @@ function ShotListContent() {
       lens: shot.lens,
       movement: shot.movement,
       durationMinutes: shot.duration_sec != null ? String(Math.round(shot.duration_sec / 60)) : "",
+      shotNumber: shot.shot_number || "",
+      productionNotes: shot.production_notes || "",
+      thumbnailPreview: shot.thumbnail_url || "",
+      thumbnailFile: null,
     });
     setFormOpen(true);
   };
@@ -432,6 +495,21 @@ function ShotListContent() {
 
     setSaving(true);
     try {
+      let thumbnailUrl = form.thumbnailPreview || null;
+
+      // Upload thumbnail if new file was selected
+      if (form.thumbnailFile && editingId) {
+        const reader = new FileReader();
+        const fileData = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve((reader.result as string).split(',')[1]); // Get base64 without prefix
+          reader.onerror = reject;
+          reader.readAsDataURL(form.thumbnailFile!);
+        });
+
+        const result = await api.shotlists.uploadThumbnail(editingId, fileData, form.thumbnailFile.name);
+        thumbnailUrl = result.thumbnailUrl;
+      }
+
       const payload = {
         scene: form.scene.trim(),
         shotType: form.shotType.trim(),
@@ -440,7 +518,11 @@ function ShotListContent() {
         lens: form.lens.trim(),
         movement: form.movement.trim(),
         durationSec,
+        shotNumber: form.shotNumber.trim() || null,
+        productionNotes: form.productionNotes.trim() || null,
+        thumbnailUrl: thumbnailUrl,
       };
+
       if (editingId) {
         const updated = await api.shotlists.updateShot(editingId, payload);
         setShots((prev) => prev.map((s) => (s.id === editingId ? updated : s)));
@@ -481,6 +563,77 @@ function ShotListContent() {
     } finally {
       setDeleting(false);
     }
+  };
+
+  const handleDuplicate = async (shot: ShotItem) => {
+    try {
+      const duplicated = await api.shotlists.duplicateShot(shot.id);
+      setShots((prev) => [...prev, duplicated]);
+      toast.success("Plano duplicado com sucesso");
+    } catch (err) {
+      toast.error("Erro ao duplicar plano");
+    }
+  };
+
+  const handleExportPdf = async () => {
+    try {
+      toast.loading("Gerando PDF...", { id: "pdf" });
+      const response = await api.shotlists.exportPdf(projectId);
+
+      if (!response.ok) {
+        throw new Error("Falha ao gerar PDF");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `shotlist-projeto-${projectId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("PDF gerado com sucesso", { id: "pdf" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao gerar PDF", { id: "pdf" });
+    }
+  };
+
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Arquivo deve ser uma imagem");
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Imagem não pode exceder 10MB");
+      return;
+    }
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = () => {
+      setForm((f) => ({
+        ...f,
+        thumbnailPreview: reader.result as string,
+        thumbnailFile: file,
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeThumbnail = () => {
+    setForm((f) => ({
+      ...f,
+      thumbnailPreview: "",
+      thumbnailFile: null,
+    }));
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -554,14 +707,24 @@ function ShotListContent() {
           </div>
           <div className="flex items-center gap-2 shrink-0 self-start">
             {shots.length > 0 && (
-              <button
-                type="button"
-                onClick={() => printShotList(shots, projectId, t)}
-                className="frame-btn-ghost inline-flex items-center gap-2"
-              >
-                <Printer className="w-4 h-4" />
-                {t("app.shotlist.export")}
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => printShotList(shots, projectId, t)}
+                  className="frame-btn-ghost inline-flex items-center gap-2"
+                >
+                  <Printer className="w-4 h-4" />
+                  {t("app.shotlist.export")}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExportPdf}
+                  className="frame-btn-ghost inline-flex items-center gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  Exportar PDF
+                </button>
+              </>
             )}
             <button
               type="button"
@@ -653,6 +816,7 @@ function ShotListContent() {
                     onToggleStatus={handleToggleStatus}
                     onEdit={openEditDialog}
                     onDelete={setDeleteTarget}
+                    onDuplicate={handleDuplicate}
                     t={t}
                   />
                 ))}
@@ -680,6 +844,18 @@ function ShotListContent() {
           <form onSubmit={handleSubmit} className="space-y-3 mt-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
+                <label className="block text-xs font-medium text-frame-gray-light mb-1.5">
+                  Número do Shot
+                </label>
+                <input
+                  type="text"
+                  value={form.shotNumber}
+                  onChange={(e) => setForm((f) => ({ ...f, shotNumber: e.target.value }))}
+                  placeholder="Ex: 1A, 2B"
+                  className="frame-input w-full"
+                />
+              </div>
+              <div>
                 <label className="block text-xs font-medium text-frame-gray-light mb-1.5">{t("app.shotlist.scene")}</label>
                 <input
                   type="text"
@@ -689,23 +865,25 @@ function ShotListContent() {
                   className="frame-input w-full"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-medium text-frame-gray-light mb-1.5">{t("app.shotlist.shotType")}</label>
-                <input
-                  type="text"
-                  value={form.shotType}
-                  onChange={(e) => setForm((f) => ({ ...f, shotType: e.target.value }))}
-                  placeholder={t("app.shotlist.shotTypePlaceholder")}
-                  list="shot-types"
-                  className="frame-input w-full"
-                />
-                <datalist id="shot-types">
-                  {SHOT_TYPES.map((type) => (
-                    <option key={type} value={type} />
-                  ))}
-                </datalist>
-              </div>
             </div>
+
+            <div>
+              <label className="block text-xs font-medium text-frame-gray-light mb-1.5">{t("app.shotlist.shotType")}</label>
+              <input
+                type="text"
+                value={form.shotType}
+                onChange={(e) => setForm((f) => ({ ...f, shotType: e.target.value }))}
+                placeholder={t("app.shotlist.shotTypePlaceholder")}
+                list="shot-types"
+                className="frame-input w-full"
+              />
+              <datalist id="shot-types">
+                {SHOT_TYPES.map((type) => (
+                  <option key={type} value={type} />
+                ))}
+              </datalist>
+            </div>
+
             <div>
               <label className="block text-xs font-medium text-frame-gray-light mb-1.5">{t("app.shotlist.descriptionLabel")}</label>
               <input
@@ -717,6 +895,7 @@ function ShotListContent() {
                 className="frame-input w-full"
               />
             </div>
+
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className="block text-xs font-medium text-frame-gray-light mb-1.5">{t("app.shotlist.camera")}</label>
@@ -758,6 +937,57 @@ function ShotListContent() {
                 placeholder={t("app.shotlist.durationPlaceholder")}
                 className="frame-input w-full"
               />
+            </div>
+
+            {/* Thumbnail Upload */}
+            <div>
+              <label className="block text-xs font-medium text-frame-gray-light mb-1.5">
+                Thumbnail (opcional)
+              </label>
+              {form.thumbnailPreview ? (
+                <div className="relative inline-block">
+                  <img
+                    src={form.thumbnailPreview}
+                    alt="Preview"
+                    className="w-32 h-24 object-cover border border-frame-gray-3"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeThumbnail}
+                    className="absolute -top-2 -right-2 p-1 bg-red-600 hover:bg-red-700 rounded-full"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex items-center justify-center gap-2 border border-dashed border-frame-gray-3/50 hover:border-frame-orange/50 bg-frame-gray-1/10 p-4 cursor-pointer transition">
+                  <Upload className="w-4 h-4 text-frame-gray-light" />
+                  <span className="text-xs text-frame-gray-light">Clique para selecionar imagem</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleThumbnailChange}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+
+            {/* Production Notes */}
+            <div>
+              <label className="block text-xs font-medium text-frame-gray-light mb-1.5">
+                Notas de Produção
+              </label>
+              <textarea
+                value={form.productionNotes}
+                onChange={(e) => setForm((f) => ({ ...f, productionNotes: e.target.value }))}
+                placeholder="Observações de lighting, arte, etc..."
+                className="frame-input min-h-[100px] w-full"
+                maxLength={500}
+              />
+              <p className="text-[0.6rem] text-frame-gray-light mt-1">
+                {form.productionNotes.length}/500 caracteres
+              </p>
             </div>
 
             <DialogFooter className="gap-2 pt-4 border-t border-frame-gray-3">
