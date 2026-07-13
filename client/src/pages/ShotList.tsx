@@ -508,21 +508,6 @@ function ShotListContent() {
 
     setSaving(true);
     try {
-      let thumbnailUrl = form.thumbnailPreview || null;
-
-      // Upload thumbnail if new file was selected
-      if (form.thumbnailFile && editingId) {
-        const reader = new FileReader();
-        const fileData = await new Promise<string>((resolve, reject) => {
-          reader.onload = () => resolve((reader.result as string).split(',')[1]); // Get base64 without prefix
-          reader.onerror = reject;
-          reader.readAsDataURL(form.thumbnailFile!);
-        });
-
-        const result = await api.shotlists.uploadThumbnail(editingId, fileData, form.thumbnailFile.name);
-        thumbnailUrl = result.thumbnailUrl;
-      }
-
       const payload = {
         scene: form.scene.trim(),
         shotType: form.shotType.trim(),
@@ -533,18 +518,37 @@ function ShotListContent() {
         durationSec,
         shotNumber: form.shotNumber.trim() || null,
         productionNotes: form.productionNotes.trim() || null,
-        thumbnailUrl: thumbnailUrl,
+        thumbnailUrl: form.thumbnailPreview || null,
       };
 
+      // Create or update shot first
+      let shot: ShotItem;
       if (editingId) {
-        const updated = await api.shotlists.updateShot(editingId, payload);
-        setShots((prev) => prev.map((s) => (s.id === editingId ? updated : s)));
+        shot = await api.shotlists.updateShot(editingId, payload);
+        setShots((prev) => prev.map((s) => (s.id === editingId ? shot : s)));
         toast.success(t("app.shotlist.successUpdated"));
       } else {
-        const created = await api.shotlists.addShot(projectId, payload);
-        setShots((prev) => [...prev, created]);
+        shot = await api.shotlists.addShot(projectId, payload);
+        setShots((prev) => [...prev, shot]);
         toast.success(t("app.shotlist.successAdded"));
       }
+
+      // Upload thumbnail if new file was selected
+      if (form.thumbnailFile) {
+        const reader = new FileReader();
+        const fileData = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve((reader.result as string).split(',')[1]); // Get base64 without prefix
+          reader.onerror = reject;
+          reader.readAsDataURL(form.thumbnailFile!);
+        });
+
+        const result = await api.shotlists.uploadThumbnail(shot.id, fileData, form.thumbnailFile.name);
+
+        // Update shot with thumbnail URL
+        const updated = await api.shotlists.updateShot(shot.id, { thumbnailUrl: result.thumbnailUrl });
+        setShots((prev) => prev.map((s) => (s.id === shot.id ? updated : s)));
+      }
+
       setFormOpen(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("app.shotlist.errorSave"));
