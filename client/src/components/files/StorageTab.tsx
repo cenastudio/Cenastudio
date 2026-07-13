@@ -26,26 +26,22 @@ export default function StorageTab() {
   const isEn = locale === "en";
 
   useEffect(() => {
-    // TODO: Implement API call to /api/storage/stats
-    // For now, show placeholder
-    setTimeout(() => {
-      setStats({
-        totalUsed: 2.3 * 1024 * 1024 * 1024, // 2.3 GB
-        quota: 10 * 1024 * 1024 * 1024, // 10 GB
-        byType: {
-          images: 850 * 1024 * 1024,
-          videos: 1.2 * 1024 * 1024 * 1024,
-          documents: 200 * 1024 * 1024,
-          audio: 50 * 1024 * 1024,
-        },
-        topFiles: [
-          { name: "final_edit_4k.mp4", size: 450 * 1024 * 1024, project: "Comercial Coca-Cola" },
-          { name: "raw_footage.mov", size: 380 * 1024 * 1024, project: "Institucional Magazine Luiza" },
-          { name: "product_shots.mp4", size: 220 * 1024 * 1024, project: "Comercial Coca-Cola" },
-        ],
+    // Fetch real storage stats from backend
+    fetch("/api/storage/stats", { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setStats(data.data);
+        } else {
+          console.error("Failed to load storage stats:", data.error);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching storage stats:", error);
+      })
+      .finally(() => {
+        setLoading(false);
       });
-      setLoading(false);
-    }, 500);
   }, []);
 
   const formatSize = (bytes: number) => {

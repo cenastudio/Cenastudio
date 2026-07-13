@@ -81,6 +81,7 @@ import shotTypesRoutes from "./routes/shotTypes.js";
 import timesheetsRoutes from "./routes/timesheets.js";
 import calendarRoutes from "./routes/calendar.js";
 import tasksRoutes from "./routes/tasks.js";
+import storageRoutes from "./routes/storage.js";
 
 const router = Router();
 
@@ -182,5 +183,6 @@ router.use("/shot-types", shotTypesRoutes);
 router.use("/timesheets", timesheetsRoutes);
 router.use("/calendar", calendarRoutes);
 router.use("/tasks", tasksRoutes);
+router.use("/storage", storageRoutes);
 
 export default router;
