@@ -167,6 +167,196 @@ export const api = {
         body: JSON.stringify({ accessToken }),
       }),
     providers: () => request<{ github: boolean; supabase: boolean }>("/auth/providers"),
+
+    // LGPD / GDPR endpoints
+    getDataStats: () =>
+      request<{
+        projects: { count: number; size: number };
+        files: { count: number; size: number };
+        clients: { count: number; size: number };
+        reviews: { count: number; size: number };
+        totalSize: number;
+      }>("/auth/data-stats"),
+    getPrivacySettings: () =>
+      request<{
+        profileVisibility: "public" | "team" | "private";
+        allowSearchEngineIndexing: boolean;
+        shareAnalyticsWithTeam: boolean;
+      }>("/auth/privacy-settings"),
+    updatePrivacySettings: (data: {
+      profileVisibility: "public" | "team" | "private";
+      allowSearchEngineIndexing: boolean;
+      shareAnalyticsWithTeam: boolean;
+    }) =>
+      request<{ message: string }>("/auth/privacy-settings", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    createLgpdRequest: (type: "copy" | "correct" | "delete") =>
+      request<{ requestId: string; estimatedDays: number }>("/auth/lgpd-request", {
+        method: "POST",
+        body: JSON.stringify({ type }),
+      }),
+    listLgpdRequests: () =>
+      request<{
+        requests: Array<{
+          id: string;
+          type: string;
+          status: string;
+          createdAt: string;
+          processedAt: string | null;
+          notes: string | null;
+        }>;
+      }>("/auth/lgpd-requests"),
+
+    // Security Advanced: 2FA
+    setup2FA: () =>
+      request<{
+        qrCode: string;
+        secret: string;
+        backupCodes: string[];
+      }>("/auth/2fa/setup", { method: "POST" }),
+    verify2FA: (code: string) =>
+      request<{ message: string }>("/auth/2fa/verify", {
+        method: "POST",
+        body: JSON.stringify({ code }),
+      }),
+    disable2FA: () =>
+      request<{ message: string }>("/auth/2fa/disable", { method: "POST" }),
+
+    // Security Advanced: API Keys
+    createApiKey: (name: string) =>
+      request<{
+        id: string;
+        name: string;
+        key: string;
+        keyPrefix: string;
+        createdAt: string;
+      }>("/auth/api-keys", {
+        method: "POST",
+        body: JSON.stringify({ name }),
+      }),
+    listApiKeys: () =>
+      request<{
+        keys: Array<{
+          id: string;
+          name: string;
+          keyPrefix: string;
+          createdAt: string;
+          lastUsed: string | null;
+        }>;
+      }>("/auth/api-keys"),
+    revokeApiKey: (id: string) =>
+      request<{ message: string }>(`/auth/api-keys/${id}`, { method: "DELETE" }),
+
+    // Security Advanced: Activity Log
+    getActivityLog: (limit?: number, days?: number) =>
+      request<{
+        activities: Array<{
+          id: number;
+          action: string;
+          ipAddress: string | null;
+          location: string | null;
+          timestamp: string;
+          suspicious: boolean;
+        }>;
+      }>(`/auth/activity?limit=${limit || 50}&days=${days || 30}`),
+
+    // Security Advanced: Security Alerts
+    getSecurityAlerts: () =>
+      request<{
+        emailOnNewLogin: boolean;
+        emailOnPasswordChange: boolean;
+        emailOnNewDevice: boolean;
+      }>("/auth/security-alerts"),
+    updateSecurityAlerts: (data: {
+      emailOnNewLogin: boolean;
+      emailOnPasswordChange: boolean;
+      emailOnNewDevice: boolean;
+    }) =>
+      request<{ message: string }>("/auth/security-alerts", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+
+    // Preferences Advanced (Sprint 3)
+    getNotificationPreferences: () =>
+      request<{
+        newComments: boolean;
+        clientUploads: boolean;
+        projectDeadlines: boolean;
+        weeklyNewsletter: boolean;
+        mentions: boolean;
+        newProjects: boolean;
+        reviewApproved: boolean;
+        paymentSuccess: boolean;
+      }>("/auth/notification-preferences"),
+    updateNotificationPreferences: (data: {
+        newComments: boolean;
+        clientUploads: boolean;
+        projectDeadlines: boolean;
+        weeklyNewsletter: boolean;
+        mentions: boolean;
+        newProjects: boolean;
+        reviewApproved: boolean;
+        paymentSuccess: boolean;
+    }) =>
+      request<{ message: string }>("/auth/notification-preferences", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+
+    getRegionalPreferences: () =>
+      request<{
+        locale: "pt" | "en";
+        timezone: string;
+        dateFormat: "DD/MM/YYYY" | "MM/DD/YYYY";
+        currency: "BRL" | "USD" | "EUR";
+      }>("/auth/regional-preferences"),
+    updateRegionalPreferences: (data: {
+        locale: "pt" | "en";
+        timezone: string;
+        dateFormat: "DD/MM/YYYY" | "MM/DD/YYYY";
+        currency: "BRL" | "USD" | "EUR";
+    }) =>
+      request<{ message: string }>("/auth/regional-preferences", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+
+    getVisualPreferences: () =>
+      request<{
+        themeMode: "dark" | "light" | "auto";
+        density: "compact" | "normal" | "spacious";
+        fontFamily: "inter" | "system" | "mono";
+        reduceAnimations: boolean;
+      }>("/auth/visual-preferences"),
+    updateVisualPreferences: (data: {
+        themeMode: "dark" | "light" | "auto";
+        density: "compact" | "normal" | "spacious";
+        fontFamily: "inter" | "system" | "mono";
+        reduceAnimations: boolean;
+    }) =>
+      request<{ message: string }>("/auth/visual-preferences", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+
+    getBehaviorPreferences: () =>
+      request<{
+        defaultProjectSort: "recent" | "alphabetical" | "deadline";
+        defaultView: "grid" | "list";
+        autoplayVideos: boolean;
+      }>("/auth/behavior-preferences"),
+    updateBehaviorPreferences: (data: {
+        defaultProjectSort: "recent" | "alphabetical" | "deadline";
+        defaultView: "grid" | "list";
+        autoplayVideos: boolean;
+    }) =>
+      request<{ message: string }>("/auth/behavior-preferences", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
   },
   tools: {
     list: () => request<ToolFromApi[]>("/tools"),

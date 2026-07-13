@@ -12,6 +12,13 @@ import { SITE_CONFIG } from "@shared/site";
 import { trackSession, hashToken, revokeSession } from "../services/sessionService.js";
 import { db } from "../models/db.js";
 import { prisma, shouldUsePrisma } from "../models/prisma.js";
+import * as lgpdService from "../services/lgpdService.js";
+import * as twoFactorService from "../services/twoFactorService.js";
+import * as apiKeyService from "../services/apiKeyService.js";
+import * as activityLogService from "../services/activityLogService.js";
+import * as twoFactorService from "../services/twoFactorService.js";
+import * as apiKeyService from "../services/apiKeyService.js";
+import * as activityLogService from "../services/activityLogService.js";
 
 function getClientOrigin() {
   return process.env.CLIENT_ORIGIN || "http://localhost:5173";
@@ -316,6 +323,736 @@ export const exportUserData: RequestHandler = async (req, res, next) => {
     res.setHeader("Content-Type", "application/json; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     res.json(payload);
+  } catch (e) {
+    next(e);
+  }
+};
+
+
+// ═══════════════════════════════════════════════════════════════
+// LGPD / GDPR ENDPOINTS
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/auth/data-stats
+ * Dashboard de transparência de dados (LGPD Art. 9)
+ */
+export const getDataStats: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const stats = await lgpdService.calculateDataStats(req.user.id);
+
+    res.json({ success: true, data: stats });
+  } catch (e) {
+    next(e);
+  }
+};
+
+/**
+ * PUT /api/auth/privacy-settings
+ * Salvar configurações de privacidade do usuário
+ */
+export const updatePrivacySettings: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const { profileVisibility, allowSearchEngineIndexing, shareAnalyticsWithTeam } = req.body;
+
+    // Validação básica
+    if (profileVisibility && !["public", "team", "private"].includes(profileVisibility)) {
+      throw new AppError("profileVisibility deve ser 'public', 'team' ou 'private'", 400);
+    }
+
+    const settings: lgpdService.PrivacySettings = {
+      profileVisibility: profileVisibility || "team",
+      allowSearchEngineIndexing: allowSearchEngineIndexing !== false,
+      shareAnalyticsWithTeam: shareAnalyticsWithTeam !== false,
+    };
+
+    await lgpdService.savePrivacySettings(req.user.id, settings);
+
+    res.json({ success: true, data: { message: "Configurações de privacidade atualizadas" } });
+  } catch (e) {
+    next(e);
+  }
+};
+
+/**
+ * GET /api/auth/privacy-settings
+ * Obter configurações de privacidade do usuário
+ */
+export const getPrivacySettings: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const settings = await lgpdService.getPrivacySettings(req.user.id);
+
+    res.json({ success: true, data: settings });
+  } catch (e) {
+    next(e);
+  }
+};
+
+/**
+ * POST /api/auth/lgpd-request
+ * Criar solicitação LGPD/GDPR (cópia, correção ou exclusão de dados)
+ * Implementa LGPD Art. 18 (Direitos do titular)
+ */
+export const createLgpdRequest: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const { type } = req.body;
+
+    if (!type || !["copy", "correct", "delete"].includes(type)) {
+      throw new AppError("type deve ser 'copy', 'correct' ou 'delete'", 400);
+    }
+
+    const result = await lgpdService.createLgpdRequest(
+      req.user.id,
+      type as lgpdService.LgpdRequestType,
+      req.user.email,
+      req.user.name || null
+    );
+
+    res.status(201).json({ success: true, data: result });
+  } catch (e) {
+    next(e);
+  }
+};
+
+/**
+ * GET /api/auth/lgpd-requests
+ * Listar solicitações LGPD do usuário
+ */
+export const listLgpdRequests: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const requests = await lgpdService.listUserLgpdRequests(req.user.id);
+
+    res.json({ success: true, data: { requests } });
+  } catch (e) {
+    next(e);
+  }
+};
+
+
+// ═══════════════════════════════════════════════════════════════
+// SECURITY ADVANCED: 2FA
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * POST /api/auth/2fa/setup
+ * Gera QR Code e secret TOTP para configurar 2FA
+ */
+export const setup2FA: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const result = await twoFactorService.setup2FA(
+      req.user.id,
+      req.user.email,
+      req.user.name || null
+    );
+
+    // Log da ação
+    activityLogService.logAction(
+      req.user.id,
+      "2FA setup iniciado",
+      req.ip,
+      req.headers["user-agent"]
+    ).catch((err) => console.error("[Activity Log] Erro:", err));
+
+    res.json({ success: true, data: result });
+  } catch (e) {
+    next(e);
+  }
+};
+
+/**
+ * POST /api/auth/2fa/verify
+ * Verifica código 2FA e ativa o 2FA se correto
+ */
+export const verify2FA: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const { code } = req.body;
+
+    if (!code || typeof code !== "string" || code.length !== 6) {
+      throw new AppError("Código deve ter 6 dígitos", 400);
+    }
+
+    const isValid = await twoFactorService.verify2FA(req.user.id, code);
+
+    if (!isValid) {
+      throw new AppError("Código inválido", 400);
+    }
+
+    // Log da ação
+    activityLogService.logAction(
+      req.user.id,
+      "2FA ativado",
+      req.ip,
+      req.headers["user-agent"]
+    ).catch((err) => console.error("[Activity Log] Erro:", err));
+
+    res.json({ success: true, data: { message: "2FA ativado com sucesso" } });
+  } catch (e) {
+    next(e);
+  }
+};
+
+/**
+ * POST /api/auth/2fa/disable
+ * Desativa 2FA
+ */
+export const disable2FA: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    await twoFactorService.disable2FA(req.user.id);
+
+    // Log da ação (potencialmente suspeita)
+    activityLogService.logAction(
+      req.user.id,
+      "2FA desativado",
+      req.ip,
+      req.headers["user-agent"]
+    ).catch((err) => console.error("[Activity Log] Erro:", err));
+
+    res.json({ success: true, data: { message: "2FA desativado" } });
+  } catch (e) {
+    next(e);
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// SECURITY ADVANCED: API KEYS
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * POST /api/auth/api-keys
+ * Cria uma nova API Key
+ */
+export const createApiKey: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const { name } = req.body;
+
+    if (!name || typeof name !== "string" || name.trim().length === 0) {
+      throw new AppError("Nome da chave é obrigatório", 400);
+    }
+
+    if (name.length > 100) {
+      throw new AppError("Nome muito longo (máximo 100 caracteres)", 400);
+    }
+
+    const result = await apiKeyService.createApiKey(req.user.id, name.trim());
+
+    // Log da ação
+    activityLogService.logAction(
+      req.user.id,
+      "API Key criada",
+      req.ip,
+      req.headers["user-agent"],
+      { keyName: name.trim() }
+    ).catch((err) => console.error("[Activity Log] Erro:", err));
+
+    res.status(201).json({ success: true, data: result });
+  } catch (e) {
+    next(e);
+  }
+};
+
+/**
+ * GET /api/auth/api-keys
+ * Lista todas as API Keys do usuário
+ */
+export const listApiKeys: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const keys = await apiKeyService.listApiKeys(req.user.id);
+
+    res.json({ success: true, data: { keys } });
+  } catch (e) {
+    next(e);
+  }
+};
+
+/**
+ * DELETE /api/auth/api-keys/:id
+ * Revoga (deleta) uma API Key
+ */
+export const revokeApiKey: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const { id } = req.params;
+
+    if (!id) {
+      throw new AppError("ID da chave é obrigatório", 400);
+    }
+
+    await apiKeyService.revokeApiKey(req.user.id, id);
+
+    // Log da ação
+    activityLogService.logAction(
+      req.user.id,
+      "API Key revogada",
+      req.ip,
+      req.headers["user-agent"],
+      { keyId: id }
+    ).catch((err) => console.error("[Activity Log] Erro:", err));
+
+    res.json({ success: true, data: { message: "API Key revogada" } });
+  } catch (e) {
+    next(e);
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// SECURITY ADVANCED: ACTIVITY LOG
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * GET /api/auth/activity
+ * Lista atividades do usuário (últimos 30 dias)
+ */
+export const getActivityLog: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const limit = parseInt(req.query.limit as string) || 50;
+    const days = parseInt(req.query.days as string) || 30;
+
+    // Validação
+    if (limit > 100) {
+      throw new AppError("Limite máximo: 100 itens", 400);
+    }
+
+    if (days > 90) {
+      throw new AppError("Período máximo: 90 dias", 400);
+    }
+
+    const activities = await activityLogService.listUserActivities(
+      req.user.id,
+      limit,
+      days
+    );
+
+    res.json({ success: true, data: { activities } });
+  } catch (e) {
+    next(e);
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// SECURITY ADVANCED: SECURITY ALERTS
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * PUT /api/auth/security-alerts
+ * Atualiza preferências de alertas de segurança
+ */
+export const updateSecurityAlerts: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const { emailOnNewLogin, emailOnPasswordChange, emailOnNewDevice } = req.body;
+
+    const alerts = {
+      emailOnNewLogin: emailOnNewLogin !== false,
+      emailOnPasswordChange: emailOnPasswordChange !== false,
+      emailOnNewDevice: emailOnNewDevice !== false,
+    };
+
+    // Salvar no banco
+    if (shouldUsePrisma) {
+      await prisma.user.update({
+        where: { id: req.user.id },
+        data: { securityAlerts: alerts as any },
+      });
+    } else {
+      db.prepare(
+        "UPDATE users SET security_alerts = ? WHERE id = ?"
+      ).run(JSON.stringify(alerts), req.user.id);
+    }
+
+    res.json({ success: true, data: { message: "Alertas de segurança atualizados" } });
+  } catch (e) {
+    next(e);
+  }
+};
+
+/**
+ * GET /api/auth/security-alerts
+ * Obtém preferências de alertas de segurança
+ */
+export const getSecurityAlerts: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    let alerts = {
+      emailOnNewLogin: true,
+      emailOnPasswordChange: true,
+      emailOnNewDevice: true,
+    };
+
+    if (shouldUsePrisma) {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { securityAlerts: true },
+      });
+      if (user?.securityAlerts) {
+        alerts = user.securityAlerts as any;
+      }
+    } else {
+      const row = db.prepare(
+        "SELECT security_alerts FROM users WHERE id = ?"
+      ).get(req.user.id) as { security_alerts: string } | undefined;
+      if (row?.security_alerts) {
+        alerts = JSON.parse(row.security_alerts);
+      }
+    }
+
+    res.json({ success: true, data: alerts });
+  } catch (e) {
+    next(e);
+  }
+};
+
+
+// ═══════════════════════════════════════════════════════════════
+// PREFERENCES ADVANCED (SPRINT 3)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * PUT /api/auth/notification-preferences
+ * Atualiza preferências de notificações (8 tipos)
+ */
+export const updateNotificationPreferences: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const prefs = {
+      newComments: req.body.newComments !== false,
+      clientUploads: req.body.clientUploads !== false,
+      projectDeadlines: req.body.projectDeadlines !== false,
+      weeklyNewsletter: req.body.weeklyNewsletter === true,
+      mentions: req.body.mentions !== false,
+      newProjects: req.body.newProjects === true,
+      reviewApproved: req.body.reviewApproved !== false,
+      paymentSuccess: req.body.paymentSuccess !== false,
+    };
+
+    if (shouldUsePrisma) {
+      await prisma.user.update({
+        where: { id: req.user.id },
+        data: { notificationPrefs: prefs as any },
+      });
+    } else {
+      db.prepare(
+        "UPDATE users SET notification_prefs = ? WHERE id = ?"
+      ).run(JSON.stringify(prefs), req.user.id);
+    }
+
+    res.json({ success: true, data: { message: "Preferências de notificação atualizadas" } });
+  } catch (e) {
+    next(e);
+  }
+};
+
+/**
+ * GET /api/auth/notification-preferences
+ * Obtém preferências de notificações
+ */
+export const getNotificationPreferences: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    let prefs = {
+      newComments: true,
+      clientUploads: true,
+      projectDeadlines: true,
+      weeklyNewsletter: false,
+      mentions: true,
+      newProjects: false,
+      reviewApproved: true,
+      paymentSuccess: true,
+    };
+
+    if (shouldUsePrisma) {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { notificationPrefs: true },
+      });
+      if (user?.notificationPrefs) {
+        prefs = user.notificationPrefs as any;
+      }
+    } else {
+      const row = db.prepare(
+        "SELECT notification_prefs FROM users WHERE id = ?"
+      ).get(req.user.id) as { notification_prefs: string } | undefined;
+      if (row?.notification_prefs) {
+        prefs = JSON.parse(row.notification_prefs);
+      }
+    }
+
+    res.json({ success: true, data: prefs });
+  } catch (e) {
+    next(e);
+  }
+};
+
+/**
+ * PUT /api/auth/regional-preferences
+ * Atualiza preferências regionais (fuso, data, moeda)
+ */
+export const updateRegionalPreferences: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const { locale, timezone, dateFormat, currency } = req.body;
+
+    // Validações
+    if (locale && !["pt", "en"].includes(locale)) {
+      throw new AppError("locale deve ser 'pt' ou 'en'", 400);
+    }
+
+    if (dateFormat && !["DD/MM/YYYY", "MM/DD/YYYY"].includes(dateFormat)) {
+      throw new AppError("dateFormat deve ser 'DD/MM/YYYY' ou 'MM/DD/YYYY'", 400);
+    }
+
+    if (currency && !["BRL", "USD", "EUR"].includes(currency)) {
+      throw new AppError("currency deve ser 'BRL', 'USD' ou 'EUR'", 400);
+    }
+
+    const prefs = {
+      locale: locale || "pt",
+      timezone: timezone || "America/Sao_Paulo",
+      dateFormat: dateFormat || "DD/MM/YYYY",
+      currency: currency || "BRL",
+    };
+
+    if (shouldUsePrisma) {
+      await prisma.user.update({
+        where: { id: req.user.id },
+        data: { regionalPrefs: prefs as any },
+      });
+    } else {
+      db.prepare(
+        "UPDATE users SET regional_prefs = ? WHERE id = ?"
+      ).run(JSON.stringify(prefs), req.user.id);
+    }
+
+    res.json({ success: true, data: { message: "Preferências regionais atualizadas" } });
+  } catch (e) {
+    next(e);
+  }
+};
+
+/**
+ * GET /api/auth/regional-preferences
+ * Obtém preferências regionais
+ */
+export const getRegionalPreferences: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    let prefs = {
+      locale: "pt",
+      timezone: "America/Sao_Paulo",
+      dateFormat: "DD/MM/YYYY",
+      currency: "BRL",
+    };
+
+    if (shouldUsePrisma) {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { regionalPrefs: true },
+      });
+      if (user?.regionalPrefs) {
+        prefs = user.regionalPrefs as any;
+      }
+    } else {
+      const row = db.prepare(
+        "SELECT regional_prefs FROM users WHERE id = ?"
+      ).get(req.user.id) as { regional_prefs: string } | undefined;
+      if (row?.regional_prefs) {
+        prefs = JSON.parse(row.regional_prefs);
+      }
+    }
+
+    res.json({ success: true, data: prefs });
+  } catch (e) {
+    next(e);
+  }
+};
+
+/**
+ * PUT /api/auth/visual-preferences
+ * Atualiza preferências visuais (tema, densidade, fonte, animações)
+ */
+export const updateVisualPreferences: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const { themeMode, density, fontFamily, reduceAnimations } = req.body;
+
+    // Validações
+    if (themeMode && !["dark", "light", "auto"].includes(themeMode)) {
+      throw new AppError("themeMode deve ser 'dark', 'light' ou 'auto'", 400);
+    }
+
+    if (density && !["compact", "normal", "spacious"].includes(density)) {
+      throw new AppError("density deve ser 'compact', 'normal' ou 'spacious'", 400);
+    }
+
+    if (fontFamily && !["inter", "system", "mono"].includes(fontFamily)) {
+      throw new AppError("fontFamily deve ser 'inter', 'system' ou 'mono'", 400);
+    }
+
+    const prefs = {
+      themeMode: themeMode || "dark",
+      density: density || "normal",
+      fontFamily: fontFamily || "inter",
+      reduceAnimations: reduceAnimations === true,
+    };
+
+    if (shouldUsePrisma) {
+      await prisma.user.update({
+        where: { id: req.user.id },
+        data: { visualPrefs: prefs as any },
+      });
+    } else {
+      db.prepare(
+        "UPDATE users SET visual_prefs = ? WHERE id = ?"
+      ).run(JSON.stringify(prefs), req.user.id);
+    }
+
+    res.json({ success: true, data: { message: "Preferências visuais atualizadas" } });
+  } catch (e) {
+    next(e);
+  }
+};
+
+/**
+ * GET /api/auth/visual-preferences
+ * Obtém preferências visuais
+ */
+export const getVisualPreferences: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    let prefs = {
+      themeMode: "dark",
+      density: "normal",
+      fontFamily: "inter",
+      reduceAnimations: false,
+    };
+
+    if (shouldUsePrisma) {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { visualPrefs: true },
+      });
+      if (user?.visualPrefs) {
+        prefs = user.visualPrefs as any;
+      }
+    } else {
+      const row = db.prepare(
+        "SELECT visual_prefs FROM users WHERE id = ?"
+      ).get(req.user.id) as { visual_prefs: string } | undefined;
+      if (row?.visual_prefs) {
+        prefs = JSON.parse(row.visual_prefs);
+      }
+    }
+
+    res.json({ success: true, data: prefs });
+  } catch (e) {
+    next(e);
+  }
+};
+
+/**
+ * PUT /api/auth/behavior-preferences
+ * Atualiza comportamentos padrão (ordenação, view, autoplay)
+ */
+export const updateBehaviorPreferences: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const { defaultProjectSort, defaultView, autoplayVideos } = req.body;
+
+    // Validações
+    if (defaultProjectSort && !["recent", "alphabetical", "deadline"].includes(defaultProjectSort)) {
+      throw new AppError("defaultProjectSort deve ser 'recent', 'alphabetical' ou 'deadline'", 400);
+    }
+
+    if (defaultView && !["grid", "list"].includes(defaultView)) {
+      throw new AppError("defaultView deve ser 'grid' ou 'list'", 400);
+    }
+
+    const prefs = {
+      defaultProjectSort: defaultProjectSort || "recent",
+      defaultView: defaultView || "grid",
+      autoplayVideos: autoplayVideos !== false,
+    };
+
+    if (shouldUsePrisma) {
+      await prisma.user.update({
+        where: { id: req.user.id },
+        data: { behaviorPrefs: prefs as any },
+      });
+    } else {
+      db.prepare(
+        "UPDATE users SET behavior_prefs = ? WHERE id = ?"
+      ).run(JSON.stringify(prefs), req.user.id);
+    }
+
+    res.json({ success: true, data: { message: "Comportamentos padrão atualizados" } });
+  } catch (e) {
+    next(e);
+  }
+};
+
+/**
+ * GET /api/auth/behavior-preferences
+ * Obtém comportamentos padrão
+ */
+export const getBehaviorPreferences: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    let prefs = {
+      defaultProjectSort: "recent",
+      defaultView: "grid",
+      autoplayVideos: true,
+    };
+
+    if (shouldUsePrisma) {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id },
+        select: { behaviorPrefs: true },
+      });
+      if (user?.behaviorPrefs) {
+        prefs = user.behaviorPrefs as any;
+      }
+    } else {
+      const row = db.prepare(
+        "SELECT behavior_prefs FROM users WHERE id = ?"
+      ).get(req.user.id) as { behavior_prefs: string } | undefined;
+      if (row?.behavior_prefs) {
+        prefs = JSON.parse(row.behavior_prefs);
+      }
+    }
+
+    res.json({ success: true, data: prefs });
   } catch (e) {
     next(e);
   }

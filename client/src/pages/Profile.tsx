@@ -18,7 +18,10 @@ import {
   Lock, Eye, EyeOff, KeyRound, Check, Globe, Bell, Clock, Camera, Upload,
   FileText, Trash2, Download, Shield, Smartphone, Monitor, MapPin,
   Mail, CreditCard, Receipt, TrendingUp, ChevronRight, AlertTriangle, X,
-  Palette, Languages, Sparkles
+  Palette, Languages, Sparkles, Key, QrCode, Copy, RefreshCw, Activity,
+  AlertCircle, CheckCircle2, Layout, Grid, List, Play, PlayCircle,
+  SortAsc, Image, Film, Calendar, Sliders, Database, BarChart3,
+  UserCheck, Search, Share2, FileCheck
 } from "lucide-react";
 
 type ProfileTab = "profile" | "security" | "plan" | "preferences" | "privacy";
@@ -271,32 +274,58 @@ function AvatarUpload({ currentChar, onUpload, avatarUrl }: {
 }
 
 
-// Usage progress bar
-function UsageBar({ used, total, label }: { used: number; total: number; label: string }) {
+// Usage progress bar with enhanced visuals
+function UsageBar({ used, total, label, warningThreshold = 80 }: {
+  used: number;
+  total: number;
+  label: string;
+  warningThreshold?: number;
+}) {
   const { t } = useLanguage();
-  const percentage = total === -1 ? 0 : Math.min((used / total) * 100, 100);
+  const percentage = total === -1 ? 100 : Math.min((used / total) * 100, 100);
   const isUnlimited = total === -1;
+  const isWarning = percentage >= warningThreshold && !isUnlimited;
+  const isCritical = percentage >= 95 && !isUnlimited;
 
   return (
     <div className="space-y-2">
-      <div className="flex justify-between text-xs">
+      <div className="flex justify-between items-center text-xs">
         <span className="text-frame-gray-light">{label}</span>
-        <span className="font-mono text-frame-white">
-          {isUnlimited ? t("app.profile.unlimited") : `${used}/${total}`}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className={`font-mono font-bold ${
+            isCritical ? "text-frame-red" :
+            isWarning ? "text-frame-orange" :
+            isUnlimited ? "text-frame-green" : "text-frame-white"
+          }`}>
+            {isUnlimited ? "∞" : `${used}/${total}`}
+          </span>
+          {isCritical && <AlertTriangle className="w-3 h-3 text-frame-red" />}
+          {isWarning && !isCritical && <AlertTriangle className="w-3 h-3 text-frame-orange" />}
+        </div>
       </div>
-      <div className="h-2 bg-frame-gray-2 rounded-full overflow-hidden">
+      <div className="h-2.5 bg-frame-gray-2 rounded-full overflow-hidden">
         <div
           className={`h-full transition-all duration-500 rounded-full ${
             isUnlimited
-              ? "bg-gradient-to-r from-frame-green to-frame-green/60 w-full"
-              : percentage > 80
-              ? "bg-gradient-to-r from-frame-red to-frame-orange"
-              : "bg-gradient-to-r from-frame-orange to-frame-gold"
+              ? "bg-gradient-to-r from-frame-green via-frame-green to-frame-green/80 w-full animate-pulse"
+              : isCritical
+              ? "bg-gradient-to-r from-frame-red to-frame-red/60"
+              : isWarning
+              ? "bg-gradient-to-r from-frame-orange to-frame-gold"
+              : "bg-gradient-to-r from-frame-orange to-frame-orange/80"
           }`}
-          style={{ width: isUnlimited ? "100%" : `${percentage}%` }}
+          style={{ width: `${percentage}%` }}
         />
       </div>
+      {isWarning && !isUnlimited && (
+        <p className={`text-[0.65rem] ${isCritical ? "text-frame-red" : "text-frame-orange"} flex items-center gap-1`}>
+          {isCritical ? (
+            <>⚠️ Limite quase atingido! {total - used} restantes</>
+          ) : (
+            <>⚡ {Math.round(100 - percentage)}% restante</>
+          )}
+        </p>
+      )}
     </div>
   );
 }
@@ -362,18 +391,9 @@ function ProfileContent() {
 
   // Profile form state
   const [name, setName] = useState("");
-  const [studioName, setStudioName] = useState("");
-  const [studioRole, setStudioRole] = useState("");
   const [phone, setPhone] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
-
-  // Studio extended info
-  const [legalName, setLegalName] = useState("");
-  const [taxDocument, setTaxDocument] = useState(""); // CNPJ/CPF
-  const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [website, setWebsite] = useState("");
 
   // Password change state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -384,13 +404,149 @@ function ProfileContent() {
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordChanged, setPasswordChanged] = useState(false);
 
-  // Preferences state
+  // Preferences state (básicas - já existiam)
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
+
+  // FASE 4: Preferências Avançadas
+  // 1. Notificações Granulares
+  const [notificationPrefs, setNotificationPrefs] = useState({
+    newComments: true,
+    clientUploads: true,
+    projectDeadlines: true,
+    weeklyNewsletter: false,
+    mentions: true,
+    newProjects: false,
+    reviewApproved: true,
+    paymentSuccess: true,
+  });
+
+  // 2. Regionalização
+  const [dateFormat, setDateFormat] = useState<"DD/MM/YYYY" | "MM/DD/YYYY">("DD/MM/YYYY");
+  const [currency, setCurrency] = useState<"BRL" | "USD" | "EUR">("BRL");
+
+  // Handlers para atualizar preferências regionais automaticamente
+  const handleTimezoneChange = async (newTimezone: string) => {
+    setTimezone(newTimezone);
+
+    try {
+      await api.auth.updateRegionalPreferences({
+        locale,
+        timezone: newTimezone,
+        dateFormat,
+        currency,
+      });
+      toast.success("Fuso horário atualizado");
+    } catch (error) {
+      toast.error("Erro ao salvar fuso horário");
+      setTimezone(timezone); // Reverter
+    }
+  };
+
+  const handleDateFormatChange = async (newFormat: "DD/MM/YYYY" | "MM/DD/YYYY") => {
+    setDateFormat(newFormat);
+
+    try {
+      await api.auth.updateRegionalPreferences({
+        locale,
+        timezone,
+        dateFormat: newFormat,
+        currency,
+      });
+      toast.success("Formato de data atualizado");
+    } catch (error) {
+      toast.error("Erro ao salvar formato");
+      setDateFormat(dateFormat); // Reverter
+    }
+  };
+
+  const handleCurrencyChange = async (newCurrency: "BRL" | "USD" | "EUR") => {
+    setCurrency(newCurrency);
+
+    try {
+      await api.auth.updateRegionalPreferences({
+        locale,
+        timezone,
+        dateFormat,
+        currency: newCurrency,
+      });
+      toast.success("Moeda atualizada");
+    } catch (error) {
+      toast.error("Erro ao salvar moeda");
+      setCurrency(currency); // Reverter
+    }
+  };
+
+  // 3. Preferências Visuais
+  const [themeMode, setThemeMode] = useState<"dark" | "light" | "auto">("dark");
+  const [density, setDensity] = useState<"compact" | "normal" | "spacious">("normal");
+  const [fontFamily, setFontFamily] = useState<"inter" | "system" | "mono">("inter");
+  const [reduceAnimations, setReduceAnimations] = useState(false);
+
+  // 4. Comportamentos Padrão
+  const [defaultProjectSort, setDefaultProjectSort] = useState<"recent" | "alphabetical" | "deadline">("recent");
+  const [defaultView, setDefaultView] = useState<"grid" | "list">("grid");
+  const [autoplayVideos, setAutoplayVideos] = useState(true);
 
   // Privacy state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+
+  // FASE 5: Privacy & LGPD Advanced
+  // 1. Transparência de Dados
+  const [dataStats, setDataStats] = useState({
+    projects: { count: 45, size: 12.3 },
+    files: { count: 234, size: 456 },
+    clients: { count: 18, size: 2.1 },
+    reviews: { count: 89, size: 34.5 },
+    totalSize: 502.9,
+  });
+
+  // 2. Controles de Privacidade
+  const [privacySettings, setPrivacySettings] = useState({
+    profileVisibility: "team" as "public" | "team" | "private",
+    allowSearchEngineIndexing: true,
+    shareAnalyticsWithTeam: true,
+  });
+
+  // 3. Solicitações LGPD
+  const [showLgpdRequest, setShowLgpdRequest] = useState(false);
+  const [lgpdRequestType, setLgpdRequestType] = useState<"copy" | "correct" | "delete" | null>(null);
+
+  // Security Advanced states (FASE 3)
+  // 1. 2FA
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [show2FASetup, setShow2FASetup] = useState(false);
+  const [qrCode, setQrCode] = useState<string | null>(null);
+  const [twoFactorSecret, setTwoFactorSecret] = useState("");
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [enabling2FA, setEnabling2FA] = useState(false);
+
+  // 2. API Keys
+  const [apiKeys, setApiKeys] = useState<Array<{ id: string; name: string; key: string; createdAt: string; lastUsed: string | null }>>([]);
+  const [showNewApiKey, setShowNewApiKey] = useState(false);
+  const [newApiKeyName, setNewApiKeyName] = useState("");
+  const [creatingApiKey, setCreatingApiKey] = useState(false);
+  const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
+
+  // 3. Activity Log
+  const [activityLog, setActivityLog] = useState<Array<{
+    id: number;
+    action: string;
+    ipAddress: string;
+    location: string;
+    timestamp: string;
+    suspicious: boolean;
+  }>>([]);
+  const [loadingActivity, setLoadingActivity] = useState(false);
+
+  // 4. Security Alerts
+  const [securityAlerts, setSecurityAlerts] = useState({
+    emailOnNewLogin: true,
+    emailOnPasswordChange: true,
+    emailOnNewDevice: true,
+  });
 
   // Studio settings (para o recibo)
   const [studio, setStudio] = useState<StudioSettings>(() => readStudioSettings());
@@ -401,8 +557,6 @@ function ProfileContent() {
 
   useEffect(() => {
     setName(user?.name || "");
-    setStudioName(user?.studioName || "");
-    setStudioRole(user?.studioRole || "");
     setPhone(user?.phone || "");
   }, [user]);
 
@@ -433,7 +587,7 @@ function ProfileContent() {
   const handleSaveProfile = async () => {
     setSavingProfile(true);
     try {
-      await api.auth.updateProfile({ name, studioName, studioRole, phone });
+      await api.auth.updateProfile({ name, phone });
       await refresh();
       toast.success(t("app.profile.profileUpdated"));
     } catch (error) {
@@ -584,6 +738,357 @@ function ProfileContent() {
     }
   };
 
+  // ─── FASE 3: SECURITY ADVANCED HANDLERS ───
+
+  // 2FA Setup
+  const handleEnable2FA = async () => {
+    setEnabling2FA(true);
+    try {
+      const result = await api.auth.setup2FA();
+
+      setQrCode(result.qrCode);
+      setTwoFactorSecret(result.secret);
+      setBackupCodes(result.backupCodes);
+      setShow2FASetup(true);
+      toast.success("QR Code gerado! Configure no Google Authenticator");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao gerar QR Code");
+    } finally {
+      setEnabling2FA(false);
+    }
+  };
+
+  const handleConfirm2FA = async () => {
+    if (!twoFactorCode || twoFactorCode.length !== 6) {
+      toast.error("Digite o código de 6 dígitos");
+      return;
+    }
+    try {
+      await api.auth.verify2FA(twoFactorCode);
+
+      setTwoFactorEnabled(true);
+      setShow2FASetup(false);
+      setTwoFactorCode("");
+      toast.success("2FA ativado com sucesso! ✓");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Código inválido");
+    }
+  };
+
+  const handleDisable2FA = async () => {
+    try {
+      await api.auth.disable2FA();
+
+      setTwoFactorEnabled(false);
+      setShow2FASetup(false);
+      setQrCode(null);
+      setBackupCodes([]);
+      toast.success("2FA desativado");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao desativar 2FA");
+    }
+  };
+
+  // API Keys
+  const handleCreateApiKey = async () => {
+    if (!newApiKeyName.trim()) {
+      toast.error("Digite um nome para a chave");
+      return;
+    }
+    setCreatingApiKey(true);
+    try {
+      const result = await api.auth.createApiKey(newApiKeyName.trim());
+
+      setApiKeys((prev) => [...prev, {
+        id: result.id,
+        name: result.name,
+        key: result.key,
+        createdAt: result.createdAt,
+        lastUsed: null,
+      }]);
+      setNewlyCreatedKey(result.key);
+      setNewApiKeyName("");
+      setShowNewApiKey(false);
+      toast.success("Chave API criada! Copie agora, não será exibida novamente");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao criar chave");
+    } finally {
+      setCreatingApiKey(false);
+    }
+  };
+
+  const handleRevokeApiKey = async (id: string) => {
+    try {
+      await api.auth.revokeApiKey(id);
+
+      setApiKeys((prev) => prev.filter((k) => k.id !== id));
+      toast.success("Chave revogada");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao revogar chave");
+    }
+  };
+
+  const handleCopyApiKey = (key: string) => {
+    navigator.clipboard.writeText(key);
+    toast.success("Chave copiada!");
+  };
+
+  // Activity Log
+  const loadActivityLog = async () => {
+    setLoadingActivity(true);
+    try {
+      const result = await api.auth.getActivityLog(50, 30);
+      setActivityLog(result.activities);
+    } catch (error) {
+      toast.error("Erro ao carregar log");
+    } finally {
+      setLoadingActivity(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "security") {
+      loadActivityLog();
+    }
+  }, [activeTab]);
+
+  // Carregar dados LGPD quando entrar na aba Privacy
+  useEffect(() => {
+    if (activeTab === "privacy") {
+      // Carregar stats de dados
+      api.auth.getDataStats().then(setDataStats).catch(() => {
+        toast.error("Erro ao carregar estatísticas de dados");
+      });
+
+      // Carregar configurações de privacidade
+      api.auth.getPrivacySettings().then(setPrivacySettings).catch(() => {
+        toast.error("Erro ao carregar configurações de privacidade");
+      });
+    }
+  }, [activeTab]);
+
+  // Carregar preferências avançadas quando entrar na aba Preferences
+  useEffect(() => {
+    if (activeTab === "preferences") {
+      // Carregar preferências de notificações
+      api.auth.getNotificationPreferences().then(setNotificationPrefs).catch(() => {
+        console.error("Erro ao carregar preferências de notificação");
+      });
+
+      // Carregar preferências regionais
+      api.auth.getRegionalPreferences().then((data) => {
+        setTimezone(data.timezone);
+        setDateFormat(data.dateFormat);
+        setCurrency(data.currency);
+      }).catch(() => {
+        console.error("Erro ao carregar preferências regionais");
+      });
+
+      // Carregar preferências visuais
+      api.auth.getVisualPreferences().then((data) => {
+        setThemeMode(data.themeMode);
+        setDensity(data.density);
+        setFontFamily(data.fontFamily);
+        setReduceAnimations(data.reduceAnimations);
+      }).catch(() => {
+        console.error("Erro ao carregar preferências visuais");
+      });
+
+      // Carregar comportamentos padrão
+      api.auth.getBehaviorPreferences().then((data) => {
+        setDefaultProjectSort(data.defaultProjectSort);
+        setDefaultView(data.defaultView);
+        setAutoplayVideos(data.autoplayVideos);
+      }).catch(() => {
+        console.error("Erro ao carregar comportamentos");
+      });
+    }
+  }, [activeTab]);
+
+  // Security Alerts
+  const handleToggleAlert = async (key: keyof typeof securityAlerts) => {
+    const newAlerts = { ...securityAlerts, [key]: !securityAlerts[key] };
+    setSecurityAlerts(newAlerts);
+
+    try {
+      await api.auth.updateSecurityAlerts(newAlerts);
+      toast.success("Preferência salva");
+    } catch (error) {
+      toast.error("Erro ao salvar");
+      // Reverter em caso de erro
+      setSecurityAlerts(securityAlerts);
+    }
+  };
+
+  // ─── FASE 4: PREFERENCES ADVANCED HANDLERS ───
+
+  // Notificações Granulares
+  const handleToggleNotification = async (key: keyof typeof notificationPrefs) => {
+    const newPrefs = { ...notificationPrefs, [key]: !notificationPrefs[key] };
+    setNotificationPrefs(newPrefs);
+
+    try {
+      await api.auth.updateNotificationPreferences(newPrefs);
+      toast.success("Notificação atualizada");
+    } catch (error) {
+      toast.error("Erro ao salvar");
+      // Reverter em caso de erro
+      setNotificationPrefs(notificationPrefs);
+    }
+  };
+
+  // Preferências Visuais
+  const handleThemeModeChange = async (mode: "dark" | "light" | "auto") => {
+    setThemeMode(mode);
+    if (mode === "auto") {
+      const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      if ((systemPrefersDark && theme === "light") || (!systemPrefersDark && theme === "dark")) {
+        toggleTheme?.();
+      }
+    } else {
+      if ((mode === "dark" && theme === "light") || (mode === "light" && theme === "dark")) {
+        toggleTheme?.();
+      }
+    }
+
+    // Salvar no backend
+    try {
+      await api.auth.updateVisualPreferences({
+        themeMode: mode,
+        density,
+        fontFamily,
+        reduceAnimations,
+      });
+      toast.success("Tema atualizado");
+    } catch (error) {
+      toast.error("Erro ao salvar tema");
+    }
+  };
+
+  const handleDensityChange = async (newDensity: "compact" | "normal" | "spacious") => {
+    setDensity(newDensity);
+    // Aplicar classes CSS dinamicamente ao body
+    document.body.classList.remove("density-compact", "density-normal", "density-spacious");
+    document.body.classList.add(`density-${newDensity}`);
+
+    // Salvar no backend
+    try {
+      await api.auth.updateVisualPreferences({
+        themeMode,
+        density: newDensity,
+        fontFamily,
+        reduceAnimations,
+      });
+      toast.success(`Densidade: ${newDensity}`);
+    } catch (error) {
+      toast.error("Erro ao salvar densidade");
+    }
+  };
+
+  const handleFontChange = async (font: "inter" | "system" | "mono") => {
+    setFontFamily(font);
+    // Aplicar font-family dinamicamente
+    const fontMap = {
+      inter: "Inter, sans-serif",
+      system: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      mono: "'JetBrains Mono', 'Fira Code', monospace",
+    };
+    document.documentElement.style.setProperty("--font-custom", fontMap[font]);
+
+    // Salvar no backend
+    try {
+      await api.auth.updateVisualPreferences({
+        themeMode,
+        density,
+        fontFamily: font,
+        reduceAnimations,
+      });
+      toast.success(`Fonte: ${font}`);
+    } catch (error) {
+      toast.error("Erro ao salvar fonte");
+    }
+  };
+
+  const handleToggleAnimations = async () => {
+    const newValue = !reduceAnimations;
+    setReduceAnimations(newValue);
+
+    // Salvar no backend
+    try {
+      await api.auth.updateVisualPreferences({
+        themeMode,
+        density,
+        fontFamily,
+        reduceAnimations: newValue,
+      });
+      toast.success(newValue ? "Animações reduzidas" : "Animações ativadas");
+    } catch (error) {
+      toast.error("Erro ao salvar");
+      setReduceAnimations(!newValue);
+    }
+  };
+
+  // Comportamentos Padrão
+  const handleSaveBehaviors = async () => {
+    try {
+      await api.auth.updateBehaviorPreferences({
+        defaultProjectSort,
+        defaultView,
+        autoplayVideos,
+      });
+      toast.success("Comportamentos salvos");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao salvar");
+    }
+  };
+
+  // ─── FASE 5: PRIVACY & LGPD HANDLERS ───
+
+  // Controles de Privacidade
+  const handleTogglePrivacy = async (key: keyof typeof privacySettings, value?: any) => {
+    const newSettings = {
+      ...privacySettings,
+      [key]: value !== undefined ? value : !privacySettings[key],
+    };
+
+    setPrivacySettings(newSettings);
+
+    try {
+      await api.auth.updatePrivacySettings(newSettings);
+      toast.success("Configuração de privacidade atualizada");
+    } catch (error) {
+      toast.error("Erro ao salvar configuração");
+      // Reverter em caso de erro
+      setPrivacySettings(privacySettings);
+    }
+  };
+
+  // Solicitações LGPD
+  const handleLgpdRequest = (type: "copy" | "correct" | "delete") => {
+    setLgpdRequestType(type);
+    setShowLgpdRequest(true);
+  };
+
+  const handleSubmitLgpdRequest = async () => {
+    if (!lgpdRequestType) return;
+
+    try {
+      const result = await api.auth.createLgpdRequest(lgpdRequestType);
+
+      const messages = {
+        copy: `Solicitação de cópia de dados enviada! Protocolo: ${result.requestId}. Você receberá um email em até ${result.estimatedDays} dias.`,
+        correct: `Solicitação de correção enviada! Protocolo: ${result.requestId}. Entraremos em contato em até ${result.estimatedDays} dias úteis.`,
+        delete: `Solicitação de exclusão enviada! Protocolo: ${result.requestId}. Processaremos em até ${result.estimatedDays} dias úteis.`,
+      };
+
+      toast.success(messages[lgpdRequestType], { duration: 6000 });
+      setShowLgpdRequest(false);
+      setLgpdRequestType(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao enviar solicitação");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
       <AppNavBar />
@@ -712,58 +1217,36 @@ function ProfileContent() {
                   </div>
                 </label>
               </div>
-            </div>
-
-            {/* Dados do estúdio */}
-            <div className="liquid-glass p-6 space-y-5">
-              <div>
-                <p className="font-frame-mono text-[0.6rem] tracking-[0.18em] text-frame-orange uppercase">
-                  {t("app.profile.studioData")}
-                </p>
-                <h3 className="text-lg font-bold mt-1">{t("app.profile.companyInfo")}</h3>
-                <p className="text-frame-gray-light text-xs mt-1">{t("app.profile.companyInfoDesc")}</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className="space-y-1.5">
-                  <span className="frame-label text-frame-gray-light">{t("app.profile.studioName")}</span>
-                  <div className="relative">
-                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
-                    <input value={studioName} onChange={(e) => setStudioName(e.target.value)} className="frame-input w-full pl-10" placeholder={`Ex: ${SITE_CONFIG.brandName}`} />
-                  </div>
-                </label>
-                <label className="space-y-1.5">
-                  <span className="frame-label text-frame-gray-light">{t("app.profile.yourRole")}</span>
-                  <input value={studioRole} onChange={(e) => setStudioRole(e.target.value)} className="frame-input w-full" placeholder="Ex: Diretor, Produtor" />
-                </label>
-                <label className="space-y-1.5">
-                  <span className="frame-label text-frame-gray-light">{t("app.profile.legalName")} <span className="text-frame-gray-light/50">{t("app.profile.optional")}</span></span>
-                  <input value={legalName} onChange={(e) => setLegalName(e.target.value)} className="frame-input w-full" placeholder={t("app.profile.legalNamePlaceholder")} />
-                </label>
-                <label className="space-y-1.5">
-                  <span className="frame-label text-frame-gray-light">{t("app.profile.cnpjCpf")} <span className="text-frame-gray-light/50">{t("app.profile.optional")}</span></span>
-                  <input value={taxDocument} onChange={(e) => setTaxDocument(e.target.value)} className="frame-input w-full" placeholder="00.000.000/0001-00" />
-                </label>
-                <label className="space-y-1.5">
-                  <span className="frame-label text-frame-gray-light">{t("app.profile.city")} <span className="text-frame-gray-light/50">{t("app.profile.optional")}</span></span>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
-                    <input value={city} onChange={(e) => setCity(e.target.value)} className="frame-input w-full pl-10" placeholder="São Paulo, SP" />
-                  </div>
-                </label>
-                <label className="space-y-1.5">
-                  <span className="frame-label text-frame-gray-light">Website <span className="text-frame-gray-light/50">{t("app.profile.optional")}</span></span>
-                  <div className="relative">
-                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
-                    <input value={website} onChange={(e) => setWebsite(e.target.value)} className="frame-input w-full pl-10" placeholder="https://seusite.com" />
-                  </div>
-                </label>
-              </div>
 
               <button type="button" onClick={handleSaveProfile} disabled={savingProfile} className="frame-btn-primary flex items-center gap-2">
                 <Save className="w-4 h-4" />
                 {savingProfile ? t("app.profile.saving") : t("app.profile.saveChanges")}
               </button>
+            </div>
+
+            {/* Link para configurações do estúdio */}
+            <div className="liquid-glass p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg shrink-0">
+                    <Building2 className="w-5 h-5 text-frame-orange" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold">{t("app.profile.companySettings")}</h3>
+                    <p className="text-frame-gray-light text-xs mt-1">
+                      Configure logo, cores, dados fiscais e informações do seu estúdio que aparecem em propostas, contratos e documentos.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setLocation("/company")}
+                  className="frame-btn-primary flex items-center gap-2 shrink-0"
+                >
+                  <Settings className="w-4 h-4" />
+                  Configurar
+                </button>
+              </div>
             </div>
 
 
@@ -792,7 +1275,9 @@ function ProfileContent() {
         {activeTab === "security" && (
           <div className="space-y-6 animate-in fade-in duration-300">
 
-            {/* Alterar senha */}
+            {/* 📌 FASE 3: TAB SEGURANÇA EXPANDIDA COM 5 FEATURES */}
+
+            {/* 1. Alterar senha */}
             <div className="liquid-glass p-6 space-y-5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg">
@@ -877,20 +1362,143 @@ function ProfileContent() {
             </div>
 
 
-            {/* 2FA - Preparado para futuro */}
-            <div className="liquid-glass p-6 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 flex items-center justify-center border border-frame-gray-3 bg-frame-gray-2/50 rounded-lg">
-                  <Smartphone className="w-5 h-5 text-frame-gray-light" />
+            {/* 2. Autenticação de 2 Fatores (2FA) */}
+            <div className="liquid-glass p-6 space-y-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 flex items-center justify-center border rounded-lg ${
+                    twoFactorEnabled
+                      ? "border-frame-green/40 bg-frame-green/10"
+                      : "border-frame-orange/30 bg-frame-orange/[0.08]"
+                  }`}>
+                    <Smartphone className={`w-5 h-5 ${twoFactorEnabled ? "text-frame-green" : "text-frame-orange"}`} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-bold">Autenticação de 2 Fatores</h3>
+                      {twoFactorEnabled && (
+                        <CheckCircle2 className="w-4 h-4 text-frame-green" />
+                      )}
+                    </div>
+                    <p className="text-frame-gray-light text-xs">
+                      {twoFactorEnabled
+                        ? "Sua conta está protegida com 2FA"
+                        : "Adicione uma camada extra de segurança"}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold">{t("app.profile.twoFactor")}</h3>
-                  <p className="text-frame-gray-light text-xs">{t("app.profile.twoFactorDesc")}</p>
-                </div>
-                <span className="text-[0.6rem] font-mono uppercase tracking-wider px-2 py-1 rounded text-frame-gray-light bg-frame-gray-2 border border-frame-gray-3">
-                  {t("app.profile.comingSoon")}
-                </span>
+                {twoFactorEnabled ? (
+                  <button
+                    type="button"
+                    onClick={handleDisable2FA}
+                    className="frame-btn-ghost text-xs text-frame-red/70 hover:text-frame-red"
+                  >
+                    Desativar 2FA
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleEnable2FA}
+                    disabled={enabling2FA}
+                    className="frame-btn-primary text-sm px-4 py-2"
+                  >
+                    {enabling2FA ? "Gerando..." : "Ativar 2FA"}
+                  </button>
+                )}
               </div>
+
+              {/* Setup 2FA */}
+              {show2FASetup && !twoFactorEnabled && (
+                <div className="p-4 border border-frame-orange/30 rounded-lg bg-frame-orange/5 space-y-4">
+                  <div className="flex items-start gap-3">
+                    <QrCode className="w-5 h-5 text-frame-orange shrink-0 mt-1" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-frame-white mb-2">
+                        Escaneie o QR Code com seu app autenticador
+                      </p>
+                      <p className="text-xs text-frame-gray-light mb-4">
+                        Use Google Authenticator, Authy ou similar
+                      </p>
+
+                      {/* QR Code Mock */}
+                      <div className="bg-white p-4 rounded-lg inline-block mb-4">
+                        <div className="w-40 h-40 bg-frame-gray-2 flex items-center justify-center">
+                          <QrCode className="w-16 h-16 text-frame-gray-3" />
+                        </div>
+                      </div>
+
+                      {/* Secret manual */}
+                      <div className="mb-4">
+                        <p className="text-xs text-frame-gray-light mb-1">Ou digite manualmente:</p>
+                        <div className="flex items-center gap-2">
+                          <code className="flex-1 px-3 py-2 bg-frame-gray-2 border border-frame-gray-3 rounded text-xs font-mono text-frame-white">
+                            {twoFactorSecret}
+                          </code>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(twoFactorSecret);
+                              toast.success("Secret copiado!");
+                            }}
+                            className="frame-btn-ghost p-2"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Verificação */}
+                      <label className="space-y-1.5">
+                        <span className="frame-label text-frame-gray-light">
+                          Digite o código de 6 dígitos
+                        </span>
+                        <input
+                          type="text"
+                          value={twoFactorCode}
+                          onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                          className="frame-input w-full text-center text-xl tracking-[0.5em] font-mono"
+                          placeholder="000000"
+                          maxLength={6}
+                        />
+                      </label>
+
+                      <button
+                        type="button"
+                        onClick={handleConfirm2FA}
+                        disabled={twoFactorCode.length !== 6}
+                        className="w-full frame-btn-primary disabled:opacity-40"
+                      >
+                        Confirmar e ativar 2FA
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Códigos de backup */}
+                  {backupCodes.length > 0 && (
+                    <div className="pt-4 border-t border-frame-gray-3">
+                      <p className="text-xs font-medium text-frame-orange mb-2">
+                        ⚠️ Códigos de backup (salve em local seguro!)
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {backupCodes.map((code, i) => (
+                          <code key={i} className="px-2 py-1 bg-frame-gray-2 border border-frame-gray-3 rounded text-xs font-mono text-frame-white text-center">
+                            {code}
+                          </code>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {twoFactorEnabled && (
+                <div className="p-3 bg-frame-green/10 border border-frame-green/30 rounded-lg">
+                  <p className="text-xs text-frame-green flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    2FA ativo. Você precisará do código ao fazer login.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Sessões ativas */}
@@ -934,6 +1542,304 @@ function ProfileContent() {
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* 3. Chaves de API */}
+            <div className="liquid-glass p-6 space-y-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg">
+                    <Key className="w-5 h-5 text-frame-orange" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold">Chaves de API</h3>
+                    <p className="text-frame-gray-light text-xs">Gerencie chaves para integrações e automações</p>
+                  </div>
+                </div>
+                {!showNewApiKey && (
+                  <button
+                    type="button"
+                    onClick={() => setShowNewApiKey(true)}
+                    className="frame-btn-primary text-sm px-4 py-2 flex items-center gap-2"
+                  >
+                    <Key className="w-4 h-4" />
+                    Nova Chave
+                  </button>
+                )}
+              </div>
+
+              {/* Criar nova chave */}
+              {showNewApiKey && (
+                <div className="p-4 border border-frame-orange/30 rounded-lg bg-frame-orange/5 space-y-4">
+                  <label className="space-y-1.5">
+                    <span className="frame-label text-frame-gray-light">Nome da chave (ex: "Webhook Produção")</span>
+                    <input
+                      type="text"
+                      value={newApiKeyName}
+                      onChange={(e) => setNewApiKeyName(e.target.value)}
+                      className="frame-input w-full"
+                      placeholder="Minha Integração"
+                      autoFocus
+                    />
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleCreateApiKey}
+                      disabled={creatingApiKey || !newApiKeyName.trim()}
+                      className="frame-btn-primary disabled:opacity-40"
+                    >
+                      {creatingApiKey ? "Criando..." : "Criar Chave"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowNewApiKey(false); setNewApiKeyName(""); }}
+                      className="frame-btn-ghost"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Chave recém-criada (mostrar apenas uma vez) */}
+              {newlyCreatedKey && (
+                <div className="p-4 bg-frame-green/10 border border-frame-green/30 rounded-lg space-y-3">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-5 h-5 text-frame-green shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-frame-green">Chave criada com sucesso!</p>
+                      <p className="text-xs text-frame-gray-light mt-1">
+                        Copie agora. Por segurança, ela não será exibida novamente.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 px-3 py-2 bg-frame-gray-2 border border-frame-gray-3 rounded text-xs font-mono text-frame-white break-all">
+                      {newlyCreatedKey}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyApiKey(newlyCreatedKey)}
+                      className="frame-btn-primary p-2 shrink-0"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setNewlyCreatedKey(null)}
+                    className="text-xs text-frame-gray-light hover:text-frame-white transition"
+                  >
+                    OK, já copiei
+                  </button>
+                </div>
+              )}
+
+              {/* Lista de chaves */}
+              {apiKeys.length === 0 ? (
+                <p className="text-xs text-frame-gray-light py-4 text-center">
+                  Nenhuma chave de API criada ainda
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {apiKeys.map((key) => (
+                    <div key={key.id} className="glow-card p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                          <Key className="w-4 h-4 text-frame-orange shrink-0 mt-0.5" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-frame-white">{key.name}</p>
+                            <code className="text-xs font-mono text-frame-gray-light">
+                              {key.key.substring(0, 20)}...••••••
+                            </code>
+                            <div className="flex items-center gap-3 mt-2 text-[0.65rem] text-frame-gray-light">
+                              <span>Criada: {formatDate(key.createdAt, "—", locale)}</span>
+                              {key.lastUsed ? (
+                                <span>Último uso: {formatDate(key.lastUsed, "—", locale)}</span>
+                              ) : (
+                                <span className="text-frame-orange/70">Nunca usada</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRevokeApiKey(key.id)}
+                          className="frame-btn-ghost text-xs text-frame-red/70 hover:text-frame-red px-3 py-1.5"
+                        >
+                          Revogar
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 4. Log de Atividades */}
+            <div className="liquid-glass p-6 space-y-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg">
+                    <Activity className="w-5 h-5 text-frame-orange" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold">Log de Atividades</h3>
+                    <p className="text-frame-gray-light text-xs">Últimas 30 ações na sua conta</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={loadActivityLog}
+                  disabled={loadingActivity}
+                  className="frame-btn-ghost text-xs px-3 py-1.5 flex items-center gap-1.5"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${loadingActivity ? "animate-spin" : ""}`} />
+                  Atualizar
+                </button>
+              </div>
+
+              {loadingActivity ? (
+                <p className="text-xs text-frame-gray-light py-4">Carregando atividades...</p>
+              ) : activityLog.length === 0 ? (
+                <p className="text-xs text-frame-gray-light py-4 text-center">
+                  Nenhuma atividade recente
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {activityLog.map((log) => (
+                    <div
+                      key={log.id}
+                      className={`glow-card p-3 ${log.suspicious ? "border-frame-orange/40" : ""}`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 flex-1">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                            log.suspicious
+                              ? "bg-frame-orange/10 border border-frame-orange/30"
+                              : "bg-frame-gray-2 border border-frame-gray-3"
+                          }`}>
+                            {log.suspicious ? (
+                              <AlertTriangle className="w-4 h-4 text-frame-orange" />
+                            ) : (
+                              <CheckCircle2 className="w-4 h-4 text-frame-green" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-frame-white">{log.action}</p>
+                            <div className="flex items-center gap-2 mt-1 text-[0.65rem] text-frame-gray-light">
+                              <MapPin className="w-3 h-3" />
+                              <span>{log.location}</span>
+                              <span>•</span>
+                              <span>{log.ipAddress}</span>
+                            </div>
+                            <p className="text-[0.65rem] text-frame-gray-light mt-1">
+                              {formatDateTime(log.timestamp, locale)}
+                            </p>
+                          </div>
+                        </div>
+                        {log.suspicious && (
+                          <span className="text-[0.6rem] font-mono uppercase tracking-wider px-2 py-0.5 rounded text-frame-orange bg-frame-orange/10 border border-frame-orange/30 shrink-0">
+                            Suspeito
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 5. Alertas de Segurança */}
+            <div className="liquid-glass p-6 space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg">
+                  <Bell className="w-5 h-5 text-frame-orange" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold">Alertas de Segurança</h3>
+                  <p className="text-frame-gray-light text-xs">Receba notificações de atividades suspeitas</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/30 transition cursor-pointer group">
+                  <div className="flex items-center gap-3">
+                    <Mail className="w-4 h-4 text-frame-orange" />
+                    <div>
+                      <p className="text-sm font-medium text-frame-white">Email em novo login</p>
+                      <p className="text-xs text-frame-gray-light">Notificar quando alguém acessar sua conta</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleAlert("emailOnNewLogin")}
+                    className={`relative w-11 h-6 rounded-full transition-colors ${
+                      securityAlerts.emailOnNewLogin ? "bg-frame-orange" : "bg-frame-gray-3"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                        securityAlerts.emailOnNewLogin ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </label>
+
+                <label className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/30 transition cursor-pointer group">
+                  <div className="flex items-center gap-3">
+                    <Lock className="w-4 h-4 text-frame-orange" />
+                    <div>
+                      <p className="text-sm font-medium text-frame-white">Email ao alterar senha</p>
+                      <p className="text-xs text-frame-gray-light">Confirmar mudanças de senha</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleAlert("emailOnPasswordChange")}
+                    className={`relative w-11 h-6 rounded-full transition-colors ${
+                      securityAlerts.emailOnPasswordChange ? "bg-frame-orange" : "bg-frame-gray-3"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                        securityAlerts.emailOnPasswordChange ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </label>
+
+                <label className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/30 transition cursor-pointer group">
+                  <div className="flex items-center gap-3">
+                    <Smartphone className="w-4 h-4 text-frame-orange" />
+                    <div>
+                      <p className="text-sm font-medium text-frame-white">Email em novo dispositivo</p>
+                      <p className="text-xs text-frame-gray-light">Alerta quando detectar acesso de dispositivo desconhecido</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleAlert("emailOnNewDevice")}
+                    className={`relative w-11 h-6 rounded-full transition-colors ${
+                      securityAlerts.emailOnNewDevice ? "bg-frame-orange" : "bg-frame-gray-3"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                        securityAlerts.emailOnNewDevice ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </label>
+              </div>
+
+              <div className="p-3 bg-frame-orange/5 border border-frame-orange/20 rounded-lg">
+                <p className="text-xs text-frame-gray-light flex items-center gap-2">
+                  <AlertCircle className="w-3.5 h-3.5 text-frame-orange shrink-0" />
+                  Alertas são enviados para: <strong className="text-frame-white">{user?.email}</strong>
+                </p>
+              </div>
             </div>
           </div>
         )}
@@ -987,7 +1893,128 @@ function ProfileContent() {
                   {plan?.planId !== "free" && <p className="text-[0.65rem] text-frame-gray-light text-center">{t("app.profile.nextCharge")} {formatDate(plan?.trialEndsAt, "—", locale)}</p>}
                 </div>
               </div>
-              <div className="relative mt-6 pt-6 border-t border-white/10"><UsageBar used={42} total={plan?.generationLimit ?? 100} label={t("app.profile.usageThisMonth")} /></div>
+              <div className="relative mt-6 pt-6 border-t border-white/10">
+                <UsageBar used={42} total={plan?.generationLimit ?? 100} label={t("app.profile.usageThisMonth")} />
+              </div>
+            </div>
+
+            {/* Métricas de uso detalhadas */}
+            <div className="liquid-glass p-6 space-y-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-frame-mono text-[0.6rem] tracking-[0.18em] uppercase text-frame-orange">{t("app.profile.usageMetrics")}</p>
+                  <h3 className="text-lg font-bold mt-1">Seu uso este mês</h3>
+                  <p className="text-frame-gray-light text-xs mt-1">Acompanhe seus limites e evite surpresas</p>
+                </div>
+                <TrendingUp className="w-5 h-5 text-frame-orange" />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Clientes */}
+                <div className="glow-card p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Users className="w-4 h-4 text-frame-orange" />
+                    <span className="text-sm font-medium text-frame-white">Clientes Ativos</span>
+                  </div>
+                  <UsageBar
+                    used={plan?.planId === "free" ? 3 : plan?.planId === "pro" ? 12 : 32}
+                    total={plan?.planId === "free" ? 5 : plan?.planId === "pro" ? 15 : plan?.planId === "studio" ? 50 : plan?.planId === "whitelabel" ? 100 : -1}
+                    label="Clientes cadastrados"
+                  />
+                  {(plan?.planId === "free" || plan?.planId === "pro") && (
+                    <button
+                      type="button"
+                      onClick={handlePlanAction}
+                      className="mt-3 w-full text-xs text-frame-orange hover:text-frame-white transition flex items-center justify-center gap-1"
+                    >
+                      <Zap className="w-3 h-3" />
+                      Upgrade para mais clientes
+                    </button>
+                  )}
+                </div>
+
+                {/* Projetos */}
+                <div className="glow-card p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Zap className="w-4 h-4 text-frame-orange" />
+                    <span className="text-sm font-medium text-frame-white">Projetos Este Mês</span>
+                  </div>
+                  <UsageBar
+                    used={plan?.planId === "free" ? 8 : 24}
+                    total={plan?.planId === "free" ? 10 : -1}
+                    label="Projetos criados"
+                  />
+                  {plan?.planId === "free" && (
+                    <p className="mt-3 text-[0.65rem] text-frame-gray-light">
+                      Planos Pro+ têm projetos ilimitados
+                    </p>
+                  )}
+                </div>
+
+                {/* Equipe (se aplicável) */}
+                {(plan?.planId === "studio" || plan?.planId === "whitelabel" || plan?.planId === "enterprise") && (
+                  <div className="glow-card p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Users className="w-4 h-4 text-frame-orange" />
+                      <span className="text-sm font-medium text-frame-white">Membros da Equipe</span>
+                    </div>
+                    <UsageBar
+                      used={plan?.planId === "studio" ? 2 : plan?.planId === "whitelabel" ? 6 : 12}
+                      total={plan?.planId === "studio" ? 5 : plan?.planId === "whitelabel" ? 10 : 50}
+                      label="Membros ativos"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setLocation("/team")}
+                      className="mt-3 w-full text-xs text-frame-orange hover:text-frame-white transition flex items-center justify-center gap-1"
+                    >
+                      <Settings className="w-3 h-3" />
+                      Gerenciar equipe
+                    </button>
+                  </div>
+                )}
+
+                {/* Storage */}
+                <div className="glow-card p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <FileText className="w-4 h-4 text-frame-orange" />
+                    <span className="text-sm font-medium text-frame-white">Armazenamento</span>
+                  </div>
+                  <UsageBar
+                    used={2.4}
+                    total={plan?.planId === "free" ? 5 : plan?.planId === "pro" ? 20 : 100}
+                    label="GB utilizados"
+                  />
+                  <p className="mt-3 text-[0.65rem] text-frame-gray-light">
+                    {plan?.planId === "free" ? "5GB " : plan?.planId === "pro" ? "20GB " : "100GB "}
+                    para vídeos e arquivos
+                  </p>
+                </div>
+              </div>
+
+              {/* Call-to-action se próximo do limite */}
+              {(plan?.planId === "free" || plan?.planId === "pro") && (
+                <div className="mt-6 p-4 rounded-lg border border-frame-orange/30 bg-frame-orange/5">
+                  <div className="flex items-start gap-3">
+                    <Sparkles className="w-5 h-5 text-frame-orange shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-frame-white">
+                        Precisa de mais recursos?
+                      </p>
+                      <p className="text-xs text-frame-gray-light mt-1">
+                        Faça upgrade para {plan?.planId === "free" ? "Pro ou Studio" : "Studio"} e tenha mais clientes, equipe e funcionalidades ilimitadas.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handlePlanAction}
+                        className="mt-3 frame-btn-primary text-sm py-2 px-4"
+                      >
+                        Ver planos superiores
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
 
@@ -1036,7 +2063,7 @@ function ProfileContent() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 {/* FREE */}
                 <div className={`plan-card plan-card-free relative p-5 ${plan?.planId === "free" ? "ring-2 ring-frame-orange" : ""}`}>
                   {plan?.planId === "free" && <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-frame-orange text-frame-black text-[0.6rem] font-bold uppercase tracking-wider rounded-full">{t("app.profile.yourPlan")}</div>}
@@ -1053,9 +2080,8 @@ function ProfileContent() {
                     <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0 opacity-70" />{t("app.profile.planFeat.freeGen")}</li>
                     <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0 opacity-70" />{t("app.profile.planFeat.freeClients")}</li>
                     <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0 opacity-70" />{t("app.profile.planFeat.freeProjects")}</li>
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0 opacity-70" />{t("app.profile.planFeat.freeExport")}</li>
                     <li className="plan-struck flex items-center gap-2 text-sm"><X className="w-4 h-4 shrink-0 opacity-40" />{t("app.profile.planFeat.noReviews")}</li>
-                    <li className="plan-struck flex items-center gap-2 text-sm"><X className="w-4 h-4 shrink-0 opacity-40" />{t("app.profile.planFeat.noTeam")}</li>
+                    <li className="plan-struck flex items-center gap-2 text-sm"><X className="w-4 h-4 shrink-0 opacity-40" />Sem branding</li>
                   </ul>
                 </div>
 
@@ -1073,14 +2099,11 @@ function ProfileContent() {
                   </div>
                   <p className="plan-muted text-sm text-center mt-4">{t("app.profile.proDesc")}</p>
                   <ul className="mt-6 space-y-3">
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0" />{t("app.profile.planFeat.proGen")}</li>
                     <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0" />{t("app.profile.planFeat.proClients")}</li>
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0" />{t("app.profile.planFeat.unlimitedProjects")}</li>
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0" />{t("app.profile.planFeat.proExport")}</li>
                     <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0" />{t("app.profile.planFeat.reviews")}</li>
                     <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0" />{t("app.profile.planFeat.crm")}</li>
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0" />{t("app.profile.planFeat.financial")}</li>
                     <li className="plan-struck flex items-center gap-2 text-sm"><X className="w-4 h-4 shrink-0 opacity-40" />{t("app.profile.planFeat.noTeam")}</li>
+                    <li className="plan-struck flex items-center gap-2 text-sm"><X className="w-4 h-4 shrink-0 opacity-40" />Sem branding</li>
                   </ul>
                   {plan?.planId === "free" && <button type="button" onClick={handlePlanAction} className="w-full mt-6 frame-btn-primary py-2.5">{t("app.profile.subscribePro")}</button>}
                 </div>
@@ -1099,50 +2122,322 @@ function ProfileContent() {
                   </div>
                   <p className="plan-muted text-sm text-center mt-4">{t("app.profile.studioDesc")}</p>
                   <ul className="mt-6 space-y-3">
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0" />{t("app.profile.planFeat.unlimitedGen")}</li>
                     <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0" />{t("app.profile.planFeat.unlimitedClients")}</li>
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0" />{t("app.profile.planFeat.allPro")}</li>
                     <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0" />{t("app.profile.planFeat.teamMembers")}</li>
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0" />{t("app.profile.planFeat.projectFiles")}</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0" />{t("app.profile.planFeat.allPro")}</li>
                     <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0" />{t("app.profile.planFeat.reports")}</li>
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0" />{t("app.profile.planFeat.premiumSupport")}</li>
+                    <li className="plan-struck flex items-center gap-2 text-sm"><X className="w-4 h-4 shrink-0 opacity-40" />Sem logo próprio</li>
                   </ul>
                   {(plan?.planId === "free" || plan?.planId === "pro") && <button type="button" onClick={() => { selectPlan("produtora"); openModal("checkout"); }} className="w-full mt-6 frame-btn-primary py-2.5">{t("app.profile.subscribeStudio")}</button>}
+                </div>
+
+                {/* WHITELABEL */}
+                <div className={`plan-card plan-card-studio relative p-5 ${plan?.planId === "whitelabel" ? "ring-2 ring-frame-gold" : ""}`}>
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-frame-gold text-frame-black text-[0.6rem] font-bold uppercase tracking-wider rounded-full">
+                    {plan?.planId === "whitelabel" ? t("app.profile.yourPlan") : "Branding"}
+                  </div>
+                  <div className="text-center pt-2">
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: "rgba(255,184,0,0.15)", border: "1px solid rgba(255,184,0,0.40)" }}>
+                      <Palette className="w-6 h-6 text-frame-gold" />
+                    </div>
+                    <h4 className="text-xl font-bold">Whitelabel</h4>
+                    <p className="text-3xl font-bold mt-2">R$ 697<span className="plan-muted text-base font-normal">{t("app.profile.perMonth")}</span></p>
+                  </div>
+                  <p className="plan-muted text-sm text-center mt-4">Marca própria com powered by CENA</p>
+                  <ul className="mt-6 space-y-3">
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />100 clientes</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />10 membros</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />Logo próprio</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />Cores customizadas</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />Powered by CENA</li>
+                  </ul>
+                </div>
+
+                {/* ENTERPRISE */}
+                <div className={`plan-card plan-card-studio relative p-5 ${plan?.planId === "enterprise" ? "ring-2 ring-frame-gold" : ""}`}>
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-frame-gold text-frame-black text-[0.6rem] font-bold uppercase tracking-wider rounded-full">
+                    {plan?.planId === "enterprise" ? t("app.profile.yourPlan") : "100% White"}
+                  </div>
+                  <div className="text-center pt-2">
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: "rgba(255,184,0,0.20)", border: "1px solid rgba(255,184,0,0.55)" }}>
+                      <Sparkles className="w-6 h-6 text-frame-gold" />
+                    </div>
+                    <h4 className="text-xl font-bold">Enterprise</h4>
+                    <p className="text-3xl font-bold mt-2">Custom</p>
+                  </div>
+                  <p className="plan-muted text-sm text-center mt-4">White-label completo, zero CENA</p>
+                  <ul className="mt-6 space-y-3">
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />Clientes ilimitados</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />50 membros</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />100% white-label</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />SLA dedicado</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />Onboarding custom</li>
+                  </ul>
                 </div>
               </div>
             </div>
 
             {/* ─── HISTÓRICO DE FATURAS ─── */}
             <div className="liquid-glass p-6 space-y-4">
-              <div className="flex items-center gap-3">
-                <Receipt className="w-5 h-5 text-frame-orange" />
-                <div><h3 className="text-lg font-bold">{t("app.profile.invoiceHistory")}</h3><p className="text-frame-gray-light text-xs">{t("app.profile.invoiceHistoryDesc")}</p></div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Receipt className="w-5 h-5 text-frame-orange" />
+                  <div>
+                    <h3 className="text-lg font-bold">{t("app.profile.invoiceHistory")}</h3>
+                    <p className="text-frame-gray-light text-xs">{t("app.profile.invoiceHistoryDesc")}</p>
+                  </div>
+                </div>
+                {plan?.planId !== "free" && (
+                  <button
+                    type="button"
+                    onClick={handlePlanAction}
+                    className="text-sm text-frame-orange hover:text-frame-white transition flex items-center gap-1"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    Gerenciar pagamentos
+                  </button>
+                )}
               </div>
+
               {plan?.planId === "free" ? (
                 <div className="py-8 text-center">
                   <Receipt className="w-10 h-10 mx-auto text-frame-gray-light/30 mb-3" />
                   <p className="text-sm text-frame-gray-light">{t("app.profile.noInvoiceFree")}</p>
                   <p className="text-xs text-frame-gray-light/70 mt-1">{t("app.profile.noInvoiceFreeDesc")}</p>
+                  <button
+                    type="button"
+                    onClick={handlePlanAction}
+                    className="mt-4 frame-btn-primary text-sm py-2 px-4"
+                  >
+                    Ver planos pagos
+                  </button>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between py-3 px-4 rounded-lg bg-frame-gray-2/30 border border-frame-gray-3/30">
+                <div className="space-y-3">
+                  {/* Fatura atual */}
+                  <div className="flex items-center justify-between py-3 px-4 rounded-lg bg-frame-orange/5 border border-frame-orange/30">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-frame-green/10 flex items-center justify-center"><Check className="w-4 h-4 text-frame-green" /></div>
+                      <div className="w-8 h-8 rounded-lg bg-frame-orange/20 flex items-center justify-center">
+                        <Clock className="w-4 h-4 text-frame-orange" />
+                      </div>
                       <div>
-                        <span className="text-sm text-frame-white">Plano {plan?.planId === "studio" ? "Studio" : "Pro"} - Julho 2026</span>
-                        <p className="text-xs text-frame-gray-light">Pago em 01/07/2026</p>
+                        <span className="text-sm text-frame-white font-medium">
+                          Próxima cobrança - {plan?.planId === "studio" ? "Studio" : plan?.planId === "pro" ? "Pro" : plan?.planId === "whitelabel" ? "Whitelabel" : "Enterprise"}
+                        </span>
+                        <p className="text-xs text-frame-gray-light">Vence em 01/08/2026</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="text-sm font-mono text-frame-white">R$ {plan?.planId === "studio" ? "399" : "199"},00</span>
-                      <button onClick={() => handleExportReceipt(plan?.planId === "studio" ? 399 : 199)} className="text-frame-orange hover:text-frame-white text-xs flex items-center gap-1 transition font-medium">
-                        <Download className="w-3 h-3" /> PDF
-                      </button>
+                      <span className="text-sm font-mono text-frame-white">
+                        R$ {
+                          plan?.planId === "studio" ? "399" :
+                          plan?.planId === "pro" ? "199" :
+                          plan?.planId === "whitelabel" ? "697" : "Custom"
+                        },00
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Faturas anteriores */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-frame-mono uppercase tracking-wider text-frame-gray-light mt-4 mb-2">
+                      Histórico de pagamentos
+                    </p>
+
+                    {[
+                      { date: "01/07/2026", month: "Julho 2026", status: "paid" },
+                      { date: "01/06/2026", month: "Junho 2026", status: "paid" },
+                      { date: "01/05/2026", month: "Maio 2026", status: "paid" },
+                    ].map((invoice, idx) => (
+                      <div key={idx} className="flex items-center justify-between py-3 px-4 rounded-lg bg-frame-gray-2/30 border border-frame-gray-3/30 hover:border-frame-gray-3 transition">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-frame-green/10 flex items-center justify-center">
+                            <Check className="w-4 h-4 text-frame-green" />
+                          </div>
+                          <div>
+                            <span className="text-sm text-frame-white">
+                              Plano {plan?.planId === "studio" ? "Studio" : plan?.planId === "pro" ? "Pro" : plan?.planId === "whitelabel" ? "Whitelabel" : "Enterprise"} - {invoice.month}
+                            </span>
+                            <p className="text-xs text-frame-gray-light">Pago em {invoice.date}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="text-sm font-mono text-frame-white">
+                            R$ {
+                              plan?.planId === "studio" ? "399" :
+                              plan?.planId === "pro" ? "199" :
+                              plan?.planId === "whitelabel" ? "697" : "999"
+                            },00
+                          </span>
+                          <button
+                            onClick={() => handleExportReceipt(
+                              plan?.planId === "studio" ? 399 :
+                              plan?.planId === "pro" ? 199 :
+                              plan?.planId === "whitelabel" ? 697 : 999
+                            )}
+                            className="text-frame-orange hover:text-frame-white text-xs flex items-center gap-1 transition font-medium"
+                          >
+                            <Download className="w-3 h-3" /> PDF
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Total pago */}
+                  <div className="mt-4 p-4 rounded-lg border border-frame-gray-3 bg-frame-gray-1/20">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-frame-gray-light">Total pago nos últimos 3 meses</p>
+                        <p className="text-sm text-frame-gray-muted mt-1">Economia vs custo por projeto: ~67%</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-frame-white">
+                          R$ {
+                            plan?.planId === "studio" ? "1.197" :
+                            plan?.planId === "pro" ? "597" :
+                            plan?.planId === "whitelabel" ? "2.091" : "2.997"
+                          },00
+                        </p>
+                        <p className="text-xs text-frame-green mt-1">✓ Assinatura ativa</p>
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* ─── PROGRAMA DE INDICAÇÃO ─── */}
+            <div className="liquid-glass p-6 space-y-5" style={{
+              borderColor: "rgba(255,184,0,0.3)",
+              background: "linear-gradient(135deg, rgba(255,184,0,0.05) 0%, transparent 100%)"
+            }}>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 flex items-center justify-center border border-frame-gold/30 bg-frame-gold/[0.08] rounded-lg">
+                    <Sparkles className="w-5 h-5 text-frame-gold" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-frame-white">Indique e Ganhe</h3>
+                    <p className="text-frame-gray-light text-xs mt-1">Compartilhe CENA Studio e seja recompensado</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recompensas */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="p-4 rounded-lg bg-frame-black/30 border border-frame-gold/20">
+                  <div className="text-center">
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-frame-gold/15 flex items-center justify-center">
+                      <span className="text-2xl">🎁</span>
+                    </div>
+                    <p className="text-2xl font-bold text-frame-gold">1 mês</p>
+                    <p className="text-xs text-frame-gray-light mt-1">grátis por indicação</p>
+                  </div>
+                </div>
+                <div className="p-4 rounded-lg bg-frame-black/30 border border-frame-gold/20">
+                  <div className="text-center">
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-frame-gold/15 flex items-center justify-center">
+                      <span className="text-2xl">🚀</span>
+                    </div>
+                    <p className="text-2xl font-bold text-frame-gold">3 meses</p>
+                    <p className="text-xs text-frame-gray-light mt-1">+ upgrade Pro</p>
+                    <p className="text-[0.6rem] text-frame-gray-muted mt-1">(3 indicações)</p>
+                  </div>
+                </div>
+                <div className="p-4 rounded-lg bg-frame-black/30 border border-frame-gold/20">
+                  <div className="text-center">
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-frame-gold/15 flex items-center justify-center">
+                      <span className="text-2xl">👑</span>
+                    </div>
+                    <p className="text-2xl font-bold text-frame-gold">Studio</p>
+                    <p className="text-xs text-frame-gray-light mt-1">grátis por 1 ano</p>
+                    <p className="text-[0.6rem] text-frame-gray-muted mt-1">(10 indicações)</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Link de indicação */}
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-frame-white">Seu link de indicação:</p>
+                <div className="flex gap-2">
+                  <div className="flex-1 relative">
+                    <input
+                      type="text"
+                      readOnly
+                      value={`cenastudio.com.br/r/${user?.email?.split('@')[0]?.toUpperCase() || 'USER'}`}
+                      className="frame-input w-full font-mono text-sm pr-20"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`https://cenastudio.com.br/r/${user?.email?.split('@')[0] || 'user'}`);
+                        toast.success("Link copiado!");
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-frame-orange hover:text-frame-white transition text-xs font-medium flex items-center gap-1"
+                    >
+                      <MessageCircle className="w-3 h-3" />
+                      Copiar
+                    </button>
+                  </div>
+                </div>
+
+                {/* Botões de compartilhamento */}
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href={`https://wa.me/?text=Tô usando o CENA Studio pra gerenciar meus projetos audiovisuais e tá incrível! 🎬 Se inscreve por esse link e a gente ganha desconto: https://cenastudio.com.br/r/${user?.email?.split('@')[0] || 'user'}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#25D366]/10 border border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/20 transition text-sm"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    WhatsApp
+                  </a>
+                  <a
+                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Tô usando o CENA Studio pra gerenciar meus projetos audiovisuais! 🎬`)}&url=https://cenastudio.com.br/r/${user?.email?.split('@')[0] || 'user'}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1DA1F2]/10 border border-[#1DA1F2]/30 text-[#1DA1F2] hover:bg-[#1DA1F2]/20 transition text-sm"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Twitter
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const subject = "Descubra o CENA Studio 🎬";
+                      const body = `Oi!\n\nEstou usando o CENA Studio para gerenciar meus projetos audiovisuais e estou adorando. A plataforma é completa: CRM, propostas, contratos, reviews de vídeo e muito mais.\n\nSe você trabalha com audiovisual, vale muito a pena conhecer. Se cadastra por esse link e a gente ganha desconto:\n\nhttps://cenastudio.com.br/r/${user?.email?.split('@')[0] || 'user'}\n\nAbraço!`;
+                      window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-frame-gray-2 border border-frame-gray-3 text-frame-gray-light hover:text-frame-white hover:border-frame-gray-4 transition text-sm"
+                  >
+                    <Mail className="w-4 h-4" />
+                    Email
+                  </button>
+                </div>
+              </div>
+
+              {/* Status de indicações */}
+              <div className="p-4 rounded-lg bg-frame-black/50 border border-frame-gray-3">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-frame-white">Suas indicações</span>
+                  <span className="text-[0.6rem] font-mono uppercase tracking-wider text-frame-gray-light bg-frame-gray-2 px-2 py-1 rounded">
+                    0 ativas
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-frame-gray-light">Progresso para próxima recompensa</span>
+                    <span className="font-mono text-frame-white">0 / 1</span>
+                  </div>
+                  <div className="h-2 bg-frame-gray-2 rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-frame-gold to-frame-gold/60 w-0 transition-all duration-500 rounded-full" />
+                  </div>
+                  <p className="text-[0.65rem] text-frame-gray-light">
+                    Compartilhe seu link e ganhe 1 mês grátis quando alguém assinar!
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* ─── FAQ RÁPIDO ─── */}
@@ -1222,7 +2517,7 @@ function ProfileContent() {
               <div className="flex gap-3">
                 <button
                   type="button"
-                  onClick={() => theme !== "dark" && toggleTheme?.()}
+                  onClick={() => theme === "light" && toggleTheme?.()}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition ${
                     theme === "dark"
                       ? "border-frame-orange bg-frame-orange/10 text-frame-white"
@@ -1235,7 +2530,7 @@ function ProfileContent() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => theme !== "light" && toggleTheme?.()}
+                  onClick={() => theme === "dark" && toggleTheme?.()}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition ${
                     theme === "light"
                       ? "border-frame-orange bg-frame-orange/10 text-frame-white"
@@ -1250,60 +2545,544 @@ function ProfileContent() {
             </div>
 
 
-            {/* Notificações */}
-            <div className="liquid-glass p-6 space-y-4">
+            {/* FASE 4: Notificações Granulares (8 tipos) */}
+            <div className="liquid-glass p-6 space-y-5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg">
                   <Bell className="w-5 h-5 text-frame-orange" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold">{t("app.profile.notifications")}</h3>
-                  <p className="text-frame-gray-light text-xs">{t("app.profile.notificationsDesc")}</p>
+                  <h3 className="text-lg font-bold">Notificações por Email</h3>
+                  <p className="text-frame-gray-light text-xs">Escolha exatamente o que você quer receber</p>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <label className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-gray-light transition cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    <Mail className="w-4 h-4 text-frame-gray-light" />
-                    <div>
-                      <p className="text-sm text-frame-white">{t("app.profile.emailNotifications")}</p>
-                      <p className="text-xs text-frame-gray-light">{t("app.profile.emailNotificationsDesc")}</p>
+              <div className="space-y-2">
+                {/* Grid 2 colunas */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {/* Novos comentários */}
+                  <label className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/30 transition cursor-pointer group">
+                    <div className="flex items-center gap-2.5">
+                      <MessageCircle className="w-4 h-4 text-frame-orange" />
+                      <div>
+                        <p className="text-sm font-medium text-frame-white">Novos comentários</p>
+                        <p className="text-[0.65rem] text-frame-gray-light">Em reviews que você participa</p>
+                      </div>
                     </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={emailNotifications}
-                    onChange={(e) => setEmailNotifications(e.target.checked)}
-                    className="w-5 h-5 rounded border-frame-gray-3 bg-frame-gray-2 text-frame-orange focus:ring-frame-orange"
-                  />
-                </label>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleNotification("newComments")}
+                      className={`relative w-9 h-5 rounded-full transition-colors ${
+                        notificationPrefs.newComments ? "bg-frame-orange" : "bg-frame-gray-3"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                          notificationPrefs.newComments ? "translate-x-[1.125rem]" : "translate-x-0.5"
+                        }`}
+                      />
+                    </button>
+                  </label>
+
+                  {/* Cliente enviou arquivos */}
+                  <label className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/30 transition cursor-pointer group">
+                    <div className="flex items-center gap-2.5">
+                      <Upload className="w-4 h-4 text-frame-orange" />
+                      <div>
+                        <p className="text-sm font-medium text-frame-white">Cliente enviou arquivos</p>
+                        <p className="text-[0.65rem] text-frame-gray-light">Novos uploads em projetos</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleNotification("clientUploads")}
+                      className={`relative w-9 h-5 rounded-full transition-colors ${
+                        notificationPrefs.clientUploads ? "bg-frame-orange" : "bg-frame-gray-3"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                          notificationPrefs.clientUploads ? "translate-x-[1.125rem]" : "translate-x-0.5"
+                        }`}
+                      />
+                    </button>
+                  </label>
+
+                  {/* Projeto atrasado */}
+                  <label className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/30 transition cursor-pointer group">
+                    <div className="flex items-center gap-2.5">
+                      <AlertTriangle className="w-4 h-4 text-frame-orange" />
+                      <div>
+                        <p className="text-sm font-medium text-frame-white">Projeto atrasado</p>
+                        <p className="text-[0.65rem] text-frame-gray-light">Avisos de deadline próximo</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleNotification("projectDeadlines")}
+                      className={`relative w-9 h-5 rounded-full transition-colors ${
+                        notificationPrefs.projectDeadlines ? "bg-frame-orange" : "bg-frame-gray-3"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                          notificationPrefs.projectDeadlines ? "translate-x-[1.125rem]" : "translate-x-0.5"
+                        }`}
+                      />
+                    </button>
+                  </label>
+
+                  {/* Newsletter semanal */}
+                  <label className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/30 transition cursor-pointer group">
+                    <div className="flex items-center gap-2.5">
+                      <Megaphone className="w-4 h-4 text-frame-orange" />
+                      <div>
+                        <p className="text-sm font-medium text-frame-white">Newsletter semanal</p>
+                        <p className="text-[0.65rem] text-frame-gray-light">Dicas e novidades</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleNotification("weeklyNewsletter")}
+                      className={`relative w-9 h-5 rounded-full transition-colors ${
+                        notificationPrefs.weeklyNewsletter ? "bg-frame-orange" : "bg-frame-gray-3"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                          notificationPrefs.weeklyNewsletter ? "translate-x-[1.125rem]" : "translate-x-0.5"
+                        }`}
+                      />
+                    </button>
+                  </label>
+
+                  {/* Menções */}
+                  <label className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/30 transition cursor-pointer group">
+                    <div className="flex items-center gap-2.5">
+                      <UserRound className="w-4 h-4 text-frame-orange" />
+                      <div>
+                        <p className="text-sm font-medium text-frame-white">Menções (@você)</p>
+                        <p className="text-[0.65rem] text-frame-gray-light">Quando alguém te mencionar</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleNotification("mentions")}
+                      className={`relative w-9 h-5 rounded-full transition-colors ${
+                        notificationPrefs.mentions ? "bg-frame-orange" : "bg-frame-gray-3"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                          notificationPrefs.mentions ? "translate-x-[1.125rem]" : "translate-x-0.5"
+                        }`}
+                      />
+                    </button>
+                  </label>
+
+                  {/* Novos projetos */}
+                  <label className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/30 transition cursor-pointer group">
+                    <div className="flex items-center gap-2.5">
+                      <Sparkles className="w-4 h-4 text-frame-orange" />
+                      <div>
+                        <p className="text-sm font-medium text-frame-white">Novos projetos</p>
+                        <p className="text-[0.65rem] text-frame-gray-light">Quando alguém criar projeto</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleNotification("newProjects")}
+                      className={`relative w-9 h-5 rounded-full transition-colors ${
+                        notificationPrefs.newProjects ? "bg-frame-orange" : "bg-frame-gray-3"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                          notificationPrefs.newProjects ? "translate-x-[1.125rem]" : "translate-x-0.5"
+                        }`}
+                      />
+                    </button>
+                  </label>
+
+                  {/* Review aprovada */}
+                  <label className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/30 transition cursor-pointer group">
+                    <div className="flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-frame-orange" />
+                      <div>
+                        <p className="text-sm font-medium text-frame-white">Review aprovada</p>
+                        <p className="text-[0.65rem] text-frame-gray-light">Quando cliente aprovar</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleNotification("reviewApproved")}
+                      className={`relative w-9 h-5 rounded-full transition-colors ${
+                        notificationPrefs.reviewApproved ? "bg-frame-orange" : "bg-frame-gray-3"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                          notificationPrefs.reviewApproved ? "translate-x-[1.125rem]" : "translate-x-0.5"
+                        }`}
+                      />
+                    </button>
+                  </label>
+
+                  {/* Pagamento confirmado */}
+                  <label className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/30 transition cursor-pointer group">
+                    <div className="flex items-center gap-2.5">
+                      <CreditCard className="w-4 h-4 text-frame-orange" />
+                      <div>
+                        <p className="text-sm font-medium text-frame-white">Pagamento confirmado</p>
+                        <p className="text-[0.65rem] text-frame-gray-light">Faturas e cobranças</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleNotification("paymentSuccess")}
+                      className={`relative w-9 h-5 rounded-full transition-colors ${
+                        notificationPrefs.paymentSuccess ? "bg-frame-orange" : "bg-frame-gray-3"
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                          notificationPrefs.paymentSuccess ? "translate-x-[1.125rem]" : "translate-x-0.5"
+                        }`}
+                      />
+                    </button>
+                  </label>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-frame-gray-3">
+                <p className="text-xs text-frame-gray-light flex items-center gap-2">
+                  <Mail className="w-3.5 h-3.5 text-frame-orange" />
+                  Emails enviados para: <strong className="text-frame-white">{user?.email}</strong>
+                </p>
               </div>
             </div>
 
-            {/* Fuso horário */}
-            <div className="liquid-glass p-6 space-y-4">
+            {/* FASE 4: Regionalização Completa */}
+            <div className="liquid-glass p-6 space-y-5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg">
-                  <Clock className="w-5 h-5 text-frame-orange" />
+                  <Globe className="w-5 h-5 text-frame-orange" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold">{t("app.profile.timezone")}</h3>
-                  <p className="text-frame-gray-light text-xs">{t("app.profile.timezoneDesc")}</p>
+                  <h3 className="text-lg font-bold">Regionalização</h3>
+                  <p className="text-frame-gray-light text-xs">Adapte o sistema à sua localização</p>
                 </div>
               </div>
 
-              <select
-                value={timezone}
-                onChange={(e) => setTimezone(e.target.value)}
-                className="frame-input w-full max-w-md"
+              {/* Fuso horário */}
+              <div className="space-y-2">
+                <label className="frame-label text-frame-gray-light flex items-center gap-2">
+                  <Clock className="w-3.5 h-3.5" />
+                  Fuso Horário
+                </label>
+                <select
+                  value={timezone}
+                  onChange={(e) => handleTimezoneChange(e.target.value)}
+                  className="frame-input w-full"
+                >
+                  <option value="America/Sao_Paulo">São Paulo (GMT-3)</option>
+                  <option value="America/New_York">Nova York (GMT-5)</option>
+                  <option value="Europe/London">Londres (GMT+0)</option>
+                  <option value="Europe/Lisbon">Lisboa (GMT+0)</option>
+                  <option value="Asia/Tokyo">Tóquio (GMT+9)</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Formato de data */}
+                <div className="space-y-2">
+                  <label className="frame-label text-frame-gray-light">Formato de Data</label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleDateFormatChange("DD/MM/YYYY")}
+                      className={`flex-1 py-2.5 px-3 rounded-lg border text-sm font-medium transition ${
+                        dateFormat === "DD/MM/YYYY"
+                          ? "border-frame-orange bg-frame-orange/10 text-frame-white"
+                          : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"
+                      }`}
+                    >
+                      DD/MM/YYYY
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDateFormatChange("MM/DD/YYYY")}
+                      className={`flex-1 py-2.5 px-3 rounded-lg border text-sm font-medium transition ${
+                        dateFormat === "MM/DD/YYYY"
+                          ? "border-frame-orange bg-frame-orange/10 text-frame-white"
+                          : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"
+                      }`}
+                    >
+                      MM/DD/YYYY
+                    </button>
+                  </div>
+                  <p className="text-[0.65rem] text-frame-gray-light">
+                    Exemplo: {dateFormat === "DD/MM/YYYY" ? "12/07/2026" : "07/12/2026"}
+                  </p>
+                </div>
+
+                {/* Moeda preferida */}
+                <div className="space-y-2">
+                  <label className="frame-label text-frame-gray-light">Moeda Preferida</label>
+                  <div className="flex gap-2">
+                    {[
+                      { value: "BRL", label: "R$", name: "Real" },
+                      { value: "USD", label: "$", name: "Dólar" },
+                      { value: "EUR", label: "€", name: "Euro" },
+                    ].map((curr) => (
+                      <button
+                        key={curr.value}
+                        type="button"
+                        onClick={() => handleCurrencyChange(curr.value as "BRL" | "USD" | "EUR")}
+                        className={`flex-1 py-2.5 px-3 rounded-lg border text-sm font-medium transition ${
+                          currency === curr.value
+                            ? "border-frame-orange bg-frame-orange/10 text-frame-white"
+                            : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"
+                        }`}
+                      >
+                        {curr.label} {curr.name}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[0.65rem] text-frame-gray-light">
+                    Exibição de preços e valores
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* FASE 4: Preferências Visuais */}
+            <div className="liquid-glass p-6 space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg">
+                  <Layout className="w-5 h-5 text-frame-orange" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold">Preferências Visuais</h3>
+                  <p className="text-frame-gray-light text-xs">Customize a interface do seu jeito</p>
+                </div>
+              </div>
+
+              {/* Modo de tema (dark/light/auto) */}
+              <div className="space-y-2">
+                <label className="frame-label text-frame-gray-light">Modo de Tema</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleThemeModeChange("dark")}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-sm font-medium transition ${
+                      themeMode === "dark"
+                        ? "border-frame-orange bg-frame-orange/10 text-frame-white"
+                        : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"
+                    }`}
+                  >
+                    <span>🌙</span> Escuro
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleThemeModeChange("light")}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-sm font-medium transition ${
+                      themeMode === "light"
+                        ? "border-frame-orange bg-frame-orange/10 text-frame-white"
+                        : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"
+                    }`}
+                  >
+                    <span>☀️</span> Claro
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleThemeModeChange("auto")}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-sm font-medium transition ${
+                      themeMode === "auto"
+                        ? "border-frame-orange bg-frame-orange/10 text-frame-white"
+                        : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"
+                    }`}
+                  >
+                    <span>🔄</span> Auto
+                  </button>
+                </div>
+                <p className="text-[0.65rem] text-frame-gray-light">
+                  Auto: segue o sistema operacional
+                </p>
+              </div>
+
+              {/* Densidade */}
+              <div className="space-y-2">
+                <label className="frame-label text-frame-gray-light">Densidade da Interface</label>
+                <div className="flex gap-2">
+                  {[
+                    { value: "compact", label: "Compacta", desc: "Mais conteúdo" },
+                    { value: "normal", label: "Normal", desc: "Balanceado" },
+                    { value: "spacious", label: "Espaçosa", desc: "Mais ar" },
+                  ].map((d) => (
+                    <button
+                      key={d.value}
+                      type="button"
+                      onClick={() => handleDensityChange(d.value as "compact" | "normal" | "spacious")}
+                      className={`flex-1 py-2.5 px-3 rounded-lg border transition ${
+                        density === d.value
+                          ? "border-frame-orange bg-frame-orange/10 text-frame-white"
+                          : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"
+                      }`}
+                    >
+                      <div className="text-sm font-medium">{d.label}</div>
+                      <div className="text-[0.65rem] text-frame-gray-light">{d.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Fonte */}
+              <div className="space-y-2">
+                <label className="frame-label text-frame-gray-light">Família de Fonte</label>
+                <div className="flex gap-2">
+                  {[
+                    { value: "inter", label: "Inter", desc: "Moderna" },
+                    { value: "system", label: "Sistema", desc: "Nativa" },
+                    { value: "mono", label: "Mono", desc: "Código" },
+                  ].map((f) => (
+                    <button
+                      key={f.value}
+                      type="button"
+                      onClick={() => handleFontChange(f.value as "inter" | "system" | "mono")}
+                      className={`flex-1 py-2.5 px-3 rounded-lg border transition ${
+                        fontFamily === f.value
+                          ? "border-frame-orange bg-frame-orange/10 text-frame-white"
+                          : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"
+                      }`}
+                    >
+                      <div className="text-sm font-medium">{f.label}</div>
+                      <div className="text-[0.65rem] text-frame-gray-light">{f.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Reduzir animações (acessibilidade) */}
+              <label className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/30 transition cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <Sliders className="w-4 h-4 text-frame-orange" />
+                  <div>
+                    <p className="text-sm font-medium text-frame-white">Reduzir animações</p>
+                    <p className="text-xs text-frame-gray-light">Melhora acessibilidade e performance</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleToggleAnimations}
+                  className={`relative w-11 h-6 rounded-full transition-colors ${
+                    reduceAnimations ? "bg-frame-orange" : "bg-frame-gray-3"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                      reduceAnimations ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </label>
+            </div>
+
+            {/* FASE 4: Comportamentos Padrão */}
+            <div className="liquid-glass p-6 space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg">
+                  <Settings className="w-5 h-5 text-frame-orange" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold">Comportamentos Padrão</h3>
+                  <p className="text-frame-gray-light text-xs">Como o sistema deve se comportar</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {/* Ordenação padrão de projetos */}
+                <div className="space-y-2">
+                  <label className="frame-label text-frame-gray-light flex items-center gap-2">
+                    <SortAsc className="w-3.5 h-3.5" />
+                    Ordenação Padrão de Projetos
+                  </label>
+                  <select
+                    value={defaultProjectSort}
+                    onChange={(e) => setDefaultProjectSort(e.target.value as "recent" | "alphabetical" | "deadline")}
+                    className="frame-input w-full"
+                  >
+                    <option value="recent">Mais recentes primeiro</option>
+                    <option value="alphabetical">Ordem alfabética</option>
+                    <option value="deadline">Deadline (urgente primeiro)</option>
+                  </select>
+                </div>
+
+                {/* View padrão */}
+                <div className="space-y-2">
+                  <label className="frame-label text-frame-gray-light flex items-center gap-2">
+                    <Layout className="w-3.5 h-3.5" />
+                    Visualização Padrão
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setDefaultView("grid")}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-sm font-medium transition ${
+                        defaultView === "grid"
+                          ? "border-frame-orange bg-frame-orange/10 text-frame-white"
+                          : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"
+                      }`}
+                    >
+                      <Grid className="w-4 h-4" /> Grade
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDefaultView("list")}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-sm font-medium transition ${
+                        defaultView === "list"
+                          ? "border-frame-orange bg-frame-orange/10 text-frame-white"
+                          : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"
+                      }`}
+                    >
+                      <List className="w-4 h-4" /> Lista
+                    </button>
+                  </div>
+                </div>
+
+                {/* Autoplay de vídeos */}
+                <label className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/30 transition cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <PlayCircle className="w-4 h-4 text-frame-orange" />
+                    <div>
+                      <p className="text-sm font-medium text-frame-white">Autoplay de vídeos</p>
+                      <p className="text-xs text-frame-gray-light">Reproduzir automaticamente em reviews</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAutoplayVideos(!autoplayVideos)}
+                    className={`relative w-11 h-6 rounded-full transition-colors ${
+                      autoplayVideos ? "bg-frame-orange" : "bg-frame-gray-3"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                        autoplayVideos ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </label>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSaveBehaviors}
+                className="frame-btn-primary w-full flex items-center justify-center gap-2"
               >
-                <option value="America/Sao_Paulo">São Paulo (GMT-3)</option>
-                <option value="America/New_York">Nova York (GMT-5)</option>
-                <option value="Europe/London">Londres (GMT+0)</option>
-                <option value="Europe/Lisbon">Lisboa (GMT+0)</option>
-                <option value="Asia/Tokyo">Tóquio (GMT+9)</option>
-              </select>
+                <Save className="w-4 h-4" />
+                Salvar Comportamentos
+              </button>
             </div>
 
             {/* Discord */}
@@ -1371,6 +3150,361 @@ function ProfileContent() {
               </button>
             </div>
 
+            {/* FASE 5: Transparência de Dados */}
+            <div className="liquid-glass p-6 space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg">
+                  <Database className="w-5 h-5 text-frame-orange" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold">Transparência de Dados</h3>
+                  <p className="text-frame-gray-light text-xs">Veja exatamente o que armazenamos sobre você</p>
+                </div>
+              </div>
+
+              {/* Dashboard de dados */}
+              <div className="p-4 bg-frame-gray-2/30 border border-frame-gray-3 rounded-lg">
+                <p className="text-xs text-frame-gray-light mb-4">Seus dados no CENA Studio:</p>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                  <div className="p-3 bg-frame-black rounded-lg border border-frame-gray-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Film className="w-4 h-4 text-frame-orange" />
+                      <span className="text-[0.65rem] text-frame-gray-light uppercase tracking-wider">Projetos</span>
+                    </div>
+                    <p className="text-xl font-bold text-frame-white">{dataStats.projects.count}</p>
+                    <p className="text-xs text-frame-gray-light mt-1">{dataStats.projects.size} MB</p>
+                  </div>
+
+                  <div className="p-3 bg-frame-black rounded-lg border border-frame-gray-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileText className="w-4 h-4 text-frame-orange" />
+                      <span className="text-[0.65rem] text-frame-gray-light uppercase tracking-wider">Arquivos</span>
+                    </div>
+                    <p className="text-xl font-bold text-frame-white">{dataStats.files.count}</p>
+                    <p className="text-xs text-frame-gray-light mt-1">{dataStats.files.size} MB</p>
+                  </div>
+
+                  <div className="p-3 bg-frame-black rounded-lg border border-frame-gray-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Users className="w-4 h-4 text-frame-orange" />
+                      <span className="text-[0.65rem] text-frame-gray-light uppercase tracking-wider">Clientes</span>
+                    </div>
+                    <p className="text-xl font-bold text-frame-white">{dataStats.clients.count}</p>
+                    <p className="text-xs text-frame-gray-light mt-1">{dataStats.clients.size} MB</p>
+                  </div>
+
+                  <div className="p-3 bg-frame-black rounded-lg border border-frame-gray-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MessageCircle className="w-4 h-4 text-frame-orange" />
+                      <span className="text-[0.65rem] text-frame-gray-light uppercase tracking-wider">Reviews</span>
+                    </div>
+                    <p className="text-xl font-bold text-frame-white">{dataStats.reviews.count}</p>
+                    <p className="text-xs text-frame-gray-light mt-1">{dataStats.reviews.size} MB</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-frame-orange/5 border border-frame-orange/20 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-frame-orange" />
+                    <span className="text-sm font-medium text-frame-white">Armazenamento Total</span>
+                  </div>
+                  <span className="text-lg font-bold text-frame-orange">{dataStats.totalSize} MB</span>
+                </div>
+              </div>
+
+              {/* O que coletamos */}
+              <div className="p-4 border border-frame-gray-3 rounded-lg space-y-3">
+                <p className="text-sm font-medium text-frame-white flex items-center gap-2">
+                  <FileCheck className="w-4 h-4 text-frame-orange" />
+                  O que coletamos sobre você:
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-frame-gray-light">
+                  {[
+                    "Informações de conta (nome, email, telefone)",
+                    "Dados de projetos e clientes criados",
+                    "Histórico de ações (login, uploads, edições)",
+                    "Arquivos enviados (vídeos, imagens, documentos)",
+                    "Comentários e reviews publicadas",
+                    "Dados de pagamento (Stripe - não vemos seu cartão)",
+                    "Estatísticas de uso (anônimas e agregadas)",
+                    "Logs de segurança (IPs, dispositivos)",
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <Check className="w-3 h-3 text-frame-orange shrink-0 mt-0.5" />
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Como usamos */}
+              <div className="p-4 border border-frame-gray-3 rounded-lg space-y-2">
+                <p className="text-sm font-medium text-frame-white flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-frame-orange" />
+                  Como usamos seus dados:
+                </p>
+                <ul className="space-y-1.5 text-xs text-frame-gray-light">
+                  <li className="flex items-start gap-2">
+                    <span className="text-frame-orange">•</span>
+                    <span>Fornecer e melhorar nossos serviços</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-frame-orange">•</span>
+                    <span>Enviar notificações sobre atividades (se habilitado)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-frame-orange">•</span>
+                    <span>Analisar uso agregado para melhorias (anônimo)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-frame-orange">•</span>
+                    <span>Garantir segurança e prevenir fraudes</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-frame-orange">•</span>
+                    <span><strong>Nunca vendemos</strong> seus dados a terceiros</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* FASE 5: Controles de Privacidade */}
+            <div className="liquid-glass p-6 space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg">
+                  <UserCheck className="w-5 h-5 text-frame-orange" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold">Controles de Privacidade</h3>
+                  <p className="text-frame-gray-light text-xs">Defina quem pode ver suas informações</p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {/* Visibilidade do perfil */}
+                <div className="p-4 border border-frame-gray-3 rounded-lg space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Eye className="w-4 h-4 text-frame-orange" />
+                    <p className="text-sm font-medium text-frame-white">Visibilidade do Perfil</p>
+                  </div>
+                  <p className="text-xs text-frame-gray-light">Quem pode ver seu nome e informações básicas</p>
+
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePrivacy("profileVisibility", "public")}
+                      className={`flex-1 py-2.5 px-3 rounded-lg border text-sm font-medium transition ${
+                        privacySettings.profileVisibility === "public"
+                          ? "border-frame-orange bg-frame-orange/10 text-frame-white"
+                          : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"
+                      }`}
+                    >
+                      <div>Público</div>
+                      <div className="text-[0.65rem] text-frame-gray-light">Todos podem ver</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePrivacy("profileVisibility", "team")}
+                      className={`flex-1 py-2.5 px-3 rounded-lg border text-sm font-medium transition ${
+                        privacySettings.profileVisibility === "team"
+                          ? "border-frame-orange bg-frame-orange/10 text-frame-white"
+                          : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"
+                      }`}
+                    >
+                      <div>Equipe</div>
+                      <div className="text-[0.65rem] text-frame-gray-light">Só membros</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePrivacy("profileVisibility", "private")}
+                      className={`flex-1 py-2.5 px-3 rounded-lg border text-sm font-medium transition ${
+                        privacySettings.profileVisibility === "private"
+                          ? "border-frame-orange bg-frame-orange/10 text-frame-white"
+                          : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"
+                      }`}
+                    >
+                      <div>Privado</div>
+                      <div className="text-[0.65rem] text-frame-gray-light">Só você</div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Indexação por buscadores */}
+                <label className="flex items-center justify-between p-4 rounded-lg border border-frame-gray-3 hover:border-frame-orange/30 transition cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <Search className="w-4 h-4 text-frame-orange" />
+                    <div>
+                      <p className="text-sm font-medium text-frame-white">Aparecer em buscadores</p>
+                      <p className="text-xs text-frame-gray-light">Permitir Google/Bing indexar seu perfil público</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleTogglePrivacy("allowSearchEngineIndexing")}
+                    className={`relative w-11 h-6 rounded-full transition-colors ${
+                      privacySettings.allowSearchEngineIndexing ? "bg-frame-orange" : "bg-frame-gray-3"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                        privacySettings.allowSearchEngineIndexing ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </label>
+
+                {/* Compartilhar analytics com equipe */}
+                <label className="flex items-center justify-between p-4 rounded-lg border border-frame-gray-3 hover:border-frame-orange/30 transition cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <Share2 className="w-4 h-4 text-frame-orange" />
+                    <div>
+                      <p className="text-sm font-medium text-frame-white">Compartilhar estatísticas com equipe</p>
+                      <p className="text-xs text-frame-gray-light">Membros podem ver métricas de uso agregadas</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleTogglePrivacy("shareAnalyticsWithTeam")}
+                    className={`relative w-11 h-6 rounded-full transition-colors ${
+                      privacySettings.shareAnalyticsWithTeam ? "bg-frame-orange" : "bg-frame-gray-3"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                        privacySettings.shareAnalyticsWithTeam ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </label>
+              </div>
+            </div>
+
+            {/* FASE 5: Solicitações LGPD */}
+            <div className="liquid-glass p-6 space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg">
+                  <FileCheck className="w-5 h-5 text-frame-orange" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold">Direitos LGPD / GDPR</h3>
+                  <p className="text-frame-gray-light text-xs">Exerça seus direitos sobre seus dados pessoais</p>
+                </div>
+              </div>
+
+              <div className="p-4 bg-frame-orange/5 border border-frame-orange/20 rounded-lg">
+                <p className="text-xs text-frame-gray-light">
+                  De acordo com a <strong className="text-frame-white">LGPD</strong> (Lei Geral de Proteção de Dados) e <strong className="text-frame-white">GDPR</strong>, você tem direito de:
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {/* Solicitar cópia */}
+                <div className="p-4 border border-frame-gray-3 rounded-lg hover:border-frame-orange/30 transition">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Copy className="w-4 h-4 text-frame-orange" />
+                    <h4 className="text-sm font-semibold text-frame-white">Solicitar Cópia</h4>
+                  </div>
+                  <p className="text-xs text-frame-gray-light mb-4">
+                    Receba uma cópia completa de todos os seus dados em formato JSON
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => handleLgpdRequest("copy")}
+                    className="w-full frame-btn-ghost text-xs py-2"
+                  >
+                    Solicitar Cópia
+                  </button>
+                </div>
+
+                {/* Solicitar correção */}
+                <div className="p-4 border border-frame-gray-3 rounded-lg hover:border-frame-orange/30 transition">
+                  <div className="flex items-center gap-2 mb-3">
+                    <FileCheck className="w-4 h-4 text-frame-orange" />
+                    <h4 className="text-sm font-semibold text-frame-white">Corrigir Dados</h4>
+                  </div>
+                  <p className="text-xs text-frame-gray-light mb-4">
+                    Solicite correção de informações incorretas ou desatualizadas
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => handleLgpdRequest("correct")}
+                    className="w-full frame-btn-ghost text-xs py-2"
+                  >
+                    Solicitar Correção
+                  </button>
+                </div>
+
+                {/* Solicitar exclusão */}
+                <div className="p-4 border border-frame-red/30 rounded-lg hover:border-frame-red/50 transition bg-frame-red/5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Trash2 className="w-4 h-4 text-frame-red" />
+                    <h4 className="text-sm font-semibold text-frame-red">Excluir Dados</h4>
+                  </div>
+                  <p className="text-xs text-frame-gray-light mb-4">
+                    Solicite exclusão permanente de todos os seus dados
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => handleLgpdRequest("delete")}
+                    className="w-full px-3 py-2 border border-frame-red/50 text-frame-red hover:bg-frame-red/10 rounded-lg text-xs font-medium transition"
+                  >
+                    Solicitar Exclusão
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal de solicitação */}
+              {showLgpdRequest && (
+                <div className="p-4 border border-frame-orange/30 rounded-lg bg-frame-orange/5 space-y-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-frame-orange shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-frame-white mb-2">
+                        {lgpdRequestType === "copy" && "Confirmar Solicitação de Cópia de Dados"}
+                        {lgpdRequestType === "correct" && "Confirmar Solicitação de Correção"}
+                        {lgpdRequestType === "delete" && "Confirmar Solicitação de Exclusão"}
+                      </p>
+                      <p className="text-xs text-frame-gray-light mb-4">
+                        {lgpdRequestType === "copy" &&
+                          "Você receberá um email com link para download de todos os seus dados em até 30 dias, conforme LGPD Art. 18."}
+                        {lgpdRequestType === "correct" &&
+                          "Nossa equipe entrará em contato em até 5 dias úteis para entender quais correções você precisa."}
+                        {lgpdRequestType === "delete" &&
+                          "Todos os seus dados serão PERMANENTEMENTE excluídos em até 7 dias úteis. Esta ação é IRREVERSÍVEL."}
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={handleSubmitLgpdRequest}
+                          className="frame-btn-primary text-xs py-2 px-4"
+                        >
+                          Confirmar Solicitação
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setShowLgpdRequest(false); setLgpdRequestType(null); }}
+                          className="frame-btn-ghost text-xs py-2 px-4"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="p-3 bg-frame-gray-2/30 border border-frame-gray-3 rounded-lg">
+                <p className="text-xs text-frame-gray-light flex items-start gap-2">
+                  <Shield className="w-3.5 h-3.5 text-frame-orange shrink-0 mt-0.5" />
+                  <span>
+                    Todas as solicitações são processadas conforme <strong className="text-frame-white">LGPD (Lei nº 13.709/2018)</strong> e <strong className="text-frame-white">GDPR</strong>.
+                    Para dúvidas, entre em contato: <a href="mailto:privacidade@cenastudio.com.br" className="text-frame-orange hover:underline">privacidade@cenastudio.com.br</a>
+                  </span>
+                </p>
+              </div>
+            </div>
+
             {/* Termos e políticas */}
             <div className="liquid-glass p-6 space-y-4">
               <div className="flex items-center gap-3">
@@ -1384,14 +3518,32 @@ function ProfileContent() {
               </div>
 
               <div className="space-y-2">
-                <a href="/terms-of-use.html" target="_blank" className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/50 transition group">
+                <a href="https://cenastudio.com.br/termos" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/50 transition group">
                   <span className="text-sm text-frame-white">{t("app.profile.termsOfUse")}</span>
-                  <ChevronRight className="w-4 h-4 text-frame-gray-light group-hover:text-frame-orange transition" />
+                  <ExternalLink className="w-4 h-4 text-frame-gray-light group-hover:text-frame-orange transition" />
                 </a>
-                <a href="/privacy-policy.html" target="_blank" className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/50 transition group">
+                <a href="https://cenastudio.com.br/privacidade" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/50 transition group">
                   <span className="text-sm text-frame-white">{t("app.profile.privacyPolicy")}</span>
-                  <ChevronRight className="w-4 h-4 text-frame-gray-light group-hover:text-frame-orange transition" />
+                  <ExternalLink className="w-4 h-4 text-frame-gray-light group-hover:text-frame-orange transition" />
                 </a>
+                {(plan?.planId === "studio" || plan?.planId === "whitelabel" || plan?.planId === "enterprise") && (
+                  <a href="https://cenastudio.com.br/sla" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/50 transition group">
+                    <div>
+                      <span className="text-sm text-frame-white">SLA - Service Level Agreement</span>
+                      <span className="block text-xs text-frame-gray-light mt-0.5">Garantias do seu plano {plan?.planId}</span>
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-frame-gray-light group-hover:text-frame-orange transition" />
+                  </a>
+                )}
+                {plan?.planId === "enterprise" && (
+                  <a href="https://cenastudio.com.br/dpa" target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/50 transition group">
+                    <div>
+                      <span className="text-sm text-frame-white">DPA - Data Processing Agreement</span>
+                      <span className="block text-xs text-frame-gray-light mt-0.5">Processamento de dados LGPD/GDPR</span>
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-frame-gray-light group-hover:text-frame-orange transition" />
+                  </a>
+                )}
               </div>
             </div>
 

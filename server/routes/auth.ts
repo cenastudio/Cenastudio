@@ -23,6 +23,38 @@ router.put("/profile", authenticate, authController.updateProfile);
 router.put("/change-password", authenticate, authController.changePassword);
 router.get("/export-data", authenticate, authController.exportUserData);
 
+// ═══ LGPD / GDPR ROUTES ═══
+router.get("/data-stats", authenticate, authController.getDataStats);
+router.get("/privacy-settings", authenticate, authController.getPrivacySettings);
+router.put("/privacy-settings", authenticate, authController.updatePrivacySettings);
+router.post("/lgpd-request", authenticate, authController.createLgpdRequest);
+router.get("/lgpd-requests", authenticate, authController.listLgpdRequests);
+
+// ═══ SECURITY ADVANCED: 2FA ═══
+router.post("/2fa/setup", authenticate, authController.setup2FA);
+router.post("/2fa/verify", authenticate, authController.verify2FA);
+router.post("/2fa/disable", authenticate, authController.disable2FA);
+
+// ═══ SECURITY ADVANCED: API KEYS ═══
+router.post("/api-keys", authenticate, authController.createApiKey);
+router.get("/api-keys", authenticate, authController.listApiKeys);
+router.delete("/api-keys/:id", authenticate, authController.revokeApiKey);
+
+// ═══ SECURITY ADVANCED: ACTIVITY LOG & ALERTS ═══
+router.get("/activity", authenticate, authController.getActivityLog);
+router.get("/security-alerts", authenticate, authController.getSecurityAlerts);
+router.put("/security-alerts", authenticate, authController.updateSecurityAlerts);
+
+// ═══ PREFERENCES ADVANCED (SPRINT 3) ═══
+router.get("/notification-preferences", authenticate, authController.getNotificationPreferences);
+router.put("/notification-preferences", authenticate, authController.updateNotificationPreferences);
+router.get("/regional-preferences", authenticate, authController.getRegionalPreferences);
+router.put("/regional-preferences", authenticate, authController.updateRegionalPreferences);
+router.get("/visual-preferences", authenticate, authController.getVisualPreferences);
+router.put("/visual-preferences", authenticate, authController.updateVisualPreferences);
+router.get("/behavior-preferences", authenticate, authController.getBehaviorPreferences);
+router.put("/behavior-preferences", authenticate, authController.updateBehaviorPreferences);
+
 // GitHub OAuth routes for users; admin is granted only by explicit email policy.
 router.get("/github", (req, res, next) => {
   if (!isGitHubAuthConfigured) {
