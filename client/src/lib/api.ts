@@ -691,6 +691,11 @@ export const api = {
       >("/files/all"),
     download: (id: number) => apiUrl(`/files/${id}/download`),
     delete: (id: number) => request<{ success: boolean }>(`/files/${id}`, { method: "DELETE" }),
+    linkToProject: (fileId: number, projectId: number) =>
+      request<{ success: boolean; message: string }>(`/files/${fileId}/link`, {
+        method: "PUT",
+        body: JSON.stringify({ projectId }),
+      }),
   },
   studioSettings: {
     get: () => request<StudioSettingsPayload>("/studio-settings"),

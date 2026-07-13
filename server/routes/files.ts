@@ -9,6 +9,7 @@ import {
   getFile,
   downloadFile,
   renameFile,
+  linkFileToProject,
 } from "../controllers/filesController.js";
 
 const router = Router();
@@ -33,6 +34,9 @@ router.get("/:id/download", downloadFile);
 
 // Rename a file
 router.patch("/:id/rename", renameFile);
+
+// Link file to project
+router.put("/:id/link", linkFileToProject);
 
 // Delete a file
 router.delete("/:id", deleteFile);

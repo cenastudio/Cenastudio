@@ -15,6 +15,7 @@ import {
   Trash2,
   Loader2,
   Upload,
+  Link,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -79,6 +80,10 @@ export default function AllFilesTab() {
   const [filter, setFilter] = useState<AssetType | "all">("all");
   const [deleteTarget, setDeleteTarget] = useState<AssetItem | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [linkTarget, setLinkTarget] = useState<AssetItem | null>(null);
+  const [projects, setProjects] = useState<Array<{ id: number; name: string }>>([]);
+  const [selectedProject, setSelectedProject] = useState<string>("");
+  const [linking, setLinking] = useState(false);
 
   const isEn = locale === "en";
 
@@ -94,6 +99,10 @@ export default function AllFilesTab() {
 
   useEffect(() => {
     loadAssets();
+    // Load projects for linking
+    api.projects.list().then((data) => {
+      setProjects(data.map((p: any) => ({ id: p.id, name: p.name })));
+    }).catch(() => {});
   }, []);
 
   const totalSize = useMemo(() => assets.reduce((sum, a) => sum + (a.size || 0), 0), [assets]);
@@ -119,6 +128,23 @@ export default function AllFilesTab() {
       toast.error(e instanceof Error ? e.message : (isEn ? "Failed to delete file" : "Falha ao excluir arquivo"));
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleLinkToProject = async () => {
+    if (!linkTarget || !selectedProject) return;
+    setLinking(true);
+    try {
+      // Link asset to project via API
+      await api.assets.linkToProject(linkTarget.id, parseInt(selectedProject));
+      toast.success(isEn ? "File linked to project" : "Arquivo vinculado ao projeto");
+      setLinkTarget(null);
+      setSelectedProject("");
+      loadAssets(); // Reload to show updated project name
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : (isEn ? "Failed to link file" : "Falha ao vincular arquivo"));
+    } finally {
+      setLinking(false);
     }
   };
 
@@ -255,9 +281,17 @@ export default function AllFilesTab() {
                     <p className="text-xs text-frame-gray-muted truncate mb-3">{asset.project_name}</p>
                   )}
                   <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setLinkTarget(asset)}
+                      className="flex-1 text-xs py-1.5 px-2 border border-frame-gray-3 hover:border-frame-orange hover:text-frame-orange transition flex items-center justify-center gap-1"
+                      title={isEn ? "Link to project" : "Vincular ao projeto"}
+                    >
+                      <Link className="w-3.5 h-3.5" />
+                    </button>
                     <a
                       href={api.assets.download(asset.id)}
-                      className="flex-1 text-xs py-1.5 px-2 border border-frame-gray-3 hover:border-frame-orange hover:text-frame-orange transition flex items-center justify-center"
+                      className="text-xs py-1.5 px-2 border border-frame-gray-3 hover:border-frame-orange hover:text-frame-orange transition flex items-center justify-center"
                       title={isEn ? "Download" : "Baixar"}
                     >
                       <Download className="w-3.5 h-3.5" />
@@ -305,6 +339,9 @@ export default function AllFilesTab() {
                     <td className="p-3 text-sm text-frame-gray-light truncate max-w-[180px]">{asset.project_name || "—"}</td>
                     <td className="p-3">
                       <div className="flex justify-end gap-2">
+                        <button type="button" onClick={() => setLinkTarget(asset)} className="p-1.5 hover:text-frame-orange transition" title={isEn ? "Link to project" : "Vincular ao projeto"}>
+                          <Link className="w-4 h-4" />
+                        </button>
                         <a href={api.assets.download(asset.id)} className="p-1.5 hover:text-frame-orange transition" title={isEn ? "Download" : "Baixar"}>
                           <Download className="w-4 h-4" />
                         </a>
@@ -320,6 +357,40 @@ export default function AllFilesTab() {
           </table>
         </div>
       )}
+
+      <AlertDialog open={!!linkTarget} onOpenChange={(open) => !open && setLinkTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{isEn ? "Link to project" : "Vincular ao projeto"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {isEn
+                ? `Select which project to link "${linkTarget?.original_name}" to:`
+                : `Selecione a qual projeto vincular "${linkTarget?.original_name}":`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <select
+              value={selectedProject}
+              onChange={(e) => setSelectedProject(e.target.value)}
+              className="frame-input w-full"
+              disabled={linking}
+            >
+              <option value="">{isEn ? "Select a project..." : "Selecione um projeto..."}</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={linking}>{isEn ? "Cancel" : "Cancelar"}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLinkToProject} disabled={linking || !selectedProject}>
+              {linking ? (isEn ? "Linking..." : "Vinculando...") : (isEn ? "Link" : "Vincular")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
