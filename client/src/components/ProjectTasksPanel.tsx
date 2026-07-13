@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { Plus, ListTodo, Loader2, ArrowRight } from "lucide-react";
+import { Plus, ListTodo, Loader2, ArrowRight, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { api, type TaskItem } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -43,6 +43,7 @@ export default function ProjectTasksPanel({ projectId, canManage }: ProjectTasks
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -103,6 +104,20 @@ export default function ProjectTasksPanel({ projectId, canManage }: ProjectTasks
       toast.error(t("app.tasks.errorCreate") as string);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (task: TaskItem) => {
+    if (!confirm(t("app.tasks.confirmDelete") as string)) return;
+    setDeletingId(task.id);
+    try {
+      await api.tasks.remove(task.id);
+      setTasks((prev) => prev.filter((item) => item.id !== task.id));
+      toast.success(t("app.tasks.deleted") as string);
+    } catch {
+      toast.error(t("app.tasks.errorDelete") as string);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -170,16 +185,33 @@ export default function ProjectTasksPanel({ projectId, canManage }: ProjectTasks
                     )}
                   </div>
                 </div>
-                {hasLink && (
-                  <button
-                    type="button"
-                    onClick={() => setLocation(getRouteForTaskLink(task.project_id, task.stage_id, task.tool_slug))}
-                    className="shrink-0 flex items-center gap-1 font-frame-mono text-[0.58rem] uppercase tracking-wider text-frame-orange hover:text-frame-white transition mt-0.5"
-                  >
-                    {t("app.tasks.open") as string}
-                    <ArrowRight className="w-3 h-3" />
-                  </button>
-                )}
+                <div className="flex items-center gap-3 shrink-0">
+                  {hasLink && (
+                    <button
+                      type="button"
+                      onClick={() => setLocation(getRouteForTaskLink(task.project_id, task.stage_id, task.tool_slug))}
+                      className="flex items-center gap-1 font-frame-mono text-[0.58rem] uppercase tracking-wider text-frame-orange hover:text-frame-white transition mt-0.5"
+                    >
+                      {t("app.tasks.open") as string}
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  )}
+                  {canManage && (
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(task)}
+                      disabled={deletingId === task.id}
+                      aria-label={t("app.tasks.delete") as string}
+                      className="text-frame-gray-light hover:text-frame-red transition mt-0.5 disabled:opacity-40"
+                    >
+                      {deletingId === task.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })}
