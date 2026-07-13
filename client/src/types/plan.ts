@@ -17,7 +17,7 @@
  * - `studio-pending`: Studio plan users awaiting payment confirmation
  * - `admin`: Administrative users with full system access
  */
-export type PlanMode = "brand" | "free" | "pro" | "studio" | "studio-pending" | "admin";
+export type PlanMode = "brand" | "free" | "pro" | "studio" | "studio-pending" | "whitelabel" | "enterprise" | "admin";
 
 /**
  * Visual Identity Theme

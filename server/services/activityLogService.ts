@@ -44,7 +44,7 @@ export interface ActivityLogDetailed extends ActivityLogEntry {
  * Detecta automaticamente ações suspeitas
  */
 export async function logAction(
-  userId: bigint,
+  userId: number,
   action: string,
   ipAddress?: string | null,
   userAgent?: string | null,
@@ -71,7 +71,7 @@ export async function logAction(
   if (shouldUsePrisma) {
     await prisma.activityLog.create({
       data: {
-        userId,
+        userId: BigInt(userId),
         action,
         ipAddress,
         location,
@@ -113,7 +113,7 @@ export async function logAction(
  * - Múltiplas tentativas falhadas
  */
 async function detectSuspiciousActivity(
-  userId: bigint,
+  userId: number,
   action: string,
   ipAddress?: string | null,
   userAgent?: string | null
@@ -140,7 +140,7 @@ async function detectSuspiciousActivity(
   if (shouldUsePrisma) {
     const logs = await prisma.activityLog.findMany({
       where: {
-        userId,
+        userId: BigInt(userId),
         timestamp: {
           gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // 90 dias
         },
@@ -169,7 +169,7 @@ async function detectSuspiciousActivity(
     if (shouldUsePrisma) {
       const logs = await prisma.activityLog.findMany({
         where: {
-          userId,
+          userId: BigInt(userId),
           timestamp: {
             gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
           },
@@ -203,7 +203,7 @@ async function detectSuspiciousActivity(
  * Lista atividades do usuário (últimos 30 dias por padrão)
  */
 export async function listUserActivities(
-  userId: bigint,
+  userId: number,
   limit: number = 30,
   days: number = 30
 ): Promise<ActivityLogEntry[]> {
@@ -212,7 +212,7 @@ export async function listUserActivities(
   if (shouldUsePrisma) {
     const logs = await prisma.activityLog.findMany({
       where: {
-        userId,
+        userId: BigInt(userId),
         timestamp: { gte: since },
       },
       orderBy: { timestamp: "desc" },

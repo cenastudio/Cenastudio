@@ -56,6 +56,7 @@ const FEATURE_REQUIREMENTS: Record<FeatureFlagId, { label: string; planLabel: st
   equipmentInventory: { label: "Equipamento", planLabel: "Studio" },
   shotList: { label: "Shot List", planLabel: "Pro" },
   timesheet: { label: "Timesheet", planLabel: "Pro" },
+  customBranding: { label: "Marca personalizada", planLabel: "White Label" },
 };
 
 /**

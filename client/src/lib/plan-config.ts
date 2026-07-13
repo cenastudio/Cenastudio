@@ -23,7 +23,9 @@ export const PLAN_HIERARCHY: Record<PlanMode, number> = {
   pro: 2,
   studio: 3,
   "studio-pending": 3,
-  admin: 4,
+  whitelabel: 4,
+  enterprise: 5,
+  admin: 6,
 };
 
 /**
@@ -103,6 +105,40 @@ const PLAN_METADATA: Record<PlanMode, PlanMetadata> = {
   "studio-pending": {
     id: "studio-pending",
     displayName: "Studio (Pending)",
+    visualIdentity: "command-center" as VisualIdentity,
+    accentColor: BRAND_ACCENT,
+    featureCount: -1,
+    maxTeamMembers: -1,
+    workflowSteps: ["entry", "planning", "production", "revision", "delivery", "closure"],
+    navStructure: [],
+    supportsCommercialHub: true,
+    supportsFinancialModules: true,
+    supportsPipeline: true,
+    supportsVideoReviews: true,
+    supportsCustomBranding: true,
+    supportsAPI: true,
+  },
+
+  whitelabel: {
+    id: "whitelabel",
+    displayName: "White Label",
+    visualIdentity: "command-center" as VisualIdentity,
+    accentColor: BRAND_ACCENT,
+    featureCount: -1,
+    maxTeamMembers: -1,
+    workflowSteps: ["entry", "planning", "production", "revision", "delivery", "closure"],
+    navStructure: [],
+    supportsCommercialHub: true,
+    supportsFinancialModules: true,
+    supportsPipeline: true,
+    supportsVideoReviews: true,
+    supportsCustomBranding: true,
+    supportsAPI: true,
+  },
+
+  enterprise: {
+    id: "enterprise",
+    displayName: "Enterprise",
     visualIdentity: "command-center" as VisualIdentity,
     accentColor: BRAND_ACCENT,
     featureCount: -1,

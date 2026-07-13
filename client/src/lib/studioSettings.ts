@@ -11,6 +11,7 @@ export interface StudioSettings {
   website: string;
   signature: string;
   primaryColor: string;
+  logoUrl?: string; // Studio logo shown on generated documents
 }
 
 export const STUDIO_SETTINGS_KEY = "frame.studio.settings.v1";

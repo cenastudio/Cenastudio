@@ -33,7 +33,7 @@ export interface TwoFactorSetupResponse {
  * O usuário deve escanear o QR Code com Google Authenticator
  */
 export async function setup2FA(
-  userId: bigint,
+  userId: number,
   userEmail: string,
   userName: string | null
 ): Promise<TwoFactorSetupResponse> {
@@ -65,7 +65,7 @@ export async function setup2FA(
   // Salvar no banco (ainda não ativa o 2FA, só depois da verificação)
   if (shouldUsePrisma) {
     await prisma.user.update({
-      where: { id: userId },
+      where: { id: BigInt(userId) },
       data: {
         twoFactorSecret: secret.base32,
         backupCodes: hashedBackupCodes as any,
@@ -97,7 +97,7 @@ export async function setup2FA(
  * Verifica código 2FA (6 dígitos) e ativa o 2FA se correto
  */
 export async function verify2FA(
-  userId: bigint,
+  userId: number,
   code: string
 ): Promise<boolean> {
   // Buscar secret do usuário
@@ -105,7 +105,7 @@ export async function verify2FA(
 
   if (shouldUsePrisma) {
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: BigInt(userId) },
       select: { twoFactorSecret: true },
     });
     secret = user?.twoFactorSecret || null;
@@ -135,7 +135,7 @@ export async function verify2FA(
   // Se código válido, ativar 2FA
   if (shouldUsePrisma) {
     await prisma.user.update({
-      where: { id: userId },
+      where: { id: BigInt(userId) },
       data: { twoFactorEnabled: true },
     });
   } else {
@@ -153,7 +153,7 @@ export async function verify2FA(
  * Valida código 2FA durante login (não ativa, apenas verifica)
  */
 export async function validate2FACode(
-  userId: bigint,
+  userId: number,
   code: string
 ): Promise<boolean> {
   let secret: string | null = null;
@@ -161,7 +161,7 @@ export async function validate2FACode(
 
   if (shouldUsePrisma) {
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: BigInt(userId) },
       select: {
         twoFactorSecret: true,
         backupCodes: true,
@@ -203,7 +203,7 @@ export async function validate2FACode(
 
     if (shouldUsePrisma) {
       await prisma.user.update({
-        where: { id: userId },
+        where: { id: BigInt(userId) },
         data: { backupCodes: backupCodes as any },
       });
     } else {
@@ -226,10 +226,10 @@ export async function validate2FACode(
 /**
  * Desativa 2FA e limpa secret/backup codes
  */
-export async function disable2FA(userId: bigint): Promise<void> {
+export async function disable2FA(userId: number): Promise<void> {
   if (shouldUsePrisma) {
     await prisma.user.update({
-      where: { id: userId },
+      where: { id: BigInt(userId) },
       data: {
         twoFactorEnabled: false,
         twoFactorSecret: null,
@@ -254,10 +254,10 @@ export async function disable2FA(userId: bigint): Promise<void> {
 /**
  * Verifica se 2FA está ativado para o usuário
  */
-export async function is2FAEnabled(userId: bigint): Promise<boolean> {
+export async function is2FAEnabled(userId: number): Promise<boolean> {
   if (shouldUsePrisma) {
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: BigInt(userId) },
       select: { twoFactorEnabled: true },
     });
     return user?.twoFactorEnabled || false;

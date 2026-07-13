@@ -41,7 +41,7 @@ export interface ApiKeyCreated {
  * A chave completa é retornada APENAS na criação e nunca mais exibida
  */
 export async function createApiKey(
-  userId: bigint,
+  userId: number,
   name: string
 ): Promise<ApiKeyCreated> {
   // Gerar chave única com prefixo "cena_"
@@ -58,7 +58,7 @@ export async function createApiKey(
   if (shouldUsePrisma) {
     const apiKey = await prisma.apiKey.create({
       data: {
-        userId,
+        userId: BigInt(userId),
         name,
         keyHash,
         keyPrefix,
@@ -101,10 +101,10 @@ export async function createApiKey(
 /**
  * Lista todas as API Keys do usuário (sem a chave completa)
  */
-export async function listApiKeys(userId: bigint): Promise<ApiKeyItem[]> {
+export async function listApiKeys(userId: number): Promise<ApiKeyItem[]> {
   if (shouldUsePrisma) {
     const keys = await prisma.apiKey.findMany({
-      where: { userId },
+      where: { userId: BigInt(userId) },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -152,12 +152,12 @@ export async function listApiKeys(userId: bigint): Promise<ApiKeyItem[]> {
 /**
  * Revoga (deleta) uma API Key
  */
-export async function revokeApiKey(userId: bigint, keyId: string): Promise<void> {
+export async function revokeApiKey(userId: number, keyId: string): Promise<void> {
   if (shouldUsePrisma) {
     const deleted = await prisma.apiKey.deleteMany({
       where: {
         id: keyId,
-        userId, // Segurança: só pode deletar próprias chaves
+        userId: BigInt(userId), // Segurança: só pode deletar próprias chaves
       },
     });
 

@@ -43,24 +43,25 @@ export type LgpdRequestType = "copy" | "correct" | "delete";
  * Calcula estatísticas de dados armazenados do usuário
  * Implementa o direito à transparência (LGPD Art. 9)
  */
-export async function calculateDataStats(userId: bigint): Promise<DataStats> {
+export async function calculateDataStats(userId: number): Promise<DataStats> {
   if (shouldUsePrisma) {
+    const uid = BigInt(userId);
     const [projects, files, clients, reviews] = await Promise.all([
       // Projects: estimar 50KB por projeto (metadata JSON)
-      prisma.project.count({ where: { userId } }),
+      prisma.project.count({ where: { userId: uid } }),
 
       // Files: somar tamanho real dos arquivos
       prisma.file.aggregate({
-        where: { userId },
+        where: { userId: uid },
         _count: true,
         _sum: { size: true },
       }),
 
       // Clients: estimar 5KB por cliente
-      prisma.client.count({ where: { userId } }),
+      prisma.client.count({ where: { userId: uid } }),
 
       // Reviews: estimar 100KB por review (com comentários)
-      prisma.videoReview.count({ where: { userId } }),
+      prisma.videoReview.count({ where: { userId: uid } }),
     ]);
 
     const projectsSize = projects * 0.05; // 50KB em MB
@@ -105,12 +106,12 @@ export async function calculateDataStats(userId: bigint): Promise<DataStats> {
  * Salva configurações de privacidade do usuário
  */
 export async function savePrivacySettings(
-  userId: bigint,
+  userId: number,
   settings: PrivacySettings
 ): Promise<void> {
   if (shouldUsePrisma) {
     await prisma.user.update({
-      where: { id: userId },
+      where: { id: BigInt(userId) },
       data: { privacySettings: settings as any },
     });
   } else {
@@ -123,14 +124,14 @@ export async function savePrivacySettings(
 /**
  * Obtém configurações de privacidade do usuário
  */
-export async function getPrivacySettings(userId: bigint): Promise<PrivacySettings> {
+export async function getPrivacySettings(userId: number): Promise<PrivacySettings> {
   if (shouldUsePrisma) {
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: BigInt(userId) },
       select: { privacySettings: true },
     });
 
-    return (user?.privacySettings as PrivacySettings) || {
+    return (user?.privacySettings as unknown as PrivacySettings) || {
       profileVisibility: "team",
       allowSearchEngineIndexing: true,
       shareAnalyticsWithTeam: true,
@@ -161,7 +162,7 @@ export async function getPrivacySettings(userId: bigint): Promise<PrivacySetting
  * Implementa LGPD Art. 18 (Direitos do titular)
  */
 export async function createLgpdRequest(
-  userId: bigint,
+  userId: number,
   type: LgpdRequestType,
   userEmail: string,
   userName: string | null
@@ -177,7 +178,7 @@ export async function createLgpdRequest(
     await prisma.lgpdRequest.create({
       data: {
         id: requestId,
-        userId,
+        userId: BigInt(userId),
         type,
         status: "pending",
       },
@@ -244,10 +245,10 @@ Dúvidas: privacidade@cenastudio.com.br
 /**
  * Lista solicitações LGPD do usuário
  */
-export async function listUserLgpdRequests(userId: bigint) {
+export async function listUserLgpdRequests(userId: number) {
   if (shouldUsePrisma) {
     return await prisma.lgpdRequest.findMany({
-      where: { userId },
+      where: { userId: BigInt(userId) },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,

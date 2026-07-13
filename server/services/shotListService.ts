@@ -482,11 +482,11 @@ export async function generateShotListPdf(userId: number, projectId: number): Pr
 
   // Title page
   doc.setFontSize(24);
-  doc.setFont(undefined, "bold");
+  doc.setFont("helvetica", "bold");
   doc.text("SHOT LIST", 105, 60, { align: "center" });
 
   doc.setFontSize(16);
-  doc.setFont(undefined, "normal");
+  doc.setFont("helvetica", "normal");
   doc.text(projectName, 105, 75, { align: "center" });
 
   doc.setFontSize(11);
@@ -512,13 +512,13 @@ export async function generateShotListPdf(userId: number, projectId: number): Pr
     doc.rect(0, 0, 210, 25, "F");
 
     doc.setFontSize(18);
-    doc.setFont(undefined, "bold");
+    doc.setFont("helvetica", "bold");
     doc.setTextColor(255, 255, 255);
     const shotTitle = shot.shot_number ? `PLANO ${shot.shot_number}` : `PLANO ${i + 1}`;
     doc.text(shotTitle, 20, 15);
 
     doc.setFontSize(10);
-    doc.setFont(undefined, "normal");
+    doc.setFont("helvetica", "normal");
     if (shot.scene) {
       doc.text(`Cena: ${shot.scene}`, 150, 12);
     }
@@ -551,11 +551,11 @@ export async function generateShotListPdf(userId: number, projectId: number): Pr
 
     // Description box
     doc.setFontSize(10);
-    doc.setFont(undefined, "bold");
+    doc.setFont("helvetica", "bold");
     doc.text("DESCRIÇÃO:", 20, y);
     y += 6;
 
-    doc.setFont(undefined, "normal");
+    doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
     const descLines = doc.splitTextToSize(shot.description || "—", 170);
     doc.text(descLines, 20, y);
@@ -568,11 +568,11 @@ export async function generateShotListPdf(userId: number, projectId: number): Pr
 
     y += 6;
     doc.setFontSize(9);
-    doc.setFont(undefined, "bold");
+    doc.setFont("helvetica", "bold");
     doc.text("ESPECIFICAÇÕES TÉCNICAS:", 22, y);
     y += 5;
 
-    doc.setFont(undefined, "normal");
+    doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     if (shot.camera) {
       doc.text(`Câmera: ${shot.camera}`, 22, y);
@@ -597,11 +597,11 @@ export async function generateShotListPdf(userId: number, projectId: number): Pr
     if (shot.production_notes) {
       y += 3;
       doc.setFontSize(9);
-      doc.setFont(undefined, "bold");
+      doc.setFont("helvetica", "bold");
       doc.text("NOTAS DE PRODUÇÃO:", 20, y);
       y += 5;
 
-      doc.setFont(undefined, "normal");
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
       doc.setTextColor(60);
       const notesLines = doc.splitTextToSize(shot.production_notes, 170);

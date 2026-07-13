@@ -14,7 +14,7 @@ interface State {
 
 class ErrorBoundary extends Component<Props, State> {
   static contextType = LanguageContext;
-  context!: { t: (key: string) => string };
+  declare context: { t: (key: string) => string };
 
   constructor(props: Props) {
     super(props);

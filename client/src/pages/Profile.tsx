@@ -562,8 +562,8 @@ function ProfileContent() {
   const [activityLog, setActivityLog] = useState<Array<{
     id: number;
     action: string;
-    ipAddress: string;
-    location: string;
+    ipAddress: string | null;
+    location: string | null;
     timestamp: string;
     suspicious: boolean;
   }>>([]);

@@ -132,6 +132,52 @@ const PLAN_TOKENS = {
     "--plan-typography-scale": "1.08",
   },
 
+  whitelabel: {
+    // White Label - same base as studio (brand color is overridden per-tenant)
+    "--plan-accent-primary": BRAND_HEX,
+    "--plan-accent-financial": "#d8b343",
+    "--plan-text-primary": "#F9F9F9",
+    "--plan-text-secondary": "#A0A0A0",
+    "--plan-text-tertiary": "#6B6B6B",
+    "--plan-surface-base": "#0A0A0A",
+    "--plan-surface-elevated": "#121212",
+    "--plan-surface-overlay": "#1A1A1A",
+    "--plan-surface-premium": "#1C1C1C",
+    "--plan-border-subtle": "rgba(255, 255, 255, 0.06)",
+    "--plan-border-default": "rgba(255, 255, 255, 0.12)",
+    "--plan-border-orange": hexToRgba(BRAND_HEX, 0.4),
+    "--plan-shadow-card": "0 2px 8px rgba(0, 0, 0, 0.4)",
+    "--plan-shadow-premium": `0 0 60px ${hexToRgba(BRAND_HEX, 0.15)}`,
+    "--plan-glow-primary": `0 0 24px ${hexToRgba(BRAND_HEX, 0.4)}`,
+    "--plan-glow-sm": GLOW_SM,
+    "--plan-glow-md": GLOW_MD,
+    "--plan-glow-lg": GLOW_LG,
+    "--plan-typography-scale": "1.08",
+  },
+
+  enterprise: {
+    // Enterprise - same as studio
+    "--plan-accent-primary": BRAND_HEX,
+    "--plan-accent-financial": "#d8b343",
+    "--plan-text-primary": "#F9F9F9",
+    "--plan-text-secondary": "#A0A0A0",
+    "--plan-text-tertiary": "#6B6B6B",
+    "--plan-surface-base": "#0A0A0A",
+    "--plan-surface-elevated": "#121212",
+    "--plan-surface-overlay": "#1A1A1A",
+    "--plan-surface-premium": "#1C1C1C",
+    "--plan-border-subtle": "rgba(255, 255, 255, 0.06)",
+    "--plan-border-default": "rgba(255, 255, 255, 0.12)",
+    "--plan-border-orange": hexToRgba(BRAND_HEX, 0.4),
+    "--plan-shadow-card": "0 2px 8px rgba(0, 0, 0, 0.4)",
+    "--plan-shadow-premium": `0 0 60px ${hexToRgba(BRAND_HEX, 0.15)}`,
+    "--plan-glow-primary": `0 0 24px ${hexToRgba(BRAND_HEX, 0.4)}`,
+    "--plan-glow-sm": GLOW_SM,
+    "--plan-glow-md": GLOW_MD,
+    "--plan-glow-lg": GLOW_LG,
+    "--plan-typography-scale": "1.08",
+  },
+
   admin: {
     // Admin - same as studio
     "--plan-accent-primary": BRAND_HEX,

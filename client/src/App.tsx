@@ -122,7 +122,7 @@ function Router() {
       <Route path="/equipment">{() => <Equipment />}</Route>
       <Route path="/project/:projectId/shotlist" component={ShotList} />
       <Route path="/timesheet">{() => <Timesheet />}</Route>
-      <Route path="/project/:projectId/files" component={Files} />
+      <Route path="/project/:projectId/files">{() => <Files />}</Route>
       <Route path="/project/:projectId/video-reviews">{() => <VideoReviews />}</Route>
 
       <Route path="/admin" component={AdminDashboard} />

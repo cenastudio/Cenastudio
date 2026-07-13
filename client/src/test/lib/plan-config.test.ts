@@ -25,7 +25,9 @@ describe("plan-config", () => {
       expect(PLAN_HIERARCHY.pro).toBe(2);
       expect(PLAN_HIERARCHY.studio).toBe(3);
       expect(PLAN_HIERARCHY["studio-pending"]).toBe(3);
-      expect(PLAN_HIERARCHY.admin).toBe(4);
+      expect(PLAN_HIERARCHY.whitelabel).toBe(4);
+      expect(PLAN_HIERARCHY.enterprise).toBe(5);
+      expect(PLAN_HIERARCHY.admin).toBe(6);
     });
 
     it("should have studio and studio-pending at same level", () => {

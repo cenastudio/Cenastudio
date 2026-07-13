@@ -209,8 +209,8 @@ export async function calculateProjectStorageStats(
   }));
 
   return {
+    // quota is intentionally omitted — not applicable for project-level stats
     totalUsed,
-    quota: 0, // Not applicable for project-level stats
     byType,
     topFiles,
     fileCount,

@@ -150,7 +150,7 @@ export const api = {
       }),
     logout: () => request<null>("/auth/logout", { method: "POST" }),
     me: () => request<{ user: AuthUser; plan: UserPlan | null }>("/auth/me"),
-    updateProfile: (data: { name: string; studioName: string; studioRole: string; phone: string }) =>
+    updateProfile: (data: { name?: string; studioName?: string; studioRole?: string; phone?: string }) =>
       request<{ user: AuthUser }>("/auth/profile", {
         method: "PUT",
         body: JSON.stringify(data),
@@ -836,7 +836,7 @@ export const api = {
         method: "DELETE",
       }),
     users: () => request<{ count: number; users: { id: number; email: string; role: string; name?: string; plan_name?: string; generation_limit?: number | null; project_count?: number; file_count?: number; review_count?: number }[] }>("/admin/users"),
-    createUser: (body: { name: string; email: string; password: string; role: "user" | "admin"; planId: "free" | "pro" | "studio" }) =>
+    createUser: (body: { name: string; email: string; password: string; role: "user" | "admin"; planId: "free" | "pro" | "studio" | "whitelabel" | "enterprise" }) =>
       request<{ id: number; email: string; role: string; planId: string }>("/admin/users", {
         method: "POST",
         body: JSON.stringify(body),
@@ -846,7 +846,7 @@ export const api = {
         method: "PUT",
         body: JSON.stringify({ role }),
       }),
-    updateUserPlan: (id: number, planId: "free" | "pro" | "studio") =>
+    updateUserPlan: (id: number, planId: "free" | "pro" | "studio" | "whitelabel" | "enterprise") =>
       request<{ id: number; planId: string }>(`/admin/users/${id}/plan`, {
         method: "PUT",
         body: JSON.stringify({ planId }),
