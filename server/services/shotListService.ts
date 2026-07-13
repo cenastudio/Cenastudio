@@ -293,8 +293,8 @@ export async function reorderShots(userId: number, projectId: number, orderedIds
 }
 
 /**
- * Upload thumbnail for a shot to Supabase Storage.
- * Returns the storage URL.
+ * Upload thumbnail for a shot to Cloudinary.
+ * Returns the Cloudinary URL.
  */
 export async function uploadShotThumbnail(
   userId: number,
@@ -304,32 +304,32 @@ export async function uploadShotThumbnail(
 ): Promise<string> {
   const shot = await getShotOwnedByUser(userId, shotId);
 
-  // Import storage service
-  const { uploadProjectFile, createProjectFileUrl } = await import("./supabaseStorage.js");
+  // Cloudinary is configured via environment variables:
+  // CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+  const cloudinary = (await import("cloudinary")).v2;
 
-  // Get shot list ID to find project ID
-  let projectId = 0;
-  if (shouldUsePrisma) {
-    const shotList = await prisma.shotList.findFirst({
-      where: { id: shot.shotListId },
-      select: { projectId: true },
-    });
-    projectId = shotList ? Number(shotList.projectId) : 0;
-  } else {
-    const shotList = db.prepare("SELECT project_id FROM shot_lists WHERE id = ?").get((shot as any).shot_list_id) as { project_id: number } | undefined;
-    projectId = shotList?.project_id || 0;
-  }
+  // Upload to Cloudinary with transformation
+  const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: "shotlist-thumbnails",
+        transformation: [
+          { width: 400, height: 300, crop: "fill" },
+          { quality: "auto:good" },
+          { fetch_format: "auto" },
+        ],
+        resource_type: "image",
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else if (result) resolve(result);
+        else reject(new Error("Upload failed"));
+      }
+    );
+    uploadStream.end(fileBuffer);
+  });
 
-  // Generate storage path
-  const ext = mimeType.split('/')[1] || 'jpg';
-  const filename = `shot-${shotId}-${Date.now()}.${ext}`;
-  const storagePath = `${userId}/${projectId}/thumbnails/${filename}`;
-
-  // Upload to Supabase Storage
-  await uploadProjectFile(storagePath, fileBuffer, mimeType);
-
-  // Get signed URL (valid for 1 year for thumbnails)
-  const thumbnailUrl = await createProjectFileUrl(storagePath, 31536000); // 1 year
+  const thumbnailUrl = uploadResult.secure_url;
 
   // Update shot with thumbnail URL
   if (shouldUsePrisma) {
