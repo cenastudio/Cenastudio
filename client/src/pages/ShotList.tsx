@@ -277,6 +277,8 @@ function SortableShotRow({
  */
 function SceneGroup({
   group,
+  isExpanded,
+  onToggleExpand,
   onToggleStatus,
   onEdit,
   onDelete,
@@ -284,6 +286,8 @@ function SceneGroup({
   t,
 }: {
   group: ShotGroup;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
   onToggleStatus: (shot: ShotItem) => void;
   onEdit: (shot: ShotItem) => void;
   onDelete: (shot: ShotItem) => void;
@@ -293,41 +297,55 @@ function SceneGroup({
   const { setNodeRef, isOver } = useDroppable({ id: `scene:${group.scene}` });
   const sceneLabel = group.scene === UNASSIGNED_SCENE ? t("app.shotlist.unassignedScene") : group.scene;
   const durationLabel = formatDuration(group.totalDurationSec);
+  const completedCount = group.shots.filter(s => s.status === "shot").length;
 
   return (
     <div
       ref={setNodeRef}
       className={`border transition ${isOver ? "border-frame-orange/60 bg-frame-orange/[0.03]" : "border-frame-gray-3/40"}`}
     >
-      <div className="flex items-center justify-between gap-3 px-3 py-2 border-b border-frame-gray-3/40 bg-frame-gray-1/20">
-        <span className="font-frame-mono text-[0.65rem] uppercase tracking-wider text-frame-white">
-          {group.scene === UNASSIGNED_SCENE ? sceneLabel : `${t("app.shotlist.scene")} ${sceneLabel}`}
-        </span>
-        <span className="font-frame-mono text-[0.6rem] text-frame-gray-light shrink-0">
-          {group.shots.length} · {durationLabel}
-        </span>
-      </div>
-      <SortableContext items={group.shots.map((s) => s.id)} strategy={verticalListSortingStrategy}>
-        <div className="p-2 space-y-2 min-h-[3rem]">
-          {group.shots.length === 0 ? (
-            <p className="text-[0.65rem] text-frame-gray-light/60 italic text-center py-2">
-              {t("app.shotlist.dropHereToMove")}
-            </p>
-          ) : (
-            group.shots.map((shot) => (
-              <SortableShotRow
-                key={shot.id}
-                shot={shot}
-                onToggleStatus={onToggleStatus}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                onDuplicate={onDuplicate}
-                t={t}
-              />
-            ))
-          )}
+      <button
+        type="button"
+        onClick={onToggleExpand}
+        className="w-full flex items-center justify-between gap-3 px-3 py-2 border-b border-frame-gray-3/40 bg-frame-gray-1/20 hover:bg-frame-gray-1/30 transition"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-frame-orange">
+            {isExpanded ? "▼" : "▶"}
+          </span>
+          <span className="font-frame-mono text-[0.65rem] uppercase tracking-wider text-frame-white">
+            {group.scene === UNASSIGNED_SCENE ? sceneLabel : `${t("app.shotlist.scene")} ${sceneLabel}`}
+          </span>
         </div>
-      </SortableContext>
+        <div className="flex items-center gap-4 font-frame-mono text-[0.6rem] text-frame-gray-light shrink-0">
+          <span>{group.shots.length} {group.shots.length === 1 ? "shot" : "shots"}</span>
+          <span>{durationLabel}</span>
+          <span className="text-green-400">{completedCount} filmado{completedCount !== 1 ? "s" : ""}</span>
+        </div>
+      </button>
+      {isExpanded && (
+        <SortableContext items={group.shots.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+          <div className="p-2 space-y-2 min-h-[3rem]">
+            {group.shots.length === 0 ? (
+              <p className="text-[0.65rem] text-frame-gray-light/60 italic text-center py-2">
+                {t("app.shotlist.dropHereToMove")}
+              </p>
+            ) : (
+              group.shots.map((shot) => (
+                <SortableShotRow
+                  key={shot.id}
+                  shot={shot}
+                  onToggleStatus={onToggleStatus}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onDuplicate={onDuplicate}
+                  t={t}
+                />
+              ))
+            )}
+          </div>
+        </SortableContext>
+      )}
     </div>
   );
 }
@@ -458,6 +476,50 @@ function ShotListContent() {
   const [activeShotId, setActiveShotId] = useState<number | null>(null);
   const shotGroups = groupShotsByScene(shots);
   const activeShot = activeShotId != null ? shots.find((s) => s.id === activeShotId) ?? null : null;
+
+  // Collapse state per scene (persisted in localStorage)
+  const [expandedScenes, setExpandedScenes] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem(`shotlist-expanded-${projectId}`);
+    return saved ? new Set(JSON.parse(saved)) : new Set(shotGroups.map(g => g.scene));
+  });
+
+  // Save to localStorage when expanded scenes change
+  useEffect(() => {
+    localStorage.setItem(`shotlist-expanded-${projectId}`, JSON.stringify([...expandedScenes]));
+  }, [expandedScenes, projectId]);
+
+  // Update expanded scenes when groups change (new scenes added)
+  useEffect(() => {
+    setExpandedScenes(prev => {
+      const newSet = new Set(prev);
+      shotGroups.forEach(g => {
+        if (!newSet.has(g.scene) && !prev.has(g.scene)) {
+          newSet.add(g.scene); // Auto-expand new scenes
+        }
+      });
+      return newSet;
+    });
+  }, [shotGroups.map(g => g.scene).join(',')]);
+
+  const toggleSceneExpand = (scene: string) => {
+    setExpandedScenes(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(scene)) {
+        newSet.delete(scene);
+      } else {
+        newSet.add(scene);
+      }
+      return newSet;
+    });
+  };
+
+  const expandAll = () => {
+    setExpandedScenes(new Set(shotGroups.map(g => g.scene)));
+  };
+
+  const collapseAll = () => {
+    setExpandedScenes(new Set());
+  };
 
   const load = () => {
     if (!projectId) return;
@@ -842,9 +904,31 @@ function ShotListContent() {
         {/* Grouped by scene, drag within and across groups */}
         {!loading && shots.length > 0 && (
           <>
-            <div className="flex items-center justify-between font-frame-mono text-[0.6rem] text-frame-gray-light uppercase tracking-wider">
-              <span>{shotGroups.length} {t("app.shotlist.scenesCount")}</span>
-              <span>{t("app.shotlist.totalDuration")}: {formatDuration(totalDurationSec(shots))}</span>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center font-frame-mono text-[0.6rem] text-frame-gray-light uppercase tracking-wider">
+                <span>{shotGroups.length} {t("app.shotlist.scenesCount")}</span>
+                <span className="mx-2">·</span>
+                <span>{t("app.shotlist.totalDuration")}: {formatDuration(totalDurationSec(shots))}</span>
+              </div>
+              {shotGroups.length > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={expandAll}
+                    className="text-[0.6rem] text-frame-gray-light hover:text-frame-orange uppercase tracking-wider transition"
+                  >
+                    Expandir Todas
+                  </button>
+                  <span className="text-frame-gray-3">|</span>
+                  <button
+                    type="button"
+                    onClick={collapseAll}
+                    className="text-[0.6rem] text-frame-gray-light hover:text-frame-orange uppercase tracking-wider transition"
+                  >
+                    Colapsar Todas
+                  </button>
+                </div>
+              )}
             </div>
             <DndContext
               sensors={sensors}
@@ -857,6 +941,8 @@ function ShotListContent() {
                   <SceneGroup
                     key={group.scene}
                     group={group}
+                    isExpanded={expandedScenes.has(group.scene)}
+                    onToggleExpand={() => toggleSceneExpand(group.scene)}
                     onToggleStatus={handleToggleStatus}
                     onEdit={openEditDialog}
                     onDelete={setDeleteTarget}
