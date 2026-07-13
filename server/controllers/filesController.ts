@@ -362,3 +362,70 @@ export const renameFile: RequestHandler = async (req, res, next) => {
     next(e);
   }
 };
+
+// Link a file to a project
+export const linkFileToProject: RequestHandler = async (req, res, next) => {
+  try {
+    const userId = req.user!.id;
+    const fileId = parseInt(req.params.id);
+    const { projectId } = req.body as { projectId?: number };
+
+    if (!fileId) {
+      throw new AppError("File ID is required", 400);
+    }
+
+    if (!projectId) {
+      throw new AppError("Project ID is required", 400);
+    }
+
+    if (shouldUsePrisma) {
+      // Verify file belongs to user
+      const file = await prisma.file.findFirst({ where: { id: BigInt(fileId), userId: BigInt(userId) } });
+      if (!file) throw new AppError("File not found", 404);
+
+      // Verify project belongs to user
+      const project = await prisma.project.findFirst({ where: { id: BigInt(projectId), userId: BigInt(userId) } });
+      if (!project) throw new AppError("Project not found", 404);
+
+      // Update file with new project_id
+      await prisma.file.update({
+        where: { id: file.id },
+        data: { projectId: project.id },
+      });
+
+      res.json({ success: true, message: "File linked to project successfully" });
+      return;
+    }
+
+    // Verify file belongs to user
+    const file = db
+      .prepare("SELECT * FROM files WHERE id = ? AND user_id = ?")
+      .get(fileId, userId) as any;
+
+    if (!file) {
+      throw new AppError("File not found", 404);
+    }
+
+    // Verify project belongs to user
+    const project = db
+      .prepare("SELECT id FROM projects WHERE id = ? AND user_id = ?")
+      .get(projectId, userId);
+
+    if (!project) {
+      throw new AppError("Project not found", 404);
+    }
+
+    // Update file with new project_id
+    const result = db
+      .prepare("UPDATE files SET project_id = ? WHERE id = ?")
+      .run(projectId, fileId);
+
+    if ((result as any).changes === 0) {
+      throw new AppError("Failed to link file to project", 500);
+    }
+
+    res.json({ success: true, message: "File linked to project successfully" });
+  } catch (e) {
+    next(e);
+  }
+};

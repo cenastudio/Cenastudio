@@ -133,10 +133,10 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ email, password }),
       }),
-    register: (name: string, email: string, password: string, desiredPlan?: "pro" | "studio") =>
+    register: (name: string, email: string, password: string, desiredPlan?: "pro" | "studio", referralCode?: string) =>
       request<{ user: AuthUser }>("/auth/register", {
         method: "POST",
-        body: JSON.stringify({ name, email, password, desiredPlan }),
+        body: JSON.stringify({ name, email, password, desiredPlan, referralCode }),
       }),
     forgotPassword: (email: string) =>
       request<{ message: string }>("/auth/forgot-password", {
@@ -691,6 +691,11 @@ export const api = {
       >("/files/all"),
     download: (id: number) => apiUrl(`/files/${id}/download`),
     delete: (id: number) => request<{ success: boolean }>(`/files/${id}`, { method: "DELETE" }),
+    linkToProject: (fileId: number, projectId: number) =>
+      request<{ success: boolean; message: string }>(`/files/${fileId}/link`, {
+        method: "PUT",
+        body: JSON.stringify({ projectId }),
+      }),
   },
   studioSettings: {
     get: () => request<StudioSettingsPayload>("/studio-settings"),
