@@ -47,7 +47,6 @@ const FEATURE_REQUIREMENTS: Partial<Record<FeatureName, PlanMode>> = {
   "team-management": "studio",
   "analytics": "studio",
   "api": "studio",
-  "custom-branding": "studio",
   "priority-support": "studio",
 
   // Landing features implementation (spec: landing-features-implementation)
@@ -56,6 +55,9 @@ const FEATURE_REQUIREMENTS: Partial<Record<FeatureName, PlanMode>> = {
   "equipment-inventory": "studio",
   "shot-list": "pro",
   "timesheet": "pro",
+
+  // Whitelabel Features
+  "custom-branding": "whitelabel",
 };
 
 /**
@@ -70,7 +72,9 @@ const PLAN_HIERARCHY: PlanMode[] = [
   "pro",             // 2 - Pro tier
   "studio-pending",  // 3 - Studio pending (Pro privileges)
   "studio",          // 4 - Studio tier
-  "admin",           // 5 - Admin (full access)
+  "whitelabel",      // 5 - Whitelabel tier
+  "enterprise",      // 6 - Enterprise tier
+  "admin",           // 7 - Admin (full access)
 ];
 
 /**

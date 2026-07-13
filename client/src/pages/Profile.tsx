@@ -512,6 +512,13 @@ function ProfileContent() {
   // 3. Solicitações LGPD
   const [showLgpdRequest, setShowLgpdRequest] = useState(false);
   const [lgpdRequestType, setLgpdRequestType] = useState<"copy" | "correct" | "delete" | null>(null);
+  const [lgpdRequestHistory, setLgpdRequestHistory] = useState<Array<{
+    id: string;
+    type: string;
+    status: string;
+    createdAt: string;
+    processedAt: string | null;
+  }>>([]);
 
   // Security Advanced states (FASE 3)
   // 1. 2FA
@@ -849,6 +856,11 @@ function ProfileContent() {
   useEffect(() => {
     if (activeTab === "security") {
       loadActivityLog();
+
+      // Carregar security alerts automaticamente
+      api.auth.getSecurityAlerts().then(setSecurityAlerts).catch(() => {
+        console.error("Erro ao carregar security alerts");
+      });
     }
   }, [activeTab]);
 
@@ -863,6 +875,13 @@ function ProfileContent() {
       // Carregar configurações de privacidade
       api.auth.getPrivacySettings().then(setPrivacySettings).catch(() => {
         toast.error("Erro ao carregar configurações de privacidade");
+      });
+
+      // Carregar histórico de solicitações LGPD
+      api.auth.listLgpdRequests().then((res) => {
+        setLgpdRequestHistory(res.requests);
+      }).catch(() => {
+        console.error("Erro ao carregar histórico LGPD");
       });
     }
   }, [activeTab]);
@@ -3504,6 +3523,91 @@ function ProfileContent() {
                 </p>
               </div>
             </div>
+
+            {/* Histórico de Solicitações LGPD */}
+            {lgpdRequestHistory.length > 0 && (
+              <div className="liquid-glass p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg">
+                    <Clock className="w-5 h-5 text-frame-orange" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold">Histórico de Solicitações</h3>
+                    <p className="text-frame-gray-light text-xs">Suas solicitações LGPD/GDPR anteriores</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  {lgpdRequestHistory.map((request) => {
+                    const typeLabels = {
+                      data_copy: "Cópia de Dados",
+                      data_correction: "Correção de Dados",
+                      data_deletion: "Exclusão de Dados",
+                    };
+                    const statusLabels = {
+                      pending: "Pendente",
+                      processing: "Processando",
+                      completed: "Concluído",
+                    };
+                    const statusColors = {
+                      pending: "text-frame-orange",
+                      processing: "text-blue-400",
+                      completed: "text-frame-green",
+                    };
+
+                    return (
+                      <div
+                        key={request.id}
+                        className="p-4 border border-frame-gray-3 rounded-lg hover:border-frame-orange/30 transition"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <FileCheck className="w-4 h-4 text-frame-orange" />
+                              <span className="text-sm font-semibold text-frame-white">
+                                {typeLabels[request.type as keyof typeof typeLabels] || request.type}
+                              </span>
+                            </div>
+                            <div className="space-y-1 text-xs text-frame-gray-light">
+                              <p className="flex items-center gap-2">
+                                <span className="text-frame-gray-muted">Protocolo:</span>
+                                <code className="font-mono text-frame-white">{request.id}</code>
+                              </p>
+                              <p className="flex items-center gap-2">
+                                <span className="text-frame-gray-muted">Solicitado em:</span>
+                                <span>{formatDateTime(request.createdAt)}</span>
+                              </p>
+                              {request.processedAt && (
+                                <p className="flex items-center gap-2">
+                                  <span className="text-frame-gray-muted">Processado em:</span>
+                                  <span>{formatDateTime(request.processedAt)}</span>
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="shrink-0">
+                            <span
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${
+                                request.status === "completed"
+                                  ? "border-frame-green/30 bg-frame-green/10 text-frame-green"
+                                  : request.status === "processing"
+                                  ? "border-blue-400/30 bg-blue-400/10 text-blue-400"
+                                  : "border-frame-orange/30 bg-frame-orange/10 text-frame-orange"
+                              }`}
+                            >
+                              {request.status === "completed" && <CheckCircle2 className="w-3 h-3" />}
+                              {request.status === "processing" && <RefreshCw className="w-3 h-3 animate-spin" />}
+                              {request.status === "pending" && <Clock className="w-3 h-3" />}
+                              {statusLabels[request.status as keyof typeof statusLabels] || request.status}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Termos e políticas */}
             <div className="liquid-glass p-6 space-y-4">

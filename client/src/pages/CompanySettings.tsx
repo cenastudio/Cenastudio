@@ -6,12 +6,14 @@ import { DEFAULT_STUDIO_SETTINGS, readStudioSettings, saveStudioSettings, type S
 import {
   Building2, Check, FileText, Globe2, Mail, Palette, Phone, Save,
   BadgeCheck, ShieldCheck, MapPin, PenLine, Sparkles, Camera,
-  FileSignature, Users, Receipt, ExternalLink, ChevronRight,
+  FileSignature, Users, Receipt, ExternalLink, ChevronRight, Lock,
+  Crown, Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
 import { SITE_CONFIG } from "@shared/site";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 
 // Preview mini-doc component
 function DocPreview({ settings }: { settings: StudioSettings }) {
@@ -97,6 +99,9 @@ function CompanySettingsContent() {
   const [savedSettings, setSavedSettings] = useState<StudioSettings>(DEFAULT_STUDIO_SETTINGS);
   const [saving, setSaving] = useState(false);
   const isDirty = JSON.stringify(settings) !== JSON.stringify(savedSettings);
+
+  // Check custom branding access
+  const { hasAccess: hasCustomBranding, UpgradePrompt } = useFeatureAccess("custom-branding");
 
   useEffect(() => {
     const local = readStudioSettings();
@@ -302,31 +307,133 @@ function CompanySettingsContent() {
                 </div>
                 <p className="text-[0.62rem] text-frame-gray-light">{t("app.company.signatureHint")}</p>
               </label>
-              <label className="space-y-1.5 block">
-                <span className="frame-label text-frame-gray-light">{t("app.company.primaryColor")}</span>
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <input type="color" value={settings.primaryColor}
-                      onChange={(e) => update("primaryColor", e.target.value)}
-                      className="w-14 h-12 rounded cursor-pointer border border-frame-gray-3 bg-transparent" />
-                  </div>
-                  <div className="relative flex-1">
-                    <Palette className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
-                    <input className="frame-input w-full pl-10 font-mono" value={settings.primaryColor}
-                      onChange={(e) => update("primaryColor", e.target.value)}
-                      placeholder={SITE_CONFIG.primaryColor} />
-                  </div>
-                  <div className="w-10 h-10 rounded-lg border border-frame-gray-3 shrink-0"
-                    style={{ background: color }} />
+
+              {/* Logo Upload */}
+              <div className="space-y-1.5 relative">
+                <div className="flex items-center justify-between">
+                  <span className="frame-label text-frame-gray-light">Logo do Estúdio</span>
+                  {!hasCustomBranding && (
+                    <span className="inline-flex items-center gap-1 text-[0.6rem] font-frame-mono uppercase tracking-wider text-frame-orange border border-frame-orange/30 bg-frame-orange/5 px-2 py-0.5 rounded">
+                      CENA Studio
+                    </span>
+                  )}
                 </div>
-                <div className="flex gap-2 flex-wrap mt-2">
-                  {[SITE_CONFIG.primaryColor, "#FF6B00", "#e63946", "#2563eb", "#7c3aed", "#059669"].map((c) => (
-                    <button key={c} type="button" onClick={() => update("primaryColor", c)}
-                      className="w-7 h-7 rounded-full border-2 transition-transform hover:scale-110"
-                      style={{ background: c, borderColor: settings.primaryColor === c ? "#fff" : "transparent" }} />
-                  ))}
+                {!hasCustomBranding ? (
+                  <div className="border border-frame-gray-3 rounded-lg p-6 bg-frame-gray-1/20">
+                    <div className="flex items-center justify-between gap-4 mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-lg bg-frame-orange/10 border border-frame-orange/30 flex items-center justify-center">
+                          <span className="text-xl font-bold text-frame-orange">C</span>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-frame-white">CENA Studio</p>
+                          <p className="text-[0.62rem] text-frame-gray-light">Logo padrão da plataforma</p>
+                        </div>
+                      </div>
+                      <Lock className="w-5 h-5 text-frame-gray-muted shrink-0" />
+                    </div>
+                    <div className="border-t border-frame-gray-3 pt-3">
+                      <p className="text-[0.7rem] text-frame-gray-light leading-relaxed mb-3">
+                        Nos planos Free, Pro e Studio, todos os documentos gerados (propostas, contratos, recibos) exibem a marca CENA Studio.
+                      </p>
+                      <div className="flex items-start gap-2 text-[0.68rem] text-frame-gray-light">
+                        <Sparkles className="w-4 h-4 text-frame-orange shrink-0 mt-0.5" />
+                        <p>
+                          <strong className="text-frame-white">Upgrade para Whitelabel:</strong> adicione seu próprio logo e personalize as cores, mantendo "powered by CENA".
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-2 text-[0.68rem] text-frame-gray-light mt-2">
+                        <Crown className="w-4 h-4 text-frame-gold shrink-0 mt-0.5" />
+                        <p>
+                          <strong className="text-frame-white">Enterprise:</strong> white-label completo, sem nenhuma marca CENA visível.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="border-2 border-dashed border-frame-gray-3/50 rounded-lg p-6 bg-frame-gray-1/20 hover:border-frame-orange/40 transition cursor-pointer">
+                      <div className="flex flex-col items-center justify-center text-center">
+                        <Camera className="w-10 h-10 text-frame-gray-light mb-2" />
+                        <p className="text-sm text-frame-gray-light">Arraste seu logo aqui ou clique para selecionar</p>
+                        <p className="text-[0.62rem] text-frame-gray-muted mt-1">PNG, JPG ou SVG até 2MB</p>
+                      </div>
+                    </div>
+                    {settings.logoUrl && (
+                      <div className="border border-frame-gray-3 rounded-lg p-3 bg-frame-gray-1/20 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded border border-frame-gray-3 bg-frame-gray-2 flex items-center justify-center overflow-hidden">
+                            <img src={settings.logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-frame-white">Logo carregado</p>
+                            <p className="text-[0.62rem] text-frame-gray-light">Será exibido em todos os documentos</p>
+                          </div>
+                        </div>
+                        <button type="button" onClick={() => update("logoUrl", "")} className="text-red-400 hover:text-red-300 transition">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Primary Color */}
+              <div className="space-y-1.5 relative">
+                <div className="flex items-center justify-between">
+                  <span className="frame-label text-frame-gray-light">{t("app.company.primaryColor")}</span>
+                  {!hasCustomBranding && (
+                    <span className="inline-flex items-center gap-1 text-[0.6rem] font-frame-mono uppercase tracking-wider text-frame-orange border border-frame-orange/30 bg-frame-orange/5 px-2 py-0.5 rounded">
+                      CENA Orange
+                    </span>
+                  )}
                 </div>
-              </label>
+                {!hasCustomBranding ? (
+                  <div className="border border-frame-gray-3 rounded-lg p-4 bg-frame-gray-1/20">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-12 h-12 rounded-lg shrink-0" style={{ background: SITE_CONFIG.primaryColor }} />
+                      <div className="flex-1">
+                        <p className="font-semibold text-frame-white">{SITE_CONFIG.primaryColor}</p>
+                        <p className="text-[0.62rem] text-frame-gray-light">Cor de marca CENA Studio (fixa)</p>
+                      </div>
+                      <Lock className="w-5 h-5 text-frame-gray-muted shrink-0" />
+                    </div>
+                    <p className="text-[0.7rem] text-frame-gray-light leading-relaxed">
+                      A cor laranja é a identidade visual da CENA Studio e aparece em todos os documentos gerados nos planos Free, Pro e Studio.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <input type="color" value={settings.primaryColor}
+                          onChange={(e) => update("primaryColor", e.target.value)}
+                          className="w-14 h-12 rounded cursor-pointer border border-frame-gray-3 bg-transparent" />
+                      </div>
+                      <div className="relative flex-1">
+                        <Palette className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
+                        <input className="frame-input w-full pl-10 font-mono"
+                          value={settings.primaryColor}
+                          onChange={(e) => update("primaryColor", e.target.value)}
+                          placeholder={SITE_CONFIG.primaryColor} />
+                      </div>
+                      <div className="w-10 h-10 rounded-lg border border-frame-gray-3 shrink-0"
+                        style={{ background: color }} />
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      {[SITE_CONFIG.primaryColor, "#FF6B00", "#e63946", "#2563eb", "#7c3aed", "#059669"].map((c) => (
+                        <button key={c} type="button" onClick={() => update("primaryColor", c)}
+                          className="w-7 h-7 rounded-full border-2 transition-transform hover:scale-110"
+                          style={{ background: c, borderColor: settings.primaryColor === c ? "#fff" : "transparent" }} />
+                      ))}
+                    </div>
+                    <p className="text-[0.7rem] text-frame-gray-light leading-relaxed">
+                      Sua cor personalizada será aplicada em toda a plataforma e em todos os documentos gerados.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Equipe do estúdio */}

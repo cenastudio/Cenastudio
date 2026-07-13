@@ -83,6 +83,15 @@ export const updateStudioSettings: RequestHandler = async (req, res, next) => {
       typeof rawLogoUrl === "string" && rawLogoUrl.trim().length > 0 && rawLogoUrl.length < 2000
         ? rawLogoUrl.trim()
         : null;
+
+    // Validate custom branding access (logo & color)
+    const hasCustomBranding = logoUrl !== null || (req.body.primaryColor && req.body.primaryColor !== SITE_CONFIG.primaryColor);
+    if (hasCustomBranding) {
+      // This will throw 402 if user doesn't have customBranding entitlement
+      const { requireFeature } = await import("../services/entitlementService.js");
+      await requireFeature(userId, req.user!.role, "customBranding");
+    }
+
     const settings = {
       studioName: clean(req.body.studioName, DEFAULT_SETTINGS.studioName) || DEFAULT_SETTINGS.studioName,
       legalName: clean(req.body.legalName),

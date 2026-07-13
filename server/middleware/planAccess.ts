@@ -23,3 +23,14 @@ export const requireStudioPlan = (feature: FeatureFlagId): RequestHandler => asy
     next(error);
   }
 };
+
+/** Gates customBranding (whitelabel/enterprise only). Admin bypasses. */
+export const requireWhitelabel: RequestHandler = async (req, _res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+    await requireFeature(req.user.id, req.user.role, "customBranding");
+    next();
+  } catch (error) {
+    next(error);
+  }
+};

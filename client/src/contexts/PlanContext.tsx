@@ -207,7 +207,9 @@ export function PlanGate({ requiredPlan, children, fallback }: PlanGateProps) {
     pro: 2,
     studio: 3,
     "studio-pending": 3,
-    admin: 4,
+    whitelabel: 4,
+    enterprise: 5,
+    admin: 6,
   };
 
   const hasAccess = planHierarchy[planMode] >= planHierarchy[requiredPlan];

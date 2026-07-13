@@ -28,12 +28,14 @@ interface ManagedUser {
   review_count?: number;
 }
 
-type PlanId = "free" | "pro" | "studio";
+type PlanId = "free" | "pro" | "studio" | "whitelabel" | "enterprise";
 
 const PLANS: { id: PlanId; label: string }[] = [
   { id: "free", label: "Free" },
   { id: "pro", label: "Pro" },
   { id: "studio", label: "Studio" },
+  { id: "whitelabel", label: "Whitelabel" },
+  { id: "enterprise", label: "Enterprise" },
 ];
 
 const INITIAL_FORM = {

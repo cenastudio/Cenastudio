@@ -24,6 +24,20 @@ const plans = [
     generationLimit: -1,
     features: ["50 clientes", "+ Clientes adicionais", "Gerações ilimitadas", "12 ferramentas IA", "Commercial Hub", "Módulo Financeiro", "Equipe ilimitada", "API Access", "Suporte premium"],
   },
+  {
+    id: "whitelabel",
+    name: "White-Label",
+    priceBrl: 149900,
+    generationLimit: -1,
+    features: ["Clientes ilimitados", "2.000 gerações IA/mês", "Tudo do Studio", "Cor e logo personalizadas", "Domínio customizado", "10 usuários de equipe", "Suporte dedicado 4h"],
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise",
+    priceBrl: 500000,
+    generationLimit: -1,
+    features: ["Tudo ilimitado", "Múltiplas marcas", "API privada", "Usuários ilimitados", "SLA 99.9%", "Account manager"],
+  },
 ];
 
 async function ensureSubscription(userId: bigint, planId: string, status = "active") {

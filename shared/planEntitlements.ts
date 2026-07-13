@@ -1,4 +1,4 @@
-export type OperationalPlanId = "free" | "pro" | "studio";
+export type OperationalPlanId = "free" | "pro" | "studio" | "whitelabel" | "enterprise";
 
 // Feature identifiers for feature gating
 export type ProductFeatureId = string;
@@ -9,7 +9,7 @@ export type ProductFeatureId = string;
  * `client/src/lib/feature-gating/gate.ts` (frontend) so a blocked feature is
  * always hidden on the client AND rejected (402) on the server.
  */
-export type FeatureFlagId = "budgetTracking" | "equipmentInventory" | "shotList" | "timesheet";
+export type FeatureFlagId = "budgetTracking" | "equipmentInventory" | "shotList" | "timesheet" | "customBranding";
 
 export interface PlanEntitlement {
   clientLimit: number | null;
@@ -19,6 +19,7 @@ export interface PlanEntitlement {
   equipmentInventory: boolean;
   shotList: boolean;
   timesheet: boolean;
+  customBranding: boolean;
 }
 
 export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
@@ -30,6 +31,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     equipmentInventory: false,
     shotList: false,
     timesheet: false,
+    customBranding: false,
   },
   pro: {
     clientLimit: 15,
@@ -39,6 +41,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     equipmentInventory: false,
     shotList: true,
     timesheet: true,
+    customBranding: false,
   },
   studio: {
     clientLimit: 50,
@@ -48,12 +51,35 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     equipmentInventory: true,
     shotList: true,
     timesheet: true,
+    customBranding: false,
+  },
+  whitelabel: {
+    clientLimit: 100,
+    teamMemberLimit: 10,
+    requiresPaidActivation: true,
+    budgetTracking: true,
+    equipmentInventory: true,
+    shotList: true,
+    timesheet: true,
+    customBranding: true,
+  },
+  enterprise: {
+    clientLimit: null,
+    teamMemberLimit: 50,
+    requiresPaidActivation: true,
+    budgetTracking: true,
+    equipmentInventory: true,
+    shotList: true,
+    timesheet: true,
+    customBranding: true,
   },
 };
 
 export function normalizeOperationalPlan(planId: string | null | undefined): OperationalPlanId {
   if (planId === "studio" || planId === "produtora") return "studio";
   if (planId === "pro" || planId === "profissional") return "pro";
+  if (planId === "whitelabel") return "whitelabel";
+  if (planId === "enterprise") return "enterprise";
   return "free";
 }
 
