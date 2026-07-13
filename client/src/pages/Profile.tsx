@@ -578,6 +578,12 @@ function ProfileContent() {
   // Referral Program state
   const [referralInfo, setReferralInfo] = useState<ReferralInfo | null>(null);
   const [loadingReferral, setLoadingReferral] = useState(true);
+  const [referralList, setReferralList] = useState<Array<{
+    id: number;
+    status: string;
+    conversionDate: string | null;
+    referredUser: { email: string; name: string | null; createdAt: string } | null;
+  }>>([]);
 
   // Studio settings (para o recibo)
   const [studio, setStudio] = useState<StudioSettings>(() => readStudioSettings());
@@ -603,6 +609,13 @@ function ProfileContent() {
     };
 
     loadReferralData();
+
+    fetch("/api/referrals/list", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) setReferralList(data.data);
+      })
+      .catch(() => console.error("Failed to load referral list"));
   }, []);
 
   useEffect(() => {
@@ -905,6 +918,21 @@ function ProfileContent() {
       api.auth.getSecurityAlerts().then(setSecurityAlerts).catch(() => {
         console.error("Erro ao carregar security alerts");
       });
+
+      // Carregar API Keys existentes (chaves criadas em sessões anteriores)
+      api.auth.listApiKeys().then((res) => {
+        setApiKeys(
+          res.keys.map((k) => ({
+            id: k.id,
+            name: k.name,
+            key: k.keyPrefix,
+            createdAt: k.createdAt,
+            lastUsed: k.lastUsed,
+          })),
+        );
+      }).catch(() => {
+        console.error("Erro ao carregar API keys");
+      });
     }
   }, [activeTab]);
 
@@ -1091,17 +1119,41 @@ function ProfileContent() {
     }
   };
 
-  // Comportamentos Padrão
-  const handleSaveBehaviors = async () => {
+  // Comportamentos Padrão — auto-save a cada mudança, igual às demais seções de preferências
+  const handleDefaultProjectSortChange = async (value: "recent" | "alphabetical" | "deadline") => {
+    const previous = defaultProjectSort;
+    setDefaultProjectSort(value);
     try {
-      await api.auth.updateBehaviorPreferences({
-        defaultProjectSort,
-        defaultView,
-        autoplayVideos,
-      });
-      toast.success("Comportamentos salvos");
+      await api.auth.updateBehaviorPreferences({ defaultProjectSort: value, defaultView, autoplayVideos });
+      toast.success("Ordenação padrão atualizada");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao salvar");
+      setDefaultProjectSort(previous);
+    }
+  };
+
+  const handleDefaultViewChange = async (value: "grid" | "list") => {
+    const previous = defaultView;
+    setDefaultView(value);
+    try {
+      await api.auth.updateBehaviorPreferences({ defaultProjectSort, defaultView: value, autoplayVideos });
+      toast.success("Visualização padrão atualizada");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao salvar");
+      setDefaultView(previous);
+    }
+  };
+
+  const handleAutoplayVideosChange = async () => {
+    const previous = autoplayVideos;
+    const next = !autoplayVideos;
+    setAutoplayVideos(next);
+    try {
+      await api.auth.updateBehaviorPreferences({ defaultProjectSort, defaultView, autoplayVideos: next });
+      toast.success(next ? "Autoplay ativado" : "Autoplay desativado");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao salvar");
+      setAutoplayVideos(previous);
     }
   };
 
@@ -1724,7 +1776,7 @@ function ProfileContent() {
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-frame-white">{key.name}</p>
                             <code className="text-xs font-mono text-frame-gray-light">
-                              {key.key.substring(0, 20)}...••••••
+                              {key.key}••••••
                             </code>
                             <div className="flex items-center gap-3 mt-2 text-[0.65rem] text-frame-gray-light">
                               <span>Criada: {formatDate(key.createdAt, "—", locale)}</span>
@@ -2520,6 +2572,40 @@ function ProfileContent() {
                   </p>
                 </div>
               </div>
+
+              {/* Lista de indicações individuais */}
+              {referralList.length > 0 && (
+                <div className="space-y-2 pt-2 border-t border-frame-gray-3/50">
+                  <p className="text-xs font-medium text-frame-gray-light">Suas indicações</p>
+                  <div className="space-y-1.5">
+                    {referralList.map((referral) => {
+                      const statusLabels: Record<string, string> = {
+                        pending: "Aguardando cadastro",
+                        converted: "Convertido",
+                        rewarded: "Recompensado",
+                      };
+                      const statusColors: Record<string, string> = {
+                        pending: "text-frame-gray-light",
+                        converted: "text-frame-green",
+                        rewarded: "text-frame-gold",
+                      };
+                      return (
+                        <div
+                          key={referral.id}
+                          className="flex items-center justify-between gap-3 p-2.5 border border-frame-gray-3/50 rounded-lg text-sm"
+                        >
+                          <span className="text-frame-white truncate">
+                            {referral.referredUser?.name || referral.referredUser?.email || "—"}
+                          </span>
+                          <span className={`text-[0.65rem] font-mono uppercase tracking-wider shrink-0 ${statusColors[referral.status] || "text-frame-gray-light"}`}>
+                            {statusLabels[referral.status] || referral.status}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* ─── FAQ RÁPIDO ─── */}
@@ -3091,7 +3177,7 @@ function ProfileContent() {
                   </label>
                   <select
                     value={defaultProjectSort}
-                    onChange={(e) => setDefaultProjectSort(e.target.value as "recent" | "alphabetical" | "deadline")}
+                    onChange={(e) => handleDefaultProjectSortChange(e.target.value as "recent" | "alphabetical" | "deadline")}
                     className="frame-input w-full"
                   >
                     <option value="recent">Mais recentes primeiro</option>
@@ -3109,7 +3195,7 @@ function ProfileContent() {
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      onClick={() => setDefaultView("grid")}
+                      onClick={() => handleDefaultViewChange("grid")}
                       className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-sm font-medium transition ${
                         defaultView === "grid"
                           ? "border-frame-orange bg-frame-orange/10 text-frame-white"
@@ -3120,7 +3206,7 @@ function ProfileContent() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setDefaultView("list")}
+                      onClick={() => handleDefaultViewChange("list")}
                       className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-sm font-medium transition ${
                         defaultView === "list"
                           ? "border-frame-orange bg-frame-orange/10 text-frame-white"
@@ -3143,7 +3229,7 @@ function ProfileContent() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setAutoplayVideos(!autoplayVideos)}
+                    onClick={handleAutoplayVideosChange}
                     className={`relative w-11 h-6 rounded-full transition-colors ${
                       autoplayVideos ? "bg-frame-orange" : "bg-frame-gray-3"
                     }`}
@@ -3156,15 +3242,6 @@ function ProfileContent() {
                   </button>
                 </label>
               </div>
-
-              <button
-                type="button"
-                onClick={handleSaveBehaviors}
-                className="frame-btn-primary w-full flex items-center justify-center gap-2"
-              >
-                <Save className="w-4 h-4" />
-                Salvar Comportamentos
-              </button>
             </div>
 
             {/* Discord */}
