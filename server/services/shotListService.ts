@@ -329,9 +329,26 @@ export async function uploadShotThumbnail(
 ): Promise<string> {
   const shot = await getShotOwnedByUser(userId, shotId);
 
-  // Cloudinary is configured via environment variables:
-  // CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+  // The cloudinary v2 SDK only auto-configures itself from a single
+  // CLOUDINARY_URL env var (cloudinary://key:secret@cloud_name) — it does
+  // NOT read CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET
+  // automatically on import, even though those are the three vars documented
+  // and actually set in Railway. Without this explicit .config() call,
+  // uploads fail with "Must supply api_key" regardless of what's in the
+  // environment.
   const cloudinary = (await import("cloudinary")).v2;
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+
+  if (!cloudinary.config().api_key) {
+    throw new AppError(
+      "Upload de thumbnail indisponível: Cloudinary não está configurado (CLOUDINARY_API_KEY ausente).",
+      503,
+    );
+  }
 
   // Upload to Cloudinary with transformation
   const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => {

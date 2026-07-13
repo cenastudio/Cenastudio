@@ -1204,11 +1204,14 @@ function ShotListContent() {
             <div className="max-w-[10rem]">
               <label className="block text-xs font-medium text-frame-gray-light mb-1.5">{t("app.shotlist.durationMinutes")}</label>
               <input
-                type="number"
-                min="0"
-                step="1"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={form.durationMinutes}
-                onChange={(e) => setForm((f) => ({ ...f, durationMinutes: e.target.value }))}
+                onChange={(e) => {
+                  const digitsOnly = e.target.value.replace(/[^0-9]/g, "");
+                  setForm((f) => ({ ...f, durationMinutes: digitsOnly }));
+                }}
                 placeholder={t("app.shotlist.durationPlaceholder")}
                 name="duration-minutes-field"
                 autoComplete="off"
