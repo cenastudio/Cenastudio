@@ -25,6 +25,9 @@ import {
   Shield,
   UserPlus,
   BriefcaseBusiness,
+  BarChart3,
+  Webhook,
+  Building2,
 } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 
@@ -132,6 +135,30 @@ const SECONDARY_COMMANDS: CommandItemDef[] = [
     icon: UserCheck,
     category: "secondary",
     keywords: ["team", "equipe"]
+  },
+  {
+    labelKey: "app.commandPalette.cmd.analyticsPremium",
+    label: "Analytics Premium",
+    path: "/analytics-premium",
+    icon: BarChart3,
+    category: "secondary",
+    keywords: ["analytics", "premium", "dashboards", "relatorios", "reports", "widgets"]
+  },
+  {
+    labelKey: "app.commandPalette.cmd.webhooks",
+    label: "Webhooks",
+    path: "/webhooks",
+    icon: Webhook,
+    category: "secondary",
+    keywords: ["webhooks", "integrations", "integracoes", "api"]
+  },
+  {
+    labelKey: "app.commandPalette.cmd.company",
+    label: "Company Settings",
+    path: "/company",
+    icon: Building2,
+    category: "secondary",
+    keywords: ["company", "estudio", "studio", "empresa", "settings", "configuracoes"]
   },
   {
     labelKey: "app.commandPalette.cmd.profile",
