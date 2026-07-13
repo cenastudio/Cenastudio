@@ -1210,6 +1210,10 @@ function ShotListContent() {
                 value={form.durationMinutes}
                 onChange={(e) => setForm((f) => ({ ...f, durationMinutes: e.target.value }))}
                 placeholder={t("app.shotlist.durationPlaceholder")}
+                name="duration-minutes-field"
+                autoComplete="off"
+                data-1p-ignore
+                data-lpignore="true"
                 className="frame-input w-full"
               />
             </div>
@@ -1257,6 +1261,10 @@ function ShotListContent() {
                 value={form.productionNotes}
                 onChange={(e) => setForm((f) => ({ ...f, productionNotes: e.target.value }))}
                 placeholder="Observações de lighting, arte, etc..."
+                name="production-notes-field"
+                autoComplete="off"
+                data-1p-ignore
+                data-lpignore="true"
                 className="frame-input min-h-[100px] w-full"
                 maxLength={500}
               />
