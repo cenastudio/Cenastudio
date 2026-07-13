@@ -4,6 +4,8 @@ import Navigation from "@/components/landing/Navigation";
 import PricingSection from "@/components/landing/PricingSection";
 import ToolsSection from "@/components/landing/ToolsSection";
 import ProductProofSection from "@/components/landing/ProductProofSection";
+import ComparisonSection from "@/components/landing/ComparisonSection";
+import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import FAQSection from "@/components/landing/FAQSection";
 import FinalCTASection from "@/components/landing/FinalCTASection";
 import { CheckoutModal } from "@/components/landing/modals/CheckoutModal";
@@ -46,6 +48,8 @@ export default function Landing() {
       <Hero />
       <ProductProofSection />
       <ToolsSection />
+      <ComparisonSection />
+      <TestimonialsSection />
       <PricingSection />
       <FAQSection />
       <FinalCTASection />
