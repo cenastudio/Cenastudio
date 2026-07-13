@@ -118,6 +118,16 @@ function DashboardContent() {
   const [clients, setClients] = useState<Client[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Mapeia o id do template para uma opção existente do select "Tipo de projeto".
+  const TEMPLATE_PROJECT_TYPE: Record<string, string> = {
+    "reel-30s": "Comercial",
+    "comercial-tv": "Comercial",
+    institucional: "Institucional",
+    documentario: "Documentário",
+    "social-media": "Social media",
+    evento: "Evento",
+  };
+
   const resetCreateForm = () => {
     setSelectedTemplate(null);
     setName("");
@@ -243,6 +253,24 @@ function DashboardContent() {
     nextStep ? `${locale === "en" ? "next" : "próximo"}: ${nextStep}` : null,
     deadlineStr ? `${locale === "en" ? "due" : "prazo"}: ${deadlineStr}` : null,
   ].filter(Boolean);
+
+  // Seleciona (ou desmarca) um template e pré-preenche os campos do formulário
+  // usando os dados de briefing/roteiro já definidos em PROJECT_TEMPLATES.
+  const handleSelectTemplate = (template: ProjectTemplate) => {
+    if (selectedTemplate?.id === template.id) {
+      setSelectedTemplate(null);
+      return;
+    }
+    setSelectedTemplate(template);
+
+    const briefingPrefill = template.prefill.briefing || {};
+    const roteiroPrefill = template.prefill.roteiro || {};
+
+    setProjectType(TEMPLATE_PROJECT_TYPE[template.id] || projectType);
+    if (briefingPrefill.objetivo) setObjective(briefingPrefill.objetivo);
+    if (roteiroPrefill.formato) setFormat(roteiroPrefill.formato);
+    if (roteiroPrefill.genero) setTone(roteiroPrefill.genero);
+  };
 
   const startProjectFromClient = () => {
     if (!clients.length) {
@@ -636,7 +664,7 @@ function DashboardContent() {
                   <button
                     key={template.id}
                     type="button"
-                    onClick={() => setSelectedTemplate(template.id === selectedTemplate?.id ? null : template)}
+                    onClick={() => handleSelectTemplate(template)}
                     className={`p-3 border text-left transition-all group ${
                       selectedTemplate?.id === template.id
                         ? "border-frame-orange bg-frame-orange/10"
