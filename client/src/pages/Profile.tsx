@@ -7,6 +7,7 @@ import { api, openBillingPortal, ApiError } from "@/lib/api";
 import { useLanguage, translate } from "@/contexts/LanguageContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { readStudioSettings, type StudioSettings } from "@/lib/studioSettings";
+import { WHATSAPP_NUMBER } from "@/lib/constants";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 import { SITE_CONFIG } from "@shared/site";
@@ -2266,16 +2267,27 @@ function ProfileContent() {
                       <Palette className="w-6 h-6 text-frame-gold" />
                     </div>
                     <h4 className="text-xl font-bold">Whitelabel</h4>
-                    <p className="text-3xl font-bold mt-2">R$ 697<span className="plan-muted text-base font-normal">{t("app.profile.perMonth")}</span></p>
+                    <p className="text-3xl font-bold mt-2">R$ 1.499<span className="plan-muted text-base font-normal">{t("app.profile.perMonth")}</span></p>
                   </div>
-                  <p className="plan-muted text-sm text-center mt-4">Marca própria com powered by CENA</p>
+                  <p className="plan-muted text-sm text-center mt-4">Marca própria com domínio e cor customizados</p>
                   <ul className="mt-6 space-y-3">
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />100 clientes</li>
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />10 membros</li>
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />Logo próprio</li>
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />Cores customizadas</li>
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />Powered by CENA</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />Clientes ilimitados</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />2.000 gerações IA/mês</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />Tudo do Studio</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />Domínio customizado</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />10 membros de equipe</li>
                   </ul>
+                  {plan?.planId !== "whitelabel" && (
+                    <a
+                      href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Olá! Tenho interesse no plano Whitelabel do CENA Studio. Pode me passar mais detalhes?")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full mt-6 frame-btn-primary py-2.5 flex items-center justify-center gap-2 no-underline"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Falar com vendas
+                    </a>
+                  )}
                 </div>
 
                 {/* ENTERPRISE */}
@@ -2290,14 +2302,25 @@ function ProfileContent() {
                     <h4 className="text-xl font-bold">Enterprise</h4>
                     <p className="text-3xl font-bold mt-2">Custom</p>
                   </div>
-                  <p className="plan-muted text-sm text-center mt-4">White-label completo, zero CENA</p>
+                  <p className="plan-muted text-sm text-center mt-4">White-label completo, zero CENA, a partir de R$ 5.000/mês</p>
                   <ul className="mt-6 space-y-3">
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />Clientes ilimitados</li>
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />50 membros</li>
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />100% white-label</li>
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />SLA dedicado</li>
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />Onboarding custom</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />Tudo ilimitado</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />Múltiplas marcas</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />API privada</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />SLA 99.9%</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />Account manager dedicado</li>
                   </ul>
+                  {plan?.planId !== "enterprise" && (
+                    <a
+                      href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Olá! Tenho interesse no plano Enterprise do CENA Studio. Pode me passar mais detalhes?")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full mt-6 frame-btn-primary py-2.5 flex items-center justify-center gap-2 no-underline"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Falar com vendas
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
