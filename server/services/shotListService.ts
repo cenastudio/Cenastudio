@@ -135,6 +135,31 @@ export interface ShotInput {
 export async function addShot(userId: number, projectId: number, data: ShotInput): Promise<ShotRecord> {
   const shotList = await getOrCreateForProject(userId, projectId);
 
+  // Check shot limit based on plan
+  const { getUserEntitlements } = await import("./entitlementService.js");
+  const entitlement = await getUserEntitlements(userId);
+  const shotLimit = entitlement.shotListLimit;
+
+  // Count existing shots
+  let currentShotCount = 0;
+  if (shouldUsePrisma) {
+    currentShotCount = await prisma.shot.count({
+      where: { shotListId: BigInt(shotList.id) },
+    });
+  } else {
+    const result = db.prepare("SELECT COUNT(*) as count FROM shots WHERE shot_list_id = ?").get(shotList.id) as { count: number };
+    currentShotCount = result.count;
+  }
+
+  // Enforce limit (unless unlimited = -1)
+  if (shotLimit !== -1 && currentShotCount >= shotLimit) {
+    const planName = entitlement.planId === "free" ? "Free" : entitlement.planId === "pro" ? "Pro" : "Studio";
+    throw new AppError(
+      `Limite de ${shotLimit} shots atingido no plano ${planName}. Faça upgrade para adicionar mais shots.`,
+      403
+    );
+  }
+
   if (shouldUsePrisma) {
     const maxOrder = await prisma.shot.aggregate({
       where: { shotListId: BigInt(shotList.id) },

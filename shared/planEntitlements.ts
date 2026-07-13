@@ -18,6 +18,7 @@ export interface PlanEntitlement {
   budgetTracking: boolean;
   equipmentInventory: boolean;
   shotList: boolean;
+  shotListLimit: number; // -1 = unlimited
   timesheet: boolean;
   customBranding: boolean;
 }
@@ -30,6 +31,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     budgetTracking: false,
     equipmentInventory: false,
     shotList: false,
+    shotListLimit: 20,
     timesheet: false,
     customBranding: false,
   },
@@ -40,6 +42,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     budgetTracking: false,
     equipmentInventory: false,
     shotList: true,
+    shotListLimit: 100,
     timesheet: true,
     customBranding: false,
   },
@@ -50,6 +53,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     budgetTracking: true,
     equipmentInventory: true,
     shotList: true,
+    shotListLimit: -1, // unlimited
     timesheet: true,
     customBranding: false,
   },
@@ -60,6 +64,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     budgetTracking: true,
     equipmentInventory: true,
     shotList: true,
+    shotListLimit: -1, // unlimited
     timesheet: true,
     customBranding: true,
   },
@@ -70,6 +75,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     budgetTracking: true,
     equipmentInventory: true,
     shotList: true,
+    shotListLimit: -1, // unlimited
     timesheet: true,
     customBranding: true,
   },
