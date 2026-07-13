@@ -8,6 +8,8 @@
 [![Feature Completion](https://img.shields.io/badge/features-77%25-yellow)](/.private/AUDITORIA_FEATURES_COMPLETA_2026-07-13.md)
 [![Shot List](https://img.shields.io/badge/shot%20list-100%25-success)](/.private/SHOTLIST_100_COMPLETO_2026-07-13.md)
 [![Video Reviews](https://img.shields.io/badge/video%20reviews-100%25-success)](/.private/BUGS_RESOLVIDOS_HISTORICO.md)
+[![Unified Files](https://img.shields.io/badge/files-unified-success)](/.private/UNIFIED_FILES_IMPLEMENTATION_2026-07-14.md)
+[![Referral System](https://img.shields.io/badge/referral-95%25-yellow)](/.private/REFERRAL_SYSTEM_COMPLETE_2026-07-14.md)
 
 ---
 
@@ -17,7 +19,7 @@ Cena Studio é uma plataforma SaaS completa para gestão de produtoras de vídeo
 
 ### Features Principais (77% Completo)
 
-#### ✅ 100% Funcionais
+#### ✅ 100% Funcionais (8 features)
 - 🎬 **Shot List Profissional** - PDF para set, tipos customizáveis, scene groups
 - 🕐 **Timesheet** - Timer em tempo real, taxa horária, export CSV
 - 🔒 **Session Management** - Rastreamento, geolocalização, encerrar sessões
@@ -25,12 +27,18 @@ Cena Studio é uma plataforma SaaS completa para gestão de produtoras de vídeo
 - 🎥 **Video Reviews** - Client Portal, aprovações, timestamps precisos (bug #4 resolvido)
 - ⚙️ **Webhooks** - CRUD, retry exponencial, HMAC signature
 - 📦 **Equipment Inventory** - CRUD, bookings, detecção de conflitos
+- 📄 **Propostas Digitais** - Assinatura eletrônica, tracking, templates branded
 
-#### ⚠️ 90-95% Funcionais
-- 🗂️ **Asset Library** (90%) - Upload funciona, falta linkagem
-- 📅 **Google Calendar** (90%) - Backend pronto, falta botões frontend
+#### ⚠️ 90-95% Funcionais (3 features)
+- 🗂️ **Asset Library** (90%) - Upload funciona, falta linkagem ← PRÓXIMO
+- 📅 **Google Calendar** (90%) - Backend pronto, falta UI ← PRÓXIMO
+- 📆 **Agendamento** (90%) - Funcional, falta email branding ← PRÓXIMO
 
-#### 🔴 Em Desenvolvimento
+#### 🆕 Recém-Implementado
+- 📁 **Files Unificados** (100%) - Assets + Files em interface única, 3 tabs
+- 🎁 **Sistema de Indicações** (95%) - Referral tracking, códigos únicos, stats
+
+#### 🔴 Em Desenvolvimento (2 features)
 - 📋 **Project Templates** (0%) - Código 50% pronto
 - 🤖 **Script Breakdown IA** (0%) - OpenRouter integration pendente
 
@@ -94,4 +102,4 @@ Este software é fornecido "como está", sem garantias de qualquer tipo.
 A Cena Studio se reserva o direito de modificar ou descontinuar o software a qualquer momento.
 
 **VERSÃO ATUAL: 1.0.0**
-**ÚLTIMA ATUALIZAÇÃO: Janeiro 2025**
+**ÚLTIMA ATUALIZAÇÃO: 14 Julho 2026**
