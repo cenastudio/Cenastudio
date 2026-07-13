@@ -5,11 +5,12 @@
 🔒 **CÓDIGO PROPRIETÁRIO - TODOS OS DIREITOS RESERVADOS**
 
 [![Deploy Status](https://img.shields.io/badge/deploy-online-success)](https://cenastudio-production.up.railway.app)
-[![Feature Completion](https://img.shields.io/badge/features-77%25-yellow)](/.private/AUDITORIA_FEATURES_COMPLETA_2026-07-13.md)
+[![Feature Completion](https://img.shields.io/badge/features-83%25-yellow)](/.private/AUDITORIA_FEATURES_COMPLETA_2026-07-13.md)
 [![Shot List](https://img.shields.io/badge/shot%20list-100%25-success)](/.private/SHOTLIST_100_COMPLETO_2026-07-13.md)
 [![Video Reviews](https://img.shields.io/badge/video%20reviews-100%25-success)](/.private/BUGS_RESOLVIDOS_HISTORICO.md)
 [![Unified Files](https://img.shields.io/badge/files-unified-success)](/.private/UNIFIED_FILES_IMPLEMENTATION_2026-07-14.md)
-[![Referral System](https://img.shields.io/badge/referral-95%25-yellow)](/.private/REFERRAL_SYSTEM_COMPLETE_2026-07-14.md)
+[![Referral System](https://img.shields.io/badge/referral-100%25-success)](/.private/REFERRAL_SYSTEM_COMPLETE_2026-07-14.md)
+[![Google Calendar](https://img.shields.io/badge/calendar-100%25-success)](/.private/GOOGLE_CALENDAR_UI_2026-07-14.md)
 
 ---
 
@@ -17,9 +18,9 @@
 
 Cena Studio é uma plataforma SaaS completa para gestão de produtoras de vídeo, desenvolvida do zero por nossa equipe.
 
-### Features Principais (77% Completo)
+### Features Principais (83% Completo)
 
-#### ✅ 100% Funcionais (8 features)
+#### ✅ 100% Funcionais (10 features)
 - 🎬 **Shot List Profissional** - PDF para set, tipos customizáveis, scene groups
 - 🕐 **Timesheet** - Timer em tempo real, taxa horária, export CSV
 - 🔒 **Session Management** - Rastreamento, geolocalização, encerrar sessões
@@ -28,15 +29,15 @@ Cena Studio é uma plataforma SaaS completa para gestão de produtoras de vídeo
 - ⚙️ **Webhooks** - CRUD, retry exponencial, HMAC signature
 - 📦 **Equipment Inventory** - CRUD, bookings, detecção de conflitos
 - 📄 **Propostas Digitais** - Assinatura eletrônica, tracking, templates branded
+- 🗂️ **Asset Library** - Upload, link to project, storage analytics
+- 📅 **Google Calendar** - Export .ics (deadline + meetings), botão destacado
 
-#### ⚠️ 90-95% Funcionais (3 features)
-- 🗂️ **Asset Library** (90%) - Upload funciona, falta linkagem ← PRÓXIMO
-- 📅 **Google Calendar** (90%) - Backend pronto, falta UI ← PRÓXIMO
-- 📆 **Agendamento** (90%) - Funcional, falta email branding ← PRÓXIMO
-
-#### 🆕 Recém-Implementado
-- 📁 **Files Unificados** (100%) - Assets + Files em interface única, 3 tabs
-- 🎁 **Sistema de Indicações** (95%) - Referral tracking, códigos únicos, stats
+#### 🆕 Recém-Implementado (14 Jul 2026)
+- 📁 **Files Unificados** - Assets + Files em interface única, 3 tabs, -37% código
+- 🎁 **Sistema de Indicações** - Referral tracking, códigos únicos, conversão automática
+- 📧 **Agendamento Email Branding** - Templates profissionais, CTA buttons, responsive
+- 🔗 **Asset Library Link** - Vincular arquivos a projetos com 1 clique
+- 📆 **Google Calendar UI** - Botão visível e destacado no ProjectHub
 
 #### 🔴 Em Desenvolvimento (2 features)
 - 📋 **Project Templates** (0%) - Código 50% pronto
