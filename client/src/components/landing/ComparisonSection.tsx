@@ -8,7 +8,7 @@ interface Feature {
   studiobinder: boolean | string;
 }
 
-const features: Feature[] = {
+const features: Feature[] = [
   {
     name: "Video Reviews com Anotações",
     cena: true,
