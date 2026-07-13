@@ -2,8 +2,8 @@ import AuthLayout, { AuthError, AuthField, AuthLink } from "@/components/AuthLay
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError, startCheckout } from "@/lib/api";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { useState } from "react";
-import { useLocation } from "wouter";
+import { useState, useEffect } from "react";
+import { useLocation, useSearch } from "wouter";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -18,8 +18,20 @@ export default function Register() {
   const [inlineError, setInlineError] = useState<string | null>(null);
   const { register } = useAuth();
   const [, setLocation] = useLocation();
-  const requestedPlan = new URLSearchParams(window.location.search).get("plan");
+  const search = useSearch();
+
+  const params = new URLSearchParams(search);
+  const requestedPlan = params.get("plan");
   const desiredPlan = requestedPlan === "studio" ? "studio" : requestedPlan === "pro" ? "pro" : undefined;
+
+  // Capture referral code from URL and store in sessionStorage
+  useEffect(() => {
+    const ref = params.get('ref');
+    if (ref) {
+      sessionStorage.setItem('referralCode', ref);
+      console.log('[Referral] Code captured from register URL:', ref);
+    }
+  }, [search]);
 
   const handleRegister = async () => {
     setInlineError(null);
@@ -37,7 +49,16 @@ export default function Register() {
     }
     setSubmitting(true);
     try {
-      await register(name.trim(), email.trim(), password, desiredPlan);
+      // Get referral code from sessionStorage
+      const referralCode = sessionStorage.getItem('referralCode') || undefined;
+
+      await register(name.trim(), email.trim(), password, desiredPlan, referralCode);
+
+      // Clear referral code after successful registration
+      if (referralCode) {
+        sessionStorage.removeItem('referralCode');
+      }
+
       toast.success(
         desiredPlan === "studio"
           ? "Conta criada. Conclua o pagamento para liberar o plano Produtora."

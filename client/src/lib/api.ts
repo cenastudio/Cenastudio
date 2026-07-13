@@ -133,10 +133,10 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ email, password }),
       }),
-    register: (name: string, email: string, password: string, desiredPlan?: "pro" | "studio") =>
+    register: (name: string, email: string, password: string, desiredPlan?: "pro" | "studio", referralCode?: string) =>
       request<{ user: AuthUser }>("/auth/register", {
         method: "POST",
-        body: JSON.stringify({ name, email, password, desiredPlan }),
+        body: JSON.stringify({ name, email, password, desiredPlan, referralCode }),
       }),
     forgotPassword: (email: string) =>
       request<{ message: string }>("/auth/forgot-password", {

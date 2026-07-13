@@ -63,11 +63,26 @@ export const providers: RequestHandler = (_req, res) => {
 
 export const register: RequestHandler = async (req, res, next) => {
   try {
-    const { name, email, password, desiredPlan } = req.body;
+    const { name, email, password, desiredPlan, referralCode } = req.body;
     const user = await authService.registerUser(name, email, password, desiredPlan);
     const token = signToken(user);
     res.cookie(COOKIE_NAME, token, cookieOptions);
     trackSession(user.id, token, req.headers["user-agent"], req.ip);
+
+    // Track referral conversion if code provided
+    if (referralCode && typeof referralCode === 'string') {
+      try {
+        const { trackReferralConversion } = await import("../services/referralService.js");
+        const converted = await trackReferralConversion(referralCode, user.id);
+        if (converted) {
+          console.log(`[Referral] Conversion tracked for code ${referralCode} -> user ${user.id}`);
+        }
+      } catch (err) {
+        // Non-blocking: registration succeeds even if referral tracking fails
+        console.error('[Referral] Failed to track conversion:', err);
+      }
+    }
+
     res.status(201).json({ success: true, data: { user } });
   } catch (e) {
     next(e);

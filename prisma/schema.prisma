@@ -48,6 +48,8 @@ model User {
   clients        Client[]
   projects       Project[]
   opportunities  Opportunity[]
+  referrals      Referral[] @relation("UserReferrals")      // Pessoas que esse usuário indicou
+  referredBy     Referral[] @relation("UserReferredBy")     // Quem indicou esse usuário
   shotTypes      ShotType[] // Custom shot types
   interactions   Interaction[]
   meetings       Meeting[]
@@ -80,6 +82,26 @@ model User {
   @@index([githubId], map: "idx_users_github_id")
   @@index([supabaseId], map: "idx_users_supabase_id")
   @@map("users")
+}
+
+model Referral {
+  id              BigInt    @id @default(autoincrement())
+  referrerId      BigInt    @map("referrer_id")     // Quem indicou
+  referredUserId  BigInt?   @map("referred_user_id") // Quem foi indicado (null até criar conta)
+  referralCode    String    @unique @map("referral_code") // Código único (ex: JOAO123)
+  status          String    @default("pending")     // pending, converted, rewarded
+  conversionDate  DateTime? @map("conversion_date") @db.Timestamptz // Quando converteu (criou conta)
+  rewardDate      DateTime? @map("reward_date") @db.Timestamptz     // Quando foi recompensado
+  rewardType      String?   @map("reward_type")     // 1month, 3months, 1year_studio
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  referrer User @relation("UserReferrals", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredUser User? @relation("UserReferredBy", fields: [referredUserId], references: [id], onDelete: SetNull)
+
+  @@index([referrerId], map: "idx_referrals_referrer")
+  @@index([referredUserId], map: "idx_referrals_referred")
+  @@index([referralCode], map: "idx_referrals_code")
+  @@map("referrals")
 }
 
 model Workspace {

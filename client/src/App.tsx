@@ -75,6 +75,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Landing} />
+      <Route path="/r/:code">{(params) => <Redirect to={`/register?ref=${params.code}`} />}</Route>
       <Route path="/login" component={Login} />
       <Route path="/auth/callback" component={AuthCallback} />
       <Route path="/register" component={Register} />

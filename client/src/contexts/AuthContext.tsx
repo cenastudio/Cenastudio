@@ -19,7 +19,7 @@ interface AuthContextType {
   teamRole: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<AuthUser>;
-  register: (name: string, email: string, password: string, desiredPlan?: "pro" | "studio") => Promise<AuthUser>;
+  register: (name: string, email: string, password: string, desiredPlan?: "pro" | "studio", referralCode?: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
   setSession: (user: AuthUser, plan: UserPlan | null) => void;
@@ -129,8 +129,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return loggedIn;
   };
 
-  const register = async (name: string, email: string, password: string, desiredPlan?: "pro" | "studio") => {
-    const { user: registered } = await api.auth.register(name, email, password, desiredPlan);
+  const register = async (name: string, email: string, password: string, desiredPlan?: "pro" | "studio", referralCode?: string) => {
+    const { user: registered } = await api.auth.register(name, email, password, desiredPlan, referralCode);
     setUser(registered);
     writeAuthSnapshot(registered, plan);
     await refresh();

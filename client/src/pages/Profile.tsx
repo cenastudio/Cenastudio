@@ -24,6 +24,26 @@ import {
   UserCheck, Search, Share2, FileCheck
 } from "lucide-react";
 
+// Referral types
+interface ReferralStats {
+  totalReferrals: number;
+  convertedReferrals: number;
+  pendingReferrals: number;
+  totalRewards: number;
+  nextRewardProgress: {
+    current: number;
+    target: number;
+    percentage: number;
+    rewardType: string;
+  };
+}
+
+interface ReferralInfo {
+  code: string;
+  url: string;
+  stats: ReferralStats;
+}
+
 type ProfileTab = "profile" | "security" | "plan" | "preferences" | "privacy";
 
 // ─── RECEIPT PDF ────────────────────────────────────────────────────────────
@@ -555,11 +575,34 @@ function ProfileContent() {
     emailOnNewDevice: true,
   });
 
+  // Referral Program state
+  const [referralInfo, setReferralInfo] = useState<ReferralInfo | null>(null);
+  const [loadingReferral, setLoadingReferral] = useState(true);
+
   // Studio settings (para o recibo)
   const [studio, setStudio] = useState<StudioSettings>(() => readStudioSettings());
 
   useEffect(() => {
     api.studioSettings.get().then((data) => setStudio(data)).catch(() => null);
+  }, []);
+
+  // Load referral data
+  useEffect(() => {
+    const loadReferralData = async () => {
+      try {
+        const response = await fetch("/api/referrals/my-code", { credentials: "include" });
+        const data = await response.json();
+        if (data.success) {
+          setReferralInfo(data.data);
+        }
+      } catch (error) {
+        console.error("Failed to load referral data:", error);
+      } finally {
+        setLoadingReferral(false);
+      }
+    };
+
+    loadReferralData();
   }, []);
 
   useEffect(() => {
@@ -2395,13 +2438,14 @@ function ProfileContent() {
                     <input
                       type="text"
                       readOnly
-                      value={`cenastudio.com.br/r/${user?.email?.split('@')[0]?.toUpperCase() || 'USER'}`}
+                      value={referralInfo?.url || `cenastudio.com.br/r/${user?.email?.split('@')[0]?.toUpperCase() || 'USER'}`}
                       className="frame-input w-full font-mono text-sm pr-20"
                     />
                     <button
                       type="button"
                       onClick={() => {
-                        navigator.clipboard.writeText(`https://cenastudio.com.br/r/${user?.email?.split('@')[0] || 'user'}`);
+                        const url = referralInfo?.url || `https://cenastudio.com.br/r/${user?.email?.split('@')[0] || 'user'}`;
+                        navigator.clipboard.writeText(url);
                         toast.success("Link copiado!");
                       }}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-frame-orange hover:text-frame-white transition text-xs font-medium flex items-center gap-1"
@@ -2415,7 +2459,7 @@ function ProfileContent() {
                 {/* Botões de compartilhamento */}
                 <div className="flex flex-wrap gap-2">
                   <a
-                    href={`https://wa.me/?text=Tô usando o CENA Studio pra gerenciar meus projetos audiovisuais e tá incrível! 🎬 Se inscreve por esse link e a gente ganha desconto: https://cenastudio.com.br/r/${user?.email?.split('@')[0] || 'user'}`}
+                    href={`https://wa.me/?text=Tô usando o CENA Studio pra gerenciar meus projetos audiovisuais e tá incrível! 🎬 Se inscreve por esse link e a gente ganha desconto: ${referralInfo?.url || `https://cenastudio.com.br/r/${user?.email?.split('@')[0] || 'user'}`}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#25D366]/10 border border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/20 transition text-sm"
@@ -2424,7 +2468,7 @@ function ProfileContent() {
                     WhatsApp
                   </a>
                   <a
-                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Tô usando o CENA Studio pra gerenciar meus projetos audiovisuais! 🎬`)}&url=https://cenastudio.com.br/r/${user?.email?.split('@')[0] || 'user'}`}
+                    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Tô usando o CENA Studio pra gerenciar meus projetos audiovisuais! 🎬`)}&url=${referralInfo?.url || `https://cenastudio.com.br/r/${user?.email?.split('@')[0] || 'user'}`}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1DA1F2]/10 border border-[#1DA1F2]/30 text-[#1DA1F2] hover:bg-[#1DA1F2]/20 transition text-sm"
@@ -2436,7 +2480,8 @@ function ProfileContent() {
                     type="button"
                     onClick={() => {
                       const subject = "Descubra o CENA Studio 🎬";
-                      const body = `Oi!\n\nEstou usando o CENA Studio para gerenciar meus projetos audiovisuais e estou adorando. A plataforma é completa: CRM, propostas, contratos, reviews de vídeo e muito mais.\n\nSe você trabalha com audiovisual, vale muito a pena conhecer. Se cadastra por esse link e a gente ganha desconto:\n\nhttps://cenastudio.com.br/r/${user?.email?.split('@')[0] || 'user'}\n\nAbraço!`;
+                      const url = referralInfo?.url || `https://cenastudio.com.br/r/${user?.email?.split('@')[0] || 'user'}`;
+                      const body = `Oi!\n\nEstou usando o CENA Studio para gerenciar meus projetos audiovisuais e estou adorando. A plataforma é completa: CRM, propostas, contratos, reviews de vídeo e muito mais.\n\nSe você trabalha com audiovisual, vale muito a pena conhecer. Se cadastra por esse link e a gente ganha desconto:\n\n${url}\n\nAbraço!`;
                       window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                     }}
                     className="flex items-center gap-2 px-4 py-2 rounded-lg bg-frame-gray-2 border border-frame-gray-3 text-frame-gray-light hover:text-frame-white hover:border-frame-gray-4 transition text-sm"
@@ -2452,19 +2497,26 @@ function ProfileContent() {
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-medium text-frame-white">Suas indicações</span>
                   <span className="text-[0.6rem] font-mono uppercase tracking-wider text-frame-gray-light bg-frame-gray-2 px-2 py-1 rounded">
-                    0 ativas
+                    {loadingReferral ? "..." : `${referralInfo?.stats.convertedReferrals || 0} ativas`}
                   </span>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
                     <span className="text-frame-gray-light">Progresso para próxima recompensa</span>
-                    <span className="font-mono text-frame-white">0 / 1</span>
+                    <span className="font-mono text-frame-white">
+                      {loadingReferral ? "..." : `${referralInfo?.stats.nextRewardProgress.current || 0} / ${referralInfo?.stats.nextRewardProgress.target || 1}`}
+                    </span>
                   </div>
                   <div className="h-2 bg-frame-gray-2 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-frame-gold to-frame-gold/60 w-0 transition-all duration-500 rounded-full" />
+                    <div
+                      className="h-full bg-gradient-to-r from-frame-gold to-frame-gold/60 transition-all duration-500 rounded-full"
+                      style={{ width: `${referralInfo?.stats.nextRewardProgress.percentage || 0}%` }}
+                    />
                   </div>
                   <p className="text-[0.65rem] text-frame-gray-light">
-                    Compartilhe seu link e ganhe 1 mês grátis quando alguém assinar!
+                    {referralInfo?.stats.nextRewardProgress.percentage === 100
+                      ? "🎉 Parabéns! Você desbloqueou uma recompensa!"
+                      : "Compartilhe seu link e ganhe 1 mês grátis quando alguém assinar!"}
                   </p>
                 </div>
               </div>
