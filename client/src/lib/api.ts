@@ -557,6 +557,9 @@ export const api = {
         lens?: string;
         movement?: string;
         durationSec?: number | null;
+        shotNumber?: string | null;
+        productionNotes?: string | null;
+        thumbnailUrl?: string | null;
       },
     ) => request<ShotItem>(`/shotlists/${projectId}/shots`, { method: "POST", body: JSON.stringify(data) }),
     updateShot: (
@@ -569,12 +572,37 @@ export const api = {
         lens: string;
         movement: string;
         durationSec: number | null;
+        shotNumber: string | null;
+        productionNotes: string | null;
+        thumbnailUrl: string | null;
         status: "pending" | "shot";
       }>,
     ) => request<ShotItem>(`/shotlists/shots/${shotId}`, { method: "PATCH", body: JSON.stringify(data) }),
     deleteShot: (shotId: number) => request<null>(`/shotlists/shots/${shotId}`, { method: "DELETE" }),
     reorder: (projectId: number, orderedIds: number[]) =>
       request<ShotItem[]>(`/shotlists/${projectId}/reorder`, { method: "PUT", body: JSON.stringify({ orderedIds }) }),
+    uploadThumbnail: (shotId: number, fileData: string, filename: string) =>
+      request<{ thumbnailUrl: string }>(`/shotlists/shots/${shotId}/thumbnail`, {
+        method: "POST",
+        body: JSON.stringify({ fileData, filename }),
+      }),
+    duplicateShot: (shotId: number) =>
+      request<ShotItem>(`/shotlists/shots/${shotId}/duplicate`, { method: "POST" }),
+    exportPdf: (projectId: number) =>
+      fetch(apiUrl(`/shotlists/${projectId}/export/pdf`), {
+        method: "GET",
+        credentials: "include",
+        headers: { Accept: "application/pdf" },
+      }),
+  },
+  shotTypes: {
+    list: () => request<Array<{ id: number; name: string; isDefault: boolean }>>(`/shot-types`),
+    create: (name: string) =>
+      request<{ id: number; name: string; isDefault: boolean }>(`/shot-types`, {
+        method: "POST",
+        body: JSON.stringify({ name }),
+      }),
+    delete: (typeId: number) => request<null>(`/shot-types/${typeId}`, { method: "DELETE" }),
   },
   timesheets: {
     list: (filters?: { projectId?: number; from?: string; to?: string }) => {
@@ -1142,6 +1170,7 @@ export interface ShotItem {
   id: number;
   shot_list_id: number;
   order_index: number;
+  shot_number: string | null;
   scene: string;
   shot_type: string;
   description: string;
@@ -1150,6 +1179,8 @@ export interface ShotItem {
   movement: string;
   duration_sec: number | null;
   status: "pending" | "shot" | string;
+  thumbnail_url: string | null;
+  production_notes: string | null;
   created_at: string;
 }
 
