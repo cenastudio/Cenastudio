@@ -389,18 +389,31 @@ function ProjectHubContent() {
                     {locale === "en" ? "Deadline" : "Prazo"} {new Date(`${metadata.deadline}T00:00:00`).toLocaleDateString(locale === "en" ? "en-US" : "pt-BR")}
                   </span>
                 )}
+              </div>
+
+              {/* Calendar Export - Highlighted action */}
+              <div className="pt-3 border-t border-frame-gray-3/50">
                 <a
                   href={api.calendar.projectIcsUrl(projectId)}
-                  className="flex items-center gap-1.5 text-frame-gray-light hover:text-frame-orange transition"
+                  download
+                  className="inline-flex items-center gap-2 px-4 py-2 border border-frame-gray-3 bg-frame-gray-1/20 hover:border-frame-orange hover:bg-frame-orange/10 text-frame-white hover:text-frame-orange transition-all text-sm font-medium group"
                   title={
                     locale === "en"
-                      ? "Export to calendar (.ics) — one-way download, not a live sync"
-                      : "Exportar para agenda (.ics) — download único, não é sincronização automática"
+                      ? "Download project schedule as .ics file (compatible with Google Calendar, Outlook, Apple Calendar)"
+                      : "Baixar cronograma do projeto como arquivo .ics (compatível com Google Calendar, Outlook, Apple Calendar)"
                   }
                 >
-                  <CalendarPlus className="w-3 h-3" />
-                  {locale === "en" ? "Export to calendar (.ics)" : "Exportar para agenda (.ics)"}
+                  <CalendarPlus className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  <span>{locale === "en" ? "Export to Calendar" : "Exportar para Agenda"}</span>
+                  <span className="text-[0.65rem] px-1.5 py-0.5 bg-frame-gray-2 text-frame-gray-light font-frame-mono rounded group-hover:bg-frame-orange/20 group-hover:text-frame-orange transition">
+                    .ics
+                  </span>
                 </a>
+                <p className="text-[0.6rem] text-frame-gray-muted mt-1.5 font-frame-mono tracking-wide">
+                  {locale === "en"
+                    ? "Includes project deadline + linked meetings"
+                    : "Inclui prazo do projeto + reuniões vinculadas"}
+                </p>
               </div>
             </div>
 
