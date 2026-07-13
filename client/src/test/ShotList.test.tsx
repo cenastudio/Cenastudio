@@ -33,6 +33,9 @@ function makeShot(overrides: Record<string, unknown> & { id: number }) {
     movement: "",
     duration_sec: null,
     status: "pending",
+    shot_number: null,
+    thumbnail_url: null,
+    production_notes: null,
     created_at: "2026-07-01T00:00:00.000Z",
     ...overrides,
   };
