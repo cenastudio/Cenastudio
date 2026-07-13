@@ -1,4 +1,4 @@
-import { db } from "../db.js";
+import { db } from "../models/db.js";
 import { AppError } from "../middleware/errorHandler.js";
 
 export async function listShotTypes(userId: number) {
