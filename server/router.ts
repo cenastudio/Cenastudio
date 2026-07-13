@@ -15,7 +15,6 @@ import projectMembersRoutes from "./routes/projectMembers.js";
 import studioSettingsRoutes from "./routes/studioSettings.js";
 import demoRoutes from "./routes/demo.js";
 import dashboardRoutes from "./routes/dashboard.js";
-import checklistRoutes from "./routes/checklist.js";
 import commercialRoutes from "./routes/commercial.js";
 import teamRoutes from "./routes/team.js";
 import {
@@ -111,7 +110,6 @@ router.use("/project-members", projectMembersRoutes);
 router.use("/studio-settings", studioSettingsRoutes);
 router.use("/demo", demoRoutes);
 router.use("/dashboard", dashboardRoutes);
-router.use("/checklist", checklistRoutes);
 router.use("/commercial", commercialRoutes);
 router.use("/team", teamRoutes);
 router.get("/analytics-overall", authenticate, getOverallAnalytics);
