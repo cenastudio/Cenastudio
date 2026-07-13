@@ -14,7 +14,7 @@
     "build:client": "vite build",
     "build:server": "esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",
-    "start:prod": "node fix-failed-migration.js && prisma migrate deploy && npm run start",
+    "start:prod": "node reset-migration.mjs && prisma migrate deploy && npm run start",
     "preview": "vite preview --host",
     "check": "tsc --noEmit",
     "test": "vitest run",
