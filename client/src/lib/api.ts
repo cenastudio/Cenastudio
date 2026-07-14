@@ -1028,6 +1028,27 @@ export const api = {
       request<{ url: string }>("/checkout/portal", {
         method: "POST",
       }),
+    invoices: () =>
+      request<{
+        invoices: Array<{
+          id: string;
+          description: string;
+          status: string | null;
+          currency: string;
+          amountPaid: number;
+          paidAt: string;
+          invoicePdf: string | null;
+          hostedInvoiceUrl: string | null;
+        }>;
+        upcoming: {
+          description: string;
+          currency: string;
+          amountDue: number;
+          dueAt: string;
+        } | null;
+        totalsByCurrency: Record<string, number>;
+        canManageBilling: boolean;
+      }>("/checkout/invoices"),
   },
   demo: {
     check: () =>

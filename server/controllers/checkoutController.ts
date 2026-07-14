@@ -54,6 +54,17 @@ export const syncSession: RequestHandler = async (req, res, next) => {
   }
 };
 
+export const getInvoices: RequestHandler = async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (!user) throw new AppError("Unauthorized", 401);
+    const history = await stripeService.getBillingHistory(user.id);
+    res.json({ success: true, data: history });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const webhook: RequestHandler = async (req, res, next) => {
   try {
     const sig = req.headers["stripe-signature"] as string;

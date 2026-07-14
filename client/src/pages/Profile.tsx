@@ -6,9 +6,8 @@ import { useBehaviorPreferences } from "@/contexts/BehaviorPreferencesContext";
 import { CHECKOUT_MODAL_PLAN, planDisplayLabel } from "@/lib/plans";
 import { useApp } from "@/contexts/AppContext";
 import { api, openBillingPortal, ApiError, type UserDataStats, type UserUsageMetrics } from "@/lib/api";
-import { useLanguage, translate } from "@/contexts/LanguageContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { readStudioSettings, type StudioSettings } from "@/lib/studioSettings";
 import { WHATSAPP_NUMBER } from "@/lib/constants";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -48,160 +47,23 @@ interface ReferralInfo {
 }
 
 type ProfileTab = "profile" | "security" | "plan" | "preferences" | "privacy";
+type BillingHistory = Awaited<ReturnType<typeof api.checkout.invoices>>;
 
-// ─── RECEIPT PDF ────────────────────────────────────────────────────────────
-function esc(value: string | number | null | undefined) {
-  return String(value ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c] || c));
+function formatBillingAmount(amountInCents: number, currency: string, locale: "pt" | "en") {
+  return new Intl.NumberFormat(locale === "en" ? "en-US" : "pt-BR", {
+    style: "currency",
+    currency: currency.toUpperCase(),
+  }).format(amountInCents / 100);
 }
 
-interface ReceiptData {
-  receiptNumber: string;
-  planName: string;
-  planId: string;
-  amount: number;
-  paidAt: string;
-  userName: string;
-  userEmail: string;
-  studio: StudioSettings;
-  locale: "pt" | "en";
+function openStripeInvoice(url: string) {
+  const parsed = new URL(url);
+  const trustedHost = parsed.hostname === "stripe.com" || parsed.hostname.endsWith(".stripe.com");
+  if (parsed.protocol !== "https:" || !trustedHost) {
+    throw new Error("URL de fatura inválida.");
+  }
+  window.open(parsed.toString(), "_blank", "noopener,noreferrer");
 }
-
-function buildReceiptHtml(data: ReceiptData): string {
-  const L = (key: string) => translate(data.locale, key);
-  const color = data.studio.primaryColor || SITE_CONFIG.primaryColor;
-  const brandFadeRgba = hexToRgba(color, 0.08);
-  const currencyLocale = data.locale === "en" ? "en-US" : "pt-BR";
-  const formattedAmount = new Intl.NumberFormat(currencyLocale, { style: "currency", currency: "BRL" }).format(data.amount);
-  const formattedDate = new Intl.DateTimeFormat(currencyLocale, { day: "2-digit", month: "long", year: "numeric" }).format(new Date(data.paidAt));
-
-  return `<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8"/>
-  <title>${L("app.receipt.title")} #${esc(data.receiptNumber)} — ${esc(data.studio.studioName)}</title>
-  <style>
-    @page{size:A4;margin:0}
-    *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    html,body{margin:0;min-height:100%;background:#0d0d0d;color:#e8e8e8;font-family:Arial,sans-serif}
-    body{background:radial-gradient(circle at 88% 5%,${color}2e,transparent 34%),linear-gradient(135deg,#15100d 0%,#0d0d0d 42%,#050505 100%)}
-    .page{width:210mm;min-height:297mm;margin:0 auto;padding:18mm;background:radial-gradient(circle at 92% 4%,${color}30,transparent 33%),linear-gradient(180deg,#111 0%,#0d0d0d 100%);position:relative;overflow:visible}
-    .page:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,${brandFadeRgba},transparent 32%),radial-gradient(circle at 10% 92%,rgba(217,195,171,.08),transparent 32%);pointer-events:none}
-    .page>*{position:relative;z-index:1}
-    .header{display:flex;justify-content:space-between;gap:32px;padding-bottom:28px;border-bottom:3px solid ${color}}
-    .brand{font-size:34px;font-weight:900;letter-spacing:.06em;color:#fff}.brand span{color:${color}}
-    .sub{font-size:11px;color:${color};font-weight:900;letter-spacing:.18em;text-transform:uppercase;margin-top:5px}
-    .doc{text-align:right}.doc small{display:block;color:#777;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
-    .doc strong{display:block;color:${color};font-size:28px;margin-top:4px}
-    .badge{display:inline-flex;align-items:center;gap:8px;margin-top:32px;background:rgba(0,200,100,0.12);border:1px solid rgba(0,200,100,0.3);padding:10px 20px}
-    .badge-dot{width:10px;height:10px;border-radius:50%;background:#00c864;flex-shrink:0}
-    .badge-text{font-size:13px;font-weight:700;color:#00c864;letter-spacing:.06em;text-transform:uppercase}
-    h1{font-size:42px;line-height:1;margin:28px 0 8px;color:#fff}
-    .muted{color:#999;font-size:13px;line-height:1.55}
-    .divider{height:1px;background:linear-gradient(90deg,${color}44,transparent);margin:28px 0}
-    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:0 0 28px}
-    .field{background:#151515;border:1px solid #252525;padding:13px 15px}
-    .label{font-size:9px;color:#777;font-weight:900;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}
-    .value{font-size:13px;color:#eee;font-weight:700}
-    .breakdown{background:#141414;border:1px solid #252525;margin-bottom:16px}
-    .breakdown-row{display:flex;justify-content:space-between;padding:14px 20px;border-top:1px solid #252525;font-size:13px;color:#bbb}
-    .breakdown-row:first-child{border-top:0}
-    .breakdown-row strong{color:#eee}
-    .total-box{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:24px 28px;border:1px solid ${color}77;background:linear-gradient(135deg,${color}22,rgba(0,0,0,0))}
-    .total-box small{display:block;color:${color};font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px}
-    .total-box strong{font-size:44px;color:#fff;font-weight:900}
-    .total-box .method{font-size:12px;color:#777;margin-top:4px}
-    .note{background:#111;border:1px solid #242424;padding:20px;margin-top:28px;color:#aaa;font-size:12px;line-height:1.7}
-    .footer{display:flex;justify-content:space-between;align-items:flex-end;margin-top:48px;padding-top:20px;border-top:1px solid #252525}
-    .footer-brand{font-size:13px;color:#555}
-    .footer-brand strong{display:block;color:#888;font-size:15px;margin-bottom:4px}
-    .watermark{font-size:10px;color:#333;font-weight:900;letter-spacing:.2em;text-transform:uppercase}
-    @media screen{.page{box-shadow:0 22px 70px rgba(0,0,0,.34)}}
-    @media print{
-      html,body{width:210mm;min-height:297mm;background:#0d0d0d}
-      .page{width:210mm;min-height:297mm;height:auto;margin:0;padding:16mm;box-shadow:none}
-      .header,.field,.breakdown-row,.total-box,.note{break-inside:avoid;page-break-inside:avoid}
-    }
-  </style>
-</head>
-<body>
-  <main class="page">
-    <header class="header">
-      <div>
-        <div class="brand">${esc(data.studio.studioName)}<span>.</span></div>
-        <div class="sub">${esc(data.studio.legalName || L("app.receipt.platformLabel"))}</div>
-      </div>
-      <div class="doc">
-        <small>${L("app.receipt.title")}</small>
-        <strong>#${esc(data.receiptNumber)}</strong>
-        <small>${formattedDate}</small>
-      </div>
-    </header>
-
-    <div class="badge">
-      <div class="badge-dot"></div>
-      <span class="badge-text">${L("app.receipt.confirmed")}</span>
-    </div>
-
-    <h1>${L("app.receipt.subscription")} ${esc(data.planName)}</h1>
-    <p class="muted">${L("app.receipt.platformAccess").replace("{plan}", esc(data.planName))}</p>
-
-    <div class="divider"></div>
-
-    <div class="grid">
-      <div class="field"><div class="label">${L("app.receipt.client")}</div><div class="value">${esc(data.userName)}</div></div>
-      <div class="field"><div class="label">Email</div><div class="value">${esc(data.userEmail)}</div></div>
-      <div class="field"><div class="label">${L("app.receipt.plan")}</div><div class="value">${esc(SITE_CONFIG.brandName)} ${esc(data.planName)}</div></div>
-      <div class="field"><div class="label">${L("app.receipt.paymentDate")}</div><div class="value">${formattedDate}</div></div>
-      <div class="field"><div class="label">${L("app.receipt.accessPeriod")}</div><div class="value">${L("app.receipt.accessValue")}</div></div>
-      <div class="field"><div class="label">${L("app.receipt.receiptNumber")}</div><div class="value">#${esc(data.receiptNumber)}</div></div>
-    </div>
-
-    <div class="breakdown">
-      <div class="breakdown-row"><span>${L("app.receipt.subscription")} ${esc(SITE_CONFIG.brandName)} ${esc(data.planName)}</span><strong>${formattedAmount}</strong></div>
-      <div class="breakdown-row"><span>${L("app.receipt.discount")}</span><strong>R$ 0,00</strong></div>
-    </div>
-
-    <div class="total-box">
-      <div>
-        <small>${L("app.receipt.totalPaid")}</small>
-        <div class="method">${L("app.receipt.paymentMethod")}</div>
-      </div>
-      <strong>${formattedAmount}</strong>
-    </div>
-
-    <div class="note">
-      ${L("app.receipt.note").replace("{plan}", esc(data.planName))}
-      ${data.studio.email ? `<br/>${data.locale === "en" ? "Contact" : "Contato"}: ${esc(data.studio.email)}` : ""}
-    </div>
-
-    <footer class="footer">
-      <div class="footer-brand">
-        <strong>${esc(data.studio.studioName)}</strong>
-        ${data.studio.city ? esc(data.studio.city) + " · " : ""}cenastudio.com.br
-      </div>
-      <div class="watermark">${L("app.receipt.watermark")}</div>
-    </footer>
-  </main>
-</body>
-</html>`;
-}
-
-function printReceiptPdf(data: ReceiptData) {
-  const html = buildReceiptHtml(data);
-  const iframe = document.createElement("iframe");
-  iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0";
-  document.body.appendChild(iframe);
-  const cleanup = () => window.setTimeout(() => iframe.remove(), 1000);
-  iframe.onload = () => {
-    const fw = iframe.contentWindow;
-    if (!fw) { cleanup(); return; }
-    fw.focus();
-    fw.onafterprint = cleanup;
-    window.setTimeout(() => { fw.print(); cleanup(); }, 250);
-  };
-  iframe.srcdoc = html;
-}
-// ─────────────────────────────────────────────────────────────────────────────
 
 function formatDate(value: string | null | undefined, noDateLabel: string, locale?: "pt" | "en") {
   if (!value) return noDateLabel;
@@ -517,6 +379,9 @@ function ProfileContent() {
   const [usageMetrics, setUsageMetrics] = useState<UserUsageMetrics | null>(null);
   const [usageMetricsLoading, setUsageMetricsLoading] = useState(false);
   const [usageMetricsError, setUsageMetricsError] = useState(false);
+  const [billingHistory, setBillingHistory] = useState<BillingHistory | null>(null);
+  const [billingHistoryLoading, setBillingHistoryLoading] = useState(false);
+  const [billingHistoryError, setBillingHistoryError] = useState(false);
 
   // 2. Controles de Privacidade
   const [privacySettings, setPrivacySettings] = useState({
@@ -581,14 +446,6 @@ function ProfileContent() {
     referredUser: { email: string; name: string | null; createdAt: string } | null;
   }>>([]);
 
-  // Studio settings (para o recibo)
-  const [studio, setStudio] = useState<StudioSettings>(() => readStudioSettings());
-
-  useEffect(() => {
-    api.studioSettings.get().then((data) => setStudio(data)).catch(() => null);
-  }, []);
-
-  // Load referral data
   useEffect(() => {
     const loadReferralData = async () => {
       try {
@@ -719,22 +576,6 @@ function ProfileContent() {
     } catch (error) {
       toast.error(t("app.profile.toastExportError"), { id: "export-data" });
     }
-  };
-
-  const handleExportReceipt = (amount: number) => {
-    const receiptNumber = `RCB-${Date.now().toString().slice(-8)}`;
-    printReceiptPdf({
-      receiptNumber,
-      planName: plan?.planId === "studio" ? "Studio" : plan?.planId === "pro" ? "Pro" : "Free",
-      planId: plan?.planId ?? "free",
-      amount,
-      paidAt: new Date().toISOString(),
-      userName: user?.name || user?.email || "—",
-      userEmail: user?.email || "—",
-      studio,
-      locale,
-    });
-    toast.success(t("app.profile.toastReceiptOpen"));
   };
 
   const handleDeleteAccount = () => {
@@ -932,10 +773,11 @@ function ProfileContent() {
     }
   }, [activeTab]);
 
-  // Carregar métricas reais quando entrar na aba Plano.
+  // Carregar métricas e faturamento reais quando entrar na aba Plano.
   useEffect(() => {
     if (activeTab !== "plan") return;
     let cancelled = false;
+
     setUsageMetricsLoading(true);
     setUsageMetricsError(false);
     api.auth.getUsageMetrics()
@@ -948,6 +790,20 @@ function ProfileContent() {
         }
       })
       .finally(() => { if (!cancelled) setUsageMetricsLoading(false); });
+
+    setBillingHistoryLoading(true);
+    setBillingHistoryError(false);
+    api.checkout.invoices()
+      .then((history) => { if (!cancelled) setBillingHistory(history); })
+      .catch(() => {
+        if (!cancelled) {
+          setBillingHistory(null);
+          setBillingHistoryError(true);
+          toast.error("Erro ao confirmar histórico de cobranças");
+        }
+      })
+      .finally(() => { if (!cancelled) setBillingHistoryLoading(false); });
+
     return () => { cancelled = true; };
   }, [activeTab]);
 
@@ -2275,10 +2131,10 @@ function ProfileContent() {
                   <Receipt className="w-5 h-5 text-frame-orange" />
                   <div>
                     <h3 className="text-lg font-bold">{t("app.profile.invoiceHistory")}</h3>
-                    <p className="text-frame-gray-light text-xs">{t("app.profile.invoiceHistoryDesc")}</p>
+                    <p className="text-frame-gray-light text-xs">Cobranças confirmadas diretamente pela Stripe</p>
                   </div>
                 </div>
-                {plan?.planId !== "free" && (
+                {billingHistory?.canManageBilling && (
                   <button
                     type="button"
                     onClick={handlePlanAction}
@@ -2290,110 +2146,118 @@ function ProfileContent() {
                 )}
               </div>
 
-              {plan?.planId === "free" ? (
+              {billingHistoryLoading ? (
+                <div className="py-8 text-center text-sm text-frame-gray-light">
+                  Confirmando cobranças com a Stripe...
+                </div>
+              ) : billingHistoryError || !billingHistory ? (
+                <div className="border border-frame-red/30 bg-frame-red/5 p-4 text-sm text-frame-red">
+                  Não foi possível confirmar o histórico agora. Nenhuma fatura estimada será exibida.
+                </div>
+              ) : billingHistory.invoices.length === 0 && !billingHistory.upcoming ? (
                 <div className="py-8 text-center">
                   <Receipt className="w-10 h-10 mx-auto text-frame-gray-light/30 mb-3" />
-                  <p className="text-sm text-frame-gray-light">{t("app.profile.noInvoiceFree")}</p>
-                  <p className="text-xs text-frame-gray-light/70 mt-1">{t("app.profile.noInvoiceFreeDesc")}</p>
-                  <button
-                    type="button"
-                    onClick={handlePlanAction}
-                    className="mt-4 frame-btn-primary text-sm py-2 px-4"
-                  >
-                    Ver planos pagos
-                  </button>
+                  <p className="text-sm text-frame-gray-light">Nenhuma cobrança confirmada</p>
+                  <p className="text-xs text-frame-gray-light/70 mt-1">
+                    Seu histórico permanecerá vazio até existir um pagamento real vinculado à sua conta.
+                  </p>
+                  {(plan?.planId === "free" || plan?.status === "trial") && (
+                    <button
+                      type="button"
+                      onClick={handlePlanAction}
+                      className="mt-4 frame-btn-primary text-sm py-2 px-4"
+                    >
+                      Ver planos pagos
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {/* Fatura atual */}
-                  <div className="flex items-center justify-between py-3 px-4 rounded-lg bg-frame-orange/5 border border-frame-orange/30">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-frame-orange/20 flex items-center justify-center">
-                        <Clock className="w-4 h-4 text-frame-orange" />
+                  {billingHistory.upcoming && (
+                    <div className="flex items-center justify-between py-3 px-4 rounded-lg bg-frame-orange/5 border border-frame-orange/30">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-frame-orange/20 flex items-center justify-center">
+                          <Clock className="w-4 h-4 text-frame-orange" />
+                        </div>
+                        <div>
+                          <span className="text-sm text-frame-white font-medium">
+                            Próxima cobrança — {billingHistory.upcoming.description}
+                          </span>
+                          <p className="text-xs text-frame-gray-light">
+                            Prevista para {formatDate(billingHistory.upcoming.dueAt, "—", locale)}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <span className="text-sm text-frame-white font-medium">
-                          Próxima cobrança - {plan?.planId === "studio" ? "Studio" : plan?.planId === "pro" ? "Pro" : plan?.planId === "whitelabel" ? "Whitelabel" : "Enterprise"}
-                        </span>
-                        <p className="text-xs text-frame-gray-light">Vence em 01/08/2026</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4">
                       <span className="text-sm font-mono text-frame-white">
-                        R$ {
-                          plan?.planId === "studio" ? "399" :
-                          plan?.planId === "pro" ? "199" :
-                          plan?.planId === "whitelabel" ? "697" : "Custom"
-                        },00
+                        {formatBillingAmount(billingHistory.upcoming.amountDue, billingHistory.upcoming.currency, locale)}
                       </span>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Faturas anteriores */}
-                  <div className="space-y-2">
-                    <p className="text-xs font-frame-mono uppercase tracking-wider text-frame-gray-light mt-4 mb-2">
-                      Histórico de pagamentos
-                    </p>
+                  {billingHistory.invoices.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-frame-mono uppercase tracking-wider text-frame-gray-light mt-4 mb-2">
+                        Histórico de pagamentos confirmados
+                      </p>
 
-                    {[
-                      { date: "01/07/2026", month: "Julho 2026", status: "paid" },
-                      { date: "01/06/2026", month: "Junho 2026", status: "paid" },
-                      { date: "01/05/2026", month: "Maio 2026", status: "paid" },
-                    ].map((invoice, idx) => (
-                      <div key={idx} className="flex items-center justify-between py-3 px-4 rounded-lg bg-frame-gray-2/30 border border-frame-gray-3/30 hover:border-frame-gray-3 transition">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-frame-green/10 flex items-center justify-center">
-                            <Check className="w-4 h-4 text-frame-green" />
+                      {billingHistory.invoices.map((invoice) => {
+                        const documentUrl = invoice.invoicePdf || invoice.hostedInvoiceUrl;
+                        return (
+                          <div key={invoice.id} className="flex items-center justify-between py-3 px-4 rounded-lg bg-frame-gray-2/30 border border-frame-gray-3/30 hover:border-frame-gray-3 transition">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-frame-green/10 flex items-center justify-center">
+                                <Check className="w-4 h-4 text-frame-green" />
+                              </div>
+                              <div>
+                                <span className="text-sm text-frame-white">{invoice.description}</span>
+                                <p className="text-xs text-frame-gray-light">
+                                  Pago em {formatDate(invoice.paidAt, "—", locale)} · {invoice.id}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <span className="text-sm font-mono text-frame-white">
+                                {formatBillingAmount(invoice.amountPaid, invoice.currency, locale)}
+                              </span>
+                              {documentUrl && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    try {
+                                      openStripeInvoice(documentUrl);
+                                    } catch {
+                                      toast.error("Não foi possível abrir a fatura da Stripe");
+                                    }
+                                  }}
+                                  className="text-frame-orange hover:text-frame-white text-xs flex items-center gap-1 transition font-medium"
+                                >
+                                  <Download className="w-3 h-3" /> PDF
+                                </button>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <span className="text-sm text-frame-white">
-                              Plano {plan?.planId === "studio" ? "Studio" : plan?.planId === "pro" ? "Pro" : plan?.planId === "whitelabel" ? "Whitelabel" : "Enterprise"} - {invoice.month}
-                            </span>
-                            <p className="text-xs text-frame-gray-light">Pago em {invoice.date}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <span className="text-sm font-mono text-frame-white">
-                            R$ {
-                              plan?.planId === "studio" ? "399" :
-                              plan?.planId === "pro" ? "199" :
-                              plan?.planId === "whitelabel" ? "697" : "999"
-                            },00
-                          </span>
-                          <button
-                            onClick={() => handleExportReceipt(
-                              plan?.planId === "studio" ? 399 :
-                              plan?.planId === "pro" ? 199 :
-                              plan?.planId === "whitelabel" ? 697 : 999
-                            )}
-                            className="text-frame-orange hover:text-frame-white text-xs flex items-center gap-1 transition font-medium"
-                          >
-                            <Download className="w-3 h-3" /> PDF
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
 
-                  {/* Total pago */}
-                  <div className="mt-4 p-4 rounded-lg border border-frame-gray-3 bg-frame-gray-1/20">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs text-frame-gray-light">Total pago nos últimos 3 meses</p>
-                        <p className="text-sm text-frame-gray-muted mt-1">Economia vs custo por projeto: ~67%</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-frame-white">
-                          R$ {
-                            plan?.planId === "studio" ? "1.197" :
-                            plan?.planId === "pro" ? "597" :
-                            plan?.planId === "whitelabel" ? "2.091" : "2.997"
-                          },00
-                        </p>
-                        <p className="text-xs text-frame-green mt-1">✓ Assinatura ativa</p>
+                  {Object.keys(billingHistory.totalsByCurrency).length > 0 && (
+                    <div className="mt-4 p-4 rounded-lg border border-frame-gray-3 bg-frame-gray-1/20">
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <p className="text-xs text-frame-gray-light">Total pago no histórico confirmado</p>
+                          <p className="text-sm text-frame-gray-muted mt-1">Soma das faturas retornadas pela Stripe</p>
+                        </div>
+                        <div className="text-right space-y-1">
+                          {Object.entries(billingHistory.totalsByCurrency).map(([invoiceCurrency, amount]) => (
+                            <p key={invoiceCurrency} className="text-2xl font-bold text-frame-white">
+                              {formatBillingAmount(amount, invoiceCurrency, locale)}
+                            </p>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
             </div>

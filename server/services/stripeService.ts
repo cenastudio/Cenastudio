@@ -54,30 +54,156 @@ export async function createCheckoutSession(
   return session;
 }
 
-export async function createPortalSession(userId: number, returnUrl: string) {
+interface StripeBillingRecord {
+  planId: string;
+  status: string;
+  stripeCustomerId: string | null;
+  stripeSubscriptionId: string | null;
+}
+
+async function getStripeBillingRecord(userId: number): Promise<StripeBillingRecord | null> {
+  if (shouldUsePrisma) {
+    const uid = BigInt(userId);
+    const [current, billing] = await Promise.all([
+      prisma.subscription.findFirst({
+        where: { userId: uid },
+        orderBy: { id: "desc" },
+        select: { planId: true, status: true, stripeSubscriptionId: true },
+      }),
+      prisma.subscription.findFirst({
+        where: { userId: uid, stripeCustomerId: { not: null } },
+        orderBy: { id: "desc" },
+        select: { planId: true, status: true, stripeCustomerId: true },
+      }),
+    ]);
+    if (!current && !billing) return null;
+
+    if (billing?.stripeCustomerId) {
+      const conflictingOwner = await prisma.subscription.findFirst({
+        where: { stripeCustomerId: billing.stripeCustomerId, userId: { not: uid } },
+        select: { id: true },
+      });
+      if (conflictingOwner) {
+        throw new AppError("Conta de cobrança inconsistente. Fale com o suporte.", 409);
+      }
+    }
+
+    return {
+      planId: current?.planId || billing?.planId || "free",
+      status: current?.status || billing?.status || "inactive",
+      stripeCustomerId: billing?.stripeCustomerId || null,
+      stripeSubscriptionId: current?.stripeSubscriptionId || null,
+    };
+  }
+
+  const current = db.prepare(
+    `SELECT plan_id, status, stripe_subscription_id
+     FROM subscriptions WHERE user_id = ? ORDER BY id DESC LIMIT 1`,
+  ).get(userId) as {
+    plan_id: string;
+    status: string;
+    stripe_subscription_id: string | null;
+  } | undefined;
+  const billing = db.prepare(
+    `SELECT plan_id, status, stripe_customer_id
+     FROM subscriptions
+     WHERE user_id = ? AND stripe_customer_id IS NOT NULL
+     ORDER BY id DESC LIMIT 1`,
+  ).get(userId) as {
+    plan_id: string;
+    status: string;
+    stripe_customer_id: string;
+  } | undefined;
+  if (!current && !billing) return null;
+
+  if (billing?.stripe_customer_id) {
+    const conflictingOwner = db.prepare(
+      "SELECT id FROM subscriptions WHERE stripe_customer_id = ? AND user_id != ? LIMIT 1",
+    ).get(billing.stripe_customer_id, userId);
+    if (conflictingOwner) {
+      throw new AppError("Conta de cobrança inconsistente. Fale com o suporte.", 409);
+    }
+  }
+
+  return {
+    planId: current?.plan_id || billing?.plan_id || "free",
+    status: current?.status || billing?.status || "inactive",
+    stripeCustomerId: billing?.stripe_customer_id || null,
+    stripeSubscriptionId: current?.stripe_subscription_id || null,
+  };
+}
+
+export async function getBillingHistory(userId: number) {
+  const record = await getStripeBillingRecord(userId);
+  if (!record?.stripeCustomerId) {
+    return { invoices: [], upcoming: null, totalsByCurrency: {}, canManageBilling: false };
+  }
+
   const stripe = getStripe();
+  const customerId = record.stripeCustomerId;
+  const paidInvoices = await stripe.invoices.list({ customer: customerId, status: "paid", limit: 24 });
+  const invoices = paidInvoices.data.map((invoice) => ({
+    id: invoice.id,
+    description: invoice.lines.data[0]?.description || `Cena Studio ${record.planId}`,
+    status: invoice.status,
+    currency: invoice.currency.toUpperCase(),
+    amountPaid: invoice.amount_paid,
+    paidAt: new Date((invoice.status_transitions.paid_at || invoice.created) * 1000).toISOString(),
+    invoicePdf: invoice.invoice_pdf,
+    hostedInvoiceUrl: invoice.hosted_invoice_url,
+  }));
 
-  const prismaSub = shouldUsePrisma
-    ? await prisma.subscription.findFirst({
-        where: { userId: BigInt(userId), stripeCustomerId: { not: null } },
-        orderBy: { id: "desc" }, select: { stripeCustomerId: true },
-      })
-    : null;
-  const sub = shouldUsePrisma ? null : db
-    .prepare(
-      `SELECT stripe_customer_id FROM subscriptions
-       WHERE user_id = ? AND stripe_customer_id IS NOT NULL
-       ORDER BY id DESC LIMIT 1`,
-    )
-    .get(userId) as { stripe_customer_id: string } | undefined;
+  let upcoming: {
+    description: string;
+    currency: string;
+    amountDue: number;
+    dueAt: string;
+  } | null = null;
 
-  const customerId = prismaSub?.stripeCustomerId || sub?.stripe_customer_id;
-  if (!customerId) {
+  if (record.stripeSubscriptionId && ["active", "trial", "trialing"].includes(record.status)) {
+    const subscription = await stripe.subscriptions.retrieve(record.stripeSubscriptionId);
+    const subscriptionCustomerId =
+      typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id;
+    const metadataUserId = subscription.metadata?.userId;
+    if (subscriptionCustomerId !== customerId || (metadataUserId && Number(metadataUserId) !== userId)) {
+      throw new AppError("Assinatura de cobrança inconsistente. Fale com o suporte.", 409);
+    }
+
+    const amountDue = subscription.items.data.reduce(
+      (sum, item) => sum + (item.price.unit_amount || 0) * (item.quantity || 1),
+      0,
+    );
+    const currency = subscription.items.data[0]?.price.currency || invoices[0]?.currency || "brl";
+    upcoming = {
+      description: `Cena Studio ${record.planId}`,
+      currency: currency.toUpperCase(),
+      amountDue,
+      dueAt: new Date(subscription.current_period_end * 1000).toISOString(),
+    };
+  }
+
+  const totalsByCurrency = invoices.reduce<Record<string, number>>((totals, invoice) => {
+    totals[invoice.currency] = (totals[invoice.currency] || 0) + invoice.amountPaid;
+    return totals;
+  }, {});
+
+  return {
+    invoices,
+    upcoming,
+    totalsByCurrency,
+    canManageBilling: true,
+  };
+}
+
+export async function createPortalSession(userId: number, returnUrl: string) {
+  const record = await getStripeBillingRecord(userId);
+  if (!record?.stripeCustomerId) {
     throw new AppError("Nenhuma assinatura Stripe encontrada.", 404);
   }
 
+  const stripe = getStripe();
   const session = await stripe.billingPortal.sessions.create({
-    customer: customerId,
+    customer: record.stripeCustomerId,
     return_url: returnUrl,
   });
 

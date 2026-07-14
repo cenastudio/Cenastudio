@@ -116,6 +116,17 @@ vi.mock('@/lib/api', () => ({
       allowance: vi.fn().mockResolvedValue({ planId: 'pro', status: 'trial', used: 0, limit: 50, remaining: 50, canCreate: true }),
       lookupCnpj: vi.fn(),
     },
+    checkout: {
+      invoices: vi.fn().mockResolvedValue({
+        invoices: [],
+        upcoming: null,
+        totalsByCurrency: {},
+        canManageBilling: false,
+      }),
+      session: vi.fn(),
+      syncSession: vi.fn(),
+      portal: vi.fn(),
+    },
     studioSettings: {
       get: vi.fn(),
       update: vi.fn(),
