@@ -6,6 +6,7 @@ import fs from "fs";
 import { ensureUploadsDirectory, safeStoredFilePath, UPLOADS_DIR } from "../utils/fileSafety.js";
 import { prisma, shouldUsePrisma } from "../models/prisma.js";
 import { withSnakeCase } from "../utils/prismaSerialization.js";
+import { assertStorageCapacity } from "../services/entitlementService.js";
 import {
   createProjectFileUrl,
   removeProjectFile,
@@ -115,6 +116,8 @@ export const uploadFile: RequestHandler = async (req, res, next) => {
     if (decodedSize > MAX_UPLOAD_SIZE) {
       throw new AppError(`Arquivo excede o limite de ${MAX_UPLOAD_SIZE_MB}MB`, 413);
     }
+
+    await assertStorageCapacity(userId, decodedSize, req.user!.role);
 
     if (shouldUsePrisma) {
       const project = await prisma.project.findFirst({

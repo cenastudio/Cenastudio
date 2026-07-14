@@ -7,6 +7,7 @@ import {
   storageObjectPath,
 } from "../services/supabaseStorage.js";
 import { withSnakeCase } from "../utils/prismaSerialization.js";
+import { assertStorageCapacity } from "../services/entitlementService.js";
 
 const MAX_VIDEO_SIZE_MB = Number.parseInt(process.env.MAX_VIDEO_SIZE_MB || "2000", 10);
 const MAX_VIDEO_SIZE = MAX_VIDEO_SIZE_MB * 1024 * 1024;
@@ -79,6 +80,8 @@ export const uploadVideo: RequestHandler = async (req, res, next) => {
         413
       );
     }
+
+    await assertStorageCapacity(userId, fileSize, req.user!.role);
 
     // Detect MIME type from filename or default to mp4
     const ext = metadata.filename.split(".").pop()?.toLowerCase();

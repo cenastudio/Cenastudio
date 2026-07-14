@@ -103,6 +103,45 @@ export async function getUserUsageMetrics(userId: number): Promise<UserUsageMetr
   };
 }
 
+/** Bytes de armazenamento atualmente usados pelo usuário (soma dos arquivos). */
+export async function getStorageUsedBytes(userId: number): Promise<number> {
+  if (shouldUsePrisma) {
+    const agg = await prisma.file.aggregate({ where: { userId: BigInt(userId) }, _sum: { size: true } });
+    return Number(agg._sum.size ?? 0);
+  }
+  const row = db.prepare("SELECT COALESCE(SUM(size), 0) AS used FROM files WHERE user_id = ?").get(userId) as { used: number };
+  return Number(row.used ?? 0);
+}
+
+/** Quota de armazenamento (bytes) do plano do usuário. -1 = ilimitado. */
+export async function getStorageQuotaBytes(userId: number): Promise<number> {
+  const entitlement = await getUserEntitlements(userId);
+  return entitlement.storageLimitBytes;
+}
+
+/**
+ * Garante que o upload de `incomingBytes` cabe na quota do plano.
+ * Lança AppError(413) quando o total ultrapassaria o limite. Admins e planos
+ * ilimitados (-1) passam direto.
+ */
+export async function assertStorageCapacity(
+  userId: number,
+  incomingBytes: number,
+  role?: "user" | "admin",
+) {
+  if (role === "admin") return;
+  const quota = await getStorageQuotaBytes(userId);
+  if (quota < 0) return; // unlimited
+  const used = await getStorageUsedBytes(userId);
+  if (used + Math.max(0, incomingBytes) > quota) {
+    const quotaGb = (quota / (1024 * 1024 * 1024)).toFixed(quota >= 1024 * 1024 * 1024 ? 0 : 1);
+    throw new AppError(
+      `Armazenamento do plano esgotado (limite de ${quotaGb} GB). Remova arquivos ou faça upgrade para enviar mais.`,
+      413,
+    );
+  }
+}
+
 export async function assertClientCapacity(userId: number, role?: "user" | "admin") {
   if (role === "admin") return;
   await requireOperationalAccess(userId, role);

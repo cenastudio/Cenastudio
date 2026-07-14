@@ -1,5 +1,6 @@
 import { prisma, shouldUsePrisma } from "../models/prisma.js";
 import { db } from "../models/db.js";
+import { getStorageQuotaBytes } from "./entitlementService.js";
 
 interface StorageStatsByType {
   images: number;
@@ -101,9 +102,8 @@ export async function calculateStorageStats(userId: number): Promise<StorageStat
     projectId: file.projectId ? Number(file.projectId) : null,
   }));
 
-  // 5. Get storage quota (based on plan - hardcoded for now, can be fetched from user.plan later)
-  // TODO: Integrate with plan service to get actual quota
-  const quota = 10 * 1024 * 1024 * 1024; // 10GB for Pro plan
+  // 5. Storage quota derived from the user's plan entitlements (-1 = unlimited).
+  const quota = await getStorageQuotaBytes(userId);
 
   return {
     totalUsed,

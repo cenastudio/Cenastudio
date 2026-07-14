@@ -105,9 +105,19 @@ export default function AllFilesTab() {
     }).catch(() => {});
   }, []);
 
+  const [storageQuota, setStorageQuota] = useState<number | null>(null);
+  useEffect(() => {
+    fetch("/api/storage/stats", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => { if (d?.success) setStorageQuota(Number(d.data.quota)); })
+      .catch(() => { /* quota display is best-effort */ });
+  }, []);
+
   const totalSize = useMemo(() => assets.reduce((sum, a) => sum + (a.size || 0), 0), [assets]);
-  const quotaBytes = 10 * 1024 * 1024 * 1024; // 10GB default (Pro tier)
-  const usagePercent = Math.min(100, (totalSize / quotaBytes) * 100);
+  const isUnlimitedStorage = storageQuota != null && storageQuota < 0;
+  const usagePercent = storageQuota != null && storageQuota > 0
+    ? Math.min(100, (totalSize / storageQuota) * 100)
+    : 0;
 
   const filteredAssets = assets.filter((asset) => {
     const type = getAssetType(asset.mime_type);
@@ -155,13 +165,13 @@ export default function AllFilesTab() {
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm text-frame-gray-light">{isEn ? "Storage used" : "Armazenamento usado"}</span>
           <span className="text-sm font-semibold text-frame-white">
-            {formatSize(totalSize)} / {formatSize(quotaBytes)}
+            {formatSize(totalSize)} / {storageQuota == null ? "—" : isUnlimitedStorage ? (isEn ? "Unlimited" : "Ilimitado") : formatSize(storageQuota)}
           </span>
         </div>
         <div className="w-full h-2 bg-frame-gray-2 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-frame-orange to-frame-orange/60 transition-all"
-            style={{ width: `${usagePercent}%` }}
+            className={`h-full transition-all ${isUnlimitedStorage ? "bg-gradient-to-r from-frame-green to-frame-green/60 w-full" : "bg-gradient-to-r from-frame-orange to-frame-orange/60"}`}
+            style={isUnlimitedStorage ? undefined : { width: `${usagePercent}%` }}
           />
         </div>
         <p className="text-xs text-frame-gray-muted mt-2">

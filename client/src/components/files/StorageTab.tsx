@@ -67,7 +67,8 @@ export default function StorageTab() {
     );
   }
 
-  const usagePercent = Math.min(100, (stats.totalUsed / stats.quota) * 100);
+  const isUnlimited = stats.quota < 0;
+  const usagePercent = isUnlimited ? 0 : Math.min(100, (stats.totalUsed / stats.quota) * 100);
 
   return (
     <div className="space-y-6">
@@ -84,19 +85,21 @@ export default function StorageTab() {
           <div className="flex items-center justify-between">
             <span className="text-sm text-frame-gray-light">{isEn ? "Used" : "Usado"}</span>
             <span className="text-sm font-semibold text-frame-white">
-              {formatSize(stats.totalUsed)} / {formatSize(stats.quota)}
+              {formatSize(stats.totalUsed)} / {isUnlimited ? (isEn ? "Unlimited" : "Ilimitado") : formatSize(stats.quota)}
             </span>
           </div>
 
           <div className="w-full h-3 bg-frame-gray-2 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-frame-orange to-frame-orange/60 transition-all"
-              style={{ width: `${usagePercent}%` }}
+              className={`h-full transition-all ${isUnlimited ? "bg-gradient-to-r from-frame-green to-frame-green/60 w-full" : "bg-gradient-to-r from-frame-orange to-frame-orange/60"}`}
+              style={isUnlimited ? undefined : { width: `${usagePercent}%` }}
             />
           </div>
 
           <p className="text-xs text-frame-gray-muted">
-            {usagePercent.toFixed(1)}% {isEn ? "of your storage quota" : "da sua cota de armazenamento"}
+            {isUnlimited
+              ? (isEn ? "Unlimited storage on your plan" : "Armazenamento ilimitado no seu plano")
+              : `${usagePercent.toFixed(1)}% ${isEn ? "of your storage quota" : "da sua cota de armazenamento"}`}
           </p>
         </div>
       </div>
