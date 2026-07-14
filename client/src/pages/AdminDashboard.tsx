@@ -12,7 +12,7 @@ import { TabsContent } from "@/components/ui/tabs";
 import { ResponsiveTabs } from "@/components/ui/responsive-tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ApiError, api, ToolFromApi, type AdminMetrics, type AdminUserDetail } from "@/lib/api";
+import { ApiError, api, ToolFromApi, type AdminMetrics, type AdminUserDetail, type AdminActionLogEntry } from "@/lib/api";
 
 interface ManagedUser {
   id: number;
@@ -92,6 +92,8 @@ function AdminContent() {
     planId: "pro", status: "active", trialDays: "14",
   });
   const [tempPassword, setTempPassword] = useState<string | null>(null);
+  const [auditLog, setAuditLog] = useState<AdminActionLogEntry[]>([]);
+  const [auditLoaded, setAuditLoaded] = useState(false);
 
   // ─── Data Loading ───
   const loadData = async () => {
@@ -183,6 +185,14 @@ function AdminContent() {
   };
 
   useEffect(() => { loadData(); }, []);
+
+  useEffect(() => {
+    if (activeTab === "audit" && !auditLoaded) {
+      api.admin.auditLog(100)
+        .then((entries) => { setAuditLog(entries); setAuditLoaded(true); })
+        .catch((e) => toast.error(e instanceof Error ? e.message : "Erro ao carregar auditoria"));
+    }
+  }, [activeTab, auditLoaded]);
 
   // ─── Computed ───
   const stats = useMemo(() => {
@@ -309,6 +319,7 @@ function AdminContent() {
             { value: "overview", label: t("app.admin.tabOverview") as string },
             { value: "users", label: t("app.admin.users") as string },
             { value: "tools", label: t("app.admin.tabTools") as string },
+            { value: "audit", label: "Auditoria" },
           ]}
           value={activeTab}
           onValueChange={setActiveTab}
@@ -518,6 +529,45 @@ function AdminContent() {
                         }`}
                       />
                     </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* ═══ TAB: AUDIT LOG ═══ */}
+          <TabsContent value="audit" className="mt-6">
+            <p className="text-xs text-frame-gray-light mb-4">
+              Toda ação administrativa (suspender conta, alterar plano/assinatura, resetar senha, promover/remover admin, gerenciar ferramentas) fica registrada aqui — quem fez, quando, e a partir de qual IP.
+            </p>
+            {!auditLoaded ? (
+              <div className="text-center py-20 text-frame-gray-light font-frame-mono text-xs">{t("app.common.loading")}</div>
+            ) : auditLog.length === 0 ? (
+              <div className="text-center py-20 text-frame-gray-light font-frame-mono text-xs">Nenhuma ação registrada ainda.</div>
+            ) : (
+              <div className="space-y-2">
+                {auditLog.map((entry) => (
+                  <div key={entry.id} className="border border-frame-gray-3 bg-frame-gray-1/20 p-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                    <span className="font-frame-mono text-[0.62rem] uppercase tracking-wider text-frame-orange border border-frame-orange/30 px-1.5 py-0.5 shrink-0 w-fit">
+                      {entry.action}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm truncate">
+                        <span className="text-frame-gray-light">{entry.adminEmail}</span>
+                        {entry.targetId && <span className="text-frame-gray-muted"> → alvo #{entry.targetId}</span>}
+                      </p>
+                      {Object.keys(entry.details || {}).length > 0 && (
+                        <p className="text-[0.62rem] text-frame-gray-muted font-frame-mono truncate">
+                          {JSON.stringify(entry.details)}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-[0.62rem] text-frame-gray-muted font-frame-mono">
+                        {new Date(entry.createdAt).toLocaleString(locale === "pt" ? "pt-BR" : "en-US")}
+                      </p>
+                      {entry.ipAddress && <p className="text-[0.6rem] text-frame-gray-muted font-frame-mono">{entry.ipAddress}</p>}
+                    </div>
                   </div>
                 ))}
               </div>

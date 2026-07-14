@@ -96,6 +96,18 @@ export interface AuthUser {
   twoFactorEnabled?: boolean;
 }
 
+export interface AdminActionLogEntry {
+  id: number;
+  adminId: number;
+  adminEmail: string;
+  action: string;
+  targetId: string | null;
+  details: Record<string, unknown>;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+}
+
 export interface AdminMetrics {
   totalUsers: number;
   admins: number;
@@ -918,6 +930,8 @@ export const api = {
       request<{ tempPassword: string }>(`/admin/users/${id}/reset-password`, {
         method: "POST",
       }),
+    auditLog: (limit = 100) =>
+      request<AdminActionLogEntry[]>(`/admin/audit-log?limit=${limit}`),
   },
   contact: {
     submit: (data: ContactPayload) =>

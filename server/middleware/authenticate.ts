@@ -89,5 +89,15 @@ export const requireAdmin: RequestHandler = (req, _res, next) => {
   if (!req.user || req.user.role !== "admin") {
     return next(new AppError("Forbidden", 403));
   }
+
+  // Feature-flagged: require 2FA for admin access once the account has it
+  // configured. Defaults OFF so this doesn't lock anyone out of the admin
+  // panel before they've had a chance to set up 2FA on Profile → Security.
+  // Turn on via env ADMIN_REQUIRE_2FA=true once the admin account(s) have
+  // 2FA enabled.
+  if (process.env.ADMIN_REQUIRE_2FA === "true" && !req.user.twoFactorEnabled) {
+    return next(new AppError("2FA obrigatório para administradores. Ative em Perfil → Segurança.", 403));
+  }
+
   next();
 };

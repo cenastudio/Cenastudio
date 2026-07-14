@@ -13,6 +13,7 @@ router.post("/tools", validateBody(createToolSchema), adminController.createTool
 router.put("/tools/:id", validateBody(updateToolSchema), adminController.updateTool);
 router.delete("/tools/:id", adminController.deleteTool);
 router.get("/metrics", adminController.getMetrics);
+router.get("/audit-log", adminController.getAuditLog);
 router.get("/users", adminController.listUsers);
 router.post("/users", validateBody(createManagedUserSchema), adminController.createManagedUser);
 router.get("/users/:id", adminController.getUserDetail);

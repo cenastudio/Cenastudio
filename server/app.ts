@@ -112,11 +112,17 @@ export function createApp() {
   });
   const aiLimiter = rateLimit({ windowMs: 60 * 1000, max: 20, handler: tooManyRequestsHandler });
   const formLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 60, handler: tooManyRequestsHandler });
+  // Admin routes carry destructive power (suspend, plan/subscription changes,
+  // password resets, deletes) — a tighter limit than the general API makes a
+  // compromised/leaked admin session much less useful to an attacker doing
+  // bulk damage, without getting in the way of normal admin usage.
+  const adminLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 120, handler: tooManyRequestsHandler });
 
   app.use("/api/auth", authLimiter);
   app.use("/api/ai", aiLimiter);
   app.use("/api/contact", formLimiter);
   app.use("/api/checkout", formLimiter);
+  app.use("/api/admin", adminLimiter);
 
   app.use("/api", apiRouter);
 

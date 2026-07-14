@@ -990,3 +990,24 @@ model ActivityLog {
   @@index([suspicious], map: "idx_activity_logs_suspicious")
   @@map("activity_logs")
 }
+
+// ===============================================
+// ADMIN AUDIT LOG (Phase 2 — admin security)
+// ===============================================
+
+model AdminAction {
+  id        BigInt   @id @default(autoincrement())
+  adminId   BigInt   @map("admin_id")
+  adminEmail String  @map("admin_email") // snapshot — survives admin deletion/role change
+  action    String   // "user.suspend", "user.plan_change", "user.reset_password", etc.
+  targetId  String?  @map("target_id") // id of the affected resource (user id, tool id, ...)
+  details   Json     @default("{}")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([adminId], map: "idx_admin_actions_admin_id")
+  @@index([createdAt], map: "idx_admin_actions_created_at")
+  @@index([action], map: "idx_admin_actions_action")
+  @@map("admin_actions")
+}

@@ -767,6 +767,18 @@ export async function initDatabase() {
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     );
+
+    CREATE TABLE IF NOT EXISTS admin_actions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      admin_id INTEGER NOT NULL,
+      admin_email TEXT NOT NULL,
+      action TEXT NOT NULL,
+      target_id TEXT,
+      details TEXT DEFAULT '{}',
+      ip_address TEXT,
+      user_agent TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
   `);
 
   ensureUserColumns();
