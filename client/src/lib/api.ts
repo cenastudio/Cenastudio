@@ -200,6 +200,23 @@ export interface UserPlan {
   features: string[];
 }
 
+export interface UserUsageMetrics {
+  period: string;
+  generations: { used: number; limit: number };
+  clients: { used: number; limit: number | null };
+  projectsThisMonth: number;
+  teamMembers: { used: number; limit: number };
+  storageBytes: number;
+}
+
+export interface UserDataStats {
+  projects: { count: number; size: number };
+  files: { count: number; size: number };
+  clients: { count: number; size: number };
+  reviews: { count: number; size: number };
+  totalSize: number;
+}
+
 export interface ClientAllowance {
   planId: "free" | "pro" | "studio";
   status: string;
@@ -245,6 +262,7 @@ export const api = {
       }),
     logout: () => request<null>("/auth/logout", { method: "POST" }),
     me: () => request<{ user: AuthUser; plan: UserPlan | null }>("/auth/me"),
+    getUsageMetrics: () => request<UserUsageMetrics>("/auth/usage-metrics"),
     updateProfile: (data: { name?: string; studioName?: string; studioRole?: string; phone?: string }) =>
       request<{ user: AuthUser }>("/auth/profile", {
         method: "PUT",
@@ -265,14 +283,7 @@ export const api = {
     providers: () => request<{ github: boolean; supabase: boolean }>("/auth/providers"),
 
     // LGPD / GDPR endpoints
-    getDataStats: () =>
-      request<{
-        projects: { count: number; size: number };
-        files: { count: number; size: number };
-        clients: { count: number; size: number };
-        reviews: { count: number; size: number };
-        totalSize: number;
-      }>("/auth/data-stats"),
+    getDataStats: () => request<UserDataStats>("/auth/data-stats"),
     getPrivacySettings: () =>
       request<{
         profileVisibility: "public" | "team" | "private";

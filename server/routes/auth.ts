@@ -19,6 +19,7 @@ router.post("/reset-password", validateBody(resetPasswordSchema), authController
 router.post("/logout", authController.logout);
 router.post("/supabase", authController.supabaseLogin);
 router.get("/me", authenticate, authController.me);
+router.get("/usage-metrics", authenticate, authController.getUsageMetrics);
 router.put("/profile", authenticate, authController.updateProfile);
 router.put("/change-password", authenticate, authController.changePassword);
 router.get("/export-data", authenticate, authController.exportUserData);

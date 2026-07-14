@@ -1,7 +1,7 @@
 import type { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 import { AppError } from "./errorHandler.js";
-import { ensureUserFromToken, getUserById } from "../services/authService.js";
+import { getUserById } from "../services/authService.js";
 import { isTokenRevoked, trackSession } from "../services/sessionService.js";
 
 export interface AuthUser {
@@ -68,7 +68,10 @@ export const authenticate: RequestHandler = async (req, res, next) => {
     }
 
     const currentUser = await getUserById(payload.id);
-    const resolvedUser = currentUser ?? (await ensureUserFromToken(payload));
+    if (!currentUser || currentUser.email.toLowerCase() !== payload.email?.toLowerCase()) {
+      return next(new AppError("Invalid or expired session", 401));
+    }
+    const resolvedUser = currentUser;
 
     // A suspended account keeps a technically-valid JWT until it expires, so
     // reject it here to cut active sessions the moment an admin disables it.

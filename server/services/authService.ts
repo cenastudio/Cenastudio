@@ -383,53 +383,6 @@ export async function getUserById(id: number): Promise<AuthUser | null> {
   };
 }
 
-export async function ensureUserFromToken(tokenUser: AuthUser): Promise<AuthUser> {
-  const existing = await getUserById(tokenUser.id);
-  if (existing) return existing;
-
-  const normalized = tokenUser.email.toLowerCase().trim();
-  const role = tokenUser.role === "admin" || isAdminEmail(normalized) ? "admin" : "user";
-  const hash = hashPassword(crypto.randomBytes(24).toString("hex"));
-
-  if (shouldUsePrisma) {
-    const user = await prisma.user.upsert({
-      where: { id: BigInt(tokenUser.id) },
-      update: {},
-      create: {
-        id: BigInt(tokenUser.id),
-        name: tokenUser.name || normalized.split("@")[0],
-        email: normalized,
-        passwordHash: hash,
-        role,
-        emailVerified: true,
-      },
-    });
-    if (role === "admin") {
-      await ensureUserSubscription(Number(user.id), "pro", "active");
-    } else if (!(await getUserPlan(Number(user.id)))) {
-      await createInitialSubscription(Number(user.id));
-    }
-    await ensureAuthWorkspace(Number(user.id), { name: user.name, email: user.email });
-    return toAuthUser(user);
-  }
-
-  db.prepare(
-    `INSERT OR IGNORE INTO users (id, name, email, password_hash, role, email_verified)
-     VALUES (?, ?, ?, ?, ?, 1)`,
-  ).run(tokenUser.id, tokenUser.name || normalized.split("@")[0], normalized, hash, role);
-
-  if (role === "admin") {
-    await ensureUserSubscription(tokenUser.id, "pro", "active");
-  } else if (!(await getUserPlan(tokenUser.id))) {
-    await createInitialSubscription(tokenUser.id);
-  }
-  await ensureAuthWorkspace(tokenUser.id, { name: tokenUser.name, email: tokenUser.email });
-
-  const restored = await getUserById(tokenUser.id);
-  if (!restored) throw new AppError("Sessão expirada. Entre novamente para continuar.", 401);
-  return restored;
-}
-
 export async function updateProfile(
   userId: number,
   data: { name?: string; studioName?: string; studioRole?: string; phone?: string },

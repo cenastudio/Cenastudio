@@ -39,6 +39,70 @@ export async function getClientAllowance(userId: number) {
   };
 }
 
+export interface UserUsageMetrics {
+  period: string;
+  generations: { used: number; limit: number };
+  clients: { used: number; limit: number | null };
+  projectsThisMonth: number;
+  teamMembers: { used: number; limit: number };
+  storageBytes: number;
+}
+
+export async function getUserUsageMetrics(userId: number): Promise<UserUsageMetrics> {
+  const plan = await getUserPlan(userId);
+  const entitlement = getPlanEntitlement(plan?.plan_id);
+  const period = new Date().toISOString().slice(0, 7);
+  const monthStart = new Date(`${period}-01T00:00:00.000Z`);
+  const nextMonth = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 1));
+
+  if (shouldUsePrisma) {
+    const uid = BigInt(userId);
+    const [generationUsage, clientsUsed, projectsThisMonth, teamMembersUsed, storage] = await Promise.all([
+      prisma.usage.aggregate({ where: { userId: uid, period }, _sum: { count: true } }),
+      prisma.client.count({ where: { userId: uid } }),
+      prisma.project.count({ where: { userId: uid, createdAt: { gte: monthStart, lt: nextMonth } } }),
+      prisma.workspaceMember.count({
+        where: { workspace: { ownerUserId: uid }, role: { not: "owner" }, status: "active" },
+      }),
+      prisma.file.aggregate({ where: { userId: uid }, _sum: { size: true } }),
+    ]);
+
+    return {
+      period,
+      generations: { used: generationUsage._sum.count ?? 0, limit: plan?.generation_limit ?? 0 },
+      clients: { used: clientsUsed, limit: entitlement.clientLimit },
+      projectsThisMonth,
+      teamMembers: { used: teamMembersUsed, limit: entitlement.teamMemberLimit },
+      storageBytes: Number(storage._sum.size ?? 0),
+    };
+  }
+
+  const generationUsage = db.prepare(
+    "SELECT COALESCE(SUM(count), 0) AS used FROM usage WHERE user_id = ? AND period = ?",
+  ).get(userId, period) as { used: number };
+  const clientsUsed = db.prepare("SELECT COUNT(*) AS used FROM clients WHERE user_id = ?").get(userId) as { used: number };
+  const projectsThisMonth = db.prepare(
+    "SELECT COUNT(*) AS used FROM projects WHERE user_id = ? AND strftime('%Y-%m', created_at) = ?",
+  ).get(userId, period) as { used: number };
+  const teamMembersUsed = db.prepare(
+    `SELECT COUNT(*) AS used FROM workspace_members wm
+     JOIN workspaces w ON w.id = wm.workspace_id
+     WHERE w.owner_user_id = ? AND wm.role != 'owner' AND wm.status = 'active'`,
+  ).get(userId) as { used: number };
+  const storage = db.prepare(
+    "SELECT COALESCE(SUM(size), 0) AS bytes FROM files WHERE user_id = ?",
+  ).get(userId) as { bytes: number };
+
+  return {
+    period,
+    generations: { used: generationUsage.used, limit: plan?.generation_limit ?? 0 },
+    clients: { used: clientsUsed.used, limit: entitlement.clientLimit },
+    projectsThisMonth: projectsThisMonth.used,
+    teamMembers: { used: teamMembersUsed.used, limit: entitlement.teamMemberLimit },
+    storageBytes: storage.bytes,
+  };
+}
+
 export async function assertClientCapacity(userId: number, role?: "user" | "admin") {
   if (role === "admin") return;
   await requireOperationalAccess(userId, role);

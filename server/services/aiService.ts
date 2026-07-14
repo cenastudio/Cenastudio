@@ -464,11 +464,9 @@ async function checkProviderAvailable(provider: string): Promise<string> {
   if (provider !== "openrouter") return provider;
 
   const currentMonth = new Date().toISOString().slice(0, 7);
-  const usage = shouldUsePrisma
-    ? await prisma.$queryRaw`SELECT count FROM usage WHERE user_id = (SELECT id FROM users LIMIT 1) AND tool_id = '01' AND period = ${currentMonth}`
-    : db.prepare(`SELECT count FROM usage WHERE user_id = 1 AND tool_id = '01' AND period = ?`).get(currentMonth);
-
-  const requestCount = Array.isArray(usage) ? (usage[0]?.count || 0) : (usage as { count?: number } | undefined)?.count || 0;
+  const requestCount = shouldUsePrisma
+    ? (await prisma.usage.aggregate({ where: { period: currentMonth }, _sum: { count: true } }))._sum.count ?? 0
+    : ((db.prepare("SELECT COALESCE(SUM(count), 0) AS count FROM usage WHERE period = ?").get(currentMonth) as { count: number }).count ?? 0);
   const freeLimit = Number(process.env.OPENROUTER_FREE_LIMIT || 50);
 
   if (requestCount >= freeLimit) {

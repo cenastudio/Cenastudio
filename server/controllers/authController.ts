@@ -16,6 +16,7 @@ import * as lgpdService from "../services/lgpdService.js";
 import * as twoFactorService from "../services/twoFactorService.js";
 import * as apiKeyService from "../services/apiKeyService.js";
 import * as activityLogService from "../services/activityLogService.js";
+import { getUserUsageMetrics } from "../services/entitlementService.js";
 
 function getClientOrigin() {
   return process.env.CLIENT_ORIGIN || "http://localhost:5173";
@@ -203,6 +204,16 @@ export const me: RequestHandler = async (req, res, next) => {
     const planRow = await authService.getUserPlan(req.user.id);
     const plan = authService.formatUserPlan(planRow);
     res.json({ success: true, data: { user, plan } });
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const getUsageMetrics: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+    const metrics = await getUserUsageMetrics(req.user.id);
+    res.json({ success: true, data: metrics });
   } catch (e) {
     next(e);
   }

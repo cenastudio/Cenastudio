@@ -5,7 +5,7 @@ import { useVisualPreferences } from "@/contexts/VisualPreferencesContext";
 import { useBehaviorPreferences } from "@/contexts/BehaviorPreferencesContext";
 import { CHECKOUT_MODAL_PLAN, planDisplayLabel } from "@/lib/plans";
 import { useApp } from "@/contexts/AppContext";
-import { api, openBillingPortal, ApiError } from "@/lib/api";
+import { api, openBillingPortal, ApiError, type UserDataStats, type UserUsageMetrics } from "@/lib/api";
 import { useLanguage, translate } from "@/contexts/LanguageContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { readStudioSettings, type StudioSettings } from "@/lib/studioSettings";
@@ -510,15 +510,13 @@ function ProfileContent() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
-  // FASE 5: Privacy & LGPD Advanced
-  // 1. Transparência de Dados
-  const [dataStats, setDataStats] = useState({
-    projects: { count: 45, size: 12.3 },
-    files: { count: 234, size: 456 },
-    clients: { count: 18, size: 2.1 },
-    reviews: { count: 89, size: 34.5 },
-    totalSize: 502.9,
-  });
+  // Métricas reais, sempre carregadas do backend com escopo no usuário autenticado.
+  const [dataStats, setDataStats] = useState<UserDataStats | null>(null);
+  const [dataStatsLoading, setDataStatsLoading] = useState(false);
+  const [dataStatsError, setDataStatsError] = useState(false);
+  const [usageMetrics, setUsageMetrics] = useState<UserUsageMetrics | null>(null);
+  const [usageMetricsLoading, setUsageMetricsLoading] = useState(false);
+  const [usageMetricsError, setUsageMetricsError] = useState(false);
 
   // 2. Controles de Privacidade
   const [privacySettings, setPrivacySettings] = useState({
@@ -934,13 +932,38 @@ function ProfileContent() {
     }
   }, [activeTab]);
 
+  // Carregar métricas reais quando entrar na aba Plano.
+  useEffect(() => {
+    if (activeTab !== "plan") return;
+    let cancelled = false;
+    setUsageMetricsLoading(true);
+    setUsageMetricsError(false);
+    api.auth.getUsageMetrics()
+      .then((metrics) => { if (!cancelled) setUsageMetrics(metrics); })
+      .catch(() => {
+        if (!cancelled) {
+          setUsageMetrics(null);
+          setUsageMetricsError(true);
+          toast.error("Erro ao carregar métricas de uso");
+        }
+      })
+      .finally(() => { if (!cancelled) setUsageMetricsLoading(false); });
+    return () => { cancelled = true; };
+  }, [activeTab]);
+
   // Carregar dados LGPD quando entrar na aba Privacy
   useEffect(() => {
     if (activeTab === "privacy") {
-      // Carregar stats de dados
-      api.auth.getDataStats().then(setDataStats).catch(() => {
-        toast.error("Erro ao carregar estatísticas de dados");
-      });
+      setDataStatsLoading(true);
+      setDataStatsError(false);
+      api.auth.getDataStats()
+        .then(setDataStats)
+        .catch(() => {
+          setDataStats(null);
+          setDataStatsError(true);
+          toast.error("Erro ao carregar estatísticas de dados");
+        })
+        .finally(() => setDataStatsLoading(false));
 
       // Carregar configurações de privacidade
       api.auth.getPrivacySettings().then(setPrivacySettings).catch(() => {
@@ -1943,7 +1966,13 @@ function ProfileContent() {
                 </div>
               </div>
               <div className="relative mt-6 pt-6 border-t border-white/10">
-                <UsageBar used={42} total={plan?.generationLimit ?? 100} label={t("app.profile.usageThisMonth")} />
+                {usageMetricsLoading ? (
+                  <p className="text-xs text-frame-gray-light">Carregando uso real...</p>
+                ) : usageMetricsError || !usageMetrics ? (
+                  <p className="text-xs text-frame-red">Não foi possível confirmar o consumo agora. Nenhum valor estimado será exibido.</p>
+                ) : (
+                  <UsageBar used={usageMetrics.generations.used} total={usageMetrics.generations.limit} label={t("app.profile.usageThisMonth")} />
+                )}
               </div>
             </div>
 
@@ -1958,88 +1987,79 @@ function ProfileContent() {
                 <TrendingUp className="w-5 h-5 text-frame-orange" />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Clientes */}
-                <div className="glow-card p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Users className="w-4 h-4 text-frame-orange" />
-                    <span className="text-sm font-medium text-frame-white">Clientes Ativos</span>
-                  </div>
-                  <UsageBar
-                    used={plan?.planId === "free" ? 3 : plan?.planId === "pro" ? 12 : 32}
-                    total={plan?.planId === "free" ? 5 : plan?.planId === "pro" ? 15 : plan?.planId === "studio" ? 50 : plan?.planId === "whitelabel" ? 100 : -1}
-                    label="Clientes cadastrados"
-                  />
-                  {(plan?.planId === "free" || plan?.planId === "pro") && (
-                    <button
-                      type="button"
-                      onClick={handlePlanAction}
-                      className="mt-3 w-full text-xs text-frame-orange hover:text-frame-white transition flex items-center justify-center gap-1"
-                    >
-                      <Zap className="w-3 h-3" />
-                      Upgrade para mais clientes
-                    </button>
-                  )}
+              {usageMetricsLoading ? (
+                <p className="py-6 text-center text-xs text-frame-gray-light">Consultando métricas do usuário...</p>
+              ) : usageMetricsError || !usageMetrics ? (
+                <div className="border border-frame-red/30 bg-frame-red/5 p-4 text-sm text-frame-red">
+                  Métricas indisponíveis. Valores simulados não serão exibidos.
                 </div>
-
-                {/* Projetos */}
-                <div className="glow-card p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Zap className="w-4 h-4 text-frame-orange" />
-                    <span className="text-sm font-medium text-frame-white">Projetos Este Mês</span>
-                  </div>
-                  <UsageBar
-                    used={plan?.planId === "free" ? 8 : 24}
-                    total={plan?.planId === "free" ? 10 : -1}
-                    label="Projetos criados"
-                  />
-                  {plan?.planId === "free" && (
-                    <p className="mt-3 text-[0.65rem] text-frame-gray-light">
-                      Planos Pro+ têm projetos ilimitados
-                    </p>
-                  )}
-                </div>
-
-                {/* Equipe (se aplicável) */}
-                {(plan?.planId === "studio" || plan?.planId === "whitelabel" || plan?.planId === "enterprise") && (
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="glow-card p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <Users className="w-4 h-4 text-frame-orange" />
-                      <span className="text-sm font-medium text-frame-white">Membros da Equipe</span>
+                      <span className="text-sm font-medium text-frame-white">Clientes cadastrados</span>
                     </div>
                     <UsageBar
-                      used={plan?.planId === "studio" ? 2 : plan?.planId === "whitelabel" ? 6 : 12}
-                      total={plan?.planId === "studio" ? 5 : plan?.planId === "whitelabel" ? 10 : 50}
-                      label="Membros ativos"
+                      used={usageMetrics.clients.used}
+                      total={usageMetrics.clients.limit ?? -1}
+                      label="Clientes vinculados à sua conta"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setLocation("/team")}
-                      className="mt-3 w-full text-xs text-frame-orange hover:text-frame-white transition flex items-center justify-center gap-1"
-                    >
-                      <Settings className="w-3 h-3" />
-                      Gerenciar equipe
-                    </button>
+                    {(plan?.planId === "free" || plan?.planId === "pro") && (
+                      <button
+                        type="button"
+                        onClick={handlePlanAction}
+                        className="mt-3 w-full text-xs text-frame-orange hover:text-frame-white transition flex items-center justify-center gap-1"
+                      >
+                        <Zap className="w-3 h-3" />
+                        Upgrade para mais clientes
+                      </button>
+                    )}
                   </div>
-                )}
 
-                {/* Storage */}
-                <div className="glow-card p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <FileText className="w-4 h-4 text-frame-orange" />
-                    <span className="text-sm font-medium text-frame-white">Armazenamento</span>
+                  <div className="glow-card p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Zap className="w-4 h-4 text-frame-orange" />
+                      <span className="text-sm font-medium text-frame-white">Projetos Este Mês</span>
+                    </div>
+                    <p className="text-2xl font-bold text-frame-white">{usageMetrics.projectsThisMonth}</p>
+                    <p className="mt-1 text-xs text-frame-gray-light">Projetos realmente criados no período {usageMetrics.period}</p>
                   </div>
-                  <UsageBar
-                    used={2.4}
-                    total={plan?.planId === "free" ? 5 : plan?.planId === "pro" ? 20 : 100}
-                    label="GB utilizados"
-                  />
-                  <p className="mt-3 text-[0.65rem] text-frame-gray-light">
-                    {plan?.planId === "free" ? "5GB " : plan?.planId === "pro" ? "20GB " : "100GB "}
-                    para vídeos e arquivos
-                  </p>
+
+                  {usageMetrics.teamMembers.limit > 0 && (
+                    <div className="glow-card p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Users className="w-4 h-4 text-frame-orange" />
+                        <span className="text-sm font-medium text-frame-white">Membros da Equipe</span>
+                      </div>
+                      <UsageBar
+                        used={usageMetrics.teamMembers.used}
+                        total={usageMetrics.teamMembers.limit}
+                        label="Membros ativos"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setLocation("/team")}
+                        className="mt-3 w-full text-xs text-frame-orange hover:text-frame-white transition flex items-center justify-center gap-1"
+                      >
+                        <Settings className="w-3 h-3" />
+                        Gerenciar equipe
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="glow-card p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <FileText className="w-4 h-4 text-frame-orange" />
+                      <span className="text-sm font-medium text-frame-white">Armazenamento</span>
+                    </div>
+                    <p className="text-2xl font-bold text-frame-white">
+                      {(usageMetrics.storageBytes / (1024 ** 3)).toLocaleString(locale === "en" ? "en-US" : "pt-BR", { maximumFractionDigits: 2 })} GB
+                    </p>
+                    <p className="mt-1 text-xs text-frame-gray-light">Soma real dos arquivos vinculados à sua conta</p>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Call-to-action se próximo do limite */}
               {(plan?.planId === "free" || plan?.planId === "pro") && (
@@ -3158,6 +3178,14 @@ function ProfileContent() {
               <div className="p-4 bg-frame-gray-2/30 border border-frame-gray-3 rounded-lg">
                 <p className="text-xs text-frame-gray-light mb-4">Seus dados no CENA Studio:</p>
 
+                {dataStatsLoading ? (
+                  <p className="py-6 text-center text-xs text-frame-gray-light">Consultando dados vinculados à sua conta...</p>
+                ) : dataStatsError || !dataStats ? (
+                  <div className="border border-frame-red/30 bg-frame-red/5 p-4 text-sm text-frame-red">
+                    Não foi possível confirmar os dados agora. Nenhum valor estimado será exibido.
+                  </div>
+                ) : (
+                  <>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                   <div className="p-3 bg-frame-black rounded-lg border border-frame-gray-3">
                     <div className="flex items-center gap-2 mb-2">
@@ -3203,6 +3231,8 @@ function ProfileContent() {
                   </div>
                   <span className="text-lg font-bold text-frame-orange">{dataStats.totalSize} MB</span>
                 </div>
+                  </>
+                )}
               </div>
 
               {/* O que coletamos */}
