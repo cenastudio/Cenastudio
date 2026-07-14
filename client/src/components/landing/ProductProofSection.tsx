@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Play, Pause, ChevronLeft, ChevronRight, CheckCircle2, Sparkles, Zap, Video } from "lucide-react";
 import { SITE_CONFIG } from "@shared/site";
+import { LazyImage } from "@/components/LazyImage";
 
 interface ProductScene {
   id: string;
@@ -236,10 +237,13 @@ export default function ProductProofSection() {
                   transition={{ duration: 0.5 }}
                   className="absolute inset-0"
                 >
-                  <img
+                  <LazyImage
                     src={scene.image}
                     alt={scene.title}
-                    className="w-full h-full object-cover object-top"
+                    className="w-full h-full"
+                    objectFit="cover"
+                    loading="lazy"
+                    aspectRatio="16/9"
                   />
 
                   {/* Annotation */}
