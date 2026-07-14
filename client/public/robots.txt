@@ -1,2 +1,4 @@
 User-agent: *
 Allow: /
+
+Sitemap: https://cenastudio-production.up.railway.app/sitemap.xml

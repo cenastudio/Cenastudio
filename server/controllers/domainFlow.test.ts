@@ -69,7 +69,7 @@ describe("CRM, files and finance controller flow", () => {
     delete process.env.POSTGRES_URL;
 
     const dbModule = await import("../models/db.js");
-    dbModule.initDatabase();
+    await dbModule.initDatabase();
     authService = await import("../services/authService.js");
     clientsController = await import("./clientsController.js");
     opportunitiesController = await import("./opportunitiesController.js");
@@ -118,6 +118,60 @@ describe("CRM, files and finance controller flow", () => {
 
     const followUps = await invoke(interactionsController.getUpcomingFollowUps, { user });
     expect(followUps.body.data.some((item: any) => item.id === interaction.body.data.id)).toBe(true);
+  });
+
+  it("rejects cross-tenant CRM and financial links", async () => {
+    const otherUser = await authService.registerUser(
+      "Outro Tenant",
+      `other-${Date.now()}@example.com`,
+      "password-123",
+    );
+    const ownClient = await invoke(clientsController.createClient, {
+      user,
+      body: { name: "Cliente do tenant A" },
+    });
+    const foreignClient = await invoke(clientsController.createClient, {
+      user: otherUser,
+      body: { name: "Cliente do tenant B" },
+    });
+    const foreignOpportunity = await invoke(opportunitiesController.createOpportunity, {
+      user: otherUser,
+      body: { clientId: foreignClient.body.data.id, title: "Oportunidade B" },
+    });
+
+    await expect(invoke(opportunitiesController.createOpportunity, {
+      user,
+      body: { clientId: foreignClient.body.data.id, title: "Tentativa cross-tenant" },
+    })).rejects.toMatchObject({ status: 404 });
+
+    await expect(invoke(interactionsController.createInteraction, {
+      user,
+      body: { clientId: ownClient.body.data.id, opportunityId: foreignOpportunity.body.data.id, notes: "cross-tenant" },
+    })).rejects.toMatchObject({ status: 404 });
+
+    await expect(invoke(analyticsController.createFinancialEntry, {
+      user,
+      body: { clientId: foreignClient.body.data.id, kind: "income", description: "Cross-tenant", amount: 1000 },
+    })).rejects.toMatchObject({ status: 404 });
+
+    const ownEntry = await invoke(analyticsController.createFinancialEntry, {
+      user,
+      body: { clientId: ownClient.body.data.id, kind: "income", description: "Válido", amount: 1000, dueDate: "2099-01-01" },
+    });
+    await expect(invoke(analyticsController.updateFinancialEntry, {
+      user,
+      params: { id: String(ownEntry.body.data.id) },
+      body: { clientId: foreignClient.body.data.id },
+    })).rejects.toMatchObject({ status: 404 });
+
+    const cleared = await invoke(analyticsController.updateFinancialEntry, {
+      user,
+      params: { id: String(ownEntry.body.data.id) },
+      body: { clientId: null, dueDate: null, status: "pending" },
+    });
+    expect(cleared.body.data.client_id).toBeNull();
+    expect(cleared.body.data.due_date).toBeNull();
+    expect(cleared.body.data.paid_at).toBeNull();
   });
 
   it("covers project files using local storage fallback", async () => {

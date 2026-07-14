@@ -110,6 +110,15 @@ export const createInteraction: RequestHandler = async (req, res, next) => {
       throw new AppError("Cliente não encontrado ou acesso não autorizado", 404);
     }
 
+    if (opportunityId) {
+      const opportunity = db.prepare(
+        "SELECT id FROM opportunities WHERE id = ? AND user_id = ? AND client_id = ?",
+      ).get(opportunityId, userId, clientId);
+      if (!opportunity) {
+        throw new AppError("Oportunidade não encontrada ou acesso não autorizado", 404);
+      }
+    }
+
     const result = db
       .prepare(
         `INSERT INTO interactions (user_id, client_id, opportunity_id, type, subject, notes, next_follow_up)

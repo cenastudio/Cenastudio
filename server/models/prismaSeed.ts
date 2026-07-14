@@ -90,48 +90,53 @@ export async function initPrismaCoreData() {
     });
   }
 
-  const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD || "admin123";
-  const existingAdmin = await prisma.user.findUnique({ where: { email: "admin@cenastudio.com.br" } });
-  const rotateAdminPassword =
-    existingAdmin &&
-    process.env.ADMIN_DEFAULT_PASSWORD &&
-    !bcrypt.compareSync(adminPassword, existingAdmin.passwordHash);
-  const admin = await prisma.user.upsert({
-    where: { email: "admin@cenastudio.com.br" },
-    create: {
-      name: "Admin",
-      email: "admin@cenastudio.com.br",
-      passwordHash: bcrypt.hashSync(adminPassword, 12),
-      role: "admin",
-      emailVerified: true,
-    },
-    update: {
-      role: "admin",
-      emailVerified: true,
-      ...(rotateAdminPassword ? { passwordHash: bcrypt.hashSync(adminPassword, 12) } : {}),
-    },
-  });
-  await ensureSubscription(admin.id, "studio", "active");
+  const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD;
+  if (adminPassword) {
+    const existingAdmin = await prisma.user.findUnique({ where: { email: "admin@cenastudio.com.br" } });
+    const rotateAdminPassword = existingAdmin && !bcrypt.compareSync(adminPassword, existingAdmin.passwordHash);
+    const admin = await prisma.user.upsert({
+      where: { email: "admin@cenastudio.com.br" },
+      create: {
+        name: "Admin",
+        email: "admin@cenastudio.com.br",
+        passwordHash: bcrypt.hashSync(adminPassword, 12),
+        role: "admin",
+        emailVerified: true,
+      },
+      update: {
+        role: "admin",
+        emailVerified: true,
+        disabled: false,
+        ...(rotateAdminPassword ? { passwordHash: bcrypt.hashSync(adminPassword, 12) } : {}),
+      },
+    });
+    await ensureSubscription(admin.id, "studio", "active");
+  }
 
-  const demoPassword = process.env.DEMO_USER_PASSWORD || "demo123";
-  const existingDemo = await prisma.user.findUnique({ where: { email: "demo@cenastudio.com.br" } });
-  const rotateDemoPassword =
-    existingDemo &&
-    process.env.DEMO_USER_PASSWORD &&
-    !bcrypt.compareSync(demoPassword, existingDemo.passwordHash);
-  const demo = await prisma.user.upsert({
-    where: { email: "demo@cenastudio.com.br" },
-    create: {
-      name: "Demo User",
-      email: "demo@cenastudio.com.br",
-      passwordHash: bcrypt.hashSync(demoPassword, 12),
-      role: "user",
-      emailVerified: true,
-    },
-    update: {
-      emailVerified: true,
-      ...(rotateDemoPassword ? { passwordHash: bcrypt.hashSync(demoPassword, 12) } : {}),
-    },
-  });
-  await ensureSubscription(demo.id, "free", "active");
+  const demoPassword = process.env.DEMO_USER_PASSWORD;
+  if (demoPassword) {
+    const existingDemo = await prisma.user.findUnique({ where: { email: "demo@cenastudio.com.br" } });
+    const rotateDemoPassword = existingDemo && !bcrypt.compareSync(demoPassword, existingDemo.passwordHash);
+    const demo = await prisma.user.upsert({
+      where: { email: "demo@cenastudio.com.br" },
+      create: {
+        name: "Demo User",
+        email: "demo@cenastudio.com.br",
+        passwordHash: bcrypt.hashSync(demoPassword, 12),
+        role: "user",
+        emailVerified: true,
+      },
+      update: {
+        emailVerified: true,
+        disabled: false,
+        ...(rotateDemoPassword ? { passwordHash: bcrypt.hashSync(demoPassword, 12) } : {}),
+      },
+    });
+    await ensureSubscription(demo.id, "free", "active");
+  } else {
+    await prisma.user.updateMany({
+      where: { email: "demo@cenastudio.com.br" },
+      data: { disabled: true },
+    });
+  }
 }

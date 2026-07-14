@@ -17,7 +17,7 @@ function audit(req: Parameters<RequestHandler>[0], action: string, targetId?: st
     targetId,
     details,
     ipAddress: req.ip,
-    userAgent: req.headers["user-agent"],
+    userAgent: req.headers?.["user-agent"],
   });
 }
 

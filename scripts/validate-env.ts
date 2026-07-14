@@ -17,6 +17,13 @@ interface ValidationResult {
 }
 
 const results: ValidationResult[] = [];
+const isProduction = process.env.NODE_ENV === "production";
+
+function isPlaceholder(value: string): boolean {
+  return ["changeme", "change-me", "secret", "your_", "localhost"].some((needle) =>
+    value.toLowerCase().includes(needle),
+  );
+}
 
 /**
  * Check if a variable exists and optionally validate its value
@@ -45,15 +52,30 @@ function checkVar(
  * Validators
  */
 const validators = {
-  jwtSecret: (value: string) => ({
-    valid: value.length >= 32,
-    message: value.length >= 32 ? "Valid (32+ characters)" : `Too short (${value.length} chars, need 32+)`,
-  }),
+  jwtSecret: (value: string) => {
+    const valid = value.length >= 32 && !isPlaceholder(value);
+    return {
+      valid,
+      message: valid ? "Valid non-placeholder secret (32+ characters)" : "Must be a non-placeholder secret with 32+ characters",
+    };
+  },
+
+  password: (value: string) => {
+    const valid = value.length >= 12 && !isPlaceholder(value);
+    return {
+      valid,
+      message: valid ? "Valid non-placeholder password (12+ characters)" : "Must be a non-placeholder password with 12+ characters",
+    };
+  },
 
   url: (value: string) => {
     try {
-      new URL(value);
-      return { valid: true, message: "Valid URL" };
+      const parsed = new URL(value);
+      const valid = !isProduction || (parsed.protocol === "https:" && parsed.hostname !== "localhost");
+      return {
+        valid,
+        message: valid ? "Valid URL" : "Production URL must use HTTPS and cannot point to localhost",
+      };
     } catch {
       return { valid: false, message: "Invalid URL format" };
     }
@@ -102,33 +124,45 @@ console.log("🔍 Validating Environment Variables...\n");
 console.log("📡 Server Configuration");
 checkVar("NODE_ENV", false);
 checkVar("PORT", false, validators.port);
-checkVar("CLIENT_ORIGIN", true, validators.url);
+checkVar("CLIENT_ORIGIN", isProduction, validators.url);
 console.log("");
 
 // === Authentication ===
 console.log("🔐 Authentication");
 checkVar("JWT_SECRET", true, validators.jwtSecret);
 checkVar("ADMIN_EMAILS", false, validators.email);
-checkVar("ADMIN_DEFAULT_PASSWORD", false);
-checkVar("DEMO_USER_PASSWORD", false);
+checkVar("ADMIN_DEFAULT_PASSWORD", isProduction, validators.password);
+checkVar("DEMO_USER_PASSWORD", false, validators.password);
 console.log("");
 
-// === Supabase ===
-console.log("☁️  Supabase");
-const isProduction = process.env.NODE_ENV === "production";
-checkVar("SUPABASE_URL", isProduction, validators.supabaseUrl);
-checkVar("SUPABASE_ANON_KEY", isProduction);
-checkVar("SUPABASE_SERVICE_ROLE_KEY", isProduction);
-checkVar("VITE_SUPABASE_URL", isProduction, validators.supabaseUrl);
-checkVar("VITE_SUPABASE_ANON_KEY", isProduction);
+// === Supabase (optional) ===
+console.log("☁️  Supabase (Optional)");
+checkVar("SUPABASE_URL", false, validators.supabaseUrl);
+checkVar("SUPABASE_ANON_KEY", false);
+checkVar("SUPABASE_SERVICE_ROLE_KEY", false);
+checkVar("VITE_SUPABASE_URL", false, validators.supabaseUrl);
+checkVar("VITE_SUPABASE_ANON_KEY", false);
 console.log("");
 
 // === Database ===
 console.log("🗄️  Database");
-checkVar("DATABASE_PATH", !isProduction, validators.databasePath);
-checkVar("DATABASE_URL", isProduction, validators.postgresUrl);
+checkVar("DATABASE_PATH", false, validators.databasePath);
+checkVar("DATABASE_URL", false, validators.postgresUrl);
 checkVar("POSTGRES_PRISMA_URL", false, validators.postgresUrl);
+checkVar("POSTGRES_URL", false, validators.postgresUrl);
 checkVar("ALLOW_EPHEMERAL_SQLITE", false);
+const hasPersistentDatabase = Boolean(
+  process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL || process.env.POSTGRES_URL,
+);
+if (isProduction && !hasPersistentDatabase && process.env.ALLOW_EPHEMERAL_SQLITE !== "true") {
+  results.push({
+    variable: "PERSISTENT_DATABASE",
+    required: true,
+    present: false,
+    valid: false,
+    message: "❌ DATABASE_URL, POSTGRES_PRISMA_URL, or POSTGRES_URL is required in production",
+  });
+}
 console.log("");
 
 // === AI Provider ===

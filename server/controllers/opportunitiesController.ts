@@ -157,6 +157,15 @@ export const createOpportunity: RequestHandler = async (req, res, next) => {
       return;
     }
 
+    const linkedClientId = clientId == null || clientId === "" ? null : Number(clientId);
+    if (linkedClientId !== null && (!Number.isInteger(linkedClientId) || linkedClientId <= 0)) {
+      throw new AppError("Cliente inválido", 400);
+    }
+    if (linkedClientId !== null) {
+      const client = db.prepare("SELECT id FROM clients WHERE id = ? AND user_id = ?").get(linkedClientId, userId);
+      if (!client) throw new AppError("Cliente não encontrado ou acesso não autorizado", 404);
+    }
+
     const result = db
       .prepare(
         `INSERT INTO opportunities (user_id, client_id, title, stage, estimated_value, probability, expected_close_date)
@@ -164,11 +173,11 @@ export const createOpportunity: RequestHandler = async (req, res, next) => {
       )
       .run(
         userId,
-        clientId || null,
+        linkedClientId,
         title.trim(),
         stage || "prospect",
-        estimatedValue || null,
-        probability || 50,
+        estimatedValue ?? null,
+        probability ?? 50,
         expectedCloseDate || null,
       );
 

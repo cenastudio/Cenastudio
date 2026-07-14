@@ -21,6 +21,8 @@ jobs:
       JWT_SECRET: test-secret-with-at-least-32-characters
       LOG_LEVEL: error
       DATABASE_PATH: /tmp/cenastudio-ci.db
+      VITE_APP_NAME: Cena Studio
+      VITE_PUBLIC_URL: https://cenastudio-production.up.railway.app
 
     steps:
       - name: Checkout
@@ -43,3 +45,6 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Verify built HTML
+        run: npm run verify:build-html

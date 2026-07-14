@@ -29,8 +29,8 @@ export function assertLaunchReadyEnvironment() {
   }
 
   const demoPassword = process.env.DEMO_USER_PASSWORD;
-  if (!demoPassword || demoPassword.length < 12 || isPlaceholder(demoPassword)) {
-    issues.push("DEMO_USER_PASSWORD must be set to a non-placeholder value with at least 12 characters.");
+  if (demoPassword && (demoPassword.length < 12 || isPlaceholder(demoPassword))) {
+    issues.push("When DEMO_USER_PASSWORD is set, it must be a non-placeholder value with at least 12 characters.");
   }
 
   const persistentDatabaseUrl =

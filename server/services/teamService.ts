@@ -355,14 +355,21 @@ export async function getTeamMemberContext(userId: number): Promise<{
   role: TeamRole | null;
 } | null> {
   if (shouldUsePrisma) {
-    const membership = await (prisma as any).workspaceMember.findFirst({
+    const memberships = await (prisma as any).workspaceMember.findMany({
       where: { userId: BigInt(userId), status: "active" },
       include: { workspace: { select: { ownerUserId: true, id: true } } },
       orderBy: { id: "asc" },
+      take: 2,
     });
 
-    if (!membership) return { isTeamMember: false, ownerUserId: null, workspaceId: null, role: null };
+    if (memberships.length === 0) {
+      return { isTeamMember: false, ownerUserId: null, workspaceId: null, role: null };
+    }
+    if (memberships.length > 1) {
+      throw new AppError("Usuário vinculado a múltiplos espaços de trabalho. Selecione um workspace explicitamente.", 409);
+    }
 
+    const membership = memberships[0];
     const isOwner = membership.role === "owner";
     return {
       isTeamMember: !isOwner,
@@ -372,18 +379,22 @@ export async function getTeamMemberContext(userId: number): Promise<{
     };
   }
 
-  const row = db
+  const rows = db
     .prepare(
       `SELECT wm.role, w.owner_user_id, w.id as workspace_id
        FROM workspace_members wm
        JOIN workspaces w ON w.id = wm.workspace_id
        WHERE wm.user_id = ? AND wm.status = 'active'
-       ORDER BY wm.id ASC LIMIT 1`,
+       ORDER BY wm.id ASC LIMIT 2`,
     )
-    .get(userId) as { role: string; owner_user_id: number; workspace_id: number } | undefined;
+    .all(userId) as Array<{ role: string; owner_user_id: number; workspace_id: number }>;
 
-  if (!row) return { isTeamMember: false, ownerUserId: null, workspaceId: null, role: null };
+  if (rows.length === 0) return { isTeamMember: false, ownerUserId: null, workspaceId: null, role: null };
+  if (rows.length > 1) {
+    throw new AppError("Usuário vinculado a múltiplos espaços de trabalho. Selecione um workspace explicitamente.", 409);
+  }
 
+  const row = rows[0];
   const isOwner = row.role === "owner";
   return {
     isTeamMember: !isOwner,
@@ -399,25 +410,14 @@ export async function getTeamMemberContext(userId: number): Promise<{
  */
 export async function getTeamMemberProjects(userId: number, ownerUserId: number): Promise<number[]> {
   if (shouldUsePrisma) {
-    // Get collaborator record for this user under the owner
     const members = await prisma.projectMember.findMany({
-      where: { userId: BigInt(userId) },
-      select: { projectId: true },
-    });
-    // Also check if any projects are explicitly owned by the owner and member is assigned
-    const ownerProjects = await prisma.projectMember.findMany({
       where: {
-        project: { userId: BigInt(ownerUserId) },
         userId: BigInt(userId),
+        project: { userId: BigInt(ownerUserId) },
       },
       select: { projectId: true },
     });
-
-    const ids = new Set([
-      ...members.map((m) => Number(m.projectId)),
-      ...ownerProjects.map((m) => Number(m.projectId)),
-    ]);
-    return Array.from(ids);
+    return members.map((member) => Number(member.projectId));
   }
 
   const rows = db

@@ -33,6 +33,15 @@ function normalizeAmount(value: unknown) {
   return amount;
 }
 
+function normalizeOptionalId(value: unknown, label: string): number | null {
+  if (value === undefined || value === null || value === "") return null;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new AppError(`${label} inválido`, 400);
+  }
+  return parsed;
+}
+
 // Get overall analytics for the user
 export const getOverallAnalytics: RequestHandler = async (req, res, next) => {
   try {
@@ -550,19 +559,21 @@ export const createFinancialEntry: RequestHandler = async (req, res, next) => {
     const settledAt = nextStatus === "settled"
       ? (paidAt || new Date().toISOString().slice(0, 10))
       : null;
+    const linkedClientId = normalizeOptionalId(clientId, "Cliente");
+    const linkedOpportunityId = normalizeOptionalId(opportunityId, "Oportunidade");
 
     if (shouldUsePrisma) {
       const owner = BigInt(userId);
-      const linkedClientId = clientId ? BigInt(Number(clientId)) : null;
-      const linkedOpportunityId = opportunityId ? BigInt(Number(opportunityId)) : null;
-      if (linkedClientId && !(await prisma.client.findFirst({ where: { id: linkedClientId, userId: owner }, select: { id: true } }))) {
+      const prismaClientId = linkedClientId ? BigInt(linkedClientId) : null;
+      const prismaOpportunityId = linkedOpportunityId ? BigInt(linkedOpportunityId) : null;
+      if (prismaClientId && !(await prisma.client.findFirst({ where: { id: prismaClientId, userId: owner }, select: { id: true } }))) {
         throw new AppError("Cliente não encontrado", 404);
       }
-      if (linkedOpportunityId && !(await prisma.opportunity.findFirst({ where: { id: linkedOpportunityId, userId: owner }, select: { id: true } }))) {
+      if (prismaOpportunityId && !(await prisma.opportunity.findFirst({ where: { id: prismaOpportunityId, userId: owner }, select: { id: true } }))) {
         throw new AppError("Oportunidade não encontrada", 404);
       }
       const created = await prisma.financialEntry.create({ data: {
-        userId: owner, clientId: linkedClientId, opportunityId: linkedOpportunityId, kind,
+        userId: owner, clientId: prismaClientId, opportunityId: prismaOpportunityId, kind,
         description: description.trim(), category: category?.trim() || "geral", amount: entryAmount,
         status: nextStatus, dueDate: dueDate ? new Date(dueDate) : null,
         paidAt: settledAt ? new Date(settledAt) : null, recurrence: nextRecurrence,
@@ -572,6 +583,16 @@ export const createFinancialEntry: RequestHandler = async (req, res, next) => {
       return;
     }
 
+    if (linkedClientId !== null) {
+      const client = db.prepare("SELECT id FROM clients WHERE id = ? AND user_id = ?").get(linkedClientId, userId);
+      if (!client) throw new AppError("Cliente não encontrado", 404);
+    }
+    if (linkedOpportunityId !== null) {
+      const opportunity = db.prepare("SELECT id FROM opportunities WHERE id = ? AND user_id = ?")
+        .get(linkedOpportunityId, userId);
+      if (!opportunity) throw new AppError("Oportunidade não encontrada", 404);
+    }
+
     const result = db.prepare(`
       INSERT INTO financial_entries (
         user_id, client_id, opportunity_id, kind, description, category, amount,
@@ -579,8 +600,8 @@ export const createFinancialEntry: RequestHandler = async (req, res, next) => {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       userId,
-      clientId || null,
-      opportunityId || null,
+      linkedClientId,
+      linkedOpportunityId,
       kind,
       description.trim(),
       category?.trim() || "geral",
@@ -606,16 +627,51 @@ export const updateFinancialEntry: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const id = Number(req.params.id);
-    const { description, amount, category, kind, dueDate, recurrence, clientId, isFixed, status: bodyStatus, paidAt: bodyPaidAt } = req.body;
+    const {
+      description,
+      amount,
+      category,
+      kind,
+      dueDate,
+      recurrence,
+      clientId,
+      opportunityId,
+      isFixed,
+      status: bodyStatus,
+      paidAt: bodyPaidAt,
+    } = req.body;
+
+    if (!Number.isInteger(id) || id <= 0) throw new AppError("Lançamento inválido", 400);
 
     if (shouldUsePrisma) {
-      const current = await prisma.financialEntry.findFirst({ where: { id: BigInt(id), userId: BigInt(userId) } });
+      const owner = BigInt(userId);
+      const current = await prisma.financialEntry.findFirst({ where: { id: BigInt(id), userId: owner } });
       if (!current) throw new AppError("Lançamento não encontrado", 404);
       const status = bodyStatus ?? current.status;
       if (!FINANCIAL_STATUSES.has(String(status))) throw new AppError("Status financeiro inválido", 400);
       if (kind !== undefined && !FINANCIAL_KINDS.has(kind)) throw new AppError("Tipo de lançamento inválido", 400);
       if (recurrence !== undefined && !FINANCIAL_RECURRENCES.has(recurrence)) throw new AppError("Recorrência inválida", 400);
-      const paidAt = status === "settled" ? (bodyPaidAt ? new Date(bodyPaidAt) : current.paidAt || new Date()) : null;
+
+      const nextClientId = clientId !== undefined
+        ? normalizeOptionalId(clientId, "Cliente")
+        : current.clientId ? Number(current.clientId) : null;
+      const nextOpportunityId = opportunityId !== undefined
+        ? normalizeOptionalId(opportunityId, "Oportunidade")
+        : current.opportunityId ? Number(current.opportunityId) : null;
+      if (nextClientId !== null && !(await prisma.client.findFirst({
+        where: { id: BigInt(nextClientId), userId: owner }, select: { id: true },
+      }))) {
+        throw new AppError("Cliente não encontrado", 404);
+      }
+      if (nextOpportunityId !== null && !(await prisma.opportunity.findFirst({
+        where: { id: BigInt(nextOpportunityId), userId: owner }, select: { id: true },
+      }))) {
+        throw new AppError("Oportunidade não encontrada", 404);
+      }
+
+      const paidAt = status === "settled"
+        ? (bodyPaidAt ? new Date(bodyPaidAt) : current.paidAt || new Date())
+        : null;
       const data: Record<string, unknown> = { status, paidAt, updatedAt: new Date() };
       if (description !== undefined) data.description = description.trim();
       if (amount !== undefined) data.amount = normalizeAmount(amount);
@@ -623,12 +679,14 @@ export const updateFinancialEntry: RequestHandler = async (req, res, next) => {
       if (kind !== undefined) data.kind = kind;
       if (dueDate !== undefined) data.dueDate = dueDate ? new Date(dueDate) : null;
       if (recurrence !== undefined) data.recurrence = recurrence;
-      if (clientId !== undefined) data.clientId = clientId ? BigInt(Number(clientId)) : null;
+      if (clientId !== undefined) data.clientId = nextClientId ? BigInt(nextClientId) : null;
+      if (opportunityId !== undefined) data.opportunityId = nextOpportunityId ? BigInt(nextOpportunityId) : null;
       if (isFixed !== undefined) data.isFixed = Boolean(isFixed);
       const updated = await prisma.financialEntry.update({ where: { id: current.id }, data });
       res.json({ success: true, data: serializeFinancial(updated) });
       return;
     }
+
     const current = db.prepare("SELECT * FROM financial_entries WHERE id = ? AND user_id = ?")
       .get(id, userId) as Record<string, unknown> | undefined;
     if (!current) throw new AppError("Lançamento não encontrado", 404);
@@ -638,7 +696,23 @@ export const updateFinancialEntry: RequestHandler = async (req, res, next) => {
     if (kind !== undefined && !FINANCIAL_KINDS.has(kind)) throw new AppError("Tipo de lançamento inválido", 400);
     if (recurrence !== undefined && !FINANCIAL_RECURRENCES.has(recurrence)) throw new AppError("Recorrência inválida", 400);
 
-    const nextAmount = amount !== undefined ? normalizeAmount(amount) : undefined;
+    const nextClientId = clientId !== undefined
+      ? normalizeOptionalId(clientId, "Cliente")
+      : normalizeOptionalId(current.client_id, "Cliente");
+    const nextOpportunityId = opportunityId !== undefined
+      ? normalizeOptionalId(opportunityId, "Oportunidade")
+      : normalizeOptionalId(current.opportunity_id, "Oportunidade");
+    if (nextClientId !== null) {
+      const client = db.prepare("SELECT id FROM clients WHERE id = ? AND user_id = ?").get(nextClientId, userId);
+      if (!client) throw new AppError("Cliente não encontrado", 404);
+    }
+    if (nextOpportunityId !== null) {
+      const opportunity = db.prepare("SELECT id FROM opportunities WHERE id = ? AND user_id = ?")
+        .get(nextOpportunityId, userId);
+      if (!opportunity) throw new AppError("Oportunidade não encontrada", 404);
+    }
+
+    const nextAmount = amount !== undefined ? normalizeAmount(amount) : null;
     const nextPaidAt = nextStatus === "settled"
       ? (bodyPaidAt || current.paid_at || new Date().toISOString().slice(0, 10))
       : null;
@@ -649,24 +723,28 @@ export const updateFinancialEntry: RequestHandler = async (req, res, next) => {
           amount = COALESCE(?, amount),
           category = COALESCE(?, category),
           kind = COALESCE(?, kind),
-          due_date = COALESCE(?, due_date),
+          due_date = CASE WHEN ? = 1 THEN ? ELSE due_date END,
           recurrence = COALESCE(?, recurrence),
-          client_id = ?,
+          client_id = CASE WHEN ? = 1 THEN ? ELSE client_id END,
+          opportunity_id = CASE WHEN ? = 1 THEN ? ELSE opportunity_id END,
           is_fixed = COALESCE(?, is_fixed),
-          status = COALESCE(?, status),
-          paid_at = CASE WHEN ? = 'settled' THEN COALESCE(?, datetime('now')) ELSE paid_at END,
+          status = ?,
+          paid_at = ?,
           updated_at = datetime('now')
       WHERE id = ? AND user_id = ?
     `).run(
       description !== undefined ? description.trim() : null,
-      nextAmount !== undefined ? nextAmount : null,
+      nextAmount,
       category !== undefined ? category.trim() : null,
       kind !== undefined ? kind : null,
-      dueDate !== undefined ? (dueDate || null) : null,
+      dueDate !== undefined ? 1 : 0,
+      dueDate || null,
       recurrence !== undefined ? recurrence : null,
-      clientId !== undefined ? (clientId || null) : current.client_id,
+      clientId !== undefined ? 1 : 0,
+      nextClientId,
+      opportunityId !== undefined ? 1 : 0,
+      nextOpportunityId,
       isFixed !== undefined ? (isFixed ? 1 : 0) : null,
-      nextStatus,
       nextStatus,
       nextPaidAt,
       id,

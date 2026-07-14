@@ -26,12 +26,8 @@ let sqliteInitReady: Promise<void> | null = null;
 
 function ensureDatabase() {
   if (!databaseInitialized) {
-    // Skip validations in production serverless - they cause cold start crashes
-    // Validations run on local dev only
-    if (process.env.NODE_ENV !== "production") {
-      assertLaunchReadyEnvironment();
-      requireEnvOrThrow();
-    }
+    assertLaunchReadyEnvironment();
+    requireEnvOrThrow();
     if (!shouldUsePrisma) {
       sqliteInitReady = initDatabase();
     }
@@ -45,6 +41,26 @@ function ensureDatabase() {
 }
 
 // Force rebuild: 2026-07-04 15:45 - URGENT FIX FOR PRESENTATION
+type SpaRequestLike = { path: string };
+type SpaResponseLike = {
+  setHeader: (name: string, value: string) => void;
+  sendFile: (filePath: string) => void;
+};
+
+// Serve the SPA shell. Every route other than the public landing page ("/")
+// is a private, authenticated area that must never be indexed, so it carries
+// an explicit X-Robots-Tag alongside the client-side <meta> hints. Extracted
+// as a named handler so the robots policy can be unit tested without booting
+// the full production app (which requires the launch-ready env guards).
+export function createSpaFallbackHandler(staticPath: string) {
+  return (req: SpaRequestLike, res: SpaResponseLike) => {
+    if (req.path !== "/") {
+      res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+    }
+    res.sendFile(path.join(staticPath, "index.html"));
+  };
+}
+
 export function createApp() {
   ensureDatabase();
 
@@ -59,9 +75,9 @@ export function createApp() {
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         imgSrc: ["'self'", "data:", "blob:", "https:"],
-        fontSrc: ["'self'", "data:"],
+        fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
         connectSrc: ["'self'", "https://*.supabase.co", "wss://*.supabase.co"],
         frameSrc: ["'self'", "https://drive.google.com", "https://*.stripe.com"],
         mediaSrc: ["'self'", "blob:", "https:"],
@@ -131,9 +147,7 @@ export function createApp() {
   if (process.env.NODE_ENV === "production" && !process.env.VERCEL) {
     const staticPath = path.resolve(__dirname, "public");
     app.use(express.static(staticPath));
-    app.get("*", (_req, res) => {
-      res.sendFile(path.join(staticPath, "index.html"));
-    });
+    app.get("*", createSpaFallbackHandler(staticPath));
   }
 
   app.use(errorHandler);

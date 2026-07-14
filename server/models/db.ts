@@ -841,48 +841,50 @@ export async function initDatabase() {
     "UPDATE plans SET features = replace(features, 'Todas as 12 ferramentas', 'Fluxos principais de produção') WHERE features LIKE ?",
   ).run("%Todas as 12 ferramentas%");
 
+  const adminPassword = process.env.ADMIN_DEFAULT_PASSWORD;
   const seedAdmin = db.prepare("SELECT id, password_hash FROM users WHERE email = ?").get("admin@cenastudio.com.br") as
     | { id: number; password_hash: string }
     | undefined;
-  if (!seedAdmin) {
-    const hash = bcrypt.hashSync(process.env.ADMIN_DEFAULT_PASSWORD || "admin123", 10);
+  if (adminPassword && !seedAdmin) {
+    const hash = bcrypt.hashSync(adminPassword, 10);
     const result = db
       .prepare(
         "INSERT INTO users (name, email, password_hash, role, email_verified) VALUES (?, ?, ?, 'admin', 1)",
       )
       .run("Admin", "admin@cenastudio.com.br", hash);
     ensureSubscription(Number(result.lastInsertRowid), "studio", "active");
-  } else {
-    const configuredPassword = process.env.ADMIN_DEFAULT_PASSWORD;
-    if (configuredPassword && !bcrypt.compareSync(configuredPassword, seedAdmin.password_hash)) {
-      db.prepare("UPDATE users SET password_hash = ?, role = 'admin', email_verified = 1 WHERE id = ?").run(
-        bcrypt.hashSync(configuredPassword, 10),
+  } else if (seedAdmin) {
+    if (adminPassword && !bcrypt.compareSync(adminPassword, seedAdmin.password_hash)) {
+      db.prepare("UPDATE users SET password_hash = ?, role = 'admin', email_verified = 1, disabled = 0 WHERE id = ?").run(
+        bcrypt.hashSync(adminPassword, 10),
         seedAdmin.id,
       );
     }
     ensureSubscription(seedAdmin.id, "studio", "active");
   }
 
+  const demoPassword = process.env.DEMO_USER_PASSWORD;
   const seedDemo = db.prepare("SELECT id, password_hash FROM users WHERE email = ?").get("demo@cenastudio.com.br") as
     | { id: number; password_hash: string }
     | undefined;
-  if (!seedDemo) {
-    const hash = bcrypt.hashSync(process.env.DEMO_USER_PASSWORD || "demo123", 10);
+  if (demoPassword && !seedDemo) {
+    const hash = bcrypt.hashSync(demoPassword, 10);
     const result = db
       .prepare(
         "INSERT INTO users (name, email, password_hash, role, email_verified) VALUES (?, ?, ?, 'user', 1)",
       )
       .run("Demo User", "demo@cenastudio.com.br", hash);
     ensureSubscription(Number(result.lastInsertRowid), "free", "active");
-  } else {
-    const configuredPassword = process.env.DEMO_USER_PASSWORD;
-    if (configuredPassword && !bcrypt.compareSync(configuredPassword, seedDemo.password_hash)) {
-      db.prepare("UPDATE users SET password_hash = ?, email_verified = 1 WHERE id = ?").run(
-        bcrypt.hashSync(configuredPassword, 10),
+  } else if (demoPassword && seedDemo) {
+    if (!bcrypt.compareSync(demoPassword, seedDemo.password_hash)) {
+      db.prepare("UPDATE users SET password_hash = ?, email_verified = 1, disabled = 0 WHERE id = ?").run(
+        bcrypt.hashSync(demoPassword, 10),
         seedDemo.id,
       );
     }
     ensureSubscription(seedDemo.id, "free", "active");
+  } else if (seedDemo) {
+    db.prepare("UPDATE users SET disabled = 1 WHERE id = ?").run(seedDemo.id);
   }
 
   ensureWorkspaceForExistingUsers();

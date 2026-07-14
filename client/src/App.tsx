@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Redirect, Route, Switch, useLocation } from "wouter";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
@@ -169,9 +169,47 @@ const PUBLIC_DARK_ROUTES = new Set([
   "/auth/callback",
 ]);
 
+const APP_NAME = import.meta.env.VITE_APP_NAME?.trim() || "Cena Studio";
+const APP_SEO_TITLE = import.meta.env.VITE_APP_SEO_TITLE?.trim()
+  || `${APP_NAME} — Software para Produtoras de Vídeo | Gestão com IA`;
+const ROUTE_TITLES: Record<string, string> = {
+  login: "Entrar",
+  register: "Criar conta",
+  dashboard: "Dashboard",
+  projects: "Projetos",
+  commercial: "Comercial",
+  clients: "Clientes",
+  profile: "Perfil",
+  analytics: "Financeiro",
+  team: "Equipe",
+  admin: "Administração",
+};
+
 function App() {
   const [location] = useLocation();
-  const forcePublicDarkTheme = PUBLIC_DARK_ROUTES.has(location) || location.startsWith("/r/");
+  const path = location.split("?")[0] || "/";
+  const forcePublicDarkTheme = PUBLIC_DARK_ROUTES.has(path) || path.startsWith("/r/");
+
+  useEffect(() => {
+    const isLanding = path === "/";
+    const routeSegment = path.split("/").filter(Boolean)[0] || "";
+    document.title = isLanding
+      ? APP_SEO_TITLE
+      : `${ROUTE_TITLES[routeSegment] || "Área segura"} | ${APP_NAME}`;
+
+    const robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
+    if (robots) {
+      robots.content = isLanding
+        ? "index, follow, max-image-preview:large"
+        : "noindex, nofollow, noarchive";
+    }
+
+    const publicUrl = (import.meta.env.VITE_PUBLIC_URL?.trim() || window.location.origin).replace(/\/$/, "");
+    const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (canonical) canonical.href = `${publicUrl}/`;
+    const openGraphUrl = document.querySelector<HTMLMetaElement>('meta[property="og:url"]');
+    if (openGraphUrl) openGraphUrl.content = `${publicUrl}/`;
+  }, [path]);
 
   return (
     <LanguageProvider>

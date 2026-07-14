@@ -371,6 +371,8 @@ function ProfileContent() {
   // Privacy state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [submittingDeleteRequest, setSubmittingDeleteRequest] = useState(false);
+  const deleteConfirmationPhrase = locale === "en" ? "DELETE MY ACCOUNT" : "EXCLUIR MINHA CONTA";
 
   // Métricas reais, sempre carregadas do backend com escopo no usuário autenticado.
   const [dataStats, setDataStats] = useState<UserDataStats | null>(null);
@@ -578,14 +580,36 @@ function ProfileContent() {
     }
   };
 
-  const handleDeleteAccount = () => {
-    if (deleteConfirmText !== "EXCLUIR MINHA CONTA") {
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== deleteConfirmationPhrase) {
       toast.error(t("app.profile.toastDeleteConfirmError"));
       return;
     }
-    toast.info(t("app.profile.toastDeleteInfo"));
-    setShowDeleteConfirm(false);
-    setDeleteConfirmText("");
+    if (lgpdRequestHistory.some((request) => request.type === "delete" && request.status === "pending")) {
+      toast.info(locale === "en" ? "An account deletion request is already pending." : "Já existe uma solicitação de exclusão pendente.");
+      setShowDeleteConfirm(false);
+      setDeleteConfirmText("");
+      return;
+    }
+
+    setSubmittingDeleteRequest(true);
+    try {
+      const result = await api.auth.createLgpdRequest("delete");
+      const history = await api.auth.listLgpdRequests();
+      setLgpdRequestHistory(history.requests);
+      toast.success(
+        locale === "en"
+          ? `Deletion request submitted. Protocol: ${result.requestId}.`
+          : `Solicitação de exclusão enviada. Protocolo: ${result.requestId}.`,
+        { duration: 6000 },
+      );
+      setShowDeleteConfirm(false);
+      setDeleteConfirmText("");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : (locale === "en" ? "Could not submit deletion request." : "Não foi possível enviar a solicitação de exclusão."));
+    } finally {
+      setSubmittingDeleteRequest(false);
+    }
   };
 
   const avatarChar = (user?.name ?? user?.email ?? "U").charAt(0).toUpperCase();
@@ -3555,7 +3579,7 @@ function ProfileContent() {
                     <div>
                       <p className="text-sm font-medium text-frame-white">{t("app.profile.deleteConfirmTitle")}</p>
                       <p className="text-xs text-frame-gray-light mt-1">
-                        Digite <strong className="text-frame-red">EXCLUIR MINHA CONTA</strong> para confirmar.
+                        {locale === "en" ? "Type" : "Digite"} <strong className="text-frame-red">{deleteConfirmationPhrase}</strong> {locale === "en" ? "to submit the request." : "para enviar a solicitação."}
                       </p>
                     </div>
                   </div>
@@ -3565,17 +3589,19 @@ function ProfileContent() {
                     value={deleteConfirmText}
                     onChange={(e) => setDeleteConfirmText(e.target.value)}
                     className="frame-input w-full border-frame-red/30"
-                    placeholder="EXCLUIR MINHA CONTA"
+                    placeholder={deleteConfirmationPhrase}
                   />
 
                   <div className="flex gap-3">
                     <button
                       type="button"
                       onClick={handleDeleteAccount}
-                      disabled={deleteConfirmText !== "EXCLUIR MINHA CONTA"}
+                      disabled={deleteConfirmText !== deleteConfirmationPhrase || submittingDeleteRequest}
                       className="flex-1 px-4 py-2 bg-frame-red text-white rounded-lg font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:bg-frame-red/80 transition"
                     >
-                      {t("app.profile.deletePermanently")}
+                      {submittingDeleteRequest
+                        ? (locale === "en" ? "Submitting..." : "Enviando...")
+                        : t("app.profile.deletePermanently")}
                     </button>
                     <button
                       type="button"
