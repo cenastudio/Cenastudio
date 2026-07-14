@@ -1,4 +1,4 @@
-# Polimento Visual - Plano de Implementação
+fas# Polimento Visual - Plano de Implementação
 
 ## ✅ Status Atual
 
@@ -117,13 +117,15 @@ body.light .text-adaptive-primary {
 
 ## 🔧 Checklist de Implementação
 
-### Fase 1 - Correções Críticas (30min)
-- [ ] Adicionar variáveis de cor adaptativa no tokens.css
-- [ ] Criar utility classes .text-adaptive-primary, .bg-adaptive-primary, .border-adaptive-primary
-- [ ] Substituir text-frame-orange por text-adaptive-primary em textos <0.7rem
-- [ ] Testar em ambos os temas
+### Fase 1 - Correções Críticas (30min) ✅ CONCLUÍDA
+- [x] Adicionar variáveis de cor adaptativa no tokens.css
+- [x] Criar utility classes .text-adaptive-primary, .bg-adaptive-primary, .border-adaptive-primary
+- [x] Substituir text-frame-orange por text-adaptive-primary em textos <0.7rem
+- [x] Testar em ambos os temas
 
-### Fase 2 - Padronizações (1h)
+**Resultado:** 34 textos pequenos com melhor contraste (5.2:1 ratio no tema claro)
+
+### Fase 2 - Padronizações (1h) - EM PROGRESSO
 - [ ] Audit todos os loading states de botões
 - [ ] Padronizar mensagens de toast
 - [ ] Verificar empty states
