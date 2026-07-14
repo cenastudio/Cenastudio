@@ -1,5 +1,5 @@
 /**
- * SkeletonCard - Loading placeholder for cards
+ * SkeletonCard - Loading placeholder for cards with shimmer effect
  */
 
 import { cn } from "@/lib/utils";
@@ -17,23 +17,23 @@ export function SkeletonCard({
 }: SkeletonCardProps) {
   return (
     <div className={cn(
-      "border border-frame-gray-3 bg-frame-gray-1/20 rounded-lg p-4 animate-pulse",
+      "border border-frame-gray-3 bg-frame-gray-1/20 rounded-lg p-4",
       className
     )}>
       {/* Image/Thumbnail placeholder */}
       {showImage && (
-        <div className="w-full aspect-video bg-frame-gray-3 rounded mb-4" />
+        <div className="w-full aspect-video skeleton-shimmer rounded mb-4" />
       )}
 
       {/* Title placeholder */}
-      <div className="h-5 bg-frame-gray-3 rounded w-3/4 mb-3" />
+      <div className="h-5 skeleton-shimmer rounded w-3/4 mb-3" />
 
       {/* Description lines */}
       <div className="space-y-2">
         {Array.from({ length: lines }).map((_, i) => (
           <div
             key={i}
-            className="h-4 bg-frame-gray-3 rounded"
+            className="h-4 skeleton-shimmer rounded"
             style={{ width: `${100 - (i * 15)}%` }}
           />
         ))}
@@ -41,8 +41,8 @@ export function SkeletonCard({
 
       {/* Footer/Actions placeholder */}
       <div className="flex gap-2 mt-4">
-        <div className="h-8 bg-frame-gray-3 rounded w-20" />
-        <div className="h-8 bg-frame-gray-3 rounded w-16" />
+        <div className="h-8 skeleton-shimmer rounded w-20" />
+        <div className="h-8 skeleton-shimmer rounded w-16" />
       </div>
     </div>
   );
@@ -71,5 +71,32 @@ export function SkeletonCardGrid({
         <SkeletonCard key={i} />
       ))}
     </div>
+  );
+}
+
+/**
+ * Skeleton primitives for custom layouts
+ */
+export function SkeletonLine({ className, width = "100%" }: { className?: string; width?: string }) {
+  return (
+    <div
+      className={cn("h-4 skeleton-shimmer rounded", className)}
+      style={{ width }}
+    />
+  );
+}
+
+export function SkeletonCircle({ size = 40, className }: { size?: number; className?: string }) {
+  return (
+    <div
+      className={cn("skeleton-shimmer rounded-full", className)}
+      style={{ width: size, height: size }}
+    />
+  );
+}
+
+export function SkeletonButton({ className }: { className?: string }) {
+  return (
+    <div className={cn("h-10 skeleton-shimmer rounded w-24", className)} />
   );
 }

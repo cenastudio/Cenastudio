@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
-import { Redirect, Route, Switch } from "wouter";
+import { Redirect, Route, Switch, useLocation } from "wouter";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { AnimatePresence, motion } from "framer-motion";
 import FrameShell from "@/components/FrameShell";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -71,65 +72,88 @@ function PageFallback() {
   return <WorkspaceLoadingShell />;
 }
 
+function PageTransition({ children }: { children: React.ReactNode }) {
+  const [location] = useLocation();
+
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={location}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{
+          duration: 0.15,
+          ease: "easeInOut"
+        }}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={Landing} />
-      <Route path="/r/:code">{(params) => <Redirect to={`/register?ref=${params.code}`} />}</Route>
-      <Route path="/login" component={Login} />
-      <Route path="/auth/callback" component={AuthCallback} />
-      <Route path="/register" component={Register} />
-      <Route path="/forgot-password" component={ForgotPassword} />
-      <Route path="/reset-password" component={ResetPassword} />
-      <Route path="/home">{() => <Redirect to="/dashboard" />}</Route>
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/projects" component={ProductionShell} />
-      <Route path="/tools" component={ProductionShell} />
-      <Route path="/tools/:id" component={ToolDetail} />
-      <Route path="/video-reviews" component={ProductionShell} />
-      <Route path="/commercial" component={CommercialHub} />
-      <Route path="/clients/new" component={NewClient} />
-      <Route path="/clients/:id/editar" component={EditClient} />
-      <Route path="/clients/:id" component={ClientDetail} />
-      <Route path="/clients" component={CommercialHub} />
-      <Route path="/pipeline" component={CommercialHub} />
-      <Route path="/proposals" component={CommercialHub} />
-      <Route path="/interactions" component={CommercialHub} />
-      <Route path="/documents" component={Documents} />
-      <Route path="/company" component={CompanySettings} />
-      <Route path="/assets">{() => <Redirect to="/files-unified?tab=all" />}</Route>
-      <Route path="/files-unified" component={FilesUnified} />
-      <Route path="/webhooks">{() => <Webhooks />}</Route>
-      <Route path="/files">{() => <Redirect to="/files-unified?tab=project" />}</Route>
-      <Route path="/files/:projectId">{() => <Redirect to="/files-unified?tab=project" />}</Route>
-      <Route path="/video-reviews/:projectId">{() => <VideoReviews />}</Route>
-      <Route path="/review/:token" component={SharedReview} />
-      <Route path="/meeting/:token" component={MeetingView} />
-      <Route path="/proposal/:token" component={ProposalView} />
+    <PageTransition>
+      <Switch>
+        <Route path="/" component={Landing} />
+        <Route path="/r/:code">{(params) => <Redirect to={`/register?ref=${params.code}`} />}</Route>
+        <Route path="/login" component={Login} />
+        <Route path="/auth/callback" component={AuthCallback} />
+        <Route path="/register" component={Register} />
+        <Route path="/forgot-password" component={ForgotPassword} />
+        <Route path="/reset-password" component={ResetPassword} />
+        <Route path="/home">{() => <Redirect to="/dashboard" />}</Route>
+        <Route path="/dashboard" component={Dashboard} />
+        <Route path="/projects" component={ProductionShell} />
+        <Route path="/tools" component={ProductionShell} />
+        <Route path="/tools/:id" component={ToolDetail} />
+        <Route path="/video-reviews" component={ProductionShell} />
+        <Route path="/commercial" component={CommercialHub} />
+        <Route path="/clients/new" component={NewClient} />
+        <Route path="/clients/:id/editar" component={EditClient} />
+        <Route path="/clients/:id" component={ClientDetail} />
+        <Route path="/clients" component={CommercialHub} />
+        <Route path="/pipeline" component={CommercialHub} />
+        <Route path="/proposals" component={CommercialHub} />
+        <Route path="/interactions" component={CommercialHub} />
+        <Route path="/documents" component={Documents} />
+        <Route path="/company" component={CompanySettings} />
+        <Route path="/assets">{() => <Redirect to="/files-unified?tab=all" />}</Route>
+        <Route path="/files-unified" component={FilesUnified} />
+        <Route path="/webhooks">{() => <Webhooks />}</Route>
+        <Route path="/files">{() => <Redirect to="/files-unified?tab=project" />}</Route>
+        <Route path="/files/:projectId">{() => <Redirect to="/files-unified?tab=project" />}</Route>
+        <Route path="/video-reviews/:projectId">{() => <VideoReviews />}</Route>
+        <Route path="/review/:token" component={SharedReview} />
+        <Route path="/meeting/:token" component={MeetingView} />
+        <Route path="/proposal/:token" component={ProposalView} />
 
-      <Route path="/team" component={TeamPage} />
-      <Route path="/analytics" component={Analytics} />
-      <Route path="/analytics-premium" component={AnalyticsPremium} />
-      <Route path="/analytics-premium/dashboard/:id">{() => <Redirect to="/analytics" />}</Route>
-      <Route path="/success" component={Success} />
-      <Route path="/profile" component={Profile} />
-      <Route path="/studio/:id" component={Studio} />
-      <Route path="/project/:projectId/journey/:stage" component={ProjectChapter} />
-      <Route path="/project/:id" component={ProjectHub} />
-      <Route path="/project/:projectId/studio/:id" component={Studio} />
-      <Route path="/project/:projectId/documents" component={Documents} />
-      <Route path="/project/:projectId/budget" component={Budget} />
-      <Route path="/equipment">{() => <Equipment />}</Route>
-      <Route path="/project/:projectId/shotlist" component={ShotList} />
-      <Route path="/timesheet">{() => <Timesheet />}</Route>
-      <Route path="/project/:projectId/files">{() => <Files />}</Route>
-      <Route path="/project/:projectId/video-reviews">{() => <VideoReviews />}</Route>
+        <Route path="/team" component={TeamPage} />
+        <Route path="/analytics" component={Analytics} />
+        <Route path="/analytics-premium" component={AnalyticsPremium} />
+        <Route path="/analytics-premium/dashboard/:id">{() => <Redirect to="/analytics" />}</Route>
+        <Route path="/success" component={Success} />
+        <Route path="/profile" component={Profile} />
+        <Route path="/studio/:id" component={Studio} />
+        <Route path="/project/:projectId/journey/:stage" component={ProjectChapter} />
+        <Route path="/project/:id" component={ProjectHub} />
+        <Route path="/project/:projectId/studio/:id" component={Studio} />
+        <Route path="/project/:projectId/documents" component={Documents} />
+        <Route path="/project/:projectId/budget" component={Budget} />
+        <Route path="/equipment">{() => <Equipment />}</Route>
+        <Route path="/project/:projectId/shotlist" component={ShotList} />
+        <Route path="/timesheet">{() => <Timesheet />}</Route>
+        <Route path="/project/:projectId/files">{() => <Files />}</Route>
+        <Route path="/project/:projectId/video-reviews">{() => <VideoReviews />}</Route>
 
-      <Route path="/admin" component={AdminDashboard} />
-      <Route path="/admin/gerenciar" component={AdminUsers} />
-      <Route path="/404" component={NotFound} />
-      <Route component={NotFound} />
-    </Switch>
+        <Route path="/admin" component={AdminDashboard} />
+        <Route path="/admin/gerenciar" component={AdminUsers} />
+        <Route path="/404" component={NotFound} />
+        <Route component={NotFound} />
+      </Switch>
+    </PageTransition>
   );
 }
 

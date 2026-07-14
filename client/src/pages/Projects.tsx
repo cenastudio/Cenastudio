@@ -10,6 +10,7 @@ import { useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { WORKFLOW_STAGES } from "@/lib/workflow";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { motion } from "framer-motion";
 
 function getMetadata(metadataJson: string) {
   try {
@@ -102,19 +103,31 @@ function ProjectsContent({ embedded }: { embedded?: boolean }) {
               const clientName = project.clientName || meta.creativeGoals?.client;
 
               return (
-                <button
+                <motion.button
                   key={project.id}
                   type="button"
                   onClick={() => setLocation(`/project/${project.id}`)}
-                  className="w-full group border border-frame-gray-3 bg-frame-gray-1/10 p-5 text-left transition hover:border-frame-orange/50 hover:bg-frame-orange/[0.02]"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  whileHover={{
+                    scale: 1.005,
+                    y: -2,
+                    boxShadow: "0 4px 20px rgba(255, 107, 0, 0.12)"
+                  }}
+                  transition={{ duration: 0.2 }}
+                  className="w-full group border border-frame-gray-3 bg-frame-gray-1/10 p-5 text-left hover:border-frame-orange/50 hover:bg-frame-orange/[0.02]"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     {/* Left: info */}
                     <div className="min-w-0 flex-1 space-y-1.5">
                       <div className="flex items-center gap-3">
-                        <h2 className="text-lg font-semibold text-frame-white group-hover:text-frame-orange transition truncate">
+                        <motion.h2
+                          className="text-lg font-semibold text-frame-white group-hover:text-frame-orange transition truncate"
+                          whileHover={{ x: 2 }}
+                          transition={{ duration: 0.15 }}
+                        >
                           {project.name}
-                        </h2>
+                        </motion.h2>
                         {meta.projectType && (
                           <span className="font-frame-mono text-[0.52rem] tracking-wider uppercase text-frame-orange border border-frame-orange/25 bg-frame-orange/[0.06] px-1.5 py-0.5 shrink-0">
                             {meta.projectType}
@@ -143,12 +156,16 @@ function ProjectsContent({ embedded }: { embedded?: boolean }) {
                         </span>
                       </div>
                       {/* CTA */}
-                      <span className="flex items-center gap-1 font-frame-mono text-[0.6rem] uppercase tracking-wider text-frame-orange group-hover:text-frame-white transition">
+                      <motion.span
+                        className="flex items-center gap-1 font-frame-mono text-[0.6rem] uppercase tracking-wider text-frame-orange group-hover:text-frame-white transition"
+                        whileHover={{ x: 4 }}
+                        transition={{ duration: 0.15 }}
+                      >
                         {t("app.projects.open")} <ArrowRight className="h-3 w-3" />
-                      </span>
+                      </motion.span>
                     </div>
                   </div>
-                </button>
+                </motion.button>
               );
             })}
           </section>
