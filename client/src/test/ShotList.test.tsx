@@ -8,6 +8,10 @@ vi.mock("wouter", () => ({
   useRoute: () => [true, { projectId: "5" }],
 }));
 
+vi.mock("@/contexts/PlanContext", () => ({
+  usePlanContext: () => ({ planMode: "studio" }),
+}));
+
 vi.mock("@/components/AppNavBar", () => ({ default: () => <div data-testid="app-nav" /> }));
 vi.mock("@/components/ProjectNav", () => ({ default: () => <div data-testid="project-nav" /> }));
 vi.mock("@/components/ProtectedRoute", () => ({
@@ -43,10 +47,12 @@ function makeShot(overrides: Record<string, unknown> & { id: number }) {
 
 describe("ShotList page — grouped by scene (step 2)", () => {
   beforeEach(() => {
+    localStorage.clear();
     vi.mocked(api.shotlists.get).mockReset();
   });
 
   afterEach(() => {
+    localStorage.clear();
     vi.clearAllMocks();
   });
 
@@ -79,9 +85,9 @@ describe("ShotList page — grouped by scene (step 2)", () => {
     expect(screen.getByText("Close")).toBeInTheDocument();
     expect(screen.getByText("Saída")).toBeInTheDocument();
 
-    // Scene headers render with count + duration ("2 · 1min" for 1A: 30+15s)
-    expect(screen.getByText(/2 · /)).toBeInTheDocument();
-    expect(screen.getByText(/1 · /)).toBeInTheDocument();
+    // Scene header badges render the shot count per scene (1A: 2 shots, 1B: 1 shot)
+    expect(screen.getByText("2 shots")).toBeInTheDocument();
+    expect(screen.getByText("1 shot")).toBeInTheDocument();
 
     // Aggregate header: 2 scenes, total duration across all shots (90s = 2min)
     expect(screen.getByText(/2 cenas/)).toBeInTheDocument();
@@ -100,9 +106,11 @@ describe("ShotList page — grouped by scene (step 2)", () => {
     const { default: ShotList } = await import("@/pages/ShotList");
     renderWithLanguage(<ShotList />);
 
-    await waitFor(() => expect(screen.getByText("Sem cena definida")).toBeInTheDocument());
-    expect(screen.getByText("Com cena")).toBeInTheDocument();
-    expect(screen.getByText("Sem cena ainda")).toBeInTheDocument();
+    await screen.findByText("Sem cena definida");
+    // Scene groups auto-expand asynchronously after shots load, so await the
+    // shot rows rather than reading them synchronously.
+    expect(await screen.findByText("Com cena")).toBeInTheDocument();
+    expect(await screen.findByText("Sem cena ainda")).toBeInTheDocument();
   });
 });
 

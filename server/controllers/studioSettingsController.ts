@@ -84,8 +84,15 @@ export const updateStudioSettings: RequestHandler = async (req, res, next) => {
         ? rawLogoUrl.trim()
         : null;
 
-    // Validate custom branding access (logo & color)
-    const hasCustomBranding = logoUrl !== null || (req.body.primaryColor && req.body.primaryColor !== SITE_CONFIG.primaryColor);
+    // Validate the color first, then gate on the *validated* value. An
+    // invalid string (e.g. "not-a-color") falls back to the default and must
+    // NOT count as custom branding — only a valid color that actually differs
+    // from the default, or a logo, requires the customBranding entitlement.
+    const validatedPrimaryColor = /^#[0-9a-f]{6}$/i.test(String(req.body.primaryColor || ""))
+      ? String(req.body.primaryColor)
+      : DEFAULT_SETTINGS.primaryColor;
+
+    const hasCustomBranding = logoUrl !== null || validatedPrimaryColor !== DEFAULT_SETTINGS.primaryColor;
     if (hasCustomBranding) {
       // This will throw 402 if user doesn't have customBranding entitlement
       const { requireFeature } = await import("../services/entitlementService.js");
@@ -101,9 +108,7 @@ export const updateStudioSettings: RequestHandler = async (req, res, next) => {
       city: clean(req.body.city),
       website: clean(req.body.website),
       signature: clean(req.body.signature, DEFAULT_SETTINGS.signature) || DEFAULT_SETTINGS.signature,
-      primaryColor: /^#[0-9a-f]{6}$/i.test(String(req.body.primaryColor || ""))
-        ? String(req.body.primaryColor)
-        : DEFAULT_SETTINGS.primaryColor,
+      primaryColor: validatedPrimaryColor,
       logoUrl,
     };
 

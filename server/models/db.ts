@@ -69,6 +69,16 @@ function ensureUserColumns() {
   if (!userCols.includes("must_reset_password")) {
     db.prepare("ALTER TABLE users ADD COLUMN must_reset_password INTEGER NOT NULL DEFAULT 0").run();
   }
+  // Security columns (2FA, LGPD privacy) — read/written by authService,
+  // twoFactorService and lgpdService. The Postgres/Prisma schema has these;
+  // the SQLite fallback must add them or getUserById() fails with
+  // "no such column: two_factor_enabled".
+  if (!userCols.includes("two_factor_enabled")) {
+    db.prepare("ALTER TABLE users ADD COLUMN two_factor_enabled INTEGER NOT NULL DEFAULT 0").run();
+  }
+  if (!userCols.includes("two_factor_secret")) db.prepare("ALTER TABLE users ADD COLUMN two_factor_secret TEXT").run();
+  if (!userCols.includes("backup_codes")) db.prepare("ALTER TABLE users ADD COLUMN backup_codes TEXT").run();
+  if (!userCols.includes("privacy_settings")) db.prepare("ALTER TABLE users ADD COLUMN privacy_settings TEXT").run();
 }
 
 function ensureSubscriptionColumns() {
@@ -676,6 +686,7 @@ export async function initDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       shot_list_id INTEGER NOT NULL REFERENCES shot_lists(id) ON DELETE CASCADE,
       order_index INTEGER DEFAULT 0,
+      shot_number TEXT,
       scene TEXT DEFAULT '',
       shot_type TEXT DEFAULT '',
       description TEXT DEFAULT '',
@@ -683,6 +694,8 @@ export async function initDatabase() {
       lens TEXT DEFAULT '',
       movement TEXT DEFAULT '',
       duration_sec INTEGER,
+      production_notes TEXT,
+      thumbnail_url TEXT,
       status TEXT DEFAULT 'pending',
       created_at TEXT DEFAULT (datetime('now'))
     );
