@@ -13,7 +13,9 @@ import {
   Trash2,
   Loader2,
   ArrowRight,
+  Calculator,
 } from "lucide-react";
+import PricingCalculatorModal from "@/components/production/PricingCalculatorModal";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -69,6 +71,7 @@ function TimesheetContent() {
 
   const [deleteTarget, setDeleteTarget] = useState<TimeEntryItem | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [calculatorOpen, setCalculatorOpen] = useState(false);
 
   const tickRef = useRef<number | null>(null);
 
@@ -203,18 +206,29 @@ function TimesheetContent() {
             <h1 className="frame-title text-[clamp(1.5rem,3vw,2.2rem)] leading-none">Timesheet</h1>
             <p className="text-xs text-frame-gray-light mt-2 max-w-lg leading-relaxed">
               Cronometre horas trabalhadas por projeto e calcule o custo real com base na taxa horária.
+              Use a calculadora de preço para estimar quanto cobrar antes de aceitar um trabalho.
             </p>
           </div>
-          {!running && (
+          <div className="flex items-center gap-2 shrink-0 self-start">
             <button
               type="button"
-              onClick={() => setManualOpen(true)}
-              className="frame-btn-ghost inline-flex items-center gap-2 shrink-0 self-start"
+              onClick={() => setCalculatorOpen(true)}
+              className="frame-btn-ghost inline-flex items-center gap-2"
             >
-              <Plus className="w-4 h-4" />
-              Registro manual
+              <Calculator className="w-4 h-4" />
+              Calculadora de preço
             </button>
-          )}
+            {!running && (
+              <button
+                type="button"
+                onClick={() => setManualOpen(true)}
+                className="frame-btn-ghost inline-flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Registro manual
+              </button>
+            )}
+          </div>
         </header>
 
         {/* Timer widget */}
@@ -372,6 +386,8 @@ function TimesheetContent() {
           </>
         )}
       </main>
+
+      <PricingCalculatorModal open={calculatorOpen} onOpenChange={setCalculatorOpen} />
 
       {/* Stop timer — optional hourly rate */}
       <Dialog open={stopDialogOpen} onOpenChange={setStopDialogOpen}>
