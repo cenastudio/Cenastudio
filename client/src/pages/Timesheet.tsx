@@ -236,7 +236,7 @@ function TimesheetContent() {
           {running ? (
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <p className="font-frame-mono text-[0.6rem] uppercase tracking-wide text-frame-orange mb-1">
+                <p className="font-frame-mono text-[0.6rem] uppercase tracking-wide text-adaptive-primary mb-1">
                   Timer em andamento
                 </p>
                 <p className="text-3xl font-bold font-mono text-frame-white">{formatDuration(elapsed)}</p>
@@ -308,7 +308,7 @@ function TimesheetContent() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-frame-orange tracking-wider block mb-2">01</span>
+                <span className="font-frame-mono text-[0.6rem] text-adaptive-primary tracking-wider block mb-2">01</span>
                 <p className="text-sm font-semibold text-frame-white">Inicie timer</p>
                 <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
                   Descreva a tarefa e inicie o cronômetro.
@@ -316,7 +316,7 @@ function TimesheetContent() {
               </div>
               <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-frame-orange tracking-wider block mb-2">02</span>
+                <span className="font-frame-mono text-[0.6rem] text-adaptive-primary tracking-wider block mb-2">02</span>
                 <p className="text-sm font-semibold text-frame-white">Vincule projeto</p>
                 <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
                   Associe o tempo a um projeto para o custo entrar no relatório certo.
@@ -324,7 +324,7 @@ function TimesheetContent() {
               </div>
               <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-frame-orange tracking-wider block mb-2">03</span>
+                <span className="font-frame-mono text-[0.6rem] text-adaptive-primary tracking-wider block mb-2">03</span>
                 <p className="text-sm font-semibold text-frame-white">Veja horas e custo</p>
                 <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
                   Defina a taxa/hora ao parar e o custo é calculado automaticamente.

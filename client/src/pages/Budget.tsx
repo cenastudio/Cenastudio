@@ -249,7 +249,7 @@ function BudgetContent() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-frame-orange tracking-wider block mb-2">01</span>
+                <span className="font-frame-mono text-[0.6rem] text-adaptive-primary tracking-wider block mb-2">01</span>
                 <p className="text-sm font-semibold text-frame-white">Defina orçamento</p>
                 <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
                   Valor previsto por categoria (Equipe, Equipamento, Locação...).
@@ -257,7 +257,7 @@ function BudgetContent() {
               </div>
               <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-frame-orange tracking-wider block mb-2">02</span>
+                <span className="font-frame-mono text-[0.6rem] text-adaptive-primary tracking-wider block mb-2">02</span>
                 <p className="text-sm font-semibold text-frame-white">Lance gastos</p>
                 <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
                   Cada despesa real entra na categoria certa, com data e descrição.
@@ -265,7 +265,7 @@ function BudgetContent() {
               </div>
               <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-frame-orange tracking-wider block mb-2">03</span>
+                <span className="font-frame-mono text-[0.6rem] text-adaptive-primary tracking-wider block mb-2">03</span>
                 <p className="text-sm font-semibold text-frame-white">Previsto vs realizado</p>
                 <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
                   Barras de progresso e alertas automáticos quando uma categoria estoura.

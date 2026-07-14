@@ -363,7 +363,7 @@ function AdminContent() {
       <main id="main-content" className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 flex-1">
         {/* Hero header */}
         <div className="mb-6">
-          <p className="font-frame-mono text-[0.64rem] tracking-[0.18em] uppercase text-frame-orange mb-1">
+          <p className="font-frame-mono text-[0.64rem] tracking-[0.18em] uppercase text-adaptive-primary mb-1">
             // {t("app.admin.adminTitle")}
           </p>
           <h1 className="frame-title text-2xl sm:text-3xl text-frame-white">
@@ -418,7 +418,7 @@ function AdminContent() {
 
             {/* Recent activity */}
             <section className="border border-frame-gray-3 bg-frame-gray-1/20 p-5 sm:p-6 mb-6">
-              <h2 className="font-frame-mono text-[0.68rem] tracking-[0.16em] uppercase text-frame-orange mb-4">
+              <h2 className="font-frame-mono text-[0.68rem] tracking-[0.16em] uppercase text-adaptive-primary mb-4">
                 {t("app.admin.recentActivity")}
               </h2>
               {loading ? (
@@ -497,7 +497,7 @@ function AdminContent() {
                               {u.plan_name || "Free"}
                             </span>
                             {u.role === "admin" && (
-                              <span className="text-[0.62rem] font-frame-mono uppercase tracking-wider text-frame-orange border border-frame-orange/30 px-1.5 py-0.5">Admin</span>
+                              <span className="text-[0.62rem] font-frame-mono uppercase tracking-wider text-adaptive-primary border border-frame-orange/30 px-1.5 py-0.5">Admin</span>
                             )}
                             {isCurrentUser && (
                               <span className="text-[0.62rem] font-frame-mono uppercase tracking-wider text-frame-gold border border-frame-gold/30 px-1.5 py-0.5">{t("app.admin.you")}</span>
@@ -738,7 +738,7 @@ function AdminContent() {
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="font-frame-mono text-[0.66rem] uppercase tracking-[0.14em] text-frame-orange mb-3 flex items-center gap-2">
+                    <h3 className="font-frame-mono text-[0.66rem] uppercase tracking-[0.14em] text-adaptive-primary mb-3 flex items-center gap-2">
                       <Bot className="w-4 h-4" /> Por ferramenta
                     </h3>
                     <div className="space-y-1.5">
@@ -754,7 +754,7 @@ function AdminContent() {
                     </div>
                   </div>
                   <div>
-                    <h3 className="font-frame-mono text-[0.66rem] uppercase tracking-[0.14em] text-frame-orange mb-3 flex items-center gap-2">
+                    <h3 className="font-frame-mono text-[0.66rem] uppercase tracking-[0.14em] text-adaptive-primary mb-3 flex items-center gap-2">
                       <Users className="w-4 h-4" /> Top usuários
                     </h3>
                     <div className="space-y-1.5">
@@ -787,7 +787,7 @@ function AdminContent() {
               <div className="space-y-2">
                 {auditLog.map((entry) => (
                   <div key={entry.id} className="border border-frame-gray-3 bg-frame-gray-1/20 p-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                    <span className="font-frame-mono text-[0.62rem] uppercase tracking-wider text-frame-orange border border-frame-orange/30 px-1.5 py-0.5 shrink-0 w-fit">
+                    <span className="font-frame-mono text-[0.62rem] uppercase tracking-wider text-adaptive-primary border border-frame-orange/30 px-1.5 py-0.5 shrink-0 w-fit">
                       {entry.action}
                     </span>
                     <div className="min-w-0 flex-1">
@@ -984,7 +984,7 @@ function AdminContent() {
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold truncate">{detail.name || t("app.admin.noName")}</span>
-                  {detail.role === "admin" && <span className="text-[0.6rem] font-frame-mono uppercase text-frame-orange border border-frame-orange/30 px-1.5 py-0.5">Admin</span>}
+                  {detail.role === "admin" && <span className="text-[0.6rem] font-frame-mono uppercase text-adaptive-primary border border-frame-orange/30 px-1.5 py-0.5">Admin</span>}
                   {detail.disabled
                     ? <span className="text-[0.6rem] font-frame-mono uppercase text-red-300 border border-red-500/40 px-1.5 py-0.5">Suspenso</span>
                     : <span className="text-[0.6rem] font-frame-mono uppercase text-frame-green border border-frame-green/40 px-1.5 py-0.5">Ativo</span>}
@@ -1013,7 +1013,7 @@ function AdminContent() {
             <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-4">
               <div className="flex items-center gap-2 mb-3">
                 <DollarSign className="w-4 h-4 text-frame-orange" />
-                <h3 className="font-frame-mono text-[0.66rem] uppercase tracking-[0.14em] text-frame-orange">Assinatura</h3>
+                <h3 className="font-frame-mono text-[0.66rem] uppercase tracking-[0.14em] text-adaptive-primary">Assinatura</h3>
               </div>
               {detail.subscription ? (
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-frame-gray-light mb-4">
@@ -1053,7 +1053,7 @@ function AdminContent() {
             <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-4 space-y-3">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-frame-orange" />
-                <h3 className="font-frame-mono text-[0.66rem] uppercase tracking-[0.14em] text-frame-orange">Suporte</h3>
+                <h3 className="font-frame-mono text-[0.66rem] uppercase tracking-[0.14em] text-adaptive-primary">Suporte</h3>
               </div>
               <div className="flex flex-wrap gap-2">
                 <button

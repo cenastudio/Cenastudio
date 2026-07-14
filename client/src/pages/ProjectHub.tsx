@@ -150,7 +150,7 @@ function TimelineStep({
         )}
       </div>
       {/* Number */}
-      <span className="font-frame-mono text-[0.5rem] tracking-[0.14em] text-frame-orange">
+      <span className="font-frame-mono text-[0.5rem] tracking-[0.14em] text-adaptive-primary">
         {stage.number}
       </span>
       {/* Label */}
@@ -323,7 +323,7 @@ function ProjectHubContent() {
                 <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-frame-white">
                   {project.name}
                 </h1>
-                <span className="font-frame-mono text-[0.58rem] tracking-[0.12em] uppercase text-frame-orange border border-frame-orange/30 bg-frame-orange/[0.08] px-2 py-0.5">
+                <span className="font-frame-mono text-[0.58rem] tracking-[0.12em] uppercase text-adaptive-primary border border-frame-orange/30 bg-frame-orange/[0.08] px-2 py-0.5">
                   {metadata.projectType || "audiovisual"}
                 </span>
               </div>
@@ -405,7 +405,7 @@ function ProjectHubContent() {
                 >
                   <CalendarPlus className="w-4 h-4 group-hover:scale-110 transition-transform" />
                   <span>{locale === "en" ? "Export to Calendar" : "Exportar para Agenda"}</span>
-                  <span className="text-[0.65rem] px-1.5 py-0.5 bg-frame-gray-2 text-frame-gray-light font-frame-mono rounded group-hover:bg-frame-orange/20 group-hover:text-frame-orange transition">
+                  <span className="text-[0.65rem] px-1.5 py-0.5 bg-frame-gray-2 text-frame-gray-light font-frame-mono rounded group-hover:bg-frame-orange/20 group-hover:text-adaptive-primary transition">
                     .ics
                   </span>
                 </a>
@@ -468,7 +468,7 @@ function ProjectHubContent() {
         <section className="border border-frame-orange/40 bg-frame-orange/[0.04] p-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="min-w-0">
-              <p className="font-frame-mono text-[0.58rem] tracking-[0.14em] uppercase text-frame-orange mb-1">
+              <p className="font-frame-mono text-[0.58rem] tracking-[0.14em] uppercase text-adaptive-primary mb-1">
                 <span>{t("app.hub.nextStep")}</span> <span>{nextStep.label}</span>
               </p>
               <h2 className="text-lg font-semibold text-frame-white">{nextAction.label}</h2>
@@ -529,7 +529,7 @@ function ProjectHubContent() {
                             {t(tool.hintKey)}
                           </span>
                           {hasContent && (
-                            <span className="inline-block mt-1.5 font-frame-mono text-[0.5rem] text-frame-orange border border-frame-orange/30 px-1.5 py-0.5">{t("app.hub.filled")}</span>
+                            <span className="inline-block mt-1.5 font-frame-mono text-[0.5rem] text-adaptive-primary border border-frame-orange/30 px-1.5 py-0.5">{t("app.hub.filled")}</span>
                           )}
                         </div>
                       </div>
@@ -552,7 +552,7 @@ function ProjectHubContent() {
                 <button
                   type="button"
                   onClick={() => setLocation(`/project/${projectId}/files`)}
-                  className="inline-flex items-center font-frame-mono text-[0.6rem] text-frame-orange hover:text-frame-white transition tracking-wider min-h-11 px-3"
+                  className="inline-flex items-center font-frame-mono text-[0.6rem] text-adaptive-primary hover:text-frame-white transition tracking-wider min-h-11 px-3"
                 >
                   {t("app.hub.viewAll")}
                 </button>
@@ -582,7 +582,7 @@ function ProjectHubContent() {
                   <Video className="w-3.5 h-3.5" />
                   {t("app.hub.approvals")}
                   {pendingReviews > 0 && (
-                    <span className="ml-1 text-[0.55rem] px-1.5 py-0.5 bg-frame-orange/20 border border-frame-orange/40 text-frame-orange">
+                    <span className="ml-1 text-[0.55rem] px-1.5 py-0.5 bg-frame-orange/20 border border-frame-orange/40 text-adaptive-primary">
                       {pendingReviews} {pendingReviews > 1 ? t("app.hub.pendingPlural") : t("app.hub.pendingSingular")}
                     </span>
                   )}
@@ -590,7 +590,7 @@ function ProjectHubContent() {
                 <button
                   type="button"
                   onClick={() => setLocation(`/project/${projectId}/video-reviews`)}
-                  className="inline-flex items-center font-frame-mono text-[0.6rem] text-frame-orange hover:text-frame-white transition tracking-wider min-h-11 px-3"
+                  className="inline-flex items-center font-frame-mono text-[0.6rem] text-adaptive-primary hover:text-frame-white transition tracking-wider min-h-11 px-3"
                 >
                   {t("app.hub.viewAll")}
                 </button>
@@ -681,7 +681,7 @@ function ProjectHubContent() {
               <button
                 type="button"
                 onClick={() => setLocation(`/project/${projectId}/studio/briefing`)}
-                className="w-full mt-3 text-[0.6rem] font-frame-mono tracking-wider text-frame-gray-light hover:text-frame-orange transition border border-dashed border-frame-gray-3/60 min-h-11 py-2 flex items-center justify-center gap-1"
+                className="w-full mt-3 text-[0.6rem] font-frame-mono tracking-wider text-frame-gray-light hover:text-adaptive-primary transition border border-dashed border-frame-gray-3/60 min-h-11 py-2 flex items-center justify-center gap-1"
               >
                 <FileText className="w-3 h-3" />
                 {t("app.hub.editBriefing")}
@@ -698,7 +698,7 @@ function ProjectHubContent() {
                 <button
                   type="button"
                   onClick={() => setLocation("/team")}
-                  className="inline-flex items-center font-frame-mono text-[0.55rem] text-frame-orange hover:text-frame-white transition min-h-11 px-3"
+                  className="inline-flex items-center font-frame-mono text-[0.55rem] text-adaptive-primary hover:text-frame-white transition min-h-11 px-3"
                 >
                   {t("app.hub.manage")}
                 </button>
@@ -709,7 +709,7 @@ function ProjectHubContent() {
                 <div className="space-y-1.5">
                   {members.map((m) => (
                     <div key={m.id} className="flex items-center gap-2 text-xs group/member">
-                      <div className="w-5 h-5 rounded-full bg-frame-orange/20 border border-frame-orange/30 flex items-center justify-center text-[0.55rem] font-frame-mono shrink-0 text-frame-orange">
+                      <div className="w-5 h-5 rounded-full bg-frame-orange/20 border border-frame-orange/30 flex items-center justify-center text-[0.55rem] font-frame-mono shrink-0 text-adaptive-primary">
                         {(m.name || m.email)[0].toUpperCase()}
                       </div>
                       <span className="truncate text-frame-white">{m.name || m.email}</span>
@@ -767,7 +767,7 @@ function ProjectHubContent() {
                 a.href = `/api/export/projects/${projectId}`;
                 a.click();
               }}
-              className="w-full font-frame-mono text-[0.6rem] tracking-wider text-frame-gray-light border border-frame-gray-3/50 min-h-11 py-2.5 hover:border-frame-orange/40 hover:text-frame-orange transition flex items-center justify-center gap-1.5"
+              className="w-full font-frame-mono text-[0.6rem] tracking-wider text-frame-gray-light border border-frame-gray-3/50 min-h-11 py-2.5 hover:border-frame-orange/40 hover:text-adaptive-primary transition flex items-center justify-center gap-1.5"
             >
               <ArrowRight className="w-3 h-3" />
               {t("app.hub.exportProject")}
