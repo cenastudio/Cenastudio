@@ -2,11 +2,27 @@
 
 **Última atualização: 14 de julho de 2026**
 
-> ⚠️ **Pendência antes da publicação legal:** os campos marcados
-> `[A PREENCHER]` neste documento (razão social/CNPJ, endereço, foro,
-> encarregado de dados) precisam ser preenchidos com os dados jurídicos
-> reais da empresa antes deste texto ser vinculante. Consulte um
-> advogado antes de publicar esta política para usuários finais.
+> ⚠️ **Pendência antes da publicação legal.** Este documento só é
+> juridicamente vinculante depois que os campos abaixo forem preenchidos
+> com os dados reais da empresa. Recomendamos revisão por um advogado
+> antes de publicar para usuários finais. Checklist (leve para o advogado):
+>
+> - [ ] **CNPJ** da empresa — Seção 1.1 deste arquivo (`**CNPJ:**`)
+> - [ ] **Endereço** completo da sede — Seção 1.1 deste arquivo (`**Endereço:**`)
+> - [ ] **Nome do Encarregado de Dados / DPO** (LGPD Art. 41) — Seção 12 (`**Nome:**`)
+> - [ ] **Telefone de contato do DPO** — Seção 12 (`**Telefone:**`)
+> - [ ] **Telefone geral de contato** — Seção 16 (`**Telefone:**`)
+> - [ ] **Foro (cidade/estado)** para resolução de conflitos — Seção 14 (`[SUA CIDADE]/[ESTADO]`)
+> - [ ] Repetir os mesmos 5 itens em `client/public/privacy-policy.html`
+>       (versão servida ao público) e `client/public/terms-of-use.html`
+>       (menciona "foro da comarca da sede da empresa" — confirmar se o
+>       texto genérico é aceitável ou se deve citar a cidade explicitamente)
+> - [ ] Confirmar se **CNPJ/Razão Social/Foro** devem ser os mesmos em
+>       `PRIVACY_POLICY.md` e em `client/public/privacy-policy.html`, ou se
+>       um dos dois documentos deve ser descontinuado para evitar duas
+>       versões divergentes da política.
+> - [ ] Validar prazos de retenção (Seção 5) e a base legal de cada
+>       finalidade de tratamento com o advogado antes de publicar.
 
 ---
 
