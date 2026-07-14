@@ -1181,23 +1181,25 @@ function ShotListContent() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-frame-gray-light mb-1.5">{t("app.shotlist.movement")}</label>
-                <input
-                  type="text"
+                {/* Native <select> instead of a text input + datalist: Safari
+                    ignores autocomplete="off" and shows its credit-card
+                    AutoFill over free-text fields. A <select> can't be
+                    autofilled, which kills that bug for good. */}
+                <select
                   value={form.movement}
                   onChange={(e) => setForm((f) => ({ ...f, movement: e.target.value }))}
-                  placeholder="Ex: Dolly in, Pan..."
-                  list="camera-movements"
                   name="movement-field"
-                  autoComplete="off"
-                  data-1p-ignore
-                  data-lpignore="true"
                   className="frame-input w-full"
-                />
-                <datalist id="camera-movements">
+                >
+                  <option value="">{t("app.shotlist.movementPlaceholder")}</option>
+                  {/* Preserve any pre-existing custom value not in the preset list */}
+                  {form.movement && !CAMERA_MOVEMENTS.includes(form.movement) && (
+                    <option value={form.movement}>{form.movement}</option>
+                  )}
                   {CAMERA_MOVEMENTS.map((movement) => (
-                    <option key={movement} value={movement} />
+                    <option key={movement} value={movement}>{movement}</option>
                   ))}
-                </datalist>
+                </select>
               </div>
             </div>
 

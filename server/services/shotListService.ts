@@ -457,6 +457,27 @@ export async function duplicateShot(userId: number, shotId: number): Promise<Sho
  * Generate PDF export of shot list using jsPDF.
  * Returns PDF buffer.
  */
+/**
+ * Fetches a remote image and returns it as a base64 data URL plus the jsPDF
+ * image format. Server-side jsPDF can't resolve a remote URL on its own
+ * (there's no DOM/Image), so thumbnails must be embedded as data. Returns
+ * null on any failure so the caller can fall back to a placeholder.
+ */
+async function fetchImageForPdf(url: string): Promise<{ dataUrl: string; format: "PNG" | "JPEG" } | null> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const contentType = res.headers.get("content-type") || "";
+    const isPng = contentType.includes("png") || /\.png($|\?)/i.test(url);
+    const format = isPng ? "PNG" : "JPEG";
+    const mime = isPng ? "image/png" : "image/jpeg";
+    const buffer = Buffer.from(await res.arrayBuffer());
+    return { dataUrl: `data:${mime};base64,${buffer.toString("base64")}`, format };
+  } catch {
+    return null;
+  }
+}
+
 export async function generateShotListPdf(userId: number, projectId: number): Promise<Buffer> {
   const { shotList, shots } = await listShots(userId, projectId);
 
@@ -473,8 +494,11 @@ export async function generateShotListPdf(userId: number, projectId: number): Pr
     if (project) projectName = project.name;
   }
 
-  // Dynamic import of jsPDF
-  const jsPDF = (await import("jspdf")).default;
+  // Dynamic import of jsPDF. jspdf's constructor is the *named* export
+  // `jsPDF`; its `.default` is a plain object (not callable), so
+  // `new (await import("jspdf")).default()` throws "jsPDF2 is not a
+  // constructor" once bundled. Destructure the named export instead.
+  const { jsPDF } = await import("jspdf");
   const doc = new jsPDF();
 
   const totalDuration = shots.reduce((sum, s) => sum + (s.duration_sec || 0), 0);
@@ -530,14 +554,21 @@ export async function generateShotListPdf(userId: number, projectId: number): Pr
 
     let y = 35;
 
-    // Thumbnail (large, centered) if available
+    // Thumbnail (large, centered) if available. Fetch + embed as data URL,
+    // since server-side jsPDF can't load a remote URL directly.
     if (shot.thumbnail_url) {
-      try {
-        // Add thumbnail as image (120x90mm, centered)
-        doc.addImage(shot.thumbnail_url, "JPEG", 45, y, 120, 90);
-        y += 95;
-      } catch (err) {
-        // If thumbnail fails to load, add placeholder
+      const image = await fetchImageForPdf(shot.thumbnail_url);
+      let added = false;
+      if (image) {
+        try {
+          doc.addImage(image.dataUrl, image.format, 45, y, 120, 90);
+          added = true;
+        } catch {
+          added = false;
+        }
+      }
+      if (!added) {
+        // Fetch/decode failed — draw a placeholder box instead.
         doc.setDrawColor(200);
         doc.setLineWidth(0.5);
         doc.rect(45, y, 120, 90);
@@ -545,8 +576,8 @@ export async function generateShotListPdf(userId: number, projectId: number): Pr
         doc.setTextColor(150);
         doc.text("Thumbnail indisponível", 105, y + 45, { align: "center" });
         doc.setTextColor(0);
-        y += 95;
       }
+      y += 95;
     }
 
     // Description box
