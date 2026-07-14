@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,7 +6,9 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Calculator, Plane, Film, Scissors, Camera, Building2, Plus, Trash2, Info } from "lucide-react";
+import { Calculator, Plane, Film, Scissors, Camera, Building2, Plus, Trash2, Info, Wallet, FileText, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { api, type Client, type Project } from "@/lib/api";
 
 /**
  * Pricing Calculator (Phase 1 — standalone, no persistence yet).
@@ -136,6 +138,31 @@ export default function PricingCalculatorModal({ open, onOpenChange }: PricingCa
   const [marginPercent, setMarginPercent] = useState(String(PRESETS[0].defaultMarginPercent));
   const [isRush, setIsRush] = useState(false);
   const [rushPercent, setRushPercent] = useState("20");
+  const [jobLabel, setJobLabel] = useState("");
+
+  // Phase 2: send the calculated total into a real project as a Budget
+  // entry, or into a Proposal for a client — instead of the number just
+  // living in this modal.
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState<number | "">("");
+  const [selectedClientId, setSelectedClientId] = useState<number | "">("");
+  const [savingBudget, setSavingBudget] = useState(false);
+  const [savingProposal, setSavingProposal] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    api.projects.list().then(setProjects).catch(() => setProjects([]));
+    api.clients.list().then(setClients).catch(() => setClients([]));
+  }, [open]);
+
+  // Picking a project tied to a client pre-selects that client for the
+  // proposal action, since a proposal always belongs to a client.
+  useEffect(() => {
+    if (!selectedProjectId) return;
+    const project = projects.find((p) => p.id === selectedProjectId);
+    if (project?.clientId) setSelectedClientId(project.clientId);
+  }, [selectedProjectId, projects]);
 
   const activePreset = useMemo(() => PRESETS.find((p) => p.id === presetId) ?? PRESETS[0], [presetId]);
 
@@ -175,6 +202,79 @@ export default function PricingCalculatorModal({ open, onOpenChange }: PricingCa
 
     return { hoursNum, rateNum, laborCost, fixedTotal, rushAmount, subtotal, marginAmount, total };
   }, [hours, hourlyRate, fixedCosts, isRush, rushPercent, marginPercent]);
+
+  const totalCents = Math.round(breakdown.total * 100);
+  const defaultTitle = jobLabel.trim() || `${activePreset.label} — ${new Date().toLocaleDateString("pt-BR")}`;
+
+  const handleAddToBudget = async () => {
+    if (!selectedProjectId) {
+      toast.error("Escolha um projeto para lançar o valor no orçamento.");
+      return;
+    }
+    setSavingBudget(true);
+    try {
+      await api.budgets.addEntry(selectedProjectId, {
+        category: "Orçamento estimado",
+        description: defaultTitle,
+        amount: totalCents,
+        entryDate: new Date().toISOString().slice(0, 10),
+      });
+      toast.success("Valor lançado no orçamento do projeto");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao lançar no orçamento");
+    } finally {
+      setSavingBudget(false);
+    }
+  };
+
+  const buildProposalHtml = () => {
+    const rows = [
+      `<tr><td>Mão de obra (${breakdown.hoursNum}h × ${formatBRL(breakdown.rateNum)})</td><td style="text-align:right">${formatBRL(breakdown.laborCost)}</td></tr>`,
+      ...fixedCosts
+        .filter((c) => c.label.trim())
+        .map((c) => `<tr><td>${c.label}</td><td style="text-align:right">${formatBRL(parseBRL(c.value))}</td></tr>`),
+      isRush && breakdown.rushAmount > 0
+        ? `<tr><td>Acréscimo de urgência</td><td style="text-align:right">${formatBRL(breakdown.rushAmount)}</td></tr>`
+        : "",
+      `<tr><td>Margem</td><td style="text-align:right">${formatBRL(breakdown.marginAmount)}</td></tr>`,
+    ].filter(Boolean).join("");
+
+    return `
+      <h2>${defaultTitle}</h2>
+      <p>${activePreset.label}</p>
+      <table style="width:100%;border-collapse:collapse;margin-top:16px">
+        ${rows}
+        <tr style="font-weight:bold;border-top:2px solid #333">
+          <td style="padding-top:8px">Total</td>
+          <td style="text-align:right;padding-top:8px">${formatBRL(breakdown.total)}</td>
+        </tr>
+      </table>
+    `;
+  };
+
+  const handleGenerateProposal = async () => {
+    if (!selectedClientId) {
+      toast.error("Escolha um cliente para gerar a proposta.");
+      return;
+    }
+    setSavingProposal(true);
+    try {
+      const result = await api.proposals.create({
+        clientId: selectedClientId,
+        title: defaultTitle,
+        html: buildProposalHtml(),
+        total: totalCents,
+      });
+      toast.success("Proposta gerada", {
+        description: "Abra em Comercial → Propostas para enviar ao cliente.",
+      });
+      if (result.proposal_url) window.open(result.proposal_url, "_blank");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao gerar proposta");
+    } finally {
+      setSavingProposal(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -333,6 +433,18 @@ export default function PricingCalculatorModal({ open, onOpenChange }: PricingCa
             </div>
           </div>
 
+          {/* Job label */}
+          <div>
+            <label className="block text-xs font-medium text-frame-gray-light mb-1.5">Nome do job (opcional)</label>
+            <input
+              type="text"
+              value={jobLabel}
+              onChange={(e) => setJobLabel(e.target.value)}
+              placeholder={defaultTitle}
+              className="frame-input w-full"
+            />
+          </div>
+
           {/* Breakdown */}
           <div className="border border-frame-orange/40 bg-frame-orange/[0.06] p-4 space-y-1.5">
             <div className="flex items-center justify-between text-sm">
@@ -359,9 +471,64 @@ export default function PricingCalculatorModal({ open, onOpenChange }: PricingCa
             </div>
           </div>
 
-          <p className="text-[0.62rem] text-frame-gray-light text-center">
-            Cálculo local, não é salvo. Use como referência para montar sua proposta ou orçamento no projeto.
-          </p>
+          {/* Turn the estimate into a real document */}
+          <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-4 space-y-3">
+            <p className="font-frame-mono text-[0.62rem] uppercase tracking-wide text-frame-gray-light">
+              Usar este valor
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-frame-gray-light mb-1.5">Projeto</label>
+                <select
+                  value={selectedProjectId}
+                  onChange={(e) => setSelectedProjectId(e.target.value ? Number(e.target.value) : "")}
+                  className="frame-input w-full"
+                >
+                  <option value="">Selecione um projeto</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-frame-gray-light mb-1.5">Cliente</label>
+                <select
+                  value={selectedClientId}
+                  onChange={(e) => setSelectedClientId(e.target.value ? Number(e.target.value) : "")}
+                  className="frame-input w-full"
+                >
+                  <option value="">Selecione um cliente</option>
+                  {clients.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                type="button"
+                onClick={handleAddToBudget}
+                disabled={savingBudget || !selectedProjectId}
+                className="frame-btn-ghost flex-1 inline-flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {savingBudget ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wallet className="w-4 h-4" />}
+                Lançar no Orçamento
+              </button>
+              <button
+                type="button"
+                onClick={handleGenerateProposal}
+                disabled={savingProposal || !selectedClientId}
+                className="frame-btn-primary flex-1 inline-flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {savingProposal ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                Gerar Proposta
+              </button>
+            </div>
+            <p className="text-[0.6rem] text-frame-gray-light">
+              "Lançar no Orçamento" registra o valor como estimativa no projeto escolhido. "Gerar Proposta" cria um
+              documento pronto para enviar ao cliente escolhido, com o breakdown do cálculo.
+            </p>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
