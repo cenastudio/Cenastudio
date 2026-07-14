@@ -125,11 +125,17 @@ body.light .text-adaptive-primary {
 
 **Resultado:** 34 textos pequenos com melhor contraste (5.2:1 ratio no tema claro)
 
-### Fase 2 - Padronizações (1h) - EM PROGRESSO
-- [ ] Audit todos os loading states de botões
-- [ ] Padronizar mensagens de toast
-- [ ] Verificar empty states
-- [ ] Documentar padrões no Design System
+### Fase 2 - Padronizações (1h) ✅ CONCLUÍDA
+- [x] Audit todos os loading states de botões
+- [x] Padronizar mensagens de toast
+- [x] Verificar empty states
+- [x] Documentar padrões no Design System
+
+**Resultado:** Padrões consolidados e documentados em `DESIGN_PATTERNS.md`
+- ✅ Loading states: Padrão spinner + texto consistente
+- ✅ Toast messages: i18n + error handling robusto
+- ✅ Empty states: Padrão icon + title + description + CTA
+- ✅ Todos os padrões documentados para referência futura
 
 ### Fase 3 - Polimentos (30min)
 - [ ] Implementar skeleton loaders em 3 listas principais
