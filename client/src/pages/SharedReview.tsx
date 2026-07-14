@@ -192,7 +192,10 @@ export default function SharedReview() {
   }, [comments, locale, review, status.labelKey, t]);
 
   const focusComposer = () => {
-    setCommentAnchor(Math.floor(newCommentTimestamp));
+    // Do NOT Math.floor() here — truncating drops sub-second precision and
+    // was the root cause of comments anchoring at the wrong second (see
+    // the equivalent fix already applied to VideoReviews.tsx/VideoPlayer.tsx).
+    setCommentAnchor(newCommentTimestamp);
     setPauseRequest((request) => request + 1);
     window.setTimeout(() => composerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 80);
   };
@@ -203,7 +206,7 @@ export default function SharedReview() {
   };
 
   const handlePlayerProgress = (seconds: number) => {
-    setNewCommentTimestamp(Math.floor(seconds));
+    setNewCommentTimestamp(seconds);
   };
 
   const handleAddComment = async () => {

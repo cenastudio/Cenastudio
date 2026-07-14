@@ -35,9 +35,18 @@ const runtimeConfig = getPostgresRuntimeConfig(
   databaseUrl || "postgresql://postgres:postgres@localhost:5432/postgres",
 );
 
+// `max: 1` meant the entire process shared a single Postgres connection.
+// That's fine for one request at a time, but any second concurrent request
+// that touches the database (e.g. two people opening the same public review
+// link, or the link's own 5s polling overlapping with a comment/approval
+// write) had to wait for that one connection to free up, and would time out
+// after connectionTimeoutMillis if it didn't in time — surfacing as the app
+// "falling over" under just two simultaneous users. Railway Postgres here
+// allows up to 100 connections; 10 gives real concurrency headroom while
+// staying well under that ceiling. Still overridable via env if needed.
 const adapter = new PrismaPg({
   connectionString: runtimeConfig.connectionString,
-  max: Number(process.env.DATABASE_POOL_MAX || 1),
+  max: Number(process.env.DATABASE_POOL_MAX || 10),
   connectionTimeoutMillis: Number(process.env.DATABASE_CONNECT_TIMEOUT_MS || 30_000),
   idleTimeoutMillis: Number(process.env.DATABASE_IDLE_TIMEOUT_MS || 10_000),
   ssl: runtimeConfig.ssl,

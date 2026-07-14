@@ -179,6 +179,12 @@ export default function VideoPlayer({
     if (playerRef.current) {
       seekToSeconds(val);
     }
+    // Dragging the seek bar doesn't reliably fire the video's own
+    // timeupdate event before the user comments, which left the parent's
+    // "current comment timestamp" stuck at its previous value (often 0) —
+    // notify the parent immediately so a comment added right after a seek
+    // anchors at the correct second instead of 0:00.
+    onProgress?.(val);
   };
 
   const toggleFullscreen = async () => {
