@@ -309,16 +309,16 @@ export async function getAdminMetrics(): Promise<AdminMetrics> {
       include: { plan: { select: { id: true, priceBrl: true } } },
     });
     const byPlan: Record<string, number> = {};
-    let mrrBrl = 0;
+    let mrrCents = 0;
     let paidActive = 0;
     for (const s of activeSubs) {
       byPlan[s.planId] = (byPlan[s.planId] || 0) + 1;
       if (s.plan.priceBrl > 0) {
         paidActive += 1;
-        mrrBrl += s.plan.priceBrl;
+        mrrCents += s.plan.priceBrl; // priceBrl is stored in cents
       }
     }
-    return { totalUsers, admins, disabled, newUsers7d, newUsers30d, byPlan, trials, paidActive, mrrBrl };
+    return { totalUsers, admins, disabled, newUsers7d, newUsers30d, byPlan, trials, paidActive, mrrBrl: Math.round(mrrCents / 100) };
   }
 
   const scalar = (sql: string, ...params: unknown[]) => (db.prepare(sql).get(...params) as { c: number }).c;
@@ -334,14 +334,14 @@ export async function getAdminMetrics(): Promise<AdminMetrics> {
     )
     .all() as Array<{ plan_id: string; price_brl: number }>;
   const byPlan: Record<string, number> = {};
-  let mrrBrl = 0;
+  let mrrCents = 0;
   let paidActive = 0;
   for (const r of rows) {
     byPlan[r.plan_id] = (byPlan[r.plan_id] || 0) + 1;
     if (r.price_brl > 0) {
       paidActive += 1;
-      mrrBrl += r.price_brl;
+      mrrCents += r.price_brl; // price_brl is stored in cents
     }
   }
-  return { totalUsers, admins, disabled, newUsers7d, newUsers30d, byPlan, trials, paidActive, mrrBrl };
+  return { totalUsers, admins, disabled, newUsers7d, newUsers30d, byPlan, trials, paidActive, mrrBrl: Math.round(mrrCents / 100) };
 }
