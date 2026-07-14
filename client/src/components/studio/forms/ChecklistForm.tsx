@@ -84,27 +84,29 @@ export default function ChecklistForm({ data, onChange, onSetOutput }: Checklist
   const [aiOutput, setAiOutput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Load checklist states from localStorage on mount
+  // Load the checked state from the persisted tool state (data.__checklistState),
+  // which is saved server-side per project — so it survives device changes and
+  // stays isolated by project/owner, unlike the previous global localStorage.
   useEffect(() => {
-    const loaded: Record<string, Record<number, boolean>> = {};
-    ["camera", "audio", "luz", "prod", "pos"].forEach((tab) => {
-      try {
-        const item = localStorage.getItem(`cl-state-${tab}`);
-        loaded[tab] = item ? JSON.parse(item) : {};
-      } catch {
-        loaded[tab] = {};
-      }
-    });
-    setCheckedState(loaded);
-  }, []);
+    try {
+      const raw = data.__checklistState;
+      setCheckedState(raw ? JSON.parse(raw) : {});
+    } catch {
+      setCheckedState({});
+    }
+  }, [data.__checklistState]);
+
+  // Persist checked state through the tool-state autosave (backend), using the
+  // "__" metadata convention so it is not sent as AI input.
+  const persist = (newState: Record<string, Record<number, boolean>>) => {
+    setCheckedState(newState);
+    onChange("__checklistState", JSON.stringify(newState));
+  };
 
   const toggleCheck = (tab: string, idx: number) => {
     const tabState = { ...checkedState[tab] };
     tabState[idx] = !tabState[idx];
-
-    const newState = { ...checkedState, [tab]: tabState };
-    setCheckedState(newState);
-    localStorage.setItem(`cl-state-${tab}`, JSON.stringify(tabState));
+    persist({ ...checkedState, [tab]: tabState });
   };
 
   const handleMarkAll = (v: boolean) => {
@@ -113,20 +115,12 @@ export default function ChecklistForm({ data, onChange, onSetOutput }: Checklist
     items.forEach((_, i) => {
       tabState[i] = v;
     });
-
-    const newState = { ...checkedState, [activeTab]: tabState };
-    setCheckedState(newState);
-    localStorage.setItem(`cl-state-${activeTab}`, JSON.stringify(tabState));
+    persist({ ...checkedState, [activeTab]: tabState });
     toast.success(v ? t("app.studio.forms.checklist.allMarked") : t("app.studio.forms.checklist.allUnmarked"));
   };
 
   const handleResetAll = () => {
-    const newState: Record<string, Record<number, boolean>> = {};
-    ["camera", "audio", "luz", "prod", "pos"].forEach((tab) => {
-      newState[tab] = {};
-      localStorage.removeItem(`cl-state-${tab}`);
-    });
-    setCheckedState(newState);
+    persist({});
     toast.success(t("app.studio.forms.checklist.allReset"));
   };
 
