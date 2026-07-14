@@ -137,14 +137,6 @@ const SECONDARY_COMMANDS: CommandItemDef[] = [
     keywords: ["team", "equipe"]
   },
   {
-    labelKey: "app.commandPalette.cmd.analyticsPremium",
-    label: "Analytics Premium",
-    path: "/analytics-premium",
-    icon: BarChart3,
-    category: "secondary",
-    keywords: ["analytics", "premium", "dashboards", "relatorios", "reports", "widgets"]
-  },
-  {
     labelKey: "app.commandPalette.cmd.webhooks",
     label: "Webhooks",
     path: "/webhooks",

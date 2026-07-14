@@ -22,7 +22,6 @@ import { ForcePasswordReset } from "@/components/ForcePasswordReset";
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 const AdminUsers = lazy(() => import("@/pages/AdminUsers"));
 const Analytics = lazy(() => import("@/pages/Analytics"));
-const AnalyticsPremium = lazy(() => import("@/pages/AnalyticsPremium"));
 const DashboardView = lazy(() => import("@/pages/DashboardView"));
 const Clients = lazy(() => import("@/pages/Clients"));
 const NewClient = lazy(() => import("@/pages/NewClient"));
@@ -132,8 +131,6 @@ function Router() {
 
         <Route path="/team" component={TeamPage} />
         <Route path="/analytics" component={Analytics} />
-        <Route path="/analytics-premium" component={AnalyticsPremium} />
-        <Route path="/analytics-premium/dashboard/:id">{() => <Redirect to="/analytics" />}</Route>
         <Route path="/success" component={Success} />
         <Route path="/profile" component={Profile} />
         <Route path="/studio/:id" component={Studio} />

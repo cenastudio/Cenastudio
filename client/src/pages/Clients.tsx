@@ -149,15 +149,6 @@ function ClientCard({ client, onEdit, onDelete, onClick }: { client: Client; onE
       </div>
     </motion.div>
   );
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
-            <button type="button" onClick={(e) => { e.stopPropagation(); onEdit(); }} className="p-1.5 text-frame-gray-light hover:text-frame-orange hover:bg-frame-orange/10 rounded transition" title={t("app.common.edit") as string}><Edit className="w-3.5 h-3.5" /></button>
-            <button type="button" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-1.5 text-frame-gray-light hover:text-red-400 hover:bg-red-400/10 rounded transition" title={t("app.common.delete") as string}><Trash2 className="w-3.5 h-3.5" /></button>
-          </div>
-          <ChevronRight className="w-4 h-4 text-frame-gray-light group-hover:text-frame-orange transition" />
-        </div>
-      </div>
-    </motion.div>
-  );
 }
 
 function ClientsContent({ embedded }: { embedded?: boolean }) {

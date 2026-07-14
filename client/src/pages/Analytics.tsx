@@ -367,13 +367,6 @@ function AnalyticsContent() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setLocation("/analytics-premium")}
-              className="frame-btn-ghost inline-flex items-center gap-2 border-frame-orange/40 text-frame-orange hover:bg-frame-orange/10"
-            >
-              <LayoutDashboard className="h-4 w-4" /> Dashboards Premium
-            </button>
             <button type="button" onClick={() => window.open("/api/export-pipeline?format=csv", "_blank")} className="frame-btn-ghost inline-flex items-center gap-2">
               <Download className="h-4 w-4" /> {t("app.finance.export")}
             </button>

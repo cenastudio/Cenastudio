@@ -167,6 +167,8 @@ body.light .border-adaptive-orange,
 body.light .border-adaptive-primary {
   border-color: var(--ds-orange-light-theme);
 }
+
+:root {
   --radius: 2px;
   --app-font-scale: 1.06;
 

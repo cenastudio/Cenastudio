@@ -122,7 +122,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
   // Navigation follows the job story: Painel → Comercial → Produção → Financeiro
   const commercialRoutes = ["/commercial", "/clients", "/pipeline", "/interactions", "/proposals"];
   const productionRoutes = ["/projects", "/project/", "/tools", "/studio/", "/files", "/video-reviews", "/documents", "/team"];
-  const financeRoutes = ["/analytics", "/analytics-premium"];
+  const financeRoutes = ["/analytics"];
 
   const isInCommercial = commercialRoutes.some((r) => location === r || location.startsWith(r + "/") || (r.endsWith("/") && location.startsWith(r)));
   const isInProduction = productionRoutes.some((r) => location === r || location.startsWith(r + "/") || (r.endsWith("/") && location.startsWith(r)));
