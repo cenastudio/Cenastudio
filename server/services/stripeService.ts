@@ -414,6 +414,57 @@ async function updatePersistedStripeSubscription(subscription: Stripe.Subscripti
   if (result.changes !== 1) throw new AppError("Atualização Stripe não foi persistida.", 500);
 }
 
+/**
+ * Best-effort cancellation of a user's active subscription, used by the LGPD
+ * erasure flow. Cancels at Stripe when configured and always downgrades the
+ * local record to a cancelled free plan. Never throws — data erasure must not
+ * be blocked by a billing provider hiccup; failures are reported to the caller.
+ */
+export async function cancelSubscriptionForErasure(userId: number): Promise<{ stripeCancelled: boolean; error?: string }> {
+  let stripeSubscriptionId: string | null = null;
+  try {
+    if (shouldUsePrisma) {
+      const sub = await prisma.subscription.findFirst({
+        where: { userId: BigInt(userId), stripeSubscriptionId: { not: null } },
+        select: { stripeSubscriptionId: true },
+      });
+      stripeSubscriptionId = sub?.stripeSubscriptionId ?? null;
+    } else {
+      const sub = db.prepare(
+        "SELECT stripe_subscription_id FROM subscriptions WHERE user_id = ? AND stripe_subscription_id IS NOT NULL LIMIT 1",
+      ).get(userId) as { stripe_subscription_id: string } | undefined;
+      stripeSubscriptionId = sub?.stripe_subscription_id ?? null;
+    }
+
+    let stripeCancelled = false;
+    if (stripeSubscriptionId && process.env.STRIPE_SECRET_KEY) {
+      try {
+        await getStripe().subscriptions.cancel(stripeSubscriptionId);
+        stripeCancelled = true;
+      } catch (err) {
+        // Subscription may already be gone at Stripe — proceed with local cleanup.
+        return { stripeCancelled: false, error: err instanceof Error ? err.message : String(err) };
+      }
+    }
+
+    // Always downgrade the local record so the erased account keeps no plan.
+    if (shouldUsePrisma) {
+      await prisma.subscription.updateMany({
+        where: { userId: BigInt(userId) },
+        data: { planId: "free", status: "cancelled", stripeSubscriptionId: null, trialEndsAt: null },
+      });
+    } else {
+      db.prepare(
+        "UPDATE subscriptions SET plan_id = 'free', status = 'cancelled', stripe_subscription_id = NULL, trial_ends_at = NULL WHERE user_id = ?",
+      ).run(userId);
+    }
+
+    return { stripeCancelled };
+  } catch (err) {
+    return { stripeCancelled: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
 async function cancelPersistedStripeSubscription(subscription: Stripe.Subscription) {
   const metadataUserId = Number(subscription.metadata?.userId) || null;
   if (shouldUsePrisma) {

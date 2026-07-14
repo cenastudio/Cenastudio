@@ -10,10 +10,14 @@
  * - Controles de privacidade
  */
 
+import { createClient } from "@supabase/supabase-js";
 import { db } from "../models/db.js";
 import { prisma, shouldUsePrisma } from "../models/prisma.js";
+import { AppError } from "../middleware/errorHandler.js";
 import { sendEmail, isEmailConfigured } from "./emailService.js";
+import { cancelSubscriptionForErasure } from "./stripeService.js";
 import { jsonSafe } from "../utils/prismaSerialization.js";
+import { logger } from "../utils/logger.js";
 import { SITE_CONFIG } from "@shared/site";
 
 // ────────────────────────────────────────────────────────────────
@@ -484,9 +488,194 @@ export async function listAllLgpdRequests(status?: string) {
   }));
 }
 
+// ────────────────────────────────────────────────────────────────
+// EXCLUSÃO / ANONIMIZAÇÃO (LGPD Art. 18, VI / GDPR Art. 17)
+// ────────────────────────────────────────────────────────────────
+
 /**
- * Processa uma solicitação LGPD (admin only)
- * Este método seria chamado por um painel administrativo
+ * Janela de carência (dias) entre a solicitação de exclusão e sua execução
+ * irreversível. Protege contra fraude/arrependimento e é padrão de mercado.
+ * Configurável por env; default 7 dias.
+ */
+export const DELETE_GRACE_DAYS = Math.max(0, Number(process.env.LGPD_DELETE_GRACE_DAYS ?? 7));
+
+interface LgpdRequestRow {
+  id: string;
+  userId: number;
+  type: LgpdRequestType;
+  status: string;
+  createdAt: string;
+}
+
+async function getLgpdRequest(requestId: string): Promise<LgpdRequestRow | null> {
+  if (shouldUsePrisma) {
+    const row = await prisma.lgpdRequest.findUnique({
+      where: { id: requestId },
+      select: { id: true, userId: true, type: true, status: true, createdAt: true },
+    });
+    if (!row) return null;
+    return {
+      id: row.id,
+      userId: Number(row.userId),
+      type: row.type as LgpdRequestType,
+      status: row.status,
+      createdAt: row.createdAt.toISOString(),
+    };
+  }
+  const row = db.prepare(
+    "SELECT id, user_id, type, status, created_at FROM lgpd_requests WHERE id = ?",
+  ).get(requestId) as { id: string; user_id: number; type: string; status: string; created_at: string } | undefined;
+  if (!row) return null;
+  return { id: row.id, userId: row.user_id, type: row.type as LgpdRequestType, status: row.status, createdAt: row.created_at };
+}
+
+/** Remove o usuário do Supabase Auth (best-effort) para impedir novo login. */
+async function removeSupabaseAuthUser(supabaseId: string | null | undefined): Promise<void> {
+  if (!supabaseId) return;
+  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+  if (!url || !key) return;
+  try {
+    const client = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+    await client.auth.admin.deleteUser(supabaseId);
+  } catch (err) {
+    logger.warn({ err }, "[LGPD] Falha ao remover usuário do Supabase Auth (seguindo com anonimização local)");
+  }
+}
+
+/**
+ * Anonimiza/apaga irreversivelmente os dados pessoais do titular (LGPD Art. 18,
+ * VI). Segue as boas práticas: apaga dados pessoais sem valor de retenção,
+ * anonimiza PII em registros preservados por integridade referencial e mantém
+ * lançamentos financeiros (retenção fiscal/contábil), com o vínculo pessoal
+ * ofuscado. É irreversível.
+ */
+export async function anonymizeUser(userId: number): Promise<void> {
+  const placeholderEmail = `deleted-user-${userId}@anonymized.invalid`;
+  const placeholderName = "Usuário removido";
+  const clientName = "Cliente removido";
+
+  // 1. Cancela cobrança recorrente (best-effort, nunca bloqueia a exclusão).
+  const billing = await cancelSubscriptionForErasure(userId);
+  if (billing.error) {
+    logger.warn({ userId, error: billing.error }, "[LGPD] Cancelamento de assinatura falhou; seguindo com anonimização");
+  }
+
+  if (shouldUsePrisma) {
+    const uid = BigInt(userId);
+    const user = await prisma.user.findUnique({ where: { id: uid }, select: { supabaseId: true } });
+
+    // 2. Remove arquivos pessoais do storage (best-effort) e do banco.
+    const files = await prisma.file.findMany({ where: { userId: uid }, select: { path: true } });
+    await removeStorageObjects(files.map((f) => f.path));
+
+    // 3. Apaga dados pessoais sem valor de retenção.
+    await prisma.file.deleteMany({ where: { userId: uid } });
+    await prisma.notification.deleteMany({ where: { userId: uid } });
+    await prisma.userSession.deleteMany({ where: { userId: uid } });
+    await prisma.resetToken.deleteMany({ where: { userId: uid } });
+    await prisma.apiKey.deleteMany({ where: { userId: uid } });
+    await prisma.webhook.deleteMany({ where: { userId: uid } });
+
+    // 4. Anonimiza PII em registros preservados.
+    await prisma.client.updateMany({
+      where: { userId: uid },
+      data: {
+        name: clientName, email: null, phone: null, contactPerson: null, contactRole: null,
+        taxId: null, address: null, city: null, state: null, country: null,
+        website: null, linkedin: null, instagram: null, notes: null,
+      },
+    });
+    await prisma.interaction.updateMany({ where: { userId: uid }, data: { subject: null, notes: null } });
+    await prisma.proposal.updateMany({
+      where: { userId: uid },
+      data: { acceptedByName: null, acceptedIp: null, acceptedUserAgent: null },
+    });
+    await prisma.meeting.updateMany({ where: { userId: uid }, data: { location: null, notes: null } });
+
+    // 5. Anonimiza o próprio usuário e invalida credenciais/segredos.
+    await prisma.user.update({
+      where: { id: uid },
+      data: {
+        email: placeholderEmail,
+        name: placeholderName,
+        phone: null,
+        avatarUrl: null,
+        studioName: null,
+        studioRole: null,
+        githubId: null,
+        supabaseId: null,
+        passwordHash: `anonymized-${randomToken()}`,
+        twoFactorEnabled: false,
+        twoFactorSecret: null,
+        backupCodes: [] as unknown as object,
+        mustResetPassword: true,
+        disabled: true,
+      },
+    });
+
+    await removeSupabaseAuthUser(user?.supabaseId);
+    logger.info({ userId }, "[LGPD] Usuário anonimizado (Prisma)");
+    return;
+  }
+
+  // SQLite fallback
+  const userRow = db.prepare("SELECT supabase_id FROM users WHERE id = ?").get(userId) as { supabase_id: string | null } | undefined;
+  const files = db.prepare("SELECT path FROM files WHERE user_id = ?").all(userId) as Array<{ path: string }>;
+  await removeStorageObjects(files.map((f) => f.path));
+
+  const safeRun = (sql: string) => {
+    try { db.prepare(sql).run(userId); } catch { /* table absent in this schema */ }
+  };
+  safeRun("DELETE FROM files WHERE user_id = ?");
+  safeRun("DELETE FROM notifications WHERE user_id = ?");
+  safeRun("DELETE FROM user_sessions WHERE user_id = ?");
+  safeRun("DELETE FROM reset_tokens WHERE user_id = ?");
+  safeRun("DELETE FROM api_keys WHERE user_id = ?");
+  safeRun("DELETE FROM webhooks WHERE user_id = ?");
+
+  try {
+    db.prepare(
+      `UPDATE clients SET name = ?, email = NULL, phone = NULL, contact_person = NULL, contact_role = NULL,
+         tax_id = NULL, address = NULL, city = NULL, state = NULL, country = NULL,
+         website = NULL, linkedin = NULL, instagram = NULL, notes = NULL
+       WHERE user_id = ?`,
+    ).run(clientName, userId);
+  } catch { /* schema variant */ }
+  try { db.prepare("UPDATE interactions SET subject = NULL, notes = NULL WHERE user_id = ?").run(userId); } catch { /* */ }
+  try { db.prepare("UPDATE proposals SET accepted_by_name = NULL, accepted_ip = NULL, accepted_user_agent = NULL WHERE user_id = ?").run(userId); } catch { /* */ }
+  try { db.prepare("UPDATE meetings SET location = NULL, notes = NULL WHERE user_id = ?").run(userId); } catch { /* */ }
+
+  db.prepare(
+    `UPDATE users SET email = ?, name = ?, phone = NULL, avatar_url = NULL, studio_name = NULL, studio_role = NULL,
+       github_id = NULL, supabase_id = NULL, password_hash = ?, two_factor_enabled = 0, two_factor_secret = NULL,
+       backup_codes = '[]', must_reset_password = 1, disabled = 1
+     WHERE id = ?`,
+  ).run(placeholderEmail, placeholderName, `anonymized-${randomToken()}`, userId);
+
+  await removeSupabaseAuthUser(userRow?.supabase_id);
+  logger.info({ userId }, "[LGPD] Usuário anonimizado (SQLite)");
+}
+
+function randomToken(): string {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
+async function removeStorageObjects(paths: string[]): Promise<void> {
+  if (paths.length === 0) return;
+  try {
+    const { removeProjectFile } = await import("./supabaseStorage.js");
+    await Promise.allSettled(paths.filter(Boolean).map((p) => removeProjectFile(p)));
+  } catch (err) {
+    logger.warn({ err }, "[LGPD] Falha ao remover objetos do storage (seguindo)");
+  }
+}
+
+/**
+ * Processa uma solicitação LGPD (admin only).
+ * Ao concluir uma solicitação de EXCLUSÃO, executa a anonimização irreversível
+ * do titular — respeitando a janela de carência (DELETE_GRACE_DAYS) contada a
+ * partir da criação da solicitação.
  */
 export async function processLgpdRequest(
   requestId: string,
@@ -494,6 +683,22 @@ export async function processLgpdRequest(
   processedBy: string,
   notes?: string
 ): Promise<void> {
+  const request = await getLgpdRequest(requestId);
+  if (!request) throw new AppError("Solicitação LGPD não encontrada.", 404);
+
+  if (request.type === "delete" && status === "completed") {
+    const createdMs = new Date(request.createdAt).getTime();
+    const readyMs = createdMs + DELETE_GRACE_DAYS * 24 * 60 * 60 * 1000;
+    if (Number.isFinite(createdMs) && Date.now() < readyMs) {
+      const readyDate = new Date(readyMs).toISOString().slice(0, 10);
+      throw new AppError(
+        `Exclusão em período de carência. Poderá ser executada a partir de ${readyDate} (${DELETE_GRACE_DAYS} dias).`,
+        409,
+      );
+    }
+    await anonymizeUser(request.userId);
+  }
+
   if (shouldUsePrisma) {
     await prisma.lgpdRequest.update({
       where: { id: requestId },
@@ -512,7 +717,7 @@ export async function processLgpdRequest(
     ).run(status, processedBy, notes || null, requestId);
   }
 
-  console.log(`[LGPD] Solicitação processada: ${requestId} | Status: ${status} | Por: ${processedBy}`);
+  logger.info({ requestId, status, processedBy, type: request.type }, "[LGPD] Solicitação processada");
 }
 
 // ────────────────────────────────────────────────────────────────
@@ -522,6 +727,7 @@ export async function processLgpdRequest(
 export default {
   calculateDataStats,
   exportUserData,
+  anonymizeUser,
   savePrivacySettings,
   getPrivacySettings,
   createLgpdRequest,
