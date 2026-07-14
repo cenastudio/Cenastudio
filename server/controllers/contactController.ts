@@ -6,6 +6,30 @@ import { sendEmail, isEmailConfigured } from "../services/emailService.js";
 
 const CONTACT_EMAIL = "cenastudio@atomicmail.io";
 
+/**
+ * Escape user-controlled text before interpolating it into the notification
+ * HTML. The contact/demo forms are public and unauthenticated, so their fields
+ * must never be trusted as markup — otherwise a submitter could inject
+ * arbitrary HTML (links, styles, tracking pixels) into the email that reaches
+ * the studio inbox.
+ */
+export function escapeHtml(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/** Collapse a value to a single safe line for use in an email Subject header. */
+function toSubjectText(value: unknown): string {
+  return String(value ?? "")
+    .replace(/[\r\n]+/g, " ")
+    .trim()
+    .slice(0, 120);
+}
+
 /** Best-effort internal notification — a failure here must never break the public form. */
 function notifyStudio(subject: string, html: string, replyTo?: string) {
   if (!isEmailConfigured) return;
@@ -25,9 +49,9 @@ export const submitContact: RequestHandler = async (req, res, next) => {
     ).run(name, email, phone ?? null, message, type);
     }
     notifyStudio(
-      `Nova mensagem de contato — ${name}`,
-      `<p><strong>Nome:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p>${phone ? `<p><strong>Telefone:</strong> ${phone}</p>` : ""}<p><strong>Mensagem:</strong></p><p>${message}</p>`,
-      email,
+      `Nova mensagem de contato — ${toSubjectText(name)}`,
+      `<p><strong>Nome:</strong> ${escapeHtml(name)}</p><p><strong>Email:</strong> ${escapeHtml(email)}</p>${phone ? `<p><strong>Telefone:</strong> ${escapeHtml(phone)}</p>` : ""}<p><strong>Mensagem:</strong></p><p>${escapeHtml(message)}</p>`,
+      typeof email === "string" ? email : undefined,
     );
     res.status(201).json({
       success: true,
@@ -49,9 +73,9 @@ export const submitDemo: RequestHandler = async (req, res, next) => {
     ).run(name, email, `Demo request from ${email}`);
     }
     notifyStudio(
-      `Nova solicitação de demo — ${name}`,
-      `<p><strong>Nome:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p>`,
-      email,
+      `Nova solicitação de demo — ${toSubjectText(name)}`,
+      `<p><strong>Nome:</strong> ${escapeHtml(name)}</p><p><strong>Email:</strong> ${escapeHtml(email)}</p>`,
+      typeof email === "string" ? email : undefined,
     );
     res.json({
       success: true,

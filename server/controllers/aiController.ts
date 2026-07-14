@@ -93,8 +93,9 @@ export async function getHistory(req: Request, res: Response) {
  * POST /api/ai/script-suggestions
  * Gera sugestões de roteiro baseadas em brief
  */
-export async function scriptSuggestions(req: Request, res: Response) {
+export async function scriptSuggestions(req: Request, res: Response, next: (err?: unknown) => void) {
   try {
+    const userId = req.user!.id;
     const { briefTitle, briefDescription, targetAudience, duration, tone } = req.body;
 
     if (!briefTitle || !briefDescription) {
@@ -104,6 +105,7 @@ export async function scriptSuggestions(req: Request, res: Response) {
       });
     }
 
+    await checkAndIncrementUsage(userId, 'ai-features:script-suggestions');
     const result = await generateScriptSuggestions({
       briefTitle,
       briefDescription,
@@ -114,11 +116,7 @@ export async function scriptSuggestions(req: Request, res: Response) {
 
     res.json({ success: true, data: result });
   } catch (error) {
-    console.error('Error in scriptSuggestions:', error);
-    res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Erro ao gerar sugestões'
-    });
+    next(error);
   }
 }
 
@@ -126,8 +124,9 @@ export async function scriptSuggestions(req: Request, res: Response) {
  * POST /api/ai/budget-analysis
  * Analisa orçamento e identifica problemas
  */
-export async function budgetAnalysis(req: Request, res: Response) {
+export async function budgetAnalysis(req: Request, res: Response, next: (err?: unknown) => void) {
   try {
+    const userId = req.user!.id;
     const { projectName, totalBudget, items, projectType } = req.body;
 
     if (!projectName || !totalBudget || !items || !Array.isArray(items)) {
@@ -137,6 +136,7 @@ export async function budgetAnalysis(req: Request, res: Response) {
       });
     }
 
+    await checkAndIncrementUsage(userId, 'ai-features:budget-analysis');
     const result = await analyzeBudget({
       projectName,
       totalBudget,
@@ -146,11 +146,7 @@ export async function budgetAnalysis(req: Request, res: Response) {
 
     res.json({ success: true, data: result });
   } catch (error) {
-    console.error('Error in budgetAnalysis:', error);
-    res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Erro ao analisar orçamento'
-    });
+    next(error);
   }
 }
 
@@ -158,8 +154,9 @@ export async function budgetAnalysis(req: Request, res: Response) {
  * POST /api/ai/generate-proposal
  * Gera proposta comercial profissional
  */
-export async function generateProposalEndpoint(req: Request, res: Response) {
+export async function generateProposalEndpoint(req: Request, res: Response, next: (err?: unknown) => void) {
   try {
+    const userId = req.user!.id;
     const {
       clientName,
       projectName,
@@ -177,6 +174,7 @@ export async function generateProposalEndpoint(req: Request, res: Response) {
       });
     }
 
+    await checkAndIncrementUsage(userId, 'ai-features:generate-proposal');
     const proposal = await generateProposal({
       clientName,
       projectName,
@@ -189,11 +187,7 @@ export async function generateProposalEndpoint(req: Request, res: Response) {
 
     res.json({ success: true, data: { proposal } });
   } catch (error) {
-    console.error('Error in generateProposal:', error);
-    res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Erro ao gerar proposta'
-    });
+    next(error);
   }
 }
 
@@ -201,8 +195,9 @@ export async function generateProposalEndpoint(req: Request, res: Response) {
  * POST /api/ai/summarize-interaction
  * Sumariza interação extraindo pontos principais
  */
-export async function summarizeInteractionEndpoint(req: Request, res: Response) {
+export async function summarizeInteractionEndpoint(req: Request, res: Response, next: (err?: unknown) => void) {
   try {
+    const userId = req.user!.id;
     const { interactionType, subject, notes, date } = req.body;
 
     if (!notes) {
@@ -212,6 +207,7 @@ export async function summarizeInteractionEndpoint(req: Request, res: Response) 
       });
     }
 
+    await checkAndIncrementUsage(userId, 'ai-features:summarize-interaction');
     const summary = await summarizeInteraction({
       interactionType: interactionType || 'Reunião',
       subject: subject || 'Interação com cliente',
@@ -221,11 +217,7 @@ export async function summarizeInteractionEndpoint(req: Request, res: Response) 
 
     res.json({ success: true, data: summary });
   } catch (error) {
-    console.error('Error in summarizeInteraction:', error);
-    res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Erro ao resumir interação'
-    });
+    next(error);
   }
 }
 
@@ -233,8 +225,9 @@ export async function summarizeInteractionEndpoint(req: Request, res: Response) 
  * POST /api/ai/analyze-sentiment
  * Analisa sentimento de texto
  */
-export async function analyzeSentimentEndpoint(req: Request, res: Response) {
+export async function analyzeSentimentEndpoint(req: Request, res: Response, next: (err?: unknown) => void) {
   try {
+    const userId = req.user!.id;
     const { text, context } = req.body;
 
     if (!text) {
@@ -244,15 +237,12 @@ export async function analyzeSentimentEndpoint(req: Request, res: Response) {
       });
     }
 
+    await checkAndIncrementUsage(userId, 'ai-features:analyze-sentiment');
     const result = await analyzeSentiment({ text, context });
 
     res.json({ success: true, data: result });
   } catch (error) {
-    console.error('Error in analyzeSentiment:', error);
-    res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Erro ao analisar sentimento'
-    });
+    next(error);
   }
 }
 
@@ -260,8 +250,9 @@ export async function analyzeSentimentEndpoint(req: Request, res: Response) {
  * POST /api/ai/chatbot
  * Chatbot de ajuda contextual
  */
-export async function chatbotEndpoint(req: Request, res: Response) {
+export async function chatbotEndpoint(req: Request, res: Response, next: (err?: unknown) => void) {
   try {
+    const userId = req.user!.id;
     const { question, context } = req.body;
 
     if (!question) {
@@ -271,6 +262,7 @@ export async function chatbotEndpoint(req: Request, res: Response) {
       });
     }
 
+    await checkAndIncrementUsage(userId, 'ai-features:chatbot');
     const response = await chatbotHelp({
       question,
       context,
@@ -278,10 +270,6 @@ export async function chatbotEndpoint(req: Request, res: Response) {
 
     res.json({ success: true, data: { response } });
   } catch (error) {
-    console.error('Error in chatbot:', error);
-    res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Erro no chatbot'
-    });
+    next(error);
   }
 }
