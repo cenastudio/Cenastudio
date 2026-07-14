@@ -12,6 +12,7 @@ import { PlanProvider } from "@/contexts/PlanContext";
 import { ProgressProvider } from "@/contexts/ProgressContext";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { VisualPreferencesProvider } from "@/contexts/VisualPreferencesContext";
 import CommandPalette from "@/components/CommandPalette";
 import QuickActionsMenu from "@/components/QuickActionsMenu";
 import { GlobalProgressBar } from "@/components/GlobalProgressBar";
@@ -160,28 +161,30 @@ function App() {
       <ErrorBoundary>
         <ThemeProvider defaultTheme="dark" switchable={true}>
           <AuthProvider>
-            <PlanProvider>
-              <ProgressProvider>
-                <ProjectProvider>
-                  <AppProvider>
-                    <TooltipProvider>
-                      <FrameShell>
-                        <Toaster />
-                        <GlobalProgressBar isLoading={false} />
-                        <QuickActionsMenu />
-                        <Suspense fallback={<PageFallback />}>
-                          <Router />
-                          <CheckoutModal />
-                          <DemoModal />
-                          <ForcePasswordReset />
-                        </Suspense>
-                        <SpeedInsights />
-                      </FrameShell>
-                    </TooltipProvider>
-                  </AppProvider>
-                </ProjectProvider>
-              </ProgressProvider>
-            </PlanProvider>
+            <VisualPreferencesProvider>
+              <PlanProvider>
+                <ProgressProvider>
+                  <ProjectProvider>
+                    <AppProvider>
+                      <TooltipProvider>
+                        <FrameShell>
+                          <Toaster />
+                          <GlobalProgressBar isLoading={false} />
+                          <QuickActionsMenu />
+                          <Suspense fallback={<PageFallback />}>
+                            <Router />
+                            <CheckoutModal />
+                            <DemoModal />
+                            <ForcePasswordReset />
+                          </Suspense>
+                          <SpeedInsights />
+                        </FrameShell>
+                      </TooltipProvider>
+                    </AppProvider>
+                  </ProjectProvider>
+                </ProgressProvider>
+              </PlanProvider>
+            </VisualPreferencesProvider>
           </AuthProvider>
         </ThemeProvider>
       </ErrorBoundary>

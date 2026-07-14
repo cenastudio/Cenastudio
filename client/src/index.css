@@ -762,6 +762,35 @@ body.light .border-adaptive-primary {
     text-rendering: optimizeLegibility;
   }
 
+  /* ─── DENSIDADE ─── */
+  html[data-density="compact"] {
+    --space-multiplier: 0.75;
+  }
+
+  html[data-density="spacious"] {
+    --space-multiplier: 1.25;
+  }
+
+  /* ─── FONTE ─── */
+  html[data-font="system"] {
+    --font-frame-body: system-ui, -apple-system, sans-serif;
+  }
+
+  html[data-font="mono"] {
+    --font-frame-body: "JetBrains Mono", monospace;
+  }
+
+  /* ─── ANIMAÇÕES REDUZIDAS ─── */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-frame-body);

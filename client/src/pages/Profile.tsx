@@ -1,6 +1,7 @@
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
+import { useVisualPreferences } from "@/contexts/VisualPreferencesContext";
 import { CHECKOUT_MODAL_PLAN, planDisplayLabel } from "@/lib/plans";
 import { useApp } from "@/contexts/AppContext";
 import { api, openBillingPortal, ApiError } from "@/lib/api";
@@ -498,11 +499,8 @@ function ProfileContent() {
     }
   };
 
-  // 3. Preferências Visuais
-  const [themeMode, setThemeMode] = useState<"dark" | "light" | "auto">("dark");
-  const [density, setDensity] = useState<"compact" | "normal" | "spacious">("normal");
-  const [fontFamily, setFontFamily] = useState<"inter" | "system" | "mono">("inter");
-  const [reduceAnimations, setReduceAnimations] = useState(false);
+  // 3. Preferências Visuais - USANDO O CONTEXTO AGORA
+  const { preferences: visualPrefs, updatePreference: updateVisualPref } = useVisualPreferences();
 
   // 4. Comportamentos Padrão
   const [defaultProjectSort, setDefaultProjectSort] = useState<"recent" | "alphabetical" | "deadline">("recent");
@@ -1029,28 +1027,10 @@ function ProfileContent() {
     }
   };
 
-  // Preferências Visuais
+  // Preferências Visuais - USANDO O CONTEXTO QUE FUNCIONA
   const handleThemeModeChange = async (mode: "dark" | "light" | "auto") => {
-    setThemeMode(mode);
-    if (mode === "auto") {
-      const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      if ((systemPrefersDark && theme === "light") || (!systemPrefersDark && theme === "dark")) {
-        toggleTheme?.();
-      }
-    } else {
-      if ((mode === "dark" && theme === "light") || (mode === "light" && theme === "dark")) {
-        toggleTheme?.();
-      }
-    }
-
-    // Salvar no backend
     try {
-      await api.auth.updateVisualPreferences({
-        themeMode: mode,
-        density,
-        fontFamily,
-        reduceAnimations,
-      });
+      await updateVisualPref("themeMode", mode);
       toast.success("Tema atualizado");
     } catch (error) {
       toast.error("Erro ao salvar tema");
@@ -1058,19 +1038,8 @@ function ProfileContent() {
   };
 
   const handleDensityChange = async (newDensity: "compact" | "normal" | "spacious") => {
-    setDensity(newDensity);
-    // Aplicar classes CSS dinamicamente ao body
-    document.body.classList.remove("density-compact", "density-normal", "density-spacious");
-    document.body.classList.add(`density-${newDensity}`);
-
-    // Salvar no backend
     try {
-      await api.auth.updateVisualPreferences({
-        themeMode,
-        density: newDensity,
-        fontFamily,
-        reduceAnimations,
-      });
+      await updateVisualPref("density", newDensity);
       toast.success(`Densidade: ${newDensity}`);
     } catch (error) {
       toast.error("Erro ao salvar densidade");
@@ -1078,23 +1047,8 @@ function ProfileContent() {
   };
 
   const handleFontChange = async (font: "inter" | "system" | "mono") => {
-    setFontFamily(font);
-    // Aplicar font-family dinamicamente
-    const fontMap = {
-      inter: "Inter, sans-serif",
-      system: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-      mono: "'JetBrains Mono', 'Fira Code', monospace",
-    };
-    document.documentElement.style.setProperty("--font-custom", fontMap[font]);
-
-    // Salvar no backend
     try {
-      await api.auth.updateVisualPreferences({
-        themeMode,
-        density,
-        fontFamily: font,
-        reduceAnimations,
-      });
+      await updateVisualPref("fontFamily", font);
       toast.success(`Fonte: ${font}`);
     } catch (error) {
       toast.error("Erro ao salvar fonte");
@@ -1102,21 +1056,11 @@ function ProfileContent() {
   };
 
   const handleToggleAnimations = async () => {
-    const newValue = !reduceAnimations;
-    setReduceAnimations(newValue);
-
-    // Salvar no backend
     try {
-      await api.auth.updateVisualPreferences({
-        themeMode,
-        density,
-        fontFamily,
-        reduceAnimations: newValue,
-      });
-      toast.success(newValue ? "Animações reduzidas" : "Animações ativadas");
+      await updateVisualPref("reduceAnimations", !visualPrefs.reduceAnimations);
+      toast.success(visualPrefs.reduceAnimations ? "Animações ativadas" : "Animações reduzidas");
     } catch (error) {
       toast.error("Erro ao salvar");
-      setReduceAnimations(!newValue);
     }
   };
 
@@ -3053,225 +2997,26 @@ function ProfileContent() {
               </div>
             </div>
 
-            {/* FASE 4: Preferências Visuais */}
-            <div className="liquid-glass p-6 space-y-5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg">
-                  <Layout className="w-5 h-5 text-frame-orange" />
-                </div>
+            {/* FASE 4: Preferências Visuais e Comportamentos - EM DESENVOLVIMENTO */}
+            <div className="liquid-glass p-6 space-y-4 border-2 border-yellow-500/30 bg-yellow-500/5">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-6 h-6 text-yellow-500 shrink-0 mt-1" />
                 <div>
-                  <h3 className="text-lg font-bold">Preferências Visuais</h3>
-                  <p className="text-frame-gray-light text-xs">Customize a interface do seu jeito</p>
-                </div>
-              </div>
-
-              {/* Modo de tema (dark/light/auto) */}
-              <div className="space-y-2">
-                <label className="frame-label text-frame-gray-light">Modo de Tema</label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleThemeModeChange("dark")}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-sm font-medium transition ${
-                      themeMode === "dark"
-                        ? "border-frame-orange bg-frame-orange/10 text-frame-white"
-                        : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"
-                    }`}
-                  >
-                    <span>🌙</span> Escuro
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleThemeModeChange("light")}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-sm font-medium transition ${
-                      themeMode === "light"
-                        ? "border-frame-orange bg-frame-orange/10 text-frame-white"
-                        : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"
-                    }`}
-                  >
-                    <span>☀️</span> Claro
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleThemeModeChange("auto")}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-sm font-medium transition ${
-                      themeMode === "auto"
-                        ? "border-frame-orange bg-frame-orange/10 text-frame-white"
-                        : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"
-                    }`}
-                  >
-                    <span>🔄</span> Auto
-                  </button>
-                </div>
-                <p className="text-[0.65rem] text-frame-gray-light">
-                  Auto: segue o sistema operacional
-                </p>
-              </div>
-
-              {/* Densidade */}
-              <div className="space-y-2">
-                <label className="frame-label text-frame-gray-light">Densidade da Interface</label>
-                <div className="flex gap-2">
-                  {[
-                    { value: "compact", label: "Compacta", desc: "Mais conteúdo" },
-                    { value: "normal", label: "Normal", desc: "Balanceado" },
-                    { value: "spacious", label: "Espaçosa", desc: "Mais ar" },
-                  ].map((d) => (
-                    <button
-                      key={d.value}
-                      type="button"
-                      onClick={() => handleDensityChange(d.value as "compact" | "normal" | "spacious")}
-                      className={`flex-1 py-2.5 px-3 rounded-lg border transition ${
-                        density === d.value
-                          ? "border-frame-orange bg-frame-orange/10 text-frame-white"
-                          : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"
-                      }`}
-                    >
-                      <div className="text-sm font-medium">{d.label}</div>
-                      <div className="text-[0.65rem] text-frame-gray-light">{d.desc}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Fonte */}
-              <div className="space-y-2">
-                <label className="frame-label text-frame-gray-light">Família de Fonte</label>
-                <div className="flex gap-2">
-                  {[
-                    { value: "inter", label: "Inter", desc: "Moderna" },
-                    { value: "system", label: "Sistema", desc: "Nativa" },
-                    { value: "mono", label: "Mono", desc: "Código" },
-                  ].map((f) => (
-                    <button
-                      key={f.value}
-                      type="button"
-                      onClick={() => handleFontChange(f.value as "inter" | "system" | "mono")}
-                      className={`flex-1 py-2.5 px-3 rounded-lg border transition ${
-                        fontFamily === f.value
-                          ? "border-frame-orange bg-frame-orange/10 text-frame-white"
-                          : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"
-                      }`}
-                    >
-                      <div className="text-sm font-medium">{f.label}</div>
-                      <div className="text-[0.65rem] text-frame-gray-light">{f.desc}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Reduzir animações (acessibilidade) */}
-              <label className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/30 transition cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <Sliders className="w-4 h-4 text-frame-orange" />
-                  <div>
-                    <p className="text-sm font-medium text-frame-white">Reduzir animações</p>
-                    <p className="text-xs text-frame-gray-light">Melhora acessibilidade e performance</p>
+                  <h3 className="text-lg font-bold text-yellow-500">Preferências Visuais e Comportamentos</h3>
+                  <p className="text-frame-gray-light text-sm mt-2 leading-relaxed">
+                    Esta seção está <strong>temporariamente desabilitada</strong>. As configurações de tema, densidade,
+                    fontes, ordenação e visualização padrão estavam salvando no banco mas não sendo aplicadas na interface.
+                  </p>
+                  <p className="text-frame-gray-light text-sm mt-2 leading-relaxed">
+                    <strong>Será reimplementada</strong> com funcionalidade real em uma próxima versão, aplicando
+                    efetivamente as preferências escolhidas em toda a aplicação.
+                  </p>
+                  <div className="mt-4 p-3 bg-frame-gray-1/40 border border-frame-gray-3 rounded text-xs text-frame-gray-light">
+                    <strong>O que estava aqui:</strong> Modo de tema (dark/light/auto), Densidade da interface,
+                    Família de fonte, Reduzir animações, Ordenação padrão de projetos, Visualização padrão (grid/list),
+                    Autoplay de vídeos.
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleToggleAnimations}
-                  className={`relative w-11 h-6 rounded-full transition-colors ${
-                    reduceAnimations ? "bg-frame-orange" : "bg-frame-gray-3"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
-                      reduceAnimations ? "translate-x-5" : "translate-x-0"
-                    }`}
-                  />
-                </button>
-              </label>
-            </div>
-
-            {/* FASE 4: Comportamentos Padrão */}
-            <div className="liquid-glass p-6 space-y-5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg">
-                  <Settings className="w-5 h-5 text-frame-orange" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold">Comportamentos Padrão</h3>
-                  <p className="text-frame-gray-light text-xs">Como o sistema deve se comportar</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {/* Ordenação padrão de projetos */}
-                <div className="space-y-2">
-                  <label className="frame-label text-frame-gray-light flex items-center gap-2">
-                    <SortAsc className="w-3.5 h-3.5" />
-                    Ordenação Padrão de Projetos
-                  </label>
-                  <select
-                    value={defaultProjectSort}
-                    onChange={(e) => handleDefaultProjectSortChange(e.target.value as "recent" | "alphabetical" | "deadline")}
-                    className="frame-input w-full"
-                  >
-                    <option value="recent">Mais recentes primeiro</option>
-                    <option value="alphabetical">Ordem alfabética</option>
-                    <option value="deadline">Deadline (urgente primeiro)</option>
-                  </select>
-                </div>
-
-                {/* View padrão */}
-                <div className="space-y-2">
-                  <label className="frame-label text-frame-gray-light flex items-center gap-2">
-                    <Layout className="w-3.5 h-3.5" />
-                    Visualização Padrão
-                  </label>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleDefaultViewChange("grid")}
-                      className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-sm font-medium transition ${
-                        defaultView === "grid"
-                          ? "border-frame-orange bg-frame-orange/10 text-frame-white"
-                          : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"
-                      }`}
-                    >
-                      <Grid className="w-4 h-4" /> Grade
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDefaultViewChange("list")}
-                      className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-sm font-medium transition ${
-                        defaultView === "list"
-                          ? "border-frame-orange bg-frame-orange/10 text-frame-white"
-                          : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"
-                      }`}
-                    >
-                      <List className="w-4 h-4" /> Lista
-                    </button>
-                  </div>
-                </div>
-
-                {/* Autoplay de vídeos */}
-                <label className="flex items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/30 transition cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    <PlayCircle className="w-4 h-4 text-frame-orange" />
-                    <div>
-                      <p className="text-sm font-medium text-frame-white">Autoplay de vídeos</p>
-                      <p className="text-xs text-frame-gray-light">Reproduzir automaticamente em reviews</p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleAutoplayVideosChange}
-                    className={`relative w-11 h-6 rounded-full transition-colors ${
-                      autoplayVideos ? "bg-frame-orange" : "bg-frame-gray-3"
-                    }`}
-                  >
-                    <span
-                      className={`absolute top-1 left-1 w-4 h-4 rounded-full transition-transform shadow-sm ${
-                        autoplayVideos
-                          ? "translate-x-5 bg-frame-black"
-                          : "translate-x-0 bg-white"
-                      }`}
-                    />
-                  </button>
-                </label>
               </div>
             </div>
 
