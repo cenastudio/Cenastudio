@@ -1,78 +1,110 @@
-# Auditoria Visual - Problemas de Contraste
+# Auditoria Visual - Problemas de Contraste e UX
 
-## 🐛 Bugs Identificados
+## ✅ Bugs Corrigidos
 
-### 1. Toggle Switches (Alta Prioridade)
-**Problema:** Switches laranjas no tema claro têm baixo contraste
-**Localização:** `Profile.tsx` linhas 1904, 1927, 1950, 3169, 3256, 3527, 3551
-**Solução:** Adicionar classes condicionais baseadas no tema
+### 1. ~~Toggle Switches vazando~~ (CORRIGIDO - commit d24b0ea)
+**Problema:** Bolinha branca do toggle vazava para fora do container
+**Solução:** Ajustado translate-x-6 → translate-x-5, translate-x-1 → translate-x-0, adicionado left-1
 
-```tsx
-// ANTES:
-className={`... ${active ? "bg-frame-orange" : "bg-frame-gray-3"}`}
+---
 
-// DEPOIS:
-className={`... ${active ? "bg-frame-orange dark:bg-frame-orange light:bg-orange-600" : "bg-frame-gray-3"}`}
-```
+## 🔍 Próximas Verificações Sugeridas
 
 ### 2. Ícones Decorativos com `text-frame-orange`
-**Problema:** Ícones laranjas ficam invisíveis/baixo contraste no tema claro
-**Localizações identificadas:**
-- Profile.tsx (ícones de seção)
-- Proposals.tsx (FileSignature, BriefcaseBusiness)
-- NotFound.tsx (404 gigante)
-- AdminDashboard.tsx (badges admin, avatares)
-
-**Solução:** Usar classes condicionais ou variantes de cor
-
-```tsx
-// ANTES:
-<Icon className="w-5 h-5 text-frame-orange" />
-
-// DEPOIS:
-<Icon className="w-5 h-5 text-frame-orange dark:text-frame-orange light:text-orange-600" />
-```
+**O que verificar:** Ícones laranjas podem ter baixo contraste no tema claro
+**Onde:** Profile.tsx (ícones de seção), Proposals.tsx, AdminDashboard.tsx
+**Como testar:** Alternar para tema claro e verificar se todos os ícones são legíveis
 
 ### 3. Bordas e Backgrounds com Opacidade
-**Problema:** `border-frame-orange/30` e `bg-frame-orange/10` ficam muito claros no tema claro
-**Localizações:**
-- Proposals.tsx (cards de steps, client selector)
-- AdminDashboard.tsx (badges, borders)
+**O que verificar:** `border-frame-orange/30` e `bg-frame-orange/10` podem ficar muito suaves
+**Onde:** Proposals.tsx (cards de steps, client selector)
+**Como testar:** Tema claro, verificar se os cards têm definição suficiente
 
-**Solução:** Ajustar opacidades para tema claro
+### 4. Botões Hover States
+**O que verificar:** Estados hover podem não estar claros em ambos os temas
+**Onde:** Todos os botões primários e secundários
+**Como testar:** Passar mouse sobre botões em ambos os temas
 
-### 4. Textos/Labels em Laranja
-**Problema:** `text-frame-orange` com fonte pequena tem baixo contraste no tema claro
-**Localizações:**
-- Proposals.tsx (eyebrows, labels, step numbers)
-- AdminDashboard.tsx (section headers, badges)
-- Profile.tsx (labels de seção)
+### 5. Focus States (Acessibilidade)
+**O que verificar:** Indicadores de foco para navegação por teclado
+**Onde:** Inputs, buttons, links
+**Como testar:** Usar Tab para navegar e verificar se está visível
 
-**Solução:** Aumentar peso da fonte ou ajustar cor no tema claro
+### 6. Text Contrast em Labels Pequenos
+**O que verificar:** Textos em `text-[0.6rem]` ou menores podem ter contraste insuficiente
+**Onde:** Labels de formulário, eyebrows, badges
+**Como testar:** Ferramenta de contraste WCAG ou DevTools
 
-## 📋 Checklist de Correção
+### 7. Modal/Dialog Overlays
+**O que verificar:** Backdrop pode estar muito escuro ou claro
+**Onde:** Modais, dialogs, popovers
+**Como testar:** Abrir modais em ambos os temas
 
-- [ ] Todos os toggle switches com variante de cor
-- [ ] Ícones decorativos com contraste adequado
-- [ ] Bordas e backgrounds ajustados
-- [ ] Textos/labels legíveis
-- [ ] Testar em ambos os temas (dark e light)
-- [ ] Verificar acessibilidade (WCAG AA mínimo)
+### 8. Loading States
+**O que verificar:** Spinners e skeleton loaders visíveis em ambos os temas
+**Onde:** Loading de listas, upload de arquivos
+**Como testar:** Simular carregamento lento
 
-## 🎨 Paleta Recomendada
+### 9. Toast/Notification Colors
+**O que verificar:** Cores de sucesso/erro/aviso suficientemente distintas
+**Onde:** Sistema de toasts (sonner)
+**Como testar:** Disparar notificações de cada tipo
 
-### Tema Escuro (atual)
-- `#e85002` - Laranja principal
-- `#ff6b1a` - Laranja hover/destaque
+### 10. Empty States
+**O que verificar:** Ilustrações e textos de empty state legíveis
+**Onde:** Listas vazias (projetos, clientes, propostas)
+**Como testar:** Conta nova ou limpar dados de teste
 
-### Tema Claro (proposto)
-- `#d64400` - Laranja mais escuro (melhor contraste)
-- `#bf3d00` - Laranja hover (ainda mais escuro)
+---
 
-## 🔧 Estratégia de Implementação
+## 🎨 Recomendações de Micromelhorias
 
-1. Criar variáveis CSS customizadas em `index.css`
-2. Usar Tailwind com variantes `dark:` e `light:`
-3. Criar componente Toggle reutilizável
-4. Criar componente Icon wrapper com contraste automático
+### Consistência
+- [ ] Verificar se todos os botões usam mesma altura (min-h-11 ou min-h-10)
+- [ ] Padronizar espaçamento entre elementos de formulário (gap-4 ou gap-5)
+- [ ] Unificar border-radius (atualmente tudo é 2px - OK)
+
+### Feedback Visual
+- [ ] Adicionar transição suave em todos os hovers (transition-colors)
+- [ ] Garantir que disabled states são visualmente claros
+- [ ] Loading states em botões que fazem requests
+
+### Acessibilidade
+- [ ] Todos os botões icon-only têm aria-label
+- [ ] Focus rings visíveis (outline-offset-2)
+- [ ] Skip links para navegação por teclado
+
+### Performance Percebida
+- [ ] Skeleton loaders em carregamentos lentos
+- [ ] Animações suaves mas não distrativas
+- [ ] Feedback imediato em ações do usuário
+
+---
+
+## 📋 Checklist de Teste Manual
+
+Execute em ambos os temas (dark e light):
+
+- [ ] Login / Registro
+- [ ] Dashboard (cards, gráficos)
+- [ ] Projetos (lista, criação, edição)
+- [ ] Clientes (lista, criação, edição)
+- [ ] Propostas (builder, preview, histórico)
+- [ ] Video Reviews (player, comentários, annotations)
+- [ ] Profile (todas as abas)
+- [ ] Admin Dashboard (se tiver acesso)
+- [ ] Configurações gerais
+
+---
+
+## 🔧 Ferramentas Recomendadas
+
+- **Chrome DevTools:** Lighthouse (Accessibility score)
+- **WebAIM Contrast Checker:** https://webaim.org/resources/contrastchecker/
+- **axe DevTools:** Extensão para testes de acessibilidade
+- **WAVE:** Web Accessibility Evaluation Tool
+
+---
+
+**Última atualização:** 14/07/2026 - Toggles corrigidos ✅
 
