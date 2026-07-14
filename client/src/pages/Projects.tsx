@@ -5,12 +5,17 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { SkeletonCardGrid } from "@/components/skeletons";
 import { ExportButton } from "@/components/ExportButton";
 import { useProject } from "@/contexts/ProjectContext";
-import { Archive, ArrowRight, Calendar, Plus, Search, Target } from "lucide-react";
+import { Archive, ArrowRight, Calendar, Plus, Search, Target, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { WORKFLOW_STAGES } from "@/lib/workflow";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
+import { useBulkSelection } from "@/hooks/useBulkSelection";
+import { BulkActionBar, BULK_ACTIONS } from "@/components/BulkActionBar";
+import { usePersistedFilters } from "@/hooks/usePersistedFilters";
+import { toast } from "sonner";
+import { api } from "@/lib/api";
 
 function getMetadata(metadataJson: string) {
   try {
@@ -34,23 +39,88 @@ function getStageLabel(meta: ReturnType<typeof getMetadata>, locale = "pt"): str
 }
 
 function ProjectsContent({ embedded }: { embedded?: boolean }) {
-  const { projects, isLoading } = useProject();
+  const { projects, isLoading, refreshProjects } = useProject();
   const [, setLocation] = useLocation();
   const { locale, t } = useLanguage();
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("active");
+
+  // Persistent filters
+  const { filters, setFilter, resetFilters, isDefault } = usePersistedFilters({
+    storageKey: "projects-filters",
+    defaultFilters: { status: "active", sort: "recent" },
+    syncWithUrl: true,
+  });
+
+  // Bulk selection
+  const bulkSelection = useBulkSelection({
+    items: projects,
+    getId: (project) => project.id,
+  });
+
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return projects.filter((project) =>
-      (status === "all" || project.status === status) &&
+      (filters.status === "all" || project.status === filters.status) &&
       (!term || project.name.toLowerCase().includes(term) || project.clientName?.toLowerCase().includes(term)),
     );
-  }, [projects, search, status]);
+  }, [projects, search, filters.status]);
+
+  // Bulk actions
+  const handleBulkDelete = async () => {
+    if (!window.confirm(t("app.projects.confirmBulkDelete") as string || `Deletar ${bulkSelection.selectedCount} projeto(s)?`)) {
+      return;
+    }
+
+    try {
+      // Delete each selected project
+      await Promise.all(
+        bulkSelection.selectedItems.map(project =>
+          api.projects.delete(project.id)
+        )
+      );
+
+      toast.success(t("app.projects.bulkDeleteSuccess") as string || `${bulkSelection.selectedCount} projeto(s) deletado(s)`);
+      bulkSelection.deselectAll();
+      refreshProjects();
+    } catch (error) {
+      toast.error(t("app.errors.generic") as string || "Erro ao deletar projetos");
+    }
+  };
+
+  const handleBulkArchive = async () => {
+    try {
+      await Promise.all(
+        bulkSelection.selectedItems.map(project =>
+          api.projects.update(project.id, { status: "archived" })
+        )
+      );
+
+      toast.success(t("app.projects.bulkArchiveSuccess") as string || `${bulkSelection.selectedCount} projeto(s) arquivado(s)`);
+      bulkSelection.deselectAll();
+      refreshProjects();
+    } catch (error) {
+      toast.error(t("app.errors.generic") as string || "Erro ao arquivar projetos");
+    }
+  };
+
+  const bulkActions = [
+    BULK_ACTIONS.ARCHIVE(handleBulkArchive),
+    BULK_ACTIONS.DELETE(handleBulkDelete),
+  ];
 
   return (
     <div className={`${embedded ? "" : "min-h-screen"} bg-frame-black text-frame-white`}>
       {!embedded && <AppNavBar />}
       {!embedded && <ProductionNav />}
+
+      {/* Bulk action bar */}
+      <BulkActionBar
+        selectedCount={bulkSelection.selectedCount}
+        onDeselectAll={bulkSelection.deselectAll}
+        actions={bulkActions}
+        position="top"
+      />
+
       <main id="main-content" className="mx-auto w-full max-w-7xl space-y-6 px-4 py-8 sm:px-6">
 
         {/* Header */}
@@ -71,17 +141,22 @@ function ProjectsContent({ embedded }: { embedded?: boolean }) {
         </header>
 
         {/* Filters */}
-        <section className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_160px]">
+        <section className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_160px_160px]">
           <label className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-frame-gray-light" />
             <input value={search} onChange={(e) => setSearch(e.target.value)} className="frame-input w-full pl-10" placeholder={t("app.projects.searchPlaceholder")} />
           </label>
-          <select value={status} onChange={(e) => setStatus(e.target.value)} className="frame-input w-full">
+          <select value={filters.status} onChange={(e) => setFilter("status", e.target.value)} className="frame-input w-full">
             <option value="active">{t("app.projects.filterActive")}</option>
             <option value="completed">{t("app.projects.filterCompleted")}</option>
             <option value="archived">{t("app.projects.filterArchived")}</option>
             <option value="all">{t("app.projects.filterAll")}</option>
           </select>
+          {!isDefault && (
+            <button onClick={resetFilters} className="frame-btn-ghost text-xs">
+              {t("app.common.clearFilters") || "Limpar filtros"}
+            </button>
+          )}
         </section>
 
         {/* Content */}
