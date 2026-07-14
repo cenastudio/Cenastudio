@@ -6,6 +6,7 @@ import { localizeTools } from "@/lib/toolTranslations";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { motion } from "framer-motion";
 import type { ToolFromApi } from "@/lib/api";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -113,15 +114,28 @@ function ToolsContent({ embedded }: { embedded?: boolean }) {
                     const Icon = getToolIcon(tool.slug);
                     const focus = TOOL_FOCUS[tool.slug];
                     return (
-                      <div key={tool.id} className={`frame-card cursor-pointer group ${focus?.critical ? "border-frame-orange/35" : ""}`} onClick={() => setLocation(openToolPath(tool))}>
-                        <Icon className="w-7 h-7 mb-3.5 text-frame-gray-light grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-300" />
+                      <motion.div
+                        key={tool.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        whileHover={{ y: -4, scale: 1.02 }}
+                        transition={{ duration: 0.2 }}
+                        className={`frame-card cursor-pointer group ${focus?.critical ? "border-frame-orange/35" : ""}`}
+                        onClick={() => setLocation(openToolPath(tool))}
+                      >
+                        <motion.div
+                          whileHover={{ scale: 1.1, rotate: 5 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <Icon className="w-7 h-7 mb-3.5 text-frame-gray-light grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 group-hover:text-frame-orange transition-all duration-300" />
+                        </motion.div>
                         <p className="font-frame-mono text-[0.64rem] tracking-[0.2em] text-frame-orange mb-2">{focus?.critical ? "SESSÃO DEDICADA" : focus?.phase || tool.id}</p>
-                        <h3 className="frame-title text-[1.45rem] text-frame-white mb-2">{tool.name}</h3>
+                        <h3 className="frame-title text-[1.45rem] text-frame-white mb-2 group-hover:text-frame-orange transition-colors">{tool.name}</h3>
                         <p className="text-[0.8rem] leading-relaxed text-frame-gray-light font-light mb-4 line-clamp-3">{tool.description}</p>
                         {focus && <p className="mb-4 border-l-2 border-frame-orange/55 pl-3 text-[0.68rem] leading-relaxed text-frame-gray-light">{focus.outcome}</p>}
                         <div className="flex flex-wrap gap-1 mb-4">{tool.tags.slice(0, 3).map((tag) => <span key={tag} className="frame-tag">{tag}</span>)}</div>
-                        <button type="button" className="frame-btn-ghost w-full !min-h-10 !py-2 !px-3.5 text-center transition group-hover:border-frame-orange/60 group-hover:text-frame-white" onClick={(event) => { event.stopPropagation(); setLocation(openToolPath(tool)); }}>{activeProject ? "Abrir neste job" : t("app.tools.openInStudio")} →</button>
-                      </div>
+                        <button type="button" className="frame-btn-ghost w-full !min-h-10 !py-2 !px-3.5 text-center transition group-hover:border-frame-orange/60 group-hover:text-frame-white group-hover:bg-frame-orange/5" onClick={(event) => { event.stopPropagation(); setLocation(openToolPath(tool)); }}>{activeProject ? "Abrir neste job" : t("app.tools.openInStudio")} →</button>
+                      </motion.div>
                     );
                   })}
                 </div>

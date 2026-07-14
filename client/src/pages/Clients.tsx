@@ -73,6 +73,8 @@ function ClientCard({ client, onEdit, onDelete, onClick }: { client: Client; onE
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.01, boxShadow: "0 4px 20px rgba(255, 107, 0, 0.1)" }}
+      transition={{ duration: 0.2 }}
       className="glow-card border border-frame-gray-3 bg-frame-gray-1/20 p-4 group cursor-pointer hover:border-frame-orange/40 hover:bg-frame-orange/[0.02] transition-all duration-200"
       onClick={onClick}>
       <div className="flex items-start justify-between gap-4">
@@ -91,13 +93,62 @@ function ClientCard({ client, onEdit, onDelete, onClick }: { client: Client; onE
             <p className="text-xs text-frame-gray-light">{client.contact_person}{client.contact_role ? ` · ${client.contact_role}` : ""}</p>
           )}
           <div className="flex items-center gap-4 flex-wrap text-xs text-frame-gray-light pt-1">
-            {client.phone && <a href={`tel:${client.phone}`} onClick={(e) => e.stopPropagation()} className="flex items-center gap-1 hover:text-frame-orange transition"><Phone className="w-3 h-3" /> {client.phone}</a>}
-            {client.email && <a href={`mailto:${client.email}`} onClick={(e) => e.stopPropagation()} className="flex items-center gap-1 hover:text-frame-orange transition"><Mail className="w-3 h-3" /> {client.email}</a>}
+            {client.phone && (
+              <motion.a
+                whileHover={{ scale: 1.05 }}
+                href={`tel:${client.phone}`}
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-1 hover:text-frame-orange transition"
+              >
+                <Phone className="w-3 h-3" /> {client.phone}
+              </motion.a>
+            )}
+            {client.email && (
+              <motion.a
+                whileHover={{ scale: 1.05 }}
+                href={`mailto:${client.email}`}
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-1 hover:text-frame-orange transition"
+              >
+                <Mail className="w-3 h-3" /> {client.email}
+              </motion.a>
+            )}
             {(client.city || client.state) && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {[client.city, client.state].filter(Boolean).join(", ")}</span>}
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <span className="font-frame-mono text-sm text-frame-orange font-semibold">{formatCurrency(client.total_spent)}</span>
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition"
+          >
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onEdit(); }}
+              className="p-1.5 text-frame-gray-light hover:text-frame-orange hover:bg-frame-orange/10 rounded transition"
+              title={t("app.common.edit") as string}
+            >
+              <Edit className="w-3.5 h-3.5" />
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+              className="p-1.5 text-frame-gray-light hover:text-red-400 hover:bg-red-400/10 rounded transition"
+              title={t("app.common.delete") as string}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </motion.button>
+          </motion.div>
+          <ChevronRight className="w-4 h-4 text-frame-gray-light group-hover:text-frame-orange transition" />
+        </div>
+      </div>
+    </motion.div>
+  );
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
             <button type="button" onClick={(e) => { e.stopPropagation(); onEdit(); }} className="p-1.5 text-frame-gray-light hover:text-frame-orange hover:bg-frame-orange/10 rounded transition" title={t("app.common.edit") as string}><Edit className="w-3.5 h-3.5" /></button>
             <button type="button" onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-1.5 text-frame-gray-light hover:text-red-400 hover:bg-red-400/10 rounded transition" title={t("app.common.delete") as string}><Trash2 className="w-3.5 h-3.5" /></button>
