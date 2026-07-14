@@ -1906,8 +1906,10 @@ function ProfileContent() {
                     }`}
                   >
                     <span
-                      className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                        securityAlerts.emailOnNewLogin ? "translate-x-6" : "translate-x-1"
+                      className={`absolute top-1 left-1 w-4 h-4 rounded-full transition-transform shadow-sm ${
+                        securityAlerts.emailOnNewLogin
+                          ? "translate-x-5 bg-frame-black"
+                          : "translate-x-0 bg-white"
                       }`}
                     />
                   </button>
@@ -1929,8 +1931,10 @@ function ProfileContent() {
                     }`}
                   >
                     <span
-                      className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                        securityAlerts.emailOnPasswordChange ? "translate-x-6" : "translate-x-1"
+                      className={`absolute top-1 left-1 w-4 h-4 rounded-full transition-transform shadow-sm ${
+                        securityAlerts.emailOnPasswordChange
+                          ? "translate-x-5 bg-frame-black"
+                          : "translate-x-0 bg-white"
                       }`}
                     />
                   </button>
@@ -1952,8 +1956,10 @@ function ProfileContent() {
                     }`}
                   >
                     <span
-                      className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                        securityAlerts.emailOnNewDevice ? "translate-x-6" : "translate-x-1"
+                      className={`absolute top-1 left-1 w-4 h-4 rounded-full transition-transform shadow-sm ${
+                        securityAlerts.emailOnNewDevice
+                          ? "translate-x-5 bg-frame-black"
+                          : "translate-x-0 bg-white"
                       }`}
                     />
                   </button>
@@ -3171,8 +3177,8 @@ function ProfileContent() {
                   }`}
                 >
                   <span
-                    className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                      reduceAnimations ? "translate-x-6" : "translate-x-1"
+                    className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
+                      reduceAnimations ? "translate-x-5" : "translate-x-0"
                     }`}
                   />
                 </button>
@@ -3258,8 +3264,10 @@ function ProfileContent() {
                     }`}
                   >
                     <span
-                      className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                        autoplayVideos ? "translate-x-6" : "translate-x-1"
+                      className={`absolute top-1 left-1 w-4 h-4 rounded-full transition-transform shadow-sm ${
+                        autoplayVideos
+                          ? "translate-x-5 bg-frame-black"
+                          : "translate-x-0 bg-white"
                       }`}
                     />
                   </button>
@@ -3529,8 +3537,10 @@ function ProfileContent() {
                     }`}
                   >
                     <span
-                      className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                        privacySettings.allowSearchEngineIndexing ? "translate-x-6" : "translate-x-1"
+                      className={`absolute top-1 left-1 w-4 h-4 rounded-full transition-transform shadow-sm ${
+                        privacySettings.allowSearchEngineIndexing
+                          ? "translate-x-5 bg-frame-black"
+                          : "translate-x-0 bg-white"
                       }`}
                     />
                   </button>
@@ -3553,8 +3563,10 @@ function ProfileContent() {
                     }`}
                   >
                     <span
-                      className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                        privacySettings.shareAnalyticsWithTeam ? "translate-x-6" : "translate-x-1"
+                      className={`absolute top-1 left-1 w-4 h-4 rounded-full transition-transform shadow-sm ${
+                        privacySettings.shareAnalyticsWithTeam
+                          ? "translate-x-5 bg-frame-black"
+                          : "translate-x-0 bg-white"
                       }`}
                     />
                   </button>

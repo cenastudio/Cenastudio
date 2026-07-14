@@ -98,6 +98,39 @@
 
 :root {
   --frame-orange-bg: rgba(var(--ds-orange-rgb), 0.09);
+
+  /* RGB values for rgba calculations */
+  --ds-orange-rgb: 232, 80, 2;
+  --ds-orange-light-rgb: 214, 68, 0;
+}
+
+/* Utility classes para cores adaptativas ao tema */
+.text-adaptive-orange {
+  color: var(--ds-orange);
+}
+
+:root.light .text-adaptive-orange,
+body.light .text-adaptive-orange {
+  color: var(--ds-orange-light-theme);
+}
+
+.bg-adaptive-orange {
+  background-color: var(--ds-orange);
+}
+
+:root.light .bg-adaptive-orange,
+body.light .bg-adaptive-orange {
+  background-color: var(--ds-orange-light-theme);
+}
+
+.border-adaptive-orange {
+  border-color: var(--ds-orange);
+}
+
+:root.light .border-adaptive-orange,
+body.light .border-adaptive-orange {
+  border-color: var(--ds-orange-light-theme);
+}
   --radius: 2px;
   --app-font-scale: 1.06;
 
