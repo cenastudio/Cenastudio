@@ -131,11 +131,6 @@
   }
 }
 
-  /* RGB values for rgba calculations */
-  --ds-orange-rgb: 232, 80, 2;
-  --ds-orange-light-rgb: 214, 68, 0;
-}
-
 /* Utility classes para cores adaptativas ao tema */
 .text-adaptive-orange,
 .text-adaptive-primary {
