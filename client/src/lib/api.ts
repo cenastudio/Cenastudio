@@ -108,6 +108,45 @@ export interface AdminActionLogEntry {
   createdAt: string;
 }
 
+export interface AdminLgpdRequest {
+  id: string;
+  type: "copy" | "correct" | "delete" | string;
+  status: "pending" | "processing" | "completed" | "rejected" | string;
+  notes: string | null;
+  createdAt: string;
+  processedAt: string | null;
+  processedBy: string | null;
+  user: { id: number; email: string; name: string | null };
+}
+
+export interface AdminReferralSummary {
+  totalReferrals: number;
+  totalConverted: number;
+  totalRewarded: number;
+  rewardsByType: Record<string, number>;
+}
+
+export interface AdminReferralEntry {
+  id: number;
+  referralCode: string;
+  status: string;
+  rewardType: string | null;
+  conversionDate: string | null;
+  rewardDate: string | null;
+  createdAt: string;
+  referrer: { id: number; email: string; name: string | null };
+  referredUser: { id: number; email: string; name: string | null } | null;
+}
+
+export interface AdminAiUsage {
+  totalGenerations: number;
+  last24h: number;
+  last7d: number;
+  last30d: number;
+  byTool: Array<{ toolId: string; toolName: string; count: number }>;
+  topUsers: Array<{ userId: number; email: string; count: number }>;
+}
+
 export interface AdminMetrics {
   totalUsers: number;
   admins: number;
@@ -932,6 +971,21 @@ export const api = {
       }),
     auditLog: (limit = 100) =>
       request<AdminActionLogEntry[]>(`/admin/audit-log?limit=${limit}`),
+    lgpdRequests: (status?: string) =>
+      request<AdminLgpdRequest[]>(`/admin/lgpd-requests${status ? `?status=${status}` : ""}`),
+    processLgpdRequest: (id: string, status: "completed" | "rejected", notes?: string) =>
+      request<{ id: string; status: string }>(`/admin/lgpd-requests/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({ status, notes }),
+      }),
+    referralOverview: () =>
+      request<{ summary: AdminReferralSummary; entries: AdminReferralEntry[] }>("/admin/referrals"),
+    aiUsage: () => request<AdminAiUsage>("/admin/ai-usage"),
+    broadcast: (title: string, message: string) =>
+      request<{ recipientCount: number }>("/admin/broadcast", {
+        method: "POST",
+        body: JSON.stringify({ title, message }),
+      }),
   },
   contact: {
     submit: (data: ContactPayload) =>

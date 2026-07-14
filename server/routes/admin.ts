@@ -14,6 +14,11 @@ router.put("/tools/:id", validateBody(updateToolSchema), adminController.updateT
 router.delete("/tools/:id", adminController.deleteTool);
 router.get("/metrics", adminController.getMetrics);
 router.get("/audit-log", adminController.getAuditLog);
+router.get("/lgpd-requests", adminController.listLgpdRequests);
+router.put("/lgpd-requests/:id", adminController.processLgpdRequest);
+router.get("/referrals", adminController.getReferralOverview);
+router.get("/ai-usage", adminController.getAiUsage);
+router.post("/broadcast", adminController.broadcastAnnouncement);
 router.get("/users", adminController.listUsers);
 router.post("/users", validateBody(createManagedUserSchema), adminController.createManagedUser);
 router.get("/users/:id", adminController.getUserDetail);

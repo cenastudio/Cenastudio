@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import {
-  AlertTriangle, Ban, Clock, Crown, DollarSign, KeyRound, Plus, RotateCcw, Search,
-  Settings2, ShieldCheck, Sparkles, Trash2, TrendingUp, Users, Wrench,
+  AlertTriangle, Ban, Clock, Crown, DollarSign, Gift, KeyRound, Megaphone, Plus, RotateCcw, Search,
+  Settings2, ShieldCheck, Sparkles, Trash2, TrendingUp, Users, Wrench, Bot, FileCheck,
 } from "lucide-react";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -12,7 +12,11 @@ import { TabsContent } from "@/components/ui/tabs";
 import { ResponsiveTabs } from "@/components/ui/responsive-tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ApiError, api, ToolFromApi, type AdminMetrics, type AdminUserDetail, type AdminActionLogEntry } from "@/lib/api";
+import {
+  ApiError, api, ToolFromApi,
+  type AdminMetrics, type AdminUserDetail, type AdminActionLogEntry,
+  type AdminLgpdRequest, type AdminReferralSummary, type AdminReferralEntry, type AdminAiUsage,
+} from "@/lib/api";
 
 interface ManagedUser {
   id: number;
@@ -94,6 +98,17 @@ function AdminContent() {
   const [tempPassword, setTempPassword] = useState<string | null>(null);
   const [auditLog, setAuditLog] = useState<AdminActionLogEntry[]>([]);
   const [auditLoaded, setAuditLoaded] = useState(false);
+  const [lgpdRequests, setLgpdRequests] = useState<AdminLgpdRequest[]>([]);
+  const [lgpdLoaded, setLgpdLoaded] = useState(false);
+  const [lgpdBusyId, setLgpdBusyId] = useState<string | null>(null);
+  const [referralSummary, setReferralSummary] = useState<AdminReferralSummary | null>(null);
+  const [referralEntries, setReferralEntries] = useState<AdminReferralEntry[]>([]);
+  const [referralLoaded, setReferralLoaded] = useState(false);
+  const [aiUsage, setAiUsage] = useState<AdminAiUsage | null>(null);
+  const [aiUsageLoaded, setAiUsageLoaded] = useState(false);
+  const [broadcastOpen, setBroadcastOpen] = useState(false);
+  const [broadcastForm, setBroadcastForm] = useState({ title: "", message: "" });
+  const [broadcastSending, setBroadcastSending] = useState(false);
 
   // ─── Data Loading ───
   const loadData = async () => {
@@ -192,7 +207,53 @@ function AdminContent() {
         .then((entries) => { setAuditLog(entries); setAuditLoaded(true); })
         .catch((e) => toast.error(e instanceof Error ? e.message : "Erro ao carregar auditoria"));
     }
-  }, [activeTab, auditLoaded]);
+    if (activeTab === "lgpd" && !lgpdLoaded) {
+      api.admin.lgpdRequests()
+        .then((reqs) => { setLgpdRequests(reqs); setLgpdLoaded(true); })
+        .catch((e) => toast.error(e instanceof Error ? e.message : "Erro ao carregar solicitações LGPD"));
+    }
+    if (activeTab === "referrals" && !referralLoaded) {
+      api.admin.referralOverview()
+        .then((d) => { setReferralSummary(d.summary); setReferralEntries(d.entries); setReferralLoaded(true); })
+        .catch((e) => toast.error(e instanceof Error ? e.message : "Erro ao carregar indicações"));
+    }
+    if (activeTab === "ai-usage" && !aiUsageLoaded) {
+      api.admin.aiUsage()
+        .then((d) => { setAiUsage(d); setAiUsageLoaded(true); })
+        .catch((e) => toast.error(e instanceof Error ? e.message : "Erro ao carregar uso de IA"));
+    }
+  }, [activeTab, auditLoaded, lgpdLoaded, referralLoaded, aiUsageLoaded]);
+
+  const processLgpd = async (id: string, status: "completed" | "rejected") => {
+    setLgpdBusyId(id);
+    try {
+      await api.admin.processLgpdRequest(id, status);
+      setLgpdRequests((prev) => prev.map((r) => r.id === id ? { ...r, status, processedAt: new Date().toISOString() } : r));
+      toast.success(status === "completed" ? "Solicitação concluída" : "Solicitação rejeitada");
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : "Erro ao processar solicitação");
+    } finally {
+      setLgpdBusyId(null);
+    }
+  };
+
+  const sendBroadcast = async () => {
+    if (!broadcastForm.title.trim() || !broadcastForm.message.trim()) {
+      toast.error("Preencha título e mensagem.");
+      return;
+    }
+    setBroadcastSending(true);
+    try {
+      const { recipientCount } = await api.admin.broadcast(broadcastForm.title.trim(), broadcastForm.message.trim());
+      toast.success(`Aviso enviado para ${recipientCount} usuários`);
+      setBroadcastOpen(false);
+      setBroadcastForm({ title: "", message: "" });
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : "Erro ao enviar aviso");
+    } finally {
+      setBroadcastSending(false);
+    }
+  };
 
   // ─── Computed ───
   const stats = useMemo(() => {
@@ -319,6 +380,9 @@ function AdminContent() {
             { value: "overview", label: t("app.admin.tabOverview") as string },
             { value: "users", label: t("app.admin.users") as string },
             { value: "tools", label: t("app.admin.tabTools") as string },
+            { value: "referrals", label: "Indicações" },
+            { value: "lgpd", label: "LGPD" },
+            { value: "ai-usage", label: "Uso de IA" },
             { value: "audit", label: "Auditoria" },
           ]}
           value={activeTab}
@@ -386,6 +450,9 @@ function AdminContent() {
               </button>
               <button type="button" onClick={() => setActiveTab("users")} className="frame-btn-ghost flex items-center gap-2">
                 <Users className="w-4 h-4" /> {t("app.admin.viewAllUsers")}
+              </button>
+              <button type="button" onClick={() => setBroadcastOpen(true)} className="frame-btn-ghost flex items-center gap-2">
+                <Megaphone className="w-4 h-4" /> Enviar aviso
               </button>
             </div>
           </TabsContent>
@@ -532,6 +599,178 @@ function AdminContent() {
                   </div>
                 ))}
               </div>
+            )}
+          </TabsContent>
+
+          {/* ═══ TAB: REFERRALS ═══ */}
+          <TabsContent value="referrals" className="mt-6">
+            {!referralLoaded ? (
+              <div className="text-center py-20 text-frame-gray-light font-frame-mono text-xs">{t("app.common.loading")}</div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-6">
+                  {[
+                    { label: "Total de indicações", value: referralSummary?.totalReferrals ?? 0 },
+                    { label: "Convertidas", value: referralSummary?.totalConverted ?? 0 },
+                    { label: "Recompensadas", value: referralSummary?.totalRewarded ?? 0 },
+                  ].map((s) => (
+                    <div key={s.label} className="bg-frame-gray-2 border border-frame-gray-3 p-4 border-b-2 border-b-frame-orange">
+                      <p className="font-frame-mono text-[0.64rem] tracking-[0.14em] uppercase text-frame-gray-light">{s.label}</p>
+                      <p className="frame-title text-3xl text-frame-white leading-none mt-2">{s.value}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="space-y-2">
+                  {referralEntries.map((entry) => (
+                    <div key={entry.id} className="border border-frame-gray-3 bg-frame-gray-1/20 p-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                      <span className={`text-[0.62rem] font-frame-mono uppercase border px-1.5 py-0.5 shrink-0 w-fit ${
+                        entry.status === "rewarded" ? "border-frame-green/40 text-frame-green"
+                        : entry.status === "converted" ? "border-[#4d9fff]/40 text-[#4d9fff]"
+                        : "border-frame-gray-3 text-frame-gray-light"
+                      }`}>
+                        {entry.status}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm truncate">
+                          <span className="text-frame-white">{entry.referrer.email}</span>
+                          <span className="text-frame-gray-muted"> indicou </span>
+                          <span className="text-frame-white">{entry.referredUser?.email ?? "—"}</span>
+                        </p>
+                        {entry.rewardType && (
+                          <p className="text-[0.62rem] text-frame-gray-muted font-frame-mono flex items-center gap-1">
+                            <Gift className="w-3 h-3" /> {entry.rewardType}
+                          </p>
+                        )}
+                      </div>
+                      <p className="text-[0.62rem] text-frame-gray-muted font-frame-mono shrink-0">
+                        {new Date(entry.createdAt).toLocaleDateString(locale === "pt" ? "pt-BR" : "en-US")}
+                      </p>
+                    </div>
+                  ))}
+                  {referralEntries.length === 0 && (
+                    <div className="text-center py-20 text-frame-gray-light font-frame-mono text-xs">Nenhuma indicação registrada ainda.</div>
+                  )}
+                </div>
+              </>
+            )}
+          </TabsContent>
+
+          {/* ═══ TAB: LGPD ═══ */}
+          <TabsContent value="lgpd" className="mt-6">
+            <p className="text-xs text-frame-gray-light mb-4">
+              Solicitações de cópia, correção ou exclusão de dados feitas pelos usuários (LGPD Art. 18). Processe dentro do prazo legal indicado no protocolo.
+            </p>
+            {!lgpdLoaded ? (
+              <div className="text-center py-20 text-frame-gray-light font-frame-mono text-xs">{t("app.common.loading")}</div>
+            ) : (
+              <div className="space-y-2">
+                {lgpdRequests.map((r) => (
+                  <div key={r.id} className="border border-frame-gray-3 bg-frame-gray-1/20 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="flex items-center gap-2 shrink-0">
+                      <FileCheck className="w-4 h-4 text-frame-gray-light" />
+                      <span className="text-[0.62rem] font-frame-mono uppercase border border-frame-gray-3 px-1.5 py-0.5">
+                        {r.type === "copy" ? "Cópia" : r.type === "correct" ? "Correção" : "Exclusão"}
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm truncate">{r.user.name || r.user.email} <span className="text-frame-gray-muted">— {r.user.email}</span></p>
+                      <p className="text-[0.62rem] text-frame-gray-muted font-frame-mono">
+                        Protocolo {r.id} · {new Date(r.createdAt).toLocaleDateString(locale === "pt" ? "pt-BR" : "en-US")}
+                      </p>
+                    </div>
+                    <span className={`text-[0.62rem] font-frame-mono uppercase border px-1.5 py-0.5 shrink-0 w-fit ${
+                      r.status === "completed" ? "border-frame-green/40 text-frame-green"
+                      : r.status === "rejected" ? "border-red-500/40 text-red-300"
+                      : "border-frame-orange/40 text-frame-orange"
+                    }`}>
+                      {r.status}
+                    </span>
+                    {r.status === "pending" && (
+                      <div className="flex gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => processLgpd(r.id, "completed")}
+                          disabled={lgpdBusyId === r.id}
+                          className="px-3 py-1.5 min-h-11 text-xs border border-frame-green/40 text-frame-green hover:bg-frame-green/10 disabled:opacity-40 transition"
+                        >
+                          Concluir
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => processLgpd(r.id, "rejected")}
+                          disabled={lgpdBusyId === r.id}
+                          className="px-3 py-1.5 min-h-11 text-xs border border-red-500/40 text-red-300 hover:bg-red-500/10 disabled:opacity-40 transition"
+                        >
+                          Rejeitar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {lgpdRequests.length === 0 && (
+                  <div className="text-center py-20 text-frame-gray-light font-frame-mono text-xs">Nenhuma solicitação LGPD registrada.</div>
+                )}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* ═══ TAB: AI USAGE ═══ */}
+          <TabsContent value="ai-usage" className="mt-6">
+            {!aiUsageLoaded ? (
+              <div className="text-center py-20 text-frame-gray-light font-frame-mono text-xs">{t("app.common.loading")}</div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3.5 mb-6">
+                  {[
+                    { label: "Total de gerações", value: aiUsage?.totalGenerations ?? 0 },
+                    { label: "Últimas 24h", value: aiUsage?.last24h ?? 0 },
+                    { label: "Últimos 7 dias", value: aiUsage?.last7d ?? 0 },
+                    { label: "Últimos 30 dias", value: aiUsage?.last30d ?? 0 },
+                  ].map((s) => (
+                    <div key={s.label} className="bg-frame-gray-2 border border-frame-gray-3 p-4 border-b-2 border-b-frame-orange">
+                      <p className="font-frame-mono text-[0.64rem] tracking-[0.14em] uppercase text-frame-gray-light">{s.label}</p>
+                      <p className="frame-title text-3xl text-frame-white leading-none mt-2">{s.value}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[0.62rem] text-frame-gray-muted font-frame-mono mb-4">
+                  Volume real de uso. Não exibimos custo estimado em R$ porque parte das ferramentas roda em modelos gratuitos com fallback (não há contagem de tokens/custo por chamada salva).
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="font-frame-mono text-[0.66rem] uppercase tracking-[0.14em] text-frame-orange mb-3 flex items-center gap-2">
+                      <Bot className="w-4 h-4" /> Por ferramenta
+                    </h3>
+                    <div className="space-y-1.5">
+                      {aiUsage?.byTool.map((t2) => (
+                        <div key={t2.toolId} className="flex items-center justify-between border border-frame-gray-3 bg-frame-gray-1/20 px-3 py-2">
+                          <span className="text-sm truncate">{t2.toolName}</span>
+                          <span className="font-frame-mono text-xs text-frame-gray-light shrink-0">{t2.count}</span>
+                        </div>
+                      ))}
+                      {(!aiUsage || aiUsage.byTool.length === 0) && (
+                        <p className="text-xs text-frame-gray-light">Sem gerações registradas.</p>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-frame-mono text-[0.66rem] uppercase tracking-[0.14em] text-frame-orange mb-3 flex items-center gap-2">
+                      <Users className="w-4 h-4" /> Top usuários
+                    </h3>
+                    <div className="space-y-1.5">
+                      {aiUsage?.topUsers.map((u) => (
+                        <div key={u.userId} className="flex items-center justify-between border border-frame-gray-3 bg-frame-gray-1/20 px-3 py-2">
+                          <span className="text-sm truncate">{u.email}</span>
+                          <span className="font-frame-mono text-xs text-frame-gray-light shrink-0">{u.count}</span>
+                        </div>
+                      ))}
+                      {(!aiUsage || aiUsage.topUsers.length === 0) && (
+                        <p className="text-xs text-frame-gray-light">Sem gerações registradas.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </>
             )}
           </TabsContent>
 
@@ -843,6 +1082,45 @@ function AdminContent() {
             </div>
           </div>
         )}
+      </AnimatedModal>
+
+      {/* ═══ BROADCAST ANNOUNCEMENT MODAL ═══ */}
+      <AnimatedModal
+        isOpen={broadcastOpen}
+        onClose={() => { if (!broadcastSending) setBroadcastOpen(false); }}
+        title="Enviar aviso para todos os usuários"
+        description="Cria uma notificação para cada conta ativa (contas suspensas não recebem)."
+        footer={
+          <>
+            <button type="button" onClick={() => setBroadcastOpen(false)} disabled={broadcastSending} className="frame-btn-ghost">
+              {t("app.common.cancel")}
+            </button>
+            <button type="button" onClick={sendBroadcast} disabled={broadcastSending} className="frame-btn-primary disabled:opacity-60">
+              {broadcastSending ? "Enviando..." : "Enviar aviso"}
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          <div>
+            <label className="font-frame-mono text-[0.62rem] uppercase tracking-[0.14em] text-frame-gray-light mb-1 block">Título</label>
+            <input
+              value={broadcastForm.title}
+              onChange={(e) => setBroadcastForm({ ...broadcastForm, title: e.target.value })}
+              placeholder="Ex: Nova funcionalidade disponível"
+              className="frame-input w-full"
+            />
+          </div>
+          <div>
+            <label className="font-frame-mono text-[0.62rem] uppercase tracking-[0.14em] text-frame-gray-light mb-1 block">Mensagem</label>
+            <textarea
+              value={broadcastForm.message}
+              onChange={(e) => setBroadcastForm({ ...broadcastForm, message: e.target.value })}
+              placeholder="Escreva o aviso..."
+              className="frame-input w-full min-h-[100px]"
+            />
+          </div>
+        </div>
       </AnimatedModal>
     </div>
   );

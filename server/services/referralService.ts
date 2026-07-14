@@ -1,6 +1,19 @@
 import { prisma, shouldUsePrisma } from "../models/prisma.js";
 import { db } from "../models/db.js";
-import crypto from "crypto";
+import { notifyUser } from "./notificationService.js";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Milestone → reward map. Cumulative: reaching the Nth conversion grants
+ * that milestone's reward once, in addition to any milestone already
+ * granted below it (checked one-by-one in `maybeApplyMilestoneRewards`).
+ */
+const REWARD_MILESTONES: Array<{ conversions: number; rewardType: string; days: number; minPlan: "free" | "pro" | "studio" }> = [
+  { conversions: 1, rewardType: "1month", days: 30, minPlan: "free" },
+  { conversions: 3, rewardType: "3months_pro", days: 90, minPlan: "pro" },
+  { conversions: 10, rewardType: "1year_studio", days: 365, minPlan: "studio" },
+];
 
 interface ReferralStats {
   totalReferrals: number;
@@ -196,14 +209,103 @@ export async function trackReferralConversion(
       },
     });
 
-    // TODO: Send notification to referrer
-    // TODO: Apply reward (extend subscription, upgrade plan, etc.)
+    const referrerId = Number(referral.referrerId);
+    notifyUser(
+      referrerId,
+      "Nova indicação convertida! 🎉",
+      "Alguém se cadastrou usando seu código de indicação.",
+    );
+
+    // Best-effort: a reward hiccup must never break the signup that
+    // triggered it. Errors are logged, not thrown.
+    await maybeApplyMilestoneRewards(referrerId).catch((err) => {
+      console.error("[referralService] Falha ao aplicar recompensa:", err);
+    });
 
     return true;
   } catch (error) {
     console.error("Error tracking referral conversion:", error);
     return false;
   }
+}
+
+/**
+ * Checks the referrer's converted-referral count against the milestone
+ * table and grants any milestone reached that hasn't been rewarded yet.
+ * Each milestone can only be rewarded once — we mark the referral that
+ * completed the count (the Nth converted one) as "rewarded" so re-running
+ * this never double-grants.
+ */
+async function maybeApplyMilestoneRewards(referrerId: number): Promise<void> {
+  if (!shouldUsePrisma) return;
+
+  const convertedReferrals = await prisma.referral.findMany({
+    where: { referrerId: BigInt(referrerId), status: { in: ["converted", "rewarded"] } },
+    orderBy: { conversionDate: "asc" },
+  });
+
+  for (const milestone of REWARD_MILESTONES) {
+    if (convertedReferrals.length < milestone.conversions) continue;
+
+    // The referral at index [conversions - 1] is the one that completed
+    // this milestone. If it's already "rewarded", this milestone was
+    // already granted — skip.
+    const milestoneReferral = convertedReferrals[milestone.conversions - 1];
+    if (milestoneReferral.status === "rewarded") continue;
+
+    await applyReward(referrerId, milestone);
+
+    await prisma.referral.update({
+      where: { id: milestoneReferral.id },
+      data: { status: "rewarded", rewardDate: new Date(), rewardType: milestone.rewardType },
+    });
+  }
+}
+
+/**
+ * Grants a referral reward by extending the referrer's subscription:
+ * upgrades to at least `minPlan` if they're on a lower tier, and extends
+ * `currentPeriodEnd` by `days` (stacking on top of the current period end
+ * if it's still in the future, so rewards accumulate instead of resetting
+ * an active paid period).
+ */
+async function applyReward(referrerId: number, milestone: { rewardType: string; days: number; minPlan: "free" | "pro" | "studio" }): Promise<void> {
+  const planRank: Record<string, number> = { free: 0, pro: 1, studio: 2, whitelabel: 3, enterprise: 4 };
+
+  const existing = await prisma.subscription.findFirst({
+    where: { userId: BigInt(referrerId) },
+    orderBy: { id: "desc" },
+  });
+
+  const currentPlan = existing?.planId ?? "free";
+  const targetPlan = (planRank[currentPlan] ?? 0) >= planRank[milestone.minPlan] ? currentPlan : milestone.minPlan;
+
+  const base = existing?.currentPeriodEnd && existing.currentPeriodEnd.getTime() > Date.now()
+    ? existing.currentPeriodEnd
+    : new Date();
+  const newPeriodEnd = new Date(base.getTime() + milestone.days * DAY_MS);
+
+  if (existing) {
+    await prisma.subscription.update({
+      where: { id: existing.id },
+      data: { planId: targetPlan, status: "active", currentPeriodEnd: newPeriodEnd },
+    });
+  } else {
+    await prisma.subscription.create({
+      data: { userId: BigInt(referrerId), planId: targetPlan, status: "active", currentPeriodEnd: newPeriodEnd },
+    });
+  }
+
+  const rewardLabels: Record<string, string> = {
+    "1month": "1 mês grátis",
+    "3months_pro": "3 meses de Pro",
+    "1year_studio": "1 ano de Studio",
+  };
+  notifyUser(
+    referrerId,
+    "Recompensa de indicação aplicada! 🎁",
+    `Você ganhou ${rewardLabels[milestone.rewardType] || milestone.rewardType} por indicar novos usuários.`,
+  );
 }
 
 /**

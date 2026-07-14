@@ -3,6 +3,9 @@ import * as authService from "../services/authService.js";
 import * as toolService from "../services/toolService.js";
 import * as adminService from "../services/adminService.js";
 import { logAdminAction, listAdminActions } from "../services/adminAuditService.js";
+import * as lgpdService from "../services/lgpdService.js";
+import * as referralAdminService from "../services/referralAdminService.js";
+import * as aiUsageService from "../services/aiUsageService.js";
 
 /** Best-effort audit log write, using the request's admin + context. */
 function audit(req: Parameters<RequestHandler>[0], action: string, targetId?: string | number | null, details?: Record<string, unknown>) {
@@ -192,6 +195,78 @@ export const getAuditLog: RequestHandler = async (req, res, next) => {
   try {
     const limit = Math.min(parseInt(String(req.query.limit ?? "100")) || 100, 500);
     res.json({ success: true, data: await listAdminActions(limit) });
+  } catch (e) {
+    next(e);
+  }
+};
+
+// ─── LGPD requests (Phase 3) ───
+
+export const listLgpdRequests: RequestHandler = async (req, res, next) => {
+  try {
+    const status = typeof req.query.status === "string" ? req.query.status : undefined;
+    res.json({ success: true, data: await lgpdService.listAllLgpdRequests(status) });
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const processLgpdRequest: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, error: "Sessão expirada." });
+      return;
+    }
+    const { status, notes } = req.body ?? {};
+    if (!["completed", "rejected"].includes(status)) {
+      res.status(400).json({ success: false, error: "status deve ser 'completed' ou 'rejected'." });
+      return;
+    }
+    await lgpdService.processLgpdRequest(req.params.id, status, req.user.email, notes);
+    audit(req, "lgpd.process", req.params.id, { status, notes });
+    res.json({ success: true, data: { id: req.params.id, status } });
+  } catch (e) {
+    next(e);
+  }
+};
+
+// ─── Referral program (Phase 3) ───
+
+export const getReferralOverview: RequestHandler = async (_req, res, next) => {
+  try {
+    const [summary, entries] = await Promise.all([
+      referralAdminService.getReferralAdminSummary(),
+      referralAdminService.listAllReferrals(100),
+    ]);
+    res.json({ success: true, data: { summary, entries } });
+  } catch (e) {
+    next(e);
+  }
+};
+
+// ─── AI usage (Phase 3) ───
+
+export const getAiUsage: RequestHandler = async (_req, res, next) => {
+  try {
+    res.json({ success: true, data: await aiUsageService.getAiUsageReport() });
+  } catch (e) {
+    next(e);
+  }
+};
+
+// ─── Broadcast announcement (Phase 3) ───
+
+export const broadcastAnnouncement: RequestHandler = async (req, res, next) => {
+  try {
+    const { title, message } = req.body ?? {};
+    if (!title?.trim() || !message?.trim()) {
+      res.status(400).json({ success: false, error: "Informe título e mensagem." });
+      return;
+    }
+    const { notifyAllUsers } = await import("../services/notificationService.js");
+    const count = await notifyAllUsers(title.trim(), message.trim(), "announcement");
+    audit(req, "broadcast.send", null, { title, recipientCount: count });
+    res.json({ success: true, data: { recipientCount: count } });
   } catch (e) {
     next(e);
   }

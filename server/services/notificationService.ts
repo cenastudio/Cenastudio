@@ -77,3 +77,30 @@ async function notifyAdminsAsync(
     await createNotification(admin.id, title, message, type, link);
   }
 }
+
+/**
+ * Creates a notification for every non-disabled user in the system.
+ * Used by the admin "broadcast announcement" tool. Returns the number of
+ * users notified.
+ */
+export async function notifyAllUsers(
+  title: string,
+  message: string,
+  type: string = "info",
+  link?: string,
+): Promise<number> {
+  if (shouldUsePrisma) {
+    const users = await prisma.user.findMany({
+      where: { disabled: false },
+      select: { id: true },
+    });
+    await Promise.all(users.map((u) => createNotification(Number(u.id), title, message, type, link)));
+    return users.length;
+  }
+
+  const users = db.prepare("SELECT id FROM users WHERE disabled = 0").all() as Array<{ id: number }>;
+  for (const u of users) {
+    await createNotification(u.id, title, message, type, link);
+  }
+  return users.length;
+}

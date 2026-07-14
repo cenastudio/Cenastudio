@@ -269,6 +269,46 @@ export async function listUserLgpdRequests(userId: number) {
 }
 
 /**
+ * Lista todas as solicitações LGPD do sistema (admin only), com dados do
+ * usuário solicitante — usado pelo painel administrativo para processar
+ * pedidos de cópia/correção/exclusão dentro do prazo legal.
+ */
+export async function listAllLgpdRequests(status?: string) {
+  if (shouldUsePrisma) {
+    return await prisma.lgpdRequest.findMany({
+      where: status ? { status } : undefined,
+      orderBy: { createdAt: "desc" },
+      include: { user: { select: { id: true, email: true, name: true } } },
+    });
+  }
+
+  const rows = status
+    ? db.prepare(
+        `SELECT r.id, r.user_id, r.type, r.status, r.notes, r.created_at, r.processed_at, r.processed_by,
+                u.email, u.name
+         FROM lgpd_requests r JOIN users u ON u.id = r.user_id
+         WHERE r.status = ? ORDER BY r.created_at DESC`,
+      ).all(status)
+    : db.prepare(
+        `SELECT r.id, r.user_id, r.type, r.status, r.notes, r.created_at, r.processed_at, r.processed_by,
+                u.email, u.name
+         FROM lgpd_requests r JOIN users u ON u.id = r.user_id
+         ORDER BY r.created_at DESC`,
+      ).all();
+
+  return (rows as any[]).map((row) => ({
+    id: row.id,
+    type: row.type,
+    status: row.status,
+    notes: row.notes,
+    createdAt: row.created_at,
+    processedAt: row.processed_at,
+    processedBy: row.processed_by,
+    user: { id: row.user_id, email: row.email, name: row.name },
+  }));
+}
+
+/**
  * Processa uma solicitação LGPD (admin only)
  * Este método seria chamado por um painel administrativo
  */
