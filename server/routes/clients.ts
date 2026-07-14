@@ -35,12 +35,14 @@ router.delete("/interactions/:id", interactionsController.deleteInteraction);
 // Meetings
 router.get("/meetings", meetingsController.listMeetings);
 router.post("/meetings", meetingsController.createMeeting);
+router.post("/meetings/:id/cancel", meetingsController.cancelMeeting);
 router.delete("/meetings/:id", meetingsController.deleteMeeting);
 
 // Proposals
 router.get("/proposals", proposalsController.listProposals);
 router.get("/proposals/:id", proposalsController.getProposal);
 router.post("/proposals", proposalsController.createProposal);
+router.post("/proposals/:id/revoke", proposalsController.revokeProposal);
 router.delete("/proposals/:id", proposalsController.deleteProposal);
 
 // Generic client routes must stay after nested collections.

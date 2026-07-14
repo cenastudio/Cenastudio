@@ -10,6 +10,24 @@ function hashDocument(html: string): string {
   return createHash("sha256").update(html, "utf8").digest("hex");
 }
 
+// Public proposal links carry client PII, so they must not live forever.
+// After this window a still-open link stops working (accepted proposals stay
+// accessible as a record of the agreement). Configurable via env.
+const PROPOSAL_SHARE_TTL_DAYS = Math.max(1, Number(process.env.PROPOSAL_SHARE_TTL_DAYS ?? 90));
+
+/** Blocks a public share link that was revoked by the owner or has expired. */
+export function assertProposalLinkUsable(proposal: { status: string; createdAt: Date }) {
+  if (proposal.status === "revoked") {
+    throw new AppError("Este link de proposta foi revogado pelo remetente.", 410);
+  }
+  if (proposal.status !== "accepted") {
+    const expiryMs = proposal.createdAt.getTime() + PROPOSAL_SHARE_TTL_DAYS * 24 * 60 * 60 * 1000;
+    if (Date.now() > expiryMs) {
+      throw new AppError("Este link de proposta expirou. Solicite um novo ao remetente.", 410);
+    }
+  }
+}
+
 function proposalIdValue(value: unknown) {
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed <= 0) throw new AppError("Proposta inválida", 400);
@@ -130,6 +148,26 @@ export const deleteProposal: RequestHandler = async (req, res, next) => {
   }
 };
 
+// Revoke the public share link (owner only). An accepted proposal keeps its
+// record and cannot be revoked; anything else becomes inaccessible publicly.
+export const revokeProposal: RequestHandler = async (req, res, next) => {
+  try {
+    const userId = req.user!.id;
+    const proposal = await prisma.proposal.findFirst({
+      where: { id: proposalIdValue(req.params.id), userId: BigInt(userId) },
+      select: { id: true, status: true },
+    });
+    if (!proposal) throw new AppError("Proposta não encontrada ou acesso não autorizado", 404);
+    if (proposal.status === "accepted") {
+      throw new AppError("Uma proposta já aceita não pode ter o link revogado.", 409);
+    }
+    await prisma.proposal.update({ where: { id: proposal.id }, data: { status: "revoked" } });
+    res.json({ success: true, data: { id: Number(req.params.id), status: "revoked" } });
+  } catch (e) {
+    next(e);
+  }
+};
+
 // Public: fetch proposal HTML + status by share token (no auth).
 export const getPublicProposal: RequestHandler = async (req, res, next) => {
   try {
@@ -139,6 +177,7 @@ export const getPublicProposal: RequestHandler = async (req, res, next) => {
       include: { client: { select: { name: true } } },
     });
     if (!proposal) throw new AppError("Proposta não encontrada", 404);
+    assertProposalLinkUsable(proposal);
 
     // Mark as "viewed" the first time it's opened publicly, without
     // overwriting a later "accepted"/"rejected" status.
@@ -175,6 +214,7 @@ export const acceptPublicProposal: RequestHandler = async (req, res, next) => {
 
     const proposal = await prisma.proposal.findUnique({ where: { shareToken: token } });
     if (!proposal) throw new AppError("Proposta não encontrada", 404);
+    assertProposalLinkUsable(proposal);
     if (proposal.status === "accepted") throw new AppError("Esta proposta já foi aceita.", 409);
     if (proposal.status === "rejected") throw new AppError("Esta proposta foi rejeitada e não pode mais ser aceita.", 409);
 

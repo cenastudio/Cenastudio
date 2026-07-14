@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SLA — Service Level Agreement — Cena Studio</title>
+  <style>
+    :root { --orange: #e85002; --bg: #0a0a0a; --surface: #141414; --border: #252525; --text: #e8e8e8; --muted: #999; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.7; }
+    .container { max-width: 800px; margin: 0 auto; padding: 3rem 1.5rem; }
+    .brand { font-size: 1.5rem; font-weight: 900; letter-spacing: 0.04em; margin-bottom: 0.5rem; }
+    .brand span { color: var(--orange); }
+    .updated { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 2rem; }
+    h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; color: #fff; }
+    h2 { font-size: 1.1rem; font-weight: 700; color: var(--orange); margin-top: 2.5rem; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    p, li { font-size: 0.9rem; color: var(--text); margin-bottom: 0.8rem; }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.5rem; }
+    a { color: var(--orange); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .highlight { background: rgba(232,80,2,0.08); border-left: 3px solid var(--orange); padding: 1rem 1.2rem; margin: 1.5rem 0; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.85rem; }
+    th, td { border: 1px solid var(--border); padding: 0.6rem 0.8rem; text-align: left; }
+    th { background: var(--surface); color: var(--orange); text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.06em; }
+    .footer { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border); font-size: 0.75rem; color: var(--muted); }
+    @media (max-width: 600px) { .container { padding: 2rem 1rem; } h1 { font-size: 1.5rem; } table { font-size: 0.78rem; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="brand">Cena<span>.</span> Studio</div>
+    <p class="updated">Última atualização: Julho de 2026</p>
+
+    <h1>SLA — Acordo de Nível de Serviço</h1>
+    <p>Este Acordo de Nível de Serviço ("SLA") descreve os compromissos de disponibilidade e suporte da Cena Studio para os planos pagos. Ele complementa os <a href="/terms-of-use.html">Termos de Uso</a>.</p>
+
+    <div class="highlight">
+      <p>Os compromissos abaixo aplicam-se a assinaturas pagas ativas (Studio, White-Label e Enterprise). Os planos Free e Pro são fornecidos em regime de melhor esforço (best-effort), sem garantia contratual de disponibilidade.</p>
+    </div>
+
+    <h2>1. Disponibilidade Mensal (Uptime)</h2>
+    <p>A disponibilidade é medida como a porcentagem de minutos no mês em que a plataforma esteve acessível, excluídas as manutenções programadas e fatores fora do nosso controle (ver item 4).</p>
+    <table>
+      <tr><th>Plano</th><th>Meta de Uptime</th><th>Suporte</th><th>Tempo de 1ª resposta</th></tr>
+      <tr><td>Studio</td><td>99,5%</td><td>Prioritário</td><td>até 24h úteis</td></tr>
+      <tr><td>White-Label</td><td>99,7%</td><td>Dedicado</td><td>até 4h úteis</td></tr>
+      <tr><td>Enterprise</td><td>99,9%</td><td>Dedicado + gerente de conta</td><td>até 1h útil</td></tr>
+    </table>
+
+    <h2>2. Canais e Janela de Suporte</h2>
+    <ul>
+      <li>E-mail: <a href="mailto:suporte@cenastudio.com.br">suporte@cenastudio.com.br</a>;</li>
+      <li>Comunidade / Discord para dúvidas gerais;</li>
+      <li>Planos White-Label e Enterprise contam com canal dedicado combinado no onboarding;</li>
+      <li>Janela de suporte padrão: dias úteis, das 9h às 18h (horário de Brasília). Incidentes críticos de indisponibilidade total são tratados fora desse horário conforme o plano.</li>
+    </ul>
+
+    <h2>3. Classificação de Incidentes</h2>
+    <table>
+      <tr><th>Severidade</th><th>Definição</th><th>Meta de resposta</th></tr>
+      <tr><td>Crítica</td><td>Plataforma totalmente indisponível para múltiplos usuários</td><td>Conforme o plano (item 1)</td></tr>
+      <tr><td>Alta</td><td>Funcionalidade essencial degradada, sem alternativa</td><td>1 dia útil</td></tr>
+      <tr><td>Média</td><td>Funcionalidade secundária afetada, com contorno</td><td>3 dias úteis</td></tr>
+      <tr><td>Baixa</td><td>Dúvida, melhoria ou impacto cosmético</td><td>5 dias úteis</td></tr>
+    </table>
+
+    <h2>4. Exclusões</h2>
+    <p>Os compromissos de uptime não se aplicam a indisponibilidades causadas por:</p>
+    <ul>
+      <li>Manutenções programadas, comunicadas com antecedência sempre que possível;</li>
+      <li>Falhas de provedores terceiros (hospedagem, processador de pagamento, provedores de IA, e-mail) fora do nosso controle direto;</li>
+      <li>Uso em desacordo com os Termos de Uso ou uso abusivo da infraestrutura;</li>
+      <li>Fatores de força maior (eventos naturais, ataques de larga escala, interrupções de internet).</li>
+    </ul>
+
+    <h2>5. Créditos de Serviço</h2>
+    <p>Caso a meta de uptime do plano não seja cumprida em um mês, o cliente de plano pago poderá solicitar crédito proporcional na fatura seguinte, mediante abertura de chamado em até 30 dias após o incidente:</p>
+    <table>
+      <tr><th>Uptime no mês</th><th>Crédito</th></tr>
+      <tr><td>Abaixo da meta e ≥ 99,0%</td><td>10% da mensalidade</td></tr>
+      <tr><td>Abaixo de 99,0% e ≥ 95,0%</td><td>25% da mensalidade</td></tr>
+      <tr><td>Abaixo de 95,0%</td><td>50% da mensalidade</td></tr>
+    </table>
+    <p>O crédito de serviço é o único e exclusivo remédio previsto neste SLA para o não cumprimento das metas de disponibilidade.</p>
+
+    <h2>6. Backups e Continuidade</h2>
+    <ul>
+      <li>Os dados são armazenados em provedores gerenciados com redundância;</li>
+      <li>O cliente pode exportar seus dados a qualquer momento em formato JSON pela seção "Privacidade" do Perfil;</li>
+      <li>Recomenda-se manter cópias próprias de arquivos e documentos críticos.</li>
+    </ul>
+
+    <h2>7. Revisão</h2>
+    <p>Este SLA pode ser atualizado para refletir melhorias operacionais. Alterações relevantes serão comunicadas pela plataforma ou por e-mail. Condições específicas para Enterprise podem ser formalizadas em contrato próprio.</p>
+
+    <h2>8. Contato</h2>
+    <ul>
+      <li>Suporte: <a href="mailto:suporte@cenastudio.com.br">suporte@cenastudio.com.br</a></li>
+      <li>Comercial (Enterprise): <a href="mailto:contato@cenastudio.com.br">contato@cenastudio.com.br</a></li>
+    </ul>
+
+    <div class="footer">
+      <p>Cena Studio Tecnologia Ltda · contato@cenastudio.com.br</p>
+      <p>Consulte também os <a href="/terms-of-use.html">Termos de Uso</a> e a <a href="/privacy-policy.html">Política de Privacidade</a>.</p>
+    </div>
+  </div>
+</body>
+</html>

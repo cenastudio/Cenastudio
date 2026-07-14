@@ -13,6 +13,21 @@ function getClientOrigin() {
   return process.env.CLIENT_ORIGIN || "http://localhost:5173";
 }
 
+// Public meeting links carry client PII, so they expire after the event
+// (plus a short grace) and can be revoked by cancelling the meeting.
+const MEETING_SHARE_GRACE_DAYS = Math.max(0, Number(process.env.MEETING_SHARE_GRACE_DAYS ?? 2));
+
+/** Blocks a public share link for a cancelled or expired meeting. */
+export function assertMeetingLinkUsable(meeting: { status: string; startsAt: Date }) {
+  if (meeting.status === "cancelled") {
+    throw new AppError("Esta reunião foi cancelada.", 410);
+  }
+  const expiryMs = meeting.startsAt.getTime() + MEETING_SHARE_GRACE_DAYS * 24 * 60 * 60 * 1000;
+  if (Date.now() > expiryMs) {
+    throw new AppError("Este link de reunião expirou.", 410);
+  }
+}
+
 function meetingIdValue(value: unknown) {
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed <= 0) throw new AppError("Reunião inválida", 400);
@@ -285,6 +300,21 @@ export const deleteMeeting: RequestHandler = async (req, res, next) => {
   }
 };
 
+// Cancel a meeting (owner only): revokes the public link immediately.
+export const cancelMeeting: RequestHandler = async (req, res, next) => {
+  try {
+    const userId = req.user!.id;
+    const result = await prisma.meeting.updateMany({
+      where: { id: meetingIdValue(req.params.id), userId: BigInt(userId) },
+      data: { status: "cancelled" },
+    });
+    if (result.count === 0) throw new AppError("Reunião não encontrada ou acesso não autorizado", 404);
+    res.json({ success: true, data: { id: Number(req.params.id), status: "cancelled" } });
+  } catch (e) {
+    next(e);
+  }
+};
+
 // Public: fetch meeting details + downloadable .ics by share token (no auth).
 export const getPublicMeeting: RequestHandler = async (req, res, next) => {
   try {
@@ -297,6 +327,7 @@ export const getPublicMeeting: RequestHandler = async (req, res, next) => {
       },
     });
     if (!meeting) throw new AppError("Reunião não encontrada", 404);
+    assertMeetingLinkUsable(meeting);
     const studioSettings = await prisma.studioSetting.findUnique({ where: { userId: meeting.owner.id } });
 
     res.json({
@@ -328,6 +359,7 @@ export const downloadPublicMeetingIcs: RequestHandler = async (req, res, next) =
       },
     });
     if (!meeting) throw new AppError("Reunião não encontrada", 404);
+    assertMeetingLinkUsable(meeting);
     const studioSettings = await prisma.studioSetting.findUnique({ where: { userId: meeting.owner.id } });
     const studioName = studioSettings?.studioName || meeting.owner.name || SITE_CONFIG.brandName;
     const studioReplyTo = studioSettings?.email?.trim() || CONTACT_EMAIL;

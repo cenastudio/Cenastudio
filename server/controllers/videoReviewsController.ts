@@ -50,8 +50,16 @@ function getClientOrigin() {
   return process.env.CLIENT_ORIGIN || "http://localhost:5173";
 }
 
+// Secret used to sign stateless public review share tokens. Prefers a
+// dedicated SHARE_LINK_SECRET (isolating share links from the session/JWT
+// secret) and falls back to JWT_SECRET. Never a hardcoded default — a missing
+// secret must fail loudly instead of signing forgeable tokens.
 function getTokenSecret() {
-  return process.env.JWT_SECRET || "cena-studio-dev-secret";
+  const secret = process.env.SHARE_LINK_SECRET || process.env.JWT_SECRET;
+  if (!secret) {
+    throw new AppError("SHARE_LINK_SECRET/JWT_SECRET não configurado.", 500);
+  }
+  return secret;
 }
 
 function encodeBase64Url(value: string) {
