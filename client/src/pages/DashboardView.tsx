@@ -14,6 +14,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import WidgetFactory from "@/components/analytics/WidgetFactory";
+import AddWidgetModal from "@/components/analytics/AddWidgetModal";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Dashboard {
@@ -50,6 +51,7 @@ function DashboardViewContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [addWidgetOpen, setAddWidgetOpen] = useState(false);
 
   const loadDashboard = async () => {
     if (!dashboardId) return;
@@ -110,8 +112,7 @@ function DashboardViewContent() {
   };
 
   const addWidget = () => {
-    toast.info(t("app.dashboardView.widgetModalPlaceholder"));
-    // This will open WidgetConfig modal
+    setAddWidgetOpen(true);
   };
 
   const deleteWidget = async (widgetId: string) => {
@@ -264,6 +265,15 @@ function DashboardViewContent() {
           )}
         </div>
       </main>
+
+      {dashboard && (
+        <AddWidgetModal
+          isOpen={addWidgetOpen}
+          onClose={() => setAddWidgetOpen(false)}
+          dashboardId={dashboard.id}
+          onCreated={loadDashboard}
+        />
+      )}
     </div>
   );
 }
