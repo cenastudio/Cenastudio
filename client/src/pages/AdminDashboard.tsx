@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import {
-  AlertTriangle, Crown, KeyRound, Plus, Search,
-  ShieldCheck, Sparkles, Trash2, Users, Wrench,
+  AlertTriangle, Ban, Clock, Crown, DollarSign, KeyRound, Plus, RotateCcw, Search,
+  Settings2, ShieldCheck, Sparkles, Trash2, TrendingUp, Users, Wrench,
 } from "lucide-react";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -12,7 +12,7 @@ import { TabsContent } from "@/components/ui/tabs";
 import { ResponsiveTabs } from "@/components/ui/responsive-tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ApiError, api, ToolFromApi } from "@/lib/api";
+import { ApiError, api, ToolFromApi, type AdminMetrics, type AdminUserDetail } from "@/lib/api";
 
 interface ManagedUser {
   id: number;
@@ -21,6 +21,7 @@ interface ManagedUser {
   role: string;
   github_id: string | null;
   created_at: string;
+  disabled?: boolean;
   plan_name: string | null;
   generation_limit: number | null;
   project_count?: number;
@@ -81,21 +82,103 @@ function AdminContent() {
   const [deleteTarget, setDeleteTarget] = useState<ManagedUser | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
+  // User detail / management drawer
+  const [detail, setDetail] = useState<AdminUserDetail | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailBusy, setDetailBusy] = useState(false);
+  const [subForm, setSubForm] = useState<{ planId: PlanId; status: "active" | "trial" | "canceled"; trialDays: string }>({
+    planId: "pro", status: "active", trialDays: "14",
+  });
+  const [tempPassword, setTempPassword] = useState<string | null>(null);
 
   // ─── Data Loading ───
   const loadData = async () => {
     setLoading(true);
     try {
-      const [toolList, userData] = await Promise.all([
+      const [toolList, userData, metricsData] = await Promise.all([
         api.admin.listTools(),
         api.admin.users(),
+        api.admin.metrics().catch(() => null),
       ]);
       setTools(toolList);
       setUsers((userData.users || []) as ManagedUser[]);
+      if (metricsData) setMetrics(metricsData);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("app.errors.loadAdmin"));
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ─── User detail / management ───
+  const openDetail = async (userId: number) => {
+    setDetailOpen(true);
+    setDetailLoading(true);
+    setTempPassword(null);
+    try {
+      const d = await api.admin.userDetail(userId);
+      setDetail(d);
+      setSubForm({
+        planId: (d.subscription?.planId as PlanId) || "pro",
+        status: (d.subscription?.status as "active" | "trial" | "canceled") === "canceled" ? "canceled" : (d.subscription?.status === "trial" ? "trial" : "active"),
+        trialDays: "14",
+      });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao carregar detalhes");
+      setDetailOpen(false);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const toggleSuspend = async () => {
+    if (!detail) return;
+    const next = !detail.disabled;
+    setDetailBusy(true);
+    try {
+      await api.admin.setUserStatus(detail.id, next);
+      setDetail({ ...detail, disabled: next });
+      toast.success(next ? "Conta suspensa" : "Conta reativada");
+      loadData();
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : "Erro ao alterar status");
+    } finally {
+      setDetailBusy(false);
+    }
+  };
+
+  const applySubscription = async () => {
+    if (!detail) return;
+    setDetailBusy(true);
+    try {
+      await api.admin.updateSubscription(detail.id, {
+        planId: subForm.planId,
+        status: subForm.status,
+        trialDays: subForm.status === "trial" ? Number(subForm.trialDays) || 14 : undefined,
+      });
+      toast.success("Assinatura atualizada");
+      await openDetail(detail.id);
+      loadData();
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : "Erro ao atualizar assinatura");
+    } finally {
+      setDetailBusy(false);
+    }
+  };
+
+  const resetPassword = async () => {
+    if (!detail) return;
+    setDetailBusy(true);
+    try {
+      const { tempPassword: tp } = await api.admin.resetUserPassword(detail.id);
+      setTempPassword(tp);
+      toast.success("Senha temporária gerada");
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : "Erro ao resetar senha");
+    } finally {
+      setDetailBusy(false);
     }
   };
 
@@ -236,10 +319,14 @@ function AdminContent() {
             {/* Stat cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-7">
               {[
-                { label: t("app.admin.users"), value: users.length, icon: Users, accent: "border-b-frame-orange" },
-                { label: t("app.admin.paidAccounts"), value: stats.paid, icon: Sparkles, accent: "border-b-frame-green" },
-                { label: t("app.admin.admins"), value: stats.admins, icon: Crown, accent: "border-b-[#4d9fff]" },
-                { label: t("app.admin.activeTools"), value: `${stats.activeTools}/${tools.length}`, icon: ShieldCheck, accent: "border-b-frame-orange" },
+                { label: t("app.admin.users"), value: metrics?.totalUsers ?? users.length, icon: Users, accent: "border-b-frame-orange" },
+                { label: "MRR (R$)", value: metrics ? metrics.mrrBrl.toLocaleString("pt-BR") : "—", icon: DollarSign, accent: "border-b-frame-green" },
+                { label: t("app.admin.paidAccounts"), value: metrics?.paidActive ?? stats.paid, icon: Sparkles, accent: "border-b-frame-green" },
+                { label: "Em trial", value: metrics?.trials ?? "—", icon: Clock, accent: "border-b-[#4d9fff]" },
+                { label: "Novos (30d)", value: metrics?.newUsers30d ?? "—", icon: TrendingUp, accent: "border-b-frame-orange" },
+                { label: "Novos (7d)", value: metrics?.newUsers7d ?? "—", icon: TrendingUp, accent: "border-b-[#4d9fff]" },
+                { label: t("app.admin.admins"), value: metrics?.admins ?? stats.admins, icon: Crown, accent: "border-b-[#4d9fff]" },
+                { label: "Suspensos", value: metrics?.disabled ?? "—", icon: Ban, accent: "border-b-red-500" },
               ].map((stat) => {
                 const Icon = stat.icon;
                 return (
@@ -337,6 +424,9 @@ function AdminContent() {
                             {isCurrentUser && (
                               <span className="text-[0.62rem] font-frame-mono uppercase tracking-wider text-frame-gold border border-frame-gold/30 px-1.5 py-0.5">{t("app.admin.you")}</span>
                             )}
+                            {u.disabled && (
+                              <span className="text-[0.62rem] font-frame-mono uppercase tracking-wider text-red-300 border border-red-500/40 px-1.5 py-0.5">Suspenso</span>
+                            )}
                           </div>
                           <p className="text-sm text-frame-gray-light truncate">{u.email}</p>
                           <p className="text-[0.64rem] text-frame-gray-muted font-frame-mono mt-0.5">
@@ -368,6 +458,14 @@ function AdminContent() {
                           }`}
                         >
                           {u.role === "admin" ? t("app.admin.demote") : t("app.admin.promote")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openDetail(u.id)}
+                          title="Gerenciar usuário"
+                          className="h-11 w-11 border border-frame-gray-3 text-frame-gray-light hover:border-frame-orange/50 hover:text-frame-orange flex items-center justify-center transition"
+                        >
+                          <Settings2 className="w-4 h-4" />
                         </button>
                         <button
                           type="button"
@@ -573,6 +671,126 @@ function AdminContent() {
               placeholder={deleteTarget.email}
               className="w-full frame-input focus:border-red-400"
             />
+          </div>
+        )}
+      </AnimatedModal>
+
+      {/* ═══ USER MANAGEMENT MODAL ═══ */}
+      <AnimatedModal
+        isOpen={detailOpen}
+        onClose={() => { if (!detailBusy) { setDetailOpen(false); setDetail(null); setTempPassword(null); } }}
+        title="Gerenciar usuário"
+        description="Assinatura, acesso e ações de suporte."
+        className="max-w-2xl"
+      >
+        {detailLoading || !detail ? (
+          <p className="text-sm text-frame-gray-light py-8 text-center">{t("app.common.loading")}</p>
+        ) : (
+          <div className="space-y-5">
+            {/* Header */}
+            <div className="flex items-start gap-3">
+              <div className={`w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold shrink-0 border-2 ${avatarClass(detail.role)}`}>
+                {(detail.name || detail.email).charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold truncate">{detail.name || t("app.admin.noName")}</span>
+                  {detail.role === "admin" && <span className="text-[0.6rem] font-frame-mono uppercase text-frame-orange border border-frame-orange/30 px-1.5 py-0.5">Admin</span>}
+                  {detail.disabled
+                    ? <span className="text-[0.6rem] font-frame-mono uppercase text-red-300 border border-red-500/40 px-1.5 py-0.5">Suspenso</span>
+                    : <span className="text-[0.6rem] font-frame-mono uppercase text-frame-green border border-frame-green/40 px-1.5 py-0.5">Ativo</span>}
+                </div>
+                <p className="text-sm text-frame-gray-light truncate">{detail.email}</p>
+              </div>
+            </div>
+
+            {/* Usage */}
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 text-center">
+              {[
+                { l: "Projetos", v: detail.usage.projects },
+                { l: "Arquivos", v: detail.usage.files },
+                { l: "Reviews", v: detail.usage.videoReviews },
+                { l: "Clientes", v: detail.usage.clients },
+                { l: "Gerações", v: detail.usage.generations },
+              ].map((s) => (
+                <div key={s.l} className="border border-frame-gray-3 bg-frame-gray-1/20 py-2">
+                  <p className="frame-title text-lg text-frame-white leading-none">{s.v}</p>
+                  <p className="text-[0.55rem] font-frame-mono uppercase tracking-wider text-frame-gray-muted mt-1">{s.l}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Subscription current state */}
+            <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <DollarSign className="w-4 h-4 text-frame-orange" />
+                <h3 className="font-frame-mono text-[0.66rem] uppercase tracking-[0.14em] text-frame-orange">Assinatura</h3>
+              </div>
+              {detail.subscription ? (
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-frame-gray-light mb-4">
+                  <p>Plano: <span className="text-frame-white">{detail.subscription.planName}</span></p>
+                  <p>Status: <span className="text-frame-white">{detail.subscription.status}</span></p>
+                  <p>Trial até: <span className="text-frame-white">{detail.subscription.trialEndsAt ? new Date(detail.subscription.trialEndsAt).toLocaleDateString("pt-BR") : "—"}</span></p>
+                  <p>Período até: <span className="text-frame-white">{detail.subscription.currentPeriodEnd ? new Date(detail.subscription.currentPeriodEnd).toLocaleDateString("pt-BR") : "—"}</span></p>
+                  <p className="col-span-2 truncate">Stripe: <span className="text-frame-white">{detail.subscription.stripeCustomerId || "sem cliente Stripe"}</span></p>
+                </div>
+              ) : (
+                <p className="text-xs text-frame-gray-light mb-4">Sem assinatura registrada.</p>
+              )}
+
+              {/* Subscription editor */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <select value={subForm.planId} onChange={(e) => setSubForm({ ...subForm, planId: e.target.value as PlanId })} className="frame-input">
+                  {PLANS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+                </select>
+                <select value={subForm.status} onChange={(e) => setSubForm({ ...subForm, status: e.target.value as "active" | "trial" | "canceled" })} className="frame-input">
+                  <option value="active">Ativo (cortesia/pago)</option>
+                  <option value="trial">Trial</option>
+                  <option value="canceled">Cancelado</option>
+                </select>
+                {subForm.status === "trial" ? (
+                  <div className="relative">
+                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
+                    <input type="number" min="1" value={subForm.trialDays} onChange={(e) => setSubForm({ ...subForm, trialDays: e.target.value })} className="frame-input w-full pl-10" placeholder="dias" />
+                  </div>
+                ) : <div />}
+              </div>
+              <button type="button" onClick={applySubscription} disabled={detailBusy} className="frame-btn-primary mt-3 text-sm disabled:opacity-60">
+                Aplicar assinatura
+              </button>
+            </div>
+
+            {/* Support actions */}
+            <div className="border border-frame-gray-3 bg-frame-gray-1/20 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-frame-orange" />
+                <h3 className="font-frame-mono text-[0.66rem] uppercase tracking-[0.14em] text-frame-orange">Suporte</h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={toggleSuspend}
+                  disabled={detailBusy || detail.id === currentUser?.id}
+                  title={detail.id === currentUser?.id ? "Você não pode suspender a própria conta" : undefined}
+                  className={`px-3 py-2 min-h-11 text-xs border flex items-center gap-2 transition disabled:opacity-40 disabled:cursor-not-allowed ${
+                    detail.disabled
+                      ? "border-frame-green/40 text-frame-green hover:bg-frame-green/10"
+                      : "border-red-500/40 text-red-300 hover:bg-red-500/10"
+                  }`}
+                >
+                  <Ban className="w-4 h-4" /> {detail.disabled ? "Reativar conta" : "Suspender conta"}
+                </button>
+                <button type="button" onClick={resetPassword} disabled={detailBusy} className="px-3 py-2 min-h-11 text-xs border border-frame-gray-3 text-frame-gray-light hover:border-frame-orange/50 hover:text-frame-orange flex items-center gap-2 transition disabled:opacity-40">
+                  <RotateCcw className="w-4 h-4" /> Resetar senha
+                </button>
+              </div>
+              {tempPassword && (
+                <div className="border border-frame-orange/40 bg-frame-orange/5 p-3">
+                  <p className="text-[0.6rem] font-frame-mono uppercase tracking-wider text-frame-gray-light mb-1">Senha temporária (mostre ao usuário — não será exibida de novo)</p>
+                  <code className="text-sm text-frame-orange break-all">{tempPassword}</code>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </AnimatedModal>

@@ -14,6 +14,7 @@ export interface AuthUser {
   phone?: string;
   mustResetPassword?: boolean;
   twoFactorEnabled?: boolean;
+  disabled?: boolean;
 }
 
 declare global {
@@ -68,6 +69,13 @@ export const authenticate: RequestHandler = async (req, res, next) => {
 
     const currentUser = await getUserById(payload.id);
     const resolvedUser = currentUser ?? (await ensureUserFromToken(payload));
+
+    // A suspended account keeps a technically-valid JWT until it expires, so
+    // reject it here to cut active sessions the moment an admin disables it.
+    if (resolvedUser.disabled) {
+      return next(new AppError("Conta suspensa. Fale com o suporte.", 403));
+    }
+
     req.user = resolvedUser;
 
     trackSession(resolvedUser.id, token, req.headers["user-agent"], req.ip);

@@ -79,6 +79,9 @@ function ensureUserColumns() {
   if (!userCols.includes("two_factor_secret")) db.prepare("ALTER TABLE users ADD COLUMN two_factor_secret TEXT").run();
   if (!userCols.includes("backup_codes")) db.prepare("ALTER TABLE users ADD COLUMN backup_codes TEXT").run();
   if (!userCols.includes("privacy_settings")) db.prepare("ALTER TABLE users ADD COLUMN privacy_settings TEXT").run();
+  if (!userCols.includes("disabled")) {
+    db.prepare("ALTER TABLE users ADD COLUMN disabled INTEGER NOT NULL DEFAULT 0").run();
+  }
 }
 
 function ensureSubscriptionColumns() {

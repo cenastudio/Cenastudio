@@ -20,6 +20,7 @@ model User {
   studioRole     String?   @map("studio_role")
   phone          String?
   mustResetPassword Boolean @default(false) @map("must_reset_password")
+  disabled       Boolean   @default(false)
 
   // LGPD / Privacy Settings
   privacySettings Json    @default("{\"profileVisibility\":\"team\",\"allowSearchEngineIndexing\":true,\"shareAnalyticsWithTeam\":true}") @map("privacy_settings")

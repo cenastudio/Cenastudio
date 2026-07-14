@@ -47,6 +47,7 @@ type PrismaUserWithProfile = {
   phone?: string | null;
   mustResetPassword?: boolean | null;
   twoFactorEnabled?: boolean | null;
+  disabled?: boolean | null;
 };
 
 export interface FormattedUserPlan {
@@ -84,6 +85,7 @@ function toAuthUser(row: PrismaUserWithProfile): AuthUser {
     phone: row.phone ?? undefined,
     mustResetPassword: row.mustResetPassword ?? false,
     twoFactorEnabled: row.twoFactorEnabled ?? false,
+    disabled: row.disabled ?? false,
   };
 }
 
@@ -323,15 +325,21 @@ export async function loginUser(email: string, password: string): Promise<AuthUs
     if (!row || !bcrypt.compareSync(password, row.passwordHash)) {
       throw new AppError("Invalid email or password", 401);
     }
+    if (row.disabled) {
+      throw new AppError("Conta suspensa. Fale com o suporte.", 403);
+    }
     await ensureAuthWorkspace(Number(row.id), { name: row.name, email: row.email });
     return toAuthUser(row);
   }
 
   const row = db.prepare("SELECT * FROM users WHERE email = ?").get(normalized) as
-    | DbUser
+    | (DbUser & { disabled?: number })
     | undefined;
   if (!row || !bcrypt.compareSync(password, row.password_hash)) {
     throw new AppError("Invalid email or password", 401);
+  }
+  if (row.disabled) {
+    throw new AppError("Conta suspensa. Fale com o suporte.", 403);
   }
   await ensureAuthWorkspace(row.id, { name: row.name, email: row.email });
   return {
@@ -355,7 +363,8 @@ export async function getUserById(id: number): Promise<AuthUser | null> {
               studio_role as studioRole,
               phone,
               must_reset_password as mustResetPassword,
-              two_factor_enabled as twoFactorEnabled
+              two_factor_enabled as twoFactorEnabled,
+              disabled
        FROM users WHERE id = ?`,
     )
     .get(id) as any;
@@ -369,7 +378,8 @@ export async function getUserById(id: number): Promise<AuthUser | null> {
     studioRole: row.studioRole,
     phone: row.phone,
     mustResetPassword: Boolean(row.mustResetPassword),
-    twoFactorEnabled: Boolean(row.twoFactorEnabled)
+    twoFactorEnabled: Boolean(row.twoFactorEnabled),
+    disabled: Boolean(row.disabled)
   };
 }
 
@@ -945,6 +955,7 @@ export async function listAllUsers(): Promise<Array<{
   role: string;
   github_id: string | null;
   created_at: string;
+  disabled: boolean;
   plan_name: string | null;
   generation_limit: number | null;
   project_count: number;
@@ -968,6 +979,7 @@ export async function listAllUsers(): Promise<Array<{
         role: user.role,
         github_id: user.githubId,
         created_at: user.createdAt.toISOString(),
+        disabled: user.disabled,
         plan_name: subscription?.plan.name ?? null,
         generation_limit: subscription?.plan.generationLimit ?? null,
         project_count: user._count.projects,
@@ -979,7 +991,7 @@ export async function listAllUsers(): Promise<Array<{
 
   return db
     .prepare(
-      `SELECT u.id, u.name, u.email, u.role, u.github_id, u.created_at,
+      `SELECT u.id, u.name, u.email, u.role, u.github_id, u.created_at, u.disabled,
               p.name as plan_name, p.generation_limit,
               COUNT(DISTINCT pr.id) as project_count,
               COUNT(DISTINCT f.id) as file_count,

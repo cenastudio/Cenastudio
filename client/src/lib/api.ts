@@ -96,6 +96,50 @@ export interface AuthUser {
   twoFactorEnabled?: boolean;
 }
 
+export interface AdminMetrics {
+  totalUsers: number;
+  admins: number;
+  disabled: number;
+  newUsers7d: number;
+  newUsers30d: number;
+  byPlan: Record<string, number>;
+  trials: number;
+  paidActive: number;
+  mrrBrl: number;
+}
+
+export interface AdminUserDetail {
+  id: number;
+  name: string | null;
+  email: string;
+  role: string;
+  disabled: boolean;
+  emailVerified: boolean;
+  twoFactorEnabled: boolean;
+  phone: string | null;
+  studioName: string | null;
+  createdAt: string;
+  subscription: {
+    planId: string;
+    planName: string;
+    status: string;
+    generationLimit: number;
+    trialEndsAt: string | null;
+    currentPeriodEnd: string | null;
+    stripeCustomerId: string | null;
+    stripeSubscriptionId: string | null;
+  } | null;
+  usage: {
+    projects: number;
+    files: number;
+    videoReviews: number;
+    clients: number;
+    generations: number;
+  };
+  lastActivityAt: string | null;
+  referrals: { total: number; converted: number };
+}
+
 export interface UserPlan {
   planId: string;
   planName: string;
@@ -835,7 +879,7 @@ export const api = {
       request<{ id: string; isActive: boolean }>(`/admin/tools/${id}`, {
         method: "DELETE",
       }),
-    users: () => request<{ count: number; users: { id: number; email: string; role: string; name?: string; plan_name?: string; generation_limit?: number | null; project_count?: number; file_count?: number; review_count?: number }[] }>("/admin/users"),
+    users: () => request<{ count: number; users: { id: number; email: string; role: string; name?: string; disabled?: boolean; plan_name?: string; generation_limit?: number | null; project_count?: number; file_count?: number; review_count?: number }[] }>("/admin/users"),
     createUser: (body: { name: string; email: string; password: string; role: "user" | "admin"; planId: "free" | "pro" | "studio" | "whitelabel" | "enterprise" }) =>
       request<{ id: number; email: string; role: string; planId: string }>("/admin/users", {
         method: "POST",
@@ -854,6 +898,25 @@ export const api = {
     deleteUser: (id: number) =>
       request<{ id: number; email: string; deleted: boolean; summary: Record<string, number> }>(`/admin/users/${id}`, {
         method: "DELETE",
+      }),
+    metrics: () => request<AdminMetrics>("/admin/metrics"),
+    userDetail: (id: number) => request<AdminUserDetail>(`/admin/users/${id}`),
+    setUserStatus: (id: number, disabled: boolean) =>
+      request<{ id: number; disabled: boolean }>(`/admin/users/${id}/status`, {
+        method: "PUT",
+        body: JSON.stringify({ disabled }),
+      }),
+    updateSubscription: (
+      id: number,
+      body: { planId: "free" | "pro" | "studio" | "whitelabel" | "enterprise"; status: "active" | "trial" | "canceled"; trialDays?: number },
+    ) =>
+      request<{ id: number; planId: string; status: string }>(`/admin/users/${id}/subscription`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    resetUserPassword: (id: number) =>
+      request<{ tempPassword: string }>(`/admin/users/${id}/reset-password`, {
+        method: "POST",
       }),
   },
   contact: {

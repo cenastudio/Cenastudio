@@ -12,10 +12,15 @@ router.get("/tools", adminController.listTools);
 router.post("/tools", validateBody(createToolSchema), adminController.createTool);
 router.put("/tools/:id", validateBody(updateToolSchema), adminController.updateTool);
 router.delete("/tools/:id", adminController.deleteTool);
+router.get("/metrics", adminController.getMetrics);
 router.get("/users", adminController.listUsers);
 router.post("/users", validateBody(createManagedUserSchema), adminController.createManagedUser);
+router.get("/users/:id", adminController.getUserDetail);
 router.put("/users/:id/role", adminController.updateUserRole);
 router.put("/users/:id/plan", adminController.updateUserPlan);
+router.put("/users/:id/status", adminController.setUserDisabled);
+router.put("/users/:id/subscription", adminController.updateUserSubscription);
+router.post("/users/:id/reset-password", adminController.resetUserPassword);
 router.delete("/users/:id", adminController.deleteManagedUser);
 
 export default router;
