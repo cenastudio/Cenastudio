@@ -30,6 +30,7 @@ router.get("/privacy-settings", authenticate, authController.getPrivacySettings)
 router.put("/privacy-settings", authenticate, authController.updatePrivacySettings);
 router.post("/lgpd-request", authenticate, authController.createLgpdRequest);
 router.get("/lgpd-requests", authenticate, authController.listLgpdRequests);
+router.get("/export-data", authenticate, authController.exportData);
 
 // ═══ SECURITY ADVANCED: 2FA ═══
 router.post("/2fa/setup", authenticate, authController.setup2FA);

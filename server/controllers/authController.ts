@@ -461,6 +461,29 @@ export const listLgpdRequests: RequestHandler = async (req, res, next) => {
   }
 };
 
+/**
+ * GET /api/auth/export-data
+ * Exporta imediatamente todos os dados do titular como um arquivo JSON para
+ * download. Atende de fato ao direito de acesso/portabilidade
+ * (LGPD Art. 18, II e V / GDPR Art. 15 e 20) — sem depender de processamento
+ * manual posterior.
+ */
+export const exportData: RequestHandler = async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError("Unauthorized", 401);
+
+    const data = await lgpdService.exportUserData(req.user.id);
+    const filename = `cenastudio-dados-${new Date().toISOString().slice(0, 10)}.json`;
+
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Cache-Control", "no-store");
+    res.status(200).send(JSON.stringify(data, null, 2));
+  } catch (e) {
+    next(e);
+  }
+};
+
 
 // ═══════════════════════════════════════════════════════════════
 // SECURITY ADVANCED: 2FA

@@ -1906,7 +1906,7 @@ function ProfileContent() {
                     <p className="mt-1 text-xs text-frame-gray-light">Projetos realmente criados no período {usageMetrics.period}</p>
                   </div>
 
-                  {usageMetrics.teamMembers.limit > 0 && (
+                  {usageMetrics.teamMembers.limit !== 0 && (
                     <div className="glow-card p-4">
                       <div className="flex items-center gap-2 mb-3">
                         <Users className="w-4 h-4 text-frame-orange" />
@@ -3320,14 +3320,14 @@ function ProfileContent() {
                     <h4 className="text-sm font-semibold text-frame-white">Solicitar Cópia</h4>
                   </div>
                   <p className="text-xs text-frame-gray-light mb-4">
-                    Receba uma cópia completa de todos os seus dados em formato JSON
+                    Baixe agora, na hora, uma cópia completa de todos os seus dados em formato JSON
                   </p>
                   <button
                     type="button"
-                    onClick={() => handleLgpdRequest("copy")}
+                    onClick={handleExportData}
                     className="w-full frame-btn-ghost text-xs py-2"
                   >
-                    Solicitar Cópia
+                    Baixar Cópia (JSON)
                   </button>
                 </div>
 

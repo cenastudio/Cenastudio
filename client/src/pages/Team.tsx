@@ -1,8 +1,11 @@
 /**
  * Team Page — /team
  *
- * Studio plan only. Admin creates team member accounts (name, email, password, role).
- * Credentials are sent manually (WhatsApp/email) to the collaborator.
+ * Available on plans that include team seats (see teamMemberLimit in
+ * shared/planEntitlements.ts). Admin creates team member accounts
+ * (name, email, password, role). Capacity is enforced server-side by
+ * teamService.assertTeamCapacity. Credentials are sent manually
+ * (WhatsApp/email) to the collaborator.
  */
 
 import { useEffect, useState } from "react";

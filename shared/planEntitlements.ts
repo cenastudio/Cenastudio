@@ -13,7 +13,7 @@ export type FeatureFlagId = "budgetTracking" | "equipmentInventory" | "shotList"
 
 export interface PlanEntitlement {
   clientLimit: number | null;
-  teamMemberLimit: number;
+  teamMemberLimit: number; // -1 = unlimited, 0 = feature unavailable
   requiresPaidActivation: boolean;
   budgetTracking: boolean;
   equipmentInventory: boolean;
@@ -37,7 +37,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
   },
   pro: {
     clientLimit: 15,
-    teamMemberLimit: 0,
+    teamMemberLimit: 5,
     requiresPaidActivation: false,
     budgetTracking: false,
     equipmentInventory: false,
@@ -48,7 +48,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
   },
   studio: {
     clientLimit: 50,
-    teamMemberLimit: 5,
+    teamMemberLimit: -1, // unlimited — matches advertised "Equipe ilimitada"
     requiresPaidActivation: true,
     budgetTracking: true,
     equipmentInventory: true,
@@ -58,7 +58,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     customBranding: false,
   },
   whitelabel: {
-    clientLimit: 100,
+    clientLimit: null, // unlimited — matches advertised "Clientes ilimitados"
     teamMemberLimit: 10,
     requiresPaidActivation: true,
     budgetTracking: true,
@@ -70,7 +70,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
   },
   enterprise: {
     clientLimit: null,
-    teamMemberLimit: 50,
+    teamMemberLimit: -1, // unlimited — matches advertised "Usuários ilimitados"
     requiresPaidActivation: true,
     budgetTracking: true,
     equipmentInventory: true,

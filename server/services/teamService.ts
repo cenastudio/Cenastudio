@@ -29,8 +29,6 @@ export interface TeamMember {
   createdAt: string;
 }
 
-const MAX_TEAM_MEMBERS_STUDIO = 5;
-
 function hashPassword(password: string): string {
   return bcrypt.hashSync(password, 12);
 }
@@ -80,26 +78,33 @@ async function countTeamMembers(ownerId: number): Promise<number> {
 }
 
 /**
- * Assert the admin has Studio plan and capacity for more members
+ * Assert the owner's plan includes team members and still has capacity.
+ * The allowance is driven entirely by the plan entitlements
+ * (`teamMemberLimit`): 0 means the feature is not part of the plan, -1 means
+ * unlimited. This keeps enforcement consistent with what each plan advertises.
  */
 async function assertTeamCapacity(ownerId: number): Promise<void> {
   const entitlement = await getUserEntitlements(ownerId);
-  if (entitlement.planId !== "studio") {
+  const limit = entitlement.teamMemberLimit;
+
+  if (limit === 0) {
     throw new AppError(
-      "O recurso Equipe está disponível apenas no plano Studio.",
+      "O recurso Equipe não está incluído no seu plano. Faça upgrade para adicionar membros.",
       402,
     );
   }
   if (!entitlement.operational) {
-    throw new AppError("Ative o plano Studio para gerenciar sua equipe.", 402);
+    throw new AppError("Ative seu plano para gerenciar a equipe.", 402);
   }
 
-  const currentCount = await countTeamMembers(ownerId);
-  if (currentCount >= MAX_TEAM_MEMBERS_STUDIO) {
-    throw new AppError(
-      `Seu plano permite até ${MAX_TEAM_MEMBERS_STUDIO} membros. Remova um membro ou entre em contato para expandir.`,
-      402,
-    );
+  if (limit !== -1) {
+    const currentCount = await countTeamMembers(ownerId);
+    if (currentCount >= limit) {
+      throw new AppError(
+        `Seu plano permite até ${limit} ${limit === 1 ? "membro" : "membros"}. Remova um membro ou faça upgrade para expandir.`,
+        402,
+      );
+    }
   }
 }
 

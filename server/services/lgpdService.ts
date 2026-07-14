@@ -13,6 +13,7 @@
 import { db } from "../models/db.js";
 import { prisma, shouldUsePrisma } from "../models/prisma.js";
 import { sendEmail, isEmailConfigured } from "./emailService.js";
+import { jsonSafe } from "../utils/prismaSerialization.js";
 import { SITE_CONFIG } from "@shared/site";
 
 // ────────────────────────────────────────────────────────────────
@@ -96,6 +97,181 @@ export async function calculateDataStats(userId: number): Promise<DataStats> {
       totalSize: parseFloat((projectsSize + filesSize + clientsSize + reviewsSize).toFixed(2)),
     };
   }
+}
+
+// ────────────────────────────────────────────────────────────────
+// PORTABILIDADE / ACESSO AOS DADOS (LGPD Art. 18, II e V)
+// ────────────────────────────────────────────────────────────────
+
+/**
+ * Campos sensíveis do usuário que NUNCA devem sair no export
+ * (credenciais e segredos de segurança). O restante do perfil é
+ * dado do próprio titular e pode ser portado.
+ */
+const REDACTED_USER_FIELDS = new Set([
+  "passwordHash",
+  "password_hash",
+  "twoFactorSecret",
+  "two_factor_secret",
+  "backupCodes",
+  "backup_codes",
+  "supabaseId",
+  "supabase_id",
+]);
+
+function redactUser<T extends Record<string, unknown>>(user: T): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(user).filter(([key]) => !REDACTED_USER_FIELDS.has(key)),
+  );
+}
+
+/** Tabelas SQLite com coluna user_id que compõem o pacote de dados do titular. */
+const SQLITE_USER_TABLES = [
+  "subscriptions",
+  "usage",
+  "clients",
+  "projects",
+  "opportunities",
+  "interactions",
+  "proposals",
+  "meetings",
+  "files",
+  "video_reviews",
+  "video_comments",
+  "financial_entries",
+  "studio_settings",
+  "notifications",
+  "webhooks",
+  "time_entries",
+  "shot_types",
+  "budgets",
+  "equipment",
+  "shot_lists",
+  "checklist_items",
+  "reports",
+  "lgpd_requests",
+] as const;
+
+export interface UserDataExport {
+  meta: {
+    generatedAt: string;
+    userId: number;
+    brand: string;
+    legalBasis: string;
+    format: string;
+  };
+  profile: Record<string, unknown> | null;
+  [collection: string]: unknown;
+}
+
+/**
+ * Reúne, de forma síncrona e imediata, todos os dados pessoais e de negócio
+ * do titular num objeto estruturado — atendendo de fato ao direito de acesso e
+ * portabilidade (LGPD Art. 18, II e V / GDPR Art. 15 e 20). Credenciais e
+ * segredos de segurança são redigidos.
+ */
+export async function exportUserData(userId: number): Promise<UserDataExport> {
+  const meta = {
+    generatedAt: new Date().toISOString(),
+    userId,
+    brand: SITE_CONFIG.brandName,
+    legalBasis: "LGPD Art. 18, II e V / GDPR Art. 15 e 20",
+    format: "cenastudio-data-export-v1",
+  };
+
+  if (shouldUsePrisma) {
+    const uid = BigInt(userId);
+    const where = { where: { userId: uid } } as const;
+
+    const [
+      user,
+      subscriptions,
+      usage,
+      clients,
+      projects,
+      opportunities,
+      interactions,
+      proposals,
+      meetings,
+      files,
+      videoReviews,
+      videoComments,
+      financialEntries,
+      studioSettings,
+      notifications,
+      webhooks,
+      timeEntries,
+      shotTypes,
+      lgpdRequests,
+      apiKeys,
+    ] = await Promise.all([
+      prisma.user.findUnique({ where: { id: uid } }),
+      prisma.subscription.findMany(where),
+      prisma.usage.findMany(where),
+      prisma.client.findMany(where),
+      prisma.project.findMany(where),
+      prisma.opportunity.findMany(where),
+      prisma.interaction.findMany(where),
+      prisma.proposal.findMany(where),
+      prisma.meeting.findMany(where),
+      prisma.file.findMany(where),
+      prisma.videoReview.findMany(where),
+      prisma.videoComment.findMany(where),
+      prisma.financialEntry.findMany(where),
+      prisma.studioSetting.findUnique({ where: { userId: uid } }),
+      prisma.notification.findMany(where),
+      prisma.webhook.findMany(where),
+      prisma.timeEntry.findMany(where),
+      prisma.shotType.findMany(where),
+      prisma.lgpdRequest.findMany(where),
+      // Only non-secret API key metadata — never the key/secret itself.
+      prisma.apiKey.findMany({ ...where, select: { id: true, name: true, createdAt: true, lastUsed: true } }),
+    ]);
+
+    return {
+      meta,
+      profile: user ? jsonSafe(redactUser(user as Record<string, unknown>)) : null,
+      subscriptions: jsonSafe(subscriptions),
+      usage: jsonSafe(usage),
+      clients: jsonSafe(clients),
+      projects: jsonSafe(projects),
+      opportunities: jsonSafe(opportunities),
+      interactions: jsonSafe(interactions),
+      proposals: jsonSafe(proposals),
+      meetings: jsonSafe(meetings),
+      files: jsonSafe(files),
+      videoReviews: jsonSafe(videoReviews),
+      videoComments: jsonSafe(videoComments),
+      financialEntries: jsonSafe(financialEntries),
+      studioSettings: studioSettings ? jsonSafe(studioSettings) : null,
+      notifications: jsonSafe(notifications),
+      webhooks: jsonSafe(webhooks),
+      timeEntries: jsonSafe(timeEntries),
+      shotTypes: jsonSafe(shotTypes),
+      lgpdRequests: jsonSafe(lgpdRequests),
+      apiKeys: jsonSafe(apiKeys),
+    };
+  }
+
+  // SQLite fallback — read the user profile plus every user-scoped table that
+  // exists, tolerating tables that may be absent in a given schema version.
+  const userRow = db.prepare("SELECT * FROM users WHERE id = ?").get(userId) as Record<string, unknown> | undefined;
+  const result: UserDataExport = {
+    meta,
+    profile: userRow ? redactUser(userRow) : null,
+  };
+
+  for (const table of SQLITE_USER_TABLES) {
+    try {
+      const rows = db.prepare(`SELECT * FROM ${table} WHERE user_id = ?`).all(userId);
+      result[table] = rows;
+    } catch {
+      // Table not present in this schema variant — skip it.
+      result[table] = [];
+    }
+  }
+
+  return result;
 }
 
 // ────────────────────────────────────────────────────────────────
@@ -345,6 +521,7 @@ export async function processLgpdRequest(
 
 export default {
   calculateDataStats,
+  exportUserData,
   savePrivacySettings,
   getPrivacySettings,
   createLgpdRequest,
