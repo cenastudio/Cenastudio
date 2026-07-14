@@ -54,15 +54,21 @@ CREDENCIAIS_TEMPLATE.md
 CREDENCIAIS_PRODUCAO.md
 scripts/create-stripe-products.ts
 scripts/get-stripe-keys.ts
-# One-off debug scripts contêm credenciais hardcoded — não versionar.
-scripts/oneoff/
+
+# One-off debug scripts frequentemente contêm credenciais hardcoded —
+# não versionar por padrão. O README de scripts/oneoff/ explica o motivo.
+scripts/oneoff/*.ts
+!scripts/oneoff/README.md
+
 # Pasta pessoal do operador: credenciais, notas de segurança, dossiês
 # de deploy real. NUNCA versionar. Nomeada com ponto para ser óbvia.
 .private/
-.vercel
-.env*
 
-# Docs locais de trabalho (não versionar)
+# Docs de trabalho / scratch de sessão (não versionar) — qualquer doc
+# gerado durante uma sessão de debug/diagnóstico que não é documentação
+# permanente do projeto. Documentação permanente vive em README.md,
+# ARCHITECTURE.md, DEPLOY.md, SECURITY.md, CHANGELOG.md, etc. (raiz,
+# sempre versionados) ou docs/ (se aplicável).
 VERCEL_ENV_VARS_TO_ADD.md
 SESSAO_*.md
 STATUS_*.md
@@ -75,6 +81,7 @@ CHECKLIST_*.md
 COMANDOS_*.md
 CREDENCIAIS_*.md
 DECISAO_*.md
+DECISAO_*.txt
 DEPLOY_*.md
 DIAGNOSTICO_*.md
 ENV_*.md
@@ -89,147 +96,43 @@ RAILWAY_*.md
 RELATORIO_*.md
 RESPOSTA_*.md
 RESULTADO_*.md
+RESULTADO_*.txt
 RESUMO_*.md
 ROTAS_*.md
 SITUACAO_*.md
 VERIFICAR_*.md
+*_COMPLETA.md
+*_DEPLOY*.md
+*_GIT*.md
+PEGAR_*.md
+
+# Scripts de trabalho de sessão (shell scripts soltos na raiz) — scripts
+# reais do projeto vivem em scripts/ e são versionados normalmente.
 *.sh
-!scripts/*.sh
-
-# Pastas internas
-docs/
-skills/
-uploads/
-
-# Docs de trabalho
-*_COMPLETA.md
-*_DEPLOY*.md
-*_GIT*.md
-CHECKLIST_*.md
-COMANDOS_*.md
-CREDENCIAIS_*.md
-DECISAO_*.txt
-DIAGNOSTICO_*.md
-ENV_*.md
-ERROS_*.md
-LIMPEZA_*.md
-PEGAR_*.md
-PERMITIR_*.md
-PERFORMANCE_EXPLICACAO.md
-PRE_*.md
-PRONTO_*.md
-PROXIMO_*.md
-PUSH_*.md
-RAILWAY_*.md
-RELATORIO_*.md
-RESOLVER_*.md
-RESPOSTA_*.md
-RESULTADO_*.txt
-RESUMO_*.md
-ROTAS_*.md
-SITUACAO_*.md
-STATUS_*.md
-VERIFICAR_*.md
-
-# Scripts de trabalho
+!scripts/**/*.sh
 limpar-*.sh
 remover-*.sh
 PUSH_*.sh
 
-# Temporários
+# Temporários de sessão de debug/diagnóstico (ex.: scripts descartáveis
+# criados com prefixo _ para consultas pontuais no banco, dumps de
+# verificação, etc. — nunca fazem parte do código do projeto).
+/_*.mjs
+/_*.ts
+/_*.txt
+/_*.json
 cookies.txt
 .checkout.txt
 add-progress-column.sql
 supabase-rls-policies.sql
 
-# Pastas internas
-docs/
+# Pastas internas (conteúdo local, não versionado)
 skills/
-uploads/
 
-# Docs de trabalho
-*_COMPLETA.md
-*_DEPLOY*.md
-*_GIT*.md
-CHECKLIST_*.md
-COMANDOS_*.md
-CREDENCIAIS_*.md
-DECISAO_*.txt
-DIAGNOSTICO_*.md
-ENV_*.md
-ERROS_*.md
-LIMPEZA_*.md
-PEGAR_*.md
-PERMITIR_*.md
-PERFORMANCE_EXPLICACAO.md
-PRE_*.md
-PRONTO_*.md
-PROXIMO_*.md
-PUSH_*.md
-RAILWAY_*.md
-RELATORIO_*.md
-RESOLVER_*.md
-RESPOSTA_*.md
-RESULTADO_*.txt
-RESUMO_*.md
-ROTAS_*.md
-SITUACAO_*.md
-STATUS_*.md
-VERIFICAR_*.md
-
-# Scripts de trabalho
-limpar-*.sh
-remover-*.sh
-PUSH_*.sh
-
-# Temporários
-cookies.txt
-.checkout.txt
-add-progress-column.sql
-supabase-rls-policies.sql
-
-# Pastas internas
-docs/
-skills/
-uploads/
-
-# Docs de trabalho
-*_COMPLETA.md
-*_DEPLOY*.md
-*_GIT*.md
-CHECKLIST_*.md
-COMANDOS_*.md
-CREDENCIAIS_*.md
-DECISAO_*.txt
-DIAGNOSTICO_*.md
-ENV_*.md
-ERROS_*.md
-LIMPEZA_*.md
-PEGAR_*.md
-PERMITIR_*.md
-PERFORMANCE_EXPLICACAO.md
-PRE_*.md
-PRONTO_*.md
-PROXIMO_*.md
-PUSH_*.md
-RAILWAY_*.md
-RELATORIO_*.md
-RESOLVER_*.md
-RESPOSTA_*.md
-RESULTADO_*.txt
-RESUMO_*.md
-ROTAS_*.md
-SITUACAO_*.md
-STATUS_*.md
-VERIFICAR_*.md
-
-# Scripts de trabalho
-limpar-*.sh
-remover-*.sh
-PUSH_*.sh
-
-# Temporários
-cookies.txt
-.checkout.txt
-add-progress-column.sql
-supabase-rls-policies.sql
+# docs/ é parcialmente versionada: design-system/ e white-label/ são
+# documentação técnica real. archive/, history/ e troubleshooting/ são
+# scratch de sessões passadas (notion dumps, checklists pontuais) e não
+# devem virar parte permanente do repo.
+docs/archive/
+docs/history/
+docs/troubleshooting/

@@ -1,6 +1,12 @@
 # POLÍTICA DE PRIVACIDADE E PROTEÇÃO DE DADOS
 
-**Última atualização: Janeiro de 2025**
+**Última atualização: 14 de julho de 2026**
+
+> ⚠️ **Pendência antes da publicação legal:** os campos marcados
+> `[A PREENCHER]` neste documento (razão social/CNPJ, endereço, foro,
+> encarregado de dados) precisam ser preenchidos com os dados jurídicos
+> reais da empresa antes deste texto ser vinculante. Consulte um
+> advogado antes de publicar esta política para usuários finais.
 
 ---
 
@@ -11,8 +17,8 @@
 **Razão Social:** Cena Studio
 **CNPJ:** [A PREENCHER]
 **Endereço:** [A PREENCHER]
-**E-mail:** privacy@cenastudio.dev
-**Website:** https://cenastudio.dev
+**E-mail:** cenastudio@atomicmail.io
+**Website:** https://cenastudio-production.up.railway.app
 
 ### 1.2 Base Legal
 
@@ -192,8 +198,9 @@ Você tem direito a:
 
 ### 6.7 Como Exercer Seus Direitos
 
-📧 **E-mail:** privacy@cenastudio.dev
-📋 **Formulário:** https://cenastudio.dev/privacy-request
+📧 **E-mail:** cenastudio@atomicmail.io
+📋 **Pelo sistema:** Perfil → Segurança/LGPD (dashboard de transparência
+de dados e solicitações de cópia/correção/exclusão)
 📞 **Prazo de resposta:** Até 15 dias
 
 ---
@@ -308,7 +315,7 @@ Se não concordar, você deve **cancelar sua conta**.
 Conforme LGPD Art. 41, nosso encarregado é:
 
 **Nome:** [A DEFINIR]
-**E-mail:** dpo@cenastudio.dev
+**E-mail:** cenastudio@atomicmail.io
 **Telefone:** [A DEFINIR]
 
 ---
@@ -345,14 +352,11 @@ Eleito o foro de **[SUA CIDADE]/[ESTADO]** para resolução de conflitos.
 
 Para dúvidas sobre privacidade:
 
-📧 **E-mail:** privacy@cenastudio.dev
-📋 **Formulário:** https://cenastudio.dev/contato
+📧 **E-mail:** cenastudio@atomicmail.io
 📞 **Telefone:** [A DEFINIR]
-🌐 **Site:** https://cenastudio.dev
+🌐 **Site:** https://cenastudio-production.up.railway.app
 
 ---
 
-**DOCUMENTO VÁLIDO E VINCULANTE**
-
-**Versão:** 1.0
-**Data de Vigência:** Janeiro de 2025
+**Versão:** 1.0 (rascunho — ver nota de pendência no topo do documento)
+**Data de Vigência:** A definir após revisão jurídica

@@ -63,27 +63,32 @@ Este documento descreve nossas práticas de segurança e como reportar vulnerabi
 
 ### 3. Banco de Dados
 
-- ✅ **PostgreSQL** com criptografia em repouso
+- ✅ **PostgreSQL** (Railway, gerenciado) com criptografia em repouso
 - ✅ **Queries parametrizadas** (Prisma ORM)
-- ✅ **Backups automáticos diários**
+- ✅ **Backups automáticos** (gerenciados pelo Railway)
 - ✅ **Acesso restrito via credenciais**
-- ✅ **Logs de auditoria** de modificações
+- ✅ **Audit log de ações administrativas** — toda mutação feita via
+  `/api/admin/*` é registrada (quem, o quê, em qual alvo, IP, quando)
 
 ### 4. Armazenamento de Arquivos
 
-- ✅ **Cloudinary** com:
+- ✅ **Cloudinary** (thumbnails/imagens) com:
   - Upload assinado (signed uploads)
   - Controle de acesso por token
-  - Transformações automáticas seguras
   - CDN com proteção DDoS
+- ✅ **Supabase Storage** (uploads de arquivo de projeto, quando
+  configurado) — desativado com erro claro (503) se as credenciais não
+  estiverem definidas, em vez de falhar silenciosamente
 
 ### 5. Infraestrutura
 
-- ✅ **Railway** (PaaS certificado)
-- ✅ **Firewall gerenciado**
-- ✅ **Monitoramento 24/7**
-- ✅ **Logs centralizados**
-- ✅ **Isolamento de serviços**
+- ✅ **Railway** (build via Nixpacks, healthcheck `/health`, restart
+  automático em falha)
+- ✅ **Rate limiting por área** — limite geral de API, limite mais
+  restrito específico para `/api/admin/*` (uma sessão admin
+  comprometida tem alcance de dano limitado)
+- ✅ **Pool de conexões com o banco** dimensionado para concorrência
+  real (ver `ARCHITECTURE.md`, ADR-002)
 
 ### 6. Código
 
@@ -105,7 +110,7 @@ Se você descobrir uma vulnerabilidade de segurança:
 
 ### Como Reportar
 
-📧 **E-mail:** security@cenastudio.dev
+📧 **E-mail:** contato@cenastudio.com.br (assunto: SEGURANÇA)
 🔐 **PGP Key:** [A FORNECER se necessário]
 
 **Inclua:**
@@ -130,12 +135,10 @@ Se você descobrir uma vulnerabilidade de segurança:
 
 ### Recompensas
 
-Atualmente **não oferecemos recompensas monetárias** (bug bounty).
-
-Porém, pesquisadores responsáveis podem receber:
-- 🏆 Crédito público em hall of fame
-- 🎁 Licença gratuita do Cena Studio Pro por 1 ano
-- 📧 Carta de recomendação (para pesquisadores sérios)
+Não temos um programa formal de bug bounty (recompensa monetária) neste
+momento. Vulnerabilidades reportadas responsavelmente são levadas a
+sério e corrigidas — reconhecimento público pode ser oferecido caso a
+caso, a pedido do pesquisador.
 
 ---
 
@@ -143,8 +146,8 @@ Porém, pesquisadores responsáveis podem receber:
 
 ### ✅ Permitido Testar
 
-- **Aplicação web:** https://cenastudio.dev
-- **API:** https://cenastudio.dev/api/*
+- **Aplicação web:** https://cenastudio-production.up.railway.app
+- **API:** https://cenastudio-production.up.railway.app/api/*
 - **Endpoints públicos:** /login, /register, /api/health
 
 ### ❌ Fora de Escopo
@@ -171,27 +174,17 @@ As seguintes situações **NÃO são consideradas vulnerabilidades**:
 - ❌ Self-XSS (requer ação do próprio usuário)
 - ❌ Clickjacking em páginas públicas
 
-### Features de Segurança Implementadas Recentemente
+### Features de Segurança Implementadas
 
-**Sprint 2 (Julho 2026) - 100% Completo:**
-- ✅ Autenticação de 2 Fatores (TOTP)
-- ✅ API Keys Pessoais
-- ✅ Activity Log (30 dias)
-- ✅ Session Management
-- ✅ Security Alerts
-
-**Sprint 1 (Julho 2026) - 100% Completo:**
-- ✅ LGPD Dashboard
-- ✅ Data Export (JSON)
-- ✅ Privacy Controls
-- ✅ GDPR Compliance
-
-**Bugs Críticos Resolvidos (13-jul-2026):**
-- ✅ 2FA QR Code agora renderiza corretamente
-- ✅ Campo `twoFactorEnabled` persiste entre sessões
-- ✅ Migration P3009 resolvida (PostgreSQL syntax)
-
-Ver documentação completa em: `.private/BUGS_RESOLVIDOS_HISTORICO.md`
+- ✅ Autenticação de 2 Fatores (TOTP) — disponível para todas as contas;
+  obrigatório para admin via feature flag `ADMIN_REQUIRE_2FA` (desligada
+  até que as contas admin existentes configurem 2FA)
+- ✅ API Keys pessoais (formato `cena_{hex}`, hash SHA-256)
+- ✅ Activity Log (30 dias) com detecção de IP/dispositivo novo
+- ✅ Session Management (listar/revogar sessões ativas)
+- ✅ LGPD Dashboard, export de dados, processamento de solicitações
+  (cópia/correção/exclusão) pelo painel admin
+- ✅ Audit log de ações administrativas (Fase 2, 14/07/2026)
 
 ### Dependências com CVEs Conhecidos
 
@@ -211,20 +204,26 @@ Consultamos regularmente:
 
 ### 2026
 
-**Julho:**
-- **13-jul:** Bug #2 identificado e resolvido - 2FA QR Code não legível
-  - **Impacto:** Baixo (feature não estava sendo usada)
-  - **Causa:** Frontend renderizava mock ao invés de imagem real
-  - **Solução:** Implementada em 2h, sem dados comprometidos
-  - **Status:** ✅ Resolvido (commit `4780d10`)
+**14 de julho — Credenciais expostas em commits históricos do git.**
+Uma auditoria do histórico do repositório identificou chaves de API e
+senhas de banco de dados reais commitadas em scripts de desenvolvimento
+ao longo do projeto (não em código de produção ativo). Os arquivos
+foram removidos do estado atual do repositório. Ação em andamento:
+rotação das credenciais efetivamente expostas com valor real (não
+placeholders). Nenhuma indicação de acesso não autorizado identificada.
+Detalhes de quais credenciais e o status da rotação são mantidos em
+registro interno (não público, por não expor quais chaves ainda podem
+estar em janela de rotação).
 
-**Nenhum incidente de segurança reportado até o momento.**
+**14 de julho — Pool de conexões de banco insuficiente para concorrência.**
+A aplicação usava uma única conexão Postgres para todo o processo, o
+que causava falha aparente ("app caindo") quando dois ou mais usuários
+acessavam simultaneamente uma mesma página com escrita no banco (ex.:
+link público de aprovação de vídeo). Corrigido no mesmo dia. Nenhum
+dado foi perdido ou corrompido — o efeito era apenas timeout de
+requisição sob concorrência.
 
-### 2025
-
-**Nenhum incidente reportado.**
-
-Atualizaremos esta seção se ocorrerem incidentes.
+Nenhum incidente de exposição ou perda de dados de usuário até o momento.
 
 ---
 
@@ -280,14 +279,14 @@ Agradecemos aos pesquisadores que reportaram vulnerabilidades responsavelmente:
 ## 📞 CONTATO
 
 **Segurança:**
-📧 security@cenastudio.dev
+📧 contato@cenastudio.com.br (assunto: SEGURANÇA)
 
 **Privacidade:**
-📧 privacy@cenastudio.dev
+📧 contato@cenastudio.com.br (assunto: LGPD/PRIVACIDADE)
 
 **Geral:**
-📧 contato@cenastudio.dev
-🌐 https://cenastudio.dev
+📧 contato@cenastudio.com.br
+🌐 https://cenastudio-production.up.railway.app
 
 ---
 
@@ -309,16 +308,16 @@ Esta política é revisada:
 - **Trimestralmente** ou
 - **Após incidentes significativos**
 
-**Última revisão:** 13 de Julho de 2026
+**Última revisão:** 14 de julho de 2026
 **Próxima revisão:** Outubro de 2026
 
 **Mudanças nesta revisão:**
-- Adicionado 2FA (TOTP) como feature implementada
-- Adicionado API Keys Pessoais
-- Adicionado Activity Log e Session Management
-- Adicionado LGPD Dashboard e compliance
-- Atualizado histórico de incidentes (Bug #2)
-- Removido "Ausência de 2FA" da lista de não-vulnerabilidades
+- Corrigida URL de escopo de testes (domínio real de produção via Railway)
+- Adicionado audit log de ações administrativas
+- Adicionado incidente de exposição de credenciais em commits históricos
+  e o incidente de pool de conexões insuficiente (ambos 14/07/2026)
+- Removidas referências a documentos internos não públicos
+- Simplificada seção de recompensas (sem promessas não confirmadas)
 
 ---
 

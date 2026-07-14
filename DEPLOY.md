@@ -100,7 +100,7 @@ GITHUB_CALLBACK_URL=https://seu-dominio.com/api/auth/github/callback
 ### Regras
 
 - `ADMIN_DEFAULT_PASSWORD` e `DEMO_USER_PASSWORD`: mínimo **12 caracteres** em produção.
-- `CLIENT_ORIGIN`: domínio público final, sem `localhost`.
+- `CLIENT_ORIGIN`: URL pública do site (atualmente `https://cenastudio-production.up.railway.app`, ou domínio próprio quando registrado).
 - SQLite **não** deve ser usado em produção. Remova `ALLOW_EPHEMERAL_SQLITE` do ambiente `production`.
 - Prisma 7 usa `@prisma/adapter-pg` com pool padrão de 1 conexão por instância serverless. Ajuste `DATABASE_POOL_MAX`, `DATABASE_CONNECT_TIMEOUT_MS`, `DATABASE_TRANSIENT_RETRIES` só depois de medir o pooler.
 
@@ -394,7 +394,7 @@ políticas. Enquanto o DB for Railway Postgres, a segurança de row-level
 ## Stripe (webhook)
 
 1. Stripe Dashboard → Developers → Webhooks → Add endpoint.
-2. URL: `https://seu-dominio.com/api/webhooks/stripe`.
+2. URL: `https://cenastudio-production.up.railway.app/api/webhooks/stripe` (ou seu domínio quando registrado).
 3. Eventos: `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`.
 4. Copie o **signing secret** para `STRIPE_WEBHOOK_SECRET`.
 
@@ -404,19 +404,19 @@ políticas. Enquanto o DB for Railway Postgres, a segurança de row-level
 
 ```bash
 # Health & readiness
-curl https://seu-dominio.com/health
-curl https://seu-dominio.com/ready
+curl https://cenastudio-production.up.railway.app/health
+curl https://cenastudio-production.up.railway.app/ready
 
 # Auth (login retorna cookie frame_token)
-curl -i -X POST https://seu-dominio.com/api/auth/login \
+curl -i -X POST https://cenastudio-production.up.railway.app/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@seudominio.com","password":"<senha>"}'
 
 # Provedores de auth disponíveis
-curl https://seu-dominio.com/api/auth/providers
+curl https://cenastudio-production.up.railway.app/api/auth/providers
 
 # Smoke completo (Prisma / rotas críticas)
-SMOKE_BASE_URL=https://seu-dominio.com npm run smoke:prisma
+SMOKE_BASE_URL=https://cenastudio-production.up.railway.app npm run smoke:prisma
 ```
 
 O smoke deve validar: login admin, login demo, registro público, criação admin, `/api/auth/me`, logout, providers, GitHub configurado/desconfigurado, limite Free (6º cliente retorna `402`), Studio pending, `/api/checkout/sync-session` ativa sessão paga.

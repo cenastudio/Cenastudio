@@ -30,8 +30,8 @@ Apenas membros **explicitamente autorizados** pela Cena Studio podem:
 
 Se você é um **usuário do Cena Studio** e tem sugestões:
 
-📧 **E-mail:** feedback@cenastudio.dev
-📋 **Formulário:** https://cenastudio.dev/feedback
+📧 **E-mail:** contato@cenastudio.com.br
+📋 **Formulário:** https://cenastudio-production.up.railway.app/contato
 
 **Não envie PRs ou issues no GitHub.**
 
@@ -41,9 +41,8 @@ Se você é um **usuário do Cena Studio** e tem sugestões:
 
 Usuários podem reportar bugs através de:
 
-📧 **E-mail:** suporte@cenastudio.dev
-💬 **Chat:** Dentro da plataforma
-🐛 **Formulário:** https://cenastudio.dev/reportar-bug
+📧 **E-mail:** contato@cenastudio.com.br
+💬 **Chat:** Dentro da plataforma (quando autenticado)
 
 ---
 
@@ -52,7 +51,7 @@ Usuários podem reportar bugs através de:
 Para questões de segurança, veja:
 
 📄 **SECURITY.md** neste repositório
-📧 **E-mail:** security@cenastudio.dev
+📧 **E-mail:** contato@cenastudio.com.br (assunto: SEGURANÇA)
 
 **NÃO crie issues públicas para vulnerabilidades.**
 

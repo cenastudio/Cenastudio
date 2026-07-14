@@ -17,24 +17,34 @@ Este documento documenta as decisões de arquitetura significativas do Cena Stud
 
 ```
 Frontend (Client)
-├── React 19.2 + TypeScript
-├── Vite 7.1 (Build tool)
+├── React 19 + TypeScript
+├── Vite (Build tool)
 ├── Tailwind CSS v4 (Estilização)
 ├── Wouter (Roteamento SPA)
 └── Radix UI (Componentes)
 
 Backend (Server)
 ├── Express + TypeScript
-├── SQLite (better-sqlite3) - Runtime atual
-├── Supabase Postgres - Preparado para migração
-├── JWT (Autenticação)
-└── Passport.js (OAuth)
+├── PostgreSQL via Prisma (banco principal, produção e dev)
+├── SQLite (better-sqlite3) - fallback local quando DATABASE_URL não está definida
+├── JWT httpOnly cookie (Autenticação)
+└── Passport.js (GitHub OAuth opcional)
 
 Infraestrutura
-├── Vercel (Hosting)
-├── Supabase (Banco de dados futuro)
-└── GitHub Actions (CI/CD planejado)
+├── Railway (Hosting + Postgres gerenciado)
+├── Cloudinary (thumbnails/imagens)
+├── Supabase Storage (upload de arquivos de projeto, opcional — ver nota abaixo)
+└── GitHub Actions (CI: typecheck + build)
 ```
+
+> **Nota sobre Supabase:** o projeto migrou de Supabase Postgres para
+> Railway Postgres (ver ADR-002 abaixo). Supabase ainda é usado
+> opcionalmente como *storage* de arquivos (`server/services/supabaseStorage.ts`)
+> e como provedor alternativo de login social — nenhum dos dois é o
+> banco de dados principal hoje. Em produção, se as env vars
+> `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` não estiverem configuradas,
+> essas features ficam desativadas com erro claro (503), sem afetar o
+> resto do sistema.
 
 ### Arquitetura de Camadas
 
@@ -56,7 +66,7 @@ Infraestrutura
                │
 ┌──────────────▼──────────────────────┐
 │          Data Access Layer          │
-│  (SQLite/Supabase + ORM futuro)    │
+│  (Prisma → PostgreSQL, fallback SQLite) │
 └─────────────────────────────────────┘
 ```
 
@@ -96,36 +106,47 @@ Infraestrutura
 
 ### ADR-002: SQLite vs Postgres (Runtime)
 
-**Status:** Aceito (migração concluída em 30/06/2026)
-**Data:** 2024
-**Contexto:** Escolher banco de dados para runtime inicial.
+**Status:** Aceito, revisado em 14/07/2026 (migração de provedor Postgres: Supabase → Railway)
+**Data:** 2024, migrações subsequentes em 30/06/2026 e julho/2026
+**Contexto:** Escolher banco de dados para runtime.
 
-**Decisão:** SQLite para desenvolvimento inicial, Supabase Postgres em produção (migrado)
+**Decisão:** PostgreSQL como banco principal (via Prisma + `@prisma/adapter-pg`),
+hospedado no Railway. SQLite (`better-sqlite3`) permanece como *fallback*
+automático quando nenhuma `DATABASE_URL`/`POSTGRES_URL` está configurada
+(`server/models/prisma.ts`, flag `shouldUsePrisma`) — útil para rodar o
+projeto localmente sem depender de um Postgres externo.
 
 **Rationale:**
-- SQLite:
+- SQLite (fallback local):
   - Zero configuração
-  - Perfeito para desenvolvimento
-  - Fácil backup (arquivo único)
-  - Performance excelente para < 100 concurrent users
+  - Não requer credenciais externas para rodar `npm run dev`
 
-- Supabase Postgres:
-  - Escalável para produção
-  - Backup automático
-  - Real-time subscriptions
-  - Row Level Security (RLS)
-  - Migrations aplicadas em 30/06/2026
+- PostgreSQL / Railway (produção):
+  - Escalável, backup gerenciado pela plataforma
+  - Mesmo provedor do hosting da aplicação (menor superfície operacional
+    do que manter contas em dois provedores diferentes)
+  - Pool de conexões dimensionado para concorrência real
+    (`DATABASE_POOL_MAX`, default 10 — ver incidente de 14/07/2026 abaixo)
 
 **Consequências:**
 - Positivas:
-  - Setup rápido para desenvolvimento
-  - Produção usando Postgres com todas vantagens
+  - Setup local sem dependências externas
+  - Produção com Postgres real e gerenciado
 
 - Negativas:
-  - Duas implementações de banco para manter
-  - Queries diferentes entre SQLite e Postgres em alguns casos
+  - Duas implementações de query para manter em alguns services (Prisma
+    para Postgres, `better-sqlite3` para o fallback) — mitigado mantendo
+    a lógica de negócio nos services e replicando apenas o acesso a dados
 
-**Revisão:** Migração concluída. Produção usa Supabase Postgres via Prisma com 5 migrations aplicadas.
+**Incidente relevante (14/07/2026):** o pool de conexões Postgres estava
+configurado com `max: 1` (uma única conexão para todo o processo), o que
+fazia a aplicação parecer "cair" com apenas 2 usuários simultâneos —
+qualquer segunda requisição concorrente esperava a única conexão liberar
+e podia expirar por timeout. Corrigido para `max: 10` (o Postgres do
+Railway suporta até 100 conexões). Ver `CHANGELOG.md`.
+
+**Revisão:** Nenhuma migração de banco planejada. Reavaliar o tamanho do
+pool se o número de usuários simultâneos crescer significativamente.
 
 ---
 
@@ -372,86 +393,68 @@ Infraestrutura
 
 ### ADR-009: Stripe vs Paddle vs LemonSqueezy
 
-**Status:** Aceito (legado)
+**Status:** Aceito
 **Data:** 2024
 **Contexto:** Escolher processador de pagamentos.
 
-**Decisão:** Stripe (legado), migrando para PIX/WhatsApp
+**Decisão:** Stripe Checkout para planos self-service (Free/Pro/Studio);
+contato consultivo via WhatsApp para os tiers White-Label/Enterprise
+(venda negociada caso a caso, sem checkout automático).
 
 **Rationale:**
 - Stripe:
-  - Ecossistema maduro
-  - Webhooks confiáveis
-  - Suporte global
-  - Documentação excelente
-
-- Paddle/LemonSqueezy não escolhidos:
-  - Ecossistema menor
-  - Menos features
-
-- PIX/WhatsApp:
-  - Melhor para mercado brasileiro
-  - Sem taxas de processamento
-  - Contato direto com cliente
+  - Ecossistema maduro, webhooks confiáveis, suporte global
+  - Fluxo real: `startCheckout()` (`client/src/lib/api.ts`) →
+    `POST /api/checkout/session` → Stripe Checkout hospedado →
+    webhook confirma assinatura
+- WhatsApp (só para White-Label/Enterprise):
+  - Esses planos exigem negociação (preço, contrato, integração
+    dedicada) — não fazem sentido como checkout self-service
 
 **Consequências:**
-- Positivas:
-  - Stripe como fallback/API
-  - PIX/WhatsApp para fluxo principal
+- Positivas: cobertura automática para os planos de maior volume
+  (Free/Pro/Studio), sem overhead de negociação manual nesses tiers
+- Negativas: dependência de um único processador de pagamento
 
-- Negativas:
-  - Dois sistemas de pagamento
-  - Stripe ainda mantido (legado)
+**Pendência conhecida (14/07/2026):** as chaves Stripe configuradas em
+produção são de **modo teste** (`sk_test_`/`pk_test_`), não modo live —
+ninguém consegue pagar de verdade ainda. Ver `.private/PROXIMOS_PASSOS.md`.
 
-**Mitigação:**
-- Manter Stripe como API-only
-- PIX/WhatsApp como UX principal
-
-**Revisão:** Remover Stripe se PIX/WhatsApp funcionar bem
+**Revisão:** N/A.
 
 ---
 
 ### ADR-010: Vercel vs Railway vs Self-hosted
 
-**Status:** Aceito
-**Data:** 2024
+**Status:** Aceito, revisado — migrado de Vercel para Railway
+**Data:** decisão original 2024, migração para Railway concluída em julho/2026
 **Contexto:** Escolher plataforma de hosting.
 
-**Decisão:** Vercel
+**Decisão:** Railway (Nixpacks para build, Postgres gerenciado no mesmo
+provedor, deploy automático em push para `main`)
 
 **Rationale:**
-- Vercel:
-  - Deploy automático (git push)
-  - CDN global
-  - Edge functions
-  - Preview deployments
-  - Integração com Next.js/React
-
-- Railway não escolhido:
-  - Menos otimizado para frontend
-  - Preview deployments não tão bons
-
-- Self-hosted não escolhido:
-  - Overhead operacional
-  - Manutenção de infraestrutura
-  - Sem CDN automático
+- Vercel foi a escolha original, mas o modelo serverless (functions
+  efêmeras) não combinava bem com um backend Express monolítico com
+  processos de longa duração e SQLite/Postgres — a migração para
+  Railway simplificou isso ao rodar a aplicação como um processo Node
+  persistente.
+- Railway:
+  - Deploy automático (git push → build → healthcheck → restart policy)
+  - Postgres gerenciado no mesmo painel/provedor da aplicação
+  - `railway.json`/`nixpacks.toml` versionados no repo definem o build
+    e o healthcheck (`GET /health`, timeout 100s, até 10 tentativas de
+    restart)
 
 **Consequências:**
 - Positivas:
-  - Deploy zero-friction
-  - Performance global (CDN)
-  - Preview environments
-
+  - Um único provedor para app + banco
+  - Deploy simples, sem necessidade de configurar functions serverless
 - Negativas:
-  - Vendor lock-in
-  - Limites de uso (free tier)
-  - SQLite efêmero (requer banco externo)
+  - Vendor lock-in (mitigado: aplicação é um processo Node padrão,
+    portável para qualquer PaaS ou container)
 
-**Mitigação:**
-- Usar Supabase para banco persistente
-- Docker container para portabilidade
-
-**Revisão:** Considerar self-hosted se custos ficarem altos
+**Revisão:** Sem migração adicional planejada.
 
 ---
 
@@ -603,22 +606,22 @@ export function useDebounce<T>(value: T, delay: number): T {
 
 ## 🔄 Evolução da Arquitetura
 
-### Fase Atual (Mid-Senior)
+### Fase Atual
 
 - Monolito modular
-- SQLite (dev) + Supabase (prod planejado)
+- PostgreSQL (Railway) via Prisma em produção; SQLite como fallback local
 - React + Vite
 - Express backend
-- JWT auth
+- JWT httpOnly cookie auth
+- CI (GitHub Actions: typecheck + build)
+- Painel admin com audit log de ações administrativas
 
-### Próxima Fase (Senior)
+### Próxima Fase
 
-- Supabase Postgres (migrado)
-- Prisma ORM
-- Redis cache
-- CI/CD automatizado
-- Monitoring (Sentry)
-- Health checks
+- Stripe em modo live (bloqueador para vendas reais)
+- Rotação de credenciais expostas no histórico do git (ver `SECURITY.md`)
+- Redis cache (se necessário)
+- Monitoring externo (Sentry ou similar)
 
 ### Futura (Scale-up)
 
@@ -639,4 +642,4 @@ export function useDebounce<T>(value: T, delay: number): T {
 
 ---
 
-**Última atualização:** 30 de Junho de 2026
+**Última atualização:** 14 de julho de 2026

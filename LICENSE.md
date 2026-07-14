@@ -167,7 +167,7 @@ A Cena Studio se reserva o direito de:
 
 Esta licença é regida pelas leis da **República Federativa do Brasil**.
 
-Qualquer disputa será resolvida no **foro da comarca de [SUA CIDADE]**,
+Qualquer disputa será resolvida no **foro da comarca de [PENDENTE: definir cidade/foro competente]**,
 com renúncia expressa a qualquer outro, por mais privilegiado que seja.
 
 ---
@@ -177,8 +177,8 @@ com renúncia expressa a qualquer outro, por mais privilegiado que seja.
 Para questões relacionadas a licenciamento ou violações:
 
 **Cena Studio**
-📧 legal@cenastudio.dev
-🌐 https://cenastudio.dev
+📧 contato@cenastudio.com.br
+🌐 https://cenastudio-production.up.railway.app
 
 ---
 

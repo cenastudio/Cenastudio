@@ -1,98 +1,91 @@
 # Cena Studio
 
-**Software Proprietário de Gestão para Produtoras de Vídeo**
+**Software de gestão para produtoras de vídeo e profissionais audiovisuais**
 
-🔒 **CÓDIGO PROPRIETÁRIO - TODOS OS DIREITOS RESERVADOS**
+🔒 **CÓDIGO PROPRIETÁRIO — TODOS OS DIREITOS RESERVADOS**
 
 [![Deploy Status](https://img.shields.io/badge/deploy-online-success)](https://cenastudio-production.up.railway.app)
-[![Feature Completion](https://img.shields.io/badge/features-91%25-success)](/.private/AUDITORIA_FEATURES_COMPLETA_2026-07-13.md)
-[![Shot List](https://img.shields.io/badge/shot%20list-100%25-success)](/.private/SHOTLIST_100_COMPLETO_2026-07-13.md)
-[![Video Reviews](https://img.shields.io/badge/video%20reviews-100%25-success)](/.private/BUGS_RESOLVIDOS_HISTORICO.md)
-[![Unified Files](https://img.shields.io/badge/files-unified-success)](/.private/UNIFIED_FILES_IMPLEMENTATION_2026-07-14.md)
-[![Referral System](https://img.shields.io/badge/referral-100%25-success)](/.private/REFERRAL_SYSTEM_COMPLETE_2026-07-14.md)
-[![Google Calendar](https://img.shields.io/badge/calendar-100%25-success)](/.private/GOOGLE_CALENDAR_UI_2026-07-14.md)
 
 ---
 
 ## 📋 Sobre
 
-Cena Studio é uma plataforma SaaS completa para gestão de produtoras de vídeo, desenvolvida do zero por nossa equipe.
+Cena Studio é uma plataforma SaaS para gestão de produtoras de vídeo e
+profissionais audiovisuais solo (filmmakers, dronistas/FPV, editores,
+fotógrafos): do briefing comercial à entrega final, com ferramentas de IA
+para gerar documentos de produção.
 
-### Features Principais (91% Completo)
+### Principais áreas
 
-#### ✅ 100% Funcionais (11 features)
-- 🎬 **Shot List Profissional** - PDF para set, tipos customizáveis, scene groups
-- 🕐 **Timesheet** - Timer em tempo real, taxa horária, export CSV
-- 🔒 **Session Management** - Rastreamento, geolocalização, encerrar sessões
-- 💰 **Budget Tracking** - Orçado vs realizado, alertas 80%/100%
-- 🎥 **Video Reviews** - Client Portal, aprovações, timestamps precisos (bug #4 resolvido)
-- ⚙️ **Webhooks** - CRUD, retry exponencial, HMAC signature
-- 📦 **Equipment Inventory** - CRUD, bookings, detecção de conflitos
-- 📄 **Propostas Digitais** - Assinatura eletrônica, tracking, templates branded
-- 🗂️ **Asset Library** - Upload, link to project, storage analytics
-- 📅 **Google Calendar** - Export .ics (deadline + meetings), botão destacado
-- 📋 **Project Templates** - 6 templates visuais com pré-preenchimento real de campos
+- **Produção** — Shot List (PDF pronto para set, tipos de plano
+  customizáveis), Timesheet (timer + cálculo de custo por taxa/hora +
+  calculadora de precificação por trabalho), Equipment Inventory,
+  Video Reviews (aprovação de cliente com comentários por timestamp em
+  link público).
+- **Comercial** — Clientes (CRM), Pipeline de oportunidades, Propostas
+  digitais com link compartilhável e aceite rastreado, Interações.
+- **Financeiro** — Orçamento por projeto (orçado vs. realizado),
+  lançamentos financeiros.
+- **Estúdio de IA** — 12 ferramentas (Roteiro, Decupagem, Callsheet,
+  Orçamento, Proposta, Contrato, Briefing, Moodboard, Checklist,
+  Cronograma, Relatório de Entrega, Assistente Livre).
+- **Analytics Premium** — dashboards customizáveis com widgets
+  (KPI, gráficos, tabela, funil, medidor) puxando dados reais do sistema.
+- **Admin** — gestão de usuários e assinaturas, suspensão de conta,
+  reset de senha, indicações com recompensa automática, processamento de
+  solicitações LGPD, audit log de ações administrativas.
 
-#### 🆕 Recém-Implementado (Jul 2026)
-- 📁 **Files Unificados** - Assets + Files em interface única, 3 tabs, -37% código
-- 🎁 **Sistema de Indicações** - Referral tracking, códigos únicos, lista individual de indicados
-- 📧 **Agendamento Email Branding** - Templates profissionais, CTA buttons, responsive
-- 🔗 **Asset Library Link** - Vincular arquivos a projetos com 1 clique
-- 📆 **Google Calendar UI** - Botão visível e destacado no ProjectHub
-- � **Analytics Premium** - Dashboards customizáveis + Reports (criar/executar/excluir), agora com entrada visível na navegação
-- ✅ **Task Management** - Exclusão de tarefas de projeto, preferências de perfil com auto-save
+### Stack
 
-#### 🔴 Em Desenvolvimento (1 feature)
-- 🤖 **Script Breakdown IA** (0%) - OpenRouter integration pendente
+- **Frontend:** React + TypeScript + Vite + Tailwind CSS + Radix UI
+- **Backend:** Express + TypeScript + Prisma
+- **Banco de dados:** PostgreSQL (Railway)
+- **Storage de arquivos:** Cloudinary (thumbnails) + Supabase Storage
+  (uploads de projeto)
+- **IA:** OpenRouter (com cadeia de fallback de modelos), Anthropic
+  como alternativa
+- **Pagamentos:** Stripe
+- **Deploy:** Railway (Nixpacks)
 
-### Integrações
-- 🤖 **IA**: OpenRouter (GPT-4, Claude)
-- ☁️ **Storage**: Cloudinary
-- 💳 **Pagamentos**: Stripe
-- 📊 **Analytics**: Dashboard interno
-- 💼 **CRM**: Pipeline + Opportunities
+Ver [`ARCHITECTURE.md`](./ARCHITECTURE.md) para decisões de arquitetura
+detalhadas.
 
 ---
 
 ## ⚖️ Licença e Propriedade Intelectual
 
-**Copyright © 2024 Cena Studio. Todos os direitos reservados.**
+**Copyright © 2024–2026 Cena Studio. Todos os direitos reservados.**
 
-Este software é **PROPRIEDADE PRIVADA** e está protegido por leis de direitos autorais e propriedade intelectual do Brasil e tratados internacionais.
+Este software é **propriedade privada** e está protegido por leis de
+direitos autorais e propriedade intelectual do Brasil e tratados
+internacionais.
 
-### ❌ PROIBIÇÕES ABSOLUTAS:
+### Proibições
 
-- **Uso não autorizado** deste código ou parte dele
-- **Cópia, reprodução ou distribuição** do código-fonte
-- **Modificação ou criação de obras derivadas**
-- **Engenharia reversa, descompilação ou desmontagem**
-- **Comercialização ou sublicenciamento**
-- **Uso em produtos concorrentes**
+- Uso não autorizado deste código ou parte dele
+- Cópia, reprodução ou distribuição do código-fonte
+- Modificação ou criação de obras derivadas
+- Engenharia reversa, descompilação ou desmontagem
+- Comercialização ou sublicenciamento
+- Uso em produtos concorrentes
 
-### ⚠️ CONSEQUÊNCIAS LEGAIS:
-
-O uso não autorizado deste software resultará em:
-- **Ações judiciais cíveis** por violação de propriedade intelectual
-- **Indenizações por danos** materiais e morais
-- **Medidas cautelares** de suspensão de uso
-- **Processos criminais** conforme Lei nº 9.609/98 (Lei do Software)
+O uso não autorizado pode resultar em ações judiciais cíveis por
+violação de propriedade intelectual, indenizações, medidas cautelares e
+processos criminais conforme a Lei nº 9.609/98 (Lei do Software).
 
 ---
 
 ## 🔐 Acesso ao Código
 
-Este repositório é **PRIVADO** e o acesso é restrito exclusivamente a:
-- Desenvolvedores autorizados pela Cena Studio
-- Membros da equipe interna
-
-**Qualquer acesso não autorizado será tratado como violação de segurança.**
+Este repositório é **privado** e o acesso é restrito a desenvolvedores
+autorizados e membros da equipe interna. Qualquer acesso não autorizado
+será tratado como violação de segurança.
 
 ---
 
 ## 📞 Contato
 
 **Cena Studio**
-Software para Produtoras de Vídeo
 
 🌐 https://cenastudio.dev
 📧 cenastudio@atomicmail.io
@@ -102,7 +95,8 @@ Software para Produtoras de Vídeo
 ## 🚨 Aviso Legal
 
 Este software é fornecido "como está", sem garantias de qualquer tipo.
-A Cena Studio se reserva o direito de modificar ou descontinuar o software a qualquer momento.
+A Cena Studio se reserva o direito de modificar ou descontinuar o
+software a qualquer momento.
 
-**VERSÃO ATUAL: 1.0.0**
-**ÚLTIMA ATUALIZAÇÃO: 13 Julho 2026**
+**Versão atual:** 1.0.0
+**Última atualização:** 14 de julho de 2026

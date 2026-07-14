@@ -25,8 +25,10 @@ http://localhost:5001/api
 
 **Produção:**
 ```
-https://cenastudio.com.br/api
+https://cenastudio-production.up.railway.app/api
 ```
+
+> ⚠️ **Pendente:** Domínio personalizado `cenastudio.com.br` ainda não está configurado.
 
 ### Endpoints Operacionais
 
@@ -953,7 +955,7 @@ POST /api/video-reviews/:id/share
   "success": true,
   "data": {
     "shareToken": "abc123xyz",
-    "shareUrl": "https://cenastudio.com.br/review/abc123xyz"
+    "shareUrl": "https://cenastudio-production.up.railway.app/review/abc123xyz"
   }
 }
 ```
@@ -1297,7 +1299,7 @@ project_data = project_response.json()
 **Configuração:**
 ```bash
 # No painel Stripe
-Webhook URL: https://cenastudio.com.br/api/checkout/webhook
+Webhook URL: https://cenastudio-production.up.railway.app/api/checkout/webhook
 Secret: whsec_...  # Configure em STRIPE_WEBHOOK_SECRET
 ```
 

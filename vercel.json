@@ -1,8 +1,0 @@
-{
-  "outputDirectory": "dist/public",
-  "functions": {
-    "api/*.js": {
-      "includeFiles": "dist/**"
-    }
-  }
-}
