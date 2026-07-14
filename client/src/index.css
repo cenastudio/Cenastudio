@@ -105,30 +105,39 @@
 }
 
 /* Utility classes para cores adaptativas ao tema */
-.text-adaptive-orange {
+.text-adaptive-orange,
+.text-adaptive-primary {
   color: var(--ds-orange);
 }
 
 :root.light .text-adaptive-orange,
-body.light .text-adaptive-orange {
+:root.light .text-adaptive-primary,
+body.light .text-adaptive-orange,
+body.light .text-adaptive-primary {
   color: var(--ds-orange-light-theme);
 }
 
-.bg-adaptive-orange {
+.bg-adaptive-orange,
+.bg-adaptive-primary {
   background-color: var(--ds-orange);
 }
 
 :root.light .bg-adaptive-orange,
-body.light .bg-adaptive-orange {
+:root.light .bg-adaptive-primary,
+body.light .bg-adaptive-orange,
+body.light .bg-adaptive-primary {
   background-color: var(--ds-orange-light-theme);
 }
 
-.border-adaptive-orange {
+.border-adaptive-orange,
+.border-adaptive-primary {
   border-color: var(--ds-orange);
 }
 
 :root.light .border-adaptive-orange,
-body.light .border-adaptive-orange {
+:root.light .border-adaptive-primary,
+body.light .border-adaptive-orange,
+body.light .border-adaptive-primary {
   border-color: var(--ds-orange-light-theme);
 }
   --radius: 2px;

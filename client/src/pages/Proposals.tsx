@@ -487,7 +487,7 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
           <section className="max-w-3xl mx-auto py-10 space-y-8">
             {/* Header */}
             <div className="text-center space-y-3">
-              <p className="font-frame-mono text-[0.6rem] uppercase tracking-[0.16em] text-frame-orange">
+              <p className="font-frame-mono text-[0.6rem] uppercase tracking-[0.16em] text-adaptive-primary">
                 {t("app.proposals.builderEyebrow") as string}
               </p>
               <h2 className="text-3xl font-bold text-frame-white tracking-tight">
@@ -502,7 +502,7 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
             <div className="grid grid-cols-3 gap-3">
               <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-frame-orange tracking-wider block mb-2">01</span>
+                <span className="font-frame-mono text-[0.6rem] text-adaptive-primary tracking-wider block mb-2">01</span>
                 <p className="text-sm font-semibold text-frame-white">
                   {t("app.proposals.step1") as string}
                 </p>
@@ -537,7 +537,7 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
                   <BriefcaseBusiness className="w-5 h-5 text-frame-orange" />
                 </div>
                 <div>
-                  <p className="font-frame-mono text-[0.6rem] uppercase tracking-[0.12em] text-frame-orange mb-1">
+                  <p className="font-frame-mono text-[0.6rem] uppercase tracking-[0.12em] text-adaptive-primary mb-1">
                     {t("app.proposals.stepLabel") as string} 1
                   </p>
                   <p className="text-base font-semibold text-frame-white">
@@ -591,7 +591,7 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
                 <p className="text-sm font-bold text-green-400">{formatCurrency(discountValue)}</p>
               </div>
               <div className="proposal-total-card proposal-total-card-accent p-3">
-                <p className="text-[0.64rem] font-frame-mono uppercase text-frame-orange">{t("app.common.total") as string}</p>
+                <p className="text-[0.64rem] font-frame-mono uppercase text-adaptive-primary">{t("app.common.total") as string}</p>
                 <p className="text-sm font-bold">{formatCurrency(total)}</p>
               </div>
             </div>
@@ -769,7 +769,7 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
 
           <aside className="proposal-preview overflow-hidden min-h-[720px] 2xl:sticky 2xl:top-24">
             <div className="h-14 border-b border-frame-gray-3 px-5 flex items-center justify-between">
-              <span className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-frame-orange">{t("app.proposals.preview") as string}</span>
+              <span className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-adaptive-primary">{t("app.proposals.preview") as string}</span>
               <span className="text-[0.62rem] text-frame-gray-light">{formatCurrency(total)}</span>
             </div>
             {selected.length ? (
