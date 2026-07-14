@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 
@@ -34,34 +34,35 @@ function resolveTheme(mode: VisualPreferences["themeMode"]): ResolvedTheme {
   return mode === "auto" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : mode;
 }
 
-function applyPreferences(prefs: VisualPreferences) {
+function applyPreferences(prefs: VisualPreferences, forcedTheme?: ResolvedTheme): ResolvedTheme {
   const root = document.documentElement;
-  const theme = resolveTheme(prefs.themeMode);
-  root.dataset.theme = theme;
+  const configuredTheme = resolveTheme(prefs.themeMode);
+  const effectiveTheme = forcedTheme ?? configuredTheme;
+  root.dataset.theme = effectiveTheme;
   root.dataset.density = prefs.density;
   root.dataset.font = prefs.fontFamily;
   root.dataset.reduceMotion = String(prefs.reduceAnimations);
-  root.classList.toggle("dark", theme === "dark");
-  root.classList.toggle("light", theme === "light");
-  localStorage.setItem("theme", theme);
+  root.classList.toggle("dark", effectiveTheme === "dark");
+  root.classList.toggle("light", effectiveTheme === "light");
+  localStorage.setItem("theme", configuredTheme);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+  return effectiveTheme;
 }
 
-export function VisualPreferencesProvider({ children }: { children: ReactNode }) {
+export function VisualPreferencesProvider({ children, forcedTheme }: { children: ReactNode; forcedTheme?: ResolvedTheme }) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [preferences, setPreferences] = useState<VisualPreferences>(readCachedPreferences);
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => resolveTheme(readCachedPreferences().themeMode));
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => forcedTheme ?? resolveTheme(readCachedPreferences().themeMode));
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    applyPreferences(preferences);
-    setResolvedTheme(resolveTheme(preferences.themeMode));
-    if (preferences.themeMode !== "auto") return;
+  useLayoutEffect(() => {
+    setResolvedTheme(applyPreferences(preferences, forcedTheme));
+    if (forcedTheme || preferences.themeMode !== "auto") return;
     const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const sync = () => { applyPreferences(preferences); setResolvedTheme(resolveTheme("auto")); };
+    const sync = () => setResolvedTheme(applyPreferences(preferences));
     media.addEventListener("change", sync);
     return () => media.removeEventListener("change", sync);
-  }, [preferences]);
+  }, [forcedTheme, preferences]);
 
   useEffect(() => {
     if (authLoading) return;

@@ -18,16 +18,6 @@ export default function Landing() {
   const search = useSearch();
   const [, setLocation] = useLocation();
 
-  // Force dark theme for landing page
-  useEffect(() => {
-    document.documentElement.classList.add('dark');
-    document.body.style.backgroundColor = '#0a0a0a';
-
-    return () => {
-      document.body.style.backgroundColor = '';
-    };
-  }, []);
-
   // Capture referral code from URL parameter
   useEffect(() => {
     const params = new URLSearchParams(search);

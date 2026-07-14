@@ -160,12 +160,24 @@ function PreferenceMotion({ children }: { children: React.ReactNode }) {
   return <MotionConfig reducedMotion={preferences.reduceAnimations ? "always" : "user"}>{children}</MotionConfig>;
 }
 
+const PUBLIC_DARK_ROUTES = new Set([
+  "/",
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+  "/auth/callback",
+]);
+
 function App() {
+  const [location] = useLocation();
+  const forcePublicDarkTheme = PUBLIC_DARK_ROUTES.has(location) || location.startsWith("/r/");
+
   return (
     <LanguageProvider>
       <ErrorBoundary>
         <AuthProvider>
-          <VisualPreferencesProvider>
+          <VisualPreferencesProvider forcedTheme={forcePublicDarkTheme ? "dark" : undefined}>
             <BehaviorPreferencesProvider>
               <ThemeProvider defaultTheme="dark" switchable={true}>
                 <PreferenceMotion>
