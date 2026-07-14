@@ -5,8 +5,9 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { SkeletonCardGrid } from "@/components/skeletons";
 import { ExportButton } from "@/components/ExportButton";
 import { useProject } from "@/contexts/ProjectContext";
-import { Archive, ArrowRight, Calendar, Plus, Search, Target, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useBehaviorPreferences } from "@/contexts/BehaviorPreferencesContext";
+import { Archive, ArrowRight, Grid2X2, List, Plus, Search } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { WORKFLOW_STAGES } from "@/lib/workflow";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -39,15 +40,21 @@ function getStageLabel(meta: ReturnType<typeof getMetadata>, locale = "pt"): str
 }
 
 function ProjectsContent({ embedded }: { embedded?: boolean }) {
-  const { projects, isLoading, refreshProjects } = useProject();
+  const { projects, isLoading, loadProjects } = useProject();
   const [, setLocation] = useLocation();
   const { locale, t } = useLanguage();
+  const { preferences: behaviorPrefs } = useBehaviorPreferences();
   const [search, setSearch] = useState("");
+  const [sortMode, setSortMode] = useState(behaviorPrefs.defaultProjectSort);
+  const [viewMode, setViewMode] = useState(behaviorPrefs.defaultView);
 
-  // Persistent filters
+  useEffect(() => setSortMode(behaviorPrefs.defaultProjectSort), [behaviorPrefs.defaultProjectSort]);
+  useEffect(() => setViewMode(behaviorPrefs.defaultView), [behaviorPrefs.defaultView]);
+
+  // Persistent status filter; sort/view follow the user's behavior preferences.
   const { filters, setFilter, resetFilters, isDefault } = usePersistedFilters({
     storageKey: "projects-filters",
-    defaultFilters: { status: "active", sort: "recent" },
+    defaultFilters: { status: "active" },
     syncWithUrl: true,
   });
 
@@ -65,6 +72,18 @@ function ProjectsContent({ embedded }: { embedded?: boolean }) {
     );
   }, [projects, search, filters.status]);
 
+  const sortedProjects = useMemo(() => [...filtered].sort((a, b) => {
+    if (sortMode === "alphabetical") return a.name.localeCompare(b.name, locale === "en" ? "en" : "pt-BR");
+    if (sortMode === "deadline") {
+      const aDeadline = getMetadata(a.metadataJson).deadline;
+      const bDeadline = getMetadata(b.metadataJson).deadline;
+      const aTime = aDeadline ? new Date(`${aDeadline}T00:00:00`).getTime() : Number.POSITIVE_INFINITY;
+      const bTime = bDeadline ? new Date(`${bDeadline}T00:00:00`).getTime() : Number.POSITIVE_INFINITY;
+      return aTime - bTime || new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    }
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+  }), [filtered, locale, sortMode]);
+
   // Bulk actions
   const handleBulkDelete = async () => {
     if (!window.confirm(t("app.projects.confirmBulkDelete") as string || `Deletar ${bulkSelection.selectedCount} projeto(s)?`)) {
@@ -81,7 +100,7 @@ function ProjectsContent({ embedded }: { embedded?: boolean }) {
 
       toast.success(t("app.projects.bulkDeleteSuccess") as string || `${bulkSelection.selectedCount} projeto(s) deletado(s)`);
       bulkSelection.deselectAll();
-      refreshProjects();
+      loadProjects();
     } catch (error) {
       toast.error(t("app.errors.generic") as string || "Erro ao deletar projetos");
     }
@@ -97,7 +116,7 @@ function ProjectsContent({ embedded }: { embedded?: boolean }) {
 
       toast.success(t("app.projects.bulkArchiveSuccess") as string || `${bulkSelection.selectedCount} projeto(s) arquivado(s)`);
       bulkSelection.deselectAll();
-      refreshProjects();
+      loadProjects();
     } catch (error) {
       toast.error(t("app.errors.generic") as string || "Erro ao arquivar projetos");
     }
@@ -140,8 +159,8 @@ function ProjectsContent({ embedded }: { embedded?: boolean }) {
           </div>
         </header>
 
-        {/* Filters */}
-        <section className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_160px_160px]">
+        {/* Filters and current presentation controls */}
+        <section className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_150px_190px_auto_auto]">
           <label className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-frame-gray-light" />
             <input value={search} onChange={(e) => setSearch(e.target.value)} className="frame-input w-full pl-10" placeholder={t("app.projects.searchPlaceholder")} />
@@ -152,17 +171,22 @@ function ProjectsContent({ embedded }: { embedded?: boolean }) {
             <option value="archived">{t("app.projects.filterArchived")}</option>
             <option value="all">{t("app.projects.filterAll")}</option>
           </select>
-          {!isDefault && (
-            <button onClick={resetFilters} className="frame-btn-ghost text-xs">
-              {t("app.common.clearFilters") || "Limpar filtros"}
-            </button>
-          )}
+          <select value={sortMode} onChange={(e) => setSortMode(e.target.value as typeof sortMode)} className="frame-input w-full" aria-label="Ordenar projetos">
+            <option value="recent">Mais recentes</option>
+            <option value="alphabetical">Ordem alfabética</option>
+            <option value="deadline">Deadline</option>
+          </select>
+          <div className="flex border border-frame-gray-3" aria-label="Visualização dos projetos">
+            <button type="button" onClick={() => setViewMode("grid")} aria-label="Grade" className={`px-3 ${viewMode === "grid" ? "bg-frame-orange text-black" : "text-frame-gray-light"}`}><Grid2X2 className="h-4 w-4" /></button>
+            <button type="button" onClick={() => setViewMode("list")} aria-label="Lista" className={`px-3 ${viewMode === "list" ? "bg-frame-orange text-black" : "text-frame-gray-light"}`}><List className="h-4 w-4" /></button>
+          </div>
+          {!isDefault && <button onClick={resetFilters} className="frame-btn-ghost text-xs">{t("app.common.clearFilters") || "Limpar filtros"}</button>}
         </section>
 
         {/* Content */}
         {isLoading ? (
           <SkeletonCardGrid count={6} cols={3} />
-        ) : filtered.length === 0 ? (
+        ) : sortedProjects.length === 0 ? (
           <EmptyState
             icon={Archive}
             title={t("app.projects.emptyTitle")}
@@ -170,8 +194,8 @@ function ProjectsContent({ embedded }: { embedded?: boolean }) {
             action={{ label: t("app.projects.newJob"), onClick: () => setLocation("/dashboard?newProject=1") }}
           />
         ) : (
-          <section className="space-y-3">
-            {filtered.map((project) => {
+          <section className={viewMode === "grid" ? "grid gap-4 md:grid-cols-2 xl:grid-cols-3" : "space-y-3"}>
+            {sortedProjects.map((project) => {
               const meta = getMetadata(project.metadataJson);
               const deadline = meta.deadline;
               const stageLabel = getStageLabel(meta, locale);
@@ -190,9 +214,9 @@ function ProjectsContent({ embedded }: { embedded?: boolean }) {
                     boxShadow: "0 4px 20px rgba(255, 107, 0, 0.12)"
                   }}
                   transition={{ duration: 0.2 }}
-                  className="w-full group border border-frame-gray-3 bg-frame-gray-1/10 p-5 text-left hover:border-frame-orange/50 hover:bg-frame-orange/[0.02]"
+                  className={`w-full group border border-frame-gray-3 bg-frame-gray-1/10 p-5 text-left hover:border-frame-orange/50 hover:bg-frame-orange/[0.02] ${viewMode === "grid" ? "min-h-[220px]" : ""}`}
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className={viewMode === "grid" ? "flex h-full flex-col justify-between gap-6" : "flex flex-col sm:flex-row sm:items-center justify-between gap-4"}>
                     {/* Left: info */}
                     <div className="min-w-0 flex-1 space-y-1.5">
                       <div className="flex items-center gap-3">

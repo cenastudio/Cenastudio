@@ -85,7 +85,7 @@ function validateField(value: string, rules: ValidationRule): string | null {
   return null;
 }
 
-export function useFormValidation<T extends Record<string, string>>(
+export function useFormValidation<T extends { [K in keyof T]: string }>(
   initialValues: T,
   validationRules: Partial<Record<keyof T, ValidationRule>>
 ) {

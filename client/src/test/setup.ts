@@ -78,6 +78,10 @@ vi.mock('@/lib/api', () => ({
       me: vi.fn(),
       providers: vi.fn().mockResolvedValue({ github: false, supabase: false }),
       updateProfile: vi.fn(),
+      getVisualPreferences: vi.fn().mockResolvedValue({ themeMode: 'dark', density: 'normal', fontFamily: 'inter', reduceAnimations: false }),
+      updateVisualPreferences: vi.fn().mockResolvedValue({ message: 'ok' }),
+      getBehaviorPreferences: vi.fn().mockResolvedValue({ defaultProjectSort: 'recent', defaultView: 'grid', autoplayVideos: true }),
+      updateBehaviorPreferences: vi.fn().mockResolvedValue({ message: 'ok' }),
     },
     tools: {
       list: vi.fn(),

@@ -128,7 +128,7 @@ export function usePersistedFilters<T extends Record<string, string | number | b
 
   // Set single filter value
   const setFilter = useCallback(<K extends keyof T>(key: K, value: T[K]) => {
-    setFilters({ [key]: value } as Partial<T>);
+    setFilters({ [key]: value } as unknown as Partial<T>);
   }, [setFilters]);
 
   return {

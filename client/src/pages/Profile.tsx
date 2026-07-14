@@ -2,6 +2,7 @@ import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
 import { useVisualPreferences } from "@/contexts/VisualPreferencesContext";
+import { useBehaviorPreferences } from "@/contexts/BehaviorPreferencesContext";
 import { CHECKOUT_MODAL_PLAN, planDisplayLabel } from "@/lib/plans";
 import { useApp } from "@/contexts/AppContext";
 import { api, openBillingPortal, ApiError } from "@/lib/api";
@@ -499,13 +500,11 @@ function ProfileContent() {
     }
   };
 
-  // 3. Preferências Visuais - USANDO O CONTEXTO AGORA
+  // 3. Preferências Visuais
   const { preferences: visualPrefs, updatePreference: updateVisualPref } = useVisualPreferences();
 
   // 4. Comportamentos Padrão
-  const [defaultProjectSort, setDefaultProjectSort] = useState<"recent" | "alphabetical" | "deadline">("recent");
-  const [defaultView, setDefaultView] = useState<"grid" | "list">("grid");
-  const [autoplayVideos, setAutoplayVideos] = useState(true);
+  const { preferences: behaviorPrefs, updatePreference: updateBehaviorPref } = useBehaviorPreferences();
 
   // Privacy state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -974,24 +973,7 @@ function ProfileContent() {
         console.error("Erro ao carregar preferências regionais");
       });
 
-      // Carregar preferências visuais
-      api.auth.getVisualPreferences().then((data) => {
-        setThemeMode(data.themeMode);
-        setDensity(data.density);
-        setFontFamily(data.fontFamily);
-        setReduceAnimations(data.reduceAnimations);
-      }).catch(() => {
-        console.error("Erro ao carregar preferências visuais");
-      });
-
-      // Carregar comportamentos padrão
-      api.auth.getBehaviorPreferences().then((data) => {
-        setDefaultProjectSort(data.defaultProjectSort);
-        setDefaultView(data.defaultView);
-        setAutoplayVideos(data.autoplayVideos);
-      }).catch(() => {
-        console.error("Erro ao carregar comportamentos");
-      });
+      // Preferências visuais e comportamentais são carregadas pelos contextos globais.
     }
   }, [activeTab]);
 
@@ -1064,41 +1046,32 @@ function ProfileContent() {
     }
   };
 
-  // Comportamentos Padrão — auto-save a cada mudança, igual às demais seções de preferências
+  // Comportamentos Padrão — auto-save e aplicação global
   const handleDefaultProjectSortChange = async (value: "recent" | "alphabetical" | "deadline") => {
-    const previous = defaultProjectSort;
-    setDefaultProjectSort(value);
     try {
-      await api.auth.updateBehaviorPreferences({ defaultProjectSort: value, defaultView, autoplayVideos });
+      await updateBehaviorPref("defaultProjectSort", value);
       toast.success("Ordenação padrão atualizada");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao salvar");
-      setDefaultProjectSort(previous);
     }
   };
 
   const handleDefaultViewChange = async (value: "grid" | "list") => {
-    const previous = defaultView;
-    setDefaultView(value);
     try {
-      await api.auth.updateBehaviorPreferences({ defaultProjectSort, defaultView: value, autoplayVideos });
+      await updateBehaviorPref("defaultView", value);
       toast.success("Visualização padrão atualizada");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao salvar");
-      setDefaultView(previous);
     }
   };
 
   const handleAutoplayVideosChange = async () => {
-    const previous = autoplayVideos;
-    const next = !autoplayVideos;
-    setAutoplayVideos(next);
+    const next = !behaviorPrefs.autoplayVideos;
     try {
-      await api.auth.updateBehaviorPreferences({ defaultProjectSort, defaultView, autoplayVideos: next });
+      await updateBehaviorPref("autoplayVideos", next);
       toast.success(next ? "Autoplay ativado" : "Autoplay desativado");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao salvar");
-      setAutoplayVideos(previous);
     }
   };
 
@@ -2997,27 +2970,111 @@ function ProfileContent() {
               </div>
             </div>
 
-            {/* FASE 4: Preferências Visuais e Comportamentos - EM DESENVOLVIMENTO */}
-            <div className="liquid-glass p-6 space-y-4 border-2 border-yellow-500/30 bg-yellow-500/5">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-6 h-6 text-yellow-500 shrink-0 mt-1" />
+            {/* Preferências visuais — aplicadas globalmente e salvas automaticamente */}
+            <div className="liquid-glass p-6 space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg">
+                  <Layout className="w-5 h-5 text-frame-orange" />
+                </div>
                 <div>
-                  <h3 className="text-lg font-bold text-yellow-500">Preferências Visuais e Comportamentos</h3>
-                  <p className="text-frame-gray-light text-sm mt-2 leading-relaxed">
-                    Esta seção está <strong>temporariamente desabilitada</strong>. As configurações de tema, densidade,
-                    fontes, ordenação e visualização padrão estavam salvando no banco mas não sendo aplicadas na interface.
-                  </p>
-                  <p className="text-frame-gray-light text-sm mt-2 leading-relaxed">
-                    <strong>Será reimplementada</strong> com funcionalidade real em uma próxima versão, aplicando
-                    efetivamente as preferências escolhidas em toda a aplicação.
-                  </p>
-                  <div className="mt-4 p-3 bg-frame-gray-1/40 border border-frame-gray-3 rounded text-xs text-frame-gray-light">
-                    <strong>O que estava aqui:</strong> Modo de tema (dark/light/auto), Densidade da interface,
-                    Família de fonte, Reduzir animações, Ordenação padrão de projetos, Visualização padrão (grid/list),
-                    Autoplay de vídeos.
-                  </div>
+                  <h3 className="text-lg font-bold">Preferências Visuais</h3>
+                  <p className="text-frame-gray-light text-xs">Alterações aplicadas imediatamente em toda a interface</p>
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <label className="frame-label text-frame-gray-light">Modo de Tema</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: "dark", label: "Escuro", icon: "🌙" },
+                    { value: "light", label: "Claro", icon: "☀️" },
+                    { value: "auto", label: "Auto", icon: "💻" },
+                  ].map((option) => (
+                    <button key={option.value} type="button" onClick={() => handleThemeModeChange(option.value as "dark" | "light" | "auto")}
+                      className={`py-2.5 px-3 rounded-lg border text-sm font-medium transition ${visualPrefs.themeMode === option.value ? "border-frame-orange bg-frame-orange/10 text-frame-white" : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"}`}>
+                      {option.icon} {option.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[0.65rem] text-frame-gray-light">Auto acompanha mudanças do tema do sistema operacional.</p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="frame-label text-frame-gray-light">Densidade da Interface</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: "compact", label: "Compacta", desc: "Mais conteúdo" },
+                    { value: "normal", label: "Normal", desc: "Balanceado" },
+                    { value: "spacious", label: "Espaçosa", desc: "Mais ar" },
+                  ].map((option) => (
+                    <button key={option.value} type="button" onClick={() => handleDensityChange(option.value as "compact" | "normal" | "spacious")}
+                      className={`py-2.5 px-3 rounded-lg border transition ${visualPrefs.density === option.value ? "border-frame-orange bg-frame-orange/10 text-frame-white" : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"}`}>
+                      <span className="block text-sm font-medium">{option.label}</span>
+                      <span className="block text-[0.65rem] opacity-70">{option.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="frame-label text-frame-gray-light">Família de Fonte</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: "inter", label: "Cena", desc: "Padrão" },
+                    { value: "system", label: "Sistema", desc: "Nativa" },
+                    { value: "mono", label: "Mono", desc: "Técnica" },
+                  ].map((option) => (
+                    <button key={option.value} type="button" onClick={() => handleFontChange(option.value as "inter" | "system" | "mono")}
+                      className={`py-2.5 px-3 rounded-lg border transition ${visualPrefs.fontFamily === option.value ? "border-frame-orange bg-frame-orange/10 text-frame-white" : "border-frame-gray-3 text-frame-gray-light hover:border-frame-gray-light"}`}>
+                      <span className="block text-sm font-medium">{option.label}</span>
+                      <span className="block text-[0.65rem] opacity-70">{option.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <button type="button" onClick={handleToggleAnimations}
+                className="flex w-full items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/30 transition text-left">
+                <span className="flex items-center gap-3">
+                  <Sliders className="w-4 h-4 text-frame-orange" />
+                  <span><span className="block text-sm font-medium text-frame-white">Reduzir animações</span><span className="block text-xs text-frame-gray-light">Remove transições e movimentos decorativos</span></span>
+                </span>
+                <span className={`relative w-11 h-6 rounded-full transition-colors ${visualPrefs.reduceAnimations ? "bg-frame-orange" : "bg-frame-gray-3"}`}>
+                  <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${visualPrefs.reduceAnimations ? "translate-x-5" : "translate-x-0"}`} />
+                </span>
+              </button>
+            </div>
+
+            {/* Comportamentos — consumidos por Projetos e Video Reviews */}
+            <div className="liquid-glass p-6 space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg">
+                  <Settings className="w-5 h-5 text-frame-orange" />
+                </div>
+                <div><h3 className="text-lg font-bold">Comportamentos Padrão</h3><p className="text-frame-gray-light text-xs">Define como Projetos e Video Reviews abrem</p></div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="frame-label text-frame-gray-light flex items-center gap-2"><SortAsc className="w-3.5 h-3.5" />Ordenação Padrão de Projetos</label>
+                <select value={behaviorPrefs.defaultProjectSort} onChange={(event) => handleDefaultProjectSortChange(event.target.value as "recent" | "alphabetical" | "deadline")} className="frame-input w-full">
+                  <option value="recent">Mais recentes primeiro</option>
+                  <option value="alphabetical">Ordem alfabética</option>
+                  <option value="deadline">Deadline (urgente primeiro)</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="frame-label text-frame-gray-light flex items-center gap-2"><Layout className="w-3.5 h-3.5" />Visualização Padrão de Projetos</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => handleDefaultViewChange("grid")} className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-sm font-medium transition ${behaviorPrefs.defaultView === "grid" ? "border-frame-orange bg-frame-orange/10 text-frame-white" : "border-frame-gray-3 text-frame-gray-light"}`}><Grid className="w-4 h-4" /> Grade</button>
+                  <button type="button" onClick={() => handleDefaultViewChange("list")} className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-sm font-medium transition ${behaviorPrefs.defaultView === "list" ? "border-frame-orange bg-frame-orange/10 text-frame-white" : "border-frame-gray-3 text-frame-gray-light"}`}><List className="w-4 h-4" /> Lista</button>
+                </div>
+              </div>
+
+              <button type="button" onClick={handleAutoplayVideosChange} className="flex w-full items-center justify-between p-3 rounded-lg border border-frame-gray-3 hover:border-frame-orange/30 transition text-left">
+                <span className="flex items-center gap-3"><PlayCircle className="w-4 h-4 text-frame-orange" /><span><span className="block text-sm font-medium text-frame-white">Autoplay de vídeos</span><span className="block text-xs text-frame-gray-light">Inicia reviews automaticamente, sem som</span></span></span>
+                <span className={`relative w-11 h-6 rounded-full transition-colors ${behaviorPrefs.autoplayVideos ? "bg-frame-orange" : "bg-frame-gray-3"}`}><span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${behaviorPrefs.autoplayVideos ? "translate-x-5" : "translate-x-0"}`} /></span>
+              </button>
             </div>
 
             {/* Discord */}

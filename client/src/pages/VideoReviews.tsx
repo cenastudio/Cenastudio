@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useBehaviorPreferences } from "@/contexts/BehaviorPreferencesContext";
 
 function parseVideoLink(url: string): string | null {
   const trimmed = url.trim();
@@ -116,6 +117,7 @@ const STATUS_ACTIONS = [
 
 function VideoReviewsContent({ embedded }: { embedded?: boolean }) {
   const { t } = useLanguage();
+  const { preferences: behaviorPrefs } = useBehaviorPreferences();
   const [, setLocation] = useLocation();
   const { projectId } = useParams<{ projectId: string }>();
   const targetReviewId = useMemo(() => {
@@ -764,6 +766,7 @@ function VideoReviewsContent({ embedded }: { embedded?: boolean }) {
                       commentMarkers={commentMarkers}
                       onAddAnnotatedComment={handleAddAnnotatedComment}
                       pauseRequest={pauseRequest}
+                      autoPlay={behaviorPrefs.autoplayVideos}
                     />
                     <p className="mt-3 text-[0.6rem] font-frame-mono uppercase tracking-wider text-frame-gray-light">
                       {t("app.videoReviews.playerHint")}

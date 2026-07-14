@@ -23,6 +23,7 @@ interface VideoPlayerProps {
   commentMarkers?: CommentMarker[];
   onAddAnnotatedComment?: (annotation: Annotation[], timestamp: number, comment: string) => void;
   pauseRequest?: number;
+  autoPlay?: boolean;
 }
 
 const PLAYBACK_SPEEDS = [0.5, 1, 1.5, 2];
@@ -52,12 +53,13 @@ export default function VideoPlayer({
   commentMarkers = [],
   onAddAnnotatedComment,
   pauseRequest = 0,
+  autoPlay = false,
 }: VideoPlayerProps) {
   const { t } = useLanguage();
   const playerRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [playing, setPlaying] = useState(false);
-  const [muted, setMuted] = useState(false);
+  const [playing, setPlaying] = useState(autoPlay);
+  const [muted, setMuted] = useState(autoPlay);
   const [volume, setVolume] = useState(0.8);
   const [played, setPlayed] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -112,15 +114,15 @@ export default function VideoPlayer({
   }, [pauseRequest]);
 
   useEffect(() => {
-    if (!url) {
-      setPlaying(false);
-      setPlayed(0);
-      setCurrentTime(0);
-      setDuration(0);
-      setAnnotationMode(false);
-      setDriveFallback(false);
-    }
-  }, [url]);
+    setPlaying(Boolean(url) && autoPlay);
+    setMuted(autoPlay);
+    setPlayed(0);
+    setCurrentTime(0);
+    setDuration(0);
+    setAnnotationMode(false);
+    setDriveFallback(false);
+    setShowControls(true);
+  }, [url, autoPlay]);
 
   const handleTimeUpdate = (event: any) => {
     const seconds = Number(event?.currentTarget?.currentTime ?? playerRef.current?.currentTime ?? 0);

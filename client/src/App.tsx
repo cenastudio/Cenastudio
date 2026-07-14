@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Redirect, Route, Switch, useLocation } from "wouter";
 import { SpeedInsights } from "@vercel/speed-insights/react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import FrameShell from "@/components/FrameShell";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,7 +12,8 @@ import { PlanProvider } from "@/contexts/PlanContext";
 import { ProgressProvider } from "@/contexts/ProgressContext";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { VisualPreferencesProvider } from "@/contexts/VisualPreferencesContext";
+import { VisualPreferencesProvider, useVisualPreferences } from "@/contexts/VisualPreferencesContext";
+import { BehaviorPreferencesProvider } from "@/contexts/BehaviorPreferencesContext";
 import CommandPalette from "@/components/CommandPalette";
 import QuickActionsMenu from "@/components/QuickActionsMenu";
 import { GlobalProgressBar } from "@/components/GlobalProgressBar";
@@ -74,18 +75,17 @@ function PageFallback() {
 
 function PageTransition({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
+  const { preferences } = useVisualPreferences();
+  const reduced = preferences.reduceAnimations;
 
   return (
     <AnimatePresence mode="wait" initial={false}>
       <motion.div
         key={location}
-        initial={{ opacity: 0, y: 10 }}
+        initial={reduced ? false : { opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        transition={{
-          duration: 0.15,
-          ease: "easeInOut"
-        }}
+        exit={reduced ? { opacity: 1 } : { opacity: 0, y: -10 }}
+        transition={{ duration: reduced ? 0 : 0.15, ease: "easeInOut" }}
       >
         {children}
       </motion.div>
@@ -155,38 +155,47 @@ function Router() {
   );
 }
 
+function PreferenceMotion({ children }: { children: React.ReactNode }) {
+  const { preferences } = useVisualPreferences();
+  return <MotionConfig reducedMotion={preferences.reduceAnimations ? "always" : "user"}>{children}</MotionConfig>;
+}
+
 function App() {
   return (
     <LanguageProvider>
       <ErrorBoundary>
-        <ThemeProvider defaultTheme="dark" switchable={true}>
-          <AuthProvider>
-            <VisualPreferencesProvider>
-              <PlanProvider>
-                <ProgressProvider>
-                  <ProjectProvider>
-                    <AppProvider>
-                      <TooltipProvider>
-                        <FrameShell>
-                          <Toaster />
-                          <GlobalProgressBar isLoading={false} />
-                          <QuickActionsMenu />
-                          <Suspense fallback={<PageFallback />}>
-                            <Router />
-                            <CheckoutModal />
-                            <DemoModal />
-                            <ForcePasswordReset />
-                          </Suspense>
-                          <SpeedInsights />
-                        </FrameShell>
-                      </TooltipProvider>
-                    </AppProvider>
-                  </ProjectProvider>
-                </ProgressProvider>
-              </PlanProvider>
-            </VisualPreferencesProvider>
-          </AuthProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <VisualPreferencesProvider>
+            <BehaviorPreferencesProvider>
+              <ThemeProvider defaultTheme="dark" switchable={true}>
+                <PreferenceMotion>
+                  <PlanProvider>
+                    <ProgressProvider>
+                      <ProjectProvider>
+                        <AppProvider>
+                          <TooltipProvider>
+                            <FrameShell>
+                              <Toaster />
+                              <GlobalProgressBar isLoading={false} />
+                              <QuickActionsMenu />
+                              <Suspense fallback={<PageFallback />}>
+                                <Router />
+                                <CheckoutModal />
+                                <DemoModal />
+                                <ForcePasswordReset />
+                              </Suspense>
+                              <SpeedInsights />
+                            </FrameShell>
+                          </TooltipProvider>
+                        </AppProvider>
+                      </ProjectProvider>
+                    </ProgressProvider>
+                  </PlanProvider>
+                </PreferenceMotion>
+              </ThemeProvider>
+            </BehaviorPreferencesProvider>
+          </VisualPreferencesProvider>
+        </AuthProvider>
       </ErrorBoundary>
     </LanguageProvider>
   );

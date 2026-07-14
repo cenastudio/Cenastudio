@@ -4,6 +4,7 @@ import AppNavBar from '@/components/AppNavBar';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { AppProvider } from '@/contexts/AppContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { VisualPreferencesProvider } from '@/contexts/VisualPreferencesContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { ProjectProvider } from '@/contexts/ProjectContext';
 import { api } from '@/lib/api';
@@ -39,17 +40,17 @@ vi.mock('framer-motion', () => ({
 
 const AllProviders = ({ children }: { children: React.ReactNode }) => {
   return (
-    <ThemeProvider defaultTheme="dark" switchable={true}>
-      <LanguageProvider>
-        <AuthProvider>
-          <AppProvider>
-            <ProjectProvider>
-              {children}
-            </ProjectProvider>
-          </AppProvider>
-        </AuthProvider>
-      </LanguageProvider>
-    </ThemeProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <VisualPreferencesProvider>
+          <ThemeProvider defaultTheme="dark" switchable={true}>
+            <AppProvider>
+              <ProjectProvider>{children}</ProjectProvider>
+            </AppProvider>
+          </ThemeProvider>
+        </VisualPreferencesProvider>
+      </AuthProvider>
+    </LanguageProvider>
   );
 };
 
@@ -90,6 +91,8 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
     // is required for AppNavBar to render the avatar dropdown containing
     // the theme toggle button.
     (api.auth.me as any).mockResolvedValue({ user: mockUser, plan: null });
+    (api.auth.getVisualPreferences as any).mockResolvedValue({ themeMode: 'dark', density: 'normal', fontFamily: 'inter', reduceAnimations: false });
+    (api.auth.updateVisualPreferences as any).mockResolvedValue({ message: 'ok' });
     // ProjectProvider loads projects once authenticated; without a resolved
     // array, `projects` becomes undefined and AppNavBar's `.find()` throws.
     (api.projects.list as any).mockResolvedValue([]);
@@ -220,8 +223,8 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
   });
 
   describe('AC5: Theme preference saves to user profile', () => {
-    it('should call API to save theme preference when toggling', async () => {
-      const fetchSpy = vi.spyOn(global, 'fetch');
+    it('should call the visual preferences API when toggling', async () => {
+      const updateSpy = vi.spyOn(api.auth, 'updateVisualPreferences');
 
       render(
         <AllProviders>
@@ -230,31 +233,15 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
       );
 
       const themeButton = await screen.findByTitle(/modo/i);
-
-      // Toggle theme
       fireEvent.click(themeButton);
 
-      // Wait for API call
       await waitFor(() => {
-        expect(fetchSpy).toHaveBeenCalledWith(
-          '/api/profile',
-          expect.objectContaining({
-            method: 'PUT',
-            headers: expect.objectContaining({
-              'Content-Type': 'application/json',
-            }),
-            body: expect.stringContaining('themePreference'),
-            credentials: 'include',
-          })
-        );
+        expect(updateSpy).toHaveBeenCalledWith(expect.objectContaining({ themeMode: 'light' }));
       });
     });
 
-    it('should not break theme toggle if API call fails', async () => {
-      // Mock fetch to fail
-      global.fetch = vi.fn(() =>
-        Promise.reject(new Error('API Error'))
-      ) as any;
+    it('should restore the previous theme if the API call fails', async () => {
+      (api.auth.updateVisualPreferences as any).mockRejectedValueOnce(new Error('API Error'));
 
       render(
         <AllProviders>
@@ -263,12 +250,10 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
       );
 
       const themeButton = await screen.findByTitle(/modo/i);
-
-      // Toggle should still work
       fireEvent.click(themeButton);
 
       await waitFor(() => {
-        expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+        expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
       });
     });
   });
@@ -319,8 +304,9 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
     });
 
     it('should show Moon icon in light mode (to switch to dark)', async () => {
-      // Start with light theme
+      // Start with light theme locally and on the authenticated profile.
       localStorage.setItem('theme', 'light');
+      (api.auth.getVisualPreferences as any).mockResolvedValueOnce({ themeMode: 'light', density: 'normal', fontFamily: 'inter', reduceAnimations: false });
 
       render(
         <AllProviders>

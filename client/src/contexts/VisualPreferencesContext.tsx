@@ -1,109 +1,94 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 
-interface VisualPreferences {
+export interface VisualPreferences {
   themeMode: "dark" | "light" | "auto";
   density: "compact" | "normal" | "spacious";
   fontFamily: "inter" | "system" | "mono";
   reduceAnimations: boolean;
 }
 
+type ResolvedTheme = "dark" | "light";
 interface VisualPreferencesContextType {
   preferences: VisualPreferences;
+  resolvedTheme: ResolvedTheme;
   updatePreference: <K extends keyof VisualPreferences>(key: K, value: VisualPreferences[K]) => Promise<void>;
   isLoading: boolean;
 }
 
-const defaultPreferences: VisualPreferences = {
-  themeMode: "dark",
-  density: "normal",
-  fontFamily: "inter",
-  reduceAnimations: false,
-};
+const STORAGE_KEY = "frame.visual-preferences";
+const defaults: VisualPreferences = { themeMode: "dark", density: "normal", fontFamily: "inter", reduceAnimations: false };
+const Context = createContext<VisualPreferencesContextType | undefined>(undefined);
 
-const VisualPreferencesContext = createContext<VisualPreferencesContextType>({
-  preferences: defaultPreferences,
-  updatePreference: async () => {},
-  isLoading: true,
-});
-
-export function VisualPreferencesProvider({ children }: { children: ReactNode }) {
-  const [preferences, setPreferences] = useState<VisualPreferences>(defaultPreferences);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Carregar preferências ao montar
-  useEffect(() => {
-    api.auth.getVisualPreferences()
-      .then((prefs) => {
-        setPreferences(prefs);
-        applyPreferences(prefs);
-      })
-      .catch((err) => {
-        console.error("Erro ao carregar preferências visuais:", err);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  }, []);
-
-  // Aplicar preferências no DOM
-  const applyPreferences = (prefs: VisualPreferences) => {
-    const root = document.documentElement;
-
-    // Tema
-    if (prefs.themeMode === "auto") {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      root.classList.toggle("dark", prefersDark);
-      root.classList.toggle("light", !prefersDark);
-    } else {
-      root.classList.toggle("dark", prefs.themeMode === "dark");
-      root.classList.toggle("light", prefs.themeMode === "light");
-    }
-
-    // Densidade
-    root.setAttribute("data-density", prefs.density);
-
-    // Fonte
-    root.setAttribute("data-font", prefs.fontFamily);
-
-    // Animações
-    if (prefs.reduceAnimations) {
-      root.style.setProperty("--animation-duration", "0.01s");
-    } else {
-      root.style.removeProperty("--animation-duration");
-    }
-  };
-
-  const updatePreference = async <K extends keyof VisualPreferences>(
-    key: K,
-    value: VisualPreferences[K]
-  ) => {
-    const newPrefs = { ...preferences, [key]: value };
-    setPreferences(newPrefs);
-    applyPreferences(newPrefs);
-
-    // Salvar no backend
-    try {
-      await api.auth.updateVisualPreferences(newPrefs);
-    } catch (err) {
-      console.error("Erro ao salvar preferências:", err);
-      // Reverter em caso de erro
-      setPreferences(preferences);
-      applyPreferences(preferences);
-    }
-  };
-
-  return (
-    <VisualPreferencesContext.Provider value={{ preferences, updatePreference, isLoading }}>
-      {children}
-    </VisualPreferencesContext.Provider>
-  );
+function readCachedPreferences(): VisualPreferences {
+  try {
+    const cached = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    const legacyTheme = localStorage.getItem("theme");
+    const themeMode = cached.themeMode ?? (legacyTheme === "light" || legacyTheme === "dark" ? legacyTheme : defaults.themeMode);
+    return { ...defaults, ...cached, themeMode };
+  } catch { return defaults; }
 }
 
+function resolveTheme(mode: VisualPreferences["themeMode"]): ResolvedTheme {
+  return mode === "auto" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : mode;
+}
+
+function applyPreferences(prefs: VisualPreferences) {
+  const root = document.documentElement;
+  const theme = resolveTheme(prefs.themeMode);
+  root.dataset.theme = theme;
+  root.dataset.density = prefs.density;
+  root.dataset.font = prefs.fontFamily;
+  root.dataset.reduceMotion = String(prefs.reduceAnimations);
+  root.classList.toggle("dark", theme === "dark");
+  root.classList.toggle("light", theme === "light");
+  localStorage.setItem("theme", theme);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+}
+
+export function VisualPreferencesProvider({ children }: { children: ReactNode }) {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const [preferences, setPreferences] = useState<VisualPreferences>(readCachedPreferences);
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => resolveTheme(readCachedPreferences().themeMode));
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    applyPreferences(preferences);
+    setResolvedTheme(resolveTheme(preferences.themeMode));
+    if (preferences.themeMode !== "auto") return;
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const sync = () => { applyPreferences(preferences); setResolvedTheme(resolveTheme("auto")); };
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, [preferences]);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!isAuthenticated) { setIsLoading(false); return; }
+    setIsLoading(true);
+    api.auth.getVisualPreferences().then(setPreferences).catch(console.error).finally(() => setIsLoading(false));
+  }, [authLoading, isAuthenticated]);
+
+  const value = useMemo<VisualPreferencesContextType>(() => ({
+    preferences,
+    resolvedTheme,
+    isLoading,
+    updatePreference: async (key, nextValue) => {
+      const previous = preferences;
+      const next = { ...previous, [key]: nextValue };
+      setPreferences(next);
+      try { await api.auth.updateVisualPreferences(next); }
+      catch (error) { setPreferences(previous); throw error; }
+    },
+  }), [preferences, resolvedTheme, isLoading]);
+
+  return <Context.Provider value={value}>{children}</Context.Provider>;
+}
+
+export function useOptionalVisualPreferences() { return useContext(Context); }
 export function useVisualPreferences() {
-  const context = useContext(VisualPreferencesContext);
-  if (!context) {
-    throw new Error("useVisualPreferences must be used within VisualPreferencesProvider");
-  }
-  return context;
+  const value = useContext(Context);
+  if (!value) throw new Error("useVisualPreferences must be used within VisualPreferencesProvider");
+  return value;
 }
