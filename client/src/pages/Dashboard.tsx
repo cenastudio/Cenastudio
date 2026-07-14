@@ -405,7 +405,23 @@ function DashboardContent() {
         </header>
 
         {/* ─── JOB EM FOCO ─── */}
-        {focusProject && (
+        {isProjectsLoading ? (
+          <section className="animate-pulse border border-frame-gray-3 p-5 sm:p-7 space-y-4">
+            <div className="h-4 bg-frame-gray-3 rounded w-24" />
+            <div className="h-8 bg-frame-gray-3 rounded w-3/4" />
+            <div className="flex gap-2">
+              <div className="h-6 bg-frame-gray-3 rounded w-20" />
+              <div className="h-6 bg-frame-gray-3 rounded w-24" />
+              <div className="h-6 bg-frame-gray-3 rounded w-28" />
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="h-3 bg-frame-gray-3 rounded w-16" />
+              <div className="h-3 bg-frame-gray-3 rounded w-32" />
+              <div className="h-1 bg-frame-gray-2 rounded flex-1 max-w-[100px]" />
+            </div>
+            <div className="h-11 bg-frame-orange/20 rounded w-40" />
+          </section>
+        ) : focusProject && (
           <section
             className="relative overflow-hidden animate-stagger-1"
             style={{
@@ -457,7 +473,6 @@ function DashboardContent() {
           </section>
         )}
 
-        {/* ─── PENDÊNCIAS (Director Queue) ─── */}
         {/* ─── PENDÊNCIAS + ATALHOS em 2 colunas ─── */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 animate-stagger-2">
 
@@ -472,7 +487,13 @@ function DashboardContent() {
                 {directorQueue.length} item{directorQueue.length !== 1 ? "s" : ""}
               </span>
             </div>
-            {directorQueue.length > 0 ? (
+            {isProjectsLoading ? (
+              <div className="space-y-2">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-20 bg-frame-gray-2 border border-frame-gray-3 animate-pulse rounded" />
+                ))}
+              </div>
+            ) : directorQueue.length > 0 ? (
               <div className="space-y-2">
                 {directorQueue.map((item) => {
                   const Icon = item.icon;
