@@ -4,6 +4,9 @@ import { CheckCircle2, ChevronDown, Loader2, Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { useFormValidation, type ValidationRule } from "@/hooks/useFormValidation";
+import { ValidatedInput } from "@/components/forms/ValidatedInput";
+import { ValidatedTextarea } from "@/components/forms/ValidatedTextarea";
 
 function CollapsibleSection({
   title,
@@ -120,6 +123,46 @@ export default function ClientFormFields({ data, onChange, disabled }: ClientFor
   });
   const [isLookingUpCnpj, setIsLookingUpCnpj] = useState(false);
   const [cnpjLookupLabel, setCnpjLookupLabel] = useState("");
+
+  // Validation rules
+  const validationRules: Partial<Record<keyof ClientFormData, ValidationRule>> = {
+    name: {
+      required: true,
+      minLength: { value: 2, message: "Nome deve ter pelo menos 2 caracteres" },
+      maxLength: { value: 100, message: "Nome não pode exceder 100 caracteres" },
+    },
+    email: {
+      email: true,
+      pattern: {
+        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        message: "Email inválido. Use o formato: email@exemplo.com"
+      }
+    },
+    phone: {
+      pattern: {
+        value: /^[\d\s()+-]{10,}$/,
+        message: "Telefone deve ter pelo menos 10 dígitos"
+      }
+    },
+    website: {
+      url: "URL deve começar com http:// ou https://",
+    },
+    linkedin: {
+      url: "URL deve começar com http:// ou https://",
+    },
+    instagram: {
+      url: "URL deve começar com http:// ou https://",
+    },
+    taxId: {
+      pattern: {
+        value: /^[\d.-/]{11,18}$/,
+        message: "CPF/CNPJ inválido (11 ou 14 dígitos)"
+      }
+    },
+  };
+
+  const { validation, handleBlur } = useFormValidation(data, validationRules);
+
   const toggleSection = (section: string) => {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
@@ -155,14 +198,24 @@ export default function ClientFormFields({ data, onChange, disabled }: ClientFor
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.common.name") as string} *</label>
-        <StyledInput value={data.name} onChange={f("name")} placeholder={t("app.common.clientNamePlaceholder") as string} disabled={disabled} />
-      </div>
-      <div className="space-y-2">
-        <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.common.company") as string}</label>
-        <StyledInput value={data.company} onChange={f("company")} placeholder={t("app.common.companyNamePlaceholder") as string} disabled={disabled} />
-      </div>
+      <ValidatedInput
+        label={t("app.common.name") as string}
+        required
+        value={data.name}
+        onChange={f("name")}
+        onBlur={() => handleBlur("name")}
+        validation={validation.name}
+        placeholder={t("app.common.clientNamePlaceholder") as string}
+        disabled={disabled}
+      />
+
+      <ValidatedInput
+        label={t("app.common.company") as string}
+        value={data.company}
+        onChange={f("company")}
+        placeholder={t("app.common.companyNamePlaceholder") as string}
+        disabled={disabled}
+      />
       <div className="space-y-2">
         <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.common.taxId") as string}</label>
         <div className="flex flex-col sm:flex-row gap-2">
@@ -205,14 +258,26 @@ export default function ClientFormFields({ data, onChange, disabled }: ClientFor
         )}
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.common.email") as string}</label>
-          <StyledInput value={data.email} onChange={f("email")} placeholder={t("app.common.emailPlaceholder") as string} disabled={disabled} />
-        </div>
-        <div className="space-y-2">
-          <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.common.phone") as string}</label>
-          <StyledInput value={data.phone} onChange={f("phone")} placeholder={t("app.common.phonePlaceholder") as string} disabled={disabled} />
-        </div>
+        <ValidatedInput
+          type="email"
+          label={t("app.common.email") as string}
+          value={data.email}
+          onChange={f("email")}
+          onBlur={() => handleBlur("email")}
+          validation={validation.email}
+          placeholder={t("app.common.emailPlaceholder") as string}
+          disabled={disabled}
+        />
+        <ValidatedInput
+          type="tel"
+          label={t("app.common.phone") as string}
+          value={data.phone}
+          onChange={f("phone")}
+          onBlur={() => handleBlur("phone")}
+          validation={validation.phone}
+          placeholder={t("app.common.phonePlaceholder") as string}
+          disabled={disabled}
+        />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -233,10 +298,13 @@ export default function ClientFormFields({ data, onChange, disabled }: ClientFor
         </div>
       </div>
       <CollapsibleSection title={t("app.common.address") as string} sectionKey="endereco" expanded={expandedSections.endereco} onToggle={toggleSection}>
-        <div className="space-y-2">
-          <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.address") as string}</label>
-          <StyledInput value={data.address} onChange={f("address")} placeholder={t("app.common.addressPlaceholder") as string} disabled={disabled} />
-        </div>
+        <ValidatedInput
+          label={t("app.common.address") as string}
+          value={data.address}
+          onChange={f("address")}
+          placeholder={t("app.common.addressPlaceholder") as string}
+          disabled={disabled}
+        />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
           <div className="space-y-2">
             <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.city") as string}</label>
@@ -254,18 +322,36 @@ export default function ClientFormFields({ data, onChange, disabled }: ClientFor
       </CollapsibleSection>
       <CollapsibleSection title={t("app.common.socialMedia") as string} sectionKey="social" expanded={expandedSections.social} onToggle={toggleSection}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.website") as string}</label>
-            <StyledInput value={data.website} onChange={f("website")} placeholder="https://" disabled={disabled} />
-          </div>
-          <div className="space-y-2">
-            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.linkedin") as string}</label>
-            <StyledInput value={data.linkedin} onChange={f("linkedin")} placeholder="https://linkedin.com/" disabled={disabled} />
-          </div>
-          <div className="space-y-2">
-            <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.instagram") as string}</label>
-            <StyledInput value={data.instagram} onChange={f("instagram")} placeholder="https://instagram.com/" disabled={disabled} />
-          </div>
+          <ValidatedInput
+            type="url"
+            label={t("app.common.website") as string}
+            value={data.website}
+            onChange={f("website")}
+            onBlur={() => handleBlur("website")}
+            validation={validation.website}
+            placeholder="https://"
+            disabled={disabled}
+          />
+          <ValidatedInput
+            type="url"
+            label={t("app.common.linkedin") as string}
+            value={data.linkedin}
+            onChange={f("linkedin")}
+            onBlur={() => handleBlur("linkedin")}
+            validation={validation.linkedin}
+            placeholder="https://linkedin.com/"
+            disabled={disabled}
+          />
+          <ValidatedInput
+            type="url"
+            label={t("app.common.instagram") as string}
+            value={data.instagram}
+            onChange={f("instagram")}
+            onBlur={() => handleBlur("instagram")}
+            validation={validation.instagram}
+            placeholder="https://instagram.com/"
+            disabled={disabled}
+          />
         </div>
       </CollapsibleSection>
       <CollapsibleSection title={t("app.common.companyInfo") as string} sectionKey="empresa" expanded={expandedSections.empresa} onToggle={toggleSection}>
@@ -335,9 +421,14 @@ export default function ClientFormFields({ data, onChange, disabled }: ClientFor
         </div>
       </CollapsibleSection>
       <div className="space-y-2 pt-4 border-t border-frame-gray-3">
-        <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.common.notes") as string}</label>
-        <textarea disabled={disabled} value={data.notes} onChange={(e) => onChange("notes", e.target.value)}
-          className="w-full bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange resize-none" rows={3} placeholder={t("app.common.notesPlaceholder") as string} />
+        <ValidatedTextarea
+          label={t("app.common.notes") as string}
+          value={data.notes}
+          onChange={f("notes")}
+          placeholder={t("app.common.notesPlaceholder") as string}
+          disabled={disabled}
+          rows={3}
+        />
       </div>
     </div>
   );

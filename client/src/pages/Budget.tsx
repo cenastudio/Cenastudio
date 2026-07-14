@@ -5,6 +5,8 @@ import ProjectNav from "@/components/ProjectNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
 import { api, type BudgetOverview, type BudgetEntryItem } from "@/lib/api";
+import { useAutocomplete } from "@/hooks/useAutocomplete";
+import { ValidatedInput } from "@/components/forms/ValidatedInput";
 import {
   Wallet,
   Plus,
@@ -72,6 +74,10 @@ function BudgetContent() {
 
   const [deleteTarget, setDeleteTarget] = useState<BudgetEntryItem | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Autocomplete for category and description
+  const categoryAutocomplete = useAutocomplete({ storageKey: "budget-categories", maxSuggestions: 8 });
+  const descriptionAutocomplete = useAutocomplete({ storageKey: "budget-descriptions", maxSuggestions: 8 });
 
   const load = () => {
     if (!projectId) return;
@@ -153,6 +159,11 @@ function BudgetContent() {
         entryDate,
       });
       setEntries((prev) => [created, ...prev]);
+
+      // Save to autocomplete history
+      categoryAutocomplete.saveToHistory(entryCategory.trim());
+      descriptionAutocomplete.saveToHistory(entryDescription.trim());
+
       toast.success("Gasto lançado");
       setEntryOpen(false);
       setEntryCategory("");
@@ -444,34 +455,36 @@ function BudgetContent() {
           </DialogHeader>
 
           <form onSubmit={handleAddEntry} className="space-y-4 mt-4">
-            <div>
-              <label className="block text-xs font-medium text-frame-gray-light mb-1.5">Categoria</label>
-              <input
-                type="text"
-                value={entryCategory}
-                onChange={(e) => setEntryCategory(e.target.value)}
-                placeholder="Ex: Equipe"
-                required
-                className="frame-input w-full"
-                list="budget-categories"
-              />
-              <datalist id="budget-categories">
-                {overview?.byCategory.map((c) => (
-                  <option key={c.name} value={c.name} />
-                ))}
-              </datalist>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-frame-gray-light mb-1.5">Descrição</label>
-              <input
-                type="text"
-                value={entryDescription}
-                onChange={(e) => setEntryDescription(e.target.value)}
-                placeholder="Ex: Diária cinegrafista"
-                required
-                className="frame-input w-full"
-              />
-            </div>
+            <ValidatedInput
+              label="Categoria"
+              value={entryCategory}
+              onChange={(v) => {
+                setEntryCategory(v);
+                categoryAutocomplete.getSuggestions(v);
+              }}
+              onSelectSuggestion={(v) => {
+                setEntryCategory(v);
+                categoryAutocomplete.clearSuggestions();
+              }}
+              suggestions={categoryAutocomplete.suggestions.length > 0 ? categoryAutocomplete.suggestions : overview?.byCategory.map((c) => c.name)}
+              placeholder="Ex: Equipe"
+              required
+            />
+            <ValidatedInput
+              label="Descrição"
+              value={entryDescription}
+              onChange={(v) => {
+                setEntryDescription(v);
+                descriptionAutocomplete.getSuggestions(v);
+              }}
+              onSelectSuggestion={(v) => {
+                setEntryDescription(v);
+                descriptionAutocomplete.clearSuggestions();
+              }}
+              suggestions={descriptionAutocomplete.suggestions}
+              placeholder="Ex: Diária cinegrafista"
+              required
+            />
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-frame-gray-light mb-1.5">Valor</label>
