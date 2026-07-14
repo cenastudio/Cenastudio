@@ -6,7 +6,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Calculator, Plane, Film, Scissors, Camera, Building2, Plus, Trash2, Info, Wallet, FileText, Loader2 } from "lucide-react";
+import { Calculator, Plane, Film, Scissors, Camera, Building2, Plus, Trash2, Info, Wallet, FileText, Loader2, ExternalLink, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { api, type Client, type Project } from "@/lib/api";
 
@@ -149,6 +149,7 @@ export default function PricingCalculatorModal({ open, onOpenChange }: PricingCa
   const [selectedClientId, setSelectedClientId] = useState<number | "">("");
   const [savingBudget, setSavingBudget] = useState(false);
   const [savingProposal, setSavingProposal] = useState(false);
+  const [generatedProposal, setGeneratedProposal] = useState<{ url: string; clientName: string } | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -258,6 +259,7 @@ export default function PricingCalculatorModal({ open, onOpenChange }: PricingCa
       return;
     }
     setSavingProposal(true);
+    setGeneratedProposal(null);
     try {
       const result = await api.proposals.create({
         clientId: selectedClientId,
@@ -265,14 +267,30 @@ export default function PricingCalculatorModal({ open, onOpenChange }: PricingCa
         html: buildProposalHtml(),
         total: totalCents,
       });
-      toast.success("Proposta gerada", {
-        description: "Abra em Comercial → Propostas para enviar ao cliente.",
-      });
-      if (result.proposal_url) window.open(result.proposal_url, "_blank");
+      // Don't window.open() here — by the time this await resolves, the
+      // browser no longer treats it as tied to the user's click, so Safari
+      // (and often Chrome) silently blocks the popup with no visible
+      // error. It genuinely looked like "nothing happened" even though the
+      // proposal really was created. Show the link in the modal instead,
+      // with a button the user clicks themselves (a real click = never
+      // blocked), plus a copy-link fallback.
+      const client = clients.find((c) => c.id === selectedClientId);
+      setGeneratedProposal({ url: result.proposal_url, clientName: client?.name ?? "cliente" });
+      toast.success("Proposta gerada com sucesso");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao gerar proposta");
     } finally {
       setSavingProposal(false);
+    }
+  };
+
+  const copyProposalLink = async () => {
+    if (!generatedProposal) return;
+    try {
+      await navigator.clipboard.writeText(generatedProposal.url);
+      toast.success("Link copiado");
+    } catch {
+      toast.error("Não foi possível copiar o link");
     }
   };
 
@@ -494,7 +512,10 @@ export default function PricingCalculatorModal({ open, onOpenChange }: PricingCa
                 <label className="block text-xs font-medium text-frame-gray-light mb-1.5">Cliente</label>
                 <select
                   value={selectedClientId}
-                  onChange={(e) => setSelectedClientId(e.target.value ? Number(e.target.value) : "")}
+                  onChange={(e) => {
+                    setSelectedClientId(e.target.value ? Number(e.target.value) : "");
+                    setGeneratedProposal(null);
+                  }}
                   className="frame-input w-full"
                 >
                   <option value="">Selecione um cliente</option>
@@ -528,6 +549,44 @@ export default function PricingCalculatorModal({ open, onOpenChange }: PricingCa
               "Lançar no Orçamento" registra o valor como estimativa no projeto escolhido. "Gerar Proposta" cria um
               documento pronto para enviar ao cliente escolhido, com o breakdown do cálculo.
             </p>
+
+            {generatedProposal && (
+              <div className="border border-frame-green/40 bg-frame-green/[0.06] p-3 space-y-2">
+                <p className="text-xs text-frame-white">
+                  Proposta criada para <strong>{generatedProposal.clientName}</strong>. Este link pode ser enviado
+                  diretamente ao cliente:
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={generatedProposal.url}
+                    onFocus={(e) => e.currentTarget.select()}
+                    className="frame-input flex-1 text-xs font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={copyProposalLink}
+                    className="frame-btn-ghost inline-flex items-center gap-1.5 shrink-0 px-3"
+                    title="Copiar link"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                  <a
+                    href={generatedProposal.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="frame-btn-primary inline-flex items-center gap-1.5 shrink-0 px-3 text-xs"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Abrir
+                  </a>
+                </div>
+                <p className="text-[0.6rem] text-frame-gray-light">
+                  Também acessível em Comercial → Clientes → {generatedProposal.clientName} → Propostas.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>
