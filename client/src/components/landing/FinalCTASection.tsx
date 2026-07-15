@@ -129,19 +129,27 @@ export default function FinalCTASection() {
 
         </motion.div>
 
-        {/* Decorative Elements */}
+        {/* Decorative Elements — pulse continuously while the section is in
+            view; revert to hidden only when scrolled out (viewport once:
+            false), so it never fades away on its own while visible. */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
-          whileInView={{ opacity: 0.1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.7, duration: 1 }}
+          whileInView={{ opacity: [0.1, 0.18, 0.1], scale: [1, 1.04, 1] }}
+          viewport={{ once: false, amount: 0.3 }}
+          transition={{
+            opacity: { delay: 0.7, duration: 3.2, repeat: Infinity, ease: "easeInOut" },
+            scale: { delay: 0.7, duration: 3.2, repeat: Infinity, ease: "easeInOut" },
+          }}
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-frame-orange/20 pointer-events-none"
         />
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
-          whileInView={{ opacity: 0.05, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.8, duration: 1 }}
+          whileInView={{ opacity: [0.05, 0.12, 0.05], scale: [1, 1.03, 1] }}
+          viewport={{ once: false, amount: 0.3 }}
+          transition={{
+            opacity: { delay: 0.9, duration: 3.6, repeat: Infinity, ease: "easeInOut" },
+            scale: { delay: 0.9, duration: 3.6, repeat: Infinity, ease: "easeInOut" },
+          }}
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full border border-frame-orange/10 pointer-events-none"
         />
       </div>
