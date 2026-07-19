@@ -22,7 +22,6 @@ router.get("/me", authenticate, authController.me);
 router.get("/usage-metrics", authenticate, authController.getUsageMetrics);
 router.put("/profile", authenticate, authController.updateProfile);
 router.put("/change-password", authenticate, authController.changePassword);
-router.get("/export-data", authenticate, authController.exportUserData);
 
 // ═══ LGPD / GDPR ROUTES ═══
 router.get("/data-stats", authenticate, authController.getDataStats);

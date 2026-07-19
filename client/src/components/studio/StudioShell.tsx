@@ -49,7 +49,14 @@ export default function StudioShell() {
   const [error, setError] = useState<string | null>(null);
   const [limitReached, setLimitReached] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // On phones/tablets (<1024px) the 12-tool list and the metadata/context
+  // panel eat ~40% of the viewport height before the user even sees the
+  // form or the AI output — the tool is already chosen when landing here
+  // (via URL/dashboard), so start collapsed there and let the toggle button
+  // (visible at every breakpoint, not just desktop) reveal it on demand.
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    () => typeof window !== "undefined" && window.innerWidth < 1024,
+  );
   const [workspaceCollapsed, setWorkspaceCollapsed] = useState(false);
   const [linkedContext, setLinkedContext] = useState<StudioLinkedContext | null>(null);
   const [selectedModel, setSelectedModel] = useState(() => localStorage.getItem("cena-ai-model") || "");
@@ -62,7 +69,7 @@ export default function StudioShell() {
   }, []);
 
   const tool = tools.find((t) => t.id === activeToolId || t.slug === activeToolId);
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
 
   // Sync active project state from URL parameters
   useEffect(() => {
@@ -259,8 +266,8 @@ export default function StudioShell() {
 
   const handleDownload = async (format: "pdf" | "docx") => {
     try {
-      if (format === "pdf") await downloadGeneratedPdf(output, tool.name);
-      else await downloadGeneratedDocx(output, tool.name);
+      if (format === "pdf") await downloadGeneratedPdf(output, tool.name, locale);
+      else await downloadGeneratedDocx(output, tool.name, locale);
       toast.success(format === "pdf" ? t("app.studio.pdfGenerated") as string : t("app.studio.wordGenerated") as string);
     } catch {
       toast.error(t("app.studio.documentError") as string);
@@ -312,8 +319,10 @@ export default function StudioShell() {
       <ProjectTimeline activeToolId={tool.slug} />
 
       <div className="studio-workbench flex flex-1 overflow-hidden flex-col lg:flex-row">
-        {/* Tool Sidebar — normal flow, collapsible */}
-        <div className={`transition-all duration-200 overflow-hidden shrink-0 ${sidebarCollapsed ? "w-0" : "w-auto"}`}>
+        {/* Tool Sidebar — normal flow, collapsible. Below lg it stacks in
+            the column flow (h-0 collapses height), matching how the
+            sidebar itself lays out horizontally on small screens. */}
+        <div className={`transition-all duration-200 overflow-hidden shrink-0 ${sidebarCollapsed ? "h-0 lg:h-auto lg:w-0" : "w-auto max-h-[40vh] lg:max-h-none"}`}>
           <div className="h-full overflow-y-auto">
             <ToolSidebar
               tools={tools}
@@ -323,14 +332,24 @@ export default function StudioShell() {
           </div>
         </div>
 
-        {/* Sidebar toggle — orange chevron icon */}
+        {/* Sidebar toggle — visible at every breakpoint so mobile users can
+            reclaim the space taken by the 12-tool list once they've already
+            picked a tool. Horizontal bar on mobile (matches the sidebar's
+            row layout there), thin vertical strip on desktop. */}
         <button
           type="button"
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="hidden lg:flex items-center justify-center w-5 shrink-0 transition-colors"
+          className="flex items-center justify-center w-full h-8 min-h-11 lg:h-auto lg:w-5 lg:min-h-0 shrink-0 gap-1.5 border-b border-frame-gray-2 lg:border-b-0 transition-colors"
           title={sidebarCollapsed ? "Mostrar ferramentas" : "Esconder ferramentas"}
         >
-          <ChevronLeft className={`w-4 h-4 text-frame-orange transition-transform ${sidebarCollapsed ? "rotate-180" : ""}`} />
+          <span className="lg:hidden font-frame-mono text-[0.6rem] uppercase tracking-[0.12em] text-frame-gray-light">
+            {sidebarCollapsed ? "Ferramentas" : "Esconder ferramentas"}
+          </span>
+          <ChevronLeft
+            className={`w-4 h-4 text-frame-orange transition-transform ${
+              sidebarCollapsed ? "rotate-[-90deg] lg:rotate-180" : "rotate-90 lg:rotate-0"
+            }`}
+          />
         </button>
 
         {/* Studio Shell Body Container */}

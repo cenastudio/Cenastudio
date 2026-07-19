@@ -64,16 +64,28 @@ interface DocumentForm {
 
 const STORAGE_KEY = "frame.documents.v1";
 
-const DOC_TYPES: Array<{ id: DocType; label: string; icon: typeof FileText; accent: string; description: string }> = [
-  { id: "briefing", label: "Briefing", icon: FileText, accent: "#ff4d1d", description: "Objetivo, publico, mensagem, riscos e escopo inicial." },
-  { id: "roteiro", label: "Roteiro", icon: Film, accent: "#f59e0b", description: "Estrutura de cenas, beat sheet, locucao e CTA." },
-  { id: "callsheet", label: "Callsheet", icon: ClipboardList, accent: "#06b6d4", description: "Dia de set, horarios, equipe, locacao e contatos." },
-  { id: "decupagem", label: "Decupagem", icon: ListChecks, accent: "#8b5cf6", description: "Planos, lentes, movimentos, cobertura e tecnica." },
-  { id: "orcamento", label: "Orcamento", icon: FileText, accent: "#22c55e", description: "Investimento, entregaveis, condicoes e premissas." },
-  { id: "cronograma", label: "Cronograma", icon: CalendarDays, accent: "#38bdf8", description: "Marcos, datas, dependencias e rodadas de aprovacao." },
-  { id: "checklist", label: "Checklist", icon: Check, accent: "#eab308", description: "Pre-set, tecnica, backup, fechamento e entrega." },
-  { id: "entrega", label: "Entrega", icon: Download, accent: "#10b981", description: "Pacote final, links, formatos, aceite e observacoes." },
-];
+interface DocTypeDefinition {
+  id: DocType;
+  label: string;
+  icon: typeof FileText;
+  accent: string;
+  description: string;
+}
+
+// Labels and descriptions must follow the active locale — they end up both
+// in the UI (type tabs) and in the generated document itself.
+function getDocTypes(t: Translate): DocTypeDefinition[] {
+  return [
+  { id: "briefing", label: t("app.documents.docTypeBriefing"), icon: FileText, accent: "#ff4d1d", description: t("app.documents.docTypeBriefingDesc") },
+  { id: "roteiro", label: t("app.documents.docTypeScript"), icon: Film, accent: "#f59e0b", description: t("app.documents.docTypeScriptDesc") },
+  { id: "callsheet", label: t("app.documents.docTypeCallsheet"), icon: ClipboardList, accent: "#06b6d4", description: t("app.documents.docTypeCallsheetDesc") },
+  { id: "decupagem", label: t("app.documents.docTypeShotBreakdown"), icon: ListChecks, accent: "#8b5cf6", description: t("app.documents.docTypeShotBreakdownDesc") },
+  { id: "orcamento", label: t("app.documents.docTypeBudget"), icon: FileText, accent: "#22c55e", description: t("app.documents.docTypeBudgetDesc") },
+  { id: "cronograma", label: t("app.documents.docTypeSchedule"), icon: CalendarDays, accent: "#38bdf8", description: t("app.documents.docTypeScheduleDesc") },
+  { id: "checklist", label: t("app.documents.docTypeChecklist"), icon: Check, accent: "#eab308", description: t("app.documents.docTypeChecklistDesc") },
+  { id: "entrega", label: t("app.documents.docTypeDelivery"), icon: Download, accent: "#10b981", description: t("app.documents.docTypeDeliveryDesc") },
+  ];
+}
 
 type FieldKind = "input" | "textarea" | "date";
 
@@ -278,58 +290,59 @@ function documentSections(form: DocumentForm, t: Translate) {
   const baseEquipment = lines(form.equipment);
   const defaults = {
     briefing: [
-      ["Objetivo e Publico", [form.objective || "Objetivo do projeto a definir", form.audience && `Publico: ${form.audience}`].filter(Boolean)],
-      ["Escopo e Entregaveis", baseScope.length ? baseScope : [t("app.documents.mainVideo"), "Versoes para redes sociais", "Arquivos finais organizados"]],
-      ["Riscos e Cuidados", ["Alinhar aprovadores antes da primeira versao", "Confirmar autorizacoes de imagem", "Definir prazo de feedback"]],
+      [t("app.documents.goalsAudienceSection"), [form.objective || t("app.documents.goalToDefine"), form.audience && `${t("app.documents.audienceLabel")}: ${form.audience}`].filter(Boolean)],
+      [t("app.documents.scopeDeliverablesSection"), baseScope.length ? baseScope : [t("app.documents.mainVideo"), t("app.documents.socialMediaVersions"), t("app.documents.organizedFinalFiles")]],
+      [t("app.documents.risksCareSection"), [t("app.documents.alignApproversFirst"), t("app.documents.confirmImageRights"), t("app.documents.defineFeedbackDeadline")]],
     ],
     roteiro: [
-      ["Estrutura Narrativa", baseScope.length ? baseScope : [t("app.documents.initialHook"), "Desenvolvimento da promessa", t("app.documents.visualProof"), "CTA final"]],
-      ["Direcao de Cena", ["Priorizar acoes filmaveis", "Prever respiros para B-roll", "Manter ritmo compativel com o canal"]],
+      [t("app.documents.narrativeStructureSection"), baseScope.length ? baseScope : [t("app.documents.initialHook"), t("app.documents.promiseDevelopment"), t("app.documents.visualProof"), t("app.documents.finalCta")]],
+      [t("app.documents.sceneDirection"), [t("app.documents.prioritizeFilmableActions"), t("app.documents.planBrollBreathers"), t("app.documents.keepChannelPacing")]],
     ],
     callsheet: [
-      ["Agenda do Dia", baseSchedule.length ? baseSchedule : ["Call time geral", "Montagem de equipamento", "Gravacao", "Backup e desmobilizacao"]],
-      ["Equipe", baseCrew.length ? baseCrew : ["Direcao", "Camera", "Som", "Producao"]],
-      [t("app.documents.equipment"), baseEquipment.length ? baseEquipment : [t("app.documents.mainCamera"), t("app.documents.dedicatedAudio"), "Kit de luz", "Midias e backup"]],
+      [t("app.documents.dayAgenda"), baseSchedule.length ? baseSchedule : [t("app.documents.callTimeGeneral"), t("app.documents.equipmentSetup"), t("app.documents.recording"), t("app.documents.backupAndWrap")]],
+      [t("app.documents.crewSection"), baseCrew.length ? baseCrew : [t("app.documents.directionRole"), t("app.documents.cameraRole"), t("app.documents.soundRole"), t("app.documents.productionRole")]],
+      [t("app.documents.equipment"), baseEquipment.length ? baseEquipment : [t("app.documents.mainCamera"), t("app.documents.dedicatedAudio"), t("app.documents.lightKit"), t("app.documents.mediaAndBackup")]],
     ],
     decupagem: [
-      ["Lista de Planos", baseScope.length ? baseScope : ["Plano aberto de contexto", "Plano medio de acao", "Close de detalhe", "B-roll de apoio"]],
-      ["Tecnica", baseEquipment.length ? baseEquipment : ["Lentes definidas por cena", t("app.documents.plannedMovements"), t("app.documents.syncedAudio")]],
+      [t("app.documents.shotListSection"), baseScope.length ? baseScope : [t("app.documents.wideContextShot"), t("app.documents.mediumActionShot"), t("app.documents.detailCloseUp"), t("app.documents.supportBroll")]],
+      [t("app.documents.techniqueSection"), baseEquipment.length ? baseEquipment : [t("app.documents.lensesPerScene"), t("app.documents.plannedMovements"), t("app.documents.syncedAudio")]],
     ],
     orcamento: [
-      ["Composicao do Investimento", [`Orcamento base: ${form.budget || "a definir"}`, "Equipe", t("app.documents.equipment"), "Pos-producao"]],
-      ["Condicoes", ["Alteracoes fora do escopo geram novo ajuste", "Direitos e uso comercial devem estar no contrato", "Pagamento conforme combinado"]],
+      [t("app.documents.investmentCompositionSection"), [`${t("app.documents.baseInvestmentValue")}: ${form.budget || t("app.common.toBeDefined")}`, t("app.documents.crewSection"), t("app.documents.equipment"), t("app.documents.postProduction")]],
+      [t("app.documents.conditionsSection"), [t("app.documents.outOfScopeChanges"), t("app.documents.commercialRightsInContract"), t("app.documents.paymentAsAgreed")]],
     ],
     cronograma: [
-      ["Marcos", baseSchedule.length ? baseSchedule : [t("app.documents.briefingApproved"), "Captacao", t("app.documents.firstCut"), "Revisao", t("app.documents.finalDelivery")]],
-      ["Aprovacao", ["Definir responsavel pelo aceite", "Centralizar comentarios por link", "Registrar rodada final"]],
+      [t("app.documents.milestonesSection"), baseSchedule.length ? baseSchedule : [t("app.documents.briefingApproved"), t("app.documents.capture"), t("app.documents.firstCut"), t("app.documents.review"), t("app.documents.finalDelivery")]],
+      [t("app.documents.approvalSection"), [t("app.documents.approvalOwnerDefine"), t("app.documents.centralizeComments"), t("app.documents.registerFinalRound")]],
     ],
     checklist: [
-      ["Pre-set", [t("app.documents.batteriesCharged"), t("app.documents.cardsFormatted"), t("app.documents.backupReady"), t("app.documents.contactsConfirmed")]],
-      [t("app.documents.closing"), [t("app.documents.doubleBackup"), "Conferencia de audio", "Material organizado por pasta", "Proxima etapa enviada ao cliente"]],
+      [t("app.documents.closing"), [t("app.documents.batteriesCharged"), t("app.documents.cardsFormatted"), t("app.documents.backupReady"), t("app.documents.contactsConfirmed")]],
+      [t("app.documents.acceptanceSection"), [t("app.documents.doubleBackup"), t("app.documents.audioCheck"), t("app.documents.materialOrganizedByFolder"), t("app.documents.nextStepSentToClient")]],
     ],
     entrega: [
-      ["Pacote Final", baseScope.length ? baseScope : ["MP4 final", t("app.documents.socialVersions"), "Legenda quando aplicavel", "Link de download"]],
-      ["Aceite", ["Cliente recebeu materiais", "Prazo de revisao final confirmado", "Novas alteracoes entram como novo escopo"]],
+      [t("app.documents.finalPackageLabel"), baseScope.length ? baseScope : [t("app.documents.finalMp4"), t("app.documents.socialVersions"), t("app.documents.subtitlesWhenApplicable"), t("app.documents.downloadLink")]],
+      [t("app.documents.acceptanceSection"), [t("app.documents.clientReceivedMaterials"), t("app.documents.finalReviewDeadlineConfirmed"), t("app.documents.newChangesAsNewScope")]],
     ],
   } satisfies Record<DocType, Array<[string, string[]]>>;
   return defaults[form.type];
 }
 
-function buildDocumentHtml(form: DocumentForm, studio: StudioSettings, t: Translate) {
-  const doc = DOC_TYPES.find((item) => item.id === form.type) || DOC_TYPES[0];
+function buildDocumentHtml(form: DocumentForm, studio: StudioSettings, t: Translate, locale: "pt" | "en" = "pt") {
+  const docTypes = getDocTypes(t);
+  const doc = docTypes.find((item) => item.id === form.type) || docTypes[0];
   const accent = doc.accent;
   const accentSoft = `${accent}14`;
   const accentTint = `${accent}22`;
   const metadata = [
     [t("app.common.client"), form.client || t("app.common.toBeDefined")],
     [t("app.common.project"), form.project || form.title],
-    ["Formato", form.format],
+    [t("app.documents.formatLabel"), form.format],
     [t("app.common.duration"), form.duration],
     [t("app.common.deadline"), form.deadline || t("app.common.toBeDefined")],
     [t("app.documents.location"), form.location || t("app.common.toBeDefined")],
-    ["Produtora", studio.studioName],
-    ["Contato", studio.email || studio.phone || t("app.common.toBeDefined")],
-    ["Cidade", studio.city || t("app.common.toBeDefined")],
+    [t("app.documents.studioLabel"), studio.studioName],
+    [t("app.documents.contactLabel"), studio.email || studio.phone || t("app.common.toBeDefined")],
+    [t("app.documents.cityLabel"), studio.city || t("app.common.toBeDefined")],
   ];
 
   const content = documentSections(form, t)
@@ -383,23 +396,24 @@ function buildDocumentHtml(form: DocumentForm, studio: StudioSettings, t: Transl
         <h1 class="doc-title">${esc(form.title || doc.label)}</h1>
         <div class="doc-muted">${esc(doc.description)}</div>
       </div>
-      <div class="doc-brand">${esc(studio.studioName)}<br/>${esc(studio.email || studio.phone || t("app.documents.operationalDocument"))}<br/>${new Date().toLocaleDateString("pt-BR")}</div>
+      <div class="doc-brand">${esc(studio.studioName)}<br/>${esc(studio.email || studio.phone || t("app.documents.operationalDocument"))}<br/>${new Date().toLocaleDateString(locale === "en" ? "en-US" : "pt-BR")}</div>
     </header>
     <div class="doc-grid">${metadata.map(([key, value]) => `<div class="doc-field"><div class="doc-field-label">${esc(key)}</div><div class="doc-field-value">${esc(value)}</div></div>`).join("")}</div>
     ${content}
     ${form.notes ? renderList(t("app.documents.additionalNotes"), lines(form.notes), accent) : ""}
-    <footer class="doc-footer"><div>${esc(studio.studioName)} · ${esc(studio.signature)}</div><div>Gerado em ${new Date().toLocaleString("pt-BR")}</div></footer>
+    <footer class="doc-footer"><div>${esc(studio.studioName)} · ${esc(studio.signature)}</div><div>${esc(t("app.documents.generatedAt"))} ${new Date().toLocaleString(locale === "en" ? "en-US" : "pt-BR")}</div></footer>
   </main>
 </body>
 </html>`;
 }
 
 function buildDocumentText(form: DocumentForm, studio: StudioSettings, t: Translate) {
-  const doc = DOC_TYPES.find((item) => item.id === form.type) || DOC_TYPES[0];
+  const docTypes = getDocTypes(t);
+  const doc = docTypes.find((item) => item.id === form.type) || docTypes[0];
   const metadata = [
     [t("app.common.client"), form.client || t("app.common.toBeDefined")],
     [t("app.common.project"), form.project || form.title],
-    ["Formato", form.format || t("app.common.toBeDefined")],
+    [t("app.documents.formatLabel"), form.format || t("app.common.toBeDefined")],
     [t("app.common.duration"), form.duration || t("app.common.toBeDefined")],
     [t("app.common.deadline"), form.deadline || t("app.common.toBeDefined")],
     [t("app.documents.location"), form.location || t("app.common.toBeDefined")],
@@ -407,6 +421,8 @@ function buildDocumentText(form: DocumentForm, studio: StudioSettings, t: Transl
   const sections = documentSections(form, t)
     .map(([title, items]) => `${title.toUpperCase()}\n${items.map((item) => `- ${item}`).join("\n")}`)
     .join("\n\n");
+
+  const additionalNotesTitle = t("app.documents.additionalNotes").toUpperCase();
 
   return [
     studio.studioName,
@@ -416,7 +432,7 @@ function buildDocumentText(form: DocumentForm, studio: StudioSettings, t: Transl
     ...metadata.map(([label, value]) => `${label}: ${value}`),
     "",
     sections,
-    form.notes ? `\n\nNOTAS ADICIONAIS\n${lines(form.notes).map((item) => `- ${item}`).join("\n")}` : "",
+    form.notes ? `\n\n${additionalNotesTitle}\n${lines(form.notes).map((item) => `- ${item}`).join("\n")}` : "",
   ].join("\n");
 }
 
@@ -464,9 +480,9 @@ function printHtmlDocument(docHtml: string, t: (key: string) => string) {
   iframe.srcdoc = docHtml;
 }
 
-function nextFormForType(current: DocumentForm, type: DocType): DocumentForm {
-  const doc = DOC_TYPES.find((item) => item.id === type) || DOC_TYPES[0];
-  const oldDefaultTitle = DOC_TYPES.some((item) => item.label === current.title) || current.title === initialForm.title;
+function nextFormForType(current: DocumentForm, type: DocType, docTypes: DocTypeDefinition[]): DocumentForm {
+  const doc = docTypes.find((item) => item.id === type) || docTypes[0];
+  const oldDefaultTitle = docTypes.some((item) => item.label === current.title) || current.title === initialForm.title;
   return {
     ...current,
     type,
@@ -517,7 +533,7 @@ function FormField({ field, value, onChange }: { field: DocumentField; value: st
 }
 
 function DocumentsContent() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const [, projectParams] = useRoute("/project/:projectId/documents");
   const { activeProject, selectProject } = useProject();
   const projectIdParam = projectParams?.projectId ? Number(projectParams.projectId) : null;
@@ -528,10 +544,11 @@ function DocumentsContent() {
   const [linkedClient, setLinkedClient] = useState<Client | null>(null);
   const [artifactStatus, setArtifactStatus] = useState<ArtifactStatus>("draft");
   const [artifactVersion, setArtifactVersion] = useState(1);
-  const selectedDoc = DOC_TYPES.find((item) => item.id === form.type) || DOC_TYPES[0];
+  const docTypes = useMemo(() => getDocTypes(t), [t]);
+  const selectedDoc = docTypes.find((item) => item.id === form.type) || docTypes[0];
   const documentForms = useMemo(() => createDocumentForms(t), [t]);
   const activeGroups = documentForms[form.type];
-  const html = useMemo(() => buildDocumentHtml(form, studio, t), [form, studio, t]);
+  const html = useMemo(() => buildDocumentHtml(form, studio, t, locale), [form, studio, t, locale]);
   const visibleDocs = useMemo(
     () => projectIdParam
       ? savedDocs.filter((doc) => doc.projectId === projectIdParam || (!doc.projectId && doc.project === activeProject?.name))
@@ -661,7 +678,7 @@ function DocumentsContent() {
 
   const exportDocx = async () => {
     const { Document, HeadingLevel, Packer, Paragraph, TextRun } = await import("docx");
-    const docType = DOC_TYPES.find((item) => item.id === form.type) || DOC_TYPES[0];
+    const docType = docTypes.find((item) => item.id === form.type) || docTypes[0];
     const docColor = docType.accent.replace("#", "").toUpperCase();
     const children = [
       new Paragraph({ children: [new TextRun({ text: studio.studioName, bold: true, color: docColor, size: 20 })] }),
@@ -754,14 +771,14 @@ function DocumentsContent() {
 
         {/* ═══ DOC TYPE TABS ═══ */}
         <nav className="flex gap-1.5 overflow-x-auto scrollbar-none">
-          {DOC_TYPES.map((doc) => {
+          {docTypes.map((doc) => {
             const Icon = doc.icon;
             const active = form.type === doc.id;
             return (
               <button
                 key={doc.id}
                 type="button"
-                onClick={() => setForm((current) => nextFormForType(current, doc.id))}
+                onClick={() => setForm((current) => nextFormForType(current, doc.id, docTypes))}
                 className={`flex items-center gap-1.5 px-3 py-2 border whitespace-nowrap transition text-[0.62rem] font-semibold uppercase tracking-wider ${
                   active
                     ? "border-frame-orange bg-frame-orange/10 text-frame-orange"
@@ -854,7 +871,7 @@ function DocumentsContent() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
                   {visibleDocs.map((doc) => {
-                    const docType = DOC_TYPES.find((item) => item.id === doc.type);
+                    const docType = docTypes.find((item) => item.id === doc.type);
                     return (
                       <div key={doc.id} className="border border-frame-gray-3 bg-frame-black/20 p-2.5 flex items-center justify-between gap-2">
                         <button type="button" onClick={() => exportPdf(doc.html)} className="text-left min-w-0 flex-1">

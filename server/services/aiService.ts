@@ -290,6 +290,7 @@ export async function generateForTool(
   input: Record<string, string>,
   projectId?: number | string,
   modelOverride?: string,
+  locale: "pt" | "en" = "pt",
 ): Promise<{ output: string; generationId: number }> {
   const provider = process.env.AI_PROVIDER || "openrouter";
   if (provider === "openrouter" && !process.env.OPENROUTER_API_KEY) {
@@ -393,9 +394,19 @@ export async function generateForTool(
     } catch { /* silently skip context injection on error */ }
   }
 
-  const outputStyle = `\n\nREGRAS DE FORMATAÇÃO (OBRIGATÓRIO — NUNCA QUEBRE ESTAS REGRAS):\n1. PROIBIDO usar Markdown: nada de **, *, #, ##, ###, -, ---, \`\`\`, > ou qualquer sintaxe de programação.\n2. Para títulos: escreva em MAIÚSCULAS na própria linha, sem símbolos antes.\n3. Para listas: use • (bullet) ou números (1. 2. 3.), NUNCA use * ou -.\n4. Para ênfase: use MAIÚSCULAS na palavra, não ** nem *.\n5. A saída deve parecer um documento PDF profissional, não código.\n6. Parágrafos curtos, diretos, sem enrolação.\n\nExemplo CORRETO:\nBRIEFING DO PROJETO\n\nCliente: TechXYZ\nObjetivo: Vídeo institucional de 90 segundos.\n\n• Público-alvo: investidores B2B\n• Canal: YouTube e LinkedIn\n• Prazo: 30 dias\n\nExemplo ERRADO (NÃO FAÇA ISSO):\n# Briefing do Projeto\n**Cliente:** TechXYZ\n- Público-alvo: investidores`;
+  const outputStylePt = `\n\nREGRAS DE FORMATAÇÃO (OBRIGATÓRIO — NUNCA QUEBRE ESTAS REGRAS):\n1. PROIBIDO usar Markdown: nada de **, *, #, ##, ###, -, ---, \`\`\`, > ou qualquer sintaxe de programação.\n2. Para títulos: escreva em MAIÚSCULAS na própria linha, sem símbolos antes.\n3. Para listas: use • (bullet) ou números (1. 2. 3.), NUNCA use * ou -.\n4. Para ênfase: use MAIÚSCULAS na palavra, não ** nem *.\n5. A saída deve parecer um documento PDF profissional, não código.\n6. Parágrafos curtos, diretos, sem enrolação.\n\nExemplo CORRETO:\nBRIEFING DO PROJETO\n\nCliente: TechXYZ\nObjetivo: Vídeo institucional de 90 segundos.\n\n• Público-alvo: investidores B2B\n• Canal: YouTube e LinkedIn\n• Prazo: 30 dias\n\nExemplo ERRADO (NÃO FAÇA ISSO):\n# Briefing do Projeto\n**Cliente:** TechXYZ\n- Público-alvo: investidores`;
 
-  const system = `${tool.promptRole}${projectContext}\n\nFerramenta: ${tool.name}. Responda em português do Brasil, formato profissional para produção audiovisual.${outputStyle}`;
+  const outputStyleEn = `\n\nFORMATTING RULES (MANDATORY — NEVER BREAK THESE RULES):\n1. Markdown is FORBIDDEN: no **, *, #, ##, ###, -, ---, \`\`\`, > or any code syntax.\n2. For headings: write in UPPERCASE on its own line, with no symbols before it.\n3. For lists: use • (bullet) or numbers (1. 2. 3.), NEVER use * or -.\n4. For emphasis: use UPPERCASE on the word, not ** or *.\n5. The output must look like a professional PDF document, not code.\n6. Short, direct paragraphs, no filler.\n\nCORRECT example:\nPROJECT BRIEF\n\nClient: TechXYZ\nGoal: 90-second corporate video.\n\n• Target audience: B2B investors\n• Channel: YouTube and LinkedIn\n• Deadline: 30 days\n\nWRONG example (DO NOT DO THIS):\n# Project Brief\n**Client:** TechXYZ\n- Target audience: investors`;
+
+  // The document must be written in whichever language the user is
+  // currently viewing the app in — not always Portuguese. `locale` comes
+  // from the client's active language toggle (see client/src/lib/api.ts).
+  const languageInstruction = locale === "en"
+    ? `Tool: ${tool.name}. Respond in English (US), professional format for video production.`
+    : `Ferramenta: ${tool.name}. Responda em português do Brasil, formato profissional para produção audiovisual.`;
+  const outputStyle = locale === "en" ? outputStyleEn : outputStylePt;
+
+  const system = `${tool.promptRole}${projectContext}\n\n${languageInstruction}${outputStyle}`;
 
   let output: string;
   const usedProvider = await checkProviderAvailable(provider);

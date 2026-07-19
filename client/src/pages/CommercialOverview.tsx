@@ -246,9 +246,9 @@ export default function CommercialOverview() {
         exportToExcelCSV(exportData);
         toast.success(t("app.commercial.toastExcelExported"));
       } else if (format === 'pdf') {
-        // For now, export a detailed CSV that can be imported to PDF
-        exportToDetailedCSV(exportData);
-        toast.info(t("app.commercial.toastPdfExported"));
+        // Opens the browser print dialog with a formatted report (save as PDF)
+        exportToPrintablePdf(exportData);
+        toast.success(t("app.commercial.toastPdfExported"));
       }
     } catch (error) {
       console.error("Error exporting report:", error);
@@ -355,7 +355,7 @@ export default function CommercialOverview() {
     downloadFile(csvText, 'commercial-hub-excel.csv', 'text/csv');
   }
 
-  function exportToDetailedCSV(data: any) {
+  function exportToPrintablePdf(data: any) {
     // Generate a beautiful dark-theme PDF report via print
     const color = SITE_CONFIG.primaryColor;
     const brandFadeRgba = hexToRgba(color, 0.06);

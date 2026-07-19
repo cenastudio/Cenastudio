@@ -1507,7 +1507,154 @@ export const deleteReport: RequestHandler = async (req, res, next) => {
   }
 };
 
-// Execute a report (generate data)
+// Build the date range filter (report.filters.startDate/endDate) shared by report types
+function reportDateRange(filters: any): { gte?: Date; lte?: Date } | undefined {
+  const range: { gte?: Date; lte?: Date } = {};
+  if (filters?.startDate) {
+    const start = new Date(filters.startDate);
+    if (!Number.isNaN(start.getTime())) range.gte = start;
+  }
+  if (filters?.endDate) {
+    const end = new Date(filters.endDate);
+    if (!Number.isNaN(end.getTime())) range.lte = end;
+  }
+  return range.gte || range.lte ? range : undefined;
+}
+
+// Compute real report data for each supported report type, reusing the same
+// Prisma queries the analytics dashboards already rely on.
+async function computeReportResult(owner: bigint, type: string, filters: any) {
+  const createdAt = reportDateRange(filters);
+
+  if (type === "sales") {
+    const wonWhere: any = { userId: owner, stage: "won" };
+    if (createdAt) wonWhere.createdAt = createdAt;
+    const totalOppsWhere: any = { userId: owner };
+    if (createdAt) totalOppsWhere.createdAt = createdAt;
+
+    const [won, totalOpps] = await Promise.all([
+      prisma.opportunity.findMany({ where: wonWhere, include: { client: { select: { segment: true } } } }),
+      prisma.opportunity.count({ where: totalOppsWhere }),
+    ]);
+
+    const months = new Map<string, { revenue: number; count: number }>();
+    const segments = new Map<string, { revenue: number; count: number }>();
+    for (const item of won) {
+      const month = monthKey(item.createdAt);
+      const monthRow = months.get(month) || { revenue: 0, count: 0 };
+      monthRow.revenue += item.estimatedValue || 0; monthRow.count += 1; months.set(month, monthRow);
+      const segment = item.client?.segment || "sem_segmento";
+      const segmentRow = segments.get(segment) || { revenue: 0, count: 0 };
+      segmentRow.revenue += item.estimatedValue || 0; segmentRow.count += 1; segments.set(segment, segmentRow);
+    }
+    const totalRevenue = won.reduce((sum, item) => sum + (item.estimatedValue || 0), 0);
+
+    return {
+      total_records: won.length,
+      total_revenue: totalRevenue,
+      avg_deal_size: won.length ? totalRevenue / won.length : 0,
+      win_rate: totalOpps ? (won.length / totalOpps) * 100 : 0,
+      revenue_by_month: Array.from(months.entries()).sort(([a], [b]) => b.localeCompare(a)).map(([month, row]) => ({ month, ...row })),
+      revenue_by_segment: Array.from(segments.entries()).map(([segment, row]) => ({ segment, ...row })),
+    };
+  }
+
+  if (type === "productivity") {
+    const days = Number(filters?.days) > 0 ? Number(filters.days) : 30;
+    const since = createdAt?.gte || new Date(Date.now() - days * 86400000);
+    const until = createdAt?.lte;
+    const withinRange = (date: Date) => date >= since && (!until || date <= until);
+
+    const [projects, generations, interactions, files] = await Promise.all([
+      prisma.project.findMany({ where: { userId: owner, createdAt: { gte: since, ...(until ? { lte: until } : {}) } }, select: { createdAt: true } }),
+      prisma.generation.findMany({ where: { userId: owner, createdAt: { gte: since, ...(until ? { lte: until } : {}) } }, select: { createdAt: true } }),
+      prisma.interaction.findMany({ where: { userId: owner, createdAt: { gte: since, ...(until ? { lte: until } : {}) } }, select: { createdAt: true } }),
+      prisma.file.findMany({ where: { userId: owner, createdAt: { gte: since, ...(until ? { lte: until } : {}) } }, select: { createdAt: true } }),
+    ]);
+    const daysMap = new Map<string, number>();
+    for (const item of [...projects, ...generations, ...interactions, ...files]) {
+      if (!withinRange(item.createdAt)) continue;
+      const day = item.createdAt.toISOString().slice(0, 10);
+      daysMap.set(day, (daysMap.get(day) || 0) + 1);
+    }
+
+    return {
+      total_records: projects.length + generations.length + interactions.length + files.length,
+      recent_projects: projects.length,
+      recent_generations: generations.length,
+      recent_interactions: interactions.length,
+      recent_files: files.length,
+      activity_by_day: Array.from(daysMap.entries()).sort(([a], [b]) => b.localeCompare(a)).map(([day, count]) => ({ day, count })),
+    };
+  }
+
+  if (type === "pipeline") {
+    const where: any = { userId: owner };
+    if (createdAt) where.createdAt = createdAt;
+    if (filters?.stage && filters.stage !== "all") where.stage = filters.stage;
+
+    const opportunities = await prisma.opportunity.findMany({ where });
+    const byStage = new Map<string, { count: number; value: number }>();
+    for (const opp of opportunities) {
+      const row = byStage.get(opp.stage) || { count: 0, value: 0 };
+      row.count += 1; row.value += opp.estimatedValue || 0; byStage.set(opp.stage, row);
+    }
+    const openOpps = opportunities.filter((o) => o.stage !== "won" && o.stage !== "lost");
+    const openPipeline = openOpps.reduce((t, o) => t + (o.estimatedValue || 0), 0);
+    const weightedPipeline = openOpps.reduce((t, o) => t + (o.estimatedValue || 0) * o.probability / 100, 0);
+
+    return {
+      total_records: opportunities.length,
+      open_pipeline_value: openPipeline,
+      weighted_pipeline_value: Math.round(weightedPipeline),
+      by_stage: Array.from(byStage.entries()).map(([stage, row]) => ({ stage, ...row })),
+    };
+  }
+
+  if (type === "roi") {
+    const where: any = { userId: owner, status: "settled" };
+    if (createdAt) where.createdAt = createdAt;
+    const entries = await prisma.financialEntry.findMany({ where });
+    const totalIncome = entries.filter((e) => e.kind === "income").reduce((t, e) => t + e.amount, 0);
+    const totalExpense = entries.filter((e) => e.kind === "expense").reduce((t, e) => t + e.amount, 0);
+    const roi = totalExpense > 0 ? ((totalIncome - totalExpense) / totalExpense) * 100 : null;
+
+    return {
+      total_records: entries.length,
+      total_income: totalIncome,
+      total_expense: totalExpense,
+      net_profit: totalIncome - totalExpense,
+      roi_percent: roi,
+    };
+  }
+
+  // health: composite snapshot of the business, same data as the overall analytics widget
+  const start = createdAt?.gte;
+  const wonFilter: any = { userId: owner, stage: "won" };
+  if (createdAt) wonFilter.createdAt = createdAt;
+  else { const monthStart = new Date(); monthStart.setUTCDate(1); monthStart.setUTCHours(0, 0, 0, 0); wonFilter.createdAt = { gte: monthStart }; }
+
+  const [totalProjects, activeProjects, totalClients, clientValue, totalOpportunities, pipeline, won, generations] = await Promise.all([
+    prisma.project.count({ where: { userId: owner, ...(start ? { createdAt } : {}) } }),
+    prisma.project.count({ where: { userId: owner, status: "active" } }),
+    prisma.client.count({ where: { userId: owner } }),
+    prisma.client.aggregate({ where: { userId: owner }, _sum: { totalSpent: true } }),
+    prisma.opportunity.count({ where: { userId: owner, ...(createdAt ? { createdAt } : {}) } }),
+    prisma.opportunity.aggregate({ where: { userId: owner, stage: { not: "lost" } }, _sum: { estimatedValue: true } }),
+    prisma.opportunity.aggregate({ where: wonFilter, _sum: { estimatedValue: true } }),
+    prisma.generation.count({ where: { userId: owner, ...(createdAt ? { createdAt } : {}) } }),
+  ]);
+
+  return {
+    total_records: totalProjects + totalClients + totalOpportunities,
+    projects: { total: totalProjects, active: activeProjects },
+    clients: { total: totalClients, total_value: clientValue._sum.totalSpent || 0 },
+    pipeline: { total_opportunities: totalOpportunities, pipeline_value: pipeline._sum.estimatedValue || 0, won_value: won._sum.estimatedValue || 0 },
+    ai: { total_generations: generations },
+  };
+}
+
+// Execute a report (generate real data based on the report's saved type/filters)
 export const runReport: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
@@ -1533,30 +1680,37 @@ export const runReport: RequestHandler = async (req, res, next) => {
       }
     });
 
-    // TODO: Implement actual report generation in background
-    // For now, immediately mark as completed with mock data
-    const mockResult = {
-      generated_at: new Date().toISOString(),
-      report_type: report.type,
-      summary: {
-        total_records: 0,
-        date_range: report.filters
-      }
-    };
-
-    const completed = await prisma.reportExecution.update({
-      where: { id: execution.id },
-      data: {
-        status: 'completed',
-        result: mockResult
-      }
-    });
+    let completed;
+    try {
+      const summary = await computeReportResult(BigInt(userId), report.type, report.filters);
+      const result = {
+        generated_at: new Date().toISOString(),
+        report_type: report.type,
+        summary,
+      };
+      completed = await prisma.reportExecution.update({
+        where: { id: execution.id },
+        data: { status: 'completed', result },
+      });
+    } catch (genError) {
+      completed = await prisma.reportExecution.update({
+        where: { id: execution.id },
+        data: {
+          status: 'failed',
+          error: genError instanceof Error ? genError.message : "Failed to generate report",
+        },
+      });
+    }
 
     // Update report lastRun
     await prisma.report.update({
       where: { id: report.id },
       data: { lastRun: new Date() }
     });
+
+    if (completed.status === 'failed') {
+      throw new AppError(completed.error || "Failed to generate report", 500);
+    }
 
     res.json({
       success: true,

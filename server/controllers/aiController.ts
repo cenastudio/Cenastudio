@@ -18,10 +18,10 @@ import { jsonSafe } from '../utils/prismaSerialization.js';
 export async function generate(req: Request, res: Response, next: (err?: unknown) => void) {
   try {
     const userId = req.user!.id;
-    const { toolId, input, projectId, model } = req.body;
+    const { toolId, input, projectId, model, locale } = req.body;
 
     await checkAndIncrementUsage(userId, toolId);
-    const result = await generateForTool(userId, toolId, input || {}, projectId, model);
+    const result = await generateForTool(userId, toolId, input || {}, projectId, model, locale === "en" ? "en" : "pt");
 
     res.json({ success: true, data: result });
   } catch (error) {

@@ -507,7 +507,11 @@ export const api = {
     generate: (toolId: string, input: Record<string, string>, projectId?: number | null, model?: string) =>
       request<{ output: string; generationId: number }>("/ai/generate", {
         method: "POST",
-        body: JSON.stringify({ toolId, input, projectId, model }),
+        // The generated document must match the language the user is
+        // currently viewing the app in — not always Portuguese. See
+        // aiService.generateForTool, which uses this to pick the
+        // instruction language for the AI system prompt.
+        body: JSON.stringify({ toolId, input, projectId, model, locale: localStorage.getItem("language") || "pt" }),
       }),
     history: (toolId: string, projectId?: number | null) =>
       request<

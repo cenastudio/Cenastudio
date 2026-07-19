@@ -832,6 +832,34 @@ export async function checkAndIncrementUsage(userId: number, toolId: string) {
   ).run(userId, toolId, period);
 }
 
+/**
+ * Best-effort lookup of the account's regional language preference, used to
+ * pick the language of transactional emails (password reset, etc.). Returns
+ * "pt" (the default) if the user doesn't exist or has no preference set —
+ * this never reveals account existence to a caller, it's only read
+ * internally right before sending an email we've already decided to send.
+ */
+export async function getUserLocaleByEmail(email: string): Promise<"pt" | "en"> {
+  const normalized = email.toLowerCase().trim();
+  try {
+    if (shouldUsePrisma) {
+      const user = await prisma.user.findUnique({ where: { email: normalized }, select: { regionalPrefs: true } });
+      const locale = (user?.regionalPrefs as { locale?: string } | null)?.locale;
+      return locale === "en" ? "en" : "pt";
+    }
+    const row = db.prepare("SELECT regional_prefs FROM users WHERE email = ?").get(normalized) as
+      | { regional_prefs: string | null }
+      | undefined;
+    if (row?.regional_prefs) {
+      const parsed = JSON.parse(row.regional_prefs) as { locale?: string };
+      return parsed.locale === "en" ? "en" : "pt";
+    }
+  } catch {
+    // best-effort — fall through to default
+  }
+  return "pt";
+}
+
 export async function createResetToken(email: string) {
   const normalized = email.toLowerCase().trim();
   if (shouldUsePrisma) {

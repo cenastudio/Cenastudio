@@ -40,20 +40,22 @@ export function cleanGeneratedText(raw: string) {
     .trim();
 }
 
-export function formatGeneratedDocumentText(raw: string, title: string) {
-  const date = new Intl.DateTimeFormat("pt-BR", {
+export function formatGeneratedDocumentText(raw: string, title: string, locale: "pt" | "en" = "pt") {
+  const date = new Intl.DateTimeFormat(locale === "en" ? "en-US" : "pt-BR", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   }).format(new Date());
   const body = cleanGeneratedText(raw);
+  const generatedLabel = locale === "en" ? `Generated on ${date}` : `Gerado em ${date}`;
 
-  return [SITE_CONFIG.brandName.toUpperCase(), title.toUpperCase(), `Gerado em ${date}`, "", body].filter(Boolean).join("\n");
+  return [SITE_CONFIG.brandName.toUpperCase(), title.toUpperCase(), generatedLabel, "", body].filter(Boolean).join("\n");
 }
 
 type DocumentBlock = { type: "heading" | "bullet" | "paragraph" | "space"; text: string };
 
-function documentBlocks(raw: string): DocumentBlock[] {
+function documentBlocks(raw: string, locale: "pt" | "en" = "pt"): DocumentBlock[] {
+  const localeTag = locale === "en" ? "en-US" : "pt-BR";
   return cleanGeneratedText(raw).split("\n").map((line) => {
     const text = line.trim();
     if (!text) return { type: "space", text: "" };
@@ -61,7 +63,7 @@ function documentBlocks(raw: string): DocumentBlock[] {
 
     const looksLikeHeading =
       text.length <= 90 &&
-      (text.endsWith(":") || (/[A-ZÁÀÂÃÉÊÍÓÔÕÚÇ]/.test(text) && text === text.toLocaleUpperCase("pt-BR")));
+      (text.endsWith(":") || (/[A-ZÁÀÂÃÉÊÍÓÔÕÚÇ]/.test(text) && text === text.toLocaleUpperCase(localeTag)));
     return { type: looksLikeHeading ? "heading" : "paragraph", text };
   });
 }
@@ -89,7 +91,7 @@ function downloadBlob(blob: Blob, filename: string) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export async function downloadGeneratedDocx(raw: string, title: string) {
+export async function downloadGeneratedDocx(raw: string, title: string, locale: "pt" | "en" = "pt") {
   const {
     AlignmentType,
     BorderStyle,
@@ -102,7 +104,8 @@ export async function downloadGeneratedDocx(raw: string, title: string) {
     TextRun,
   } = await import("docx");
 
-  const date = new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(new Date());
+  const date = new Intl.DateTimeFormat(locale === "en" ? "en-US" : "pt-BR", { dateStyle: "long" }).format(new Date());
+  const generatedLabel = locale === "en" ? `Document generated on ${date}` : `Documento gerado em ${date}`;
   const brandColorHex = hexNoHash(SITE_CONFIG.primaryColor);
   const children = [
     new Paragraph({
@@ -116,10 +119,10 @@ export async function downloadGeneratedDocx(raw: string, title: string) {
       spacing: { before: 220, after: 140 },
     }),
     new Paragraph({
-      children: [new TextRun({ text: `Documento gerado em ${date}`, color: "666666", size: 18 })],
+      children: [new TextRun({ text: generatedLabel, color: "666666", size: 18 })],
       spacing: { after: 420 },
     }),
-    ...documentBlocks(raw).map((block) => {
+    ...documentBlocks(raw, locale).map((block) => {
       if (block.type === "space") return new Paragraph({ spacing: { after: 100 } });
       if (block.type === "heading") {
         return new Paragraph({
@@ -163,7 +166,7 @@ export async function downloadGeneratedDocx(raw: string, title: string) {
   downloadBlob(await Packer.toBlob(doc), `${slugify(SITE_CONFIG.brandName)}-${safeFilename(title)}.docx`);
 }
 
-export async function downloadGeneratedPdf(raw: string, title: string) {
+export async function downloadGeneratedPdf(raw: string, title: string, locale: "pt" | "en" = "pt") {
   const { jsPDF } = await import("jspdf");
   const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -198,10 +201,11 @@ export async function downloadGeneratedPdf(raw: string, title: string) {
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(9);
   pdf.setTextColor(105, 105, 105);
-  pdf.text(`Gerado em ${new Intl.DateTimeFormat("pt-BR").format(new Date())}`, margin, y);
+  const generatedDate = new Intl.DateTimeFormat(locale === "en" ? "en-US" : "pt-BR").format(new Date());
+  pdf.text(locale === "en" ? `Generated on ${generatedDate}` : `Gerado em ${generatedDate}`, margin, y);
   y += 12;
 
-  for (const block of documentBlocks(raw)) {
+  for (const block of documentBlocks(raw, locale)) {
     if (block.type === "space") {
       y += 3;
       continue;

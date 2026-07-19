@@ -99,15 +99,34 @@ export const forgotPassword: RequestHandler = async (req, res, next) => {
     // request because the email provider is unavailable.
     if (token && isEmailConfigured) {
       const resetUrl = `${getClientOrigin()}/reset-password?token=${token}`;
+      // The email must match the account's own regional language setting —
+      // not always Portuguese. Looking this up doesn't leak anything to the
+      // caller: it's only used for the email we already know we're sending.
+      const locale = await authService.getUserLocaleByEmail(email);
+      const copy = locale === "en"
+        ? {
+          subject: `Password reset — ${SITE_CONFIG.brandName}`,
+          html: `
+            <p>We received a request to reset your password.</p>
+            <p><a href="${resetUrl}">Click here to create a new password</a></p>
+            <p>This link expires in 1 hour. If you didn't request this, ignore this email.</p>
+          `,
+          text: `Reset your password: ${resetUrl} (expires in 1 hour)`,
+        }
+        : {
+          subject: `Redefinição de senha — ${SITE_CONFIG.brandName}`,
+          html: `
+            <p>Recebemos uma solicitação para redefinir sua senha.</p>
+            <p><a href="${resetUrl}">Clique aqui para criar uma nova senha</a></p>
+            <p>Este link expira em 1 hora. Se você não solicitou isso, ignore este email.</p>
+          `,
+          text: `Redefina sua senha: ${resetUrl} (expira em 1 hora)`,
+        };
       sendEmail({
         to: email,
-        subject: `Redefinição de senha — ${SITE_CONFIG.brandName}`,
-        html: `
-          <p>Recebemos uma solicitação para redefinir sua senha.</p>
-          <p><a href="${resetUrl}">Clique aqui para criar uma nova senha</a></p>
-          <p>Este link expira em 1 hora. Se você não solicitou isso, ignore este email.</p>
-        `,
-        text: `Redefina sua senha: ${resetUrl} (expira em 1 hora)`,
+        subject: copy.subject,
+        html: copy.html,
+        text: copy.text,
       }).catch((err) => {
         console.error("[forgotPassword] Falha ao enviar email:", err instanceof Error ? err.message : err);
       });
@@ -264,93 +283,6 @@ export const changePassword: RequestHandler = async (req, res, next) => {
     next(e);
   }
 };
-
-export const exportUserData: RequestHandler = async (req, res, next) => {
-  try {
-    if (!req.user) throw new AppError("Unauthorized", 401);
-    const userId = req.user.id;
-
-    const user = await authService.getUserById(userId);
-    const planRow = await authService.getUserPlan(userId);
-    const plan = authService.formatUserPlan(planRow);
-
-    const { db } = await import("../models/db.js");
-
-    const safeQuery = (sql: string, params: unknown[]): unknown[] => {
-      try { return (db.prepare(sql).all as (...args: unknown[]) => unknown[])(params[0]); }
-      catch { return []; }
-    };
-
-    const projects = safeQuery(
-      "SELECT id, name, description, status, metadata_json, created_at, updated_at FROM projects WHERE user_id = ? ORDER BY created_at DESC",
-      [userId]
-    );
-    const clients = safeQuery(
-      "SELECT id, name, company, email, phone, tax_id, address, city, state, country, industry, created_at FROM clients WHERE user_id = ? ORDER BY created_at DESC",
-      [userId]
-    );
-    const generations = safeQuery(
-      "SELECT id, tool_id, input, output, created_at, project_id FROM generations WHERE user_id = ? ORDER BY created_at DESC LIMIT 500",
-      [userId]
-    );
-    const opportunities = safeQuery(
-      "SELECT id, title, client_name, value, stage, probability, expected_close, notes, created_at FROM opportunities WHERE user_id = ? ORDER BY created_at DESC",
-      [userId]
-    );
-    const interactions = safeQuery(
-      "SELECT id, client_id, type, subject, notes, date, created_at FROM interactions WHERE user_id = ? ORDER BY created_at DESC",
-      [userId]
-    );
-    const financialEntries = safeQuery(
-      "SELECT id, type, description, amount, category, due_date, status, created_at FROM financial_entries WHERE user_id = ? ORDER BY created_at DESC",
-      [userId]
-    );
-
-    const payload = {
-      exportedAt: new Date().toISOString(),
-      exportVersion: "1.0",
-      notice: "Exportação de dados pessoais conforme LGPD — Art. 18, IV",
-      account: {
-        id: user?.id,
-        name: user?.name,
-        email: user?.email,
-        role: user?.role,
-        studioName: user?.studioName,
-        studioRole: user?.studioRole,
-        phone: user?.phone,
-      },
-      plan: {
-        planId: plan?.planId,
-        planName: plan?.planName,
-        status: plan?.status,
-        generationLimit: plan?.generationLimit,
-        trialEndsAt: plan?.trialEndsAt,
-      },
-      summary: {
-        projects: projects.length,
-        clients: clients.length,
-        generations: generations.length,
-        opportunities: opportunities.length,
-        interactions: interactions.length,
-        financialEntries: financialEntries.length,
-      },
-      projects,
-      clients,
-      opportunities,
-      interactions,
-      financialEntries,
-      generationHistory: generations,
-    };
-
-    const filename = `cenastudio-dados-${userId}-${new Date().toISOString().slice(0, 10)}.json`;
-    res.setHeader("Content-Type", "application/json; charset=utf-8");
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    res.json(payload);
-  } catch (e) {
-    next(e);
-  }
-};
-
 
 // ═══════════════════════════════════════════════════════════════
 // LGPD / GDPR ENDPOINTS
