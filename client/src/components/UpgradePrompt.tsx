@@ -154,6 +154,16 @@ const FEATURE_INFO: Record<FeatureName, { name: string; benefit: string; icon: R
     benefit: "Track worked hours with a timer and calculate real labor cost automatically",
     icon: <Sparkles className="h-5 w-5" />,
   },
+  "webhooks": {
+    name: "Webhooks",
+    benefit: "Connect Cena to other tools and automate your workflow",
+    icon: <Zap className="h-5 w-5" />,
+  },
+  "calendar-export": {
+    name: "Calendar Export",
+    benefit: "Export the project schedule as .ics for any calendar app",
+    icon: <Zap className="h-5 w-5" />,
+  },
 };
 
 /**

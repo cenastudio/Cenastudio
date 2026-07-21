@@ -292,6 +292,28 @@ export function FeatureUpgradeRequired({
       ],
       requiredPlan: "pro",
     },
+    "webhooks": {
+      icon: <Crown className="h-8 w-8" />,
+      title: t("app.upgrade.webhooksTitle"),
+      description: t("app.upgrade.webhooksDesc"),
+      benefits: [
+        t("app.upgrade.webhooksBenefit1"),
+        t("app.upgrade.webhooksBenefit2"),
+        t("app.upgrade.webhooksBenefit3"),
+        t("app.upgrade.webhooksBenefit4"),
+      ],
+      requiredPlan: "studio",
+    },
+    "calendar-export": {
+      icon: <Crown className="h-8 w-8" />,
+      title: t("app.upgrade.calendarExportTitle"),
+      description: t("app.upgrade.calendarExportDesc"),
+      benefits: [
+        t("app.upgrade.calendarExportBenefit1"),
+        t("app.upgrade.calendarExportBenefit2"),
+      ],
+      requiredPlan: "studio",
+    },
   };
 
   // Check if user has access

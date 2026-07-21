@@ -5,45 +5,48 @@ import * as opportunitiesController from "../controllers/opportunitiesController
 import * as meetingsController from "../controllers/meetingsController.js";
 import * as proposalsController from "../controllers/proposalsController.js";
 import { authenticate } from "../middleware/authenticate.js";
-import { requireOperationalPlan } from "../middleware/planAccess.js";
+import { requireOperationalPlan, requireStudioPlan } from "../middleware/planAccess.js";
 
 const router = express.Router();
 
 // All routes require authentication
 router.use(authenticate, requireOperationalPlan);
 
-// Clients
+// Clients — CRM básico is included in every plan (Free included).
 router.get("/stats", clientsController.getClientStats);
 router.get("/allowance", clientsController.getAllowance);
 router.get("/lookup/cnpj/:cnpj", clientsController.getCompanyByCnpj);
 
-// Opportunities
-router.get("/opportunities/stats", opportunitiesController.getPipelineStats);
-router.get("/opportunities", opportunitiesController.listOpportunities);
-router.get("/opportunities/:id", opportunitiesController.getOpportunity);
-router.post("/opportunities", opportunitiesController.createOpportunity);
-router.put("/opportunities/:id", opportunitiesController.updateOpportunity);
-router.delete("/opportunities/:id", opportunitiesController.deleteOpportunity);
+// Opportunities (sales pipeline) — advertised as a Pro+ feature.
+const pipelineGate = requireStudioPlan("pipeline");
+router.get("/opportunities/stats", pipelineGate, opportunitiesController.getPipelineStats);
+router.get("/opportunities", pipelineGate, opportunitiesController.listOpportunities);
+router.get("/opportunities/:id", pipelineGate, opportunitiesController.getOpportunity);
+router.post("/opportunities", pipelineGate, opportunitiesController.createOpportunity);
+router.put("/opportunities/:id", pipelineGate, opportunitiesController.updateOpportunity);
+router.delete("/opportunities/:id", pipelineGate, opportunitiesController.deleteOpportunity);
 
-// Interactions
-router.get("/interactions/follow-ups", interactionsController.getUpcomingFollowUps);
-router.get("/interactions", interactionsController.listInteractions);
-router.post("/interactions", interactionsController.createInteraction);
-router.put("/interactions/:id", interactionsController.updateInteraction);
-router.delete("/interactions/:id", interactionsController.deleteInteraction);
+// Interactions — part of the same Pro+ pipeline feature ("CRM completo + pipeline comercial").
+router.get("/interactions/follow-ups", pipelineGate, interactionsController.getUpcomingFollowUps);
+router.get("/interactions", pipelineGate, interactionsController.listInteractions);
+router.post("/interactions", pipelineGate, interactionsController.createInteraction);
+router.put("/interactions/:id", pipelineGate, interactionsController.updateInteraction);
+router.delete("/interactions/:id", pipelineGate, interactionsController.deleteInteraction);
 
-// Meetings
+// Meetings — used from the client detail page for any plan, not part of the
+// Pro+ pipeline gate.
 router.get("/meetings", meetingsController.listMeetings);
 router.post("/meetings", meetingsController.createMeeting);
 router.post("/meetings/:id/cancel", meetingsController.cancelMeeting);
 router.delete("/meetings/:id", meetingsController.deleteMeeting);
 
-// Proposals
-router.get("/proposals", proposalsController.listProposals);
-router.get("/proposals/:id", proposalsController.getProposal);
-router.post("/proposals", proposalsController.createProposal);
-router.post("/proposals/:id/revoke", proposalsController.revokeProposal);
-router.delete("/proposals/:id", proposalsController.deleteProposal);
+// Proposals ("Portal do cliente com aprovações") — advertised as a Pro+ feature.
+const proposalsGate = requireStudioPlan("proposals");
+router.get("/proposals", proposalsGate, proposalsController.listProposals);
+router.get("/proposals/:id", proposalsGate, proposalsController.getProposal);
+router.post("/proposals", proposalsGate, proposalsController.createProposal);
+router.post("/proposals/:id/revoke", proposalsGate, proposalsController.revokeProposal);
+router.delete("/proposals/:id", proposalsGate, proposalsController.deleteProposal);
 
 // Generic client routes must stay after nested collections.
 router.get("/", clientsController.listClients);

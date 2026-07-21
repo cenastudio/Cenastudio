@@ -3,6 +3,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import AppNavBar from "@/components/AppNavBar";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
 import AnimatedModal from "@/components/AnimatedModal";
 import EmptyState from "@/components/EmptyState";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -38,6 +39,7 @@ import { motion } from "framer-motion";
 import type { Translate } from "@/contexts/LanguageContext";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLocation } from "wouter";
+import { useIsMobile } from "@/hooks/useMobile";
 import {
   DndContext,
   closestCenter,
@@ -161,6 +163,11 @@ function PipelineContent({ embedded }: { embedded?: boolean }) {
   const [modalMode, setModalMode] = useState<"create" | "edit" | "detail" | "delete" | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [activeId, setActiveId] = useState<number | null>(null);
+  // Drag-and-drop between kanban columns competes with the horizontal-scroll
+  // touch gesture on narrow screens, and the columns' fixed width makes the
+  // board itself hard to scan. Mobile gets a stacked list per stage instead,
+  // using the existing prev/next stage buttons on each card to move deals.
+  const isMobile = useIsMobile();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -649,6 +656,61 @@ function PipelineContent({ embedded }: { embedded?: boolean }) {
               {hasActiveFilters ? t("app.commercial.pipeline.clearFilters") : t("app.commercial.pipeline.newDeal")}
             </button>
           </div>
+        ) : isMobile ? (
+          // Mobile: stacked list per stage, no drag-and-drop. Moving a deal
+          // uses the same prev/next stage buttons already built into each
+          // OpportunityCard, avoiding the touch-scroll vs. drag conflict of
+          // the kanban board below.
+          <section className="space-y-4">
+            {stages.map((stage) => {
+              const stageOpps = getOpportunitiesByStage(stage.id);
+              return (
+                <div key={stage.id} className={`border ${stage.color} bg-frame-gray-1/10`}>
+                  <div className="p-3 border-b border-frame-gray-3 bg-frame-black/60">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 ${stage.dot}`} />
+                        <h2 className="font-frame-mono uppercase tracking-[0.14em] text-xs">{stage.label}</h2>
+                      </div>
+                      <span className="text-[0.68rem] text-frame-gray-light">{stageOpps.length}</span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between gap-3">
+                      <p className="text-xs text-frame-gray-light">{stage.description}</p>
+                      <p className="text-xs text-frame-orange font-semibold">{formatCurrency(getStageTotal(stage.id))}</p>
+                    </div>
+                  </div>
+                  <div className="p-2.5 space-y-2">
+                    {stageOpps.map((opportunity) => (
+                      <OpportunityCard
+                        key={opportunity.id}
+                        opportunity={opportunity}
+                        formatCurrency={formatCurrency}
+                        formatDate={formatDate}
+                        dueTone={getDueTone(opportunity.expected_close_date)}
+                        onOpen={() => openDetailModal(opportunity)}
+                        onEdit={() => openEditModal(opportunity)}
+                        onDelete={() => {
+                          setSelectedOpportunity(opportunity);
+                          setModalMode("delete");
+                        }}
+                        onMove={moveOpportunity}
+                        previousStage={previousStage(opportunity)}
+                        nextStage={nextStage(opportunity)}
+                      />
+                    ))}
+                    {stageOpps.length === 0 && (
+                      <button
+                        onClick={openCreateModal}
+                        className="w-full frame-empty-state p-4 text-left text-xs text-frame-gray-light hover:border-frame-orange/60 hover:text-frame-orange transition"
+                      >
+                        {t("app.pipeline.newOpportunity") as string}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </section>
         ) : (
           <DndContext
             sensors={sensors}
@@ -1231,10 +1293,18 @@ function DetailStat({ label, value }: { label: string; value: string }) {
 }
 
 export default function Pipeline({ embedded }: { embedded?: boolean }) {
-  if (embedded) return <PipelineContent embedded />;
+  if (embedded) {
+    return (
+      <FeatureUpgradeRequired feature="pipeline" variant="full">
+        <PipelineContent embedded />
+      </FeatureUpgradeRequired>
+    );
+  }
   return (
     <ProtectedRoute>
-      <PipelineContent />
+      <FeatureUpgradeRequired feature="pipeline" variant="full">
+        <PipelineContent />
+      </FeatureUpgradeRequired>
     </ProtectedRoute>
   );
 }

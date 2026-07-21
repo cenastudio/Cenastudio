@@ -218,7 +218,9 @@ describe("plan-config", () => {
       const proMetadata = getPlanMetadata("pro");
       const studioMetadata = getPlanMetadata("studio");
 
-      expect(freeMetadata.maxTeamMembers).toBe(1);
+      // Free plan doesn't include team members at all (teamMemberLimit: 0 in
+      // shared/planEntitlements.ts).
+      expect(freeMetadata.maxTeamMembers).toBe(0);
       expect(proMetadata.maxTeamMembers).toBe(5);
       expect(studioMetadata.maxTeamMembers).toBe(-1); // unlimited
     });
@@ -228,7 +230,9 @@ describe("plan-config", () => {
 
       expect(studioMetadata.supportsCommercialHub).toBe(true);
       expect(studioMetadata.supportsFinancialModules).toBe(true);
-      expect(studioMetadata.supportsCustomBranding).toBe(true);
+      // Custom branding is a White Label+ entitlement, not Studio
+      // (see shared/planEntitlements.ts customBranding: false for studio).
+      expect(studioMetadata.supportsCustomBranding).toBe(false);
       expect(studioMetadata.supportsAPI).toBe(true);
     });
 

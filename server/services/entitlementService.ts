@@ -160,6 +160,11 @@ const FEATURE_REQUIREMENTS: Record<FeatureFlagId, { label: string; planLabel: st
   shotList: { label: "Shot List", planLabel: "Pro" },
   timesheet: { label: "Timesheet", planLabel: "Pro" },
   customBranding: { label: "Marca personalizada", planLabel: "White Label" },
+  pipeline: { label: "Pipeline comercial", planLabel: "Pro" },
+  videoReviews: { label: "Review de vídeos", planLabel: "Pro" },
+  proposals: { label: "Propostas", planLabel: "Pro" },
+  webhooks: { label: "Webhooks", planLabel: "Studio" },
+  calendarExport: { label: "Exportar cronograma para agenda", planLabel: "Studio" },
 };
 
 /**

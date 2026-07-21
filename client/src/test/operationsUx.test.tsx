@@ -31,7 +31,7 @@ vi.mock("@/contexts/ProjectContext", () => ({
   useProject: () => projectContextState,
 }));
 
-function renderWithLanguage(component: React.ReactElement) {
+function renderWithLanguage(component: React.ReactElement, overridePlanMode?: import("@/types/plan").PlanMode) {
   // AuthProvider is required because pages like Collaborators/Tools now
   // render ProductionNav (the Production area sub-navigation), which calls
   // useAuth() to determine role-based tab visibility. PlanProvider is
@@ -40,7 +40,7 @@ function renderWithLanguage(component: React.ReactElement) {
   // Timesheet — see .kiro/specs/landing-features-implementation).
   return render(
     <AuthProvider>
-      <PlanProvider>
+      <PlanProvider overridePlanMode={overridePlanMode}>
         <LanguageProvider>{component}</LanguageProvider>
       </PlanProvider>
     </AuthProvider>,
@@ -219,7 +219,7 @@ describe("operational UI and UX flows", () => {
     }));
 
     const { default: Pipeline } = await import("@/pages/Pipeline");
-    renderWithLanguage(<Pipeline />);
+    renderWithLanguage(<Pipeline />, "pro");
 
     const retry = await screen.findByRole("button", { name: "Tentar novamente" });
     shouldFail = false;
@@ -254,7 +254,7 @@ describe("operational UI and UX flows", () => {
     }));
 
     const { default: Pipeline } = await import("@/pages/Pipeline");
-    renderWithLanguage(<Pipeline />);
+    renderWithLanguage(<Pipeline />, "pro");
 
     const title = await screen.findByText("Filme Aurora");
     fireEvent.click(title.closest("button")!);

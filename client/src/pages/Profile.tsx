@@ -98,14 +98,14 @@ function TabButton({ active, onClick, icon: Icon, label }: {
       onClick={onClick}
       aria-label={label}
       title={label}
-      className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all rounded-lg min-h-11 ${
+      className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-all rounded-lg min-h-11 shrink-0 whitespace-nowrap ${
         active
           ? "bg-frame-orange/15 text-frame-orange border border-frame-orange/30"
           : "text-frame-gray-light hover:text-frame-white hover:bg-frame-gray-2/50"
       }`}
     >
       <Icon className="w-4 h-4" />
-      <span className="hidden sm:inline">{label}</span>
+      <span>{label}</span>
     </button>
   );
 }
@@ -1042,8 +1042,11 @@ function ProfileContent() {
           </p>
         </div>
 
-        {/* ─── TABS ─── */}
-        <div className="flex flex-wrap gap-2 mb-8 pb-4 border-b border-frame-gray-3/30">
+        {/* ─── TABS ───
+            Below md this scrolls horizontally instead of wrapping, matching
+            the ResponsiveTabs pattern used elsewhere — desktop keeps the
+            original flex-wrap layout untouched. */}
+        <div className="flex gap-2 mb-8 pb-4 border-b border-frame-gray-3/30 max-md:overflow-x-auto max-md:flex-nowrap max-md:scrollbar-none flex-wrap">
           <TabButton
             active={activeTab === "profile"}
             onClick={() => setActiveTab("profile")}
@@ -1836,7 +1839,7 @@ function ProfileContent() {
                   </div>
                   <div className="flex flex-wrap gap-4 pt-2">
                     <div className="flex items-center gap-2"><Zap className="w-4 h-4 text-frame-orange" /><span className="text-sm text-frame-white"><strong>{plan?.generationLimit === -1 ? "∞" : plan?.generationLimit}</strong> {t("app.profile.generationsMonth")}</span></div>
-                    <div className="flex items-center gap-2"><Users className="w-4 h-4 text-frame-orange" /><span className="text-sm text-frame-white"><strong>{plan?.planId === "studio" ? t("app.profile.planFeat.teamMembers") : plan?.planId === "pro" ? t("app.profile.planFeat.proClients") : t("app.profile.planFeat.freeClients")}</strong></span></div>
+                    <div className="flex items-center gap-2"><Users className="w-4 h-4 text-frame-orange" /><span className="text-sm text-frame-white"><strong>{plan?.planId === "studio" ? t("app.profile.planFeat.studioClients") : plan?.planId === "pro" ? t("app.profile.planFeat.proClients") : t("app.profile.planFeat.freeClients")}</strong></span></div>
                     {plan?.status === "trial" && plan?.trialEndsAt && <div className="flex items-center gap-2"><CalendarClock className="w-4 h-4 text-frame-orange" /><span className="text-sm text-frame-orange">Trial até {formatDate(plan.trialEndsAt, "—", locale)}</span></div>}
                   </div>
                 </div>
@@ -1987,7 +1990,7 @@ function ProfileContent() {
                 <div className="relative p-4 rounded-xl bg-frame-gray-2/30 border border-frame-gray-3/50">
                   <div className="absolute -top-3 left-4 px-2 py-0.5 bg-frame-orange text-frame-black text-[0.6rem] font-bold uppercase tracking-wider rounded">{t("app.profile.stepCreate")}</div>
                   <p className="text-sm text-frame-white mt-2">{t("app.profile.stepCreateDesc")}</p>
-                  <p className="text-xs text-frame-gray-light mt-2">{plan?.planId === "free" ? t("app.profile.planFeat.freeClients") : plan?.planId === "pro" ? t("app.profile.planFeat.proClients") : t("app.profile.planFeat.unlimitedClients")}</p>
+                  <p className="text-xs text-frame-gray-light mt-2">{plan?.planId === "free" ? t("app.profile.planFeat.freeClients") : plan?.planId === "pro" ? t("app.profile.planFeat.proClients") : plan?.planId === "studio" ? t("app.profile.planFeat.studioClients") : t("app.profile.planFeat.unlimitedClients")}</p>
                 </div>
                 <div className="relative p-4 rounded-xl bg-frame-gray-2/30 border border-frame-gray-3/50">
                   <div className="absolute -top-3 left-4 px-2 py-0.5 bg-frame-orange text-frame-black text-[0.6rem] font-bold uppercase tracking-wider rounded">{t("app.profile.stepGenerate")}</div>
@@ -2071,8 +2074,8 @@ function ProfileContent() {
                   </div>
                   <p className="plan-muted text-sm text-center mt-4">{t("app.profile.studioDesc")}</p>
                   <ul className="mt-6 space-y-3">
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0" />{t("app.profile.planFeat.unlimitedClients")}</li>
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0" />{t("app.profile.planFeat.teamMembers")}</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0" />{t("app.profile.planFeat.studioClients")}</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0" />{t("app.profile.planFeat.studioTeam")}</li>
                     <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0" />{t("app.profile.planFeat.allPro")}</li>
                     <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-orange shrink-0" />{t("app.profile.planFeat.reports")}</li>
                     <li className="plan-struck flex items-center gap-2 text-sm"><X className="w-4 h-4 shrink-0 opacity-40" />Sem logo próprio</li>
@@ -2095,7 +2098,7 @@ function ProfileContent() {
                   <p className="plan-muted text-sm text-center mt-4">Marca própria com domínio e cor customizados</p>
                   <ul className="mt-6 space-y-3">
                     <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />Clientes ilimitados</li>
-                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />2.000 gerações IA/mês</li>
+                    <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />Gerações IA ilimitadas</li>
                     <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />Tudo do Studio</li>
                     <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />Domínio customizado</li>
                     <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-frame-gold shrink-0" />10 membros de equipe</li>

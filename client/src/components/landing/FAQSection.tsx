@@ -35,7 +35,7 @@ const FAQS_PT: FAQ[] = [
   },
   {
     question: "Posso convidar colaboradores ou equipe?",
-    answer: "No plano Studio você pode ter até 5 membros de equipe com login próprio e permissões configuráveis, além de cadastrar equipe externa (freelancers) sem limite.",
+    answer: "No plano Pro você pode ter até 5 membros de equipe. No Studio a equipe é ilimitada — todos com login próprio e permissões configuráveis, além de cadastrar equipe externa (freelancers) sem limite.",
   },
   {
     question: "Meus arquivos ficam seguros?",
@@ -70,7 +70,7 @@ const FAQS_EN: FAQ[] = [
   },
   {
     question: "Can I invite collaborators or team members?",
-    answer: "The Studio plan supports up to 5 team members with their own login and configurable permissions, plus unlimited external crew (freelancers).",
+    answer: "The Pro plan supports up to 5 team members. The Studio plan has unlimited team members, each with their own login and configurable permissions, plus unlimited external crew (freelancers).",
   },
   {
     question: "Are my files safe?",

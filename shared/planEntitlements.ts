@@ -9,7 +9,17 @@ export type ProductFeatureId = string;
  * `client/src/lib/feature-gating/gate.ts` (frontend) so a blocked feature is
  * always hidden on the client AND rejected (402) on the server.
  */
-export type FeatureFlagId = "budgetTracking" | "equipmentInventory" | "shotList" | "timesheet" | "customBranding";
+export type FeatureFlagId =
+  | "budgetTracking"
+  | "equipmentInventory"
+  | "shotList"
+  | "timesheet"
+  | "customBranding"
+  | "pipeline"
+  | "videoReviews"
+  | "proposals"
+  | "webhooks"
+  | "calendarExport";
 
 const GB = 1024 * 1024 * 1024;
 
@@ -24,6 +34,18 @@ export interface PlanEntitlement {
   shotListLimit: number; // -1 = unlimited
   timesheet: boolean;
   customBranding: boolean;
+  // "CRM completo + pipeline comercial" — opportunities pipeline + interaction
+  // history/follow-ups, advertised as a Pro+ feature (Free only gets the
+  // basic client list, per shared/site.ts PRICING).
+  pipeline: boolean;
+  // "Review de vídeos com anotações" — advertised Pro+.
+  videoReviews: boolean;
+  // "Portal do cliente com aprovações" — advertised Pro+.
+  proposals: boolean;
+  // "Webhooks para automação" — advertised Studio+.
+  webhooks: boolean;
+  // "Exportar cronograma para agenda (.ics)" — advertised Studio+.
+  calendarExport: boolean;
 }
 
 export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
@@ -38,6 +60,11 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     shotListLimit: 20,
     timesheet: false,
     customBranding: false,
+    pipeline: false,
+    videoReviews: false,
+    proposals: false,
+    webhooks: false,
+    calendarExport: false,
   },
   pro: {
     clientLimit: 15,
@@ -50,6 +77,11 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     shotListLimit: 100,
     timesheet: true,
     customBranding: false,
+    pipeline: true,
+    videoReviews: true,
+    proposals: true,
+    webhooks: false,
+    calendarExport: false,
   },
   studio: {
     clientLimit: 50,
@@ -62,6 +94,11 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     shotListLimit: -1, // unlimited
     timesheet: true,
     customBranding: false,
+    pipeline: true,
+    videoReviews: true,
+    proposals: true,
+    webhooks: true,
+    calendarExport: true,
   },
   whitelabel: {
     clientLimit: null, // unlimited — matches advertised "Clientes ilimitados"
@@ -74,6 +111,11 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     shotListLimit: -1, // unlimited
     timesheet: true,
     customBranding: true,
+    pipeline: true,
+    videoReviews: true,
+    proposals: true,
+    webhooks: true,
+    calendarExport: true,
   },
   enterprise: {
     clientLimit: null,
@@ -86,6 +128,11 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     shotListLimit: -1, // unlimited
     timesheet: true,
     customBranding: true,
+    pipeline: true,
+    videoReviews: true,
+    proposals: true,
+    webhooks: true,
+    calendarExport: true,
   },
 };
 

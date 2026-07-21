@@ -29,7 +29,7 @@ const plans = [
     name: "White-Label",
     priceBrl: 149900,
     generationLimit: -1,
-    features: ["Clientes ilimitados", "2.000 gerações IA/mês", "Tudo do Studio", "Cor e logo personalizadas", "Domínio customizado", "10 usuários de equipe", "Suporte dedicado 4h"],
+    features: ["Clientes ilimitados", "Gerações IA ilimitadas", "Tudo do Studio", "Cor e logo personalizadas", "Domínio customizado", "10 usuários de equipe", "Suporte dedicado 4h"],
   },
   {
     id: "enterprise",

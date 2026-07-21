@@ -56,7 +56,7 @@ const PLAN_METADATA: Record<PlanMode, PlanMetadata> = {
     accentColor: BRAND_ACCENT,
     featureCount: 8,
     maxProjects: 5,
-    maxTeamMembers: 1,
+    maxTeamMembers: 0,
     workflowSteps: ["entry", "planning", "production", "delivery"],
     navStructure: [],
     supportsCommercialHub: false,
@@ -98,7 +98,9 @@ const PLAN_METADATA: Record<PlanMode, PlanMetadata> = {
     supportsFinancialModules: true,
     supportsPipeline: true,
     supportsVideoReviews: true,
-    supportsCustomBranding: true,
+    // Custom branding is a White Label+ entitlement (see shared/planEntitlements.ts
+    // customBranding: false for studio) — must stay false here too.
+    supportsCustomBranding: false,
     supportsAPI: true,
   },
 
@@ -115,7 +117,7 @@ const PLAN_METADATA: Record<PlanMode, PlanMetadata> = {
     supportsFinancialModules: true,
     supportsPipeline: true,
     supportsVideoReviews: true,
-    supportsCustomBranding: true,
+    supportsCustomBranding: false,
     supportsAPI: true,
   },
 

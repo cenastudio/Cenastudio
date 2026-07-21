@@ -33,7 +33,8 @@ export default function ProtectedRoute({ children, adminOnly }: ProtectedRoutePr
     return null;
   }
 
-  if (!isAdmin && plan?.planId === "studio" && !isPlanOperational(plan.planId, plan.status)) {
+  const paidPlans = ["studio", "whitelabel", "enterprise"];
+  if (!isAdmin && plan?.planId && paidPlans.includes(plan.planId) && !isPlanOperational(plan.planId, plan.status)) {
     return <PlanActivationRequired />;
   }
 

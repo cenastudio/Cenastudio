@@ -55,6 +55,8 @@ const FEATURE_REQUIREMENTS: Partial<Record<FeatureName, PlanMode>> = {
   "equipment-inventory": "studio",
   "shot-list": "pro",
   "timesheet": "pro",
+  "webhooks": "studio",
+  "calendar-export": "studio",
 
   // Whitelabel Features
   "custom-branding": "whitelabel",

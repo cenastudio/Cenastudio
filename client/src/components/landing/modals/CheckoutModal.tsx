@@ -72,7 +72,7 @@ const PLANS = [
       "+ Clientes adicionais",
       "Gerações ilimitadas",
       "Tudo do Pro",
-      "5 membros de equipe",
+      "Equipe ilimitada",
       "Arquivos e aprovações por projeto",
       "Relatórios operacionais",
       "Suporte premium",

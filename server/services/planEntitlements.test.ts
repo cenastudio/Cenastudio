@@ -30,4 +30,32 @@ describe("plan entitlements match advertised plans", () => {
   it("enterprise advertises 'Usuários ilimitados'", () => {
     expect(getPlanEntitlement("enterprise").teamMemberLimit).toBe(-1);
   });
+
+  it("free does not include pipeline, video reviews, proposals, webhooks or calendar export", () => {
+    const free = getPlanEntitlement("free");
+    expect(free.pipeline).toBe(false);
+    expect(free.videoReviews).toBe(false);
+    expect(free.proposals).toBe(false);
+    expect(free.webhooks).toBe(false);
+    expect(free.calendarExport).toBe(false);
+  });
+
+  it("pro advertises 'Review de vídeos com anotações', 'Portal do cliente com aprovações' and 'CRM completo + pipeline comercial'", () => {
+    const pro = getPlanEntitlement("pro");
+    expect(pro.pipeline).toBe(true);
+    expect(pro.videoReviews).toBe(true);
+    expect(pro.proposals).toBe(true);
+    // Webhooks and calendar export remain Studio+ per shared/site.ts PRICING.
+    expect(pro.webhooks).toBe(false);
+    expect(pro.calendarExport).toBe(false);
+  });
+
+  it("studio advertises 'Webhooks para automação' and 'Exportar cronograma para agenda (.ics)'", () => {
+    const studio = getPlanEntitlement("studio");
+    expect(studio.webhooks).toBe(true);
+    expect(studio.calendarExport).toBe(true);
+    expect(studio.pipeline).toBe(true);
+    expect(studio.videoReviews).toBe(true);
+    expect(studio.proposals).toBe(true);
+  });
 });

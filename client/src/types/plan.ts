@@ -370,7 +370,9 @@ export type FeatureName =
   | "budget-tracking"
   | "equipment-inventory"
   | "shot-list"
-  | "timesheet";
+  | "timesheet"
+  | "webhooks"
+  | "calendar-export";
 
 /**
  * Feature Access Result

@@ -5,6 +5,7 @@ import AppNavBar from "@/components/AppNavBar";
 import ProjectNav from "@/components/ProjectNav";
 import ProductionNav from "@/components/ProductionNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
 import VideoPlayer from "@/components/VideoPlayer";
 import ReviewCommentComposer from "@/components/ReviewCommentComposer";
 import type { Annotation } from "@/components/AnnotationCanvas";
@@ -988,10 +989,18 @@ function VideoReviewsContent({ embedded }: { embedded?: boolean }) {
 }
 
 export default function VideoReviews({ embedded }: { embedded?: boolean }) {
-  if (embedded) return <VideoReviewsContent embedded />;
+  if (embedded) {
+    return (
+      <FeatureUpgradeRequired feature="video-reviews" variant="full">
+        <VideoReviewsContent embedded />
+      </FeatureUpgradeRequired>
+    );
+  }
   return (
     <ProtectedRoute>
-      <VideoReviewsContent />
+      <FeatureUpgradeRequired feature="video-reviews" variant="full">
+        <VideoReviewsContent />
+      </FeatureUpgradeRequired>
     </ProtectedRoute>
   );
 }

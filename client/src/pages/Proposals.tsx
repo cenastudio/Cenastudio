@@ -4,6 +4,7 @@ import { useLocation } from "wouter";
 import { useClientIdFromQuery } from "@/hooks/useClientIdFromQuery";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
 import { api } from "@/lib/api";
 import {
   BriefcaseBusiness,
@@ -798,10 +799,18 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
 }
 
 export default function Proposals({ embedded }: { embedded?: boolean }) {
-  if (embedded) return <ProposalsContent embedded />;
+  if (embedded) {
+    return (
+      <FeatureUpgradeRequired feature="proposals" variant="full">
+        <ProposalsContent embedded />
+      </FeatureUpgradeRequired>
+    );
+  }
   return (
     <ProtectedRoute>
-      <ProposalsContent />
+      <FeatureUpgradeRequired feature="proposals" variant="full">
+        <ProposalsContent />
+      </FeatureUpgradeRequired>
     </ProtectedRoute>
   );
 }

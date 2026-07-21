@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/authenticate.js";
-import { requireOperationalPlan } from "../middleware/planAccess.js";
+import { requireOperationalPlan, requireStudioPlan } from "../middleware/planAccess.js";
 import {
   listAllVideoReviews,
   listVideoReviews,
@@ -20,8 +20,9 @@ import {
 
 const router = Router();
 
-// All video review routes require authentication except shared access
-router.use(authenticate, requireOperationalPlan);
+// All video review routes require authentication except shared access.
+// Video Reviews are advertised as a Pro+ feature (shared/site.ts PRICING).
+router.use(authenticate, requireOperationalPlan, requireStudioPlan("videoReviews"));
 
 // List all reviews for the current user
 router.get("/", listAllVideoReviews);

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import AppNavBar from "@/components/AppNavBar";
 import ProductionNav from "@/components/ProductionNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
 import { api } from "@/lib/api";
 import {
   Webhook as WebhookIcon,
@@ -487,7 +488,9 @@ function WebhooksContent() {
 export default function Webhooks() {
   return (
     <ProtectedRoute>
-      <WebhooksContent />
+      <FeatureUpgradeRequired feature="webhooks" variant="full">
+        <WebhooksContent />
+      </FeatureUpgradeRequired>
     </ProtectedRoute>
   );
 }

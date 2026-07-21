@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { isActionComplete, WORKFLOW_STAGES, type WorkflowStage } from "@/lib/workflow";
+import { useFeatureAccess } from "@/hooks/useFeatureAccess";
 
 interface ProjectDetail {
   id: number;
@@ -172,6 +173,7 @@ function ProjectHubContent() {
   const projectId = parseInt(id || "0");
   const { isTeamMember, teamRole } = useAuth();
   const canManageTasks = !isTeamMember || teamRole === "producer";
+  const { hasAccess: hasCalendarExport } = useFeatureAccess("calendar-export");
 
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [members, setMembers] = useState<ProjectMember[]>([]);
@@ -391,7 +393,8 @@ function ProjectHubContent() {
                 )}
               </div>
 
-              {/* Calendar Export - Highlighted action */}
+              {/* Calendar Export - Highlighted action (Studio+ feature) */}
+              {hasCalendarExport && (
               <div className="pt-3 border-t border-frame-gray-3/50">
                 <a
                   href={api.calendar.projectIcsUrl(projectId)}
@@ -415,6 +418,7 @@ function ProjectHubContent() {
                     : "Inclui prazo do projeto + reuniões vinculadas"}
                 </p>
               </div>
+              )}
             </div>
 
             {/* Quick stats */}
