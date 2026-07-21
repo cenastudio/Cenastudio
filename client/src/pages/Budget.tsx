@@ -485,7 +485,7 @@ function BudgetContent() {
               placeholder="Ex: Diária cinegrafista"
               required
             />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-frame-gray-light mb-1.5">Valor</label>
                 <input

@@ -373,7 +373,7 @@ function TimesheetContent() {
                       <button
                         type="button"
                         onClick={() => setDeleteTarget(entry)}
-                        className="p-1.5 border border-frame-gray-3/50 hover:border-red-500 hover:text-red-500 transition"
+                        className="p-1.5 max-md:min-h-11 max-md:min-w-11 max-md:flex max-md:items-center max-md:justify-center border border-frame-gray-3/50 hover:border-red-500 hover:text-red-500 transition"
                         title="Excluir registro"
                       >
                         <Trash2 className="w-3.5 h-3.5" />

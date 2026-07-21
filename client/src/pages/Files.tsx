@@ -546,25 +546,25 @@ function FilesContent({ embedded }: FilesContentProps) {
                               <Video className="w-3 h-3 text-frame-orange absolute bottom-1 right-1 opacity-70" />
                             )}
                           </div>
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                          <div className="flex gap-1 max-md:opacity-100 opacity-0 group-hover:opacity-100 transition">
                             {!isLink && isPreviewable(file) && (
-                              <button onClick={() => openPreview(file)} className="p-2 hover:bg-frame-gray-3 transition" title={t("app.common.preview")}>
+                              <button onClick={() => openPreview(file)} className="p-2 max-md:min-h-11 max-md:min-w-11 max-md:flex max-md:items-center max-md:justify-center hover:bg-frame-gray-3 transition" title={t("app.common.preview")}>
                                 <Eye className="w-4 h-4" />
                               </button>
                             )}
                             {isLink ? (
-                              <a href={file.path} target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-frame-gray-3 transition" title={t("app.files.openLink")}>
+                              <a href={file.path} target="_blank" rel="noopener noreferrer" className="p-2 max-md:min-h-11 max-md:min-w-11 max-md:flex max-md:items-center max-md:justify-center hover:bg-frame-gray-3 transition" title={t("app.files.openLink")}>
                                 <ExternalLink className="w-4 h-4" />
                               </a>
                             ) : (
-                              <button onClick={() => handleDownload(file)} className="p-2 hover:bg-frame-gray-3 transition" title={t("app.common.download")}>
+                              <button onClick={() => handleDownload(file)} className="p-2 max-md:min-h-11 max-md:min-w-11 max-md:flex max-md:items-center max-md:justify-center hover:bg-frame-gray-3 transition" title={t("app.common.download")}>
                                 <Download className="w-4 h-4" />
                               </button>
                             )}
-                            <button onClick={(e) => { e.stopPropagation(); setRenamingFile(file); setNewFileName(file.original_name); }} className="p-2 hover:bg-frame-gray-3 transition" title={t("app.files.rename")}>
+                            <button onClick={(e) => { e.stopPropagation(); setRenamingFile(file); setNewFileName(file.original_name); }} className="p-2 max-md:min-h-11 max-md:min-w-11 max-md:flex max-md:items-center max-md:justify-center hover:bg-frame-gray-3 transition" title={t("app.files.rename")}>
                               <Pencil className="w-4 h-4" />
                             </button>
-                            <button onClick={() => { setSelectedFile(file); setIsDeleteOpen(true); }} className="p-2 hover:bg-frame-red/20 hover:text-frame-red transition" title={t("app.common.delete")}>
+                            <button onClick={() => { setSelectedFile(file); setIsDeleteOpen(true); }} className="p-2 max-md:min-h-11 max-md:min-w-11 max-md:flex max-md:items-center max-md:justify-center hover:bg-frame-red/20 hover:text-frame-red transition" title={t("app.common.delete")}>
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
@@ -597,25 +597,25 @@ function FilesContent({ embedded }: FilesContentProps) {
                         </p>
                       </div>
                       <span className="text-xs text-frame-gray-light hidden sm:block">{formatDate(file.created_at)}</span>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
+                      <div className="flex gap-1 max-md:opacity-100 opacity-0 group-hover:opacity-100 transition shrink-0">
                         {!isLink && isPreviewable(file) && (
-                          <button onClick={() => openPreview(file)} className="p-1.5 hover:bg-frame-gray-3 transition" title={t("app.common.preview")}>
+                          <button onClick={() => openPreview(file)} className="p-1.5 max-md:min-h-11 max-md:min-w-11 max-md:flex max-md:items-center max-md:justify-center hover:bg-frame-gray-3 transition" title={t("app.common.preview")}>
                             <Eye className="w-4 h-4" />
                           </button>
                         )}
                         {isLink ? (
-                          <a href={file.path} target="_blank" rel="noopener noreferrer" className="p-1.5 hover:bg-frame-gray-3 transition" title={t("app.files.openLink")}>
+                          <a href={file.path} target="_blank" rel="noopener noreferrer" className="p-1.5 max-md:min-h-11 max-md:min-w-11 max-md:flex max-md:items-center max-md:justify-center hover:bg-frame-gray-3 transition" title={t("app.files.openLink")}>
                             <ExternalLink className="w-4 h-4" />
                           </a>
                         ) : (
-                          <button onClick={() => handleDownload(file)} className="p-1.5 hover:bg-frame-gray-3 transition" title={t("app.common.download")}>
+                          <button onClick={() => handleDownload(file)} className="p-1.5 max-md:min-h-11 max-md:min-w-11 max-md:flex max-md:items-center max-md:justify-center hover:bg-frame-gray-3 transition" title={t("app.common.download")}>
                             <Download className="w-4 h-4" />
                           </button>
                         )}
-                        <button onClick={(e) => { e.stopPropagation(); setRenamingFile(file); setNewFileName(file.original_name); }} className="p-1.5 hover:bg-frame-gray-3 transition" title={t("app.files.rename")}>
+                        <button onClick={(e) => { e.stopPropagation(); setRenamingFile(file); setNewFileName(file.original_name); }} className="p-1.5 max-md:min-h-11 max-md:min-w-11 max-md:flex max-md:items-center max-md:justify-center hover:bg-frame-gray-3 transition" title={t("app.files.rename")}>
                           <Pencil className="w-4 h-4" />
                         </button>
-                        <button onClick={() => { setSelectedFile(file); setIsDeleteOpen(true); }} className="p-1.5 hover:bg-frame-red/20 hover:text-frame-red transition" title={t("app.common.delete")}>
+                        <button onClick={() => { setSelectedFile(file); setIsDeleteOpen(true); }} className="p-1.5 max-md:min-h-11 max-md:min-w-11 max-md:flex max-md:items-center max-md:justify-center hover:bg-frame-red/20 hover:text-frame-red transition" title={t("app.common.delete")}>
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>

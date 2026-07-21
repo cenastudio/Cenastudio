@@ -86,7 +86,8 @@ export function AIChatbot() {
       {!isOpen && (
         <Button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg"
+          className="fixed right-6 z-50 h-14 w-14 rounded-full shadow-lg"
+          style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
           size="icon"
         >
           <Bot className="h-6 w-6" />
@@ -95,7 +96,10 @@ export function AIChatbot() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 flex h-[500px] w-[380px] flex-col rounded-lg border bg-background shadow-2xl">
+        <div
+          className="fixed right-6 z-50 flex h-[500px] max-h-[calc(100dvh-3rem)] w-[380px] max-w-[calc(100vw-3rem)] flex-col rounded-lg border bg-background shadow-2xl"
+          style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
+        >
           {/* Header */}
           <div className="flex items-center justify-between border-b p-4">
             <div className="flex items-center gap-2">

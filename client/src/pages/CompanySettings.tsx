@@ -457,7 +457,7 @@ function CompanySettingsContent() {
             </div>
 
             {/* Save bar */}
-            <div className="sticky bottom-4 z-10">
+            <div className="sticky z-10" style={{ bottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}>
               <div className="liquid-glass p-4 flex items-center justify-between gap-4 shadow-2xl border-frame-orange/20"
                 style={{ borderColor: isDirty ? "rgba(var(--ds-orange-rgb),0.4)" : undefined }}>
                 <div className="flex items-center gap-2">

@@ -1559,6 +1559,15 @@ body.light .border-adaptive-primary {
     opacity: 0.9;
   }
 
+  /* iOS Safari auto-zooms the page when focusing an input with a computed
+     font-size below 16px. Bump it to 16px on small screens only — desktop
+     keeps the compact 0.88rem. */
+  @media (max-width: 767px) {
+    .frame-input {
+      font-size: 16px;
+    }
+  }
+
   /* App nav — fixed glass */
   .frame-nav {
     position: sticky;
@@ -2041,6 +2050,10 @@ body.light .border-adaptive-primary {
   bottom: 0;
   background: linear-gradient(180deg, transparent, var(--app-surface-strong) 18%);
   border-color: var(--app-border) !important;
+  /* On phones the home-indicator/gesture area overlaps a plain sticky bar —
+     env() resolves to 0 on desktop/browsers without a safe area, so this is
+     a no-op there. */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .clients-stage-column {
@@ -2355,4 +2368,15 @@ body.light .border-adaptive-primary {
 .studio-workbench select.frame-input {
   padding: 6px 8px;
   font-size: 0.76rem;
+}
+
+/* Same iOS auto-zoom fix as .frame-input above, needed here too because the
+   Studio's compact mode overrides font-size below the 16px threshold.
+   Desktop keeps the compact sizes untouched. */
+@media (max-width: 767px) {
+  .studio-workbench .frame-input,
+  .studio-workbench textarea.frame-input,
+  .studio-workbench select.frame-input {
+    font-size: 16px;
+  }
 }

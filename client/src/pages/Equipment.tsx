@@ -422,7 +422,7 @@ function EquipmentContent() {
                 className="frame-input w-full"
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-frame-gray-light mb-1.5">Categoria</label>
                 <select value={category} onChange={(e) => setCategory(e.target.value)} className="frame-input w-full">
@@ -485,7 +485,7 @@ function EquipmentContent() {
                 ))}
               </select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-frame-gray-light mb-1.5">Início</label>
                 <input type="date" value={bookingStart} onChange={(e) => setBookingStart(e.target.value)} required className="frame-input w-full" />

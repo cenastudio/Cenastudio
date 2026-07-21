@@ -312,8 +312,8 @@ function AssetsContent({ embedded }: { embedded?: boolean }) {
                 <thead className="bg-frame-gray-2/40">
                   <tr>
                     <th className="text-left p-3 text-xs font-semibold text-frame-gray-light uppercase tracking-wider">{isEn ? "Name" : "Nome"}</th>
-                    <th className="text-left p-3 text-xs font-semibold text-frame-gray-light uppercase tracking-wider">{isEn ? "Size" : "Tamanho"}</th>
-                    <th className="text-left p-3 text-xs font-semibold text-frame-gray-light uppercase tracking-wider">{isEn ? "Project" : "Projeto"}</th>
+                    <th className="text-left p-3 text-xs font-semibold text-frame-gray-light uppercase tracking-wider hidden sm:table-cell">{isEn ? "Size" : "Tamanho"}</th>
+                    <th className="text-left p-3 text-xs font-semibold text-frame-gray-light uppercase tracking-wider hidden md:table-cell">{isEn ? "Project" : "Projeto"}</th>
                     <th className="text-right p-3 text-xs font-semibold text-frame-gray-light uppercase tracking-wider">{isEn ? "Actions" : "Ações"}</th>
                   </tr>
                 </thead>
@@ -325,11 +325,14 @@ function AssetsContent({ embedded }: { embedded?: boolean }) {
                         <td className="p-3">
                           <div className="flex items-center gap-3">
                             {getFileIcon(type)}
-                            <span className="text-sm text-frame-white truncate max-w-[240px]">{asset.original_name}</span>
+                            <div className="min-w-0">
+                              <span className="block text-sm text-frame-white truncate max-w-[160px] sm:max-w-[240px]">{asset.original_name}</span>
+                              <span className="block text-[0.65rem] text-frame-gray-light sm:hidden">{formatSize(asset.size)}</span>
+                            </div>
                           </div>
                         </td>
-                        <td className="p-3 text-sm text-frame-gray-light whitespace-nowrap">{formatSize(asset.size)}</td>
-                        <td className="p-3 text-sm text-frame-gray-light truncate max-w-[180px]">{asset.project_name || "—"}</td>
+                        <td className="p-3 text-sm text-frame-gray-light whitespace-nowrap hidden sm:table-cell">{formatSize(asset.size)}</td>
+                        <td className="p-3 text-sm text-frame-gray-light truncate max-w-[180px] hidden md:table-cell">{asset.project_name || "—"}</td>
                         <td className="p-3">
                           <div className="flex justify-end gap-2">
                             <a href={api.assets.download(asset.id)} className="p-1.5 hover:text-frame-orange transition" title={isEn ? "Download" : "Baixar"}>

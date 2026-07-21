@@ -350,7 +350,7 @@ function TeamContent() {
             {/* Role selector */}
             <div className="space-y-2">
               <span className="frame-label text-frame-gray-light">{t("app.team.labelRole") as string}</span>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {ROLES.map((r) => {
                   const Icon = r.icon;
                   return (

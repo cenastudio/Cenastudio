@@ -729,7 +729,8 @@ function AnalyticsContent() {
           <button
             type="button"
             onClick={() => setShowEntryForm(true)}
-            className="fixed bottom-6 right-6 z-40 w-14 h-14 bg-frame-orange text-frame-black rounded-full shadow-2xl shadow-frame-orange/30 flex items-center justify-center hover:scale-110 hover:shadow-frame-orange/50 transition-all"
+            className="fixed right-6 z-40 w-14 h-14 bg-frame-orange text-frame-black rounded-full shadow-2xl shadow-frame-orange/30 flex items-center justify-center hover:scale-110 hover:shadow-frame-orange/50 transition-all"
+            style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
             aria-label={t("app.finance.newEntry")}
           >
             <Plus className="w-6 h-6" />

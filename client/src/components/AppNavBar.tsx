@@ -358,6 +358,56 @@ export default function AppNavBar({ children }: AppNavBarProps) {
                 ))}
               </nav>
 
+              {/* Active project switcher — the desktop chip+dropdown above is
+                  `hidden xl:block`, so mobile/tablet otherwise has no way to
+                  switch the active project from the nav at all. */}
+              {user && contextProject && (
+                <div className="mt-3 border border-frame-gray-3/60 bg-frame-gray-1/20">
+                  <p className="px-3 pt-2.5 font-frame-mono text-[0.55rem] uppercase tracking-[0.14em] text-frame-orange">
+                    {t("app.nav.activeProject") as string}
+                  </p>
+                  <div className="max-h-[240px] overflow-y-auto py-1">
+                    {projects.map((project) => {
+                      const isActive = project.id === contextProject.id;
+                      return (
+                        <button
+                          key={project.id}
+                          type="button"
+                          onClick={() => {
+                            setLocation(`/project/${project.id}`);
+                            setMobileMenuOpen(false);
+                          }}
+                          className={`w-full text-left px-3 py-2.5 min-h-11 flex items-center gap-3 transition-colors ${
+                            isActive
+                              ? "bg-frame-orange/10 border-l-2 border-frame-orange"
+                              : "hover:bg-frame-gray-2/50 border-l-2 border-transparent"
+                          }`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isActive ? "bg-frame-orange" : "bg-frame-gray-3"}`} />
+                          <span className="min-w-0 flex-1">
+                            <span className={`block text-[0.75rem] font-medium truncate ${isActive ? "text-frame-orange" : "text-frame-white"}`}>{project.name}</span>
+                            {project.clientName && (
+                              <span className="block text-[0.6rem] text-frame-gray-light truncate">{project.clientName}</span>
+                            )}
+                          </span>
+                          {isActive && <span className="text-[0.5rem] font-frame-mono text-frame-orange">✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLocation("/projects");
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 min-h-11 border-t border-frame-gray-3/40 text-[0.65rem] font-frame-mono text-frame-gray-light hover:text-frame-orange transition tracking-wider"
+                  >
+                    {t("app.hub.viewAll") as string}
+                  </button>
+                </div>
+              )}
+
               {/* Additional mobile-only controls */}
               <div className="mt-3 grid grid-cols-2 gap-2 sm:hidden">
                 <div className="min-h-[45px] border border-frame-gray-3 px-2 flex items-center justify-center">

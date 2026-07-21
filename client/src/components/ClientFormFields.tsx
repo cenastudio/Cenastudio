@@ -279,7 +279,7 @@ export default function ClientFormFields({ data, onChange, disabled }: ClientFor
           disabled={disabled}
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="block font-frame-mono text-xs text-frame-orange uppercase">{t("app.common.segment") as string}</label>
           <StyledSelect value={data.segment} onChange={f("segment")} disabled={disabled}>
@@ -355,7 +355,7 @@ export default function ClientFormFields({ data, onChange, disabled }: ClientFor
         </div>
       </CollapsibleSection>
       <CollapsibleSection title={t("app.common.companyInfo") as string} sectionKey="empresa" expanded={expandedSections.empresa} onToggle={toggleSection}>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="block font-frame-mono text-xs text-frame-gray-light uppercase">{t("app.common.industry") as string}</label>
             <StyledInput value={data.industry} onChange={f("industry")} placeholder={t("app.common.industryPlaceholder") as string} disabled={disabled} />

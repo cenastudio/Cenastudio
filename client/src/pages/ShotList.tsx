@@ -1073,7 +1073,7 @@ function ShotListContent() {
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-3 mt-4" autoComplete="off" data-lpignore="true" data-1p-ignore>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-frame-gray-light mb-1.5">
                   Número do Shot
@@ -1152,7 +1152,7 @@ function ShotListContent() {
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="block text-xs font-medium text-frame-gray-light mb-1.5">{t("app.shotlist.camera")}</label>
                 <input

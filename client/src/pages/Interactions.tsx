@@ -502,7 +502,7 @@ function InteractionsContent({ embedded }: { embedded?: boolean }) {
 
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className="p-2 hover:bg-frame-gray-3 transition rounded-none">
+                        <button className="p-2 max-md:min-h-11 max-md:min-w-11 max-md:flex max-md:items-center max-md:justify-center hover:bg-frame-gray-3 transition rounded-none">
                           <MoreVertical className="w-4 h-4" />
                         </button>
                       </DropdownMenuTrigger>

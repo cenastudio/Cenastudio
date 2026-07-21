@@ -733,10 +733,10 @@ td{padding:10px 12px;border-top:1px solid #252525;color:#ddd;font-size:12px}
                             <th className="px-4 py-3 text-left text-sm font-semibold text-frame-gray-light">
                               {t("app.commercial.thStage")}
                             </th>
-                            <th className="px-4 py-3 text-right text-sm font-semibold text-frame-gray-light">
+                            <th className="px-4 py-3 text-right text-sm font-semibold text-frame-gray-light hidden sm:table-cell">
                               {t("app.commercial.thQty")}
                             </th>
-                            <th className="px-4 py-3 text-right text-sm font-semibold text-frame-gray-light">
+                            <th className="px-4 py-3 text-right text-sm font-semibold text-frame-gray-light hidden md:table-cell">
                               {t("app.commercial.thTotalValue")}
                             </th>
                             <th className="px-4 py-3 text-right text-sm font-semibold text-frame-gray-light">
@@ -759,10 +759,10 @@ td{padding:10px 12px;border-top:1px solid #252525;color:#ddd;font-size:12px}
                                 <td className="px-4 py-3 text-sm text-frame-white">
                                   {stageLabels[stage] || stage}
                                 </td>
-                                <td className="px-4 py-3 text-right text-sm text-frame-white">
+                                <td className="px-4 py-3 text-right text-sm text-frame-white hidden sm:table-cell">
                                   {data.count}
                                 </td>
-                                <td className="px-4 py-3 text-right text-sm text-frame-white">
+                                <td className="px-4 py-3 text-right text-sm text-frame-white hidden md:table-cell">
                                   R$ {data.totalValue.toLocaleString('pt-BR')}
                                 </td>
                                 <td className="px-4 py-3 text-right text-sm font-semibold text-frame-orange">
@@ -931,7 +931,7 @@ td{padding:10px 12px;border-top:1px solid #252525;color:#ddd;font-size:12px}
                         <tr className="border-b border-frame-gray-3/40">
                           <th className="text-left pb-3 font-frame-mono text-[0.6rem] uppercase tracking-wider text-frame-gray-light">{t("app.commercial.funnelThStage")}</th>
                           <th className="text-right pb-3 font-frame-mono text-[0.6rem] uppercase tracking-wider text-frame-gray-light">{t("app.commercial.funnelThOpps")}</th>
-                          <th className="text-right pb-3 font-frame-mono text-[0.6rem] uppercase tracking-wider text-frame-gray-light">{t("app.commercial.funnelThValue")}</th>
+                          <th className="text-right pb-3 font-frame-mono text-[0.6rem] uppercase tracking-wider text-frame-gray-light hidden sm:table-cell">{t("app.commercial.funnelThValue")}</th>
                           <th className="text-right pb-3 font-frame-mono text-[0.6rem] uppercase tracking-wider text-frame-gray-light">{t("app.commercial.funnelThTicket")}</th>
                         </tr>
                       </thead>
@@ -953,7 +953,7 @@ td{padding:10px 12px;border-top:1px solid #252525;color:#ddd;font-size:12px}
                             <tr key={key} className="border-b border-frame-gray-3/20 last:border-0">
                               <td className={`py-3 font-medium ${isWon ? "text-frame-green" : isLost ? "text-frame-red/70" : "text-frame-white"}`}>{label}</td>
                               <td className="py-3 text-right text-frame-white font-mono">{d.count}</td>
-                              <td className="py-3 text-right text-frame-gray-light font-mono">R$ {d.value.toLocaleString('pt-BR')}</td>
+                              <td className="py-3 text-right text-frame-gray-light font-mono hidden sm:table-cell">R$ {d.value.toLocaleString('pt-BR')}</td>
                               <td className="py-3 text-right text-frame-gray-light font-mono">{ticket > 0 ? `R$ ${ticket.toLocaleString('pt-BR')}` : '—'}</td>
                             </tr>
                           );

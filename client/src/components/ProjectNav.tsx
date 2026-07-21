@@ -33,8 +33,12 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
   return (
     <div className="border-b border-frame-gray-3 bg-frame-black/95 dark:bg-frame-black/95 backdrop-blur-sm sticky top-16 z-40 shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
       <div className="max-w-7xl mx-auto px-4 md:px-6">
-        {/* Row 1: utility nav — back, project identity, section tabs (Overview/Budget/Shot List) */}
-        <div className="flex items-center gap-3 py-2">
+        {/* Row 1: utility nav — back, project identity, section tabs (Overview/Budget/Shot List).
+            Scrolls horizontally on narrow screens with the same fade-out edge
+            used in Row 2 below, instead of silently compressing/cutting off
+            the conditional Budget/Shot List tabs. */}
+        <div className="relative -mx-4 md:mx-0">
+        <div className="flex items-center gap-3 py-2 overflow-x-auto scrollbar-none px-4 md:px-0">
           <button
             type="button"
             onClick={() => setLocation("/dashboard")}
@@ -99,6 +103,9 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
               Shot List
             </button>
           )}
+        </div>
+        {/* Fade-out edge signals there's more to scroll on narrow viewports */}
+        <div className="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-frame-black/95 to-transparent md:hidden" aria-hidden="true" />
         </div>
 
         {/* Row 2: dedicated journey stepper — own row so it isn't squeezed by
