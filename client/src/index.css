@@ -2379,4 +2379,12 @@ body.light .border-adaptive-primary {
   .studio-workbench select.frame-input {
     font-size: 16px;
   }
+
+  /* Below the desktop split-pane breakpoint the studio flows as one page.
+     Give the chat panel (assistant / refine) a tall, usable height instead of
+     letting `.studio-chat-panel { min-height: 0 }` collapse it in the natural
+     flow. The document/output path is handled by a min-h utility in JSX. */
+  .studio-chat-panel {
+    min-height: 75vh;
+  }
 }

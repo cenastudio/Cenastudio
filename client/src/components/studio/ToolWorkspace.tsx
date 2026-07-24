@@ -90,7 +90,7 @@ export default function ToolWorkspace({
   };
 
   return (
-    <div className="studio-input-panel w-full lg:w-[390px] shrink-0 p-4 md:p-5 overflow-y-auto border-b lg:border-b-0 lg:border-r border-[var(--ds-border)] flex flex-col justify-between h-full select-none">
+    <div className="studio-input-panel w-full lg:w-[390px] shrink-0 p-4 md:p-5 lg:overflow-y-auto border-b lg:border-b-0 lg:border-r border-[var(--ds-border)] flex flex-col justify-between lg:h-full select-none">
       <div className="space-y-4">
         {/* Workspace Title & Input Marker */}
         <div className="studio-panel-header flex justify-between items-center border-b border-[var(--ds-border)] pb-3 mb-3">

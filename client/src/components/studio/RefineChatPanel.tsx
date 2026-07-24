@@ -91,9 +91,9 @@ ${userMessage}`;
   };
 
   return (
-    <div className="studio-chat-panel flex-1 flex flex-col overflow-hidden select-none">
+    <div className="studio-chat-panel flex-1 flex flex-col lg:overflow-hidden select-none">
       {/* Chat Area */}
-      <div className="flex-1 p-5 overflow-y-auto space-y-4">
+      <div className="flex-1 p-5 lg:overflow-y-auto space-y-4">
         {messages.map((msg, i) => {
           const isUser = msg.role === "user";
           return (

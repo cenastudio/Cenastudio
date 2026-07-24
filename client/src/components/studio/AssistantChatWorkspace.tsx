@@ -139,7 +139,7 @@ export default function AssistantChatWorkspace({ tool, projectId }: AssistantCha
   };
 
   return (
-    <div className="studio-chat-panel flex-1 min-w-0 flex flex-col border-t lg:border-t-0 border-[var(--ds-border)]">
+    <div className="studio-chat-panel flex-1 min-w-0 flex flex-col border-t lg:border-t-0 border-[var(--ds-border)] min-h-[75vh] lg:min-h-0">
       <div className="px-4 sm:px-6 py-4 border-b border-[var(--ds-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <p className="frame-label mb-1">{t("app.studio.assistant.headerLabel") as string}</p>

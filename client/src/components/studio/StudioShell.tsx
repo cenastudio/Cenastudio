@@ -314,11 +314,16 @@ export default function StudioShell() {
   };
 
   return (
-    <div className="studio-app min-h-screen bg-frame-black text-frame-white flex flex-col h-screen">
+    <div className="studio-app min-h-screen bg-frame-black text-frame-white flex flex-col lg:h-screen">
       <AppNavBar />
       <ProjectTimeline activeToolId={tool.slug} />
 
-      <div className="studio-workbench flex flex-1 overflow-hidden flex-col lg:flex-row">
+      {/* Below lg the studio flows as one naturally-scrolling page instead of a
+          fixed-height split-pane. The desktop layout (h-screen + nested
+          overflow panes) crammed the tool list, form and AI output into a
+          single viewport with competing internal scrollbars — unusable on a
+          phone. lg+ keeps the original split-pane behaviour. */}
+      <div className="studio-workbench flex flex-1 flex-col lg:flex-row lg:overflow-hidden">
         {/* Tool Sidebar — normal flow, collapsible. Below lg it stacks in
             the column flow (h-0 collapses height), matching how the
             sidebar itself lays out horizontally on small screens. */}
@@ -353,14 +358,14 @@ export default function StudioShell() {
         </button>
 
         {/* Studio Shell Body Container */}
-        <div className="studio-main flex-1 flex overflow-hidden flex-col md:flex-row relative">
+        <div className="studio-main flex-1 flex flex-col md:flex-row relative lg:overflow-hidden">
           {tool.slug === "assistente" ? (
             <AssistantChatWorkspace tool={tool} projectId={activeProject?.id} />
           ) : (
             <>
               {/* Main workspace (Inputs & Forms) — collapsible */}
               {/* Mobile stacks panels in a column, so height is the collapse axis there (h-0); md+ stacks in a row, so width stays the collapse axis (w-0), unchanged from before. */}
-              <div className={`transition-all duration-200 overflow-hidden shrink-0 ${workspaceCollapsed ? "h-0 w-auto md:h-auto md:w-0" : "w-auto md:w-[380px] lg:w-[420px] max-h-[42vh] md:max-h-none"}`}>
+              <div className={`transition-all duration-200 overflow-hidden shrink-0 ${workspaceCollapsed ? "h-0 w-auto md:h-auto md:w-0" : "w-auto md:w-[380px] lg:w-[420px]"}`}>
                 <ToolWorkspace
                   tool={tool}
                   formData={formData}
@@ -395,8 +400,10 @@ export default function StudioShell() {
                 <ChevronLeft className={`w-4 h-4 text-frame-orange transition-transform md:rotate-0 ${workspaceCollapsed ? "rotate-90 md:rotate-180" : "-rotate-90 md:rotate-0"}`} />
               </button>
 
-              {/* Output and Refinement Chat Panel */}
-              <div className="flex-1 flex flex-col overflow-hidden">
+              {/* Output and Refinement Chat Panel — min height on mobile so the
+                  document/output area stays comfortably tall in the natural
+                  page flow instead of collapsing to its content height. */}
+              <div className="flex-1 flex flex-col lg:overflow-hidden min-h-[70vh] lg:min-h-0">
                 {/* Limit Reached Warning Alert Banner */}
                 {limitReached && (
                   <div className="mx-6 mt-4 px-4 py-3 border border-frame-orange/40 bg-[rgba(255,77,0,0.08)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0 rounded-none">
