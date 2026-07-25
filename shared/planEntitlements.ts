@@ -11,6 +11,7 @@ export type ProductFeatureId = string;
  */
 export type FeatureFlagId =
   | "budgetTracking"
+  | "projectDre"
   | "equipmentInventory"
   | "shotList"
   | "timesheet"
@@ -29,6 +30,10 @@ export interface PlanEntitlement {
   storageLimitBytes: number; // -1 = unlimited
   requiresPaidActivation: boolean;
   budgetTracking: boolean;
+  // "DRE por projeto" — resultado financeiro real do projeto (receita menos
+  // custos/despesas). Depende de budgetTracking para custos diretos, então
+  // segue o mesmo nível mínimo de plano (Studio+).
+  projectDre: boolean;
   equipmentInventory: boolean;
   shotList: boolean;
   shotListLimit: number; // -1 = unlimited
@@ -55,6 +60,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     storageLimitBytes: 2 * GB,
     requiresPaidActivation: false,
     budgetTracking: false,
+    projectDre: false,
     equipmentInventory: false,
     shotList: false,
     shotListLimit: 20,
@@ -72,6 +78,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     storageLimitBytes: 25 * GB,
     requiresPaidActivation: false,
     budgetTracking: false,
+    projectDre: false,
     equipmentInventory: false,
     shotList: true,
     shotListLimit: 100,
@@ -89,6 +96,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     storageLimitBytes: 250 * GB,
     requiresPaidActivation: true,
     budgetTracking: true,
+    projectDre: true,
     equipmentInventory: true,
     shotList: true,
     shotListLimit: -1, // unlimited
@@ -106,6 +114,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     storageLimitBytes: 1024 * GB, // 1 TB
     requiresPaidActivation: true,
     budgetTracking: true,
+    projectDre: true,
     equipmentInventory: true,
     shotList: true,
     shotListLimit: -1, // unlimited
@@ -123,6 +132,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     storageLimitBytes: -1, // unlimited
     requiresPaidActivation: true,
     budgetTracking: true,
+    projectDre: true,
     equipmentInventory: true,
     shotList: true,
     shotListLimit: -1, // unlimited

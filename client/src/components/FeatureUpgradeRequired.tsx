@@ -256,6 +256,18 @@ export function FeatureUpgradeRequired({
       ],
       requiredPlan: "studio",
     },
+    "project-dre": {
+      icon: <Crown className="h-8 w-8" />,
+      title: t("app.upgrade.projectDreTitle"),
+      description: t("app.upgrade.projectDreDesc"),
+      benefits: [
+        t("app.upgrade.projectDreBenefit1"),
+        t("app.upgrade.projectDreBenefit2"),
+        t("app.upgrade.projectDreBenefit3"),
+        t("app.upgrade.projectDreBenefit4"),
+      ],
+      requiredPlan: "studio",
+    },
     "equipment-inventory": {
       icon: <Crown className="h-8 w-8" />,
       title: t("app.upgrade.equipmentInventoryTitle"),

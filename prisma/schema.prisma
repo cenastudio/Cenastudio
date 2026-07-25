@@ -70,6 +70,7 @@ model User {
   tasksAssigned  Task[] @relation("TaskAssignee")
   tasksCreated   Task[] @relation("TaskCreator")
   financialEntries FinancialEntry[]
+  dreSettings    DreSettings[]
   studioSettings StudioSetting?
   checklistItems ChecklistItem[]
   dashboards     Dashboard[]
@@ -316,6 +317,8 @@ model Project {
   shotLists     ShotList[]
   timeEntries   TimeEntry[]
   tasks         Task[]
+  financialEntries FinancialEntry[]
+  dreSettings   DreSettings?
 
   @@index([userId], map: "idx_projects_user_id")
   @@index([clientId], map: "idx_projects_client_id")
@@ -596,6 +599,7 @@ model FinancialEntry {
   userId        BigInt    @map("user_id")
   clientId      BigInt?   @map("client_id")
   opportunityId BigInt?   @map("opportunity_id")
+  projectId     BigInt?   @map("project_id")
   kind          String
   description   String
   category      String    @default("geral")
@@ -612,10 +616,12 @@ model FinancialEntry {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   client Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
   opportunity Opportunity? @relation(fields: [opportunityId], references: [id], onDelete: SetNull)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
   @@index([userId], map: "idx_financial_entries_user_id")
   @@index([dueDate], map: "idx_financial_entries_due_date")
   @@index([status], map: "idx_financial_entries_status")
+  @@index([projectId], map: "idx_financial_entries_project_id")
   @@map("financial_entries")
 }
 
@@ -769,6 +775,30 @@ model BudgetEntry {
 
   @@index([budgetId], map: "idx_budget_entries_budget_id")
   @@map("budget_entries")
+}
+
+// ===============================================
+// DRE POR PROJETO (spec: dre-por-projeto)
+// Demonstrativo de Resultado do Exercício por projeto: receita bruta,
+// deduções, custos diretos (reuso de Budget/BudgetEntry) e despesas
+// operacionais alocadas, chegando ao resultado líquido do projeto.
+// ===============================================
+
+model DreSettings {
+  id                    BigInt   @id @default(autoincrement())
+  userId                BigInt   @map("user_id")
+  projectId             BigInt   @unique @map("project_id")
+  deductions            Json     @default("[]") // [{ name, type: "percent"|"fixed", value }]
+  allocatedExpenseMode  String?  @map("allocated_expense_mode") // "fixed" | "percent" | null
+  allocatedExpenseValue Int?     @map("allocated_expense_value") // cents (fixed) or basis points (percent)
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "idx_dre_settings_user_id")
+  @@map("dre_settings")
 }
 
 // ===============================================

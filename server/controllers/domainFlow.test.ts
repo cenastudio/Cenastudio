@@ -31,6 +31,7 @@ let equipmentController: typeof import("./equipmentController.js");
 let shotListController: typeof import("./shotListController.js");
 let timesheetController: typeof import("./timesheetController.js");
 let calendarController: typeof import("./calendarController.js");
+let dreController: typeof import("./dreController.js");
 let planAccess: typeof import("../middleware/planAccess.js");
 let sqliteDb: typeof import("../models/db.js").db;
 let user: { id: number; email: string; role: "user" };
@@ -82,6 +83,7 @@ describe("CRM, files and finance controller flow", () => {
     shotListController = await import("./shotListController.js");
     timesheetController = await import("./timesheetController.js");
     calendarController = await import("./calendarController.js");
+    dreController = await import("./dreController.js");
     planAccess = await import("../middleware/planAccess.js");
     sqliteDb = dbModule.db;
     user = await authService.registerUser(`Domain Flow`, `domain-${Date.now()}@example.com`, "password-123");
@@ -524,6 +526,70 @@ describe("CRM, files and finance controller flow", () => {
 
     await expect(
       invoke(calendarController.exportProjectSchedule, { user, params: { projectId: String(project.body.data.id) } }),
+    ).rejects.toMatchObject({ status: 404 });
+  });
+
+  it("covers DRE by project with plan gating, revenue linking and cross-tenant isolation", async () => {
+    const project = await invoke(projectsController.createProject, {
+      user,
+      body: { name: "Projeto DRE", metadataJson: "{}" },
+    });
+    const projectId = String(project.body.data.id);
+
+    // `user` is on studio plan already (upgraded by the budget test above),
+    // but exercise the real gate anyway (projectDre is Studio-only, same as budgetTracking).
+    const dreGate = planAccess.requireStudioPlan("projectDre");
+    await invoke(dreGate, { user, params: { projectId } }); // studio already active — should not throw
+
+    // Downgrade temporarily to confirm the gate actually blocks non-Studio plans.
+    await authService.updateUserPlan(user.id, "pro");
+    await expect(
+      invoke(dreGate, { user, params: { projectId } }),
+    ).rejects.toMatchObject({ status: 402 });
+    await authService.updateUserPlan(user.id, "studio");
+
+    // No revenue/budget linked yet -> report shows zeros with hasRevenueData/hasBudgetData false.
+    const emptyReport = await invoke(dreController.getReport, { user, params: { projectId } });
+    expect(emptyReport.body.data.grossRevenue).toBe(0);
+    expect(emptyReport.body.data.hasRevenueData).toBe(false);
+
+    // Configure a 10% percent deduction + a fixed allocated expense.
+    const settings = await invoke(dreController.updateSettings, {
+      user,
+      params: { projectId },
+      body: {
+        deductions: [{ name: "Impostos", type: "percent", value: 1000 }], // 10%
+        allocatedExpense: { mode: "fixed", value: 5000 },
+      },
+    });
+    expect(settings.body.success).toBe(true);
+
+    // Link settled income to the project via the extended FinancialEntry endpoint.
+    await invoke(analyticsController.createFinancialEntry, {
+      user,
+      body: { projectId: project.body.data.id, kind: "income", description: "Receita do projeto", amount: 100000, status: "settled" },
+    });
+
+    const report = await invoke(dreController.getReport, { user, params: { projectId } });
+    expect(report.body.data.hasRevenueData).toBe(true);
+    expect(report.body.data.grossRevenue).toBe(100000);
+    expect(report.body.data.totalDeductions).toBe(10000); // 10% of 100000
+    expect(report.body.data.netRevenue).toBe(90000);
+    expect(report.body.data.allocatedExpense).toBe(5000);
+    expect(report.body.data.netResult).toBe(90000 - report.body.data.directCosts - 5000);
+
+    // Cross-tenant: another user cannot read/configure this project's DRE.
+    const otherUser = await authService.registerUser(
+      "Outro Tenant DRE",
+      `other-dre-${Date.now()}@example.com`,
+      "password-123",
+    );
+    await authService.updateUserPlan(otherUser.id, "studio");
+    await expect(
+      invoke(dreController.getReport, { user: otherUser, params: { projectId } }),
+    ).rejects.toMatchObject({ status: 404 });
+    await expect(
+      invoke(dreController.updateSettings, { user: otherUser, params: { projectId }, body: { deductions: [], allocatedExpense: null } }),
     ).rejects.toMatchObject({ status: 404 });
   });
 });

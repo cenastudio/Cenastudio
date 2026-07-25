@@ -52,6 +52,7 @@ const FEATURE_REQUIREMENTS: Partial<Record<FeatureName, PlanMode>> = {
   // Landing features implementation (spec: landing-features-implementation)
   // Mirrors shared/planEntitlements.ts — must stay in sync with the backend gate.
   "budget-tracking": "studio",
+  "project-dre": "studio",
   "equipment-inventory": "studio",
   "shot-list": "pro",
   "timesheet": "pro",

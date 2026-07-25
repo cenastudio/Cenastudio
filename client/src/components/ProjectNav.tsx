@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
-import { BookOpen, ChevronLeft, Wallet, Clapperboard } from "lucide-react";
+import { BookOpen, ChevronLeft, Wallet, Clapperboard, FileBarChart } from "lucide-react";
 import { getStageForLocation, WORKFLOW_STAGES } from "@/lib/workflow";
 import { usePlanContext } from "@/contexts/PlanContext";
 import { canAccessFeature } from "@/lib/feature-gating";
@@ -18,6 +18,8 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
   const activeStage = getStageForLocation(location);
   const canAccessBudget = canAccessFeature("budget-tracking", planMode).hasAccess;
   const isBudgetActive = location === `/project/${projectId}/budget`;
+  const canAccessDre = canAccessFeature("project-dre", planMode).hasAccess;
+  const isDreActive = location === `/project/${projectId}/dre`;
   const canAccessShotList = canAccessFeature("shot-list", planMode).hasAccess;
   const isShotListActive = location === `/project/${projectId}/shotlist`;
 
@@ -85,6 +87,22 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
             >
               <Wallet className="h-3.5 w-3.5" />
               Orçamento
+            </button>
+          )}
+          {canAccessDre && (
+            <button
+              type="button"
+              onClick={() => setLocation(`/project/${projectId}/dre`)}
+              className={`flex min-h-11 shrink-0 items-center gap-1.5 px-3 py-1.5 font-frame-mono text-xs tracking-wider transition-all duration-200
+                relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:transition-all
+                ${isDreActive
+                  ? "text-frame-orange after:bg-frame-orange"
+                  : "text-frame-gray-light hover:text-frame-white after:bg-transparent"
+                }`}
+              aria-current={isDreActive ? "page" : undefined}
+            >
+              <FileBarChart className="h-3.5 w-3.5" />
+              DRE
             </button>
           )}
           {canAccessShotList && (

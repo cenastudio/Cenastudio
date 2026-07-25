@@ -31,6 +31,7 @@ interface FinancialEntry {
   client_id: number | null;
   client_name?: string | null;
   client_company?: string | null;
+  project_id?: number | null;
   kind: "income" | "expense";
   description: string;
   category: string;
@@ -82,6 +83,7 @@ interface EntryForm {
   dueDate: string;
   recurrence: "once" | "monthly";
   clientId: string;
+  projectId: string;
   isFixed: boolean;
 }
 
@@ -94,6 +96,7 @@ const initialEntry: EntryForm = {
   dueDate: "",
   recurrence: "once",
   clientId: "",
+  projectId: "",
   isFixed: false,
 };
 
@@ -132,6 +135,7 @@ function AnalyticsContent() {
   const [overall, setOverall] = useState<OverallAnalytics | null>(null);
   const [finance, setFinance] = useState<FinanceOverview | null>(null);
   const [clients, setClients] = useState<ClientOption[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [entry, setEntry] = useState<EntryForm>(initialEntry);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -169,6 +173,15 @@ function AnalyticsContent() {
   }, []);
 
   useEffect(() => { loadAnalytics(); }, [loadAnalytics]);
+
+  useEffect(() => {
+    api.projects.list().then(setProjects).catch(() => setProjects([]));
+  }, []);
+
+  const projectOptionsForEntry = useMemo(() => {
+    if (!entry.clientId) return projects;
+    return projects.filter((p) => String(p.clientId ?? "") === entry.clientId);
+  }, [projects, entry.clientId]);
 
   useEffect(() => {
     if (!projectIdParam) return;
@@ -239,6 +252,7 @@ function AnalyticsContent() {
       dueDate: item.due_date?.slice(0, 10) || "",
       recurrence: item.recurrence,
       clientId: item.client_id ? String(item.client_id) : "",
+      projectId: item.project_id ? String(item.project_id) : "",
       isFixed: Boolean(item.is_fixed),
     });
     setEditingEntry(item);
@@ -256,6 +270,7 @@ function AnalyticsContent() {
       const payload = {
         ...entry, amount: Number(entry.amount),
         clientId: entry.clientId ? Number(entry.clientId) : null,
+        projectId: entry.projectId ? Number(entry.projectId) : null,
         paidAt: entry.status === "settled" ? new Date().toISOString().slice(0, 10) : null,
       };
 
@@ -814,9 +829,20 @@ function AnalyticsContent() {
                   </label>
                   <label className="block">
                     <span className="font-frame-mono text-[0.55rem] uppercase tracking-wider text-frame-gray-light mb-1.5 block">{t("app.finance.linkedClient")}</span>
-                    <select className="frame-input w-full" value={entry.clientId} onChange={(e) => setEntry((c) => ({ ...c, clientId: e.target.value }))}>
+                    <select
+                      className="frame-input w-full"
+                      value={entry.clientId}
+                      onChange={(e) => setEntry((c) => ({ ...c, clientId: e.target.value, projectId: "" }))}
+                    >
                       <option value="">{t("app.finance.noLink")}</option>
                       {clients.map((c) => <option key={c.id} value={c.id}>{c.name}{c.company ? ` · ${c.company}` : ""}</option>)}
+                    </select>
+                  </label>
+                  <label className="block col-span-2">
+                    <span className="font-frame-mono text-[0.55rem] uppercase tracking-wider text-frame-gray-light mb-1.5 block">Vincular a projeto</span>
+                    <select className="frame-input w-full" value={entry.projectId} onChange={(e) => setEntry((c) => ({ ...c, projectId: e.target.value }))}>
+                      <option value="">Nenhum</option>
+                      {projectOptionsForEntry.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
                   </label>
                 </div>

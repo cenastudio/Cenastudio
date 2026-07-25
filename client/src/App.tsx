@@ -41,6 +41,7 @@ const ProductionShell = lazy(() => import("@/pages/ProductionShell"));
 const CommercialHub = lazy(() => import("@/pages/CommercialHub"));
 const Documents = lazy(() => import("@/pages/Documents"));
 const Budget = lazy(() => import("@/pages/Budget"));
+const Dre = lazy(() => import("@/pages/Dre"));
 const Equipment = lazy(() => import("@/pages/Equipment"));
 const ShotList = lazy(() => import("@/pages/ShotList"));
 const Timesheet = lazy(() => import("@/pages/Timesheet"));
@@ -140,6 +141,7 @@ function Router() {
         <Route path="/project/:projectId/studio/:id" component={Studio} />
         <Route path="/project/:projectId/documents" component={Documents} />
         <Route path="/project/:projectId/budget" component={Budget} />
+        <Route path="/project/:projectId/dre" component={Dre} />
         <Route path="/equipment">{() => <Equipment />}</Route>
         <Route path="/project/:projectId/shotlist" component={ShotList} />
         <Route path="/timesheet">{() => <Timesheet />}</Route>

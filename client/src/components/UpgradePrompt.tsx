@@ -139,6 +139,11 @@ const FEATURE_INFO: Record<FeatureName, { name: string; benefit: string; icon: R
     benefit: "Track budgeted vs actual spend per category, with automatic overspend alerts",
     icon: <Zap className="h-5 w-5" />,
   },
+  "project-dre": {
+    name: "Project P&L (DRE)",
+    benefit: "See the real financial result of each project: revenue, direct costs and profit",
+    icon: <Zap className="h-5 w-5" />,
+  },
   "equipment-inventory": {
     name: "Equipment Inventory",
     benefit: "Register your gear and book it per project with automatic conflict blocking",

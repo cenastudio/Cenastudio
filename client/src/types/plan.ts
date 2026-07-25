@@ -368,6 +368,7 @@ export type FeatureName =
   | "custom-branding"
   | "priority-support"
   | "budget-tracking"
+  | "project-dre"
   | "equipment-inventory"
   | "shot-list"
   | "timesheet"

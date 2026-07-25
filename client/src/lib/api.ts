@@ -627,6 +627,14 @@ export const api = {
       }),
     deleteEntry: (id: number) => request<null>(`/budgets/entries/${id}`, { method: "DELETE" }),
   },
+  dre: {
+    getReport: (projectId: number) => request<DreReport>(`/dre/${projectId}`),
+    updateSettings: (projectId: number, data: DreSettingsInput) =>
+      request<{ id: number; deductions: unknown; allocated_expense_mode: string | null; allocated_expense_value: number | null }>(
+        `/dre/${projectId}/settings`,
+        { method: "PUT", body: JSON.stringify(data) },
+      ),
+  },
   equipment: {
     list: () => request<EquipmentItem[]>("/equipment"),
     create: (data: {
@@ -1305,6 +1313,34 @@ export interface BudgetEntryItem {
   entry_date: string;
   receipt_url: string | null;
   created_at: string;
+}
+
+export interface DreDeduction {
+  name: string;
+  type: "percent" | "fixed";
+  value: number; // fixed: centavos; percent: pontos-base (10000 = 100%)
+  amount: number; // calculado pelo backend, somente leitura
+}
+
+export interface DreReport {
+  projectId: number;
+  currency: string;
+  grossRevenue: number;
+  deductions: DreDeduction[];
+  totalDeductions: number;
+  netRevenue: number;
+  directCosts: number;
+  grossResult: number;
+  allocatedExpense: number;
+  netResult: number;
+  hasRevenueData: boolean;
+  hasBudgetData: boolean;
+  currencyMismatch: boolean;
+}
+
+export interface DreSettingsInput {
+  deductions: Array<{ name: string; type: "percent" | "fixed"; value: number }>;
+  allocatedExpense: { mode: "fixed" | "percent"; value: number } | null;
 }
 
 export interface EquipmentItem {

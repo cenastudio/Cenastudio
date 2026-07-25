@@ -156,6 +156,7 @@ export async function assertClientCapacity(userId: number, role?: "user" | "admi
 
 const FEATURE_REQUIREMENTS: Record<FeatureFlagId, { label: string; planLabel: string }> = {
   budgetTracking: { label: "Orçamento", planLabel: "Studio" },
+  projectDre: { label: "DRE por Projeto", planLabel: "Studio" },
   equipmentInventory: { label: "Equipamento", planLabel: "Studio" },
   shotList: { label: "Shot List", planLabel: "Pro" },
   timesheet: { label: "Timesheet", planLabel: "Pro" },
