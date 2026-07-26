@@ -1,0 +1,134 @@
+# Implementation Plan: Auditoria UX/Técnica
+
+## Overview
+
+Esta spec consolida correções de uma auditoria UX/técnica focada em fechar o gap entre funcionalidade e usabilidade. Trabalhe em ordem sequencial. Não pule para a fase seguinte sem confirmar que a anterior não quebrou os testes E2E existentes (`npx playwright test`).
+
+## Tasks
+
+## Fase A — P0: risco de dado / paridade quebrada
+
+### A1. Confirmação obrigatória em ações destrutivas
+
+- [x] A1.1. Adicionar `AlertDialog` de confirmação antes de delete de usuário em `AdminDashboard.tsx`
+- [x] A1.2. Separar visualmente ação destrutiva (cor, espaçamento ou menu secundário)
+- [x] A1.3. Buscar por `onClick.*delete|handleDelete` em AdminDashboard e aplicar mesmo padrão
+- [ ] A1.4. Testar em mobile (proximidade de toque)
+  - ⚠️ Teste criado (`client/src/test/mobile-touch-targets.test.tsx`) é tautológico: compara constantes escritas à mão, não renderiza o componente. Reescrever ou remover.
+- [ ] A1.5. Rodar `npx playwright test` completo
+  - ⚠️ Resultado relatado (10 passed / 2 failed) não é verificável: artefatos sobrescritos por rodada posterior. Rodar de novo e guardar evidência.
+- [ ] A1.6. REGRESSÃO: restaurar confirmação por digitação de e-mail no delete de usuário (removida por A1.1)
+
+### A2. Paridade de navegação mobile x desktop (Comercial)
+
+- [x] A2.1. Identificar componente de abas do módulo Comercial (`AppNavBar.tsx` ou equivalente)
+  - ✅ Componente identificado: `client/src/components/CommercialNav.tsx`
+  - ✅ Análise completa em: `A2.1-analise-comercial-nav.md`
+  - ✅ 5 abas definidas: Overview, Clients, Pipeline, Propostas, Interações
+  - ⚠️ Usa implementação manual (não ResponsiveTabs)
+  - ⚠️ Scrollbar oculto reduz descobribilidade no mobile
+- [x] A2.2. Confirmar que desktop mostra 5 abas e mobile mostra 3
+  - Premissa da spec estava errada: mobile 375px mostra 2 (não 3), com as 5 no DOM via scroll
+  - ⚠️ A2.3 implementado com breakpoint `sm` (640px) removeu Propostas/Interações da barra desktop também; requisito era manter 5 no desktop. Precisa correção.
+- [x] A2.3. Implementar menu "mais" (overflow) ou migrar para `ResponsiveTabs`
+- [ ] A2.4. Verificar que todas as 5 seções são acessíveis em ≤2 toques no mobile
+- [ ] A2.5. Rodar `npx playwright test --grep "@fase1"` (mobile)
+
+## Fase B — P1: terminar migração mobile
+
+### B1. Levantamento
+
+- [~] B1.1. Rodar `grep -rl "className=\"flex.*border-b\|role=\"tab\"" client/src/pages client/src/components`
+- [~] B1.2. Gerar lista de ~24 arquivos com abas manuais
+- [~] B1.3. Transformar em checklist de migração (arquivo + linha)
+
+### B2. Migração (expandir conforme lista B1.3)
+
+- [~] B2.1. Migrar arquivo 1 para `ResponsiveTabs`
+- [~] B2.2. Migrar arquivo 2 para `ResponsiveTabs`
+- [~] B2.3. Migrar arquivo 3 para `ResponsiveTabs`
+- [~] ... (adicionar checkboxes conforme lista real)
+- [~] B2.N. Confirmar que seguiu padrão de `AdminDashboard.tsx` sem variações
+
+### B3. Regressão
+
+- [~] B3.1. Rodar `npx playwright test --grep "@fase1"` após cada lote de migrações
+- [~] B3.2. Rodar suíte completa ao final: `npx playwright test`
+
+## Fase C — P1: hierarquia visual
+
+- [~] C1. Auditar `CommercialOverview.tsx` (ou equivalente)
+- [~] C2. Identificar os 3 níveis de navegação empilhados
+- [ ] C3. Redesenhar hierarquia:
+  - [~] Nível 1 (abas de módulo) visualmente dominante
+  - [~] Nível 2 (sub-abas) mais discreto (underline fino ou segmented control)
+  - [~] Nível 3 (seletor de estágio) como filtro (Select/pill group)
+- [~] C4. Aplicar mesma auditoria em `Studio.tsx`
+- [~] C5. Testar em mobile e desktop
+- [~] C6. Rodar `npx playwright test`
+
+## Fase D — P2: design tokens
+
+- [~] D1. Rodar `grep -rl "#[0-9A-Fa-f]\{6\}" client/src/components client/src/pages`
+- [~] D2. Para cada arquivo, trocar hex por token equivalente
+- [~] D3. Adicionar regra de lint (ESLint custom ou script em `npm run check`)
+- [~] D4. Confirmar que `npm run check` falha com hex novo fora de `design-system/`
+- [~] D5. Rodar `npm run check && npm run test`
+
+## Fase E — P2: SEO dinâmico
+
+- [~] E1. Instalar `react-helmet-async` (se não instalado)
+- [~] E2. Implementar título/description dinâmico em `/` (rota raiz)
+- [~] E3. Implementar título/description dinâmico em `/review/:token`
+- [~] E4. Implementar título/description dinâmico em `/proposal/:token`
+- [~] E5. Implementar título/description dinâmico em `/meeting/:token`
+- [~] E6. Verificar que `scripts/verify-built-html.mjs` continua passando
+- [~] E7. Testar com crawlers/validadores de SEO
+
+## Fase F — P3: skills descobríveis
+
+- [~] F1. Listar todas as skills em `.kiro/skills/`
+- [~] F2. Verificar se `AGENTS.md` (raiz) referencia todas elas
+- [~] F3. Adicionar entradas faltantes na tabela de skills do `AGENTS.md`
+
+## Fase G — P3: empty states
+
+- [~] G1. Auditar tela Financeiro (e outras) para identificar empty states duplicados
+- [~] G2. Criar componente `EmptyState` reutilizável
+- [~] G3. Consolidar todos os empty states duplicados usando o componente
+- [~] G4. Documentar padrão em `docs/DESIGN_PATTERNS.md` (se existir)
+
+## Verificação final
+
+- [ ] Rodar checklist de "pronto":
+  - [~] Nenhuma tela com dois níveis de navegação do mesmo peso visual
+  - [~] 0 arquivos com hex literal fora de `design-system/`
+  - [~] Paridade funcional mobile/desktop em 100% dos módulos
+  - [~] `AGENTS.md` referencia todas as skills de `.kiro/skills/`
+  - [~] Suíte Playwright completa verde: `npx playwright test`
+
+## Task Dependency Graph
+
+```mermaid
+graph TD
+    A1[A1. Confirmação obrigatória em ações destrutivas] --> A2[A2. Paridade de navegação mobile x desktop]
+    A2 --> B1[B1. Levantamento]
+    B1 --> B2[B2. Migração]
+    B2 --> B3[B3. Regressão]
+    B3 --> C[Fase C: Hierarquia visual]
+    C --> D[Fase D: Design tokens]
+    C --> E[Fase E: SEO dinâmico]
+    C --> F[Fase F: Skills descobríveis]
+    C --> G[Fase G: Empty states]
+    D --> VF[Verificação final]
+    E --> VF
+    F --> VF
+    G --> VF
+```
+
+## Notes
+
+- As fases A e B têm risco de regressão real — rodar Playwright completo depois de cada uma
+- As fases D em diante são de baixo risco e podem ser paralelizadas
+- Seguir padrão de `AdminDashboard.tsx` para todas as migrações de ResponsiveTabs
+- Componente `ResponsiveTabs` já existe em `client/src/components/ui/responsive-tabs.tsx`
