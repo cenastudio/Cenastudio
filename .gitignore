@@ -93,7 +93,9 @@ PRE_*.md
 PRONTO_*.md
 PROXIMO_*.md
 RAILWAY_*.md
-RELATORIO_*.md
+# Ancorado na raiz: o objetivo é barrar scratch de sessão solto no topo do
+# repo, não engolir documentação arquivada em .kiro/archive/ ou docs/.
+/RELATORIO_*.md
 RESPOSTA_*.md
 RESULTADO_*.md
 RESULTADO_*.txt
