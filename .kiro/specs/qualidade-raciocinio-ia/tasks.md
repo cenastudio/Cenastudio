@@ -6,10 +6,19 @@
 
 ### A1. Orçamento — separar metodologia de dado perecível
 
-- [ ] A1.1. Localizar valores hardcoded em R$ em `shared/tools.ts` (ferramenta 04)
-- [ ] A1.2. Trocar por instrução de metodologia + disclaimer
-- [ ] A1.3. Manter estrutura de categorias (equipe, equipamento, pós)
-- [ ] A1.4. Adicionar nota sobre validar com 2-3 orçamentos reais
+- [x] A1.1. Localizar valores hardcoded em R$ em `shared/tools.ts` (ferramenta 04)
+  - 2 blocos: 12 diárias de equipe (linhas 283-294) e 7 de equipamento (297-303),
+    sob o título "VALORES DE REFERÊNCIA DE MERCADO BRASILEIRO (2024)"
+- [x] A1.2. Trocar por instrução de metodologia + disclaimer
+  - Substituído por "COMO CHEGAR AOS VALORES": ancoragem por senioridade,
+    equipamento por classe, 5 fatores de ajuste, faixa em vez de número único.
+    Removida também a alegação "conhece os valores praticados em 2024/2025" da
+    IDENTIDADE OPERACIONAL. Menções a R$ caíram de 30 para 11
+- [x] A1.3. Manter estrutura de categorias (equipe, equipamento, pós)
+  - Preservada; pós agora exige declarar o critério (por entrega ou por diária)
+- [x] A1.4. Adicionar nota sobre validar com 2-3 orçamentos reais
+  - Disclaimer obrigatório na abertura da resposta. Acrescentado: se o usuário
+    informar valores próprios, usar os dele como âncora e descartar a derivação
 
 ### A2. Adicionar exemplos input→output
 
