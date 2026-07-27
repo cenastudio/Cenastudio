@@ -70,7 +70,9 @@ scripts/oneoff/*.ts
 # ARCHITECTURE.md, DEPLOY.md, SECURITY.md, CHANGELOG.md, etc. (raiz,
 # sempre versionados) ou docs/ (se aplicável).
 VERCEL_ENV_VARS_TO_ADD.md
-SESSAO_*.md
+# Ancorado na raiz (mesmo motivo de /RELATORIO_*.md): barrar scratch de sessão
+# solto no topo do repo, sem engolir documentação arquivada em .kiro/archive/.
+/SESSAO_*.md
 STATUS_*.md
 LIMPEZA_*.md
 RESOLVER_*.md

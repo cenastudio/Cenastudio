@@ -85,16 +85,17 @@ verificar, está dito explicitamente.
 
 - Ao fechar o primeiro cliente pagante → revisar modelo de IA das
   ferramentas de Orçamento e Contrato (alta criticidade) antes das demais.
-- Ao próximo commit que tocar `.gitignore` → o `.gitignore` ainda tem 2 regras
-  de ancoragem a revisar: `RELATORIO_*` e `SESSAO_*`. O `RELATORIO_*` já foi
-  ancorado (`/RELATORIO_*.md`, linha 98) no commit `065bc36`; falta ancorar
-  `SESSAO_*.md` (linha 73), que hoje torna
-  `.kiro/specs/features-criticas-gap-analysis/SESSAO_2026_07_10.md` invisível ao
-  git. Backup de segurança em `/tmp/backup-sessao.md` (volátil — reboot apaga).
-  Contexto: todo esse bloco do `.gitignore` foi escrito para barrar scratch de
-  sessão na **raiz** do repo, mas os padrões não têm âncora `/`, então casam em
-  qualquer profundidade. Os ~30 padrões restantes do bloco têm o mesmo defeito
-  latente, sem arquivo afetado hoje.
+- ~~`.gitignore`: ancorar `RELATORIO_*` e `SESSAO_*`~~ — **resolvido.**
+  `/RELATORIO_*.md` no commit `065bc36`; `/SESSAO_*.md` no lote de arquivamento
+  de features-criticas. Ambos verificados nos dois sentidos (arquivo arquivado
+  deixou de ser ignorado; raiz continua barrada). O
+  `SESSAO_2026_07_10.md` passou a ser rastreado pelo git.
+- Os ~30 padrões restantes do bloco "Docs de trabalho / scratch de sessão" do
+  `.gitignore` seguem **sem âncora** `/`, então casam em qualquer profundidade.
+  Nenhum arquivo afetado hoje. Gatilho: ao criar qualquer `.md` cujo nome case
+  com `CHECKLIST_*`, `ANALISE_*`, `DIAGNOSTICO_*`, `STATUS_*`, `RESUMO_*` e afins
+  fora da raiz → conferir se não está sendo engolido antes de assumir que foi
+  versionado.
 
 ## 4. Próximas tarefas
 
