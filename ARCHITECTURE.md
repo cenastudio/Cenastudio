@@ -349,7 +349,13 @@ pool se o número de usuários simultâneos crescer significativamente.
 
 ### ADR-008: JWT vs Sessions vs Supabase Auth
 
-**Status:** Aceito
+**Status:** Superseded by ADR-011
+
+> A escolha de autenticação (JWT em cookie httpOnly) segue valendo. O que foi
+> superado é a seção **Mitigação** abaixo — Redis blacklist, access token de
+> 15min e refresh token nunca foram implementados. Ver ADR-011 para a estratégia
+> de revogação em vigor.
+
 **Data:** 2024
 **Contexto:** Escolher método de autenticação.
 
@@ -455,6 +461,46 @@ provedor, deploy automático em push para `main`)
     portável para qualquer PaaS ou container)
 
 **Revisão:** Sem migração adicional planejada.
+
+---
+
+### ADR-011: Invalidação de JWT via deny-list em `user_sessions`
+
+**Status:** Aceito
+**Data:** 2026-07 (decisão tomada no código; registrada retroativamente em 2026-07-26)
+**Contexto:** JWT é stateless e não pode ser revogado sem estado externo. O
+ADR-008 previa como mitigação um blacklist em Redis com access tokens de 15min —
+não foi o caminho seguido. Este ADR substitui aquela mitigação.
+
+**Decisão:** Deny-list em tabela Postgres `user_sessions`.
+
+**Rationale:**
+- Postgres já existe no stack; Redis adicionaria ~$10/mês sem outro uso
+- `tokenHash` (SHA256 do JWT) evita guardar o token original no banco
+- Revogação por `revokedAt` (soft revoke) em vez de delete: a linha precisa
+  sobreviver para que o token continue reconhecido como morto
+- `authenticate` chama `isTokenRevoked()` e rejeita apenas quando existe linha
+  **com** `revokedAt` preenchido
+
+**Consequências:**
+- Positivas:
+  - Revogação remota funciona (encerrar sessão → 401 no próximo request)
+  - Custo zero de infraestrutura adicional
+  - Índices em `userId` e `tokenHash` mantêm a consulta por request barata
+- Negativas:
+  - Token sem linha correspondente é **aceito**. Isso é deliberado: o
+    `trackSession()` é fire-and-forget, e tratar "sem linha" como revogado
+    quebraria o primeiro request logo após o login
+  - Difere da proposta original (allow-list), que rejeitaria token desconhecido
+  - Uma consulta ao banco por request autenticado
+
+**Risco aceito:** se a tabela `user_sessions` for perdida/truncada, todos os
+tokens ativos voltam a valer até expirar (até 7 dias) sem nenhuma forma de
+revogação nesse intervalo. Revisar esta decisão se o produto passar a lidar com
+dado sensível de cliente em maior volume, ou após o primeiro incidente de
+segurança real.
+
+**Revisão:** condicionada aos dois gatilhos acima.
 
 ---
 

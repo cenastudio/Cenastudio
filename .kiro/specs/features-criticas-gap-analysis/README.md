@@ -1,5 +1,12 @@
 # Spec: Features Críticas - Gap Analysis Competitivo
 
+> **Nota de precisão (2026-07-26):** este README descreve o plano original. Ele
+> **não** é fonte de status — o estado real verificado contra o código está em
+> [`docs/STATUS.md`](../../../docs/STATUS.md). Divergências conhecidas: o
+> `tasks.md` desta pasta tem 25 tasks marcadas como concluídas, mas Project
+> Templates, Asset Library e Script Breakdown não existem no código (sem rota,
+> sem model, sem teste). Ver a nota de confiabilidade na Seção 1 do `STATUS.md`.
+
 ## 📋 Visão Geral
 
 Esta spec implementa **8 features estratégicas** para fechar o gap competitivo do Cena Studio com líderes de mercado (StudioBinder, Frame.io, Monday.com). O objetivo é aumentar de **53% para ~80% de feature parity** mantendo zero custo adicional de infraestrutura.
@@ -10,7 +17,7 @@ Esta spec implementa **8 features estratégicas** para fechar o gap competitivo 
 
 ---
 
-## 🎯 8 Features Implementadas
+## 🎯 8 Features Planejadas
 
 ### Fase 1 (Semana 1) — 6-7 dias
 1. **Project Templates** — Duplicar projetos pré-configurados (Reel 30s, Comercial, etc)
@@ -121,7 +128,8 @@ Ao final de cada fase:
 - **Análise Competitiva:** Conversas anteriores (Task 2 do summary)
 - **Stack Atual:** [`ARCHITECTURE.md`](../../../ARCHITECTURE.md)
 - **Fase Anterior:** [`fase-3-white-label`](../fase-3-white-label/) (white-label básico)
-- **Plano Macro:** [`PLANO-IDEAL-PROXIMOS-PASSOS.md`](../../../PLANO-IDEAL-PROXIMOS-PASSOS.md)
+- **Plano Macro:** `PLANO-IDEAL-PROXIMOS-PASSOS.md` — arquivo não existe mais no
+  repo; a fila de trabalho vive em [`docs/STATUS.md`](../../../docs/STATUS.md)
 
 ---
 
