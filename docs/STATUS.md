@@ -115,10 +115,23 @@ Tarefas soltas identificadas na verificação, sem spec própria ainda:
   há reprocessamento, campo de agendamento (`nextRetryAt`) nem scheduler. Exige
   migration (campo no `WebhookDelivery`), função no service e um scheduler — o
   mesmo scheduler serviria para a poda de `user_sessions` acima.
-- Fechar a checagem de claim `type` na autenticação (ADR-012, risco aceito).
-  Duas linhas: rejeitar `type === "client-portal"` no `authenticate` do app, e
-  emitir o token do app com `type: "app"`. Hoje a separação entre os dois domínios
-  de auth depende de um efeito colateral, não de uma asserção.
+- ~~Fechar a checagem de claim `type` na autenticação (ADR-012, risco aceito)~~ —
+  **feito.** `signToken` emite `type: "app"`; `authenticate` rejeita qualquer
+  `type` presente e diferente de `"app"`. Token sem a claim continua aceito, para
+  não invalidar sessões emitidas antes da mudança. Verificado: token de portal
+  rejeitado, token do app aceito, token legado aceito.
+- Completar `scripts/validate-env.ts`. O script checa **23** variáveis, mas o
+  código referencia **79** (`.env.example` declara 89 contando aliases e as
+  comentadas). Passar no `npm run validate:env` hoje não significa que o ambiente
+  está completo — entre as não checadas estão `SUPABASE_SERVICE_ROLE_KEY`,
+  `MAX_UPLOAD_SIZE_MB`, `LGPD_DELETE_GRACE_DAYS` e os `STRIPE_PRICE_*_ANNUAL`.
+- Conferir a documentação de entrada contra o código (Etapas 4.1–4.3 da spec
+  `00-fundacao-limpeza-e-documentacao/`, ainda abertas): `README.md` e
+  `COMO-O-SISTEMA-FUNCIONA.md` (features listadas batem com o que existe?) e
+  `API_GUIDE.md` (endpoints conferem com `server/router.ts`?). Dado o que a
+  verificação dos 20 relatórios revelou, é provável que os três listem features
+  que não existem — Project Templates, Asset Library e Script Breakdown são os
+  suspeitos imediatos.
 
 ## 5. Achados extraídos de documentos arquivados
 
