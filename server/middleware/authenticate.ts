@@ -39,7 +39,7 @@ function getJwtSecret(): string {
 
 export function signToken(user: AuthUser): string {
   return jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
+    { id: user.id, email: user.email, role: user.role, type: "app" as const },
     getJwtSecret(),
     { expiresIn: "7d" },
   );
@@ -61,7 +61,16 @@ export const authenticate: RequestHandler = async (req, res, next) => {
     return next(new AppError("Unauthorized", 401));
   }
   try {
-    const payload = jwt.verify(token, getJwtSecret()) as AuthUser;
+    const payload = jwt.verify(token, getJwtSecret()) as AuthUser & { type?: string };
+
+    // O token do Portal do Cliente é assinado com o mesmo segredo (ADR-012),
+    // então `jwt.verify` sozinho não distingue os dois domínios. Rejeitar
+    // explicitamente em vez de depender do efeito colateral da checagem de
+    // e-mail mais abaixo. Ausência de `type` é aceita: tokens emitidos antes
+    // desta mudança não têm a claim e continuam válidos até expirar.
+    if (payload.type && payload.type !== "app") {
+      return next(new AppError("Invalid or expired session", 401));
+    }
 
     if (await isTokenRevoked(token)) {
       return next(new AppError("Invalid or expired session", 401));
