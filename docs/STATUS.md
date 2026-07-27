@@ -85,6 +85,17 @@ verificar, está dito explicitamente.
 
 - Ao fechar o primeiro cliente pagante → revisar modelo de IA das
   ferramentas de Orçamento e Contrato (alta criticidade) antes das demais.
+- **Rotação de credenciais — ADIADA por decisão do operador (2026-07-26).**
+  Inventário completo em `docs/CREDENCIAIS_PARA_ROTACIONAR.md` (não versionado) e
+  em `.private/CREDENCIAIS_ROTACIONAR.md` (procedência + valores). Nada foi
+  revogado. Bloqueia o push: **não empurrar com o PAT atual**, que está em texto
+  puro na URL do remote em `.git/config`. Ordem quando retomar: revogar o PAT →
+  remote sem credencial embutida → rotar Cloudinary, `DATABASE_URL` e
+  `JWT_SECRET` (vazamento já documentado) → decidir sobre `git filter-repo` →
+  push. Rotar `JWT_SECRET` derruba todas as sessões do app e do portal de uma vez.
+  Pendente também: descobrir se o histórico já foi reescrito (os commits citados
+  no doc de `.private/` não existem no histórico atual, mas
+  `CREDENCIAIS_TEMPLATE.md` em `1d0dc81` sobreviveu).
 - ~~`.gitignore`: ancorar `RELATORIO_*` e `SESSAO_*`~~ — **resolvido.**
   `/RELATORIO_*.md` no commit `065bc36`; `/SESSAO_*.md` no lote de arquivamento
   de features-criticas. Ambos verificados nos dois sentidos (arquivo arquivado
