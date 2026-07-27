@@ -504,6 +504,71 @@ segurança real.
 
 ---
 
+### ADR-012: Dois domínios de autenticação (app e Portal do Cliente)
+
+**Status:** Proposed
+**Data:** 2026-07-26
+**Contexto:** O Portal do Cliente expõe projetos a pessoas externas ao estúdio,
+que não têm conta em `users`. Era preciso autenticá-las sem criá-las como
+usuários do app nem lhes dar qualquer alcance sobre rotas internas. A spec
+`.kiro/specs/portal-do-cliente/` ainda está ativa e o código ainda não foi
+commitado — daí o status `Proposed` em vez de `Aceito`.
+
+**Decisão:** Um segundo domínio de autenticação, paralelo ao do app.
+
+- Credencial própria em `client_portal_access`: `email` + `passwordHash`
+  (bcrypt, cost 12), desacoplada da tabela `users`
+- Sessão por JWT de 7 dias em cookie httpOnly `client_portal_token`
+  (`sameSite: lax`, `secure` em produção), separado do `frame_token` do app
+- O JWT do portal é assinado com o **mesmo segredo** do app
+  (`getJwtSecret()`); o que distingue os dois é a claim `type: "client-portal"`,
+  verificada em `authenticateClientPortal`
+- Revogação sem tabela própria: o middleware rejeita o token quando
+  `access.updatedAt > payload.iat * 1000`. Trocar a senha ou desativar o acesso
+  invalida todos os tokens emitidos antes disso. O flag `active` é revalidado a
+  cada request
+
+**Rationale:**
+- Cliente externo não deve existir em `users`: evita contaminar contagem de
+  usuários, planos, entitlements e o próprio painel admin
+- Cookie com nome distinto impede que o navegador envie a credencial do portal
+  para rotas do app e vice-versa
+- Revogação por timestamp dispensa uma segunda tabela de sessões e não tem o
+  ponto cego do ADR-011
+
+**Consequências:**
+- Positivas:
+  - **Revogação mais rigorosa que a do ADR-011.** Aqui o estado é revalidado a
+    cada request (`active` + `updatedAt` vs `iat`), então desativar um acesso
+    corta as sessões existentes imediatamente. No ADR-011, token sem linha
+    correspondente é aceito. Se a estratégia do app for revista, este é o
+    desenho a seguir
+  - Superfície pequena: um middleware, um service, uma tabela
+  - Sem custo de infraestrutura adicional
+- Negativas:
+  - Dois caminhos de autenticação para manter em sincronia
+  - Segredo compartilhado acopla os dois domínios: rotacionar o segredo do app
+    invalida todas as sessões de portal ao mesmo tempo
+  - `bcrypt.hashSync` (cost 12) é síncrono e bloqueia o event loop no login e na
+    criação de acesso; aceitável no volume atual, revisar se o portal virar rota
+    de tráfego alto
+
+**Risco aceito:** token confusion se algum código futuro esquecer de checar a
+claim `type`. Hoje o `authenticate` do app **não** verifica `type` — um token de
+portal é rejeitado apenas como efeito colateral, porque o payload não tem `email`
+e a comparação com `currentUser.email` falha. Essa proteção é acidental, não uma
+asserção: qualquer refatoração que relaxe a checagem de e-mail, ou qualquer novo
+middleware que confie só em `jwt.verify()` com o segredo compartilhado, reabre o
+caminho. Mitigação de baixo custo, ainda não aplicada: exigir explicitamente
+`type !== "client-portal"` no `authenticate` do app, e passar a emitir o token do
+app com uma claim `type: "app"`.
+
+**Revisão:** ao concluir a spec `portal-do-cliente/`, promover para `Aceito` ou
+ajustar conforme o que o código de fato entregar. Revisar também se o portal
+passar a receber tráfego relevante (ver nota sobre `hashSync`).
+
+---
+
 ## 🎨 Padrões de Design
 
 ### Controller Pattern

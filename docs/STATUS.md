@@ -114,6 +114,10 @@ Tarefas soltas identificadas na verificação, sem spec própria ainda:
   há reprocessamento, campo de agendamento (`nextRetryAt`) nem scheduler. Exige
   migration (campo no `WebhookDelivery`), função no service e um scheduler — o
   mesmo scheduler serviria para a poda de `user_sessions` acima.
+- Fechar a checagem de claim `type` na autenticação (ADR-012, risco aceito).
+  Duas linhas: rejeitar `type === "client-portal"` no `authenticate` do app, e
+  emitir o token do app com `type: "app"`. Hoje a separação entre os dois domínios
+  de auth depende de um efeito colateral, não de uma asserção.
 
 ## 5. Achados extraídos de documentos arquivados
 
@@ -240,7 +244,12 @@ paralelo ao do app, sem nenhum registro em `ARCHITECTURE.md`:
   cada request
 
 É uma decisão deliberada e melhor desenhada que a do ADR-011 (revalida a cada
-request, em vez de aceitar token sem linha). Merece ADR próprio, mas o código
-está **não commitado** no working tree e a spec `portal-do-cliente/` segue
-ativa — escrever o ADR agora pode registrar algo que ainda vai mudar. Decisão
-sobre timing e conteúdo do ADR fica com o operador.
+request, em vez de aceitar token sem linha).
+
+**Resolvido:** registrado como **ADR-012** em `ARCHITECTURE.md` com status
+`Proposed` — não `Aceito`, porque a spec `portal-do-cliente/` segue ativa e o
+código ainda não foi commitado. Promover a `Aceito` ao concluir a spec.
+
+Pendência de segurança derivada, ainda não aplicada (ver Seção 4): o
+`authenticate` do app não checa a claim `type`. Um token de portal só é rejeitado
+por efeito colateral (payload sem `email`), não por asserção explícita.
