@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { ApiError } from "@/lib/api";
 import { usePortalAuth } from "../PortalAuthContext";
@@ -10,6 +10,13 @@ export default function PortalLogin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Força tema dark — portal não usa ThemeContext da produtora.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add("dark");
+    root.dataset.theme = "dark";
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { usePortalAuth } from "./PortalAuthContext";
 
@@ -12,6 +13,21 @@ const NAV_ITEMS = [
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const { client, logout } = usePortalAuth();
   const [location, setLocation] = useLocation();
+
+  // O portal não usa ThemeContext (contexto isolado da produtora),
+  // mas precisa do tema dark para os tokens frame-* funcionarem.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add("dark");
+    root.dataset.theme = "dark";
+    return () => {
+      // Ao sair do portal, respeitar o tema salvo pelo usuário da produtora.
+      const stored = localStorage.getItem("theme") ?? "dark";
+      root.classList.toggle("dark", stored === "dark");
+      root.classList.toggle("light", stored === "light");
+      root.dataset.theme = stored;
+    };
+  }, []);
 
   async function handleLogout() {
     await logout();
