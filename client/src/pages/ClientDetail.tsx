@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import ScheduleMeetingModal from "@/components/ScheduleMeetingModal";
+import ClientPortalAccessSection from "@/components/ClientPortalAccessSection";
 
 interface ClientData {
   id: number;
@@ -374,6 +375,7 @@ function ClientDetailContent() {
             { value: "financial", label: "Financeiro", count: financial.length },
             { value: "propostas", label: "Propostas", count: proposals.length },
             { value: "video-reviews", label: "Vídeo Reviews", count: videoReviews.length },
+            { value: "portal", label: "Portal" },
           ]}
         >
 
@@ -834,6 +836,14 @@ function ClientDetailContent() {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          {/* PORTAL DO CLIENTE */}
+          <TabsContent value="portal">
+            <ClientPortalAccessSection
+              clientId={clientId}
+              defaultEmail={client?.email ?? undefined}
+            />
           </TabsContent>
         </ResponsiveTabs>
 
