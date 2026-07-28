@@ -236,7 +236,7 @@
   - Rodar `npx prisma migrate dev --name add_time_entries`.
   - _Requirements: 7.1_
 
-- [~] 23. Backend: `timesheetService` com timer state
+- [ ] 23. Backend: `timesheetService` com timer state
   - Criar `server/services/timesheetService.ts`:
     - `startTimer(userId, projectId, taskId?)`: verifica se já existe timer ativo (retorna 409 se sim, OR auto-para o anterior).
     - `stopTimer(timerId, description, category)`: calcula duração, salva `TimeEntry`, remove state de timer ativo.
@@ -249,7 +249,7 @@
   - Testes cobrindo: prevent duplicate active timer, duration calc, CSV formatting, retention filter.
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.10_
 
-- [~] 24. Frontend: `TimerContext` global + `Timesheet` page
+- [ ] 24. Frontend: `TimerContext` global + `Timesheet` page
   - Criar `client/src/contexts/TimerContext.tsx`: state global do timer ativo (currentTimer, elapsed, start, pause, stop).
   - Persistir estado via polling do `/api/timesheet/active` a cada 30s (para recovery após refresh).
   - Envolver App em `<TimerProvider>`.
@@ -261,14 +261,14 @@
   - Adicionar rota `/timesheet` no App.tsx + link no AppNavBar.
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.7, 7.8, 7.9_
 
-- [~] 25. Settings: taxa horária + resumo por projeto
+- [ ] 25. Settings: taxa horária + resumo por projeto
   - Modificar `client/src/pages/Settings.tsx`: adicionar campo "Taxa horária (R$/hora)" que salva em `user.hourlyRate` via PUT `/api/users/me`.
   - Criar `client/src/components/timesheet/ProjectTimeSummary.tsx`: componente exibido em `ProjectDetails.tsx` mostrando total de horas trabalhadas no projeto + breakdown por categoria + valor calculado.
   - _Requirements: 7.6, 7.9, 7.10_
 
 #### Feature H: Google Calendar Sync
 
-- [~] 26. Setup Google OAuth2 (env vars + credentials)
+- [ ] 26. Setup Google OAuth2 (env vars + credentials)
   - Guiar user (via docs em setup-guide.md) para criar projeto no Google Cloud Console, habilitar Calendar API, criar OAuth2 credentials (client ID + secret), configurar redirect URI: `{APP_DOMAIN}/api/calendar/google/callback`.
   - Adicionar env vars ao `.env.example`:
     ```
@@ -279,13 +279,13 @@
   - Instalar dependência: `npm install googleapis`.
   - _Requirements: 8.3_
 
-- [~] 27. Prisma migration `add_calendar_events` + Google tokens em User
+- [ ] 27. Prisma migration `add_calendar_events` + Google tokens em User
   - Editar `prisma/schema.prisma`: adicionar model `CalendarEvent` + colunas `googleAccessToken`, `googleRefreshToken`, `googleTokenExpiry` em `User`.
   - Adicionar relações `calendarEvents CalendarEvent[]` em `User` e `Project`.
   - Rodar `npx prisma migrate dev --name add_calendar_events`.
   - _Requirements: 8.7_
 
-- [~] 28. Backend: `calendarService` — ICS + Google API
+- [ ] 28. Backend: `calendarService` — ICS + Google API
   - Estender `server/services/icsService.ts` (já existe): função `generateICSFromCallsheet(callsheetData)` que retorna string RFC 5545 compliant com múltiplos VEVENTs (um por marco de horário).
   - Criar `server/services/calendarService.ts`:
     - `getOAuthClient(userId)`: instancia `google.auth.OAuth2` client, injeta tokens do user, faz refresh automático se expirado.
@@ -304,7 +304,7 @@
   - Testes cobrindo: ICS generation RFC 5545, mock googleapis client (não bater API real), retry lógico.
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9_
 
-- [~] 29. Frontend: botões de export + Settings integration
+- [ ] 29. Frontend: botões de export + Settings integration
   - Modificar `client/src/pages/Studio.tsx` (tool Callsheet ID 03): após output, exibir três botões:
     - "Baixar PDF" (já existe)
     - "Baixar .ics" (chama `/api/calendar/export/:projectId`, faz download)
@@ -330,7 +330,7 @@
   - Atualizado `PLANO-IDEAL-PROXIMOS-PASSOS.md` (Fase 4 ✅ 10/jul/2026)
   - Atualizado `README.md` (seção "Features 2026" com 9 features)
 
-- [~] 32. Validação final, commit, monitoring
+- [ ] 32. Validação final, commit, monitoring
   - Rodar suite completa: `npm run ci` (typecheck + tests + build).
   - Rodar `npm run production:smoke` para validar em prod-like.
   - Grep sanity check: `rg "TODO" .kiro/specs/features-criticas-gap-analysis/` retorna vazio.

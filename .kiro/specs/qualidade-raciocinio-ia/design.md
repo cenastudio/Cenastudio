@@ -66,32 +66,43 @@ Roger Deakins em Blade Runner 2049" em vez de só "contraste alto, sombras densa
 
 **Mudança de produto, não só de prompt.**
 
-**Opção 1: Parsing de texto**
-```tsx
-<Button onClick={extractToStructured}>
-  Usar este orçamento no módulo de Orçamento
-</Button>
-```
-- Extrai totais por categoria do markdown gerado
-- Popula `BudgetEntry` via `budgetService.ts`
-- Risco: parsing de texto livre é frágil
+**Decidido em A4.1 — Opção 2 (JSON estruturado). Contrato completo em
+`ARCHITECTURE.md`, ADR-013.** O que se segue é só o resumo; em caso de
+divergência, o ADR vence.
 
-**Opção 2: JSON estruturado (recomendada)**
-- Pedir ao modelo retornar bloco JSON junto do markdown
-- Usar só o JSON para popular banco
-- Mais confiável que parsing de texto
+Por que não a Opção 1 (parsing de texto): `generateForTool` proíbe markdown no
+system prompt, `cleanGeneratedText` reescreve tabelas (`|` → ` · `), e depois da
+A1 cada rubrica é uma faixa (dois números por linha). Não existe formato estável
+para parsear.
 
-**Estrutura JSON:**
+Três pontos do ADR que mudam o que estava escrito aqui:
+
+1. **Destino é o baseline do `Budget`** (`updateBudgetBaseline` →
+   `Budget.totalAmount` + `Budget.categories`), **não `BudgetEntry`**.
+   `BudgetEntry` é gasto realizado e alimenta `directCosts` do DRE — estimativa
+   ali viraria custo fictício e alerta "Estourado" imediato.
+2. **Delimitador não é cerca de código** (` ``` ` é proibido pelas regras de
+   formatação globais), e sim linhas sentinela `<<<CENA_BUDGET_JSON` /
+   `CENA_BUDGET_JSON>>>` no fim da resposta.
+3. **Faixa → valor único** é decisão do usuário no diálogo de confirmação
+   (piso/teto, teto pré-selecionado), nunca automática.
+
+**Estrutura JSON (`cena.budget.v1`, resumo):**
 ```json
 {
+  "schema": "cena.budget.v1",
+  "currency": "BRL",
   "categories": [
-    {"name": "Equipe", "total": 15000},
-    {"name": "Equipamento", "total": 8000},
-    {"name": "Pós-produção", "total": 12000}
+    { "key": "equipe", "label": "Equipe", "min": 3300, "max": 5500 }
   ],
-  "total": 35000
+  "margin": { "min": 1690, "max": 3080 },
+  "assumptions": "..."
 }
 ```
+Valores em reais (número JSON), convertidos para centavos com
+`Math.round(v * 100)`. `total` do modelo é ignorado (recalculado como Σ
+`budgeted`). `margin` nunca entra no baseline. Bloco ausente ou inválido →
+botão inerte + caminho manual, sem fallback de parsing de prosa.
 
 ## Fase B — Reclassificar modelo por criticidade
 

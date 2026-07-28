@@ -1,6 +1,7 @@
 import { SITE_CONFIG } from "@shared/site";
 import { parseHexColor } from "@shared/color";
 import { slugify } from "@shared/slug";
+import { stripBudgetBlock } from "@shared/budgetBlock";
 
 const stripInlineMarkdown = (value: string) =>
   value
@@ -16,7 +17,9 @@ const stripInlineMarkdown = (value: string) =>
     .replace(/[ \t]+$/gm, "");
 
 export function cleanGeneratedText(raw: string) {
-  const normalized = raw
+  // O bloco `cena.budget.v1` (ADR-013) é dado de máquina: sai antes de qualquer
+  // formatação, porque tudo que é exibido, copiado ou exportado passa por aqui.
+  const normalized = stripBudgetBlock(raw)
     .replace(/\r\n?/g, "\n")
     .replace(/```[a-zA-Z0-9-]*\n?/g, "")
     .replace(/```/g, "");

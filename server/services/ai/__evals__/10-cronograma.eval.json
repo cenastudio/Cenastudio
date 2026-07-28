@@ -1,0 +1,116 @@
+{
+  "tool": "10",
+  "slug": "cronograma",
+  "cases": [
+    {
+      "id": "cronograma-prazo-confortavel",
+      "notes": "Cronograma sem buffer e sem caminho crítico é lista de desejos. A estrutura exige os dois.",
+      "input": {
+        "projeto": "Institucional de 3 minutos",
+        "briefing": "Início em 05/08, entrega final em 30/09. 3 diárias de captação, color grade e motion graphics de dados. Cliente com 2 rodadas de revisão."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "quatro-fases",
+          "description": "cobre as 4 fases da estrutura (pré, filmagem, pós, entrega)",
+          "check": { "type": "includesAll", "values": ["PRÉ-PRODUÇÃO", "FILMAGEM", "PÓS-PRODUÇÃO", "ENTREGA"] }
+        },
+        {
+          "id": "datas-reais",
+          "description": "usa datas concretas, não só nomes de etapa",
+          "check": { "type": "regex", "pattern": "\\b\\d{1,2}/\\d{1,2}(/\\d{2,4})?\\b", "minMatches": 8 }
+        },
+        {
+          "id": "buffer",
+          "description": "reserva buffer explícito para imprevistos",
+          "check": { "type": "regex", "pattern": "(buffer|conting[êe]ncia|margem|folga)", "flags": "i" }
+        },
+        {
+          "id": "caminho-critico",
+          "description": "identifica marcos de aprovação e o caminho crítico",
+          "check": { "type": "regex", "pattern": "(caminho cr[íi]tico|marco cr[íi]tico|APROVA[ÇC][ÃA]O)", "flags": "i" }
+        },
+        {
+          "id": "prazo-de-resposta-do-cliente",
+          "description": "dá prazo explícito para o cliente responder em cada aprovação",
+          "check": { "type": "regex", "pattern": "(dias [úu]teis|prazo de resposta|at[ée] \\d+ dias)", "flags": "i" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        },
+        {
+          "id": "aritmetica-de-datas",
+          "description": "as datas somam dentro da janela informada, sem fase começando antes da anterior terminar",
+          "check": { "type": "manual" }
+        }
+      ]
+    },
+    {
+      "id": "cronograma-prazo-inviavel",
+      "notes": "Prazo impossível é o teste mais importante desta ferramenta: o certo é dizer que não cabe, não fingir que cabe.",
+      "input": {
+        "projeto": "Comercial para TV",
+        "briefing": "Cliente quer 2 diárias de captação, color grade, trilha original e 3 versões, com início em 10/10 e entrega em 20/10."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "sinaliza-risco",
+          "description": "diz explicitamente que o prazo é apertado ou inviável em vez de acomodar tudo em silêncio",
+          "check": { "type": "regex", "pattern": "(invi[áa]vel|apertad|risco|n[ãa]o cabe|inaceit|cr[íi]tico|comprime)", "flags": "i" }
+        },
+        {
+          "id": "propoe-alternativa",
+          "description": "propõe alternativa (reduzir escopo, aumentar equipe ou renegociar prazo)",
+          "check": { "type": "regex", "pattern": "(alternativa|renegoci|reduzir|priorizar|paralel)", "flags": "i" }
+        },
+        {
+          "id": "quatro-fases",
+          "description": "ainda entrega as fases da estrutura",
+          "check": { "type": "includesAll", "values": ["PRÉ", "FILMAGEM", "PÓS", "ENTREGA"] }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "cronograma-documentario-longo",
+      "notes": "Produção longa com captação distribuída: o cronograma tem de tratar as janelas entre trechos, não um bloco único.",
+      "input": {
+        "projeto": "Documentário de 20 minutos",
+        "briefing": "Captação distribuída em 8 dias ao longo de 3 meses, 3 cidades, entrevistas dependentes de agenda de terceiros. Início em 02/02, entrega em 15/07."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "quatro-fases",
+          "description": "cobre as fases da estrutura",
+          "check": { "type": "includesAll", "values": ["PRÉ", "PÓS", "ENTREGA"] }
+        },
+        {
+          "id": "dependencia-de-terceiros",
+          "description": "trata a dependência de agenda de terceiros como risco de cronograma",
+          "check": { "type": "regex", "pattern": "(agenda|disponibilidade|depend[êe]ncia|terceiro)", "flags": "i" }
+        },
+        {
+          "id": "buffer",
+          "description": "reserva buffer explícito",
+          "check": { "type": "regex", "pattern": "(buffer|conting[êe]ncia|margem|folga)", "flags": "i" }
+        },
+        {
+          "id": "datas-reais",
+          "description": "usa datas concretas ao longo dos meses",
+          "check": { "type": "regex", "pattern": "\\b\\d{1,2}/\\d{1,2}(/\\d{2,4})?\\b", "minMatches": 8 }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    }
+  ]
+}

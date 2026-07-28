@@ -1,0 +1,164 @@
+{
+  "tool": "09",
+  "slug": "checklist",
+  "cases": [
+    {
+      "id": "checklist-externa-com-drone",
+      "notes": "Drone puxa autorização ANAC e bateria extra. Checklist genérico que ignora isso é o que faz a equipe descobrir o problema em campo.",
+      "input": {
+        "projeto": "Vídeo institucional de fazenda de café",
+        "briefing": "Externa de 1 diária no interior de Minas, com drone para planos aéreos do cafezal, equipe de 4, sem energia elétrica na maior parte da locação."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "departamentos-obrigatorios",
+          "description": "cobre os departamentos da estrutura (câmera, iluminação, áudio, produção, comunicação)",
+          "check": {
+            "type": "includesAll",
+            "values": ["CÂMERA", "ILUMINAÇÃO", "ÁUDIO", "PRODUÇÃO", "COMUNICAÇÃO"]
+          }
+        },
+        {
+          "id": "formato-de-checagem",
+          "description": "entrega itens verificáveis em formato de caixa de marcação (mínimo 30 itens)",
+          "check": { "type": "regex", "pattern": "\\[\\s?\\]", "minMatches": 30 }
+        },
+        {
+          "id": "autorizacao-drone",
+          "description": "inclui a autorização de voo do drone, não só o equipamento",
+          "check": { "type": "regex", "pattern": "(ANAC|SARPAS|autoriza[çc][ãa]o de voo)", "flags": "i" }
+        },
+        {
+          "id": "energia-em-locacao-sem-rede",
+          "description": "resolve a falta de energia (gerador ou autonomia de bateria)",
+          "check": { "type": "regex", "pattern": "(gerador|autonomia|bateria)", "flags": "i" }
+        },
+        {
+          "id": "backup-de-arquivo",
+          "description": "prevê backup dos arquivos no fechamento do dia",
+          "check": { "type": "includesAll", "values": ["backup"] }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "checklist-estudio-fundo-infinito",
+      "notes": "Em estúdio, o risco muda: energia e locação deixam de ser problema, e o checklist tem de se adaptar em vez de repetir a lista universal.",
+      "input": {
+        "projeto": "Série de vídeos de produto para e-commerce",
+        "briefing": "1 diária em estúdio com fundo infinito branco, mesa de still, 40 produtos pequenos, equipe de 3, energia e internet do estúdio disponíveis."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "departamentos-obrigatorios",
+          "description": "mantém os departamentos da estrutura",
+          "check": { "type": "includesAll", "values": ["CÂMERA", "ILUMINAÇÃO", "PRODUÇÃO"] }
+        },
+        {
+          "id": "formato-de-checagem",
+          "description": "mínimo 25 itens verificáveis",
+          "check": { "type": "regex", "pattern": "\\[\\s?\\]", "minMatches": 25 }
+        },
+        {
+          "id": "especifico-de-still",
+          "description": "adapta ao cenário de produto (fundo, mesa de still, controle de reflexo ou lente macro)",
+          "check": { "type": "regex", "pattern": "(fundo infinito|still|macro|reflex)", "flags": "i" }
+        },
+        {
+          "id": "controle-de-volume",
+          "description": "trata o volume de 40 produtos (organização, identificação ou ordem de captação)",
+          "check": { "type": "regex", "pattern": "(40|identifica|organiza|ordem)", "flags": "i" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "checklist-noturna-via-publica",
+      "notes": "Noturna em via pública é o cenário de maior risco operacional e legal: autorização, sinalização e segurança da equipe.",
+      "input": {
+        "projeto": "Videoclipe noturno",
+        "briefing": "Filmagem das 19h às 3h em via pública no centro de São Paulo, com carro em movimento, equipe de 7 e uso de gerador."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "departamentos-obrigatorios",
+          "description": "mantém os departamentos da estrutura",
+          "check": { "type": "includesAll", "values": ["CÂMERA", "ILUMINAÇÃO", "ÁUDIO", "PRODUÇÃO"] }
+        },
+        {
+          "id": "formato-de-checagem",
+          "description": "mínimo 30 itens verificáveis",
+          "check": { "type": "regex", "pattern": "\\[\\s?\\]", "minMatches": 30 }
+        },
+        {
+          "id": "autorizacao-via-publica",
+          "description": "exige autorização para filmagem em via pública",
+          "check": { "type": "regex", "pattern": "(autoriza[çc][ãa]o|alvar[áa]|CET|prefeitura)", "flags": "i" }
+        },
+        {
+          "id": "seguranca-noturna",
+          "description": "trata segurança da equipe à noite (sinalização, colete, apoio ou vigilância)",
+          "check": { "type": "regex", "pattern": "(sinaliza|colete|refletiv|seguran[çc]a|vigil)", "flags": "i" }
+        },
+        {
+          "id": "gerador-e-cabeamento",
+          "description": "inclui gerador com cabeamento e proteção adequados",
+          "check": { "type": "includesAll", "values": ["gerador"] }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "checklist-documentario-3-cidades",
+      "notes": "Itinerância troca o risco de esquecer item pelo de perder material entre trechos: transporte, carga e backup redundante.",
+      "input": {
+        "projeto": "Documentário curto sobre cidades históricas",
+        "briefing": "5 diárias em 3 cidades (Belo Horizonte, Ouro Preto e Diamantina), equipe de 6, captação de som direto, 2 entrevistas com tradução de libras, hospedagem para a equipe."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "departamentos-obrigatorios",
+          "description": "mantém os departamentos da estrutura",
+          "check": { "type": "includesAll", "values": ["CÂMERA", "ÁUDIO", "PRODUÇÃO", "COMUNICAÇÃO"] }
+        },
+        {
+          "id": "formato-de-checagem",
+          "description": "mínimo 35 itens verificáveis, proporcional a 5 diárias",
+          "check": { "type": "regex", "pattern": "\\[\\s?\\]", "minMatches": 35 }
+        },
+        {
+          "id": "som-direto",
+          "description": "detalha captação de som direto (boom, lapela, monitoramento ou proteção de vento)",
+          "check": { "type": "regex", "pattern": "(boom|lapela|XLR|deadcat|vento)", "flags": "i" }
+        },
+        {
+          "id": "libras",
+          "description": "não esquece a necessidade de intérprete de libras nas entrevistas",
+          "check": { "type": "regex", "pattern": "(libras|int[ée]rprete)", "flags": "i" }
+        },
+        {
+          "id": "backup-redundante",
+          "description": "prevê backup redundante entre trechos de viagem",
+          "check": { "type": "regex", "pattern": "(backup|3-2-1|duas c[óo]pias|redund)", "flags": "i" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    }
+  ]
+}

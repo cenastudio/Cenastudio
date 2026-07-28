@@ -26,6 +26,10 @@ const GB = 1024 * 1024 * 1024;
 
 export interface PlanEntitlement {
   clientLimit: number | null;
+  // "Portal do cliente com login persistente" — disponível em todos os
+  // planos, diferenciado pelo número de clientes com portal ativo
+  // simultaneamente. Mesma convenção de clientLimit: number | null, null = ilimitado.
+  clientPortalLimit: number | null;
   teamMemberLimit: number; // -1 = unlimited, 0 = feature unavailable
   storageLimitBytes: number; // -1 = unlimited
   requiresPaidActivation: boolean;
@@ -56,6 +60,7 @@ export interface PlanEntitlement {
 export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
   free: {
     clientLimit: 5,
+    clientPortalLimit: 1,
     teamMemberLimit: 0,
     storageLimitBytes: 2 * GB,
     requiresPaidActivation: false,
@@ -74,6 +79,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
   },
   pro: {
     clientLimit: 15,
+    clientPortalLimit: 5,
     teamMemberLimit: 5,
     storageLimitBytes: 25 * GB,
     requiresPaidActivation: false,
@@ -92,6 +98,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
   },
   studio: {
     clientLimit: 50,
+    clientPortalLimit: null, // unlimited
     teamMemberLimit: -1, // unlimited — matches advertised "Equipe ilimitada"
     storageLimitBytes: 250 * GB,
     requiresPaidActivation: true,
@@ -110,6 +117,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
   },
   whitelabel: {
     clientLimit: null, // unlimited — matches advertised "Clientes ilimitados"
+    clientPortalLimit: null, // unlimited
     teamMemberLimit: 10,
     storageLimitBytes: 1024 * GB, // 1 TB
     requiresPaidActivation: true,
@@ -128,6 +136,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
   },
   enterprise: {
     clientLimit: null,
+    clientPortalLimit: null, // unlimited
     teamMemberLimit: -1, // unlimited — matches advertised "Usuários ilimitados"
     storageLimitBytes: -1, // unlimited
     requiresPaidActivation: true,

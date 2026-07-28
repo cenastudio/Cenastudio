@@ -83,8 +83,23 @@ verificar, está dito explicitamente.
 
 ## 3. Gatilhos pendentes
 
-- Ao fechar o primeiro cliente pagante → revisar modelo de IA das
-  ferramentas de Orçamento e Contrato (alta criticidade) antes das demais.
+- **Gatilho: upgrade de modelo de IA.** Ao fechar o primeiro cliente pagante →
+  revisar o grupo de **alta criticidade** do ADR-014 (03 Callsheet, 04 Orçamento,
+  06 Contrato, 09 Checklist) para modelo pago, antes das faixas `medium` e
+  `creative`. Hoje as três faixas rodam em modelo `:free` do OpenRouter, que é
+  pool compartilhado — o teto de qualidade é o do free tier, e é decisão
+  temporária registrada como tal no ADR-014. Ponto único de mudança:
+  `TIER_MODEL` em `server/services/aiService.ts`.
+  Gatilho anterior a este, independente de cliente pagante: aplicar em
+  `TIER_MODEL.high` o resultado do eval comparativo da Fase D do spec
+  `qualidade-raciocinio-ia` — a escolha atual da faixa alta ainda não é
+  respaldada por eval.
+- **Catálogo `:free` do OpenRouter envelhece sem aviso.** Na conferência de
+  2026-07-27, 2 dos 5 modelos da cadeia de fallback já não existiam
+  (`meta-llama/llama-3.3-70b-instruct:free`, `qwen/qwen3-next-80b-a3b-instruct:free`)
+  — custavam uma volta de latência cada antes de cair no degrau seguinte.
+  Corrigidos. Gatilho: ao mexer em roteamento de modelo, reconferir contra
+  `GET https://openrouter.ai/api/v1/models`.
 - **Rotação de credenciais — ADIADA por decisão do operador (2026-07-26).**
   Inventário completo em `docs/CREDENCIAIS_PARA_ROTACIONAR.md` (não versionado) e
   em `.private/CREDENCIAIS_ROTACIONAR.md` (procedência + valores). Nada foi
@@ -113,8 +128,21 @@ verificar, está dito explicitamente.
 Ordem de execução combinada. O conteúdo de cada frente vive na spec, não aqui.
 
 1. `.kiro/specs/00-fundacao-limpeza-e-documentacao/` — em andamento
-2. `.kiro/specs/qualidade-raciocinio-ia/`
+2. `.kiro/specs/qualidade-raciocinio-ia/` — **13 de 18 tasks feitas** (Fases A, B
+   e C fechadas; Fase D com runner e 41 casos de eval prontos). Retomar pelas
+   tasks 14 e 15 (eval comparativo e aplicação do modelo em `TIER_MODEL.high`);
+   o passo a passo da retomada está no topo do `tasks.md` da spec.
 3. `.kiro/specs/auditoria-ux-2026-07/`
+
+Pausado por dependência externa, **não bloqueante**:
+
+- **Fase E do spec `qualidade-raciocinio-ia` (tasks 16 a 18) — aguardando acesso
+  ao banco de produção.** É o loop de uso real: extrair volume, taxa de reuso e
+  rating médio por `tool_id` da tabela `generations`, cruzar para achar as
+  ferramentas de alto volume com reuso ou rating baixos, e repriorizar os próximos
+  upgrades por dado em vez de distribuir esforço igualmente entre as 12. Sem esse
+  acesso, a priorização de IA continua sendo por julgamento. Retomar quando houver
+  credencial de leitura em produção ou um staging com volume real.
 
 Tarefas soltas identificadas na verificação, sem spec própria ainda:
 

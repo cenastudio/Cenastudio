@@ -10,6 +10,17 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AnimatedModal from "@/components/AnimatedModal";
 import { TabsContent } from "@/components/ui/tabs";
 import { ResponsiveTabs } from "@/components/ui/responsive-tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -83,8 +94,6 @@ function AdminContent() {
   const [createOpen, setCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState(INITIAL_FORM);
   const [creating, setCreating] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<ManagedUser | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   // User detail / management drawer
@@ -328,22 +337,6 @@ function AdminContent() {
     }
   };
 
-  const deleteUser = async () => {
-    if (!deleteTarget || deleteConfirm.trim().toLowerCase() !== deleteTarget.email.toLowerCase()) return;
-    setDeletingId(deleteTarget.id);
-    try {
-      await api.admin.deleteUser(deleteTarget.id);
-      toast.success(t("app.admin.accountDeleted"));
-      setDeleteTarget(null);
-      setDeleteConfirm("");
-      await loadData();
-    } catch (e) {
-      toast.error(e instanceof ApiError ? e.message : t("app.admin.deleteUserError"));
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
   const toggleTool = async (tool: ToolFromApi) => {
     try {
       await api.admin.updateTool(tool.id, { isActive: !tool.isActive });
@@ -545,15 +538,59 @@ function AdminContent() {
                         >
                           <Settings2 className="w-4 h-4" />
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => { setDeleteTarget(u); setDeleteConfirm(""); }}
-                          disabled={isCurrentUser}
-                          title={isCurrentUser ? t("app.admin.cannotDeleteSelf") as string : t("app.admin.deleteAccount") as string}
-                          className="h-11 w-11 border border-red-500/30 text-red-300 hover:bg-red-500/10 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {/* Visual separator before destructive action */}
+                        <div className="w-px h-8 bg-frame-gray-3 mx-1" aria-hidden="true" />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <button
+                              type="button"
+                              disabled={isCurrentUser}
+                              title={isCurrentUser ? t("app.admin.cannotDeleteSelf") as string : t("app.admin.deleteAccount") as string}
+                              className="h-11 w-11 border-2 border-red-500/40 text-red-400 hover:bg-red-500/10 hover:border-red-500/60 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="bg-frame-gray-1 border-frame-gray-3 text-frame-white">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="text-frame-white">Tem certeza?</AlertDialogTitle>
+                              <AlertDialogDescription className="text-frame-gray-light">
+                                Esta ação não pode ser desfeita. Todos os dados, projetos, arquivos e reviews de <strong className="text-frame-white">{u.name || u.email}</strong> ({u.email}) serão permanentemente excluídos.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <div className="flex items-start gap-3 my-4 p-3 bg-red-500/10 border border-red-500/30">
+                              <AlertTriangle className="w-5 h-5 text-red-300 shrink-0 mt-0.5" />
+                              <div className="text-sm text-frame-gray-light">
+                                <p className="font-semibold text-frame-white mb-1">{u.name || t("app.admin.noName")}</p>
+                                <p className="text-[0.62rem] font-frame-mono uppercase tracking-[0.12em] text-frame-gray-muted">
+                                  {u.project_count || 0} {t("app.admin.projects")} · {u.file_count || 0} {t("app.admin.files")} · {u.review_count || 0} {t("app.admin.reviews")}
+                                </p>
+                              </div>
+                            </div>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="frame-btn-ghost">Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={async (e) => {
+                                  e.preventDefault();
+                                  setDeletingId(u.id);
+                                  try {
+                                    await api.admin.deleteUser(u.id);
+                                    toast.success(t("app.admin.accountDeleted"));
+                                    await loadData();
+                                  } catch (err) {
+                                    toast.error(err instanceof ApiError ? err.message : t("app.admin.deleteUserError"));
+                                  } finally {
+                                    setDeletingId(null);
+                                  }
+                                }}
+                                disabled={deletingId === u.id}
+                                className="bg-red-500 text-white px-4 py-2 text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-red-400 transition border-none"
+                              >
+                                {deletingId === u.id ? t("app.admin.deleting") : "Confirmar exclusão"}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                   );
@@ -695,14 +732,38 @@ function AdminContent() {
                         >
                           Concluir
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => processLgpd(r.id, "rejected")}
-                          disabled={lgpdBusyId === r.id}
-                          className="px-3 py-1.5 min-h-11 text-xs border border-red-500/40 text-red-300 hover:bg-red-500/10 disabled:opacity-40 transition"
-                        >
-                          Rejeitar
-                        </button>
+                        {/* Visual separator before destructive action */}
+                        <div className="w-px h-8 bg-frame-gray-3 mx-1" aria-hidden="true" />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <button
+                              type="button"
+                              disabled={lgpdBusyId === r.id}
+                              className="px-3 py-1.5 min-h-11 text-xs border-2 border-red-500/40 text-red-300 hover:bg-red-500/10 disabled:opacity-40 transition"
+                            >
+                              Rejeitar
+                            </button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="bg-frame-gray-1 border-frame-gray-3 text-frame-white">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="text-frame-white">Rejeitar solicitação LGPD?</AlertDialogTitle>
+                              <AlertDialogDescription className="text-frame-gray-light">
+                                Você está prestes a rejeitar a solicitação de <strong className="text-frame-white">{r.type === "copy" ? "cópia de dados" : r.type === "correct" ? "correção" : "exclusão"}</strong> do usuário <strong className="text-frame-white">{r.user.name || r.user.email}</strong> (Protocolo {r.id}).
+                                <br /><br />
+                                Esta é uma ação legalmente significativa. Certifique-se de que há justificativa legal para a rejeição.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="frame-btn-ghost">Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => processLgpd(r.id, "rejected")}
+                                className="bg-red-500 text-white px-4 py-2 text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-red-400 transition border-none"
+                              >
+                                Confirmar rejeição
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     )}
                   </div>
@@ -909,61 +970,6 @@ function AdminContent() {
         </div>
       </AnimatedModal>
 
-      {/* ═══ DELETE CONFIRMATION MODAL ═══ */}
-      <AnimatedModal
-        isOpen={!!deleteTarget}
-        onClose={() => { if (!deletingId) { setDeleteTarget(null); setDeleteConfirm(""); } }}
-        title={t("app.admin.deleteUserAccount") as string}
-        description={t("app.admin.deleteUserAccountDesc") as string}
-        className="max-w-lg"
-        footer={
-          <>
-            <button
-              type="button"
-              onClick={() => { setDeleteTarget(null); setDeleteConfirm(""); }}
-              disabled={!!deletingId}
-              className="frame-btn-ghost"
-            >
-              {t("app.common.cancel")}
-            </button>
-            <button
-              type="button"
-              onClick={deleteUser}
-              disabled={!deleteTarget || deleteConfirm.trim().toLowerCase() !== deleteTarget.email.toLowerCase() || deletingId === deleteTarget.id}
-              className="bg-red-500 text-white px-4 py-2 text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-red-400 transition"
-            >
-              {deletingId === deleteTarget?.id ? t("app.admin.deleting") : t("app.admin.deletePermanently")}
-            </button>
-          </>
-        }
-      >
-        {deleteTarget && (
-          <div>
-            <div className="flex items-start gap-3 mb-4">
-              <div className="p-2 bg-red-500/10 text-red-300 shrink-0">
-                <AlertTriangle className="w-5 h-5" />
-              </div>
-              <div className="border border-frame-gray-3 bg-frame-gray-1/40 p-3 text-sm flex-1">
-                <p className="font-semibold">{deleteTarget.name || t("app.admin.noName")}</p>
-                <p className="text-frame-gray-light">{deleteTarget.email}</p>
-                <p className="text-[0.6rem] font-frame-mono uppercase tracking-[0.12em] text-frame-gray-muted mt-2">
-                  {deleteTarget.project_count || 0} {t("app.admin.projects")} · {deleteTarget.file_count || 0} {t("app.admin.files")} · {deleteTarget.review_count || 0} {t("app.admin.reviews")}
-                </p>
-              </div>
-            </div>
-            <label className="block text-xs font-frame-mono uppercase tracking-[0.16em] text-frame-gray-light mb-2">
-              {t("app.admin.typeEmailToConfirm")}
-            </label>
-            <input
-              value={deleteConfirm}
-              onChange={(e) => setDeleteConfirm(e.target.value)}
-              placeholder={deleteTarget.email}
-              className="w-full frame-input focus:border-red-400"
-            />
-          </div>
-        )}
-      </AnimatedModal>
-
       {/* ═══ USER MANAGEMENT MODAL ═══ */}
       <AnimatedModal
         isOpen={detailOpen}
@@ -1056,22 +1062,79 @@ function AdminContent() {
                 <h3 className="font-frame-mono text-[0.66rem] uppercase tracking-[0.14em] text-adaptive-primary">Suporte</h3>
               </div>
               <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={toggleSuspend}
-                  disabled={detailBusy || detail.id === currentUser?.id}
-                  title={detail.id === currentUser?.id ? "Você não pode suspender a própria conta" : undefined}
-                  className={`px-3 py-2 min-h-11 text-xs border flex items-center gap-2 transition disabled:opacity-40 disabled:cursor-not-allowed ${
-                    detail.disabled
-                      ? "border-frame-green/40 text-frame-green hover:bg-frame-green/10"
-                      : "border-red-500/40 text-red-300 hover:bg-red-500/10"
-                  }`}
-                >
-                  <Ban className="w-4 h-4" /> {detail.disabled ? "Reativar conta" : "Suspender conta"}
-                </button>
-                <button type="button" onClick={resetPassword} disabled={detailBusy} className="px-3 py-2 min-h-11 text-xs border border-frame-gray-3 text-frame-gray-light hover:border-frame-orange/50 hover:text-frame-orange flex items-center gap-2 transition disabled:opacity-40">
-                  <RotateCcw className="w-4 h-4" /> Resetar senha
-                </button>
+                {/* Suspend/Reactivate account with confirmation */}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      type="button"
+                      disabled={detailBusy || detail.id === currentUser?.id}
+                      title={detail.id === currentUser?.id ? "Você não pode suspender a própria conta" : undefined}
+                      className={`px-3 py-2 min-h-11 text-xs border flex items-center gap-2 transition disabled:opacity-40 disabled:cursor-not-allowed ${
+                        detail.disabled
+                          ? "border-frame-green/40 text-frame-green hover:bg-frame-green/10"
+                          : "border-red-500/40 text-red-300 hover:bg-red-500/10"
+                      }`}
+                    >
+                      <Ban className="w-4 h-4" /> {detail.disabled ? "Reativar conta" : "Suspender conta"}
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="bg-frame-gray-1 border-frame-gray-3 text-frame-white">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-frame-white">
+                        {detail.disabled ? "Reativar conta?" : "Suspender conta?"}
+                      </AlertDialogTitle>
+                      <AlertDialogDescription className="text-frame-gray-light">
+                        {detail.disabled
+                          ? `A conta de ${detail.name || detail.email} será reativada e o usuário poderá fazer login novamente.`
+                          : `A conta de ${detail.name || detail.email} será suspensa e o usuário não poderá fazer login até a reativação.`
+                        }
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="frame-btn-ghost">Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={toggleSuspend}
+                        className={`px-4 py-2 text-sm font-semibold transition border-none ${
+                          detail.disabled
+                            ? "bg-frame-green text-white hover:bg-frame-green/80"
+                            : "bg-red-500 text-white hover:bg-red-400"
+                        }`}
+                      >
+                        {detail.disabled ? "Confirmar reativação" : "Confirmar suspensão"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
+                {/* Reset password with confirmation */}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button
+                      type="button"
+                      disabled={detailBusy}
+                      className="px-3 py-2 min-h-11 text-xs border border-frame-gray-3 text-frame-gray-light hover:border-frame-orange/50 hover:text-frame-orange flex items-center gap-2 transition disabled:opacity-40"
+                    >
+                      <RotateCcw className="w-4 h-4" /> Resetar senha
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="bg-frame-gray-1 border-frame-gray-3 text-frame-white">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-frame-white">Resetar senha?</AlertDialogTitle>
+                      <AlertDialogDescription className="text-frame-gray-light">
+                        Uma senha temporária será gerada para <strong className="text-frame-white">{detail.name || detail.email}</strong>. A senha atual será invalidada imediatamente.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="frame-btn-ghost">Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={resetPassword}
+                        className="bg-frame-orange text-white px-4 py-2 text-sm font-semibold hover:bg-frame-orange/80 transition border-none"
+                      >
+                        Confirmar reset
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
               {tempPassword && (
                 <div className="border border-frame-orange/40 bg-frame-orange/5 p-3">

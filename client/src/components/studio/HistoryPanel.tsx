@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import { Loader2, X, RefreshCw, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { stripBudgetBlock } from "@shared/budgetBlock";
 
 interface HistoryItem {
   id: number;
@@ -156,7 +157,9 @@ export default function HistoryPanel({ isOpen, onClose, toolId, projectId, onRes
                     {firstInputValue}
                   </h4>
                   <p className="text-[0.66rem] text-frame-gray-light line-clamp-2 mt-1.5 font-light leading-normal">
-                    {item.output}
+                    {/* Preview sem o bloco estruturado (ADR-013). O restore
+                        continua entregando o output cru, que a ponte precisa. */}
+                    {stripBudgetBlock(item.output)}
                   </p>
                   {scope === "all" && item.projectName && (
                     <p className="mt-2 truncate font-frame-mono text-[0.56rem] uppercase tracking-[0.1em] text-frame-orange/80">

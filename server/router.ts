@@ -83,6 +83,8 @@ import calendarRoutes from "./routes/calendar.js";
 import tasksRoutes from "./routes/tasks.js";
 import storageRoutes from "./routes/storage.js";
 import referralsRoutes from "./routes/referrals.js";
+import portalAuthRoutes from "./routes/portalAuth.js";
+import portalRoutes from "./routes/portal.js";
 
 const router = Router();
 
@@ -186,5 +188,7 @@ router.use("/calendar", calendarRoutes);
 router.use("/tasks", tasksRoutes);
 router.use("/storage", storageRoutes);
 router.use("/referrals", referralsRoutes);
+router.use("/client-portal-auth", portalAuthRoutes);
+router.use("/portal", portalRoutes);
 
 export default router;

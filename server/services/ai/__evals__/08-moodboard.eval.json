@@ -1,0 +1,106 @@
+{
+  "tool": "08",
+  "slug": "moodboard",
+  "cases": [
+    {
+      "id": "moodboard-ancora-real",
+      "notes": "Este é o caso que valida a task 3 na ferramenta em que ela nasceu: referência nomeada e consultável, não adjetivo.",
+      "input": {
+        "projeto": "Clipe musical melancólico",
+        "briefing": "Faixa lenta, letra sobre despedida. Locação: apartamento vazio e rua molhada à noite. Quero algo com peso visual, não bonitinho."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "referencia-nomeada",
+          "description": "cita obra ou profissional nomeado como âncora do look (task 3)",
+          "check": { "type": "regex", "pattern": "(no esp[íi]rito de|refer[êe]ncia:|como em|à maneira de|trabalho de)", "flags": "i" }
+        },
+        {
+          "id": "nao-vale-adjetivo",
+          "description": "não usa rótulo de plataforma ou adjetivo no lugar de referência",
+          "check": { "type": "regexAbsent", "pattern": "(estilo Netflix|vibe A24|publicidade premium|estilo TikTok)", "flags": "i" }
+        },
+        {
+          "id": "aproveita-e-descarta",
+          "description": "diz o que se aproveita e o que se descarta da referência, em vez de pedir cópia",
+          "check": { "type": "regex", "pattern": "(aproveit|descart|sem o|mas sem|diferen[çt])", "flags": "i" }
+        },
+        {
+          "id": "parametros-tecnicos",
+          "description": "acompanha a âncora de parâmetro técnico executável (cor, temperatura, contraste ou lente)",
+          "check": { "type": "regex", "pattern": "(#[0-9A-Fa-f]{6}|\\d{3,5}\\s?K|contraste|ratio|\\d{2,3}\\s?mm)", "minMatches": 2 }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        },
+        {
+          "id": "look-executavel",
+          "description": "o DP consegue reproduzir o look no set com o que está descrito",
+          "check": { "type": "manual" }
+        }
+      ]
+    },
+    {
+      "id": "moodboard-marca-com-guia-fechado",
+      "notes": "Quando a marca tem paleta fixa, o moodboard tem de trabalhar dentro dela em vez de propor outra.",
+      "input": {
+        "projeto": "Campanha de banco digital",
+        "briefing": "Guia de marca fechado: roxo #6B2FBF e branco, tipografia própria. Público jovem, tom otimista. Não pode usar tons quentes saturados."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "respeita-paleta",
+          "description": "trabalha com a cor da marca informada",
+          "check": { "type": "regex", "pattern": "(6B2FBF|roxo)", "flags": "i" }
+        },
+        {
+          "id": "respeita-proibicao",
+          "description": "reconhece a proibição de tons quentes saturados",
+          "check": { "type": "regex", "pattern": "(quente|satura)", "flags": "i" }
+        },
+        {
+          "id": "referencia-nomeada",
+          "description": "traz âncora real mesmo dentro da restrição de marca",
+          "check": { "type": "regex", "pattern": "(no esp[íi]rito de|refer[êe]ncia:|como em|à maneira de|trabalho de)", "flags": "i" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "moodboard-restricao-de-orcamento",
+      "notes": "Look que exige equipamento inacessível é fantasia. Testa se ele calibra pela realidade da produção.",
+      "input": {
+        "projeto": "Documentário de baixo orçamento",
+        "briefing": "Equipe de 2, só luz natural e um LED painel pequeno, câmera com uma lente 35mm. Quero que pareça cinematográfico mesmo assim."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "respeita-o-kit",
+          "description": "não propõe look que dependa de equipamento indisponível",
+          "check": { "type": "regexAbsent", "pattern": "(HMI|grua|crane|set de luz completo|anamórf)", "flags": "i" }
+        },
+        {
+          "id": "usa-luz-natural",
+          "description": "constrói o look em cima de luz natural e do LED disponível",
+          "check": { "type": "regex", "pattern": "(luz natural|janela|hora dourada|LED)", "flags": "i" }
+        },
+        {
+          "id": "referencia-nomeada",
+          "description": "ancora em obra real de estética factível com pouco recurso",
+          "check": { "type": "regex", "pattern": "(no esp[íi]rito de|refer[êe]ncia:|como em|à maneira de|trabalho de)", "flags": "i" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    }
+  ]
+}

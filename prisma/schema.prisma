@@ -285,11 +285,35 @@ model Client {
   financialEntries FinancialEntry[]
   meetings Meeting[]
   proposals Proposal[]
+  portalAccess ClientPortalAccess?
 
   @@index([userId], map: "idx_clients_user_id")
   @@index([status], map: "idx_clients_status")
   @@index([workflowStage], map: "idx_clients_workflow_stage")
   @@map("clients")
+}
+
+// ===============================================
+// PORTAL DO CLIENTE (spec: portal-do-cliente)
+// Login persistente e isolado do cliente final, 1:1 com Client. Não reusa
+// User/authenticate — payload e cookie próprios (ver authenticateClientPortal).
+// ===============================================
+
+model ClientPortalAccess {
+  id           BigInt    @id @default(autoincrement())
+  clientId     BigInt    @unique @map("client_id")
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  active       Boolean   @default(true)
+  lastLoginAt  DateTime? @map("last_login_at") @db.Timestamptz
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @default(now()) @map("updated_at") @db.Timestamptz
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId], map: "idx_client_portal_access_client_id")
+  @@index([email], map: "idx_client_portal_access_email")
+  @@map("client_portal_access")
 }
 
 model Project {

@@ -1,0 +1,101 @@
+{
+  "tool": "02",
+  "slug": "decupagem",
+  "cases": [
+    {
+      "id": "decupagem-comercial-30s",
+      "notes": "Decupagem existe para o set executar sem interpretar. Sem lente e movimento por plano, não serve.",
+      "input": {
+        "projeto": "Comercial de 30 segundos para rede de academias",
+        "briefing": "Roteiro: 4 cenas curtas mostrando pessoas diferentes treinando, terminando com o logo. 1 diária, câmera Sony FX6, kit de lentes primes."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "planos-numerados",
+          "description": "lista os planos numerados, não só as cenas",
+          "check": { "type": "regex", "pattern": "(PLANO\\s*\\d|SHOT\\s*\\d|\\bP\\d{1,2}\\b)", "minMatches": 6 }
+        },
+        {
+          "id": "lente-por-plano",
+          "description": "indica lente em milímetros nos planos",
+          "check": { "type": "regex", "pattern": "\\b\\d{2,3}\\s?mm\\b", "minMatches": 3 }
+        },
+        {
+          "id": "movimento-de-camera",
+          "description": "especifica movimento ou estática por plano",
+          "check": { "type": "regex", "pattern": "(DOLLY|TRAVELLING|PAN|TILT|HANDHELD|GIMBAL|EST[ÁA]TICO|STEADY)", "minMatches": 3 }
+        },
+        {
+          "id": "ancora-de-camera",
+          "description": "ancora a gramática de câmera em obra ou profissional nomeado (task 3)",
+          "check": { "type": "regex", "pattern": "(no esp[íi]rito de|refer[êe]ncia:|como em|à maneira de)", "flags": "i" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "decupagem-cena-de-dialogo",
+      "notes": "Diálogo exige cobertura que corta na edição: eixo, contra-plano e insert.",
+      "input": {
+        "projeto": "Curta de ficção",
+        "briefing": "Cena de 2 minutos: dois personagens discutem sentados em uma mesa de bar. Precisa de cobertura suficiente para a edição respirar."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "cobertura-de-dialogo",
+          "description": "prevê cobertura de diálogo (plano e contra-plano, ou over-the-shoulder)",
+          "check": { "type": "regex", "pattern": "(contra-?plano|over[- ]the[- ]shoulder|OTS|reverse)", "flags": "i" }
+        },
+        {
+          "id": "eixo",
+          "description": "trata o eixo de ação ou a regra dos 180 graus",
+          "check": { "type": "regex", "pattern": "(eixo|180)", "flags": "i" }
+        },
+        {
+          "id": "planos-numerados",
+          "description": "lista planos numerados suficientes para cortar a cena",
+          "check": { "type": "regex", "pattern": "(PLANO\\s*\\d|SHOT\\s*\\d|\\bP\\d{1,2}\\b)", "minMatches": 5 }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "decupagem-restricao-de-equipamento",
+      "notes": "Restrição real de kit: se ele decupa um dolly que não existe, a decupagem não é executável.",
+      "input": {
+        "projeto": "Vídeo de depoimento de cliente",
+        "briefing": "Meia diária, equipe de 2 pessoas, só tripé e uma lente 24-70mm. Sem dolly, sem gimbal, sem trilho. Locação: escritório do cliente."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "respeita-o-kit",
+          "description": "não decupa movimento que exige equipamento indisponível",
+          "check": { "type": "regexAbsent", "pattern": "(dolly|gimbal|trilho|steadicam|drone)", "flags": "i" }
+        },
+        {
+          "id": "lente-disponivel",
+          "description": "trabalha dentro da faixa da lente disponível",
+          "check": { "type": "regex", "pattern": "(24|35|50|70)\\s?mm", "minMatches": 2 }
+        },
+        {
+          "id": "planos-numerados",
+          "description": "lista planos numerados",
+          "check": { "type": "regex", "pattern": "(PLANO\\s*\\d|SHOT\\s*\\d|\\bP\\d{1,2}\\b)", "minMatches": 4 }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    }
+  ]
+}

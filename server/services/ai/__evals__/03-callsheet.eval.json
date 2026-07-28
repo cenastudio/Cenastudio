@@ -1,0 +1,152 @@
+{
+  "tool": "03",
+  "slug": "callsheet",
+  "cases": [
+    {
+      "id": "callsheet-externa-por-do-sol",
+      "notes": "O caso clássico de erro de callsheet: janela de luz natural manda no dia. Se o modelo não escalona os horários a partir do pôr do sol, a equipe perde a cena.",
+      "input": {
+        "projeto": "Clipe musical — banda independente",
+        "briefing": "1 diária de 10h em Belo Horizonte, dia 12/09. Locação: galpão alugado no Barro Preto e 2 cenas em externa na Praça da Liberdade, que precisam da luz do fim de tarde. Equipe de 5. Diretor: Ana Prado. Produtora: Cena Filmes."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "secoes-obrigatorias",
+          "description": "traz as seções obrigatórias da estrutura (locação, horários, equipe, logística, notas)",
+          "check": {
+            "type": "includesAll",
+            "values": ["LOCAÇÃO", "HORÁRIOS", "EQUIPE TÉCNICA", "LOGÍSTICA", "NOTAS"]
+          }
+        },
+        {
+          "id": "horarios-escalonados",
+          "description": "escalona ao menos 6 horários ao longo do dia, não só chamada e wrap",
+          "check": { "type": "regex", "pattern": "\\b\\d{1,2}[:h]\\d{2}\\b", "minMatches": 6 }
+        },
+        {
+          "id": "marcos-do-dia",
+          "description": "nomeia os marcos operacionais do dia (general call, wrap)",
+          "check": { "type": "includesAll", "values": ["call", "wrap"] }
+        },
+        {
+          "id": "ancora-de-luz",
+          "description": "trata a luz do fim de tarde como âncora do cronograma",
+          "check": { "type": "includesAll", "values": ["luz"] }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "respeita as regras globais de formatação (sem markdown)",
+          "check": { "type": "noMarkdown" }
+        },
+        {
+          "id": "ordem-executavel",
+          "description": "a ordem das cenas e os intervalos entre marcos são exequíveis num dia real de 10h",
+          "check": { "type": "manual" }
+        }
+      ]
+    },
+    {
+      "id": "callsheet-fabrica-com-norma-de-seguranca",
+      "notes": "Locação industrial impõe EPI e acompanhamento. Callsheet que ignora isso trava o set na portaria.",
+      "input": {
+        "projeto": "Institucional industrial",
+        "briefing": "Filmagem em fábrica de autopeças em Contagem, dia 03/10, das 7h às 17h. Área de produção exige EPI (botina, óculos, protetor auricular) e acompanhamento de técnico de segurança. 4 entrevistas com diretores em sala de reunião. Equipe de 6. Almoço no refeitório da fábrica."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "secoes-obrigatorias",
+          "description": "traz as seções obrigatórias da estrutura",
+          "check": {
+            "type": "includesAll",
+            "values": ["LOCAÇÃO", "HORÁRIOS", "EQUIPE TÉCNICA", "LOGÍSTICA", "NOTAS"]
+          }
+        },
+        {
+          "id": "epi-e-seguranca",
+          "description": "registra a exigência de EPI e o acompanhamento de segurança",
+          "check": { "type": "includesAll", "values": ["EPI", "segurança"] }
+        },
+        {
+          "id": "refeicao",
+          "description": "trata a refeição no refeitório em vez de assumir catering externo",
+          "check": { "type": "includesAll", "values": ["refeit"] }
+        },
+        {
+          "id": "horarios-escalonados",
+          "description": "escalona ao menos 6 horários",
+          "check": { "type": "regex", "pattern": "\\b\\d{1,2}[:h]\\d{2}\\b", "minMatches": 6 }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "callsheet-briefing-minimo",
+      "notes": "Testa o comportamento com informação faltando: o certo é marcar o campo como pendente, não inventar telefone e endereço.",
+      "input": {
+        "projeto": "Ensaio fotográfico e vídeo para marca de roupa",
+        "briefing": "Dia 20/11, estúdio em São Paulo. É tudo que sei por enquanto."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "secoes-obrigatorias",
+          "description": "mantém a estrutura mesmo sem dados",
+          "check": { "type": "includesAll", "values": ["LOCAÇÃO", "HORÁRIOS", "EQUIPE"] }
+        },
+        {
+          "id": "marca-pendencia",
+          "description": "marca os campos desconhecidos como pendentes em vez de preencher com dado inventado",
+          "check": { "type": "regex", "pattern": "(a definir|a confirmar|\\[.{2,30}\\])", "flags": "i", "minMatches": 3 }
+        },
+        {
+          "id": "sem-telefone-inventado",
+          "description": "não inventa telefone de contato que não foi informado",
+          "check": { "type": "regexAbsent", "pattern": "\\(?\\d{2}\\)?\\s?9\\d{4}[- ]?\\d{4}" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "callsheet-duas-locacoes-company-move",
+      "notes": "Duas locações no mesmo dia é onde o cronograma estoura. Exige janela explícita de deslocamento.",
+      "input": {
+        "projeto": "Série de vídeos para rede de restaurantes",
+        "briefing": "Dia 08/08, duas unidades: Savassi (manhã) e Lourdes (tarde), 15 minutos de carro entre elas. Equipe de 4, van da produção. Precisa filmar cozinha em operação nas duas. Wrap até 18h."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "duas-locacoes",
+          "description": "nomeia as duas locações",
+          "check": { "type": "includesAll", "values": ["Savassi", "Lourdes"] }
+        },
+        {
+          "id": "janela-de-deslocamento",
+          "description": "reserva janela explícita de deslocamento entre as unidades",
+          "check": { "type": "regex", "pattern": "(deslocamento|company move|traslado|transfer)", "flags": "i" }
+        },
+        {
+          "id": "horarios-escalonados",
+          "description": "escalona ao menos 8 horários, cobrindo os dois blocos do dia",
+          "check": { "type": "regex", "pattern": "\\b\\d{1,2}[:h]\\d{2}\\b", "minMatches": 8 }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        },
+        {
+          "id": "cabe-no-dia",
+          "description": "a soma dos blocos mais o deslocamento fecha antes do wrap de 18h",
+          "check": { "type": "manual" }
+        }
+      ]
+    }
+  ]
+}

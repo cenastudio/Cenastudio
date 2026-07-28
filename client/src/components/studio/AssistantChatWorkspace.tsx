@@ -4,6 +4,7 @@ import { Bot, Copy, Loader2, Send, Trash2, UserRound, Sparkles, FolderOpen } fro
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useProject } from "@/contexts/ProjectContext";
+import { stripBudgetBlock } from "@shared/budgetBlock";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -70,7 +71,8 @@ export default function AssistantChatWorkspace({ tool, projectId }: AssistantCha
       lines.push("Documentos já gerados neste job:");
       for (const doc of projectHistory.slice(0, 4)) {
         const name = TOOL_NAMES[doc.toolId] || `Ferramenta ${doc.toolId}`;
-        const preview = doc.output.slice(0, 400).replace(/\n/g, " ");
+        // ADR-013: bloco estruturado não vira contexto de prompt.
+        const preview = stripBudgetBlock(doc.output).slice(0, 400).replace(/\n/g, " ");
         lines.push(`[${name}]: ${preview}...`);
       }
     }

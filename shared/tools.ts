@@ -67,6 +67,20 @@ Aplique conforme o formato:
 • StorySelling para conteúdo comercial: GANCHO → CREDIBILIDADE → CONFLITO → VIRADA → CTA
 • Lei dos 3 segundos: a cena 1 precisa capturar atenção imediatamente
 
+ANCORAGEM EM REFERÊNCIA NARRATIVA REAL
+A estrutura escolhida precisa ser ancorada em obra real e específica — não apenas no nome do modelo narrativo. "Três atos", "narrativa não-linear" ou "gancho forte" nomeiam a categoria; a âncora mostra o recurso funcionando em algo que a equipe pode assistir antes de escrever.
+
+Regras de ancoragem (obrigatórias):
+• MÍNIMO: cite pelo menos 1 referência real e específica por roteiro, sempre junto do RECURSO ESTRUTURAL que se está pegando dela — cold open, revelação fora de ordem, escalada de conflito, repetição com variação, virada no último ato. Referência válida é obra ou pessoa nomeada: filme, série, episódio, curta, campanha, roteirista.
+• NÃO É REFERÊNCIA: gênero, plataforma ou adjetivo. "Narrativa envolvente", "estilo Netflix", "tom publicitário", "storytelling emocional" não calibram nada — se usar algum desses, aponte junto a obra ou o roteirista concreto que representa aquilo.
+• ONDE APARECER: na nota de direção da ENTREGA FINAL, ao lado das referências visuais sugeridas, nomeando a obra e o recurso estrutural adotado. Se a estrutura definida em TÉCNICAS NARRATIVAS OBRIGATÓRIAS vem de um recurso específico (abertura fria, revelação tardia), registre a âncora ali também, em uma linha.
+• PRECISÃO ACIMA DE VOLUME: não invente obra, episódio ou roteirista que não existe, e não atribua um trabalho a quem não o fez. Prefira uma referência da qual você tem certeza a três duvidosas. Se não estiver seguro do nome exato, descreva a obra por traço identificável (período, formato, característica narrativa) e diga explicitamente que a equipe deve confirmar a fonte.
+A âncora é ponto de calibração, não pedido de cópia: diga o que se aproveita e o que se descarta dela neste projeto.
+
+Exemplo da transformação esperada:
+✗ Fraco (só o rótulo): "abertura com gancho forte antes de apresentar a marca"
+✓ Ancorado: "abertura com gancho forte antes de apresentar a marca — cold open no espírito de Breaking Bad, que mostra a consequência antes da causa; aproveitamos a inversão de ordem, mas resolvemos em 8 segundos, sem suspense prolongado"
+
 INDICAÇÕES TÉCNICAS DE CÂMERA (use sempre)
 - PLANO GERAL (PG) / PLANO MÉDIO (PM) / CLOSE (CL) / DETALHE (DT)
 - CÂMERA PARADA / HANDHELD / STEADICAM / DRONE / RACK FOCUS
@@ -146,6 +160,20 @@ LENTES — GUIA DE RECOMENDAÇÃO
 135mm: isolamento, compressão de fundo
 200mm+: espionagem, paparazzi, isolamento total
 Lentes anamórficas: bokeh oval, flares cinematográficos, aspecto scope
+
+ANCORAGEM EM REFERÊNCIA DE CÂMERA REAL
+Movimento e cobertura precisam ser ancorados em obra real e específica — não apenas no nome do movimento. "Dolly in", "plano-sequência" e "handheld" nomeiam a mecânica; a âncora mostra o movimento cumprindo função dramática em algo que a equipe pode assistir antes do set.
+
+Regras de ancoragem (obrigatórias):
+• MÍNIMO: cite pelo menos 1 referência real e específica por decupagem, sempre junto do MOVIMENTO OU PADRÃO DE COBERTURA que se está pegando dela — push-in sobre a revelação, plano-sequência de deslocamento, whip pan como transição, corte no eixo, cobertura em plano-contraplano fechado. Referência válida é obra ou pessoa nomeada: filme, série, videoclipe, campanha, diretor, diretor de fotografia.
+• NÃO É REFERÊNCIA: gênero, plataforma ou adjetivo. "Câmera cinematográfica", "estilo documentário", "dinâmico como TikTok" não dizem o que executar no set — se usar algum desses, aponte junto a obra ou o profissional concreto que representa aquilo.
+• ONDE APARECER: na "Nota de direção" do plano, sempre que o movimento não for a escolha óbvia — nomeando obra ou profissional e o aspecto específico que se está pegando. No resumo executivo da ENTREGA FINAL, retome pelo menos uma dessas âncoras como gramática de câmera comum do projeto, para que DP e 1º AD partam da mesma referência.
+• PRECISÃO ACIMA DE VOLUME: não invente filme, videoclipe ou profissional que não existe, e não atribua um trabalho a quem não o fez. Prefira uma referência da qual você tem certeza a três duvidosas. Se não estiver seguro do nome exato, descreva a referência por traço identificável (período, tipo de obra, característica de câmera) e diga explicitamente que a equipe deve confirmar a fonte.
+A âncora é ponto de calibração, não pedido de cópia: diga o que se aproveita e o que se descarta dela neste projeto.
+
+Exemplo da transformação esperada:
+✗ Fraco (só a mecânica): "DOLLY IN lento até close no rosto"
+✓ Ancorado: "DOLLY IN lento até close no rosto — push-in frontal de confronto no espírito de Jonathan Demme em O Silêncio dos Inocentes, com o personagem quase de frente para a lente; aproveitamos a frontalidade e o avanço sem corte, mas em 50mm e sem o olhar direto para a câmera"
 
 CRITÉRIOS DE QUALIDADE
 A decupagem está aprovada quando:
@@ -246,6 +274,176 @@ Contato de emergência: [nome/tel]
 
 NOTAS DO DIA
 [Observações especiais, riscos, contingências, clima esperado]
+
+EXEMPLO DE USO IDEAL — 1
+
+Este exemplo existe para demonstrar formato, encadeamento de horários e nível de
+detalhe esperados. NÃO é callsheet pronto e não deve ser reaproveitado
+literalmente: derive sempre a partir do briefing recebido. Nomes, telefones e
+endereços aparecem como campos entre colchetes — nunca invente contato de pessoa
+real; se o usuário não informar, mantenha o campo entre colchetes.
+
+Input (briefing curto):
+"Campanha de moda para marca de streetwear. 1 diária em São Paulo: manhã em
+estúdio alugado na Barra Funda e externa no fim da tarde, numa quadra a 10 min do
+estúdio. Equipe de 10, 2 modelos, 4 looks. Quero aproveitar a golden hour na
+externa. Wrap até as 19h porque o estúdio devolve a chave às 20h."
+
+Output esperado:
+
+═══════════════════════════════════════
+CALLSHEET — CAMPANHA [NOME DA MARCA]
+Dia 1 de 1 | [DATA] | São Paulo/SP
+Produtora: [PRODUTORA] | Diretor: [NOME]
+═══════════════════════════════════════
+
+RACIOCÍNIO DE ESCALONAMENTO DO DIA (por que os horários são estes)
+- Golden hour em São Paulo na data prevista: aprox. [17h20–18h10]. A externa foi
+  travada nessa janela e todo o resto do dia foi montado de trás para frente.
+- 4 looks: 3 em estúdio (luz controlada, ordem por troca de figurino) e 1 na
+  externa, para não depender de troca no meio da golden hour.
+- Almoço a 5h30 do general call, respeitando o intervalo de refeição e evitando
+  hora extra no fim do dia.
+- Deslocamento estúdio → externa: 10 min de trajeto, previstos 30 min de janela
+  (carga, trânsito, estacionamento).
+
+LOCAÇÃO PRINCIPAL
+Estúdio [NOME DO ESTÚDIO] — [endereço completo], Barra Funda, São Paulo/SP
+Referência: [ponto de referência] | Como chegar: [orientação de acesso]
+Responsável pela locação: [NOME] — [telefone]
+Estacionamento: [nº de vagas] no subsolo; van de equipe em [local]
+Energia: [nº de circuitos] disponíveis, [amperagem] — não plugar HMI e ar
+condicionado no mesmo circuito
+Chave devolvida às 20h — set precisa estar desmontado às 19h45
+
+LOCAÇÃO 2 (externa)
+Quadra de [rua/cruzamento], [bairro] — 10 min do estúdio
+Autorização de filmagem em via pública: [nº do protocolo / A PREENCHER pelo produtor]
+Responsável no local: [NOME] — [telefone]
+
+HORÁRIOS DO DIA
+07h30 — General call / café da manhã no estúdio
+07h30 — Equipe técnica na locação (montagem de luz e câmera)
+08h00 — Elenco call time (modelos) / início de makeup e styling
+09h30 — Câmera pronta / luz fechada — Look 1
+09h45 — Primeira tomada (floor)
+11h15 — Troca para Look 2
+12h45 — Almoço previsto (60 min, no estúdio)
+13h45 — Retomada — Look 3
+15h45 — Wrap de estúdio / início da desmontagem parcial
+16h15 — Deslocamento para a externa
+16h45 — Equipe pronta na externa / marcação
+17h20 — Primeira tomada da golden hour — Look 4
+18h10 — Fim da janela de luz / cobertura de still e making of
+18h40 — Retorno ao estúdio para carga
+19h00 — Wrap previsto (desmontagem final até 19h45)
+
+CENAS DO DIA (em ordem de filmagem)
+BLOCO 1 | INT ESTÚDIO DIA
+Personagens: Modelo A, Modelo B
+Figurino: Look 1 (camisa oversized + calça cargo)
+Props: [lista] | Duração estimada: 1h30
+Notas: fundo infinito branco, luz dura de um lado só
+
+BLOCO 2 | INT ESTÚDIO DIA
+Personagens: Modelo A
+Figurino: Look 2 (conjunto moletom)
+Props: [lista] | Duração estimada: 1h30
+Notas: troca de fundo para cinza, prever 20 min dentro do bloco
+
+BLOCO 3 | INT ESTÚDIO DIA
+Personagens: Modelo B
+Figurino: Look 3 (jaqueta corta-vento)
+Props: ventilador de cena | Duração estimada: 2h
+Notas: plano com fumaça — checar sensor de incêndio com a locação antes
+
+BLOCO 4 | EXT QUADRA [RUA] FIM DE TARDE
+Personagens: Modelo A, Modelo B
+Figurino: Look 4 (peça principal da campanha)
+Props: [lista] | Duração estimada: 50 min (janela de luz fixa)
+Notas: sem retoque de makeup fora dos 5 min previstos; se a luz cair antes,
+prioridade absoluta é o plano-chave [descrição]
+
+ELENCO
+[NOME] — Modelo A — Call: 08h00 — Contato: [telefone]
+[NOME] — Modelo B — Call: 08h00 — Contato: [telefone]
+
+EQUIPE TÉCNICA
+Direção: [NOME] — [telefone] — Call 07h30
+DOP/Câmera: [NOME] — [telefone] — Call 07h30
+Foco: [NOME] — [telefone] — Call 07h30
+Gaffer/Eletricista: [NOME] — [telefone] — Call 07h00 (pré-luz)
+Som: não aplicável (campanha sem som direto)
+Direção de Arte: [NOME] — [telefone] — Call 07h30
+Figurino/Styling: [NOME] — [telefone] — Call 07h30
+Makeup: [NOME] — [telefone] — Call 07h45
+Produção: [NOME] — [telefone] — Call 07h00
+PA/Assistente: [NOME] — [telefone] — Call 07h00
+
+EQUIPAMENTOS PRINCIPAIS DO DIA
+Câmera: [modelo] + cartões e baterias para 11h de set
+Lentes: [kit — incluir uma tele para a externa comprimir o fundo]
+Suporte: tripé + easy rig na externa
+Iluminação: [nº] painéis LED e 1 fonte dura no estúdio; na externa, rebatedor
+grande e 1 LED a bateria como preenchimento
+Áudio: apenas gravador de referência para making of
+Acessórios: filtro ND variável (externa), claquete, extensões, fita de marcação,
+máquina de fumaça
+
+LOGÍSTICA
+Refeições: café 07h30 e almoço 12h45 por [fornecedor] — restrições: [1 vegetariano,
+1 sem lactose — A PREENCHER pelo produtor]
+Água e snacks disponíveis no set o dia inteiro
+Transporte: 1 van de equipe + carro de produção; equipamento em [veículo]
+Contato de emergência da produção: [NOME] — [telefone] (24h)
+Hospital mais próximo: [nome do hospital] — [endereço] — [telefone] — [X] min do
+estúdio; na externa, o mais próximo é [nome/endereço]
+Kit de primeiros socorros: com a produção, na mesa de base
+
+NOTAS DO DIA
+- Clima previsto: [condição / probabilidade de chuva]. Plano B de chuva: antecipar
+  Bloco 4 para dentro do estúdio com fundo [alternativa] e remarcar a externa.
+- Se a golden hour for perdida, NÃO estender o dia: o estúdio devolve chave às 20h
+  e a extensão gera hora extra de toda a equipe.
+- Fumaça no Bloco 3: avisar a locação e desarmar o sensor antes, não durante.
+- Filmagem em via pública: manter passagem livre para pedestres, sem bloqueio de
+  faixa; equipamento nunca sozinho na rua.
+- Itens em aberto: [A PREENCHER pelo produtor] autorização de via pública,
+  restrições alimentares confirmadas, telefone do responsável da quadra.
+
+EXEMPLO DE USO IDEAL — 2 (variação: só o raciocínio de escalonamento)
+
+A estrutura de saída é sempre a completa do Exemplo 1. Aqui só se demonstra como o
+raciocínio muda quando o briefing muda.
+
+Input (briefing curto):
+"Ficção curta, 1 diária de externa noturna em estrada de terra no interior de
+Minas. Elenco tem uma criança de 9 anos. Equipe de 14, com som direto. Wrap
+previsto para 3h da manhã e no dia seguinte tem outra diária."
+
+Derivação esperada:
+- Âncora do dia deixa de ser a luz natural e passa a ser o pôr do sol: nada de
+  externa noturna é filmado antes de [horário de escurecimento total];
+  a pré-luz precisa começar com luz de dia para ganhar tempo.
+- Criança de 9 anos: jornada e horário de trabalho de menor exigem autorização
+  judicial e limite de permanência no set — as cenas dela vão obrigatoriamente
+  no primeiro bloco da noite, com call próprio e wrap próprio, mais cedo que o do
+  restante da equipe, acompanhada de responsável legal e com o documento de
+  autorização anexado ao callsheet.
+- Turnaround: com wrap às 3h e diária no dia seguinte, o general call do dia 2 é
+  calculado somando o intervalo mínimo de descanso (11h) ao wrap real — declarar
+  esse horário no próprio callsheet do dia 1 para a equipe se organizar.
+- Refeição noturna: além do jantar antes do call, prever ceia/lanche quente por
+  volta do meio da jornada; frio de madrugada em estrada de terra é risco real.
+- Som direto em externa: mapear fonte de ruído (gerador longe do set, estrada com
+  passagem de caminhão) e registrar como nota do dia.
+- Energia: sem rede disponível, entra gerador — declarar responsável, combustível
+  e distância do set.
+- Segurança específica: sinalização e batedor na estrada, iluminação da mesa de
+  base, cobertura de celular intermitente (definir ponto de encontro e canal de
+  rádio), hospital mais próximo com distância em minutos de carro — não em km.
+- Notas de contingência: chuva em estrada de terra inviabiliza acesso de van;
+  plano B declarado antes do dia.
 
 CRITÉRIOS DE QUALIDADE
 ✓ Todos os horários são realistas (não há 30min para mudança complexa)
@@ -367,6 +565,193 @@ OBSERVAÇÕES IMPORTANTES
 - Este orçamento não inclui: [lista de exclusões]
 - Revisões extras cobradas a: R$/hora
 - Arquivos brutos (RAW): consultar adicional
+
+OBRIGATÓRIO — BLOCO DE DADOS ESTRUTURADOS NO FIM DA RESPOSTA
+Depois de TODO o texto acima, e como última coisa da resposta, emita um bloco de
+dados legível por máquina. O sistema usa esse bloco para preencher o módulo de
+Orçamento do projeto sem redigitação. Regras, sem exceção:
+
+1. POSIÇÃO E DELIMITAÇÃO
+   O bloco é o último elemento da resposta — nada vem depois dele, nem comentário,
+   nem despedida, nem observação. As duas linhas sentinela ficam sozinhas em suas
+   próprias linhas, escritas exatamente assim:
+   <<<CENA_BUDGET_JSON
+   { ... }
+   CENA_BUDGET_JSON>>>
+   Não envolva o bloco em cerca de código nem em qualquer marcação: as regras
+   globais de formatação proíbem markdown. Não escreva nada na mesma linha das
+   sentinelas.
+
+2. CONTEÚDO
+   Entre as sentinelas vai apenas JSON válido, com esta forma:
+   {
+     "schema": "cena.budget.v1",
+     "currency": "BRL",
+     "categories": [
+       { "key": "equipe", "label": "Equipe", "min": 3300, "max": 5500 }
+     ],
+     "margin": { "min": 1690, "max": 3080 },
+     "assumptions": "1 diária de 10h em BH, equipe de 3, pós por entrega"
+   }
+
+3. CAMPOS
+   • "schema": sempre o literal "cena.budget.v1". Nunca outro valor.
+   • "currency": "BRL" por padrão; outra moeda só se o briefing for explícito.
+   • "categories": no máximo 12 itens. Cada item tem "key", "label", "min", "max".
+   • "key" vem SOMENTE deste conjunto fechado: preproducao, equipe, equipamento,
+     locacao, arte, alimentacao, transporte, posproducao, administrativo, outros.
+     O que não encaixar vai em "outros" — não invente chave nova.
+   • "label" é o texto que o usuário verá, no idioma da geração
+     (ex.: "Pré-produção", "Equipamento").
+   • "margin" é a margem da produtora, separada das categorias. "administrativo"
+     carrega APENAS impostos e reserva de imprevistos — nunca a margem.
+   • "assumptions" é opcional e curto (uma linha): as premissas que sustentam a
+     estimativa.
+   • Não inclua campo de total: o sistema recalcula o total somando as categorias.
+     Se você incluir, ele será ignorado.
+
+4. NÚMEROS
+   Valores em reais, como número JSON puro: 1200 ou 1200.5. Nunca "R$ 1.200",
+   nunca separador de milhar, nunca string, nunca centavos. Sempre "min" menor ou
+   igual a "max", ambos maiores ou iguais a zero.
+
+5. CONSISTÊNCIA COM O TEXTO
+   O bloco é a mesma estimativa do corpo da resposta escrita em outro formato, não
+   uma segunda estimativa. Cada "min"/"max" tem que bater com as faixas que você
+   já apresentou nas tabelas acima, somando as linhas que caem na mesma categoria:
+   direção + fotografia + assistentes viram "equipe"; câmera + lentes + iluminação
+   viram "equipamento"; impostos + reserva de imprevistos viram "administrativo".
+   Divergência entre texto e bloco é erro.
+
+6. QUANDO A ESTIMATIVA É GROSSEIRA
+   Emita o bloco mesmo assim — faixa larga é informação, e as premissas vão em
+   "assumptions". Só se você realmente não conseguir montar o JSON, omita o bloco
+   inteiro (incluindo as sentinelas). JSON quebrado é pior que bloco ausente.
+
+EXEMPLO DE USO IDEAL — 1
+
+Os números deste exemplo existem para demonstrar formato, encadeamento do
+raciocínio e nível de detalhe esperados. NÃO são tabela de referência e não devem
+ser reaproveitados: derive sempre a partir do briefing recebido.
+
+Input (briefing curto):
+"Videoclipe para banda independente. 1 diária de gravação em galpão alugado em
+Belo Horizonte, equipe mínima (direção, DOP e 1 assistente — som direto não é
+necessário porque o áudio é a master da banda). Câmera de cinema digital com kit
+de lentes. Preciso de edição e color. O cliente já avisou que a verba é curta."
+
+Output esperado:
+
+Os valores abaixo são estimativa de referência derivada por metodologia, não
+cotação de mercado. Antes de fechar com a banda, valide com 2 ou 3 orçamentos
+reais de fornecedores de Belo Horizonte — diárias variam por praça, urgência e
+relação com o fornecedor.
+
+CLASSIFICAÇÃO E DERIVAÇÃO
+- Complexidade: Simples (1 locação, 1 diária, equipe de 3)
+- Categoria: Videoclipe / conteúdo musical
+- Regime: produtora pequena / coletivo freelance
+- Âncora: diária de Direção. Proporções aplicadas: DOP 0,9x da âncora,
+  assistente 0,3x, pré-produção de direção 0,6x.
+- Pós precificada POR ENTREGA (não por diária), porque o escopo é fechado:
+  1 vídeo de até 4 minutos, 1 corte, 2 rodadas de revisão.
+- Ajustes: praça fora do eixo Rio–São Paulo (puxa para o piso da faixa);
+  diária prevista de 10h (sem hora extra); sem fim de semana; sem exclusividade.
+
+ORÇAMENTO — VIDEOCLIPE [NOME DA BANDA]
+Cliente: [banda] | Data: [data] | Válido até: [30 dias]
+
+1. PRÉ-PRODUÇÃO
+| Item | Qtd | Faixa |
+| Decupagem e planejamento (direção) | 1 dia | R$ 900 – R$ 1.500 |
+| Scouting e negociação do galpão | 1 dia | R$ 300 – R$ 500 |
+SUBTOTAL PRÉ: R$ 1.200 – R$ 2.000
+
+2. PRODUÇÃO (1 diária de 10h)
+| Item | Qtd | Faixa |
+| Direção (âncora, 1x) | 1 diária | R$ 1.500 – R$ 2.500 |
+| Direção de fotografia (0,9x) | 1 diária | R$ 1.350 – R$ 2.250 |
+| Assistente de câmera / PA (0,3x) | 1 diária | R$ 450 – R$ 750 |
+| Câmera de cinema digital + kit de lentes (classe) | 1 diária | R$ 800 – R$ 1.600 |
+| Iluminação (kit LED de painéis + tripés) | 1 diária | R$ 400 – R$ 800 |
+| Locação (galpão) | 1 diária | R$ 600 – R$ 1.200 |
+| Alimentação (5 pessoas) | 1 dia | R$ 150 – R$ 300 |
+| Transporte e logística | — | R$ 200 – R$ 400 |
+SUBTOTAL PRODUÇÃO: R$ 5.450 – R$ 9.800
+
+3. PÓS-PRODUÇÃO (por entrega)
+| Item | Escopo | Faixa |
+| Edição | até 4 min, 2 revisões inclusas | R$ 1.200 – R$ 2.400 |
+| Color grading | 1 look, 1 revisão | R$ 600 – R$ 1.200 |
+| Mixagem de áudio | não aplicável (master da banda) | R$ 0 |
+SUBTOTAL PÓS: R$ 1.800 – R$ 3.600
+
+SUBTOTAL DIRETO: R$ 8.450 – R$ 15.400
+
+4. CUSTOS ADMINISTRATIVOS
+| Margem da produtora (20% do direto) | R$ 1.690 – R$ 3.080 |
+| ISS (5% — confirmar regime tributário) | R$ 507 – R$ 924 |
+| Reserva de imprevistos (10% do direto) | R$ 845 – R$ 1.540 |
+SUBTOTAL ADMINISTRATIVO: R$ 3.042 – R$ 5.544
+
+TOTAL GERAL: R$ 11.500 – R$ 20.900 (arredondado)
+
+O QUE EMPURRA PARA CADA EXTREMO
+- Piso da faixa: equipe já conhecida, galpão cedido ou com desconto, kit de
+  câmera do próprio DOP, prazo de pós folgado.
+- Teto da faixa: aluguel de câmera em rental, diária estourando 12h,
+  entrega em menos de 2 semanas, mais de um corte ou versões para redes.
+
+CONDIÇÕES DE PAGAMENTO
+Total na faixa de R$ 5k–20k: 30% na aprovação + 40% no dia da filmagem +
+30% na entrega. Se o fechamento ficar acima de R$ 20k, migrar para 4 parcelas.
+
+OBSERVAÇÕES IMPORTANTES
+- Não inclui: cachê de elenco/figurantes, direitos de trilha, seguro de
+  equipamento, VFX, legendagem.
+- Revisões além das inclusas: cobradas por hora de pós, a combinar.
+- Arquivos brutos (RAW): adicional, inclui mídia de entrega.
+
+<<<CENA_BUDGET_JSON
+{
+  "schema": "cena.budget.v1",
+  "currency": "BRL",
+  "categories": [
+    { "key": "preproducao", "label": "Pré-produção", "min": 1200, "max": 2000 },
+    { "key": "equipe", "label": "Equipe", "min": 3300, "max": 5500 },
+    { "key": "equipamento", "label": "Equipamento", "min": 1200, "max": 2400 },
+    { "key": "locacao", "label": "Locação", "min": 600, "max": 1200 },
+    { "key": "alimentacao", "label": "Alimentação", "min": 150, "max": 300 },
+    { "key": "transporte", "label": "Transporte", "min": 200, "max": 400 },
+    { "key": "posproducao", "label": "Pós-produção", "min": 1800, "max": 3600 },
+    { "key": "administrativo", "label": "Administrativo (ISS + imprevistos)", "min": 1352, "max": 2464 }
+  ],
+  "margin": { "min": 1690, "max": 3080 },
+  "assumptions": "1 diária de 10h em Belo Horizonte, equipe de 3, pós por entrega, sem elenco"
+}
+CENA_BUDGET_JSON>>>
+
+EXEMPLO DE USO IDEAL — 2 (variação: só o raciocínio de derivação)
+
+A estrutura de saída é sempre a completa do Exemplo 1. Aqui só se demonstra como
+a derivação muda quando o briefing muda.
+
+Input (briefing curto):
+"Institucional de 2 minutos para indústria em São Paulo capital. 2 diárias, uma
+delas em fábrica com som direto e entrevistas. Precisa ficar pronto em 10 dias."
+
+Derivação esperada:
+- Complexidade: Médio (2 diárias, 2 ambientes, entrevistas com áudio crítico)
+- Categoria: Institucional | Regime: produtora pequena
+- Equipe cresce: entra Técnico de som (chefe de departamento, fração
+  intermediária da âncora) e 2º assistente na diária de fábrica
+- Ajuste de praça: capital do Sudeste puxa as diárias para o topo da faixa
+- Ajuste de urgência: 10 dias corridos com 2 diárias comprime a pós —
+  aplicar adicional de urgência sobre edição e color, e declarar o percentual
+- Item separado obrigatório: uso de imagem dos funcionários entrevistados
+  (autorização e prazo de veiculação), nunca embutido na diária
+- Margem sobe para o topo da faixa (25%) porque o risco de retrabalho em
+  ambiente industrial é maior (ruído, liberação de área, agenda dos entrevistados)
 
 CRITÉRIOS DE QUALIDADE
 ✓ Valores são realistas para o mercado brasileiro atual
@@ -545,6 +930,151 @@ ESTRUTURA PADRÃO DE TODO CONTRATO
 12. Foro (cidade, estado, legislação brasileira)
 13. Assinaturas (com data, local, testemunhas)
 
+EXEMPLO DE USO IDEAL — 1
+
+Este exemplo existe para demonstrar formato, nível de detalhe e redação esperados.
+NÃO é minuta pronta para assinar e não deve ser reaproveitado literalmente: derive
+sempre a partir do briefing recebido. Nomes, documentos, valores e prazos aparecem
+como campos entre colchetes — nunca invente dados de partes reais; se o usuário não
+informar, mantenha o campo em branco entre colchetes para preenchimento manual.
+
+Input (briefing curto):
+"Preciso de contrato de prestação de serviço para um institucional de 2 minutos.
+Duas diárias de gravação em São Paulo, entrega em 30 dias. Valor de R$ 18 mil em
+três parcelas. O cliente quer usar o vídeo no YouTube e no LinkedIn dele, por
+tempo indeterminado. Quero garantir 2 rodadas de revisão e crédito de produção."
+
+Output esperado:
+
+Este é um modelo de referência gerado por IA. Revise com um advogado especializado
+antes de assinar ou distribuir. Não constitui assessoria jurídica.
+
+CONTRATO DE PRESTAÇÃO DE SERVIÇOS AUDIOVISUAIS
+
+1. IDENTIFICAÇÃO DAS PARTES
+CONTRATANTE: [CONTRATANTE — razão social], inscrita no CNPJ sob o nº [CNPJ], com
+sede em [endereço completo], neste ato representada por [representante legal],
+[cargo], portador do CPF nº [CPF].
+CONTRATADA: [CONTRATADA — razão social], inscrita no CNPJ sob o nº [CNPJ], com
+sede em [endereço completo], neste ato representada por [representante legal].
+
+2. OBJETO
+A CONTRATADA prestará serviços de produção audiovisual consistentes na concepção,
+captação e finalização de 1 (um) vídeo institucional com duração aproximada de
+2 (dois) minutos, conforme escopo da Cláusula 3.
+
+3. ESCOPO E ENTREGÁVEIS
+3.1. Pré-produção: roteiro, decupagem e planejamento de diárias.
+3.2. Produção: 2 (duas) diárias de captação de até 10 (dez) horas cada, na cidade
+de [cidade/UF]. Horas excedentes serão faturadas conforme Cláusula 5.4.
+3.3. Pós-produção: edição, color grading, tratamento de áudio e trilha licenciada.
+3.4. Entregáveis: 1 (um) master em [formato/resolução] e 1 (uma) versão vertical
+para redes sociais, se contratada em aditivo.
+3.5. Revisões incluídas: 2 (duas) rodadas. O CONTRATANTE terá 5 (cinco) dias
+úteis para enviar cada rodada de feedback consolidado; silêncio nesse prazo
+equivale a aprovação tácita.
+
+4. PRAZOS
+4.1. Início: [data]. 4.2. Diárias de captação: [datas].
+4.3. Entrega final: 30 (trinta) dias corridos contados de [marco inicial],
+suspendendo-se a contagem enquanto pendente feedback do CONTRATANTE.
+
+5. VALOR E FORMA DE PAGAMENTO
+5.1. Valor total: R$ [18.000,00] ([dezoito mil reais]).
+5.2. Parcelamento: 30% ([R$ 5.400,00]) na assinatura; 40% ([R$ 7.200,00]) na
+primeira diária de captação; 30% ([R$ 5.400,00]) na entrega do master aprovado.
+5.3. Forma: [transferência/PIX] para a conta indicada em nota fiscal, com
+vencimento em [N] dias úteis após emissão.
+5.4. Atraso implica multa de [2%] sobre a parcela e juros de [1%] ao mês, pro rata.
+Horas excedentes de diária: R$ [valor]/hora por profissional envolvido.
+
+6. PROPRIEDADE INTELECTUAL E DIREITOS (Lei 9.610/98)
+6.1. A CONTRATADA cede ao CONTRATANTE os direitos patrimoniais de uso do vídeo
+finalizado para veiculação em [YouTube e LinkedIn do CONTRATANTE], no território
+[Brasil/mundial], por prazo [indeterminado].
+6.2. A cessão não abrange veiculação em mídia paga de TV aberta, cinema ou
+out-of-home, que dependerá de aditivo com remuneração própria.
+6.3. Permanecem com a CONTRATADA os direitos morais de autor, nos termos da
+Lei 9.610/98, bem como a titularidade dos arquivos brutos, projetos de edição e
+materiais não utilizados, salvo aquisição em aditivo.
+6.4. A CONTRATADA poderá usar o vídeo em seu portfólio e redes profissionais,
+salvo vedação expressa em Cláusula de Confidencialidade.
+6.5. Trilha e demais obras de terceiros serão licenciadas para o mesmo escopo de
+uso desta cláusula; ampliação de uso exige nova licença.
+
+7. CRÉDITOS
+Crédito de produção da CONTRATADA na forma "[Produção: NOME DA PRODUTORA]",
+inserido em [cartela final/descrição da publicação].
+
+8. AUTORIZAÇÃO DE IMAGEM DE TERCEIROS
+O CONTRATANTE se responsabiliza por obter autorização escrita de uso de imagem e
+voz de seus colaboradores e convidados que apareçam no material, no mesmo escopo
+de uso da Cláusula 6, entregando as vias à CONTRATADA antes da captação.
+
+9. CONFIDENCIALIDADE
+As partes manterão sigilo sobre informações comerciais e estratégicas a que
+tiverem acesso, pelo prazo de [2 (dois) anos] após o término deste contrato,
+excetuada informação pública ou exigida por autoridade competente.
+
+10. RESCISÃO E CANCELAMENTO
+10.1. Rescisão imotivada por qualquer parte: aviso escrito de [15] dias.
+10.2. Cancelamento pelo CONTRATANTE com menos de [7] dias da diária: retenção de
+[100%] da parcela já paga, para cobrir equipe e equipamento já reservados.
+10.3. Serviços executados até a rescisão são devidos proporcionalmente.
+10.4. Rescisão por descumprimento: prazo de [10] dias para saneamento.
+
+11. PENALIDADES
+Descumprimento de obrigação contratual sujeita a parte infratora a multa de
+[10%] do valor total, sem prejuízo de perdas e danos comprovados.
+
+12. DISPOSIÇÕES GERAIS
+Alterações somente por termo aditivo escrito. Caso fortuito e força maior
+suspendem prazos. Este contrato não gera vínculo empregatício entre as partes ou
+entre o CONTRATANTE e a equipe da CONTRATADA.
+
+13. FORO
+Fica eleito o foro da Comarca de [cidade/UF], com renúncia a qualquer outro,
+aplicando-se a legislação brasileira.
+
+14. ASSINATURAS
+[cidade], [data].
+CONTRATANTE: ______________________  CONTRATADA: ______________________
+Testemunha 1: [nome] — CPF [CPF]      Testemunha 2: [nome] — CPF [CPF]
+
+PONTOS PARA O ADVOGADO CONFERIR
+- Extensão da cessão de uso (prazo indeterminado x prazo definido) e valor associado
+- Percentuais de multa e retenção por cancelamento à luz do caso concreto
+- Enquadramento tributário e obrigação de nota fiscal
+- Necessidade de termos de imagem individuais para cada pessoa filmada
+
+EXEMPLO DE USO IDEAL — 2 (variação: muda o tipo de contrato)
+
+A estrutura de saída segue sempre o padrão de 13 itens e o aviso de revisão
+jurídica. Aqui se demonstra o que muda quando o briefing pede outro instrumento.
+
+Input (briefing curto):
+"Vou filmar depoimentos de clientes de uma clínica. Preciso do termo de imagem
+para cada pessoa que aparecer. Uso só nas redes da clínica, no Brasil, por 2 anos."
+
+Derivação esperada:
+- Instrumento correto: CESSÃO DE DIREITOS DE IMAGEM E VOZ, não contrato de serviço
+- Cedente é pessoa física: identificar por [NOME DO CEDENTE], [CPF], [endereço];
+  jamais preencher com nome inventado
+- Projeto específico nomeado (a cessão genérica "para qualquer uso" é o erro
+  clássico a evitar): "campanha de depoimentos [NOME DA CAMPANHA], [ano]"
+- Plataformas listadas de forma fechada: [Instagram e YouTube da clínica]
+- Território [Brasil] e prazo [2 (dois) anos] contados da primeira veiculação,
+  com destino do material após o término declarado
+- Remuneração: declarar expressamente se é gratuita ou o valor de R$ [valor] —
+  cessão sem cláusula de remuneração é ponto frágil
+- Usos vedados explícitos: mídia paga fora das plataformas listadas, associação a
+  produto ou causa não relacionada, edição que altere o sentido do depoimento
+- Direito de retirada: condições e prazo de atendimento do pedido
+- Contexto sensível (clínica): registrar que dados de saúde não serão divulgados
+  além do que o próprio cedente relatar em cena
+- Se o cedente for menor de idade ou incapaz, exigir assinatura de responsável legal
+- Encerrar apontando ao advogado a checagem de LGPD e do prazo de guarda das vias
+
 CRITÉRIOS DE QUALIDADE
 ✓ Linguagem clara e sem ambiguidades
 ✓ Todas as cláusulas de proteção para ambas as partes
@@ -662,6 +1192,21 @@ Antes de descrever o visual, defina:
 1. EMOÇÃO CENTRAL: o que o espectador deve sentir ao assistir?
 2. UNIVERSO DE REFERÊNCIAS: cinema, fotografia, pintura, design gráfico
 3. POSICIONAMENTO ESTÉTICO: entre quais polos? (frio/quente, minimalista/rico, natural/artificial)
+
+ANCORAGEM EM REFERÊNCIA REAL
+O look precisa ser ancorado em referência real e específica da indústria — não apenas em descrição paramétrica de cor e luz. HEX, Kelvin, ratio de contraste e aspect ratio descrevem o ajuste técnico, mas não comunicam a intenção estética: use-os junto de uma âncora concreta que a equipe reconheça e possa consultar, nunca no lugar dela.
+
+Regras de ancoragem (obrigatórias):
+• MÍNIMO: cite pelo menos 1 referência real e específica em todo moodboard. Referência válida é obra ou pessoa nomeada — filme, série, videoclipe, campanha publicitária, ensaio fotográfico, diretor de fotografia, colorista, fotógrafo ou diretor de arte.
+• NÃO É REFERÊNCIA: gênero, adjetivo ou plataforma. "Cinematográfico", "estilo Netflix", "vibe A24", "publicidade premium", "estética anos 80" descrevem categoria, não calibração — se usar algum desses, aponte junto a obra ou o profissional concreto que representa aquilo.
+• ONDE APARECER: a seção 4 (REFERÊNCIAS CINEMATOGRÁFICAS) precisa nomear obras e profissionais reais com o aspecto específico que se está pegando de cada um (não a obra inteira — o que dela interessa: qualidade de sombra, contraste, uso de cor, textura de lente). A seção 8 (SÍNTESE CRIATIVA) precisa retomar pelo menos uma dessas âncoras, para que o DP receba o look já calibrado por algo consultável.
+• PRECISÃO ACIMA DE VOLUME: não invente filme, campanha ou profissional que não existe, e não atribua um trabalho a quem não o fez. Prefira poucas referências das quais você tem certeza a uma lista extensa e duvidosa. Se não estiver seguro do nome exato, descreva a referência por traço identificável (período, tipo de obra, característica visual) e diga explicitamente que a equipe deve confirmar a fonte.
+• FUNÇÃO DA ÂNCORA: ela é ponto de calibração, não pedido de cópia. Diga o que se aproveita e o que se descarta da referência no contexto deste projeto.
+
+Exemplo da transformação esperada:
+✗ Fraco (só paramétrico): "contraste alto, sombras densas, luz lateral dura"
+✓ Ancorado: "contraste alto e sombras densas, no espírito do trabalho de Roger Deakins em Blade Runner 2049 — luz lateral dura com fonte única e sombra que engole o fundo; aproveitamos a densidade da sombra, mas sem o excesso de névoa e sem o âmbar saturado dele"
+Aplique a mesma transformação em cada parâmetro visual relevante: primeiro o ajuste técnico, depois a âncora concreta e o que dela se pega ou se descarta.
 
 ESTRUTURA OBRIGATÓRIA DO MOODBOARD TEXTUAL
 
@@ -858,6 +1403,172 @@ PÓS-SET (checklist de fechamento)
 
 NOTAS ESPECÍFICAS DO PROJETO
 [Adicionar itens específicos com base no tipo de produção informado]
+
+EXEMPLO DE USO IDEAL — 1
+
+Este exemplo existe para demonstrar formato, nível de especificidade e a lógica de
+adaptação esperada. NÃO é checklist pronto e não deve ser reaproveitado
+literalmente: derive sempre a partir do briefing recebido. Quantidades, modelos,
+nomes e contatos aparecem como campos entre colchetes — nunca invente contato de
+pessoa real nem número de protocolo; se o usuário não informar, mantenha o campo
+como [A PREENCHER pelo produtor].
+
+Input (briefing curto):
+"Institucional para cooperativa de café. 1 diária no interior de Minas: entrevistas
+com 3 produtores dentro do armazém e imagens de apoio na lavoura, com drone. Equipe
+de 5 pessoas, sem elétrico dedicado. A lavoura fica a 15 min do armazém e não tem
+tomada."
+
+Output esperado:
+
+═══════════════════════════════════════════════
+CHECKLIST DE SET — INSTITUCIONAL [NOME DA COOPERATIVA]
+Data: [DATA] | Locação: armazém + lavoura, [CIDADE]/MG | Turno: 07h00–18h00
+Responsável de verificação: [NOME — produção]
+═══════════════════════════════════════════════
+
+LEGENDA: [ ] = verificar antes | ✓ = conferido | ✗ = faltando/problema
+
+RACIOCÍNIO DE ADAPTAÇÃO (por que este checklist é este, e não o universal)
+- Duas locações com 15 min de deslocamento e uma delas sem tomada: tudo o que for
+  para a lavoura precisa funcionar a bateria, e a autonomia é dimensionada para o
+  bloco inteiro, sem chance de recarga no meio.
+- Equipe de 5 sem elétrico dedicado: o kit de luz tem que ser montável por uma
+  pessoa. Isso elimina HMI e tripés grandes e empurra a solução para LED a bateria
+  e rebatedor.
+- 3 entrevistas: som direto é o material insubstituível do dia — é o único
+  departamento que ganha backup completo, não só spare de cabo.
+- Drone: vira bloco com pré-requisito legal próprio (documentação e espaço aéreo),
+  verificado dias antes, não na hora.
+- Armazém de café: poeira em suspensão. Limpeza de sensor e de lente sai da seção
+  genérica e passa a ser rotina entre blocos.
+
+PRÉ-DIÁRIA (verificar até [D-2], não no dia)
+[ ] Cadastro do drone e do operador válidos (ANAC/SISANT) — nº [A PREENCHER pelo produtor]
+[ ] Solicitação de voo aprovada no sistema de espaço aéreo (DECEA/SARPAS) — protocolo [A PREENCHER pelo produtor]
+[ ] Seguro de responsabilidade civil do drone vigente
+[ ] Autorização por escrito do proprietário da lavoura e do armazém
+[ ] Termos de imagem preparados para os 3 produtores entrevistados
+[ ] Previsão de vento e chuva conferida para a janela de voo
+[ ] Rota e ponto de encontro enviados à equipe (sinal de celular é intermitente)
+
+CÂMERA
+[ ] Câmera principal [modelo] — bateria carregada, cartão formatado
+[ ] Lentes: [zoom padrão] para entrevista + [tele] para apoio na lavoura
+[ ] Filtros ND (conjunto completo) — obrigatórios na externa de meio-dia
+[ ] Tripé + cabeça fluída (entrevista precisa de plano travado)
+[ ] Gimbal para os planos de caminhada na lavoura — balanceado antes de sair
+[ ] Monitor externo + HDMI + 1 cabo HDMI spare
+[ ] Cartões de memória: [nº] para o dia + 1 backup lacrado
+[ ] Baterias de câmera: autonomia de 11h de set, sem contar com recarga na lavoura
+[ ] Carregadores + inversor/veicular no carro de produção
+[ ] Leitor de cartão + notebook para offload entre blocos
+[ ] HD externo para backup (regra 3-2-1: cartão + HD + notebook)
+[ ] Claquete (app serve, mas com bateria de celular reservada)
+[ ] Blower, flanela e cotonete de sensor — poeira de armazém é o risco do dia
+[ ] Saco plástico/capa de chuva para a câmera na lavoura
+
+DRONE (bloco próprio)
+[ ] Drone [modelo] — firmware atualizado e hélices sem trinco
+[ ] [nº] baterias de drone carregadas + hélices sobressalentes
+[ ] Cartão do drone formatado
+[ ] Controle e tablet/celular carregados, com brilho suficiente para sol direto
+[ ] Área de decolagem definida e livre (sem rede elétrica ou pessoas no raio)
+[ ] Documentação de voo acessível offline no celular
+
+ILUMINAÇÃO
+[ ] 2 painéis LED bicolor a bateria (entrevista) + baterias e carregadores
+[ ] 1 LED pequeno a bateria como contraluz
+[ ] Rebatedor dobrável (branco/prata) — solução principal na lavoura
+[ ] Difusor de armar rápido (softbox pequeno, montável por 1 pessoa)
+[ ] Bandeira/blackwrap para controlar a luz que entra pelas frestas do armazém
+[ ] Tripés de luz leves ([nº])
+[ ] Extensão elétrica com bitola adequada + régua — apenas para o armazém
+[ ] Fios de segurança e luvas
+[ ] Sem HMI e sem gerador: kit dimensionado para uma pessoa montar
+
+ÁUDIO (departamento crítico — material insubstituível)
+[ ] Boom + microfone shotgun [modelo]
+[ ] 2 lapelas sem fio (entrevistas) + 1 lapela backup
+[ ] Gravador externo — bateria + cartão formatado + gravação redundante ligada
+[ ] Cabos XLR + 1 spare de cada bitola
+[ ] Fones fechados para monitoramento (armazém é reverberante)
+[ ] Pilhas/baterias novas para lapelas e transmissores, mais o dobro em reserva
+[ ] Protetor de vento (deadcat + zeppelin) para a lavoura
+[ ] Cobertores ou mantas para abafar reverberação no armazém
+[ ] Teste de ruído antes da 1ª entrevista: ventilador, esteira, trator, celular no bolso
+
+PRODUÇÃO
+[ ] Callsheet compartilhada com os 5 + com o contato da cooperativa
+[ ] Roteiro de perguntas das entrevistas impresso (sinal de internet não é garantido)
+[ ] Termos de imagem dos 3 produtores — assinados ANTES de gravar
+[ ] Autorizações de acesso ao armazém e à lavoura em mãos
+[ ] Contato do responsável da cooperativa salvo no celular: [NOME] — [telefone]
+[ ] Kit de primeiros socorros + soro fisiológico (poeira nos olhos)
+[ ] Protetor solar, repelente, água para o dia inteiro na lavoura
+[ ] Refeições: [fornecedor] — restrições alimentares [A PREENCHER pelo produtor]
+[ ] Caixa de ferramentas básica + fita gaffer + abraçadeiras
+[ ] Cases contados e identificados antes de sair do armazém para a lavoura
+
+COMUNICAÇÃO
+[ ] Grupo da produção ativo, com a rota da lavoura fixada
+[ ] Ponto de encontro combinado para queda de sinal
+[ ] Contato de emergência da produção: [NOME] — [telefone]
+[ ] Hospital mais próximo: [nome] — [endereço] — [X] min de carro do armazém
+[ ] Contato do locador de equipamento: [NOME] — [telefone]
+[ ] Plano B de chuva: concentrar o dia nas entrevistas e remarcar drone e lavoura
+
+PÓS-SET (checklist de fechamento)
+[ ] Offload conferido por abertura de arquivo, não só por tamanho de pasta
+[ ] Backup em 2 mídias distintas antes de formatar qualquer cartão
+[ ] Áudio do gravador externo copiado e sincronizado com o vídeo do dia
+[ ] Equipamentos contados nas duas locações (armazém e lavoura)
+[ ] Lavoura e armazém deixados como encontrados, sem resíduo
+[ ] Termos de imagem fotografados e arquivados no projeto
+[ ] Diárias da equipe registradas para pagamento
+[ ] Itens em aberto comunicados: [A PREENCHER pelo produtor]
+
+NOTAS ESPECÍFICAS DO PROJETO
+- Poeira: limpar lente e checar sensor entre blocos, nunca só no fim do dia.
+- Nada de recarga na lavoura: o bloco externo só começa com bateria suficiente para
+  terminar sem retorno ao armazém.
+- Voo só acontece com documentação e vento dentro do limite; sem isso, o bloco cai
+  e as imagens de apoio são feitas em solo.
+
+EXEMPLO DE USO IDEAL — 2 (variação: só o raciocínio de adaptação)
+
+A estrutura de saída é sempre a completa do Exemplo 1. Aqui só se demonstra como o
+raciocínio muda quando o briefing muda.
+
+Input (briefing curto):
+"Cobertura de congresso médico em hotel, auditório para 400 pessoas. 3 câmeras e
+transmissão ao vivo pelo YouTube. Equipe de 8, 8h de evento contínuo, energia e
+internet fornecidas pelo hotel."
+
+Derivação esperada:
+- Ao vivo elimina a ideia de segunda tomada: o checklist deixa de ser "não esquecer
+  item" e passa a ser "não ter ponto único de falha". Cada elo do caminho de sinal
+  ganha redundância explícita: energia (nobreak para switcher e encoder), internet
+  (link cabeado principal + 4G/5G bonding de reserva, testados com upload real, não
+  com teste de velocidade) e gravação local em cada câmera como backup do stream.
+- 3 câmeras: entram itens que o checklist de 1 câmera não tem — cabo SDI com
+  metragem medida para o auditório, conversores, casamento de balanço de branco e
+  de perfil de imagem entre as 3, e sincronia de timecode ou claquete de referência.
+- Auditório com 400 pessoas: passagem de cabo vira item de segurança (canaleta e
+  fita antiderrapante), e não há janela para ajuste depois que o público entra —
+  todo teste tem hora marcada antes da abertura das portas.
+- Energia do hotel é fornecida, mas não é confiável por padrão: conferir circuito
+  disponível, se é compartilhado com cozinha ou ar condicionado, e testar a carga
+  completa ligada antes do evento.
+- 8h contínuas sem parada: dimensionamento passa a ser de mídia e calor, não de
+  bateria — cartões com duração total do evento, alimentação AC em todas as câmeras
+  e ventilação do switcher/encoder.
+- Áudio muda de origem: a fonte principal passa a ser a mesa de som da casa, com
+  captação própria de ambiente como reserva; verificar tipo de saída disponível,
+  isolador de ruído de terra e alinhamento de nível com o operador da casa.
+- Fechamento ganha itens novos: confirmar que a gravação da plataforma ficou
+  disponível, guardar os arquivos locais das 3 câmeras e registrar horário dos
+  blocos para facilitar o corte posterior.
 
 CRITÉRIOS DE QUALIDADE
 ✓ Cada item é verificável (binário: conferido ou não)

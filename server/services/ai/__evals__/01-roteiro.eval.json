@@ -1,0 +1,106 @@
+{
+  "tool": "01",
+  "slug": "roteiro",
+  "cases": [
+    {
+      "id": "roteiro-institucional-90s",
+      "notes": "Verifica o que a task 3 acrescentou: âncora narrativa real e nomeada, não rótulo genérico de gênero.",
+      "input": {
+        "projeto": "Vídeo institucional de software de gestão",
+        "briefing": "90 segundos para investidores B2B, veiculação em YouTube e LinkedIn. Precisa explicar o problema que o produto resolve e passar credibilidade sem parecer propaganda."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "ancora-real",
+          "description": "cita obra ou pessoa nomeada como âncora do recurso narrativo (task 3)",
+          "check": { "type": "regex", "pattern": "(no esp[íi]rito de|refer[êe]ncia:|como em|à maneira de)", "flags": "i" }
+        },
+        {
+          "id": "sem-rotulo-vazio",
+          "description": "não usa rótulo de plataforma como se fosse referência (estilo Netflix, vibe A24)",
+          "check": { "type": "regexAbsent", "pattern": "(estilo Netflix|vibe A24|estilo TikTok)", "flags": "i" }
+        },
+        {
+          "id": "indicacoes-de-camera",
+          "description": "traz indicações técnicas de câmera por cena",
+          "check": { "type": "regex", "pattern": "(PLANO|CLOSE|DOLLY|TRAVELLING|PAN|CONTRA-PLONG|GERAL)", "minMatches": 3 }
+        },
+        {
+          "id": "estrutura-de-cenas",
+          "description": "divide em cenas numeradas com marcação de interior/exterior ou tempo",
+          "check": { "type": "regex", "pattern": "(CENA\\s*\\d|INT\\.|EXT\\.)", "minMatches": 3 }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        },
+        {
+          "id": "cabe-em-90s",
+          "description": "o volume de cenas e falas é filmável e cabe em 90 segundos",
+          "check": { "type": "manual" }
+        }
+      ]
+    },
+    {
+      "id": "roteiro-reels-vertical-15s",
+      "notes": "Formato curto é onde o modelo tende a escrever roteiro longo demais. Testa contenção.",
+      "input": {
+        "projeto": "Reels para marca de café",
+        "briefing": "15 segundos, vertical, para Instagram. Objetivo: mostrar o ritual da manhã e terminar com o pacote do produto. Sem locução, só imagem e trilha."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "ancora-real",
+          "description": "traz âncora concreta em vez de adjetivo",
+          "check": { "type": "regex", "pattern": "(no esp[íi]rito de|refer[êe]ncia:|como em|à maneira de)", "flags": "i" }
+        },
+        {
+          "id": "respeita-sem-locucao",
+          "description": "não escreve locução, já que o briefing pediu só imagem e trilha",
+          "check": { "type": "regexAbsent", "pattern": "(LOCU[ÇC][ÃA]O|NARRADOR|VOZ EM OFF)", "flags": "i" }
+        },
+        {
+          "id": "vertical",
+          "description": "considera o enquadramento vertical",
+          "check": { "type": "regex", "pattern": "(vertical|9:16)", "flags": "i" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "roteiro-documental-depoimento",
+      "notes": "Documentário não tem fala escrita: o roteiro vira estrutura de perguntas e cobertura. Testa se ele muda de registro.",
+      "input": {
+        "projeto": "Minidocumentário sobre feira livre",
+        "briefing": "6 minutos, depoimentos reais de 3 feirantes, sem roteiro de fala. Precisa de estrutura de perguntas e plano de cobertura de imagens de apoio."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "perguntas-de-entrevista",
+          "description": "propõe perguntas de entrevista em vez de diálogo escrito",
+          "check": { "type": "regex", "pattern": "\\?", "minMatches": 5 }
+        },
+        {
+          "id": "cobertura",
+          "description": "planeja imagens de apoio (b-roll / cobertura)",
+          "check": { "type": "regex", "pattern": "(b-?roll|cobertura|imagens de apoio)", "flags": "i" }
+        },
+        {
+          "id": "ancora-real",
+          "description": "ancora a estrutura em obra documental nomeada",
+          "check": { "type": "regex", "pattern": "(no esp[íi]rito de|refer[êe]ncia:|como em|à maneira de)", "flags": "i" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    }
+  ]
+}

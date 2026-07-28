@@ -1,0 +1,106 @@
+{
+  "tool": "07",
+  "slug": "briefing",
+  "cases": [
+    {
+      "id": "briefing-de-conversa-desorganizada",
+      "notes": "O valor da ferramenta está na seção de gaps: transformar conversa solta em briefing e dizer o que falta perguntar.",
+      "input": {
+        "projeto": "A definir",
+        "conversa": "Cliente (WhatsApp): oi, preciso de um vídeo pra lançar nossa linha nova de tênis. Tipo aquele da Nike, sabe? Pra rodar no Insta. Tem que ficar pronto antes do Black Friday. Ah, e a diretora de marketing quer aparecer falando um pouco. Orçamento a gente vê depois."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "secao-de-gaps",
+          "description": "traz a seção crítica de gaps com perguntas específicas ao cliente",
+          "check": { "type": "regex", "pattern": "GAPS?", "minMatches": 1 }
+        },
+        {
+          "id": "perguntas-concretas",
+          "description": "formula perguntas concretas em vez de listar temas vagos",
+          "check": { "type": "regex", "pattern": "\\?", "minMatches": 4 }
+        },
+        {
+          "id": "detecta-gap-de-orcamento",
+          "description": "identifica o orçamento como gap, já que o cliente disse 'a gente vê depois'",
+          "check": { "type": "regex", "pattern": "(or[çc]amento|verba|investimento)", "flags": "i" }
+        },
+        {
+          "id": "prazo-black-friday",
+          "description": "converte 'antes do Black Friday' em necessidade de data concreta",
+          "check": { "type": "regex", "pattern": "(black friday|data (limite|exata|espec))", "flags": "i" }
+        },
+        {
+          "id": "secoes-obrigatorias",
+          "description": "cobre objetivo, entregáveis, público, tom e cronograma",
+          "check": { "type": "includesAll", "values": ["OBJETIVO", "ENTREG", "PÚBLICO", "TOM", "CRONOGRAMA"] }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "briefing-com-contradicao",
+      "notes": "A metodologia manda detectar contradição. Aqui o briefing pede tom sóbrio e humor ao mesmo tempo, e prazo que não combina com o escopo.",
+      "input": {
+        "projeto": "Vídeo institucional de hospital",
+        "conversa": "Precisamos de algo bem sério e sóbrio, hospital não é lugar de brincadeira. Mas queremos que seja divertido e viralize tipo aquele vídeo da farmácia. Prazo: 10 dias. Queremos depoimento de 12 médicos e imagens de 4 unidades."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "aponta-contradicao",
+          "description": "aponta explicitamente a contradição de tom",
+          "check": { "type": "regex", "pattern": "(contradi|conflito|tens[ãa]o|incompat|inconsist)", "flags": "i" }
+        },
+        {
+          "id": "aponta-risco-de-prazo",
+          "description": "sinaliza que 12 depoimentos em 4 unidades não cabem em 10 dias",
+          "check": { "type": "regex", "pattern": "(prazo|10 dias|invi[áa]vel|apertad)", "flags": "i" }
+        },
+        {
+          "id": "secao-de-gaps",
+          "description": "traz a seção de gaps",
+          "check": { "type": "regex", "pattern": "GAPS?" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "briefing-completo-sem-gaps",
+      "notes": "Quando o briefing está completo, inventar gap para parecer útil é ruído. Testa contenção.",
+      "input": {
+        "projeto": "Vídeo de produto — Aurora Cosméticos",
+        "conversa": "Objetivo: apresentar o sérum novo para consumidoras de 25 a 40 anos em São Paulo, que já conhecem a marca. Entregáveis: 1 vídeo de 45s em 16:9 e 2 cortes 9:16, para Instagram e YouTube. Tom: elegante e sóbrio, referência: campanhas da Aesop. Não usar humor. Guia de marca com cores e tipografia será enviado. Entrega final em 30/11, aprovação de roteiro em 05/11. Orçamento de R$ 28.000. Locação: estúdio próprio da marca. Elenco: 2 modelos profissionais. Aprovação: Bruna Lima, diretora de marketing, decisão final. 2 rodadas de revisão. Comunicação por e-mail."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "reconhece-completude",
+          "description": "reconhece que o briefing está completo em vez de fabricar gaps",
+          "check": { "type": "regex", "pattern": "(completo|pronto para pr[ée]|sem gaps|nenhum gap)", "flags": "i" }
+        },
+        {
+          "id": "preserva-restricao",
+          "description": "preserva a proibição explícita de humor",
+          "check": { "type": "regex", "pattern": "(humor)", "flags": "i" }
+        },
+        {
+          "id": "recomendacoes",
+          "description": "traz recomendações proativas da produtora",
+          "check": { "type": "regex", "pattern": "RECOMENDA", "flags": "i" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    }
+  ]
+}

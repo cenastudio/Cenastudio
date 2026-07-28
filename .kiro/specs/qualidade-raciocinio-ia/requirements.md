@@ -61,8 +61,11 @@ Esta spec mexe em três coisas:
 
 **A4. Ponte entre Orçamento (texto) e Orçamento (estruturado)**
 - Botão "usar este orçamento no módulo de Orçamento do projeto"
-- Extrai totais por categoria e popula `BudgetEntry` via `budgetService.ts`
-- Alternativa: pedir JSON estruturado junto do texto markdown
+- Extrai totais por categoria de um bloco JSON emitido junto do texto
+- Popula o **baseline** do `Budget` (`updateBudgetBaseline`: `totalAmount` +
+  `categories`), **não** `BudgetEntry` — este é gasto realizado e alimenta os
+  custos diretos do DRE
+- Decisão e contrato JSON: `ARCHITECTURE.md`, ADR-013 (decidido em A4.1)
 
 ### Fase B — Reclassificar modelo por criticidade
 
@@ -109,4 +112,4 @@ Definir 2-3 perfis e associar cada ferramenta:
 - [ ] Temperatura por perfil implementada e testada nas 3 categorias
 - [ ] Pasta de eval existe com ≥3 casos por ferramenta
 - [ ] Resultado comparativo registrado em `docs/STATUS.md`
-- [ ] Decisão tomada sobre ponte Orçamento IA → BudgetEntry estruturado
+- [x] Decisão tomada sobre ponte Orçamento IA → Orçamento estruturado (ADR-013)

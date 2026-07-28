@@ -3,6 +3,7 @@ import { type ToolFromApi } from "@/lib/api";
 import { cleanGeneratedText } from "@/lib/documentFormatter";
 import ActionToolbar from "./ActionToolbar";
 import RefineChatPanel from "./RefineChatPanel";
+import BudgetBridgeAction from "./BudgetBridgeAction";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
 import { CheckCircle2, FileText, Send, Archive, ChevronRight, Sparkles } from "lucide-react";
@@ -120,6 +121,13 @@ export default function OutputPanel({
                     </button>
                   )}
                 </div>
+
+                {/* Ponte Orçamento IA → módulo de Orçamento (ADR-013). Só na
+                    ferramenta 04, que é a única que emite o bloco estruturado. */}
+                {tool.slug === "orcamento" && (
+                  <BudgetBridgeAction output={output} projectId={projectId} />
+                )}
+
                 <pre className="whitespace-pre-wrap break-words font-frame-body text-[0.88rem] leading-[1.8] text-frame-cream selection:bg-frame-orange selection:text-frame-black">
                   {displayOutput}
                 </pre>

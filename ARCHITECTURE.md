@@ -569,6 +569,228 @@ passar a receber tráfego relevante (ver nota sobre `hashSync`).
 
 ---
 
+### ADR-013: Ponte Orçamento IA → módulo de Orçamento via bloco JSON delimitado
+
+**Status:** Aceito
+**Data:** 2026-07-26
+**Contexto:** A ferramenta 04 (Orçamento) gera um documento em texto e não
+alimenta o módulo estruturado de Orçamento — o usuário redigita tudo em
+`Budget.tsx`. A spec `.kiro/specs/qualidade-raciocinio-ia/` (A4) apresentava duas
+opções: (1) parsear o texto gerado, (2) pedir ao modelo um bloco JSON junto do
+texto. Três achados no código decidem a questão:
+
+1. **O texto gerado não é markdown estruturado e não é estável.** `generateForTool`
+   (`server/services/aiService.ts`) anexa ao system prompt uma regra obrigatória
+   que **proíbe** markdown (`**`, `#`, `-`, ` ``` `). O que chega ao cliente é
+   prosa em caixa-alta com bullets `•`, e `cleanGeneratedText`
+   (`client/src/lib/documentFormatter.ts`) ainda reescreve `|` de tabela para
+   ` · ` e remove cercas de código. Parsear isso é parsear um formato que o
+   próprio sistema instrui o modelo a não garantir.
+2. **Depois da A1, cada rubrica é uma faixa, não um número.** O `promptRole` da 04
+   exige "FAIXA, NUNCA NÚMERO ÚNICO" (`R$ 8.450 – R$ 15.400`). Uma linha de
+   orçamento passa a ter dois números, e `BudgetEntry.amount` / `budgeted` é um
+   `Int` único. Qual dos dois vale não é dedutível do texto — precisa ser
+   declarado.
+3. **Estimativa não é gasto realizado.** `BudgetEntry` é o razão de despesa real
+   (`entryDate`, `receiptUrl`), e `dreService.ts` calcula
+   `directCosts = budgetService.getOverview().totalSpent`, que é a soma de
+   `BudgetEntry`. Escrever a estimativa da IA como `BudgetEntry` injetaria custo
+   fictício no DRE e, como `getOverview` marca `over` para categoria com gasto e
+   sem orçamento, faria o projeto nascer "Estourado".
+
+**Decisão:** Opção 2 (JSON estruturado), com três ajustes que o código impõe.
+
+- **Delimitador não é cerca de código.** O bloco vai no fim da resposta entre
+  duas linhas sentinela em texto puro, porque ` ``` ` é proibido pelas regras de
+  formatação globais:
+
+  ```
+  <<<CENA_BUDGET_JSON
+  { ...json... }
+  CENA_BUDGET_JSON>>>
+  ```
+
+- **Destino é o baseline do `Budget`, não `BudgetEntry`.** A ponte chama
+  `updateBudgetBaseline` (`PUT /api/budgets/:projectId`), populando
+  `Budget.totalAmount`, `Budget.currency` e `Budget.categories`
+  (`[{ name, budgeted }]`). `addEntry` nunca é usado pela ponte. **Isto supera a
+  redação de `requirements.md` A4 e de `design.md` A4**, que falavam em popular
+  `BudgetEntry`.
+- **Sem fallback de parsing de prosa.** Se o bloco não existe ou não valida, a
+  ponte não tenta ler o texto — ela se desabilita e manda o usuário para o
+  preenchimento manual. Meia-extração errada é pior que nenhuma num módulo
+  financeiro.
+
+**Contrato JSON (`cena.budget.v1`)** — o que a A4.2 faz o modelo emitir e a
+A4.4/A4.5 consomem:
+
+```json
+{
+  "schema": "cena.budget.v1",
+  "currency": "BRL",
+  "categories": [
+    { "key": "preproducao",    "label": "Pré-produção",  "min": 1200, "max": 2000 },
+    { "key": "equipe",         "label": "Equipe",        "min": 3300, "max": 5500 },
+    { "key": "equipamento",    "label": "Equipamento",   "min": 1200, "max": 2400 },
+    { "key": "locacao",        "label": "Locação",       "min":  600, "max": 1200 },
+    { "key": "alimentacao",    "label": "Alimentação",   "min":  150, "max":  300 },
+    { "key": "transporte",     "label": "Transporte",    "min":  200, "max":  400 },
+    { "key": "posproducao",    "label": "Pós-produção",  "min": 1800, "max": 3600 },
+    { "key": "administrativo", "label": "Administrativo","min": 1352, "max": 2464 }
+  ],
+  "margin": { "min": 1690, "max": 3080 },
+  "assumptions": "1 diária de 10h em BH, equipe de 3, pós por entrega"
+}
+```
+
+Regras do contrato:
+
+- `key` vem de um conjunto fechado: `preproducao`, `equipe`, `equipamento`,
+  `locacao`, `arte`, `alimentacao`, `transporte`, `posproducao`,
+  `administrativo`, `outros`. Chave desconhecida é remapeada para `outros`, não
+  rejeitada. `label` é o texto que vai para `Budget.categories[].name` — fica no
+  idioma da geração (`locale`), enquanto `key` é o identificador estável usado na
+  validação.
+- **Unidade: reais, número JSON** (`1200`, `1200.5`), sem `"R$"`, sem separador
+  de milhar, sem string. A conversão para os centavos do banco é do consumidor:
+  `Math.round(valor * 100)`. Pedir centavos ao modelo trocaria um erro de
+  formatação por um erro de aritmética.
+- `min ≤ max`, ambos finitos e `≥ 0`. Máximo de 12 categorias e 4 KB de bloco.
+  Categorias repetidas são somadas pelo consumidor. Resolvido na A4.4, onde o
+  limite não dizia o comportamento: **excesso de rubricas** mantém as 12
+  primeiras válidas e lista as demais como descartadas (não invalida o bloco);
+  **bloco acima de 4 KB** é inválido sem tentativa de `JSON.parse`; na **soma de
+  chaves repetidas** o `label` da linha resultante é o da primeira ocorrência.
+- **Faixa → valor único:** o diálogo de confirmação (A4.3) oferece *piso* e
+  *teto*, com **teto pré-selecionado**, e o valor escolhido vira `budgeted`.
+  Teto por padrão porque `budgeted` é o limite autorizado: usar o piso marcaria
+  "Estourado" (`pct ≥ 1` em `getOverview`) em projetos que estão dentro da
+  estimativa, e alerta que sempre dispara deixa de ser alerta.
+- **`total` do modelo é ignorado.** `totalAmount` é recalculado como Σ
+  `budgeted`, igual ao que `Budget.tsx` já faz ao salvar o baseline pela tela.
+- **`margin` nunca entra no baseline.** Margem da produtora é receita, não custo;
+  incluí-la infla o teto e esconde estouro. Vai só para exibição no diálogo.
+  `administrativo` carrega apenas impostos e reserva de imprevistos.
+- **Nada é gravado sem confirmação humana.** A ponte sempre abre o diálogo com o
+  que extraiu antes de chamar a API.
+- `updateBudgetBaseline` **substitui** as categorias existentes. Quando já houver
+  baseline, o diálogo avisa e exige confirmação explícita. Sem merge na v1.
+
+**Bloco ausente ou inválido:**
+
+- `output` sem sentinela, `JSON.parse` falhando, `schema` diferente de
+  `cena.budget.v1`, ou zero categorias válidas → botão inerte com a explicação
+  "este orçamento foi gerado sem os dados estruturados" e link para a tela de
+  Orçamento do projeto. Gerações anteriores à A4.2 caem aqui por definição —
+  é o comportamento esperado, não erro.
+- Validade parcial: categorias válidas são mantidas, as inválidas são descartadas
+  e listadas no diálogo. Se sobrar zero, trata-se como inválido.
+
+**Consequências:**
+
+- Positivas:
+  - A extração passa a depender de um contrato versionado (`schema`), não do
+    humor do modelo na formatação.
+  - Funciona a partir do histórico: o bloco é persistido em `generations.output`,
+    então a ponte roda em geração antiga sem regerar.
+  - `BudgetEntry` continua significando exclusivamente gasto real — DRE e alertas
+    seguem confiáveis.
+- Negativas:
+  - O bloco é lixo visual e precisa ser removido antes de exibir, copiar e
+    exportar e antes de o output ser reinjetado como contexto de prompt. A A4.4
+    centralizou isso em `stripBudgetBlock` (`shared/budgetBlock.ts`), aplicado em
+    `cleanGeneratedText` (cobre exibição, cópia, PDF e DOCX), no
+    `buildProjectContext` do servidor, no contexto do Assistente, no prompt de
+    refino e no preview do histórico. `BudgetBridgeAction` é o único consumidor
+    que recebe o output cru — é ele que precisa do bloco.
+  - Modelo free pode emitir JSON malformado; nesse caso a ponte simplesmente não
+    aparece, e a A4.6 precisa medir com que frequência isso acontece.
+  - Custo de tokens por geração um pouco maior.
+  - A escolha piso/teto é do usuário, o que adiciona um passo à UI.
+
+**Revisão:** se a taxa de bloco inválido medida na A4.6 for alta, a saída para
+gerar o JSON numa segunda chamada dedicada (prompt curto, só JSON) já está
+compatível com este contrato — o `schema` continua o mesmo. Rever também ao
+introduzir tabela de preços própria do sistema (alternativa registrada em
+`design.md` A1).
+
+---
+
+### ADR-014: Roteamento de modelo e amostragem por criticidade da ferramenta
+
+**Status:** Aceito para a estrutura, **provisório para a escolha de modelo da
+faixa alta** (pendente do eval da Fase D — task D4.1 do spec
+`qualidade-raciocinio-ia`)
+**Data:** 2026-07-27
+**Contexto:** `resolveToolModel` agrupava as 12 ferramentas de IA por tema:
+`CALCULATION_TOOLS` (04 Orçamento, 05 Proposta, 06 Contrato) e `MARKETING_TOOLS`
+(07 Briefing, 08 Moodboard, 11 Entrega). Tema é a variável errada. O que importa
+para escolher modelo e temperatura é **quanto custa estar errado**:
+
+- Proposta (05) ficava junto de Orçamento por "ter número", mas erro nela é uma
+  renegociação; erro no orçamento é prejuízo.
+- Callsheet (03) e Checklist de Set (09) não tinham roteamento nenhum — caíam no
+  modelo padrão. São justamente os dois documentos que erram em cima de gente
+  parada no set.
+- Todas as 12 usavam a mesma temperatura global (`OPENROUTER_TEMPERATURE=0.7`).
+  0.7 é alto para cláusula de contrato e baixo para moodboard.
+
+**Decisão:** classificar por criticidade de erro e derivar duas coisas dessa
+classificação — modelo e amostragem.
+
+| Faixa | Ferramentas | Critério |
+|---|---|---|
+| `high` | 03 Callsheet, 04 Orçamento, 06 Contrato, 09 Checklist | erro custa dinheiro, prazo ou exposição jurídica |
+| `medium` | 01 Roteiro, 02 Decupagem, 05 Proposta, 10 Cronograma, 11 Entrega | erro custa retrabalho |
+| `creative` | 07 Briefing, 08 Moodboard, 12 Assistente | erro é questão de gosto |
+
+Ferramenta não classificada cai em `medium`, não em `creative` — fail-safe para
+não mandar ferramenta nova para a temperatura mais alta por omissão.
+
+Perfis de amostragem (`TEMPERATURE_PROFILES`): `precision` 0.2 / `standard` 0.6 /
+`creative` 0.8, `top_p` 0.95 nos três. O mapa de perfil **não** é espelho da
+criticidade: Roteiro (01) é `medium` mas usa `creative`, porque errar num roteiro
+é barato e variação ali é o que se quer. É a única exceção, e é deliberada.
+
+Precedência: o perfil da ferramenta vence `OPENROUTER_TEMPERATURE` /
+`NVIDIA_TEMPERATURE`. O específico ganha do global; as variáveis continuam
+valendo para chamadas que não vêm de uma ferramenta (`server/services/ai/aiHelper.ts`).
+
+**O que ainda não está decidido:** qual modelo serve a faixa `high`. `TIER_MODEL`
+mantém `poolside/laguna-m.1:free`, que já atendia Orçamento e Contrato antes do
+reagrupamento, para não trocar modelo em produção por palpite. Os dois candidatos
+do design eram `nvidia/nemotron-3-ultra-550b-a55b:free` e
+`qwen/qwen3-next-80b-a3b-instruct:free`; a consulta a
+`GET https://openrouter.ai/api/v1/models` em 2026-07-27 mostra que **o segundo
+não é mais oferecido** — restam 15 modelos `:free` no catálogo. A mesma consulta
+revelou que a cadeia de fallback tinha 2 de 5 degraus mortos
+(`meta-llama/llama-3.3-70b-instruct:free` e o próprio qwen), corrigidos no mesmo
+commit.
+
+**Consequências:**
+- Positivas:
+  - Callsheet e Checklist passam a ser roteadas com a mesma prioridade de
+    Orçamento e Contrato, o que antes não acontecia.
+  - Contrato e orçamento ficam mais repetíveis (0.2), moodboard e briefing mais
+    variados (0.8), sem trocar de modelo.
+  - Faixa e perfil são função pura testável (`aiServiceRouting.test.ts`, 12
+    testes), e "ferramenta nova sem classificação" deixa de ser falha silenciosa.
+- Negativas:
+  - Muda o modelo de 4 ferramentas em relação ao agrupamento anterior (03, 05,
+    09, 12) **sem eval por trás** — é o custo de reclassificar antes de medir. A
+    Fase D é o que fecha essa lacuna.
+  - Quem tinha ajustado `OPENROUTER_TEMPERATURE` no ambiente perde efeito nas 8
+    ferramentas mapeadas.
+  - O catálogo `:free` do OpenRouter muda sem aviso, então tanto `TIER_MODEL`
+    quanto a cadeia de fallback são referências que envelhecem. Reconferir a cada
+    mexida em roteamento.
+
+**Revisão:** ao fechar o primeiro cliente pagante, revisar a faixa `high` para
+modelo pago (gatilho em `docs/STATUS.md`, Seção 3). Antes disso, aplicar o
+resultado do eval comparativo da Fase D em `TIER_MODEL.high`.
+
+---
+
 ## 🎨 Padrões de Design
 
 ### Controller Pattern

@@ -1,0 +1,122 @@
+{
+  "tool": "12",
+  "slug": "assistente",
+  "cases": [
+    {
+      "id": "assistente-duvida-tecnica",
+      "notes": "Pergunta técnica fechada: resposta tem de ser direta e acionável, não aula genérica.",
+      "input": {
+        "pergunta": "Estou filmando entrevista em sala com lâmpada fluorescente no teto e janela grande atrás do entrevistado. Como resolvo o balanço de branco e o contraluz com só um painel LED?"
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "responde-as-duas-partes",
+          "description": "trata balanço de branco e contraluz, não só um dos dois",
+          "check": { "type": "regex", "pattern": "(balan[çc]o de branco|kelvin|temperatura de cor)", "flags": "i" }
+        },
+        {
+          "id": "solucao-com-o-recurso-disponivel",
+          "description": "resolve com o painel LED único informado, sem exigir kit que não existe",
+          "check": { "type": "regex", "pattern": "(LED|rebated|difus|persiana|cortina)", "flags": "i" }
+        },
+        {
+          "id": "acionavel",
+          "description": "dá passos executáveis no set, não teoria solta",
+          "check": { "type": "minLength", "chars": 400 }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        },
+        {
+          "id": "tecnicamente-correto",
+          "description": "a orientação técnica está correta e não pioraria a imagem",
+          "check": { "type": "manual" }
+        }
+      ]
+    },
+    {
+      "id": "assistente-pergunta-de-precificacao",
+      "notes": "Pergunta de preço é onde o modelo tende a cravar tabela. Depois da A1, o certo é dar método e mandar validar.",
+      "input": {
+        "pergunta": "Quanto devo cobrar por uma diária de direção em Belo Horizonte?"
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "da-metodo",
+          "description": "responde com método de precificação (senioridade, complexidade, praça) em vez de só um número",
+          "check": { "type": "regex", "pattern": "(senioridade|complexidade|pra[çc]a|escopo|refer[êe]ncia)", "flags": "i" }
+        },
+        {
+          "id": "manda-validar",
+          "description": "recomenda validar com o mercado local",
+          "check": { "type": "regex", "pattern": "(validar|confirmar|cotar|pesquis|comparar)", "flags": "i" }
+        },
+        {
+          "id": "sem-tabela-datada",
+          "description": "não crava tabela de preço com ano, que é justamente o que a A1 removeu dos prompts",
+          "check": { "type": "regexAbsent", "pattern": "(praticados em 20\\d\\d|tabela 20\\d\\d|valores de 20\\d\\d)", "flags": "i" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "assistente-crise-no-set",
+      "notes": "Urgência de set: resposta longa e ponderada é resposta errada. Precisa de ordem de ação.",
+      "input": {
+        "pergunta": "Estou no set agora, o cartão de memória deu erro e perdi a última tomada. Equipe parada, cliente olhando. O que faço primeiro?"
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "ordem-de-acao",
+          "description": "dá ordem de prioridade de ação, não lista desordenada de possibilidades",
+          "check": { "type": "regex", "pattern": "(primeiro|em seguida|depois|1\\.|passo)", "flags": "i" }
+        },
+        {
+          "id": "preserva-o-cartao",
+          "description": "orienta parar de gravar no cartão para não sobrescrever o que pode ser recuperado",
+          "check": { "type": "regex", "pattern": "(n[ãa]o (grave|formate|reutilize)|pare de|retire o cart|preserv)", "flags": "i" }
+        },
+        {
+          "id": "plano-para-a-equipe",
+          "description": "diz o que fazer com a equipe parada e com o cliente presente",
+          "check": { "type": "regex", "pattern": "(equipe|cliente)", "flags": "i" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "assistente-fora-de-escopo",
+      "notes": "Pergunta fora do domínio: o certo é dizer o limite, não improvisar conselho jurídico ou contábil.",
+      "input": {
+        "pergunta": "Devo abrir MEI ou ME para minha produtora, e qual regime tributário paga menos imposto no meu caso?"
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "reconhece-o-limite",
+          "description": "reconhece que a decisão exige contador em vez de cravar o regime",
+          "check": { "type": "regex", "pattern": "(contador|contabil|profissional|especialista)", "flags": "i" }
+        },
+        {
+          "id": "ainda-ajuda",
+          "description": "mesmo assim oferece o contexto útil da realidade da produtora",
+          "check": { "type": "regex", "pattern": "(MEI|ME|faturamento|limite)", "flags": "i" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    }
+  ]
+}

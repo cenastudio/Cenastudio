@@ -4,6 +4,7 @@ import * as interactionsController from "../controllers/interactionsController.j
 import * as opportunitiesController from "../controllers/opportunitiesController.js";
 import * as meetingsController from "../controllers/meetingsController.js";
 import * as proposalsController from "../controllers/proposalsController.js";
+import * as clientPortalAccessController from "../controllers/clientPortalAccessController.js";
 import { authenticate } from "../middleware/authenticate.js";
 import { requireOperationalPlan, requireStudioPlan } from "../middleware/planAccess.js";
 
@@ -16,6 +17,14 @@ router.use(authenticate, requireOperationalPlan);
 router.get("/stats", clientsController.getClientStats);
 router.get("/allowance", clientsController.getAllowance);
 router.get("/lookup/cnpj/:cnpj", clientsController.getCompanyByCnpj);
+
+// Portal do Cliente — gestão do acesso pela produtora (spec: portal-do-cliente).
+// Disponível em todos os planos, limitado por clientPortalLimit (não é feature-gated).
+router.get("/portal-access/allowance", clientPortalAccessController.getPortalAllowance);
+router.get("/:id/portal-access", clientPortalAccessController.getPortalAccessStatus);
+router.post("/:id/portal-access", clientPortalAccessController.createPortalAccess);
+router.patch("/:id/portal-access", clientPortalAccessController.updatePortalAccessStatus);
+router.post("/:id/portal-access/reset-password", clientPortalAccessController.resetPortalPassword);
 
 // Opportunities (sales pipeline) — advertised as a Pro+ feature.
 const pipelineGate = requireStudioPlan("pipeline");

@@ -226,6 +226,22 @@ export interface ClientAllowance {
   canCreate: boolean;
 }
 
+export interface ClientPortalAccessStatus {
+  clientId: number;
+  active: boolean;
+  email: string | null;
+  lastLoginAt: string | null;
+  createdAt: string | null; // null = nunca criado
+}
+
+export interface ClientPortalAllowance {
+  planId: string;
+  used: number;
+  limit: number | null;
+  remaining: number | null;
+  canActivate: boolean;
+}
+
 export interface StudioSettingsPayload {
   studioName: string;
   legalName: string;
@@ -474,6 +490,25 @@ export const api = {
     get: (id: number) => request<ClientDetails>(`/clients/${id}`),
     allowance: () => request<ClientAllowance>("/clients/allowance"),
     lookupCnpj: (cnpj: string) => request<CnpjCompanyData>(`/clients/lookup/cnpj/${encodeURIComponent(cnpj)}`),
+    portalAccess: {
+      allowance: () => request<ClientPortalAllowance>("/clients/portal-access/allowance"),
+      getStatus: (clientId: number) => request<ClientPortalAccessStatus>(`/clients/${clientId}/portal-access`),
+      create: (clientId: number, data: { email: string; password: string }) =>
+        request<ClientPortalAccessStatus>(`/clients/${clientId}/portal-access`, {
+          method: "POST",
+          body: JSON.stringify(data),
+        }),
+      updateStatus: (clientId: number, active: boolean) =>
+        request<ClientPortalAccessStatus>(`/clients/${clientId}/portal-access`, {
+          method: "PATCH",
+          body: JSON.stringify({ active }),
+        }),
+      resetPassword: (clientId: number, password: string) =>
+        request<null>(`/clients/${clientId}/portal-access/reset-password`, {
+          method: "POST",
+          body: JSON.stringify({ password }),
+        }),
+    },
   },
   meetings: {
     list: (clientId?: number) =>

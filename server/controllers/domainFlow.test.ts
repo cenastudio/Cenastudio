@@ -298,6 +298,24 @@ describe("CRM, files and finance controller flow", () => {
 
     const overviewAfterDelete = await invoke(budgetController.getOverview, { user, params: { projectId } });
     expect(overviewAfterDelete.body.data.totalSpent).toBe(250000);
+
+    // Ownership: ninguém grava baseline em projeto de outro usuário. A ponte
+    // Orçamento IA → módulo (ADR-013) manda `projectId` do cliente, então esta
+    // é a barreira que impede escrever no projeto alheio.
+    const intruder = await authService.registerUser(
+      "Intruso Orçamento",
+      `intruder-${Date.now()}@example.com`,
+      "password-123",
+    );
+    await expect(
+      invoke(budgetController.updateBudgetBaseline, {
+        user: intruder,
+        params: { projectId },
+        body: { totalAmount: 1000, currency: "BRL", categories: [{ name: "Equipe", budgeted: 1000 }] },
+      }),
+    ).rejects.toMatchObject({ status: 404 });
+    const overviewUntouched = await invoke(budgetController.getOverview, { user, params: { projectId } });
+    expect(overviewUntouched.body.data.totalBudgeted).toBe(500000);
   });
 
   it("covers equipment inventory + booking overlap rejection (F2)", async () => {

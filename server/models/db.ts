@@ -288,6 +288,21 @@ function ensureFinancialEntryColumns() {
   `);
 }
 
+function ensureClientPortalTable() {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS client_portal_access (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      client_id INTEGER NOT NULL UNIQUE REFERENCES clients(id) ON DELETE CASCADE,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      active INTEGER NOT NULL DEFAULT 1,
+      last_login_at TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+}
+
 function ensureWorkspaceTables() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS workspaces (
@@ -378,6 +393,8 @@ function createIndexes() {
     "CREATE INDEX IF NOT EXISTS idx_financial_entries_status ON financial_entries(status)",
     "CREATE INDEX IF NOT EXISTS idx_financial_entries_project_id ON financial_entries(project_id)",
     "CREATE INDEX IF NOT EXISTS idx_dre_settings_user_id ON dre_settings(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_client_portal_access_client_id ON client_portal_access(client_id)",
+    "CREATE INDEX IF NOT EXISTS idx_client_portal_access_email ON client_portal_access(email)",
     "CREATE INDEX IF NOT EXISTS idx_reset_tokens_token ON reset_tokens(token)",
     "CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_studio_settings_user_id ON studio_settings(user_id)",
@@ -814,6 +831,7 @@ export async function initDatabase() {
   ensureVideoReviewColumns();
   ensureStudioSettingsColumns();
   ensureFinancialEntryColumns();
+  ensureClientPortalTable();
   ensureWorkspaceTables();
   createIndexes();
 

@@ -154,6 +154,43 @@ export async function assertClientCapacity(userId: number, role?: "user" | "admi
   }
 }
 
+/**
+ * Portal do Cliente (spec: portal-do-cliente): quantos acessos de portal
+ * estão ATIVOS (não o total já criado — desativar libera vaga imediatamente,
+ * Requisito 7.4) versus o limite do plano da produtora.
+ */
+export async function getClientPortalAllowance(userId: number) {
+  const entitlement = await getUserEntitlements(userId);
+  const used = shouldUsePrisma
+    ? await prisma.clientPortalAccess.count({ where: { active: true, client: { userId: BigInt(userId) } } })
+    : (
+        db.prepare(
+          `SELECT COUNT(*) AS count FROM client_portal_access cpa
+           JOIN clients c ON c.id = cpa.client_id
+           WHERE c.user_id = ? AND cpa.active = 1`,
+        ).get(userId) as { count: number }
+      ).count;
+
+  return {
+    planId: entitlement.planId,
+    used,
+    limit: entitlement.clientPortalLimit,
+    remaining: entitlement.clientPortalLimit === null ? null : Math.max(0, entitlement.clientPortalLimit - used),
+    canActivate: entitlement.clientPortalLimit === null || used < entitlement.clientPortalLimit,
+  };
+}
+
+export async function assertClientPortalCapacity(userId: number, role?: "user" | "admin") {
+  if (role === "admin") return;
+  const allowance = await getClientPortalAllowance(userId);
+  if (!allowance.canActivate) {
+    throw new AppError(
+      `Seu plano ${allowance.planId.toUpperCase()} permite até ${allowance.limit} portais de cliente ativos. Faça upgrade para continuar.`,
+      402,
+    );
+  }
+}
+
 const FEATURE_REQUIREMENTS: Record<FeatureFlagId, { label: string; planLabel: string }> = {
   budgetTracking: { label: "Orçamento", planLabel: "Studio" },
   projectDre: { label: "DRE por Projeto", planLabel: "Studio" },

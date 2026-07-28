@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import { Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { stripBudgetBlock } from "@shared/budgetBlock";
 
 interface Message {
   role: "user" | "ai";
@@ -52,7 +53,7 @@ export default function RefineChatPanel({
       const refinementPrompt = `Por favor, ajuste o resultado anterior da ferramenta de acordo com esta instrução. Responda apenas com o novo resultado completo da ferramenta formatado em formato profissional, sem introduções, saudações ou explicações secundárias.
 
 [Resultado Anterior]:
-${currentOutput}
+${stripBudgetBlock(currentOutput)}
 
 [Instrução de Refinamento do Filmmaker]:
 ${userMessage}`;

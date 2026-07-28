@@ -1,0 +1,142 @@
+{
+  "$id": "cena.ai-eval.v1",
+  "title": "Arquivo de eval de uma ferramenta de IA do Cena Studio",
+  "description": "Estrutura de referência (JSON Schema draft-07) dos arquivos *.eval.json desta pasta. Fase D do spec .kiro/specs/qualidade-raciocinio-ia: um arquivo por ferramenta, 3-5 casos cada. Cada critério de aceite carrega um check executável, porque o eval decide qual modelo atende a faixa de alta criticidade (ADR-014) e precisa dar o mesmo número em duas execuções seguidas. O que só humano julga usa type manual e fica fora do placar. A validação em uso é validateEvalFile() em server/services/ai/evalCriteria.ts — este arquivo é a documentação da forma, não um validador em runtime.",
+  "type": "object",
+  "required": ["tool", "slug", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "tool": {
+      "type": "string",
+      "pattern": "^\\d{2}$",
+      "description": "toolId de 2 dígitos, igual ao de shared/tools.ts (ex.: 04)."
+    },
+    "slug": {
+      "type": "string",
+      "description": "Slug da ferramenta, só para leitura humana do relatório."
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/case" }
+    }
+  },
+  "definitions": {
+    "case": {
+      "type": "object",
+      "required": ["id", "input", "acceptanceCriteria"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Único dentro do arquivo. Usado para rodar um caso só (--case=)."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Por que este caso existe — o cenário que ele estressa."
+        },
+        "input": {
+          "type": "object",
+          "description": "Campos do formulário da ferramenta. O runner concatena os valores como a geração real faz.",
+          "minProperties": 1,
+          "additionalProperties": { "type": "string" }
+        },
+        "acceptanceCriteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/criterion" }
+        }
+      }
+    },
+    "criterion": {
+      "type": "object",
+      "required": ["id", "description", "check"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "description": {
+          "type": "string",
+          "description": "A frase legível que vai para o relatório."
+        },
+        "check": { "$ref": "#/definitions/check" }
+      }
+    },
+    "check": {
+      "type": "object",
+      "required": ["type"],
+      "description": "Tipos suportados: includesAll, excludesAll, regex, noMarkdown, budgetBlock, currencyRange, minLength, manual.",
+      "oneOf": [
+        {
+          "properties": {
+            "type": { "const": "includesAll" },
+            "values": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+          },
+          "required": ["type", "values"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "type": { "const": "excludesAll" },
+            "values": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+          },
+          "required": ["type", "values"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "type": { "const": "regex" },
+            "pattern": { "type": "string" },
+            "flags": { "type": "string" },
+            "minMatches": { "type": "integer", "minimum": 1 }
+          },
+          "required": ["type", "pattern"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "type": { "const": "regexAbsent" },
+            "pattern": { "type": "string" },
+            "flags": { "type": "string" }
+          },
+          "required": ["type", "pattern"],
+          "additionalProperties": false
+        },
+        {
+          "properties": { "type": { "const": "noMarkdown" } },
+          "required": ["type"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "type": { "const": "budgetBlock" },
+            "minCategories": { "type": "integer", "minimum": 1 }
+          },
+          "required": ["type"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "type": { "const": "currencyRange" },
+            "min": { "type": "number", "minimum": 0 },
+            "max": { "type": "number", "minimum": 0 }
+          },
+          "required": ["type", "min", "max"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "type": { "const": "minLength" },
+            "chars": { "type": "integer", "minimum": 1 }
+          },
+          "required": ["type", "chars"],
+          "additionalProperties": false
+        },
+        {
+          "properties": { "type": { "const": "manual" } },
+          "required": ["type"],
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

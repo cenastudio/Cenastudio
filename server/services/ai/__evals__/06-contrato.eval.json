@@ -1,0 +1,159 @@
+{
+  "tool": "06",
+  "slug": "contrato",
+  "cases": [
+    {
+      "id": "contrato-prestacao-de-servicos",
+      "notes": "O tipo mais usado. O aviso de revisão jurídica é obrigatório e não negociável — contrato de IA sem ele é passivo.",
+      "input": {
+        "tipo": "Contrato de prestação de serviços audiovisuais",
+        "briefing": "Cena Filmes (produtora, CNPJ 12.345.678/0001-90, Belo Horizonte) presta serviço para a Padaria Pão de Casa (CNPJ 98.765.432/0001-10). Objeto: 3 vídeos de 60 segundos para redes sociais. R$ 18.000 em 3 parcelas. 2 rodadas de revisão. Entrega em 45 dias. Cessão para uso digital no Brasil por 2 anos."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "aviso-juridico",
+          "description": "abre com o aviso obrigatório de revisão por advogado",
+          "check": { "type": "regex", "pattern": "(revise|revisar|revis[ãa]o).{0,120}advogad", "flags": "is" }
+        },
+        {
+          "id": "clausulas-numeradas",
+          "description": "estrutura em cláusulas numeradas (mínimo 10 das 13 da estrutura padrão)",
+          "check": { "type": "regex", "pattern": "^\\s*\\d{1,2}[.)]\\s+\\S", "flags": "m", "minMatches": 10 }
+        },
+        {
+          "id": "elementos-essenciais",
+          "description": "traz partes com CNPJ, objeto, pagamento, propriedade intelectual, confidencialidade, rescisão, foro e assinaturas",
+          "check": {
+            "type": "includesAll",
+            "values": ["CNPJ", "Objeto", "Pagamento", "Confidencialidade", "Rescisão", "Foro", "Assinatura"]
+          }
+        },
+        {
+          "id": "condicoes-do-briefing",
+          "description": "reflete as condições informadas (valor, parcelas, revisões, prazo, território e prazo de cessão)",
+          "check": { "type": "includesAll", "values": ["18.000", "3 (três) parcelas", "45"] }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        },
+        {
+          "id": "coerencia-juridica",
+          "description": "as cláusulas não se contradizem entre si (prazo de cessão, rescisão e pagamento)",
+          "check": { "type": "manual" }
+        }
+      ]
+    },
+    {
+      "id": "contrato-cessao-de-imagem",
+      "notes": "Cessão de imagem tem elementos próprios: CPF do cedente, território, prazo, direito de retirada e uso não permitido explícito.",
+      "input": {
+        "tipo": "Cessão de direitos de imagem",
+        "briefing": "Cedente: Marina Alves, CPF 123.456.789-00. Projeto: campanha institucional da Clínica Vida. Uso em Instagram, YouTube e site. Território Brasil. Prazo de 3 anos. Cessão gratuita."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "aviso-juridico",
+          "description": "traz o aviso obrigatório de revisão por advogado",
+          "check": { "type": "regex", "pattern": "(revise|revisar|revis[ãa]o).{0,120}advogad", "flags": "is" }
+        },
+        {
+          "id": "elementos-da-cessao",
+          "description": "identifica cedente com CPF, projeto, plataformas, território e prazo",
+          "check": { "type": "includesAll", "values": ["CPF", "Território", "Prazo", "Instagram"] }
+        },
+        {
+          "id": "gratuidade-documentada",
+          "description": "documenta a cessão gratuita em vez de deixar valor em branco",
+          "check": { "type": "regex", "pattern": "(gratuit|sem [ôo]nus|n[ãa]o haver[áa] remunera)", "flags": "i" }
+        },
+        {
+          "id": "uso-nao-permitido",
+          "description": "declara explicitamente os usos não autorizados",
+          "check": { "type": "regex", "pattern": "(n[ãa]o (autoriz|permit)|veda|proib)", "flags": "i" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "contrato-nda",
+      "notes": "NDA é o tipo mais curto e o que mais tenta o modelo a usar juriquês genérico sem definir o que é informação confidencial.",
+      "input": {
+        "tipo": "NDA — acordo de confidencialidade",
+        "briefing": "Entre Cena Filmes e a startup Fintrack, que vai compartilhar roadmap de produto e dados de usuários para a produção de um vídeo de lançamento. Prazo de confidencialidade de 5 anos."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "aviso-juridico",
+          "description": "traz o aviso obrigatório de revisão por advogado",
+          "check": { "type": "regex", "pattern": "(revise|revisar|revis[ãa]o).{0,120}advogad", "flags": "is" }
+        },
+        {
+          "id": "define-informacao-confidencial",
+          "description": "define o que é Informação Confidencial em vez de só citar o termo",
+          "check": { "type": "includesAll", "values": ["Informação Confidencial"] }
+        },
+        {
+          "id": "excecoes",
+          "description": "prevê as exceções (informação pública ou obtida de terceiros)",
+          "check": { "type": "regex", "pattern": "(exce[çc]|dom[íi]nio p[úu]blico|informa[çc][ãa]o p[úu]blica)", "flags": "i" }
+        },
+        {
+          "id": "penalidades-e-prazo",
+          "description": "traz penalidades e o prazo de 5 anos informado",
+          "check": { "type": "includesAll", "values": ["Penalidade", "5"] }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "contrato-licenca-de-trilha",
+      "notes": "Licença musical erra por omissão: sem tipo de uso, território e prazo, a produtora fica exposta em plataforma.",
+      "input": {
+        "tipo": "Licença de trilha sonora",
+        "briefing": "Licença da faixa \"Cerrado\", do compositor Téo Ramos, para sincronização como tema de um documentário curto. Uso em YouTube e festivais. Território mundial. Prazo de 5 anos. R$ 2.500."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "aviso-juridico",
+          "description": "traz o aviso obrigatório de revisão por advogado",
+          "check": { "type": "regex", "pattern": "(revise|revisar|revis[ãa]o).{0,120}advogad", "flags": "is" }
+        },
+        {
+          "id": "obra-identificada",
+          "description": "identifica a obra e o compositor",
+          "check": { "type": "includesAll", "values": ["Cerrado", "Téo Ramos"] }
+        },
+        {
+          "id": "tipo-de-uso",
+          "description": "declara o tipo de uso (sincronização) e as plataformas",
+          "check": { "type": "regex", "pattern": "(sincroniza|tema)", "flags": "i" }
+        },
+        {
+          "id": "territorio-prazo-valor",
+          "description": "fecha território, prazo e valor da licença",
+          "check": { "type": "includesAll", "values": ["mundial", "5", "2.500"] }
+        },
+        {
+          "id": "exclusividade",
+          "description": "diz se a licença é exclusiva ou não, em vez de omitir",
+          "check": { "type": "regex", "pattern": "(exclusiv|n[ãa]o exclusiv)", "flags": "i" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    }
+  ]
+}

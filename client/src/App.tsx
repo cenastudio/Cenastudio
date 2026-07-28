@@ -69,6 +69,7 @@ const MeetingView = lazy(() => import("@/pages/MeetingView"));
 const ProposalView = lazy(() => import("@/pages/ProposalView"));
 const CheckoutModal = lazy(() => import("@/components/landing/modals/CheckoutModal").then((module) => ({ default: module.CheckoutModal })));
 const DemoModal = lazy(() => import("@/components/landing/modals/DemoModal").then((module) => ({ default: module.DemoModal })));
+const PortalApp = lazy(() => import("@/portal/PortalApp"));
 
 function PageFallback() {
   return <WorkspaceLoadingShell />;
@@ -191,6 +192,23 @@ function App() {
   const [location] = useLocation();
   const path = location.split("?")[0] || "/";
   const forcePublicDarkTheme = PUBLIC_DARK_ROUTES.has(path) || path.startsWith("/r/");
+
+  // Portal do Cliente (spec: portal-do-cliente): sub-árvore isolada, montada
+  // ANTES de qualquer provider da produtora (AuthProvider/PlanProvider/etc).
+  // O cliente final não é um User — reaproveitar esses providers vazaria
+  // contexto de auth da produtora para uma sessão que não deve ter acesso a
+  // ele, e vice-versa.
+  if (path.startsWith("/portal")) {
+    return (
+      <LanguageProvider>
+        <ErrorBoundary>
+          <Suspense fallback={<PageFallback />}>
+            <PortalApp />
+          </Suspense>
+        </ErrorBoundary>
+      </LanguageProvider>
+    );
+  }
 
   useEffect(() => {
     const isLanding = path === "/";

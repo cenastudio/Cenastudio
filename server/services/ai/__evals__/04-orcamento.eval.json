@@ -1,0 +1,156 @@
+{
+  "tool": "04",
+  "slug": "orcamento",
+  "cases": [
+    {
+      "id": "orcamento-clipe-1-diaria",
+      "notes": "Caso base, mesmo cenário do exemplo do prompt. Se falhar aqui, falha em tudo.",
+      "input": {
+        "projeto": "Clipe musical para banda independente",
+        "briefing": "Clipe de 3 minutos, 1 diária de 10h em Belo Horizonte, galpão alugado, equipe reduzida, entrega em 3 semanas com color grading."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "faixa-nao-numero-unico",
+          "description": "cada rubrica sai como faixa, não como número único (regra da A1)",
+          "check": { "type": "regex", "pattern": "R\\$\\s*[\\d.]+\\s*(–|-|a)\\s*R\\$", "minMatches": 4 }
+        },
+        {
+          "id": "categorias-minimas",
+          "description": "cobre equipe, equipamento e pós-produção",
+          "check": { "type": "includesAll", "values": ["equipe", "equipamento", "pós"] }
+        },
+        {
+          "id": "disclaimer",
+          "description": "abre com o disclaimer de estimativa e recomendação de validar com orçamentos reais",
+          "check": { "type": "regex", "pattern": "(estimativa|refer[êe]ncia).{0,400}(validar|confirmar|cotar)", "flags": "is" }
+        },
+        {
+          "id": "bloco-json",
+          "description": "emite o bloco cena.budget.v1 extraível com ao menos 4 rubricas (ADR-013)",
+          "check": { "type": "budgetBlock", "minCategories": 4 }
+        },
+        {
+          "id": "ordem-de-grandeza",
+          "description": "teto do orçamento fica numa ordem de grandeza plausível para 1 diária (até R$ 60k)",
+          "check": { "type": "currencyRange", "min": 5000, "max": 60000 }
+        },
+        {
+          "id": "sem-tabela-datada",
+          "description": "não ressuscita tabela de preço com ano cravado (o que a A1 removeu)",
+          "check": { "type": "regexAbsent", "pattern": "(praticados em 20\\d\\d|valores de mercado 20\\d\\d|tabela 20\\d\\d)", "flags": "i" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "orcamento-institucional-2-diarias-sp",
+      "notes": "Praça mais cara e uma diária em fábrica. Testa se os fatores de ajuste aparecem em vez de valor chapado.",
+      "input": {
+        "projeto": "Institucional industrial",
+        "briefing": "Institucional de 2 minutos para indústria em São Paulo capital. 2 diárias, uma delas em fábrica com norma de segurança, entrevistas com 4 diretores, motion graphics de dados no fim."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "faixa-nao-numero-unico",
+          "description": "rubricas em faixa",
+          "check": { "type": "regex", "pattern": "R\\$\\s*[\\d.]+\\s*(–|-|a)\\s*R\\$", "minMatches": 4 }
+        },
+        {
+          "id": "fator-de-ajuste-praca",
+          "description": "declara o ajuste de praça (SP capital) em vez de aplicá-lo silenciosamente",
+          "check": { "type": "regex", "pattern": "(pra[çc]a|São Paulo|capital)", "flags": "i" }
+        },
+        {
+          "id": "motion-graphics-na-pos",
+          "description": "precifica o motion graphics dentro de pós-produção",
+          "check": { "type": "includesAll", "values": ["motion"] }
+        },
+        {
+          "id": "bloco-json",
+          "description": "emite o bloco cena.budget.v1 com ao menos 5 rubricas",
+          "check": { "type": "budgetBlock", "minCategories": 5 }
+        },
+        {
+          "id": "disclaimer",
+          "description": "mantém o disclaimer de estimativa",
+          "check": { "type": "regex", "pattern": "(estimativa|refer[êe]ncia).{0,400}(validar|confirmar|cotar)", "flags": "is" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "orcamento-ancoragem-valores-do-usuario",
+      "notes": "A A1 mandou usar os valores do próprio usuário como âncora e descartar a derivação. Este caso verifica se ele obedece em vez de impor a própria tabela.",
+      "input": {
+        "projeto": "Campanha de varejo",
+        "briefing": "3 diárias em Curitiba. Meu diretor de fotografia cobra R$ 1.400/diária e o rental do kit de câmera sai R$ 900/diária. Pós por entrega, 4 versões."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "usa-valor-do-usuario",
+          "description": "usa os valores informados pelo usuário (1.400 e 900) em vez de derivar os próprios",
+          "check": { "type": "includesAll", "values": ["1.400", "900"] }
+        },
+        {
+          "id": "pos-por-entrega",
+          "description": "declara o critério de pós por entrega, como o usuário pediu",
+          "check": { "type": "regex", "pattern": "(por entrega|4 vers|quatro vers)", "flags": "i" }
+        },
+        {
+          "id": "bloco-json",
+          "description": "emite o bloco cena.budget.v1",
+          "check": { "type": "budgetBlock", "minCategories": 4 }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        },
+        {
+          "id": "aritmetica",
+          "description": "3 diárias × os valores informados fecham com o subtotal apresentado",
+          "check": { "type": "manual" }
+        }
+      ]
+    },
+    {
+      "id": "orcamento-briefing-minimo",
+      "notes": "Briefing de uma linha. A medição da A4.6 mostrou que aqui o modelo tende a devolver questionário em vez de estimar — este caso trava esse comportamento como reprovação, porque a ponte para o módulo depende do bloco.",
+      "input": {
+        "projeto": "Vídeo curto para redes",
+        "briefing": "Preciso de um vídeo vertical de 30 segundos para Instagram."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "estima-com-premissa-declarada",
+          "description": "estima assumindo premissas explícitas em vez de só pedir mais dados",
+          "check": { "type": "regex", "pattern": "(premissa|assumindo|consider(?:ei|ando)|hip[óo]tese)", "flags": "i" }
+        },
+        {
+          "id": "tem-valor",
+          "description": "apresenta valores em R$",
+          "check": { "type": "regex", "pattern": "R\\$\\s*[\\d.]+", "minMatches": 3 }
+        },
+        {
+          "id": "bloco-json",
+          "description": "emite o bloco cena.budget.v1 mesmo com briefing pobre",
+          "check": { "type": "budgetBlock", "minCategories": 3 }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    }
+  ]
+}

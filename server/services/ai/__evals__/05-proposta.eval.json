@@ -1,0 +1,114 @@
+{
+  "tool": "05",
+  "slug": "proposta",
+  "cases": [
+    {
+      "id": "proposta-institucional-completa",
+      "notes": "Proposta é documento de venda: sem validade, próximo passo e entregável verificável, o cliente não fecha.",
+      "input": {
+        "projeto": "Vídeo institucional para construtora",
+        "briefing": "Cliente: Construtora Horizonte. Escopo: 1 vídeo de 3 minutos mais 3 cortes verticais para redes. 3 diárias, entrega em 60 dias. Valor de R$ 42.000. 2 rodadas de revisão."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "secoes-de-venda",
+          "description": "traz as seções da estrutura obrigatória (entregáveis, cronograma, investimento, próximo passo)",
+          "check": {
+            "type": "includesAll",
+            "values": ["ENTREG", "CRONOGRAMA", "INVESTIMENTO"]
+          }
+        },
+        {
+          "id": "validade",
+          "description": "declara prazo de validade da proposta",
+          "check": { "type": "regex", "pattern": "(v[áa]lida (at[ée]|por)|validade)", "flags": "i" }
+        },
+        {
+          "id": "proximo-passo",
+          "description": "termina com próximo passo concreto e de baixo atrito",
+          "check": { "type": "regex", "pattern": "(pr[óo]ximo passo|para avan[çc]ar|basta responder|agendar)", "flags": "i" }
+        },
+        {
+          "id": "valor-e-parcelamento",
+          "description": "apresenta o valor total informado e as condições de pagamento",
+          "check": { "type": "includesAll", "values": ["42.000", "pagamento"] }
+        },
+        {
+          "id": "termos-essenciais",
+          "description": "cobre direitos de uso, escopo extra e arquivos brutos",
+          "check": { "type": "regex", "pattern": "(direitos de (imagem|uso)|fora do escopo|RAW|brutos)", "flags": "i", "minMatches": 2 }
+        },
+        {
+          "id": "nao-itemiza-orcamento",
+          "description": "não abre o orçamento rubrica por rubrica (a estrutura pede valor fechado para não criar objeção)",
+          "check": { "type": "regexAbsent", "pattern": "(SUBTOTAL|Administrativo:|Equipamento:\\s*R\\$)" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "proposta-cliente-com-orcamento-menor",
+      "notes": "Cliente com teto abaixo do escopo: o certo é reduzir escopo explicitamente, não prometer tudo pelo preço menor.",
+      "input": {
+        "projeto": "Campanha para restaurante",
+        "briefing": "Cliente quer 6 vídeos mas tem R$ 12.000 e o escopo cheio custaria R$ 25.000. Preciso propor algo honesto."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "escopo-ajustado",
+          "description": "propõe escopo reduzido ou faseado em vez de prometer o escopo cheio pelo valor menor",
+          "check": { "type": "regex", "pattern": "(fase|etapa|escopo reduzid|primeira leva|priorizar)", "flags": "i" }
+        },
+        {
+          "id": "valor-do-cliente",
+          "description": "trabalha com o valor informado pelo cliente",
+          "check": { "type": "includesAll", "values": ["12.000"] }
+        },
+        {
+          "id": "proximo-passo",
+          "description": "termina com próximo passo concreto",
+          "check": { "type": "regex", "pattern": "(pr[óo]ximo passo|para avan[çc]ar|basta responder|agendar)", "flags": "i" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "proposta-recorrencia-mensal",
+      "notes": "Contrato recorrente muda a lógica da proposta: pacote mensal, volume e reajuste.",
+      "input": {
+        "projeto": "Contrato mensal de conteúdo",
+        "briefing": "Cliente de e-commerce quer 8 vídeos curtos por mês, contrato de 6 meses, 1 diária mensal de captação. Valor mensal de R$ 9.500."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "recorrencia",
+          "description": "estrutura como pacote recorrente, com volume mensal e duração do contrato",
+          "check": { "type": "regex", "pattern": "(mensal|por m[êe]s|6 meses|seis meses)", "flags": "i", "minMatches": 2 }
+        },
+        {
+          "id": "valor-mensal",
+          "description": "apresenta o valor mensal informado",
+          "check": { "type": "includesAll", "values": ["9.500"] }
+        },
+        {
+          "id": "entregaveis-verificaveis",
+          "description": "define entregáveis verificáveis por ciclo",
+          "check": { "type": "includesAll", "values": ["ENTREG"] }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    }
+  ]
+}

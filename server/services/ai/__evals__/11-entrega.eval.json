@@ -1,0 +1,114 @@
+{
+  "tool": "11",
+  "slug": "entrega",
+  "cases": [
+    {
+      "id": "entrega-multiplataforma",
+      "notes": "O relatório é o que encerra o projeto e protege a produtora. Specs verificáveis e data de aprovação são o núcleo.",
+      "input": {
+        "projeto": "Campanha de lançamento — Marca Aurora",
+        "briefing": "Entregues: 1 vídeo master 16:9 de 2 minutos, 3 cortes verticais de 30s, versão com e sem legenda. H.264, 1080p, 25fps, áudio estéreo 48kHz. Aprovado pelo cliente em 12/06 por Rita Souza, gerente de marketing. 2 rodadas de revisão realizadas. RAW retido por 6 meses."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "secoes-obrigatorias",
+          "description": "cobre resumo, arquivos entregues, specs técnicas, backup e aprovações",
+          "check": {
+            "type": "includesAll",
+            "values": ["ARQUIVOS", "ESPECIFICAÇÕES", "BACKUP", "APROVAÇ"]
+          }
+        },
+        {
+          "id": "specs-verificaveis",
+          "description": "traz specs técnicas verificáveis (codec, resolução, frame rate, áudio)",
+          "check": { "type": "includesAll", "values": ["H.264", "1080", "25", "48"] }
+        },
+        {
+          "id": "aprovacao-documentada",
+          "description": "documenta data e nome de quem aprovou (proteção jurídica)",
+          "check": { "type": "includesAll", "values": ["12/06", "Rita Souza"] }
+        },
+        {
+          "id": "retencao-de-raw",
+          "description": "declara o prazo de retenção dos arquivos brutos",
+          "check": { "type": "regex", "pattern": "(6 meses|seis meses)", "flags": "i" }
+        },
+        {
+          "id": "pendencias",
+          "description": "traz a seção de pendências, mesmo que para dizer que não há",
+          "check": { "type": "regex", "pattern": "(pend[êe]ncia)", "flags": "i" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "entrega-com-pendencia-aberta",
+      "notes": "Pendência aberta precisa de responsável e prazo, senão o projeto fica em limbo.",
+      "input": {
+        "projeto": "Vídeo de treinamento interno",
+        "briefing": "Entregue o master em 1080p, mas a versão com locução em inglês está travada esperando o áudio do cliente. Aprovação parcial em 20/05 por Caio Nunes."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "pendencia-com-responsavel",
+          "description": "registra a pendência com responsável e prazo",
+          "check": { "type": "regex", "pattern": "(pend[êe]ncia)", "flags": "i" }
+        },
+        {
+          "id": "responsavel-cliente",
+          "description": "atribui ao cliente o item que depende dele",
+          "check": { "type": "regex", "pattern": "(respons[áa]vel|cliente)", "flags": "i" }
+        },
+        {
+          "id": "aprovacao-parcial",
+          "description": "não declara o projeto encerrado quando a aprovação foi parcial",
+          "check": { "type": "regexAbsent", "pattern": "(Nenhuma pend[êe]ncia\\. Projeto encerrado)", "flags": "i" }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    },
+    {
+      "id": "entrega-broadcast",
+      "notes": "Entrega para TV tem exigência técnica própria (loudness, codec de finalização) que não pode ser tratada como web.",
+      "input": {
+        "projeto": "Comercial 30s para TV aberta",
+        "briefing": "Entrega em ProRes 422 HQ, 1920x1080, 29.97fps, áudio conforme norma de loudness para broadcast. Também 1 versão web em H.264. Aprovado em 08/04."
+      },
+      "acceptanceCriteria": [
+        {
+          "id": "codec-de-finalizacao",
+          "description": "mantém ProRes para broadcast e H.264 para web, sem trocar um pelo outro",
+          "check": { "type": "includesAll", "values": ["ProRes", "H.264"] }
+        },
+        {
+          "id": "loudness",
+          "description": "trata loudness com unidade adequada",
+          "check": { "type": "regex", "pattern": "(LUFS|loudness)", "flags": "i" }
+        },
+        {
+          "id": "frame-rate-broadcast",
+          "description": "preserva o frame rate informado",
+          "check": { "type": "includesAll", "values": ["29.97"] }
+        },
+        {
+          "id": "secoes-obrigatorias",
+          "description": "cobre arquivos entregues e specs técnicas",
+          "check": { "type": "includesAll", "values": ["ARQUIVOS", "ESPECIFICAÇÕES"] }
+        },
+        {
+          "id": "sem-markdown",
+          "description": "sem markdown",
+          "check": { "type": "noMarkdown" }
+        }
+      ]
+    }
+  ]
+}
