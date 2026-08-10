@@ -58,15 +58,6 @@
   transition: background-color 300ms ease, color 300ms ease;
 }
 
-/* Apply smooth transitions to all elements that use theme colors */
-*,
-*::before,
-*::after {
-  transition-property: background-color, border-color, color, fill, stroke;
-  transition-duration: 300ms;
-  transition-timing-function: ease;
-}
-
 /* ============================================================================
    LIGHT THEME
    ============================================================================ */

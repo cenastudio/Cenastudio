@@ -649,7 +649,7 @@ body.light .border-adaptive-primary {
 .landing-glass {
   background: var(--landing-glass);
   border: 1px solid var(--landing-line);
-  border-radius: 6px;
+  border-radius: var(--ds-radius-1);
   box-shadow: var(--landing-shadow);
   -webkit-backdrop-filter: blur(22px) saturate(1.18);
   backdrop-filter: blur(22px) saturate(1.18);
@@ -658,7 +658,7 @@ body.light .border-adaptive-primary {
 .landing-glass-strong {
   background: var(--landing-glass-strong);
   border: 1px solid var(--landing-line);
-  border-radius: 6px;
+  border-radius: var(--ds-radius-1);
   box-shadow: var(--landing-shadow);
   -webkit-backdrop-filter: blur(28px) saturate(1.24);
   backdrop-filter: blur(28px) saturate(1.24);
@@ -669,7 +669,7 @@ body.light .border-adaptive-primary {
   overflow: hidden;
   background: var(--landing-glass);
   border: 1px solid var(--landing-line);
-  border-radius: 6px;
+  border-radius: var(--ds-radius-1);
   box-shadow: var(--landing-shadow);
   -webkit-backdrop-filter: blur(20px) saturate(1.15);
   backdrop-filter: blur(20px) saturate(1.15);
@@ -702,7 +702,7 @@ body.light .border-adaptive-primary {
   gap: 8px;
   min-height: 36px;
   border: 1px solid var(--landing-line);
-  border-radius: 6px;
+  border-radius: var(--ds-radius-1);
   background: var(--landing-glass-soft);
   color: var(--landing-subtle);
   padding: 0 14px;
@@ -1212,7 +1212,7 @@ body.light .border-adaptive-primary {
 }
 
 /* ─── PLAN CARDS — laranja translúcido em ambos os temas ─── */
-.plan-card { border-radius: 12px; }
+.plan-card { border-radius: var(--ds-radius-1); }
 
 .plan-card-free   { background: rgba(var(--ds-orange-rgb),0.07);  border: 1px solid rgba(var(--ds-orange-rgb),0.30); }
 .plan-card-pro    { background: rgba(var(--ds-orange-rgb),0.12);  border: 1px solid rgba(var(--ds-orange-rgb),0.55); }
@@ -1488,7 +1488,7 @@ body.light .border-adaptive-primary {
   .frame-card {
     background: var(--app-surface);
     border: 1px solid var(--app-border);
-    border-radius: 16px;
+    border-radius: var(--ds-radius-1);
     box-shadow: var(--app-shadow);
     -webkit-backdrop-filter: blur(20px) saturate(1.16);
     backdrop-filter: blur(20px) saturate(1.16);
@@ -1538,7 +1538,7 @@ body.light .border-adaptive-primary {
     padding: 12px 15px;
     font-family: var(--font-frame-body);
     font-size: 0.88rem;
-    border-radius: 6px;
+    border-radius: var(--ds-radius-1);
     outline: none;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -1945,7 +1945,7 @@ body.light .border-adaptive-primary {
 .notification-item {
   position: relative;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--ds-radius-1);
 }
 
 .notification-item + .notification-item {
@@ -2008,7 +2008,7 @@ body.light .border-adaptive-primary {
 }
 
 .studio-tool-nav {
-  border-radius: 6px;
+  border-radius: var(--ds-radius-1);
   background: transparent;
 }
 

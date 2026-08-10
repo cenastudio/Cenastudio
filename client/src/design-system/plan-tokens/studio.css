@@ -249,9 +249,9 @@
    Light Mode Overrides
    Studio plan adapts to light mode with premium white aesthetic
    ======================================== */
-@media (prefers-color-scheme: light) {
-  :root[data-plan="studio"],
-  .plan-studio {
+:root:not(.dark)[data-plan="studio"],
+:root:not(.dark) .plan-studio,
+.plan-studio.light {
     /* Surfaces - Pure white to very light gray (Command Center) */
     --plan-surface-base: #ffffff;
     --plan-surface-elevated: #f7f7f7;        /* Muito claro, quase branco */

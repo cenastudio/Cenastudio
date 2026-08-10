@@ -42,6 +42,50 @@
   --ds-gradient-primary: linear-gradient(135deg, var(--ds-orange) 0%, #c10801 50%, #8f0601 100%);
   --ds-gradient-hero: radial-gradient(circle at 50% 50%, rgba(var(--ds-orange-rgb), 0.3) 0%, transparent 70%);
   --ds-gradient-card: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+  --ds-gradient-bg-dark:
+    radial-gradient(circle at 12% 8%, rgba(193, 8, 1, 0.16), transparent 30%),
+    radial-gradient(circle at 86% 18%, rgba(var(--ds-orange-rgb), 0.2), transparent 34%),
+    radial-gradient(circle at 76% 92%, rgba(217, 195, 171, 0.08), transparent 42%),
+    linear-gradient(180deg, #060606 0%, #0b0503 48%, #020202 100%);
+  --ds-gradient-bg-light:
+    radial-gradient(circle at 14% 12%, rgba(241, 96, 1, 0.1), transparent 30%),
+    radial-gradient(circle at 88% 20%, rgba(214, 68, 0, 0.08), transparent 34%),
+    linear-gradient(180deg, #f9f9f9 0%, #f2efeb 100%);
+
+  /* Border system */
+  --ds-border-1: 1px;
+  --ds-border-2: 2px;
+  --ds-radius-0: 0px;
+  --ds-radius-1: 2px;
+
+  /* Spacing scale (4pt-ish, tuned for cinematic density) */
+  --ds-space-0: 0px;
+  --ds-space-1: 2px;
+  --ds-space-2: 4px;
+  --ds-space-3: 6px;
+  --ds-space-4: 8px;
+  --ds-space-5: 10px;
+  --ds-space-6: 12px;
+  --ds-space-7: 14px;
+  --ds-space-8: 16px;
+  --ds-space-9: 18px;
+  --ds-space-10: 20px;
+  --ds-space-11: 22px;
+  --ds-space-12: 24px;
+  --ds-space-13: 26px;
+  --ds-space-14: 28px;
+  --ds-space-15: 30px;
+  --ds-space-16: 32px;
+  --ds-space-18: 36px;
+  --ds-space-20: 40px;
+  --ds-space-24: 48px;
+  --ds-space-28: 56px;
+  --ds-space-32: 64px;
+
+  /* Shadows (subtle, premium) */
+  --ds-shadow-1: 0 1px 0 rgba(0, 0, 0, 0.6);
+  --ds-shadow-2: 0 22px 70px rgba(0, 0, 0, 0.42);
+  --ds-shadow-glass: 0 24px 80px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(249, 249, 249, 0.08);
 
   /* Enhanced shadows - layered depth system */
   --ds-shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
@@ -57,6 +101,25 @@
   --ds-transition-slow: 350ms ease;
   --ds-transition-bounce: 280ms cubic-bezier(0.16, 1, 0.3, 1);
   --ds-transition-spring: 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Motion */
+  --ds-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ds-ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ds-dur-1: 120ms;
+  --ds-dur-2: 180ms;
+  --ds-dur-3: 280ms;
+
+  /* Chat system */
+  --ds-chat-bg-user: var(--ds-surface-2);
+  --ds-chat-border-user: var(--ds-orange);
+  --ds-chat-text-user: var(--ds-text-1);
+  --ds-chat-bg-assistant: var(--ds-surface-1);
+  --ds-chat-border-assistant: var(--ds-surface-3);
+  --ds-chat-text-assistant: var(--ds-cream);
+  --ds-chat-avatar-user-bg: var(--ds-surface-3);
+  --ds-chat-avatar-user-text: var(--ds-text-1);
+  --ds-chat-avatar-assistant-bg: var(--ds-orange);
+  --ds-chat-avatar-assistant-text: var(--ds-black);
 
   /* State colors */
   --ds-state-hover: rgba(var(--ds-orange-rgb), 0.08);
@@ -100,60 +163,10 @@ body.light {
   --ds-state-disabled: rgba(26, 26, 26, 0.12);
   --ds-state-focus: rgba(214, 68, 0, 0.24);
 
-  /* Border system */
-  --ds-border-1: 1px;
-  --ds-border-2: 2px;
-  --ds-radius-0: 0px;
-  --ds-radius-1: 2px;
-
-  /* Spacing scale (4pt-ish, tuned for cinematic density) */
-  --ds-space-0: 0px;
-  --ds-space-1: 2px;
-  --ds-space-2: 4px;
-  --ds-space-3: 6px;
-  --ds-space-4: 8px;
-  --ds-space-5: 10px;
-  --ds-space-6: 12px;
-  --ds-space-7: 14px;
-  --ds-space-8: 16px;
-  --ds-space-9: 18px;
-  --ds-space-10: 20px;
-  --ds-space-11: 22px;
-  --ds-space-12: 24px;
-  --ds-space-13: 26px;
-  --ds-space-14: 28px;
-  --ds-space-15: 30px;
-  --ds-space-16: 32px;
-  --ds-space-18: 36px;
-  --ds-space-20: 40px;
-  --ds-space-24: 48px;
-  --ds-space-28: 56px;
-  --ds-space-32: 64px;
-
-  /* Shadows (subtle, premium) */
-  --ds-shadow-1: 0 1px 0 rgba(0, 0, 0, 0.6);
-  --ds-shadow-2: 0 22px 70px rgba(0, 0, 0, 0.42);
-  --ds-shadow-glass: 0 24px 80px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(249, 249, 249, 0.08);
-  --ds-shadow-glow: 0 0 0 1px rgba(var(--ds-orange-rgb), 0.2), 0 0 52px rgba(var(--ds-orange-rgb), 0.16);
-
-  /* Motion */
-  --ds-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ds-ease-in: cubic-bezier(0.7, 0, 0.84, 0);
-  --ds-dur-1: 120ms;
-  --ds-dur-2: 180ms;
-  --ds-dur-3: 280ms;
-
-  /* Chat system */
-  --ds-chat-bg-user: var(--ds-surface-2);
-  --ds-chat-border-user: var(--ds-orange);
-  --ds-chat-text-user: var(--ds-text-1);
+  /* Tema claro: gradientes de fundo adaptados (chat/gradiente-base)
+     --ds-gradient-bg-light já existe em :root e vale aqui também. */
   --ds-chat-bg-assistant: var(--ds-surface-1);
-  --ds-chat-border-assistant: var(--ds-surface-3);
-  --ds-chat-text-assistant: var(--ds-cream);
-  --ds-chat-avatar-user-bg: var(--ds-surface-3);
-  --ds-chat-avatar-user-text: var(--ds-text-1);
-  --ds-chat-avatar-assistant-bg: var(--ds-orange);
-  --ds-chat-avatar-assistant-text: var(--ds-black);
+  --ds-chat-text-assistant: var(--ds-text-2);
 }
 
 /* Chat primitives */

@@ -143,9 +143,9 @@
    Light Mode Overrides
    Free plan adapts to light mode with proper contrast
    ======================================== */
-@media (prefers-color-scheme: light) {
-  :root[data-plan="free"],
-  .plan-free {
+:root:not(.dark)[data-plan="free"],
+:root:not(.dark) .plan-free,
+.plan-free.light {
     /* Surfaces - Pure white to very light gray */
     --plan-surface-base: #ffffff;
     --plan-surface-elevated: #f8f8f8;        /* Muito claro, quase branco */

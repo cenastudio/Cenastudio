@@ -176,9 +176,9 @@
    Light Mode Overrides
    Pro plan enhanced visual richness in light mode
    ======================================== */
-@media (prefers-color-scheme: light) {
-  :root[data-plan="pro"],
-  .plan-pro {
+:root:not(.dark)[data-plan="pro"],
+:root:not(.dark) .plan-pro,
+.plan-pro.light {
     /* Surfaces - White base with subtle elevation */
     --plan-surface-base: #ffffff;
     --plan-surface-elevated: #f8f8f8;
