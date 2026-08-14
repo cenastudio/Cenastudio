@@ -41,17 +41,27 @@ Esta spec consolida correções de uma auditoria UX/técnica focada em fechar o 
 
 ### B1. Levantamento
 
-- [ ] B1.1. Rodar `grep -rl "className=\"flex.*border-b\|role=\"tab\"" client/src/pages client/src/components`
-- [ ] B1.2. Gerar lista de ~24 arquivos com abas manuais
-- [ ] B1.3. Transformar em checklist de migração (arquivo + linha)
+- [x] B1.1. Rodar `grep -rl "className=\"flex.*border-b\|role=\"tab\"" client/src/pages client/src/components`
+  - Resultado bruto em 2026-08-14: 24 arquivos. A busca pega também headers/modais com `border-b`, então foi cruzada com `TabsList`, `ResponsiveTabs`, `overflow-x-auto`, `activeTab` e `nav`.
+- [x] B1.2. Gerar lista de ~24 arquivos com abas manuais
+  - Bruto do grep: `Projects.tsx`, `Webhooks.tsx`, `Equipment.tsx`, `ShotList.tsx`, `CompanySettings.tsx`, `Analytics.tsx`, `Pipeline.tsx`, `Profile.tsx`, `Documents.tsx`, `Dre.tsx`, `Interactions.tsx`, `ClientDetail.tsx`, `Budget.tsx`, `Clients.tsx`, `Timesheet.tsx`, `ConfirmDialog.tsx`, `ui/command.tsx`, `StudioShell.tsx`, `landing/Hero.tsx`, `AnimatedModal.tsx`, `QuickActionsMenu.tsx`, `files/StorageTab.tsx`, `AIChatbot.tsx`, `analytics/FinancialModals.tsx`.
+  - Triagem: vários itens são apenas separadores visuais, modais ou tabelas. Alvos reais de navegação/tabs para migração estão listados em B2.
+- [x] B1.3. Transformar em checklist de migração (arquivo + linha)
+  - Critério B2: priorizar fluxos de uso diário e controles que, no mobile, dependem de scroll horizontal invisível, têm touch target abaixo de 44px, ou empilham mais um nível de navegação no topo da tela.
 
 ### B2. Migração (expandir conforme lista B1.3)
 
-- [ ] B2.1. Migrar arquivo 1 para `ResponsiveTabs`
-- [ ] B2.2. Migrar arquivo 2 para `ResponsiveTabs`
-- [ ] B2.3. Migrar arquivo 3 para `ResponsiveTabs`
-- [ ] ... (adicionar checkboxes conforme lista real)
-- [ ] B2.N. Confirmar que seguiu padrão de `AdminDashboard.tsx` sem variações
+- [ ] B2.1. `client/src/components/ProductionNav.tsx:129` — endurecer navegação de Produção: desktop/tablet com touch target `min-h-11`; mobile dropdown com trigger e itens `min-h-11`; validar acesso a Jobs, Estúdio IA, Aprovações, Arquivos, Documentos, Equipamento, Timesheet, Webhooks e Equipe em ≤2 toques.
+- [ ] B2.2. `client/src/components/ProjectNav.tsx:43` e `client/src/components/ProjectNav.tsx:135` — redesenhar navegação de projeto no mobile: reduzir duas faixas horizontais empilhadas, manter Overview/Orçamento/DRE/Shot List e jornada acessíveis sem scroll escondido.
+- [ ] B2.3. `client/src/pages/Profile.tsx:1049` — trocar tabs manuais da conta por `ResponsiveTabs` ou dropdown mobile equivalente, preservando desktop wrap.
+- [ ] B2.4. `client/src/pages/Documents.tsx:774` — migrar tipos de documento para controle mobile-safe; botões atuais usam `py-2` e dependem de `overflow-x-auto`.
+- [ ] B2.5. `client/src/pages/FilesUnified.tsx:63` — migrar `TabsList` custom para `ResponsiveTabs`, mantendo All Files/By Project/Storage.
+- [ ] B2.6. `client/src/components/studio/forms/ChecklistForm.tsx:180` — migrar 6 abas internas do checklist para controle mobile-safe; botões atuais usam `py-1.5` e scroll horizontal.
+- [ ] B2.7. `client/src/pages/AnalyticsPremium.tsx:41` — alinhar tabs Dashboards/Relatórios ao padrão `ResponsiveTabs` e touch target mínimo.
+- [ ] B2.8. `client/src/components/studio/ToolSidebar.tsx:72` — auditar rail horizontal de categorias/ferramentas do Studio no mobile; decidir entre dropdown por categoria ou busca/filtro fixo sem esconder ferramentas críticas.
+- [ ] B2.9. `client/src/pages/ProjectHub.tsx:457` — revisar header de ações do projeto no mobile; hoje usa `overflow-x-auto` em ação/contexto de alto uso.
+- [ ] B2.10. `client/src/pages/Pipeline.tsx:606` e `client/src/pages/Pipeline.tsx:722` — manter board horizontal quando necessário, mas adicionar caminho mobile previsível por estágio/filtro para não depender só de arrastar colunas.
+- [ ] B2.11. Confirmar que os itens B2.1 a B2.10 seguem o padrão de `AdminDashboard.tsx`/`ResponsiveTabs`: touch target ≥44px, estado ativo claro, sem scroll horizontal invisível para navegação primária, e Playwright cobrindo fluxos críticos.
 
 ### B3. Regressão
 
