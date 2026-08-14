@@ -96,8 +96,9 @@ Portal do Cliente é uma área autenticada em `/portal/login` onde o cliente aco
 
 1. Vincule projetos ao cadastro do cliente
 2. Anexe arquivos aos projetos vinculados
-3. Crie propostas e reuniões usando o mesmo cliente
-4. O portal mostra somente os dados relacionados a esse cliente
+3. Na tela de arquivos, marque quais materiais devem ser liberados no portal
+4. Crie propostas e reuniões usando o mesmo cliente
+5. O portal mostra somente os dados relacionados a esse cliente; arquivos exigem liberação explícita
 
 **Visão do cliente:**
 

@@ -87,11 +87,14 @@ describe("Client Portal E2E Flow", () => {
     ) as any).lastInsertRowid;
 
     database
-      .prepare("INSERT INTO files (project_id, user_id, filename, original_name, path, mime_type, size) VALUES (?, ?, ?, ?, ?, ?, ?)")
-      .run(testProjectId, producerUserId, "e2e-file.pdf", "e2e-file.pdf", "path/to/e2e-file.pdf", "application/pdf", 2048);
+      .prepare("INSERT INTO files (project_id, user_id, filename, original_name, path, mime_type, size, visible_in_client_portal) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+      .run(testProjectId, producerUserId, "e2e-file.pdf", "e2e-file.pdf", "path/to/e2e-file.pdf", "application/pdf", 2048, 1);
     database
-      .prepare("INSERT INTO files (project_id, user_id, filename, original_name, path, mime_type, size) VALUES (?, ?, ?, ?, ?, ?, ?)")
-      .run(otherProjectId, otherProducerUserId, "other-e2e-file.pdf", "other-e2e-file.pdf", "path/to/other-e2e-file.pdf", "application/pdf", 3072);
+      .prepare("INSERT INTO files (project_id, user_id, filename, original_name, path, mime_type, size, visible_in_client_portal) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+      .run(testProjectId, producerUserId, "internal-e2e-file.pdf", "internal-e2e-file.pdf", "path/to/internal-e2e-file.pdf", "application/pdf", 1024, 0);
+    database
+      .prepare("INSERT INTO files (project_id, user_id, filename, original_name, path, mime_type, size, visible_in_client_portal) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+      .run(otherProjectId, otherProducerUserId, "other-e2e-file.pdf", "other-e2e-file.pdf", "path/to/other-e2e-file.pdf", "application/pdf", 3072, 1);
   });
 
   it("E2E: producer creates portal access for their client", async () => {
@@ -137,6 +140,7 @@ describe("Client Portal E2E Flow", () => {
     const files = await portalDataService.listFilesForClient(producerClientId);
 
     expect(files.length).toBeGreaterThan(0);
+    expect(files.some((file) => file.originalName === "internal-e2e-file.pdf")).toBe(false);
     expect(files[0]).toMatchObject({
       projectId: testProjectId,
       projectName: "E2E Project",

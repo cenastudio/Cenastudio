@@ -78,7 +78,7 @@ export async function getProjectForClient(clientId: number, projectId: number): 
 export async function listFilesForClient(clientId: number): Promise<PortalFileSummary[]> {
   if (shouldUsePrisma) {
     const rows = await prisma.file.findMany({
-      where: { project: { clientId: BigInt(clientId) } },
+      where: { visibleInClientPortal: true, project: { clientId: BigInt(clientId) } },
       orderBy: { createdAt: "desc" },
       include: { project: { select: { name: true } } },
     });
@@ -97,7 +97,7 @@ export async function listFilesForClient(clientId: number): Promise<PortalFileSu
     .prepare(
       `SELECT f.id, f.original_name, f.mime_type, f.size, f.project_id, f.created_at, p.name AS project_name
        FROM files f JOIN projects p ON p.id = f.project_id
-       WHERE p.client_id = ?
+       WHERE p.client_id = ? AND f.visible_in_client_portal = 1
        ORDER BY f.created_at DESC`,
     )
     .all(clientId) as any[];
@@ -116,7 +116,7 @@ export async function listFilesForClient(clientId: number): Promise<PortalFileSu
 export async function getFileDownloadUrlForClient(clientId: number, fileId: number): Promise<string> {
   if (shouldUsePrisma) {
     const file = await prisma.file.findFirst({
-      where: { id: BigInt(fileId), project: { clientId: BigInt(clientId) } },
+      where: { id: BigInt(fileId), visibleInClientPortal: true, project: { clientId: BigInt(clientId) } },
     });
     if (!file) throw new AppError("Arquivo não encontrado", 404);
     if (file.mimeType === "text/uri-list") return file.path;
@@ -126,7 +126,7 @@ export async function getFileDownloadUrlForClient(clientId: number, fileId: numb
   const file = db
     .prepare(
       `SELECT f.* FROM files f JOIN projects p ON p.id = f.project_id
-       WHERE f.id = ? AND p.client_id = ?`,
+       WHERE f.id = ? AND p.client_id = ? AND f.visible_in_client_portal = 1`,
     )
     .get(fileId, clientId) as any;
   if (!file) throw new AppError("Arquivo não encontrado", 404);

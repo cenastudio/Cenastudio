@@ -74,8 +74,8 @@ describe("portalDataService", () => {
 
     // Criar arquivos para os projetos
     const insertFile = database.prepare(`
-      INSERT INTO files (user_id, project_id, filename, original_name, path, mime_type, size, category)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO files (user_id, project_id, filename, original_name, path, mime_type, size, category, visible_in_client_portal)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     insertFile.run(
       ownerId,
@@ -86,6 +86,18 @@ describe("portalDataService", () => {
       "application/pdf",
       1024,
       "project",
+      1,
+    );
+    insertFile.run(
+      ownerId,
+      projectId,
+      "alpha-internal.pdf",
+      "alpha-internal.pdf",
+      "files/alpha-internal.pdf",
+      "application/pdf",
+      1024,
+      "project",
+      0,
     );
     insertFile.run(
       otherOwnerId,
@@ -96,6 +108,7 @@ describe("portalDataService", () => {
       "application/pdf",
       2048,
       "project",
+      1,
     );
 
     // Criar entradas financeiras (usando due_date no lugar de date)
@@ -153,6 +166,12 @@ describe("portalDataService", () => {
       originalName: "alpha-file.pdf",
       projectId,
     });
+  });
+
+  it("does not list files that were not explicitly released to the portal", async () => {
+    const files = await portalDataService.listFilesForClient(clientId);
+
+    expect(files.some((file) => file.originalName === "alpha-internal.pdf")).toBe(false);
   });
 
   it("returns empty list for cross-client file access", async () => {

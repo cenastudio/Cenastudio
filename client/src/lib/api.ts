@@ -859,6 +859,7 @@ export const api = {
           mime_type: string | null;
           size: number | null;
           path: string;
+          visible_in_client_portal?: boolean | number;
           created_at: string;
         }>
       >("/files/all"),

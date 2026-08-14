@@ -121,6 +121,15 @@ function ensureProjectColumns() {
   }
 }
 
+function ensureFileColumns() {
+  const fileCols = (db.prepare("PRAGMA table_info(files)").all() as { name: string }[]).map(
+    (c) => c.name,
+  );
+  if (!fileCols.includes("visible_in_client_portal")) {
+    db.prepare("ALTER TABLE files ADD COLUMN visible_in_client_portal INTEGER NOT NULL DEFAULT 0").run();
+  }
+}
+
 function ensureClientColumns() {
   const clientCols = (db.prepare("PRAGMA table_info(clients)").all() as { name: string }[]).map(
     (c) => c.name,
@@ -594,6 +603,7 @@ export async function initDatabase() {
       size INTEGER,
       path TEXT NOT NULL,
       category TEXT DEFAULT 'general',
+      visible_in_client_portal INTEGER NOT NULL DEFAULT 0,
       created_at TEXT DEFAULT (datetime('now'))
     );
 
@@ -828,6 +838,7 @@ export async function initDatabase() {
   ensureSubscriptionColumns();
   ensureProjectColumns();
   ensureClientColumns();
+  ensureFileColumns();
   ensureVideoReviewColumns();
   ensureStudioSettingsColumns();
   ensureFinancialEntryColumns();

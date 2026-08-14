@@ -492,6 +492,7 @@ model File {
   size         Int?
   path         String
   category     String   @default("general")
+  visibleInClientPortal Boolean @default(false) @map("visible_in_client_portal")
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)

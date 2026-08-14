@@ -17,7 +17,7 @@ import {
 function serializeFile(value: any) {
   return withSnakeCase(value, {
     projectId: "project_id", userId: "user_id", originalName: "original_name",
-    mimeType: "mime_type", createdAt: "created_at",
+    mimeType: "mime_type", visibleInClientPortal: "visible_in_client_portal", createdAt: "created_at",
   });
 }
 
@@ -361,6 +361,56 @@ export const renameFile: RequestHandler = async (req, res, next) => {
     }
 
     res.json({ success: true });
+  } catch (e) {
+    next(e);
+  }
+};
+
+// Toggle whether a file is intentionally published to the client portal.
+export const updatePortalVisibility: RequestHandler = async (req, res, next) => {
+  try {
+    const userId = req.user!.id;
+    const fileId = parseInt(req.params.id);
+    const { visible } = req.body as { visible?: boolean };
+
+    if (!fileId) {
+      throw new AppError("File ID is required", 400);
+    }
+    if (typeof visible !== "boolean") {
+      throw new AppError("Visible flag is required", 400);
+    }
+
+    if (shouldUsePrisma) {
+      const file = await prisma.file.findFirst({
+        where: { id: BigInt(fileId), userId: BigInt(userId) },
+        select: { id: true, projectId: true },
+      });
+      if (!file) throw new AppError("File not found", 404);
+      if (visible && !file.projectId) {
+        throw new AppError("Vincule o arquivo a um projeto antes de liberar no portal.", 400);
+      }
+      const updated = await prisma.file.update({
+        where: { id: file.id },
+        data: { visibleInClientPortal: visible },
+      });
+      res.json({ success: true, data: serializeFile(updated) });
+      return;
+    }
+
+    const file = db
+      .prepare("SELECT id, project_id FROM files WHERE id = ? AND user_id = ?")
+      .get(fileId, userId) as any;
+    if (!file) throw new AppError("File not found", 404);
+    if (visible && !file.project_id) {
+      throw new AppError("Vincule o arquivo a um projeto antes de liberar no portal.", 400);
+    }
+
+    db
+      .prepare("UPDATE files SET visible_in_client_portal = ? WHERE id = ? AND user_id = ?")
+      .run(visible ? 1 : 0, fileId, userId);
+
+    const updated = db.prepare("SELECT * FROM files WHERE id = ?").get(fileId);
+    res.json({ success: true, data: updated });
   } catch (e) {
     next(e);
   }

@@ -9,6 +9,7 @@ import {
   getFile,
   downloadFile,
   renameFile,
+  updatePortalVisibility,
   linkFileToProject,
 } from "../controllers/filesController.js";
 
@@ -34,6 +35,9 @@ router.get("/:id/download", downloadFile);
 
 // Rename a file
 router.patch("/:id/rename", renameFile);
+
+// Publish/unpublish a file in the client portal
+router.patch("/:id/portal-visibility", updatePortalVisibility);
 
 // Link file to project
 router.put("/:id/link", linkFileToProject);

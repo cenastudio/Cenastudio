@@ -73,7 +73,9 @@ verificar, está dito explicitamente.
   portal ganhou hierarquia de cliente mais clara: dashboard com próximas reuniões,
   arquivos recentes e propostas; páginas dedicadas para agenda, arquivos,
   propostas, projetos e conta; e central da produtora indicando quais superfícies
-  alimentam o portal.
+  alimentam o portal. Também em 2026-08-14, arquivos deixaram de aparecer no
+  portal apenas por vínculo de projeto: agora exigem liberação explícita via
+  `visible_in_client_portal`, controlada pela produtora na tela de Arquivos.
 - **Project Templates:** presets no frontend (`PROJECT_TEMPLATES` em
   `Dashboard.tsx`, `lib/studioContext.ts`, `components/studio/ToolWorkspace.tsx`).
   Sem entidade persistida nem rota.
@@ -190,9 +192,10 @@ Ordem de execução combinada. O conteúdo de cada frente vive na spec, não aqu
    Backend/auth/dados já cobertos por testes dedicados; frontend do portal foi
    reorganizado para funcionar como central real do cliente, com dashboard,
    reuniões, arquivos, propostas, projetos, conta e gestão de acesso pela
-   produtora. Validação desta rodada: `npm run check`,
+   produtora. Arquivos agora têm publicação explícita no portal; nada aparece
+   para o cliente até a produtora liberar. Validação desta rodada: `npm run check`,
    `npm run test -- server/clientPortalFlow.test.ts server/services/portalDataService.test.ts server/services/clientPortalAuthService.test.ts`
-   (42 passed, 4 skipped) e `npm run build`.
+   (43 passed, 4 skipped) e `npm run build`.
 
 Pausado por dependência externa, **não bloqueante**:
 

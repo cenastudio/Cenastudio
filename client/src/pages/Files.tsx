@@ -10,6 +10,7 @@ import {
   Folder, Plus, X, Loader2, Search,
   Eye, Grid3X3, List, Link, ExternalLink,
   Globe, Pencil,
+  Globe2,
 } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import { toast } from "sonner";
@@ -28,6 +29,7 @@ interface FileData {
   mime_type: string | null;
   size: number | null;
   path: string;
+  visible_in_client_portal?: boolean | number;
   created_at: string;
 }
 
@@ -250,6 +252,29 @@ function FilesContent({ embedded }: FilesContentProps) {
   };
 
   const handleDownload = (file: FileData) => window.open(`/api/files/${file.id}/download`, "_blank");
+
+  const isFileVisibleInPortal = (file: FileData) => file.visible_in_client_portal === true || file.visible_in_client_portal === 1;
+
+  const togglePortalVisibility = async (file: FileData) => {
+    const nextVisible = !isFileVisibleInPortal(file);
+    try {
+      const res = await fetch(`/api/files/${file.id}/portal-visibility`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ visible: nextVisible }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setFiles((current) => current.map((item) => (item.id === file.id ? data.data : item)));
+        toast.success(nextVisible ? "Arquivo liberado no portal do cliente." : "Arquivo removido do portal do cliente.");
+      } else {
+        toast.error(data.error || "Nao foi possivel atualizar o portal.");
+      }
+    } catch {
+      toast.error("Nao foi possivel atualizar o portal.");
+    }
+  };
 
   const handleRename = async () => {
     if (!renamingFile || !newFileName.trim()) { setRenamingFile(null); return; }
@@ -527,6 +552,7 @@ function FilesContent({ embedded }: FilesContentProps) {
                   {filteredFiles.map((file) => {
                     const Icon = getFileIcon(file.mime_type || "");
                     const isLink = isLinkFile(file);
+                    const visibleInPortal = isFileVisibleInPortal(file);
                     return (
                       <motion.div
                         key={file.id}
@@ -564,6 +590,15 @@ function FilesContent({ embedded }: FilesContentProps) {
                             <button onClick={(e) => { e.stopPropagation(); setRenamingFile(file); setNewFileName(file.original_name); }} className="p-2 max-md:min-h-11 max-md:min-w-11 max-md:flex max-md:items-center max-md:justify-center hover:bg-frame-gray-3 transition" title={t("app.files.rename")}>
                               <Pencil className="w-4 h-4" />
                             </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); togglePortalVisibility(file); }}
+                              className={`p-2 max-md:min-h-11 max-md:min-w-11 max-md:flex max-md:items-center max-md:justify-center transition ${
+                                visibleInPortal ? "text-frame-green hover:bg-frame-green/10" : "hover:bg-frame-gray-3"
+                              }`}
+                              title={visibleInPortal ? "Remover do portal do cliente" : "Liberar no portal do cliente"}
+                            >
+                              <Globe2 className="w-4 h-4" />
+                            </button>
                             <button onClick={() => { setSelectedFile(file); setIsDeleteOpen(true); }} className="p-2 max-md:min-h-11 max-md:min-w-11 max-md:flex max-md:items-center max-md:justify-center hover:bg-frame-red/20 hover:text-frame-red transition" title={t("app.common.delete")}>
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -572,6 +607,7 @@ function FilesContent({ embedded }: FilesContentProps) {
                         <h3 className="text-sm font-semibold text-frame-white mb-1 truncate flex-1">{file.original_name}</h3>
                         <div className="flex items-center gap-2 text-xs text-frame-gray-light mt-2 pt-2 border-t border-frame-gray-3">
                           <span className="bg-frame-gray-2 px-1.5 py-0.5">{isLink ? t("app.files.link") : getFileTypeLabel(file.mime_type || "")}</span>
+                          {visibleInPortal && <span className="border border-frame-green/30 text-frame-green px-1.5 py-0.5">Portal</span>}
                           <span>{isLink ? "—" : formatFileSize(file.size || 0)}</span>
                           <span className="ml-auto">{formatDate(file.created_at)}</span>
                         </div>
@@ -585,6 +621,7 @@ function FilesContent({ embedded }: FilesContentProps) {
                 {filteredFiles.map((file) => {
                   const Icon = getFileIcon(file.mime_type || "");
                   const isLink = isLinkFile(file);
+                  const visibleInPortal = isFileVisibleInPortal(file);
                   return (
                     <div key={file.id} className="flex items-center gap-4 px-4 py-3 hover:bg-frame-gray-1/20 transition group">
                       <div className="p-2 bg-frame-gray-2 rounded shrink-0">
@@ -595,6 +632,7 @@ function FilesContent({ embedded }: FilesContentProps) {
                         <p className="text-xs text-frame-gray-light">
                           {isLink ? t("app.files.link") : getFileTypeLabel(file.mime_type || "")} — {isLink ? t("app.files.externalUrl") : formatFileSize(file.size || 0)}
                         </p>
+                        {visibleInPortal && <p className="mt-1 font-frame-mono text-[0.58rem] uppercase text-frame-green">Liberado no portal</p>}
                       </div>
                       <span className="text-xs text-frame-gray-light hidden sm:block">{formatDate(file.created_at)}</span>
                       <div className="flex gap-1 max-md:opacity-100 opacity-0 group-hover:opacity-100 transition shrink-0">
@@ -614,6 +652,15 @@ function FilesContent({ embedded }: FilesContentProps) {
                         )}
                         <button onClick={(e) => { e.stopPropagation(); setRenamingFile(file); setNewFileName(file.original_name); }} className="p-1.5 max-md:min-h-11 max-md:min-w-11 max-md:flex max-md:items-center max-md:justify-center hover:bg-frame-gray-3 transition" title={t("app.files.rename")}>
                           <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); togglePortalVisibility(file); }}
+                          className={`p-1.5 max-md:min-h-11 max-md:min-w-11 max-md:flex max-md:items-center max-md:justify-center transition ${
+                            visibleInPortal ? "text-frame-green hover:bg-frame-green/10" : "hover:bg-frame-gray-3"
+                          }`}
+                          title={visibleInPortal ? "Remover do portal do cliente" : "Liberar no portal do cliente"}
+                        >
+                          <Globe2 className="w-4 h-4" />
                         </button>
                         <button onClick={() => { setSelectedFile(file); setIsDeleteOpen(true); }} className="p-1.5 max-md:min-h-11 max-md:min-w-11 max-md:flex max-md:items-center max-md:justify-center hover:bg-frame-red/20 hover:text-frame-red transition" title={t("app.common.delete")}>
                           <Trash2 className="w-4 h-4" />
