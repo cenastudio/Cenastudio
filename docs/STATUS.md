@@ -152,7 +152,7 @@ Ordem de execução combinada. O conteúdo de cada frente vive na spec, não aqu
    `docs/CONEXOES.md`, `docs/DESIGN_PATTERNS.md` e `AGENTS.md`. Produção
    canônica: GitHub `cenastudio/Cenastudio` → Vercel `cena-studio-prod` →
    Supabase Postgres. Railway fica apenas como histórico/legado.
-3. `.kiro/specs/auditoria-ux-2026-07/` — **20 de 47 tasks feitas**. Fase A
+3. `.kiro/specs/auditoria-ux-2026-07/` — **25 de 47 tasks feitas**. Fase A
    avançou em 2026-08-14: delete de usuário voltou a exigir digitação do e-mail,
    teste mobile de touch target agora renderiza componente real, e Comercial
    mostra 5 abas diretas em desktop/tablet com dropdown mobile acessível em até
@@ -164,14 +164,18 @@ Ordem de execução combinada. O conteúdo de cada frente vive na spec, não aqu
    concluída: mobile saiu de duas faixas horizontais empilhadas para dropdown de
    seção + dropdown de jornada, mantendo desktop intacto. B2.3-B2.7 concluídas
    em lote: Profile, Documents e Checklist ganharam select mobile; FilesUnified
-   e AnalyticsPremium migraram para `ResponsiveTabs`. Validação já executada
-   nesta frente: `npm run check`,
+   e AnalyticsPremium migraram para `ResponsiveTabs`. B2.8-B2.11 concluídas em
+   sequência: ToolSidebar ganhou seletor mobile de categoria/ferramenta;
+   ProjectHub trocou timeline horizontal por select mobile de etapa; Pipeline
+   ganhou filtro de etapa no bloco mobile, grid para story steps e botões de
+   mover etapa com `min-h-11`. Validação já executada nesta frente: `npm run check`,
    `npm run test -- client/src/test/mobile-touch-targets.test.tsx`,
    `npm run test -- client/src/test/ProductionNav.test.tsx`,
    `npm run test -- client/src/test/ProjectNav.test.tsx`,
    `npm run test -- client/src/test/ProjectNav.test.tsx client/src/test/responsive-tabs.test.tsx client/src/test/appImport.test.ts`,
    `npx playwright test tests/e2e/commercial-nav-visibility.spec.ts` e
-   `npx playwright test --grep "@fase1"`. Próxima task: B2.8-B2.10.
+   `npx playwright test --grep "@fase1"` (última rodada após B2.8-B2.11:
+   6 passed, 6 skipped). Próxima task: B3.2.
 
 Pausado por dependência externa, **não bloqueante**:
 

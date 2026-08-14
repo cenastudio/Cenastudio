@@ -503,7 +503,7 @@ function PipelineContent({ embedded }: { embedded?: boolean }) {
                 : "Cada conversa comercial vive aqui até virar projeto. Acompanhe valor, chance de fechamento e próximo passo sem perder nenhuma oportunidade."}
             </p>
             {/* Connection story */}
-            <div className="flex gap-2 mt-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
               <div className="border border-frame-orange/30 bg-frame-orange/[0.06] px-3 py-2 text-center min-w-[90px]">
                 <span className="block font-frame-mono text-[0.5rem] text-frame-orange">01</span>
                 <span className="block text-[0.6rem] font-medium text-frame-white mt-0.5">Lead entra</span>
@@ -539,7 +539,7 @@ function PipelineContent({ embedded }: { embedded?: boolean }) {
                 <select
                   value={stageFilter}
                   onChange={(event) => setStageFilter(event.target.value)}
-                  className="w-full bg-frame-gray-1 border border-frame-gray-3 pl-9 pr-3 py-2.5 text-sm outline-none focus:border-frame-orange appearance-none"
+                  className="w-full min-h-11 bg-frame-gray-1 border border-frame-gray-3 pl-9 pr-3 py-2.5 text-sm outline-none focus:border-frame-orange appearance-none"
                 >
                   <option value="all">{t("app.common.all") as string}</option>
                   {stages.map((stage) => (
@@ -596,7 +596,7 @@ function PipelineContent({ embedded }: { embedded?: boolean }) {
             type="button"
             onClick={clearFilters}
             disabled={!hasActiveFilters}
-            className="frame-btn-ghost disabled:opacity-40 disabled:pointer-events-none"
+            className="frame-btn-ghost min-h-11 disabled:opacity-40 disabled:pointer-events-none"
           >
             {t("app.pipeline.clearFilters") as string}
           </button>
@@ -661,56 +661,76 @@ function PipelineContent({ embedded }: { embedded?: boolean }) {
           // uses the same prev/next stage buttons already built into each
           // OpportunityCard, avoiding the touch-scroll vs. drag conflict of
           // the kanban board below.
-          <section className="space-y-4">
-            {stages.map((stage) => {
-              const stageOpps = getOpportunitiesByStage(stage.id);
-              return (
-                <div key={stage.id} className={`border ${stage.color} bg-frame-gray-1/10`}>
-                  <div className="p-3 border-b border-frame-gray-3 bg-frame-black/60">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <span className={`w-2 h-2 ${stage.dot}`} />
-                        <h2 className="font-frame-mono uppercase tracking-[0.14em] text-xs">{stage.label}</h2>
+          <div className="space-y-4">
+            <div className="border border-frame-gray-3 bg-frame-gray-1/15 p-3 space-y-2">
+              <label htmlFor="pipeline-mobile-stage" className="frame-label text-frame-gray-light">
+                {t("app.pipeline.stage") as string}
+              </label>
+              <select
+                id="pipeline-mobile-stage"
+                value={stageFilter}
+                onChange={(event) => setStageFilter(event.target.value)}
+                className="w-full min-h-11 bg-frame-gray-1 border border-frame-gray-3 px-3 text-sm text-frame-white outline-none focus:border-frame-orange"
+              >
+                <option value="all">{t("app.common.all") as string}</option>
+                {stages.map((stage) => (
+                  <option key={stage.id} value={stage.id}>
+                    {stage.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <section className="space-y-4">
+              {stages.map((stage) => {
+                const stageOpps = getOpportunitiesByStage(stage.id);
+                return (
+                  <div key={stage.id} className={`border ${stage.color} bg-frame-gray-1/10`}>
+                    <div className="p-3 border-b border-frame-gray-3 bg-frame-black/60">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <span className={`w-2 h-2 ${stage.dot}`} />
+                          <h2 className="font-frame-mono uppercase tracking-[0.14em] text-xs">{stage.label}</h2>
+                        </div>
+                        <span className="text-[0.68rem] text-frame-gray-light">{stageOpps.length}</span>
                       </div>
-                      <span className="text-[0.68rem] text-frame-gray-light">{stageOpps.length}</span>
+                      <div className="mt-2 flex items-center justify-between gap-3">
+                        <p className="text-xs text-frame-gray-light">{stage.description}</p>
+                        <p className="text-xs text-frame-orange font-semibold">{formatCurrency(getStageTotal(stage.id))}</p>
+                      </div>
                     </div>
-                    <div className="mt-2 flex items-center justify-between gap-3">
-                      <p className="text-xs text-frame-gray-light">{stage.description}</p>
-                      <p className="text-xs text-frame-orange font-semibold">{formatCurrency(getStageTotal(stage.id))}</p>
+                    <div className="p-2.5 space-y-2">
+                      {stageOpps.map((opportunity) => (
+                        <OpportunityCard
+                          key={opportunity.id}
+                          opportunity={opportunity}
+                          formatCurrency={formatCurrency}
+                          formatDate={formatDate}
+                          dueTone={getDueTone(opportunity.expected_close_date)}
+                          onOpen={() => openDetailModal(opportunity)}
+                          onEdit={() => openEditModal(opportunity)}
+                          onDelete={() => {
+                            setSelectedOpportunity(opportunity);
+                            setModalMode("delete");
+                          }}
+                          onMove={moveOpportunity}
+                          previousStage={previousStage(opportunity)}
+                          nextStage={nextStage(opportunity)}
+                        />
+                      ))}
+                      {stageOpps.length === 0 && (
+                        <button
+                          onClick={openCreateModal}
+                          className="w-full min-h-11 frame-empty-state p-4 text-left text-xs text-frame-gray-light hover:border-frame-orange/60 hover:text-frame-orange transition"
+                        >
+                          {t("app.pipeline.newOpportunity") as string}
+                        </button>
+                      )}
                     </div>
                   </div>
-                  <div className="p-2.5 space-y-2">
-                    {stageOpps.map((opportunity) => (
-                      <OpportunityCard
-                        key={opportunity.id}
-                        opportunity={opportunity}
-                        formatCurrency={formatCurrency}
-                        formatDate={formatDate}
-                        dueTone={getDueTone(opportunity.expected_close_date)}
-                        onOpen={() => openDetailModal(opportunity)}
-                        onEdit={() => openEditModal(opportunity)}
-                        onDelete={() => {
-                          setSelectedOpportunity(opportunity);
-                          setModalMode("delete");
-                        }}
-                        onMove={moveOpportunity}
-                        previousStage={previousStage(opportunity)}
-                        nextStage={nextStage(opportunity)}
-                      />
-                    ))}
-                    {stageOpps.length === 0 && (
-                      <button
-                        onClick={openCreateModal}
-                        className="w-full frame-empty-state p-4 text-left text-xs text-frame-gray-light hover:border-frame-orange/60 hover:text-frame-orange transition"
-                      >
-                        {t("app.pipeline.newOpportunity") as string}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </section>
+                );
+              })}
+            </section>
+          </div>
         ) : (
           <DndContext
             sensors={sensors}
@@ -1146,7 +1166,7 @@ function OpportunityCard({
         <button
           disabled={!previousStage}
           onClick={() => previousStage && onMove(opportunity, previousStage.id)}
-          className="flex items-center justify-center gap-1.5 py-2 text-xs text-frame-gray-light hover:text-frame-white disabled:opacity-30 disabled:hover:text-frame-gray-light"
+          className="min-h-11 flex items-center justify-center gap-1.5 py-2 text-xs text-frame-gray-light hover:text-frame-white disabled:opacity-30 disabled:hover:text-frame-gray-light"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           {t("app.common.back") as string}
@@ -1154,7 +1174,7 @@ function OpportunityCard({
         <button
           disabled={!nextStage}
           onClick={() => nextStage && onMove(opportunity, nextStage.id)}
-          className="flex items-center justify-center gap-1.5 py-2 text-xs text-frame-orange hover:bg-frame-orange/10 disabled:opacity-30 disabled:hover:bg-transparent"
+          className="min-h-11 flex items-center justify-center gap-1.5 py-2 text-xs text-frame-orange hover:bg-frame-orange/10 disabled:opacity-30 disabled:hover:bg-transparent"
         >
           {t("app.common.next") as string}
           <ArrowRight className="w-3.5 h-3.5" />

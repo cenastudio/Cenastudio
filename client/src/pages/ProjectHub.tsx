@@ -453,9 +453,25 @@ function ProjectHubContent() {
             />
           </div>
 
+          <label className="sr-only" htmlFor="project-stage-mobile">
+            {locale === "en" ? "Project stage" : "Etapa do projeto"}
+          </label>
+          <select
+            id="project-stage-mobile"
+            value={nextStep.id}
+            onChange={(event) => setLocation(`/project/${projectId}/journey/${event.target.value}`)}
+            className="sm:hidden w-full min-h-11 bg-frame-gray-1 border border-frame-gray-3 px-3 text-sm text-frame-white outline-none focus:border-frame-orange"
+          >
+            {stageStates.map((stage) => (
+              <option key={stage.id} value={stage.id}>
+                {stage.number} · {stage.label}
+              </option>
+            ))}
+          </select>
+
           {/* Stage dots + connectors */}
-          <div className="flex items-start justify-between overflow-x-auto scrollbar-none -mx-2">
-            {stageStates.map((stage, i) => (
+          <div className="hidden sm:flex items-start justify-between -mx-2">
+            {stageStates.map((stage) => (
               <TimelineStep
                 key={stage.id}
                 stage={stage}

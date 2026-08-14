@@ -66,14 +66,19 @@ Esta spec consolida correções de uma auditoria UX/técnica focada em fechar o 
   - Mobile usa `select` `min-h-11`; desktop usa botões com `min-h-11` e wrap.
 - [x] B2.7. `client/src/pages/AnalyticsPremium.tsx:41` — alinhar tabs Dashboards/Relatórios ao padrão `ResponsiveTabs` e touch target mínimo.
   - Validação do lote B2.3-B2.7 em 2026-08-14: `npm run check` e `npm run test -- client/src/test/ProjectNav.test.tsx client/src/test/responsive-tabs.test.tsx client/src/test/appImport.test.ts`.
-- [ ] B2.8. `client/src/components/studio/ToolSidebar.tsx:72` — auditar rail horizontal de categorias/ferramentas do Studio no mobile; decidir entre dropdown por categoria ou busca/filtro fixo sem esconder ferramentas críticas.
-- [ ] B2.9. `client/src/pages/ProjectHub.tsx:457` — revisar header de ações do projeto no mobile; hoje usa `overflow-x-auto` em ação/contexto de alto uso.
-- [ ] B2.10. `client/src/pages/Pipeline.tsx:606` e `client/src/pages/Pipeline.tsx:722` — manter board horizontal quando necessário, mas adicionar caminho mobile previsível por estágio/filtro para não depender só de arrastar colunas.
-- [ ] B2.11. Confirmar que os itens B2.1 a B2.10 seguem o padrão de `AdminDashboard.tsx`/`ResponsiveTabs`: touch target ≥44px, estado ativo claro, sem scroll horizontal invisível para navegação primária, e Playwright cobrindo fluxos críticos.
+- [x] B2.8. `client/src/components/studio/ToolSidebar.tsx:72` — auditar rail horizontal de categorias/ferramentas do Studio no mobile; decidir entre dropdown por categoria ou busca/filtro fixo sem esconder ferramentas críticas.
+  - Mobile agora usa seletor de categoria + seletor de ferramenta, ambos `min-h-11`; desktop preserva a sidebar vertical.
+- [x] B2.9. `client/src/pages/ProjectHub.tsx:457` — revisar header de ações do projeto no mobile; hoje usa `overflow-x-auto` em ação/contexto de alto uso.
+  - Timeline visual fica em `sm+`; mobile usa select de etapa com `min-h-11`, levando direto para `/journey/:stage`.
+- [x] B2.10. `client/src/pages/Pipeline.tsx:606` e `client/src/pages/Pipeline.tsx:722` — manter board horizontal quando necessário, mas adicionar caminho mobile previsível por estágio/filtro para não depender só de arrastar colunas.
+  - Mobile mantém lista empilhada e ganhou seletor de etapa no bloco do pipeline; story steps quebram em grid e botões de mover etapa usam `min-h-11`.
+- [x] B2.11. Confirmar que os itens B2.1 a B2.10 seguem o padrão de `AdminDashboard.tsx`/`ResponsiveTabs`: touch target ≥44px, estado ativo claro, sem scroll horizontal invisível para navegação primária, e Playwright cobrindo fluxos críticos.
+  - B2.1-B2.10 revisados: navegação primária mobile usa dropdown/select ou lista empilhada; scroll horizontal ficou apenas em tabelas/boards não primários.
 
 ### B3. Regressão
 
-- [ ] B3.1. Rodar `npx playwright test --grep "@fase1"` após cada lote de migrações
+- [x] B3.1. Rodar `npx playwright test --grep "@fase1"` após cada lote de migrações
+  - Resultado em 2026-08-14 após B2.8-B2.11: 6 passed, 6 skipped.
 - [ ] B3.2. Rodar suíte completa ao final: `npx playwright test`
 
 ## Fase C — P1: hierarquia visual

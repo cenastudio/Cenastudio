@@ -54,9 +54,21 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
     creative: locale === "pt" ? "Direção visual" : "Visual direction",
     assistant: locale === "pt" ? "Apoio livre" : "Open support",
   };
+  const visibleCategories = CATEGORIES.map((cat) => ({
+    ...cat,
+    tools: cat.slugs
+      .map((slug) => getToolBySlug(slug))
+      .filter((t): t is ToolFromApi => t !== undefined && t.isActive),
+  })).filter((cat) => cat.tools.length > 0);
+  const activeCategory =
+    visibleCategories.find((cat) => cat.tools.some((tool) => tool.id === activeToolId || tool.slug === activeToolId)) ||
+    visibleCategories[0];
+  const activeTool =
+    activeCategory?.tools.find((tool) => tool.id === activeToolId || tool.slug === activeToolId) ||
+    activeCategory?.tools[0];
 
   return (
-    <aside className="studio-sidebar w-full lg:w-[260px] shrink-0 border-b lg:border-b-0 flex flex-col overflow-x-auto lg:overflow-y-auto">
+    <aside className="studio-sidebar w-full lg:w-[260px] shrink-0 border-b lg:border-b-0 flex flex-col lg:overflow-y-auto">
       {/* Brand Header (Hidden on Mobile) */}
       <div className="hidden lg:block px-5 py-5 border-b border-frame-gray-2">
         <p className="frame-label mb-1">// Studio</p>
@@ -69,15 +81,47 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
       <ProjectSelector />
 
       {/* Categories / Navigation */}
-      <div className="flex lg:flex-col overflow-x-auto lg:overflow-x-visible shrink-0 lg:shrink py-2 lg:py-3 w-full">
-        {CATEGORIES.map((cat) => {
-          // Filter tools belonging to this category
-          const categoryTools = cat.slugs
-            .map((slug) => getToolBySlug(slug))
-            .filter((t): t is ToolFromApi => t !== undefined && t.isActive);
+      {activeCategory && activeTool && (
+        <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-2 px-3 py-3 border-t border-frame-gray-2">
+          <label className="sr-only" htmlFor="studio-tool-category">
+            {locale === "pt" ? "Categoria de ferramenta" : "Tool category"}
+          </label>
+          <select
+            id="studio-tool-category"
+            value={activeCategory.key}
+            onChange={(event) => {
+              const nextCategory = visibleCategories.find((cat) => cat.key === event.target.value);
+              const firstTool = nextCategory?.tools[0];
+              if (firstTool) onSelectTool(firstTool.id);
+            }}
+            className="w-full min-h-11 bg-frame-gray-1 border border-frame-gray-3 px-3 text-sm text-frame-white outline-none focus:border-frame-orange"
+          >
+            {visibleCategories.map((cat) => (
+              <option key={cat.key} value={cat.key}>
+                {categoryLabels[cat.key]}
+              </option>
+            ))}
+          </select>
+          <label className="sr-only" htmlFor="studio-tool-select">
+            {locale === "pt" ? "Ferramenta ativa" : "Active tool"}
+          </label>
+          <select
+            id="studio-tool-select"
+            value={activeTool.id}
+            onChange={(event) => onSelectTool(event.target.value)}
+            className="w-full min-h-11 bg-frame-gray-1 border border-frame-gray-3 px-3 text-sm text-frame-white outline-none focus:border-frame-orange"
+          >
+            {activeCategory.tools.map((tool) => (
+              <option key={tool.id} value={tool.id}>
+                {tool.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
-          if (categoryTools.length === 0) return null;
-
+      <div className="hidden lg:flex lg:flex-col shrink-0 lg:shrink py-2 lg:py-3 w-full">
+        {visibleCategories.map((cat) => {
           return (
             <div key={cat.key} className="flex lg:flex-col items-center lg:items-stretch shrink-0 lg:shrink">
               {/* Category label (Hidden on mobile or rendered as badge) */}
@@ -85,7 +129,7 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
                 // {categoryLabels[cat.key]}
               </p>
               <div className="flex lg:flex-col gap-2 px-2 lg:px-3">
-                {categoryTools.map((t, index) => {
+                {cat.tools.map((t, index) => {
                    const TIcon = getToolIcon(t.slug);
                    const active = t.id === activeToolId || t.slug === activeToolId;
                   return (
