@@ -34,7 +34,10 @@ export function assertLaunchReadyEnvironment() {
   }
 
   const persistentDatabaseUrl =
-    process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL || process.env.POSTGRES_URL;
+    process.env.SUPABASE_DATABASE_URL ||
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.POSTGRES_URL;
 
   if (!persistentDatabaseUrl && process.env.ALLOW_EPHEMERAL_SQLITE !== "true") {
     issues.push(
