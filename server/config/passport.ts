@@ -12,6 +12,22 @@ interface GitHubProfile {
   photos: [{ value: string }];
 }
 
+function isAdminGitHubProfile(profile: GitHubProfile): boolean {
+  const adminIdentifiers = new Set(
+    ["doesnotzero", "257423264", ...(process.env.ADMIN_GITHUB_USERNAMES || "").split(",")]
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean),
+  );
+
+  return adminIdentifiers.has(profile.username?.toLowerCase()) || adminIdentifiers.has(String(profile.id));
+}
+
+function getGitHubProfileEmail(profile: GitHubProfile): string {
+  const email = profile.emails?.[0]?.value;
+  if (email) return email;
+  return `${profile.id}+${profile.username}@users.noreply.github.com`;
+}
+
 export const isGitHubAuthConfigured = Boolean(
   process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET,
 );
@@ -30,14 +46,19 @@ if (githubClientId && githubClientSecret) {
       },
       async (accessToken: string, refreshToken: string, profile: GitHubProfile, done: any) => {
         try {
-          const email = profile.emails[0]?.value;
-          if (!email) throw new Error("GitHub profile did not provide an email");
+          const email = getGitHubProfileEmail(profile);
+          const role = isAdminEmail(email) || isAdminGitHubProfile(profile) ? "admin" : "user";
 
           if (shouldUsePrisma) {
             const byGitHub = await prisma.user.findFirst({ where: { githubId: profile.id } });
-            if (byGitHub) return done(null, await getUserById(Number(byGitHub.id)));
+            if (byGitHub) {
+              if (role === "admin" && byGitHub.role !== "admin") {
+                await prisma.user.update({ where: { id: byGitHub.id }, data: { role: "admin", disabled: false } });
+              }
+              return done(null, await getUserById(Number(byGitHub.id)));
+            }
             const user = await upsertOAuthUser(email, profile.displayName || profile.username, {
-              role: isAdminEmail(email) ? "admin" : "user",
+              role,
             });
             await prisma.user.update({
               where: { id: BigInt(user.id) },
@@ -48,10 +69,15 @@ if (githubClientId && githubClientSecret) {
           const byGitHub = db.prepare("SELECT id FROM users WHERE github_id = ?").get(profile.id) as
             | { id: number }
             | undefined;
-          if (byGitHub) return done(null, await getUserById(byGitHub.id));
+          if (byGitHub) {
+            if (role === "admin") {
+              db.prepare("UPDATE users SET role = 'admin', disabled = 0 WHERE id = ?").run(byGitHub.id);
+            }
+            return done(null, await getUserById(byGitHub.id));
+          }
 
           const user = await upsertOAuthUser(email, profile.displayName || profile.username, {
-            role: isAdminEmail(email) ? "admin" : "user",
+            role,
           });
           db.prepare("UPDATE users SET github_id = ?, avatar_url = ? WHERE id = ?").run(
             profile.id,
