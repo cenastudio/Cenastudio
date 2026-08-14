@@ -39,6 +39,7 @@ function serializeProposal(value: any) {
     userId: "user_id", clientId: "client_id", shareToken: "share_token",
     documentHash: "document_hash", acceptedAt: "accepted_at", acceptedByName: "accepted_by_name",
     acceptedIp: "accepted_ip", acceptedUserAgent: "accepted_user_agent",
+    visibleInClientPortal: "visible_in_client_portal",
     createdAt: "created_at", updatedAt: "updated_at",
   }) as any;
   if (result.client) {
@@ -65,7 +66,7 @@ export const listProposals: RequestHandler = async (req, res, next) => {
       select: {
         id: true, userId: true, clientId: true, title: true, total: true, status: true,
         shareToken: true, documentHash: true, acceptedAt: true, acceptedByName: true,
-        acceptedIp: true, acceptedUserAgent: true, createdAt: true, updatedAt: true,
+        acceptedIp: true, acceptedUserAgent: true, visibleInClientPortal: true, createdAt: true, updatedAt: true,
         client: { select: { name: true, email: true } },
         // html intentionally excluded from list — can be large; fetched via getProposal
       },
@@ -148,6 +149,32 @@ export const deleteProposal: RequestHandler = async (req, res, next) => {
   }
 };
 
+export const updatePortalVisibility: RequestHandler = async (req, res, next) => {
+  try {
+    const userId = req.user!.id;
+    const { visible } = req.body as { visible?: boolean };
+    if (typeof visible !== "boolean") throw new AppError("Visible flag is required", 400);
+
+    const proposal = await prisma.proposal.findFirst({
+      where: { id: proposalIdValue(req.params.id), userId: BigInt(userId) },
+      select: { id: true, status: true },
+    });
+    if (!proposal) throw new AppError("Proposta não encontrada ou acesso não autorizado", 404);
+    if (visible && proposal.status === "revoked") {
+      throw new AppError("Uma proposta revogada não pode ser liberada no portal.", 409);
+    }
+
+    const updated = await prisma.proposal.update({
+      where: { id: proposal.id },
+      data: { visibleInClientPortal: visible },
+      include: { client: { select: { name: true, email: true } } },
+    });
+    res.json({ success: true, data: serializeProposal(updated) });
+  } catch (e) {
+    next(e);
+  }
+};
+
 // Revoke the public share link (owner only). An accepted proposal keeps its
 // record and cannot be revoked; anything else becomes inaccessible publicly.
 export const revokeProposal: RequestHandler = async (req, res, next) => {
@@ -161,8 +188,8 @@ export const revokeProposal: RequestHandler = async (req, res, next) => {
     if (proposal.status === "accepted") {
       throw new AppError("Uma proposta já aceita não pode ter o link revogado.", 409);
     }
-    await prisma.proposal.update({ where: { id: proposal.id }, data: { status: "revoked" } });
-    res.json({ success: true, data: { id: Number(req.params.id), status: "revoked" } });
+    await prisma.proposal.update({ where: { id: proposal.id }, data: { status: "revoked", visibleInClientPortal: false } });
+    res.json({ success: true, data: { id: Number(req.params.id), status: "revoked", visible_in_client_portal: false } });
   } catch (e) {
     next(e);
   }

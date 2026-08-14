@@ -145,7 +145,7 @@ export interface PortalProposalSummary {
 
 export async function listProposalsForClient(clientId: number): Promise<PortalProposalSummary[]> {
   const rows = await prisma.proposal.findMany({
-    where: { clientId: BigInt(clientId) },
+    where: { clientId: BigInt(clientId), visibleInClientPortal: true, status: { not: "revoked" } },
     orderBy: { createdAt: "desc" },
     select: { id: true, title: true, total: true, status: true, acceptedAt: true, createdAt: true },
   });
@@ -170,7 +170,7 @@ export interface PortalMeetingSummary {
 
 export async function listMeetingsForClient(clientId: number): Promise<PortalMeetingSummary[]> {
   const rows = await prisma.meeting.findMany({
-    where: { clientId: BigInt(clientId) },
+    where: { clientId: BigInt(clientId), visibleInClientPortal: true, status: { not: "cancelled" } },
     orderBy: { startsAt: "desc" },
     select: { id: true, title: true, location: true, startsAt: true, durationMinutes: true, status: true },
   });

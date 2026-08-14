@@ -76,6 +76,9 @@ verificar, está dito explicitamente.
   alimentam o portal. Também em 2026-08-14, arquivos deixaram de aparecer no
   portal apenas por vínculo de projeto: agora exigem liberação explícita via
   `visible_in_client_portal`, controlada pela produtora na tela de Arquivos.
+  Propostas e reuniões seguem o mesmo princípio: criar/enviar internamente não
+  publica no portal; a produtora precisa liberar o item explicitamente, e revogar
+  proposta/cancelar reunião remove o item do portal.
 - **Project Templates:** presets no frontend (`PROJECT_TEMPLATES` em
   `Dashboard.tsx`, `lib/studioContext.ts`, `components/studio/ToolWorkspace.tsx`).
   Sem entidade persistida nem rota.

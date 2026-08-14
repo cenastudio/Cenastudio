@@ -546,6 +546,11 @@ export const api = {
         method: "POST",
         body: JSON.stringify(data),
       }),
+    updatePortalVisibility: (id: number, visible: boolean) =>
+      request<MeetingItem>(`/clients/meetings/${id}/portal-visibility`, {
+        method: "PATCH",
+        body: JSON.stringify({ visible }),
+      }),
     delete: (id: number) => request<{ id: number }>(`/clients/meetings/${id}`, { method: "DELETE" }),
   },
   proposals: {
@@ -555,6 +560,11 @@ export const api = {
       request<ProposalCreatedResponse>("/clients/proposals", {
         method: "POST",
         body: JSON.stringify(data),
+      }),
+    updatePortalVisibility: (id: number, visible: boolean) =>
+      request<ProposalItem>(`/clients/proposals/${id}/portal-visibility`, {
+        method: "PATCH",
+        body: JSON.stringify({ visible }),
       }),
     delete: (id: number) => request<{ id: number }>(`/clients/proposals/${id}`, { method: "DELETE" }),
   },
@@ -1274,6 +1284,7 @@ export interface MeetingItem {
   share_token: string;
   email_sent_at?: string | null;
   email_error?: string | null;
+  visible_in_client_portal?: boolean;
   client_name?: string;
   client_email?: string | null;
   client_phone?: string | null;
@@ -1292,9 +1303,10 @@ export interface ProposalItem {
   client_id: number;
   title: string;
   total: number;
-  status: "sent" | "viewed" | "accepted" | "rejected";
+  status: "draft" | "sent" | "viewed" | "accepted" | "rejected" | "revoked";
   share_token: string;
   document_hash: string;
+  visible_in_client_portal?: boolean;
   accepted_at?: string | null;
   accepted_by_name?: string | null;
   client_name?: string;

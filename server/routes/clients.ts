@@ -46,6 +46,7 @@ router.delete("/interactions/:id", pipelineGate, interactionsController.deleteIn
 // Pro+ pipeline gate.
 router.get("/meetings", meetingsController.listMeetings);
 router.post("/meetings", meetingsController.createMeeting);
+router.patch("/meetings/:id/portal-visibility", meetingsController.updatePortalVisibility);
 router.post("/meetings/:id/cancel", meetingsController.cancelMeeting);
 router.delete("/meetings/:id", meetingsController.deleteMeeting);
 
@@ -54,6 +55,7 @@ const proposalsGate = requireStudioPlan("proposals");
 router.get("/proposals", proposalsGate, proposalsController.listProposals);
 router.get("/proposals/:id", proposalsGate, proposalsController.getProposal);
 router.post("/proposals", proposalsGate, proposalsController.createProposal);
+router.patch("/proposals/:id/portal-visibility", proposalsGate, proposalsController.updatePortalVisibility);
 router.post("/proposals/:id/revoke", proposalsGate, proposalsController.revokeProposal);
 router.delete("/proposals/:id", proposalsGate, proposalsController.deleteProposal);
 

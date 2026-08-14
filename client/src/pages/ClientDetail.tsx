@@ -8,7 +8,7 @@ import { TabsContent } from "@/components/ui/tabs";
 import { ResponsiveTabs } from "@/components/ui/responsive-tabs";
 import {
   ArrowLeft, BriefcaseBusiness, Building2, Calendar, Copy, DollarSign, FileText, Film, FolderOpen,
-  Mail, MessageSquare, Phone, Trash2, User, Loader2, Video,
+  Globe2, Mail, MessageSquare, Phone, Trash2, User, Loader2, Video,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
@@ -94,10 +94,11 @@ interface SavedProposal {
   total: number;
   html: string;
   createdAt: string;
-  status?: "draft" | "sent" | "viewed" | "accepted" | "rejected";
+  status?: "draft" | "sent" | "viewed" | "accepted" | "rejected" | "revoked";
   acceptedByName?: string;
   acceptedAt?: string;
   shareToken?: string;
+  visibleInClientPortal?: boolean;
 }
 
 function ClientDetailContent() {
@@ -150,10 +151,32 @@ function ClientDetailContent() {
             acceptedByName: row.accepted_by_name ?? undefined,
             acceptedAt: row.accepted_at ?? undefined,
             shareToken: row.share_token,
+            visibleInClientPortal: Boolean(row.visible_in_client_portal),
           })),
         ),
       )
       .catch(() => setProposals([]));
+  };
+
+  const toggleProposalPortalVisibility = async (proposal: SavedProposal) => {
+    const nextVisible = !proposal.visibleInClientPortal;
+    try {
+      const updated = await api.proposals.updatePortalVisibility(Number(proposal.id), nextVisible);
+      setProposals((current) =>
+        current.map((item) =>
+          item.id === proposal.id
+            ? {
+                ...item,
+                status: updated.status,
+                visibleInClientPortal: Boolean(updated.visible_in_client_portal),
+              }
+            : item,
+        ),
+      );
+      toast.success(nextVisible ? "Proposta liberada no portal do cliente" : "Proposta removida do portal do cliente");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao atualizar portal da proposta");
+    }
   };
 
   useEffect(() => {
@@ -724,15 +747,25 @@ function ClientDetailContent() {
                                   ? "border-blue-500/30 text-blue-400 bg-blue-400/[0.06]"
                                   : proposal.status === "viewed"
                                   ? "border-yellow-500/30 text-yellow-400 bg-yellow-400/[0.06]"
+                                  : proposal.status === "revoked"
+                                  ? "border-frame-gray-3 text-frame-gray-light bg-frame-gray-2/20"
                                   : "border-frame-gray-3 text-frame-gray-light"
                               }`}>
                                 {proposal.status === "accepted" ? "✓ Aceita"
                                   : proposal.status === "rejected" ? "✗ Recusada"
                                   : proposal.status === "sent" ? "→ Enviada"
                                   : proposal.status === "viewed" ? "◉ Visualizada"
+                                  : proposal.status === "revoked" ? "Revogada"
                                   : "◦ Rascunho"}
                               </span>
                             )}
+                            <span className={`text-[0.55rem] font-frame-mono uppercase tracking-wider px-2 py-0.5 border ${
+                              proposal.visibleInClientPortal
+                                ? "border-frame-green/30 text-frame-green bg-frame-green/[0.06]"
+                                : "border-frame-gray-3 text-frame-gray-light bg-frame-gray-2/20"
+                            }`}>
+                              {proposal.visibleInClientPortal ? "Portal" : "Interna"}
+                            </span>
                           </div>
                           <h4 className="font-semibold text-frame-white truncate group-hover:text-frame-orange transition">
                             {proposal.title}
@@ -755,7 +788,7 @@ function ClientDetailContent() {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center gap-2 pt-3 border-t border-frame-gray-3/40">
+                      <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-frame-gray-3/40">
                         {proposal.shareToken && (
                           <button
                             onClick={async () => {
@@ -771,8 +804,19 @@ function ClientDetailContent() {
                           </button>
                         )}
                         <button
+                          onClick={() => toggleProposalPortalVisibility(proposal)}
+                          className={`flex-1 min-w-[130px] frame-btn-ghost flex items-center justify-center gap-1.5 text-xs ${
+                            proposal.visibleInClientPortal ? "text-frame-green" : ""
+                          }`}
+                          title={proposal.visibleInClientPortal ? "Remover do portal do cliente" : "Liberar no portal do cliente"}
+                          disabled={proposal.status === "revoked"}
+                        >
+                          <Globe2 className="w-3.5 h-3.5" />
+                          {proposal.visibleInClientPortal ? "No portal" : "Liberar"}
+                        </button>
+                        <button
                           onClick={() => setLocation(`/proposals?clientId=${clientId}`)}
-                          className="flex-1 frame-btn-ghost flex items-center justify-center gap-1.5 text-xs"
+                          className="flex-1 min-w-[130px] frame-btn-ghost flex items-center justify-center gap-1.5 text-xs"
                           title="Criar nova proposta"
                         >
                           <FileText className="w-3.5 h-3.5" />

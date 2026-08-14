@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
-import { Calendar, Loader2, Mail, MessageCircle, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Calendar, Loader2, Mail, MessageCircle, CheckCircle2, AlertTriangle, Globe2 } from "lucide-react";
 import { toast } from "sonner";
 import { api, type MeetingCreatedResponse } from "@/lib/api";
 
@@ -90,6 +90,25 @@ export function ScheduleMeetingModal({
     }
   };
 
+  const togglePortalVisibility = async () => {
+    if (!result) return;
+    const nextVisible = !Boolean(result.visible_in_client_portal);
+    try {
+      const updated = await api.meetings.updatePortalVisibility(result.id, nextVisible);
+      setResult({
+        ...result,
+        ...updated,
+        meeting_url: result.meeting_url,
+        whatsapp_url: result.whatsapp_url,
+        email_available: result.email_available,
+        email_configured: result.email_configured,
+      });
+      toast.success(nextVisible ? "Reunião liberada no portal do cliente" : "Reunião removida do portal do cliente");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao atualizar portal da reunião.");
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-lg rounded-none p-6">
@@ -162,6 +181,34 @@ export function ScheduleMeetingModal({
                 </p>
               </div>
             )}
+
+            <div className={`flex flex-col gap-3 border p-3 ${
+              result.visible_in_client_portal
+                ? "border-frame-green/30 bg-frame-green/[0.06]"
+                : "border-frame-gray-3 bg-frame-gray-2/20"
+            }`}>
+              <div className="flex items-start gap-3">
+                <Globe2 className={`w-4 h-4 shrink-0 mt-0.5 ${result.visible_in_client_portal ? "text-frame-green" : "text-frame-gray-light"}`} />
+                <div>
+                  <p className="text-xs font-semibold text-frame-white">
+                    {result.visible_in_client_portal ? "Reunião liberada no portal" : "Reunião interna"}
+                  </p>
+                  <p className="text-[0.68rem] text-frame-gray-light leading-relaxed">
+                    {result.visible_in_client_portal
+                      ? "O cliente já consegue ver este compromisso na central dele."
+                      : "Libere quando quiser que o cliente veja este compromisso dentro do portal."}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={togglePortalVisibility}
+                className="frame-btn-ghost w-full flex items-center justify-center gap-2 text-xs"
+              >
+                <Globe2 className="w-3.5 h-3.5" />
+                {result.visible_in_client_portal ? "Remover do portal" : "Liberar no portal"}
+              </button>
+            </div>
 
             <a
               href={result.whatsapp_url}

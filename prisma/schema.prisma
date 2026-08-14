@@ -428,6 +428,7 @@ model Proposal {
   acceptedByName  String?   @map("accepted_by_name")
   acceptedIp      String?   @map("accepted_ip")
   acceptedUserAgent String? @map("accepted_user_agent")
+  visibleInClientPortal Boolean @default(false) @map("visible_in_client_portal")
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime  @default(now()) @map("updated_at") @db.Timestamptz
 
@@ -453,6 +454,7 @@ model Meeting {
   emailSentAt     DateTime? @map("email_sent_at") @db.Timestamptz
   emailError      String?   @map("email_error")
   status          String    @default("scheduled")
+  visibleInClientPortal Boolean @default(false) @map("visible_in_client_portal")
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime  @default(now()) @map("updated_at") @db.Timestamptz
 

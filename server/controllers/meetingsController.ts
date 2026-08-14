@@ -39,6 +39,7 @@ function serializeMeeting(value: any) {
     userId: "user_id", clientId: "client_id", opportunityId: "opportunity_id",
     startsAt: "starts_at", durationMinutes: "duration_minutes",
     shareToken: "share_token", emailSentAt: "email_sent_at", emailError: "email_error",
+    visibleInClientPortal: "visible_in_client_portal",
     createdAt: "created_at", updatedAt: "updated_at",
   }) as any;
   if (result.client) {
@@ -363,13 +364,39 @@ export const deleteMeeting: RequestHandler = async (req, res, next) => {
   }
 };
 
+export const updatePortalVisibility: RequestHandler = async (req, res, next) => {
+  try {
+    const userId = req.user!.id;
+    const { visible } = req.body as { visible?: boolean };
+    if (typeof visible !== "boolean") throw new AppError("Visible flag is required", 400);
+
+    const meeting = await prisma.meeting.findFirst({
+      where: { id: meetingIdValue(req.params.id), userId: BigInt(userId) },
+      select: { id: true, status: true },
+    });
+    if (!meeting) throw new AppError("Reunião não encontrada ou acesso não autorizado", 404);
+    if (visible && meeting.status === "cancelled") {
+      throw new AppError("Uma reunião cancelada não pode ser liberada no portal.", 409);
+    }
+
+    const updated = await prisma.meeting.update({
+      where: { id: meeting.id },
+      data: { visibleInClientPortal: visible },
+      include: { client: { select: { name: true, email: true, phone: true } } },
+    });
+    res.json({ success: true, data: serializeMeeting(updated) });
+  } catch (e) {
+    next(e);
+  }
+};
+
 // Cancel a meeting (owner only): revokes the public link immediately.
 export const cancelMeeting: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const result = await prisma.meeting.updateMany({
       where: { id: meetingIdValue(req.params.id), userId: BigInt(userId) },
-      data: { status: "cancelled" },
+      data: { status: "cancelled", visibleInClientPortal: false },
     });
     if (result.count === 0) throw new AppError("Reunião não encontrada ou acesso não autorizado", 404);
     res.json({ success: true, data: { id: Number(req.params.id), status: "cancelled" } });
