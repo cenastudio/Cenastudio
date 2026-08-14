@@ -80,59 +80,46 @@ Templates de projeto permitem duplicar configurações completas de projetos (ta
 
 ### O que é
 
-Portal do Cliente é um link público compartilhável onde o cliente acompanha progresso do projeto e baixa entregas finais, **sem precisar criar conta**.
+Portal do Cliente é uma área autenticada em `/portal/login` onde o cliente acompanha projetos, arquivos, propostas, reuniões e resumo financeiro liberados pela produtora. O acesso é separado do login interno da produtora e usa credenciais próprias do cliente.
 
 ### Como usar
 
-**Ativar portal:**
+**Criar acesso ao portal:**
 
-1. Abra o projeto que quer compartilhar
-2. No header, clique em **"Compartilhar com Cliente"**
-3. Modal abre com configurações:
-   - **Toggle "Ativar Portal"**: liga/desliga
-   - **URL gerada**: ex. `cenastudio.dev/client/abc123` (copie e envie ao cliente)
-   - **Opções de visibilidade**:
-     - ☑️ Mostrar progresso (%)
-     - ☑️ Mostrar timeline (etapas pré/produção/pós)
-     - ☑️ Mostrar arquivos (entregas finais)
-   - **Senha** (somente plano Studio): protege acesso com senha
-4. Clique em **"Salvar"**
-5. Copie URL e envie ao cliente (WhatsApp, email, etc)
+1. Abra o cadastro do cliente em **Clientes**
+2. Entre na aba **Portal**
+3. Clique em **"Criar acesso ao portal"**
+4. Defina e-mail e senha inicial do cliente
+5. Copie o link `/portal/login` e envie junto das credenciais
 
-**Marcar arquivo como "Entrega Final":**
+**Lançar conteúdo no portal:**
 
-1. Vá em **Arquivos** do projeto
-2. Localize o arquivo finalizado (ex: vídeo editado, logo aprovado)
-3. Clique em **⋮** no arquivo
-4. Selecione **"Marcar como Entrega Final"**
-5. Arquivo aparece no portal do cliente com botão **"Baixar"**
+1. Vincule projetos ao cadastro do cliente
+2. Anexe arquivos aos projetos vinculados
+3. Crie propostas e reuniões usando o mesmo cliente
+4. O portal mostra somente os dados relacionados a esse cliente
 
 **Visão do cliente:**
 
 Quando cliente acessa o link, vê:
-- **Nome do projeto**
-- **Progresso visual** (barra de %)
-- **Timeline** (etapas concluídas destacadas)
-- **Entregas finais**: lista com thumbnails + botões "Baixar" e "Aprovar Entrega"
-
-**Aprovação de entrega:**
-
-1. Cliente clica em **"Aprovar Entrega"** no arquivo
-2. Sistema registra aprovação com timestamp
-3. Produtor recebe notificação por email (se configurado)
-4. Ícone ✓ verde aparece no arquivo aprovado
+- **Dashboard** com projetos ativos, arquivos recentes, propostas e próxima reunião
+- **Projetos** com status, progresso, prazo e arquivos vinculados
+- **Arquivos** consolidados com download
+- **Propostas** vinculadas ao cliente
+- **Reuniões** futuras e histórico
+- **Conta** para troca de senha
 
 **Desativar portal:**
 
-1. Volte no modal "Compartilhar com Cliente"
-2. Desligue o toggle **"Ativar Portal"**
-3. Link retorna erro 404 "Portal desativado"
+1. Abra o cadastro do cliente em **Clientes > Portal**
+2. Clique em **"Desativar"**
+3. O login do cliente passa a ser recusado enquanto o acesso estiver inativo
 
 **Limites por plano:**
 
-- **Free**: Portal expira após 30 dias da ativação
-- **Pro**: Portal expira após 90 dias
-- **Studio**: Ilimitado + senha opcional
+- **Free**: 1 acesso ativo
+- **Pro**: 5 acessos ativos
+- **Studio/Whitelabel/Enterprise**: sem limite numérico configurado
 
 ---
 

@@ -66,9 +66,14 @@ verificar, está dito explicitamente.
 - **Timesheet:** implementado. `/timesheets`, model `TimeEntry`.
 - **Google Calendar:** rota `/calendar` registrada. A integração real com a API do
   Google **não foi verificada** — só a existência da rota.
-- **Portal do Cliente:** em construção (spec `portal-do-cliente/`). Rotas `/portal`
-  e `/client-portal-auth`, model `ClientPortalAccess` — presentes no working tree,
-  ainda não commitados.
+- **Portal do Cliente:** MVP funcional em evolução (spec `portal-do-cliente/`).
+  Rotas `/portal` e `/client-portal-auth`, model `ClientPortalAccess`, auth
+  isolada, endpoints de projetos/arquivos/propostas/reuniões/resumo financeiro,
+  app `/portal/*` e central de acesso em `ClientDetail.tsx`. Em 2026-08-14 o
+  portal ganhou hierarquia de cliente mais clara: dashboard com próximas reuniões,
+  arquivos recentes e propostas; páginas dedicadas para agenda, arquivos,
+  propostas, projetos e conta; e central da produtora indicando quais superfícies
+  alimentam o portal.
 - **Project Templates:** presets no frontend (`PROJECT_TEMPLATES` em
   `Dashboard.tsx`, `lib/studioContext.ts`, `components/studio/ToolWorkspace.tsx`).
   Sem entidade persistida nem rota.
@@ -181,6 +186,13 @@ Ordem de execução combinada. O conteúdo de cada frente vive na spec, não aqu
    `ProjectTimeline`, `ActionToolbar`), com select mobile para etapa e toolbar
    com controles `min-h-11`. Próxima task: C6 ou Fase D, conforme decisão sobre
    rodar a suíte Playwright completa.
+4. `.kiro/specs/portal-do-cliente/` — **MVP UX reforçado em 2026-08-14**.
+   Backend/auth/dados já cobertos por testes dedicados; frontend do portal foi
+   reorganizado para funcionar como central real do cliente, com dashboard,
+   reuniões, arquivos, propostas, projetos, conta e gestão de acesso pela
+   produtora. Validação desta rodada: `npm run check`,
+   `npm run test -- server/clientPortalFlow.test.ts server/services/portalDataService.test.ts server/services/clientPortalAuthService.test.ts`
+   (42 passed, 4 skipped) e `npm run build`.
 
 Pausado por dependência externa, **não bloqueante**:
 
