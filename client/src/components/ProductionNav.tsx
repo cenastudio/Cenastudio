@@ -139,7 +139,7 @@ export default function ProductionNav() {
                 onClick={() => setLocation(tab.href)}
                 aria-current={isActive ? "page" : undefined}
                 className={`
-                  relative flex items-center gap-2 px-4 py-3 whitespace-nowrap transition-all duration-200
+                  relative flex min-h-11 items-center gap-2 px-4 py-3 whitespace-nowrap transition-all duration-200
                   font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase
                   after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:transition-all after:duration-200
                   ${isActive
@@ -168,7 +168,7 @@ export default function ProductionNav() {
                 type="button"
                 aria-current={activeSecondaryTab ? "page" : undefined}
                 className={`
-                  relative flex items-center gap-2 px-4 py-3 whitespace-nowrap transition-all duration-200
+                  relative flex min-h-11 items-center gap-2 px-4 py-3 whitespace-nowrap transition-all duration-200
                   font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase
                   after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:transition-all after:duration-200
                   ${activeSecondaryTab
@@ -196,7 +196,7 @@ export default function ProductionNav() {
                   <DropdownMenuItem
                     key={tab.href}
                     onClick={() => setLocation(tab.href)}
-                    className={`gap-2.5 font-frame-mono text-[0.62rem] tracking-[0.1em] uppercase cursor-pointer ${
+                    className={`min-h-11 gap-2.5 font-frame-mono text-[0.62rem] tracking-[0.1em] uppercase cursor-pointer ${
                       isActive ? "text-frame-orange" : "text-frame-gray-light"
                     }`}
                   >
@@ -215,7 +215,7 @@ export default function ProductionNav() {
             type="button"
             onClick={() => setMobileOpen((open) => !open)}
             aria-expanded={mobileOpen}
-            className="flex w-full items-center justify-between gap-2 border border-frame-gray-3/60 bg-frame-gray-1/30 px-3 py-2.5 text-left"
+            className="flex min-h-11 w-full items-center justify-between gap-2 border border-frame-gray-3/60 bg-frame-gray-1/30 px-3 py-2.5 text-left"
           >
             <span className="flex items-center gap-2 font-frame-mono text-[0.65rem] tracking-[0.1em] uppercase text-frame-orange">
               {activeTab && <activeTab.icon className="w-3.5 h-3.5" />}
@@ -240,7 +240,7 @@ export default function ProductionNav() {
                       setMobileOpen(false);
                     }}
                     aria-current={isActive ? "page" : undefined}
-                    className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left font-frame-mono text-[0.62rem] tracking-[0.1em] uppercase transition ${
+                    className={`flex min-h-11 w-full items-center gap-2.5 px-3 py-2.5 text-left font-frame-mono text-[0.62rem] tracking-[0.1em] uppercase transition ${
                       isActive ? "bg-frame-orange/10 text-frame-orange" : "text-frame-gray-light hover:bg-frame-gray-2/40 hover:text-frame-white"
                     }`}
                   >

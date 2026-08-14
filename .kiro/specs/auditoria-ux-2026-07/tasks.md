@@ -16,21 +16,20 @@ Esta spec consolida correções de uma auditoria UX/técnica focada em fechar o 
 - [x] A1.4. Testar em mobile (proximidade de toque)
   - Teste reescrito em `client/src/test/mobile-touch-targets.test.tsx`: renderiza `AdminContent`, verifica classes reais de touch target (`min-h-11`, `h-11`, `w-11`) e fluxo do dialog.
 - [ ] A1.5. Rodar `npx playwright test` completo
-  - ⚠️ Resultado relatado (10 passed / 2 failed) não é verificável: artefatos sobrescritos por rodada posterior. Rodar de novo e guardar evidência.
+  - Pendente: resultado antigo (10 passed / 2 failed) não é verificável porque os artefatos foram sobrescritos por rodada posterior. Rodar de novo e guardar evidência.
 - [x] A1.6. REGRESSÃO: restaurar confirmação por digitação de e-mail no delete de usuário (removida por A1.1)
   - Delete de usuário exige digitar o e-mail exato antes de habilitar a confirmação.
 
 ### A2. Paridade de navegação mobile x desktop (Comercial)
 
 - [x] A2.1. Identificar componente de abas do módulo Comercial (`AppNavBar.tsx` ou equivalente)
-  - ✅ Componente identificado: `client/src/components/CommercialNav.tsx`
-  - ✅ Análise completa em: `A2.1-analise-comercial-nav.md`
-  - ✅ 5 abas definidas: Overview, Clients, Pipeline, Propostas, Interações
-  - ⚠️ Usa implementação manual (não ResponsiveTabs)
-  - ⚠️ Scrollbar oculto reduz descobribilidade no mobile
+  - Componente identificado: `client/src/components/CommercialNav.tsx`
+  - Análise completa em: `A2.1-analise-comercial-nav.md`
+  - 5 abas definidas: Overview, Clients, Pipeline, Propostas, Interações
+  - Histórico corrigido em A2.4: mobile deixou de depender de scrollbar horizontal escondido.
 - [x] A2.2. Confirmar que desktop mostra 5 abas e mobile mostra 3
   - Premissa da spec estava errada: mobile 375px mostra 2 (não 3), com as 5 no DOM via scroll
-  - ⚠️ A2.3 implementado com breakpoint `sm` (640px) removeu Propostas/Interações da barra desktop também; requisito era manter 5 no desktop. Precisa correção.
+  - Histórico corrigido em A2.4: desktop/tablet mostram as 5 abas diretamente; mobile usa dropdown com as 5 seções.
 - [x] A2.3. Implementar menu "mais" (overflow) ou migrar para `ResponsiveTabs`
 - [x] A2.4. Verificar que todas as 5 seções são acessíveis em ≤2 toques no mobile
   - `tests/e2e/commercial-nav-visibility.spec.ts` confirma 5 seções no dropdown mobile e acesso em até 2 toques; desktop/tablet mostram as 5 abas diretamente.
@@ -51,7 +50,9 @@ Esta spec consolida correções de uma auditoria UX/técnica focada em fechar o 
 
 ### B2. Migração (expandir conforme lista B1.3)
 
-- [ ] B2.1. `client/src/components/ProductionNav.tsx:129` — endurecer navegação de Produção: desktop/tablet com touch target `min-h-11`; mobile dropdown com trigger e itens `min-h-11`; validar acesso a Jobs, Estúdio IA, Aprovações, Arquivos, Documentos, Equipamento, Timesheet, Webhooks e Equipe em ≤2 toques.
+- [x] B2.1. `client/src/components/ProductionNav.tsx:129` — endurecer navegação de Produção: desktop/tablet com touch target `min-h-11`; mobile dropdown com trigger e itens `min-h-11`; validar acesso a Jobs, Estúdio IA, Aprovações, Arquivos, Documentos, Equipamento, Timesheet, Webhooks e Equipe em ≤2 toques.
+  - `client/src/test/ProductionNav.test.tsx` cobre touch target real e navegação mobile em 2 toques para todas as áreas visíveis.
+  - Validação em 2026-08-14: `npm run test -- client/src/test/ProductionNav.test.tsx`, `npm run check`, `npx playwright test --grep "@fase1"` (6 passed, 6 skipped).
 - [ ] B2.2. `client/src/components/ProjectNav.tsx:43` e `client/src/components/ProjectNav.tsx:135` — redesenhar navegação de projeto no mobile: reduzir duas faixas horizontais empilhadas, manter Overview/Orçamento/DRE/Shot List e jornada acessíveis sem scroll escondido.
 - [ ] B2.3. `client/src/pages/Profile.tsx:1049` — trocar tabs manuais da conta por `ResponsiveTabs` ou dropdown mobile equivalente, preservando desktop wrap.
 - [ ] B2.4. `client/src/pages/Documents.tsx:774` — migrar tipos de documento para controle mobile-safe; botões atuais usam `py-2` e dependem de `overflow-x-auto`.
