@@ -481,19 +481,28 @@ td{padding:10px 12px;border-top:1px solid #252525;color:#ddd;font-size:12px}
               </p>
             </div>
             {/* Workflow steps */}
-            <div className="flex gap-2 shrink-0">
-              <div className="border border-frame-orange/30 bg-frame-orange/[0.06] px-3 py-2 text-center min-w-[90px]">
-                <span className="block font-frame-mono text-[0.5rem] text-frame-orange">01</span>
-                <span className="block text-[0.6rem] font-medium text-frame-white mt-0.5">{t("app.commercial.stepProspect")}</span>
-              </div>
-              <div className="border border-frame-gray-3/40 px-3 py-2 text-center min-w-[90px]">
-                <span className="block font-frame-mono text-[0.5rem] text-frame-gray-light">02</span>
-                <span className="block text-[0.6rem] font-medium text-frame-gray-light mt-0.5">{t("app.commercial.stepQualify")}</span>
-              </div>
-              <div className="border border-frame-gray-3/40 px-3 py-2 text-center min-w-[90px]">
-                <span className="block font-frame-mono text-[0.5rem] text-frame-gray-light">03</span>
-                <span className="block text-[0.6rem] font-medium text-frame-gray-light mt-0.5">{t("app.commercial.stepClose")}</span>
-              </div>
+            <div className="grid grid-cols-3 gap-2 shrink-0 lg:min-w-[300px]" aria-label={locale === "en" ? "Commercial workflow" : "Fluxo comercial"}>
+              {[
+                { step: "01", label: t("app.commercial.stepProspect"), active: true },
+                { step: "02", label: t("app.commercial.stepQualify"), active: false },
+                { step: "03", label: t("app.commercial.stepClose"), active: false },
+              ].map((item) => (
+                <div
+                  key={item.step}
+                  className={`border px-2.5 py-2 text-center ${
+                    item.active
+                      ? "border-frame-orange/30 bg-frame-orange/[0.06]"
+                      : "border-frame-gray-3/40 bg-frame-gray-1/20"
+                  }`}
+                >
+                  <span className={`block font-frame-mono text-[0.5rem] ${item.active ? "text-frame-orange" : "text-frame-gray-light"}`}>
+                    {item.step}
+                  </span>
+                  <span className={`block text-[0.58rem] sm:text-[0.6rem] font-medium mt-0.5 leading-tight ${item.active ? "text-frame-white" : "text-frame-gray-light"}`}>
+                    {item.label}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -510,7 +519,7 @@ td{padding:10px 12px;border-top:1px solid #252525;color:#ddd;font-size:12px}
           ]}
           value={activeTab}
           onValueChange={setActiveTab}
-          listClassName="mb-8"
+          listClassName="mb-8 lg:max-w-3xl"
         >
 
           {/* Dashboard Tab */}

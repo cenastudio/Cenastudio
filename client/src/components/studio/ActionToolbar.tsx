@@ -35,13 +35,13 @@ export default function ActionToolbar({
   }, [downloadOpen]);
 
   return (
-    <div className="px-6 py-3 border-b border-frame-gray-2 flex flex-wrap items-center justify-between gap-3 bg-frame-gray-1/40 shrink-0 select-none">
+    <div className="px-4 sm:px-6 py-3 border-b border-frame-gray-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-frame-gray-1/40 shrink-0 select-none">
       {/* Segmented Tab Selector — Refinar só aparece quando tem output */}
-      <div className="flex bg-frame-gray-1 p-0.5 border border-frame-gray-3">
+      <div className="grid grid-cols-1 sm:flex w-full sm:w-auto bg-frame-gray-1 p-0.5 border border-frame-gray-3">
         <button
           type="button"
           onClick={() => onChangeTab("document")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase transition ${
+          className={`min-h-11 flex items-center justify-center gap-1.5 px-3 py-1.5 font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase transition ${
             activeTab === "document"
               ? "bg-frame-orange text-frame-black font-medium"
               : "text-frame-gray-light hover:text-frame-white"
@@ -54,7 +54,7 @@ export default function ActionToolbar({
           <button
             type="button"
             onClick={() => onChangeTab("refine")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase transition ${
+            className={`min-h-11 flex items-center justify-center gap-1.5 px-3 py-1.5 font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase transition ${
               activeTab === "refine"
                 ? "bg-frame-orange text-frame-black font-medium"
                 : "text-frame-gray-light hover:text-frame-white"
@@ -67,14 +67,14 @@ export default function ActionToolbar({
       </div>
 
       {/* Operation Actions */}
-      <div className="flex items-center gap-1.5">
+      <div className="grid grid-cols-3 sm:flex sm:items-center gap-1.5 w-full sm:w-auto">
         {hasOutput && (
           <>
             <button
               type="button"
               onClick={onCopy}
               title={t("app.studio.copyToClipboard") as string}
-              className="font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase px-3 py-2 border border-frame-gray-3 text-frame-gray-light bg-transparent transition hover:border-frame-gray-muted hover:text-frame-white flex items-center gap-1.5"
+              className="min-h-11 justify-center font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase px-3 py-2 border border-frame-gray-3 text-frame-gray-light bg-transparent transition hover:border-frame-gray-muted hover:text-frame-white flex items-center gap-1.5"
             >
               <Copy className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">{t("app.studio.copy") as string}</span>
@@ -84,7 +84,7 @@ export default function ActionToolbar({
                 type="button"
                 onClick={() => setDownloadOpen((open) => !open)}
                 title={t("app.studio.export") as string}
-                className="font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase px-3 py-2 border border-frame-gray-3 text-frame-gray-light bg-transparent transition hover:border-frame-gray-muted hover:text-frame-white flex items-center gap-1.5"
+                className="min-h-11 w-full justify-center font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase px-3 py-2 border border-frame-gray-3 text-frame-gray-light bg-transparent transition hover:border-frame-gray-muted hover:text-frame-white flex items-center gap-1.5"
                 aria-expanded={downloadOpen}
               >
                 <Download className="w-3.5 h-3.5" />
@@ -117,7 +117,7 @@ export default function ActionToolbar({
           type="button"
           onClick={onClear}
           title={t("app.studio.clearFields") as string}
-          className="font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase px-3 py-2 border border-frame-gray-3 text-frame-gray-light bg-transparent transition hover:border-frame-red/40 hover:text-frame-red flex items-center gap-1.5"
+          className="min-h-11 justify-center font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase px-3 py-2 border border-frame-gray-3 text-frame-gray-light bg-transparent transition hover:border-frame-red/40 hover:text-frame-red flex items-center gap-1.5"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">{t("app.studio.clear") as string}</span>
@@ -127,7 +127,7 @@ export default function ActionToolbar({
           type="button"
           onClick={onToggleHistory}
           title={t("app.studio.viewHistory") as string}
-          className="font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase px-3 py-2 border border-frame-gray-3 text-frame-gray-light bg-transparent transition hover:border-frame-gold/40 hover:text-frame-gold flex items-center gap-1.5"
+          className="min-h-11 justify-center font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase px-3 py-2 border border-frame-gray-3 text-frame-gray-light bg-transparent transition hover:border-frame-gold/40 hover:text-frame-gold flex items-center gap-1.5"
         >
           <History className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">{t("app.studio.history") as string}</span>

@@ -57,10 +57,27 @@ export default function ProjectTimeline({ activeToolId }: ProjectTimelineProps) 
     });
   };
   const activeStage = getStageForTool(activeToolId);
+  const mobileStageValue = activeStage || WORKFLOW_STAGES[0]?.id || "";
 
   return (
-    <div className="w-full bg-frame-gray-1 border-b border-frame-gray-2 px-6 py-3 select-none flex items-center justify-between overflow-x-auto scrollbar-thin">
-      <div className="flex items-center gap-6 min-w-max w-full">
+    <div className="w-full bg-frame-gray-1 border-b border-frame-gray-2 px-4 sm:px-6 py-3 select-none">
+      <label className="sr-only" htmlFor="studio-mobile-stage">
+        {t("app.studio.timeline.pipeline") as string}
+      </label>
+      <select
+        id="studio-mobile-stage"
+        value={mobileStageValue}
+        onChange={(event) => handleNavigateStep(event.target.value)}
+        className="md:hidden w-full min-h-11 bg-frame-black border border-frame-gray-3 px-3 text-sm text-frame-white outline-none focus:border-frame-orange"
+      >
+        {WORKFLOW_STAGES.map((step, idx) => (
+          <option key={step.id} value={step.id}>
+            {idx + 1} · {step.label}
+          </option>
+        ))}
+      </select>
+
+      <div className="hidden md:flex items-center gap-6 w-full">
         {/* Cinematic Pipeline Header Label (Hidden on small mobile) */}
         <div className="hidden xl:flex flex-col pr-5 border-r border-frame-gray-2 shrink-0 font-frame-mono select-none">
           <span className="text-[0.62rem] tracking-[0.25em] text-frame-orange font-semibold uppercase">
@@ -85,7 +102,7 @@ export default function ProjectTimeline({ activeToolId }: ProjectTimelineProps) 
                 key={step.id}
                 type="button"
                 onClick={() => handleNavigateStep(step.id)}
-                className="flex items-center gap-1.5 md:gap-2.5 z-10 bg-frame-gray-1 px-2 py-1 border border-transparent hover:border-frame-gray-3 transition-[background-color,border-color,color,transform] duration-200 group rounded-none outline-none shrink-0"
+                className="min-h-11 flex items-center gap-1.5 md:gap-2.5 z-10 bg-frame-gray-1 px-2 py-1 border border-transparent hover:border-frame-gray-3 transition-[background-color,border-color,color,transform] duration-200 group rounded-none outline-none shrink-0"
               >
                 {/* Node circle state */}
                 <div
@@ -93,7 +110,7 @@ export default function ProjectTimeline({ activeToolId }: ProjectTimelineProps) 
                     isActive
                       ? "border-frame-orange bg-frame-orange text-frame-black shadow-[0_0_12px_rgba(255,77,0,0.3)]"
                       : isFilled
-                        ? "border-[#00c864] bg-[#00c864]/10 text-[#00c864]"
+                        ? "border-frame-green bg-frame-green/10 text-frame-green"
                         : "border-frame-gray-3 bg-frame-black text-frame-gray-light group-hover:border-frame-white group-hover:text-frame-white"
                   }`}
                 >

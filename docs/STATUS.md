@@ -152,7 +152,7 @@ Ordem de execução combinada. O conteúdo de cada frente vive na spec, não aqu
    `docs/CONEXOES.md`, `docs/DESIGN_PATTERNS.md` e `AGENTS.md`. Produção
    canônica: GitHub `cenastudio/Cenastudio` → Vercel `cena-studio-prod` →
    Supabase Postgres. Railway fica apenas como histórico/legado.
-3. `.kiro/specs/auditoria-ux-2026-07/` — **25 de 47 tasks feitas**. Fase A
+3. `.kiro/specs/auditoria-ux-2026-07/` — **30 de 47 tasks feitas**. Fase A
    avançou em 2026-08-14: delete de usuário voltou a exigir digitação do e-mail,
    teste mobile de touch target agora renderiza componente real, e Comercial
    mostra 5 abas diretas em desktop/tablet com dropdown mobile acessível em até
@@ -174,8 +174,13 @@ Ordem de execução combinada. O conteúdo de cada frente vive na spec, não aqu
    `npm run test -- client/src/test/ProjectNav.test.tsx`,
    `npm run test -- client/src/test/ProjectNav.test.tsx client/src/test/responsive-tabs.test.tsx client/src/test/appImport.test.ts`,
    `npx playwright test tests/e2e/commercial-nav-visibility.spec.ts` e
-   `npx playwright test --grep "@fase1"` (última rodada após B2.8-B2.11:
-   6 passed, 6 skipped). Próxima task: B3.2.
+   `npx playwright test --grep "@fase1"` (última rodada após Fase C:
+   6 passed, 6 skipped). Fase C avançou em 2026-08-14: `CommercialOverview`
+   compactou os steps do fluxo para não competir com as tabs principais;
+   `Studio` foi auditado nos componentes reais (`StudioShell`,
+   `ProjectTimeline`, `ActionToolbar`), com select mobile para etapa e toolbar
+   com controles `min-h-11`. Próxima task: C6 ou Fase D, conforme decisão sobre
+   rodar a suíte Playwright completa.
 
 Pausado por dependência externa, **não bloqueante**:
 

@@ -83,14 +83,19 @@ Esta spec consolida correções de uma auditoria UX/técnica focada em fechar o 
 
 ## Fase C — P1: hierarquia visual
 
-- [ ] C1. Auditar `CommercialOverview.tsx` (ou equivalente)
-- [ ] C2. Identificar os 3 níveis de navegação empilhados
-- [ ] C3. Redesenhar hierarquia:
-  - [ ] Nível 1 (abas de módulo) visualmente dominante
-  - [ ] Nível 2 (sub-abas) mais discreto (underline fino ou segmented control)
-  - [ ] Nível 3 (seletor de estágio) como filtro (Select/pill group)
-- [ ] C4. Aplicar mesma auditoria em `Studio.tsx`
-- [ ] C5. Testar em mobile e desktop
+- [x] C1. Auditar `CommercialOverview.tsx` (ou equivalente)
+  - Achado: header, workflow steps e tabs disputavam o topo no mobile; as tabs já usavam `ResponsiveTabs`, mas os steps pareciam uma segunda navegação dominante.
+- [x] C2. Identificar os 3 níveis de navegação empilhados
+  - Nível 1: navegação do módulo Comercial/Produção; nível 2: tabs internas do overview/Studio; nível 3: etapas/filtros de funil/jornada.
+- [x] C3. Redesenhar hierarquia:
+  - [x] Nível 1 (abas de módulo) visualmente dominante
+  - [x] Nível 2 (sub-abas) mais discreto (underline fino ou segmented control)
+  - [x] Nível 3 (seletor de estágio) como filtro (Select/pill group)
+  - `CommercialOverview` compactou workflow steps em grid discreto e limitou a largura visual das tabs; `ProjectTimeline` usa select mobile para etapa.
+- [x] C4. Aplicar mesma auditoria em `Studio.tsx`
+  - `Studio.tsx` é wrapper; auditoria aplicada em `StudioShell`, `ProjectTimeline` e `ActionToolbar`: timeline horizontal virou select mobile, toolbar passou a usar controles `min-h-11`.
+- [x] C5. Testar em mobile e desktop
+  - Validação em 2026-08-14: `npm run check`, `npm run test -- client/src/test/appImport.test.ts client/src/test/operationsUx.test.tsx`, `npx playwright test --grep "@fase1"` (6 passed, 6 skipped).
 - [ ] C6. Rodar `npx playwright test`
 
 ## Fase D — P2: design tokens
