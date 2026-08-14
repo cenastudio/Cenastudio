@@ -5,8 +5,9 @@ import ProductionNav from "@/components/ProductionNav";
 import ProjectNav from "@/components/ProjectNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FolderOpen, Package, BarChart3 } from "lucide-react";
+import { TabsContent } from "@/components/ui/tabs";
+import { ResponsiveTabs } from "@/components/ui/responsive-tabs";
+import { FolderOpen } from "lucide-react";
 import AllFilesTab from "@/components/files/AllFilesTab";
 import ProjectFilesTab from "@/components/files/ProjectFilesTab";
 import StorageTab from "@/components/files/StorageTab";
@@ -59,45 +60,15 @@ function FilesUnifiedContent() {
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabValue)} className="space-y-6">
-          <TabsList className="inline-flex h-auto p-0 bg-transparent border border-frame-gray-3">
-            <TabsTrigger
-              value="all"
-              className="
-                data-[state=active]:bg-frame-orange data-[state=active]:text-frame-black
-                data-[state=inactive]:text-frame-gray-light data-[state=inactive]:hover:text-frame-white
-                px-4 py-2.5 font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase
-                rounded-none border-0 transition-all
-              "
-            >
-              <Package className="w-3.5 h-3.5 mr-2" />
-              {isEn ? "All Files" : "Todos os Arquivos"}
-            </TabsTrigger>
-            <TabsTrigger
-              value="project"
-              className="
-                data-[state=active]:bg-frame-orange data-[state=active]:text-frame-black
-                data-[state=inactive]:text-frame-gray-light data-[state=inactive]:hover:text-frame-white
-                px-4 py-2.5 font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase
-                rounded-none border-0 transition-all
-              "
-            >
-              <FolderOpen className="w-3.5 h-3.5 mr-2" />
-              {isEn ? "By Project" : "Por Projeto"}
-            </TabsTrigger>
-            <TabsTrigger
-              value="storage"
-              className="
-                data-[state=active]:bg-frame-orange data-[state=active]:text-frame-black
-                data-[state=inactive]:text-frame-gray-light data-[state=inactive]:hover:text-frame-white
-                px-4 py-2.5 font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase
-                rounded-none border-0 transition-all
-              "
-            >
-              <BarChart3 className="w-3.5 h-3.5 mr-2" />
-              {isEn ? "Storage" : "Armazenamento"}
-            </TabsTrigger>
-          </TabsList>
+        <ResponsiveTabs
+          value={activeTab}
+          onValueChange={(value) => setActiveTab(value as TabValue)}
+          tabs={[
+            { value: "all", label: isEn ? "All Files" : "Todos os Arquivos" },
+            { value: "project", label: isEn ? "By Project" : "Por Projeto" },
+            { value: "storage", label: isEn ? "Storage" : "Armazenamento" },
+          ]}
+        >
 
           <TabsContent value="all" className="mt-0">
             <AllFilesTab />
@@ -110,7 +81,7 @@ function FilesUnifiedContent() {
           <TabsContent value="storage" className="mt-0">
             <StorageTab />
           </TabsContent>
-        </Tabs>
+        </ResponsiveTabs>
       </main>
     </div>
   );

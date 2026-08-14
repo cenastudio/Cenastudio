@@ -771,7 +771,22 @@ function DocumentsContent() {
         </header>
 
         {/* ═══ DOC TYPE TABS ═══ */}
-        <nav className="flex gap-1.5 overflow-x-auto scrollbar-none">
+        <label htmlFor="document-type-mobile" className="sr-only">
+          Tipo de documento
+        </label>
+        <select
+          id="document-type-mobile"
+          value={form.type}
+          onChange={(event) => setForm((current) => nextFormForType(current, event.target.value as DocType, docTypes))}
+          className="frame-input min-h-11 w-full sm:hidden"
+        >
+          {docTypes.map((doc) => (
+            <option key={doc.id} value={doc.id}>
+              {doc.label}
+            </option>
+          ))}
+        </select>
+        <nav className="hidden gap-1.5 sm:flex sm:flex-wrap">
           {docTypes.map((doc) => {
             const Icon = doc.icon;
             const active = form.type === doc.id;
@@ -780,7 +795,7 @@ function DocumentsContent() {
                 key={doc.id}
                 type="button"
                 onClick={() => setForm((current) => nextFormForType(current, doc.id, docTypes))}
-                className={`flex items-center gap-1.5 px-3 py-2 border whitespace-nowrap transition text-[0.62rem] font-semibold uppercase tracking-wider ${
+                className={`flex min-h-11 items-center gap-1.5 px-3 py-2 border whitespace-nowrap transition text-[0.62rem] font-semibold uppercase tracking-wider ${
                   active
                     ? "border-frame-orange bg-frame-orange/10 text-frame-orange"
                     : "border-frame-gray-3 text-frame-gray-light hover:border-frame-orange/40 hover:text-frame-white"

@@ -1042,41 +1042,54 @@ function ProfileContent() {
           </p>
         </div>
 
-        {/* ─── TABS ───
-            Below md this scrolls horizontally instead of wrapping, matching
-            the ResponsiveTabs pattern used elsewhere — desktop keeps the
-            original flex-wrap layout untouched. */}
-        <div className="flex gap-2 mb-8 pb-4 border-b border-frame-gray-3/30 max-md:overflow-x-auto max-md:flex-nowrap max-md:scrollbar-none flex-wrap">
-          <TabButton
-            active={activeTab === "profile"}
-            onClick={() => setActiveTab("profile")}
-            icon={UserRound}
-            label={t("app.profile.tabProfile")}
-          />
-          <TabButton
-            active={activeTab === "security"}
-            onClick={() => setActiveTab("security")}
-            icon={Shield}
-            label={t("app.profile.tabSecurity")}
-          />
-          <TabButton
-            active={activeTab === "plan"}
-            onClick={() => setActiveTab("plan")}
-            icon={Crown}
-            label={t("app.profile.tabPlan")}
-          />
-          <TabButton
-            active={activeTab === "preferences"}
-            onClick={() => setActiveTab("preferences")}
-            icon={Settings}
-            label={t("app.profile.tabPreferences")}
-          />
-          <TabButton
-            active={activeTab === "privacy"}
-            onClick={() => setActiveTab("privacy")}
-            icon={FileText}
-            label={t("app.profile.tabPrivacy")}
-          />
+        <div className="mb-8 border-b border-frame-gray-3/30 pb-4">
+          <label htmlFor="profile-mobile-tabs" className="sr-only">
+            {t("app.profile.myAccount")}
+          </label>
+          <select
+            id="profile-mobile-tabs"
+            value={activeTab}
+            onChange={(event) => setActiveTab(event.target.value as ProfileTab)}
+            className="frame-input min-h-11 w-full md:hidden"
+          >
+            <option value="profile">{t("app.profile.tabProfile")}</option>
+            <option value="security">{t("app.profile.tabSecurity")}</option>
+            <option value="plan">{t("app.profile.tabPlan")}</option>
+            <option value="preferences">{t("app.profile.tabPreferences")}</option>
+            <option value="privacy">{t("app.profile.tabPrivacy")}</option>
+          </select>
+          <div className="hidden flex-wrap gap-2 md:flex">
+            <TabButton
+              active={activeTab === "profile"}
+              onClick={() => setActiveTab("profile")}
+              icon={UserRound}
+              label={t("app.profile.tabProfile")}
+            />
+            <TabButton
+              active={activeTab === "security"}
+              onClick={() => setActiveTab("security")}
+              icon={Shield}
+              label={t("app.profile.tabSecurity")}
+            />
+            <TabButton
+              active={activeTab === "plan"}
+              onClick={() => setActiveTab("plan")}
+              icon={Crown}
+              label={t("app.profile.tabPlan")}
+            />
+            <TabButton
+              active={activeTab === "preferences"}
+              onClick={() => setActiveTab("preferences")}
+              icon={Settings}
+              label={t("app.profile.tabPreferences")}
+            />
+            <TabButton
+              active={activeTab === "privacy"}
+              onClick={() => setActiveTab("privacy")}
+              icon={FileText}
+              label={t("app.profile.tabPrivacy")}
+            />
+          </div>
         </div>
 
 

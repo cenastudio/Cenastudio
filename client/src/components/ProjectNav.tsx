@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
-import { BookOpen, ChevronLeft, Wallet, Clapperboard, FileBarChart } from "lucide-react";
+import { BookOpen, ChevronDown, ChevronLeft, Wallet, Clapperboard, FileBarChart } from "lucide-react";
 import { getStageForLocation, WORKFLOW_STAGES } from "@/lib/workflow";
 import { usePlanContext } from "@/contexts/PlanContext";
 import { canAccessFeature } from "@/lib/feature-gating";
@@ -14,6 +14,8 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
   const { t } = useLanguage();
   const [location, setLocation] = useLocation();
   const [projectName, setProjectName] = useState("");
+  const [sectionOpen, setSectionOpen] = useState(false);
+  const [journeyOpen, setJourneyOpen] = useState(false);
   const { planMode } = usePlanContext();
   const activeStage = getStageForLocation(location);
   const canAccessBudget = canAccessFeature("budget-tracking", planMode).hasAccess;
@@ -32,9 +34,166 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
       .catch(() => {});
   }, [projectId]);
 
+  const sectionTabs = [
+    {
+      href: `/project/${projectId}`,
+      label: t("app.common.overview") as string,
+      icon: BookOpen,
+      active: location === `/project/${projectId}`,
+    },
+    ...(canAccessBudget
+      ? [{
+          href: `/project/${projectId}/budget`,
+          label: "Orçamento",
+          icon: Wallet,
+          active: isBudgetActive,
+        }]
+      : []),
+    ...(canAccessDre
+      ? [{
+          href: `/project/${projectId}/dre`,
+          label: "DRE",
+          icon: FileBarChart,
+          active: isDreActive,
+        }]
+      : []),
+    ...(canAccessShotList
+      ? [{
+          href: `/project/${projectId}/shotlist`,
+          label: "Shot List",
+          icon: Clapperboard,
+          active: isShotListActive,
+        }]
+      : []),
+  ];
+  const activeSection = sectionTabs.find((tab) => tab.active) || sectionTabs[0];
+  const activeJourney = WORKFLOW_STAGES.find((stage) => stage.id === activeStage) || WORKFLOW_STAGES[0];
+  const ActiveSectionIcon = activeSection.icon;
+
+  const goTo = (href: string) => {
+    setLocation(href);
+    setSectionOpen(false);
+    setJourneyOpen(false);
+  };
+
   return (
     <div className="border-b border-frame-gray-3 bg-frame-black/95 dark:bg-frame-black/95 backdrop-blur-sm sticky top-16 z-40 shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
       <div className="max-w-7xl mx-auto px-4 md:px-6">
+        <div className="space-y-2 py-2 md:hidden">
+          <div className="flex min-h-11 items-center gap-3">
+            <button
+              type="button"
+              onClick={() => goTo("/dashboard")}
+              className="flex min-h-11 min-w-11 shrink-0 items-center justify-center text-frame-gray-light transition hover:text-frame-orange"
+              title={t("app.common.backToDashboard") as string}
+              aria-label={t("app.common.backToDashboard") as string}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <div className="min-w-0">
+              <span className="block font-frame-mono text-[0.58rem] uppercase tracking-widest text-frame-gray-light">
+                {t("app.common.project") as string}
+              </span>
+              <span className="block truncate text-sm font-semibold text-frame-white">
+                {projectName || `#${projectId}`}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSectionOpen((open) => !open);
+                  setJourneyOpen(false);
+                }}
+                aria-expanded={sectionOpen}
+                aria-label="Seção do projeto"
+                className="flex min-h-11 w-full items-center justify-between gap-2 border border-frame-gray-3/60 bg-frame-gray-1/30 px-3 py-2.5 text-left"
+              >
+                <span className="flex min-w-0 items-center gap-2 font-frame-mono text-[0.65rem] uppercase tracking-[0.1em] text-frame-orange">
+                  <ActiveSectionIcon className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{activeSection.label}</span>
+                </span>
+                <ChevronDown className={`h-3.5 w-3.5 text-frame-gray-light transition-transform ${sectionOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {sectionOpen && (
+                <div className="mt-1 divide-y divide-frame-gray-3/30 border border-frame-gray-3/60 bg-frame-black/95">
+                  {sectionTabs.map((tab) => {
+                    const Icon = tab.icon;
+                    return (
+                      <button
+                        key={tab.href}
+                        type="button"
+                        onClick={() => goTo(tab.href)}
+                        aria-current={tab.active ? "page" : undefined}
+                        className={`flex min-h-11 w-full items-center gap-2.5 px-3 py-2.5 text-left font-frame-mono text-[0.62rem] uppercase tracking-[0.1em] transition ${
+                          tab.active ? "bg-frame-orange/10 text-frame-orange" : "text-frame-gray-light hover:bg-frame-gray-2/40 hover:text-frame-white"
+                        }`}
+                      >
+                        <Icon className={`h-3.5 w-3.5 ${tab.active ? "text-frame-orange" : ""}`} />
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <button
+                type="button"
+                onClick={() => {
+                  setJourneyOpen((open) => !open);
+                  setSectionOpen(false);
+                }}
+                aria-expanded={journeyOpen}
+                aria-label={t("app.nav.projectJourney") as string}
+                className="flex min-h-11 w-full items-center justify-between gap-2 border border-frame-gray-3/60 bg-frame-gray-1/30 px-3 py-2.5 text-left"
+              >
+                <span className="flex min-w-0 items-center gap-2 font-frame-mono text-[0.65rem] uppercase tracking-[0.1em] text-frame-orange">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-frame-orange text-[0.55rem] text-frame-black">
+                    {activeJourney.number}
+                  </span>
+                  <span className="truncate">{activeJourney.label}</span>
+                </span>
+                <ChevronDown className={`h-3.5 w-3.5 text-frame-gray-light transition-transform ${journeyOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {journeyOpen && (
+                <div className="mt-1 divide-y divide-frame-gray-3/30 border border-frame-gray-3/60 bg-frame-black/95">
+                  {WORKFLOW_STAGES.map((stage) => {
+                    const isActive = activeStage === stage.id && location !== `/project/${projectId}`;
+                    return (
+                      <button
+                        key={stage.id}
+                        type="button"
+                        onClick={() => goTo(`/project/${projectId}/journey/${stage.id}`)}
+                        aria-current={isActive ? "page" : undefined}
+                        className={`flex min-h-11 w-full items-center gap-2.5 px-3 py-2.5 text-left font-frame-mono text-[0.62rem] uppercase tracking-[0.1em] transition ${
+                          isActive ? "bg-frame-orange/10 text-frame-orange" : "text-frame-gray-light hover:bg-frame-gray-2/40 hover:text-frame-white"
+                        }`}
+                      >
+                        <span
+                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[0.55rem] ${
+                            isActive ? "bg-frame-orange text-frame-black" : "bg-frame-gray-2 text-frame-gray-light"
+                          }`}
+                        >
+                          {stage.number}
+                        </span>
+                        {stage.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="hidden md:block">
         {/* Row 1: utility nav — back, project identity, section tabs (Overview/Budget/Shot List).
             Scrolls horizontally on narrow screens with the same fade-out edge
             used in Row 2 below, instead of silently compressing/cutting off
@@ -165,6 +324,7 @@ export default function ProjectNav({ projectId }: ProjectNavProps) {
           </nav>
           {/* Fade-out edge signals there's more to scroll on narrow viewports */}
           <div className="pointer-events-none absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-frame-black/95 to-transparent md:hidden" aria-hidden="true" />
+        </div>
         </div>
       </div>
     </div>

@@ -53,12 +53,19 @@ Esta spec consolida correções de uma auditoria UX/técnica focada em fechar o 
 - [x] B2.1. `client/src/components/ProductionNav.tsx:129` — endurecer navegação de Produção: desktop/tablet com touch target `min-h-11`; mobile dropdown com trigger e itens `min-h-11`; validar acesso a Jobs, Estúdio IA, Aprovações, Arquivos, Documentos, Equipamento, Timesheet, Webhooks e Equipe em ≤2 toques.
   - `client/src/test/ProductionNav.test.tsx` cobre touch target real e navegação mobile em 2 toques para todas as áreas visíveis.
   - Validação em 2026-08-14: `npm run test -- client/src/test/ProductionNav.test.tsx`, `npm run check`, `npx playwright test --grep "@fase1"` (6 passed, 6 skipped).
-- [ ] B2.2. `client/src/components/ProjectNav.tsx:43` e `client/src/components/ProjectNav.tsx:135` — redesenhar navegação de projeto no mobile: reduzir duas faixas horizontais empilhadas, manter Overview/Orçamento/DRE/Shot List e jornada acessíveis sem scroll escondido.
-- [ ] B2.3. `client/src/pages/Profile.tsx:1049` — trocar tabs manuais da conta por `ResponsiveTabs` ou dropdown mobile equivalente, preservando desktop wrap.
-- [ ] B2.4. `client/src/pages/Documents.tsx:774` — migrar tipos de documento para controle mobile-safe; botões atuais usam `py-2` e dependem de `overflow-x-auto`.
-- [ ] B2.5. `client/src/pages/FilesUnified.tsx:63` — migrar `TabsList` custom para `ResponsiveTabs`, mantendo All Files/By Project/Storage.
-- [ ] B2.6. `client/src/components/studio/forms/ChecklistForm.tsx:180` — migrar 6 abas internas do checklist para controle mobile-safe; botões atuais usam `py-1.5` e scroll horizontal.
-- [ ] B2.7. `client/src/pages/AnalyticsPremium.tsx:41` — alinhar tabs Dashboards/Relatórios ao padrão `ResponsiveTabs` e touch target mínimo.
+- [x] B2.2. `client/src/components/ProjectNav.tsx:43` e `client/src/components/ProjectNav.tsx:135` — redesenhar navegação de projeto no mobile: reduzir duas faixas horizontais empilhadas, manter Overview/Orçamento/DRE/Shot List e jornada acessíveis sem scroll escondido.
+  - Mobile agora usa dropdown de seção do projeto + dropdown de jornada, ambos com `min-h-11`; desktop mantém as linhas existentes.
+  - `client/src/test/ProjectNav.test.tsx` cobre ausência de `overflow-x-auto` no bloco mobile e navegação em 2 toques para seções e etapas.
+  - Validação em 2026-08-14: `npm run test -- client/src/test/ProjectNav.test.tsx`, `npm run check`, `npx playwright test --grep "@fase1"` (6 passed, 6 skipped).
+- [x] B2.3. `client/src/pages/Profile.tsx:1049` — trocar tabs manuais da conta por `ResponsiveTabs` ou dropdown mobile equivalente, preservando desktop wrap.
+  - Mobile usa `select` `min-h-11`; desktop preserva botões existentes sem scroll horizontal.
+- [x] B2.4. `client/src/pages/Documents.tsx:774` — migrar tipos de documento para controle mobile-safe; botões atuais usam `py-2` e dependem de `overflow-x-auto`.
+  - Mobile usa `select` `min-h-11`; desktop usa botões com `min-h-11` e wrap.
+- [x] B2.5. `client/src/pages/FilesUnified.tsx:63` — migrar `TabsList` custom para `ResponsiveTabs`, mantendo All Files/By Project/Storage.
+- [x] B2.6. `client/src/components/studio/forms/ChecklistForm.tsx:180` — migrar 6 abas internas do checklist para controle mobile-safe; botões atuais usam `py-1.5` e scroll horizontal.
+  - Mobile usa `select` `min-h-11`; desktop usa botões com `min-h-11` e wrap.
+- [x] B2.7. `client/src/pages/AnalyticsPremium.tsx:41` — alinhar tabs Dashboards/Relatórios ao padrão `ResponsiveTabs` e touch target mínimo.
+  - Validação do lote B2.3-B2.7 em 2026-08-14: `npm run check` e `npm run test -- client/src/test/ProjectNav.test.tsx client/src/test/responsive-tabs.test.tsx client/src/test/appImport.test.ts`.
 - [ ] B2.8. `client/src/components/studio/ToolSidebar.tsx:72` — auditar rail horizontal de categorias/ferramentas do Studio no mobile; decidir entre dropdown por categoria ou busca/filtro fixo sem esconder ferramentas críticas.
 - [ ] B2.9. `client/src/pages/ProjectHub.tsx:457` — revisar header de ações do projeto no mobile; hoje usa `overflow-x-auto` em ação/contexto de alto uso.
 - [ ] B2.10. `client/src/pages/Pipeline.tsx:606` e `client/src/pages/Pipeline.tsx:722` — manter board horizontal quando necessário, mas adicionar caminho mobile previsível por estágio/filtro para não depender só de arrastar colunas.

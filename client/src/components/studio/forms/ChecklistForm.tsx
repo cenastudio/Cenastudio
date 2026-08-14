@@ -173,18 +173,34 @@ export default function ChecklistForm({ data, onChange, onSetOutput }: Checklist
     pos: t("app.studio.forms.checklist.tabPost"),
     ia: t("app.studio.forms.checklist.tabAI"),
   };
+  const checklistTabs = ["camera", "audio", "luz", "prod", "pos", "ia"];
 
   return (
     <div className="space-y-4 font-frame-body">
       {/* Título & Tabs Internas */}
-      <div className="flex bg-frame-gray-1 p-0.5 border border-frame-gray-3 overflow-x-auto select-none shrink-0 scrollbar-none">
-        {["camera", "audio", "luz", "prod", "pos", "ia"].map((tab) => {
+      <label htmlFor="checklist-mobile-tabs" className="sr-only">
+        Checklist
+      </label>
+      <select
+        id="checklist-mobile-tabs"
+        value={activeTab}
+        onChange={(event) => setActiveTab(event.target.value)}
+        className="frame-input min-h-11 w-full sm:hidden"
+      >
+        {checklistTabs.map((tab) => (
+          <option key={tab} value={tab}>
+            {tabLabelMap[tab]}
+          </option>
+        ))}
+      </select>
+      <div className="hidden bg-frame-gray-1 p-0.5 border border-frame-gray-3 select-none shrink-0 sm:flex sm:flex-wrap">
+        {checklistTabs.map((tab) => {
           return (
             <button
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 font-frame-mono text-[0.64rem] tracking-[0.1em] uppercase transition shrink-0 ${
+              className={`flex min-h-11 items-center gap-1.5 px-3 py-1.5 font-frame-mono text-[0.64rem] tracking-[0.1em] uppercase transition shrink-0 ${
                 activeTab === tab
                   ? "bg-frame-orange text-frame-black font-medium"
                   : "text-frame-gray-light hover:text-frame-white"

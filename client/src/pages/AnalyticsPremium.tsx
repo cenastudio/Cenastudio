@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { BarChart3, LayoutDashboard, FileText, Plus } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TabsContent } from "@/components/ui/tabs";
+import { ResponsiveTabs } from "@/components/ui/responsive-tabs";
 import DashboardsTab from "@/components/analytics/DashboardsTab";
 import ReportsTab from "@/components/analytics/ReportsTab";
 
@@ -37,17 +37,15 @@ function AnalyticsPremiumContent() {
         </header>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
-            <TabsTrigger value="dashboards" className="flex items-center gap-2">
-              <LayoutDashboard className="h-4 w-4" />
-              Dashboards
-            </TabsTrigger>
-            <TabsTrigger value="reports" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Relatórios
-            </TabsTrigger>
-          </TabsList>
+        <ResponsiveTabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          tabs={[
+            { value: "dashboards", label: "Dashboards" },
+            { value: "reports", label: "Relatórios" },
+          ]}
+          listClassName="mb-6"
+        >
 
           <TabsContent value="dashboards" className="mt-6">
             <DashboardsTab />
@@ -56,7 +54,7 @@ function AnalyticsPremiumContent() {
           <TabsContent value="reports" className="mt-6">
             <ReportsTab />
           </TabsContent>
-        </Tabs>
+        </ResponsiveTabs>
       </main>
     </div>
   );
