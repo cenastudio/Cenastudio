@@ -1,148 +1,137 @@
-/**
- * Mobile Touch Target Tests for AdminDashboard
- *
- * Verifies that destructive action buttons meet WCAG 2.5.5 (AAA) touch target size guidelines:
- * - Minimum 44x44 CSS pixels for touch targets
- * - Adequate spacing between adjacent interactive elements
- * - Visual separators provide proper spacing to prevent accidental taps
- *
- * Related spec: auditoria-ux-2026-07 / Task A1.4
- */
+import "@testing-library/jest-dom";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { api } from "@/lib/api";
+import { AdminContent } from "@/pages/AdminDashboard";
 
-import { describe, it, expect } from "vitest";
-import { render } from "@testing-library/react";
+vi.mock("@/components/AppNavBar", () => ({
+  default: () => <div data-testid="app-nav" />,
+}));
 
-describe("AdminDashboard Mobile Touch Targets", () => {
-  describe("Delete Button Touch Target Sizing", () => {
-    it("should have minimum 44x44px touch target for delete button", () => {
-      // The delete button uses className="h-11 w-11"
-      // In Tailwind: h-11 = 2.75rem = 44px, w-11 = 2.75rem = 44px
-      const tailwindH11 = 44; // px
-      const tailwindW11 = 44; // px
-      const wcagMinimum = 44; // px
+vi.mock("@/contexts/AuthContext", () => ({
+  useAuth: () => ({
+    user: { id: 99, email: "admin@cenastudio.com", role: "admin", name: "Admin" },
+    isAuthenticated: true,
+    isAdmin: true,
+    isLoading: false,
+  }),
+}));
 
-      expect(tailwindH11).toBeGreaterThanOrEqual(wcagMinimum);
-      expect(tailwindW11).toBeGreaterThanOrEqual(wcagMinimum);
-    });
-
-    it("should have adequate spacing from adjacent buttons", () => {
-      // Visual separator uses className="w-px h-8 bg-frame-gray-3 mx-1"
-      // mx-1 = margin-left: 0.25rem (4px) + margin-right: 0.25rem (4px) = 8px total
-      const separatorMarginLeft = 4; // px (mx-1 = 0.25rem)
-      const separatorMarginRight = 4; // px (mx-1 = 0.25rem)
-      const totalSpacing = separatorMarginLeft + separatorMarginRight;
-      const minimumRecommended = 8; // px minimum spacing for adjacent touch targets
-
-      expect(totalSpacing).toBeGreaterThanOrEqual(minimumRecommended);
-    });
-
-    it("should have border-2 for better visibility of destructive action", () => {
-      // Delete button uses border-2 = 2px border
-      // This makes the destructive action more visually distinct
-      const borderWidth = 2; // px
-      expect(borderWidth).toBeGreaterThan(1); // Thicker than standard border-1
-    });
-
-    it("should have adequate gap between action buttons in the flex container", () => {
-      // The action buttons container uses className="flex items-center gap-2"
-      // gap-2 = 0.5rem = 8px
-      const gapBetweenButtons = 8; // px (gap-2)
-      const minimumRecommended = 8; // px
-
-      expect(gapBetweenButtons).toBeGreaterThanOrEqual(minimumRecommended);
-    });
-  });
-
-  describe("Other Action Buttons Touch Target Sizing", () => {
-    it("should verify Settings button has adequate touch target", () => {
-      // Settings button uses className="h-11 w-11"
-      const buttonHeight = 44; // px (h-11)
-      const buttonWidth = 44; // px (w-11)
-      const wcagMinimum = 44; // px
-
-      expect(buttonHeight).toBeGreaterThanOrEqual(wcagMinimum);
-      expect(buttonWidth).toBeGreaterThanOrEqual(wcagMinimum);
-    });
-
-    it("should verify Promote/Demote button has adequate touch target", () => {
-      // Promote/Demote button uses className="min-h-11"
-      const minHeight = 44; // px (min-h-11)
-      const wcagMinimum = 44; // px
-
-      expect(minHeight).toBeGreaterThanOrEqual(wcagMinimum);
-    });
-
-    it("should verify Plan selector has adequate touch target", () => {
-      // Plan selector uses py-1.5 = padding-top: 0.375rem (6px) + padding-bottom: 0.375rem (6px)
-      // Total vertical padding = 12px
-      // Estimated height = line-height (~16px for text-xs) + padding (12px) = ~28px
-      // Note: This is a SELECT element which may need enhancement for mobile
-      const estimatedHeight = 28; // px (approximate)
-      const wcagMinimum = 44; // px
-
-      // This test documents that the select might be below WCAG AAA
-      // However, SELECT elements have browser-native touch handling which may compensate
-      expect(estimatedHeight).toBeLessThan(wcagMinimum);
-      // TODO: Consider enhancing select styling for better mobile experience
-    });
-  });
-
-  describe("Touch Target Documentation", () => {
-    it("should document current implementation meets WCAG 2.5.5 Level AAA for critical actions", () => {
-      const implementation = {
-        deleteButton: {
-          dimensions: "44x44px",
-          meets: "WCAG 2.5.5 AAA",
-          class: "h-11 w-11",
-        },
-        settingsButton: {
-          dimensions: "44x44px",
-          meets: "WCAG 2.5.5 AAA",
-          class: "h-11 w-11",
-        },
-        visualSeparator: {
-          spacing: "8px total (4px left + 4px right)",
-          class: "mx-1",
-          purpose: "Prevent accidental tap on adjacent destructive action",
-        },
-        buttonGap: {
-          spacing: "8px",
-          class: "gap-2",
-          purpose: "Adequate spacing between all action buttons",
-        },
+vi.mock("@/contexts/LanguageContext", () => ({
+  useLanguage: () => ({
+    locale: "pt",
+    t: (key: string) => {
+      const labels: Record<string, string> = {
+        "app.admin.tabOverview": "Visão geral",
+        "app.admin.users": "Usuários",
+        "app.admin.tabTools": "Ferramentas",
+        "app.admin.noName": "Sem nome",
+        "app.admin.projects": "projetos",
+        "app.admin.files": "arquivos",
+        "app.admin.reviews": "reviews",
+        "app.admin.deleteAccount": "Excluir conta",
+        "app.admin.cannotDeleteSelf": "Você não pode excluir sua conta",
+        "app.admin.deleting": "Excluindo...",
+        "app.admin.accountDeleted": "Conta excluída",
+        "app.admin.viewAllUsers": "Ver usuários",
+        "app.admin.promote": "Promover",
+        "app.admin.demote": "Rebaixar",
+        "app.common.loading": "Carregando...",
       };
+      return labels[key] ?? key;
+    },
+  }),
+}));
 
-      expect(implementation.deleteButton.dimensions).toBe("44x44px");
-      expect(implementation.settingsButton.dimensions).toBe("44x44px");
-      expect(implementation.visualSeparator.spacing).toBe("8px total (4px left + 4px right)");
-      expect(implementation.buttonGap.spacing).toBe("8px");
-    });
+vi.mock("wouter", () => ({
+  useLocation: () => ["/admin", vi.fn()],
+}));
+
+const targetUser = {
+  id: 7,
+  name: "Cliente Risco",
+  email: "cliente-risco@example.com",
+  role: "user",
+  github_id: null,
+  created_at: "2026-08-01T00:00:00.000Z",
+  disabled: false,
+  plan_name: "pro",
+  generation_limit: 100,
+  project_count: 2,
+  file_count: 3,
+  review_count: 1,
+};
+
+function mockAdminApi() {
+  Object.assign(api.admin, {
+    listTools: vi.fn().mockResolvedValue([]),
+    users: vi.fn().mockResolvedValue({ users: [targetUser], count: 1 }),
+    metrics: vi.fn().mockResolvedValue(null),
+    auditLog: vi.fn().mockResolvedValue([]),
+    lgpdRequests: vi.fn().mockResolvedValue([]),
+    referrals: vi.fn().mockResolvedValue({ summary: null, entries: [] }),
+    aiUsage: vi.fn().mockResolvedValue(null),
+    updateUserPlan: vi.fn().mockResolvedValue({}),
+    updateUserRole: vi.fn().mockResolvedValue({}),
+    deleteUser: vi.fn().mockResolvedValue({}),
+    createUser: vi.fn().mockResolvedValue({}),
+    createTool: vi.fn().mockResolvedValue({}),
+    updateTool: vi.fn().mockResolvedValue({}),
+    deleteTool: vi.fn().mockResolvedValue({}),
+    userDetail: vi.fn(),
+    setUserStatus: vi.fn(),
+    updateUserSubscription: vi.fn(),
+    resetUserPassword: vi.fn(),
+    processLgpdRequest: vi.fn(),
+    broadcast: vi.fn(),
+  });
+}
+
+async function renderUsersTab() {
+  render(<AdminContent />);
+  fireEvent.click(await screen.findByRole("button", { name: /ver usuários/i }));
+  return screen.findByText(targetUser.email);
+}
+
+describe("AdminDashboard mobile destructive actions", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAdminApi();
   });
 
-  describe("Mobile Layout Considerations", () => {
-    it("should verify responsive layout changes from desktop to mobile", () => {
-      // The user list item uses: flex flex-col lg:flex-row lg:items-center gap-4
-      // This means:
-      // - Mobile (< lg): flex-col (vertical stacking) with gap-4 (16px)
-      // - Desktop (>= lg): flex-row (horizontal) with gap-4 (16px)
+  it("renders real mobile-safe touch targets for user actions", async () => {
+    await renderUsersTab();
 
-      const mobileGap = 16; // px (gap-4 in vertical layout)
-      const desktopGap = 16; // px (gap-4 in horizontal layout)
-      const minimumRecommended = 8; // px
+    const userCard = screen.getByText(targetUser.email).closest("div.border");
+    expect(userCard).not.toBeNull();
 
-      expect(mobileGap).toBeGreaterThan(minimumRecommended);
-      expect(desktopGap).toBeGreaterThan(minimumRecommended);
+    const actions = within(userCard as HTMLElement);
+    expect(actions.getByLabelText(`Plano de ${targetUser.email}`)).toHaveClass("min-h-11");
+    expect(actions.getByRole("button", { name: /promover/i })).toHaveClass("min-h-11");
+    expect(actions.getByRole("button", { name: `Gerenciar ${targetUser.email}` })).toHaveClass("h-11", "w-11");
+    expect(actions.getByRole("button", { name: `Excluir ${targetUser.email}` })).toHaveClass("h-11", "w-11", "border-2");
+  });
+
+  it("requires typing the user email before deleting an account", async () => {
+    await renderUsersTab();
+
+    fireEvent.click(screen.getByRole("button", { name: `Excluir ${targetUser.email}` }));
+
+    const confirmButton = await screen.findByRole("button", { name: "Confirmar exclusão" });
+    expect(confirmButton).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText("Digite o e-mail para confirmar"), {
+      target: { value: "cliente-risco" },
     });
+    expect(confirmButton).toBeDisabled();
 
-    it("should verify action buttons maintain adequate spacing in mobile layout", () => {
-      // Action buttons container: flex items-center gap-2
-      // This maintains horizontal layout even on mobile
-      // gap-2 = 8px spacing between buttons
-
-      const buttonSpacing = 8; // px
-      const minimumRecommended = 8; // px
-
-      expect(buttonSpacing).toBeGreaterThanOrEqual(minimumRecommended);
+    fireEvent.change(screen.getByLabelText("Digite o e-mail para confirmar"), {
+      target: { value: targetUser.email },
     });
+    expect(confirmButton).toBeEnabled();
+
+    fireEvent.click(confirmButton);
+
+    await waitFor(() => expect(api.admin.deleteUser).toHaveBeenCalledWith(targetUser.id));
   });
 });

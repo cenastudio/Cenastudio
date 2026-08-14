@@ -1,8 +1,8 @@
 /**
- * Test: A2.3 - Validar menu overflow "Mais" no CommercialNav
+ * Test: A2.3/A2.4 - Validar paridade mobile/desktop no CommercialNav
  *
- * Após implementação do menu overflow, este teste valida:
- * - Desktop: 3 abas primárias + botão "Mais" com dropdown
+ * Este teste valida:
+ * - Desktop/tablet: 5 abas diretas
  * - Mobile: dropdown único com todas as 5 abas
  * - Todas as abas acessíveis em ≤2 toques
  */
@@ -10,12 +10,12 @@
 import { test, expect } from "@playwright/test";
 import { loginAsAdmin } from "./support/auth";
 
-test.describe("CommercialNav - Menu overflow", () => {
+test.describe("CommercialNav - Mobile/Desktop parity", () => {
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page);
   });
 
-  test("Desktop (1280px): deve mostrar 3 abas primárias + botão Mais com dropdown", async ({ page }) => {
+  test("Desktop (1280px): deve mostrar as 5 abas comerciais diretas", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto("/commercial");
     await page.waitForLoadState("networkidle");
@@ -27,33 +27,21 @@ test.describe("CommercialNav - Menu overflow", () => {
     const desktopNav = nav.locator('.hidden.sm\\:flex').first();
     await expect(desktopNav).toBeVisible();
 
-    // Should show 3 primary tabs + 1 "Mais" button = 4 buttons total
+    // Should show all 5 commercial tabs directly on desktop
     const visibleButtons = desktopNav.locator('button');
     const buttonCount = await visibleButtons.count();
 
-    console.log(`Desktop: ${buttonCount} buttons visible (3 primary tabs + 1 "Mais" button)`);
-    expect(buttonCount).toBe(4);
+    console.log(`Desktop: ${buttonCount} buttons visible`);
+    expect(buttonCount).toBe(5);
 
-    // Check that primary tabs are present
+    // Check that all tabs are present directly
     await expect(desktopNav.getByRole('button', { name: /visão geral|overview/i })).toBeVisible();
     await expect(desktopNav.getByRole('button', { name: /clientes|clients/i })).toBeVisible();
     await expect(desktopNav.getByRole('button', { name: /pipeline/i })).toBeVisible();
+    await expect(desktopNav.getByRole('button', { name: /propostas|proposals/i })).toBeVisible();
+    await expect(desktopNav.getByRole('button', { name: /interações|interactions/i })).toBeVisible();
 
-    // Check that "Mais" button exists
-    const maisButton = desktopNav.getByRole('button', { name: /mais|more/i });
-    await expect(maisButton).toBeVisible();
-
-    // Click "Mais" to open dropdown
-    await maisButton.click();
-
-    // Verify secondary tabs are in dropdown
-    const dropdown = page.locator('[data-slot="dropdown-menu-content"]');
-    await expect(dropdown).toBeVisible();
-
-    await expect(dropdown.getByRole('menuitem', { name: /propostas|proposals/i })).toBeVisible();
-    await expect(dropdown.getByRole('menuitem', { name: /interações|interactions/i })).toBeVisible();
-
-    console.log('✅ Desktop: 3 primary tabs + "Mais" dropdown with 2 secondary tabs confirmed');
+    console.log('✅ Desktop: all 5 commercial tabs are directly visible');
   });
 
   test("Mobile (375px): deve mostrar dropdown único com todas as 5 abas", async ({ page }) => {
@@ -151,12 +139,12 @@ test.describe("CommercialNav - Menu overflow", () => {
     const desktopNav = nav.locator('.hidden.sm\\:flex').first();
     await expect(desktopNav).toBeVisible();
 
-    // Should show 4 buttons (3 primary + 1 "Mais")
+    // Should show 5 buttons directly
     const visibleButtons = desktopNav.locator('button');
     const buttonCount = await visibleButtons.count();
 
-    expect(buttonCount).toBe(4);
+    expect(buttonCount).toBe(5);
 
-    console.log('✅ Tablet: Uses desktop layout with overflow menu');
+    console.log('✅ Tablet: Uses desktop layout with all 5 direct tabs');
   });
 });

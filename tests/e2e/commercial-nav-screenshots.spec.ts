@@ -1,7 +1,7 @@
 /**
- * Test: A2.3 - Visual documentation of CommercialNav with overflow menu
+ * Test: A2.3/A2.4 - Visual documentation of CommercialNav responsive behavior
  *
- * Takes screenshots to document the new overflow menu behavior.
+ * Takes screenshots to document desktop direct tabs and mobile dropdown behavior.
  */
 
 import { test } from "@playwright/test";
@@ -26,22 +26,15 @@ test.describe("CommercialNav - Screenshots", () => {
     });
   });
 
-  test("Screenshot - Desktop with dropdown open (1280px)", async ({ page }) => {
+  test("Screenshot - Desktop all tabs visible (1280px)", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto("/commercial");
     await page.waitForLoadState("networkidle");
 
-    // Click "Mais" button to open dropdown
-    const nav = page.locator('nav[aria-label*="comercial"], nav[aria-label*="Commercial"]').first();
-    const desktopNav = nav.locator('.hidden.sm\\:flex').first();
-    const maisButton = desktopNav.getByRole('button', { name: /mais|more/i });
-    await maisButton.click();
-
-    // Wait for dropdown animation
     await page.waitForTimeout(300);
 
     await page.screenshot({
-      path: '.kiro/specs/auditoria-ux-2026-07/screenshots/commercial-nav-desktop-1280px-dropdown.png',
+      path: '.kiro/specs/auditoria-ux-2026-07/screenshots/commercial-nav-desktop-1280px-all-tabs.png',
       fullPage: false,
     });
   });

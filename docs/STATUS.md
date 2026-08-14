@@ -152,8 +152,15 @@ Ordem de execução combinada. O conteúdo de cada frente vive na spec, não aqu
    `docs/CONEXOES.md`, `docs/DESIGN_PATTERNS.md` e `AGENTS.md`. Produção
    canônica: GitHub `cenastudio/Cenastudio` → Vercel `cena-studio-prod` →
    Supabase Postgres. Railway fica apenas como histórico/legado.
-3. `.kiro/specs/auditoria-ux-2026-07/` — **6 de 47 tasks feitas**. Retomar só
-   depois das frentes acima, com foco em mobile/UX e validação visual real.
+3. `.kiro/specs/auditoria-ux-2026-07/` — **10 de 47 tasks feitas**. Fase A
+   avançou em 2026-08-14: delete de usuário voltou a exigir digitação do e-mail,
+   teste mobile de touch target agora renderiza componente real, e Comercial
+   mostra 5 abas diretas em desktop/tablet com dropdown mobile acessível em até
+   2 toques. Validação executada: `npm run check`,
+   `npm run test -- client/src/test/mobile-touch-targets.test.tsx`,
+   `npx playwright test tests/e2e/commercial-nav-visibility.spec.ts` e
+   `npx playwright test --grep "@fase1"`. Próxima task: B1 levantamento das abas
+   manuais restantes antes de migrar novos componentes.
 
 Pausado por dependência externa, **não bloqueante**:
 

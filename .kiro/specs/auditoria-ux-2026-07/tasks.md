@@ -13,11 +13,12 @@ Esta spec consolida correções de uma auditoria UX/técnica focada em fechar o 
 - [x] A1.1. Adicionar `AlertDialog` de confirmação antes de delete de usuário em `AdminDashboard.tsx`
 - [x] A1.2. Separar visualmente ação destrutiva (cor, espaçamento ou menu secundário)
 - [x] A1.3. Buscar por `onClick.*delete|handleDelete` em AdminDashboard e aplicar mesmo padrão
-- [ ] A1.4. Testar em mobile (proximidade de toque)
-  - ⚠️ Teste criado (`client/src/test/mobile-touch-targets.test.tsx`) é tautológico: compara constantes escritas à mão, não renderiza o componente. Reescrever ou remover.
+- [x] A1.4. Testar em mobile (proximidade de toque)
+  - Teste reescrito em `client/src/test/mobile-touch-targets.test.tsx`: renderiza `AdminContent`, verifica classes reais de touch target (`min-h-11`, `h-11`, `w-11`) e fluxo do dialog.
 - [ ] A1.5. Rodar `npx playwright test` completo
   - ⚠️ Resultado relatado (10 passed / 2 failed) não é verificável: artefatos sobrescritos por rodada posterior. Rodar de novo e guardar evidência.
-- [ ] A1.6. REGRESSÃO: restaurar confirmação por digitação de e-mail no delete de usuário (removida por A1.1)
+- [x] A1.6. REGRESSÃO: restaurar confirmação por digitação de e-mail no delete de usuário (removida por A1.1)
+  - Delete de usuário exige digitar o e-mail exato antes de habilitar a confirmação.
 
 ### A2. Paridade de navegação mobile x desktop (Comercial)
 
@@ -31,8 +32,10 @@ Esta spec consolida correções de uma auditoria UX/técnica focada em fechar o 
   - Premissa da spec estava errada: mobile 375px mostra 2 (não 3), com as 5 no DOM via scroll
   - ⚠️ A2.3 implementado com breakpoint `sm` (640px) removeu Propostas/Interações da barra desktop também; requisito era manter 5 no desktop. Precisa correção.
 - [x] A2.3. Implementar menu "mais" (overflow) ou migrar para `ResponsiveTabs`
-- [ ] A2.4. Verificar que todas as 5 seções são acessíveis em ≤2 toques no mobile
-- [ ] A2.5. Rodar `npx playwright test --grep "@fase1"` (mobile)
+- [x] A2.4. Verificar que todas as 5 seções são acessíveis em ≤2 toques no mobile
+  - `tests/e2e/commercial-nav-visibility.spec.ts` confirma 5 seções no dropdown mobile e acesso em até 2 toques; desktop/tablet mostram as 5 abas diretamente.
+- [x] A2.5. Rodar `npx playwright test --grep "@fase1"` (mobile)
+  - Resultado em 2026-08-14: 6 passed, 6 skipped.
 
 ## Fase B — P1: terminar migração mobile
 

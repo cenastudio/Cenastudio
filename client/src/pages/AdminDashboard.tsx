@@ -80,7 +80,7 @@ function avatarClass(role: string) {
 /* ═══════════════════════════════════════════════════════════════════════════
    ADMIN CONTENT
    ═══════════════════════════════════════════════════════════════════════════ */
-function AdminContent() {
+export function AdminContent() {
   const { t, locale } = useLanguage();
   const { user: currentUser } = useAuth();
   const [, setLocation] = useLocation();
@@ -95,6 +95,7 @@ function AdminContent() {
   const [createForm, setCreateForm] = useState(INITIAL_FORM);
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteConfirmByUserId, setDeleteConfirmByUserId] = useState<Record<number, string>>({});
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   // User detail / management drawer
   const [detail, setDetail] = useState<AdminUserDetail | null>(null);
@@ -510,11 +511,12 @@ function AdminContent() {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex w-full flex-wrap items-center justify-end gap-2 lg:w-auto lg:justify-start">
                         <select
                           value={u.plan_name?.toLowerCase() || "free"}
                           onChange={(e) => changePlan(u, e.target.value)}
-                          className="bg-frame-gray-2 border border-frame-gray-3 px-2 py-1.5 text-xs outline-none focus:border-frame-orange w-24"
+                          aria-label={`Plano de ${u.email}`}
+                          className="min-h-11 bg-frame-gray-2 border border-frame-gray-3 px-2 py-1.5 text-xs outline-none focus:border-frame-orange w-24"
                         >
                           {PLANS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
                         </select>
@@ -534,6 +536,7 @@ function AdminContent() {
                           type="button"
                           onClick={() => openDetail(u.id)}
                           title="Gerenciar usuário"
+                          aria-label={`Gerenciar ${u.email}`}
                           className="h-11 w-11 border border-frame-gray-3 text-frame-gray-light hover:border-frame-orange/50 hover:text-frame-orange flex items-center justify-center transition"
                         >
                           <Settings2 className="w-4 h-4" />
@@ -546,6 +549,8 @@ function AdminContent() {
                               type="button"
                               disabled={isCurrentUser}
                               title={isCurrentUser ? t("app.admin.cannotDeleteSelf") as string : t("app.admin.deleteAccount") as string}
+                              aria-label={`Excluir ${u.email}`}
+                              onClick={() => setDeleteConfirmByUserId((prev) => ({ ...prev, [u.id]: "" }))}
                               className="h-11 w-11 border-2 border-red-500/40 text-red-400 hover:bg-red-500/10 hover:border-red-500/60 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -567,15 +572,38 @@ function AdminContent() {
                                 </p>
                               </div>
                             </div>
+                            <div className="space-y-2">
+                              <label htmlFor={`delete-confirm-${u.id}`} className="block font-frame-mono text-[0.62rem] uppercase tracking-[0.14em] text-frame-gray-light">
+                                Digite o e-mail para confirmar
+                              </label>
+                              <input
+                                id={`delete-confirm-${u.id}`}
+                                value={deleteConfirmByUserId[u.id] ?? ""}
+                                onChange={(event) => setDeleteConfirmByUserId((prev) => ({ ...prev, [u.id]: event.target.value }))}
+                                placeholder={u.email}
+                                autoComplete="off"
+                                className="frame-input w-full"
+                              />
+                            </div>
                             <AlertDialogFooter>
-                              <AlertDialogCancel className="frame-btn-ghost">Cancelar</AlertDialogCancel>
+                              <AlertDialogCancel
+                                className="frame-btn-ghost"
+                                onClick={() => setDeleteConfirmByUserId((prev) => ({ ...prev, [u.id]: "" }))}
+                              >
+                                Cancelar
+                              </AlertDialogCancel>
                               <AlertDialogAction
                                 onClick={async (e) => {
                                   e.preventDefault();
+                                  if ((deleteConfirmByUserId[u.id] ?? "").trim() !== u.email) {
+                                    toast.error("Digite o e-mail exatamente para confirmar a exclusão");
+                                    return;
+                                  }
                                   setDeletingId(u.id);
                                   try {
                                     await api.admin.deleteUser(u.id);
                                     toast.success(t("app.admin.accountDeleted"));
+                                    setDeleteConfirmByUserId((prev) => ({ ...prev, [u.id]: "" }));
                                     await loadData();
                                   } catch (err) {
                                     toast.error(err instanceof ApiError ? err.message : t("app.admin.deleteUserError"));
@@ -583,7 +611,7 @@ function AdminContent() {
                                     setDeletingId(null);
                                   }
                                 }}
-                                disabled={deletingId === u.id}
+                                disabled={deletingId === u.id || (deleteConfirmByUserId[u.id] ?? "").trim() !== u.email}
                                 className="bg-red-500 text-white px-4 py-2 text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-red-400 transition border-none"
                               >
                                 {deletingId === u.id ? t("app.admin.deleting") : "Confirmar exclusão"}
