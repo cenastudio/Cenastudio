@@ -422,7 +422,7 @@ function CompanySettingsContent() {
                         style={{ background: color }} />
                     </div>
                     <div className="flex gap-2 flex-wrap">
-                      {[SITE_CONFIG.primaryColor, "#FF6B00", "#e63946", "#2563eb", "#7c3aed", "#059669"].map((c) => (
+                      {[SITE_CONFIG.primaryColor, "#e63946", "#2563eb", "#7c3aed", "#059669"].map((c) => (
                         <button key={c} type="button" onClick={() => update("primaryColor", c)}
                           className="w-7 h-7 rounded-full border-2 transition-transform hover:scale-110"
                           style={{ background: c, borderColor: settings.primaryColor === c ? "#fff" : "transparent" }} />

@@ -51,7 +51,7 @@ describe("criticidade por ferramenta (Fase B)", () => {
   });
 
   it("roteia alta criticidade para modelo fixo e média para o padrão do provedor", () => {
-    expect(resolveToolModel("04")).toBe("poolside/laguna-m.1:free");
+    expect(resolveToolModel("04")).toBe("nvidia/nemotron-3-super-120b-a12b:free");
     expect(resolveToolModel("06")).toBe(resolveToolModel("04"));
     expect(resolveToolModel("05")).toBeUndefined();
     expect(resolveToolModel("08")).toBe("nvidia/nemotron-3-super-120b-a12b:free");

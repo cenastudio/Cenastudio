@@ -1,6 +1,8 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+const BRAND_ORANGE = 'var(--ds-orange)';
+
 interface RevenueChartProps {
   data: Array<{ month: string; revenue: number }>;
   loading?: boolean;
@@ -47,16 +49,16 @@ export function RevenueChart({ data, loading = false }: RevenueChartProps) {
             fontFamily: 'var(--font-mono)',
             fontSize: '12px'
           }}
-          labelStyle={{ color: '#ff4d1d', marginBottom: '4px' }}
+          labelStyle={{ color: BRAND_ORANGE, marginBottom: '4px' }}
           formatter={(value) => [`R$ ${Number(value).toLocaleString('pt-BR')}`, t('app.commercial.chartTooltipRevenue')]}
         />
         <Line
           type="monotone"
           dataKey="revenue"
-          stroke="#ff4d1d"
+          stroke={BRAND_ORANGE}
           strokeWidth={2}
-          dot={{ fill: '#ff4d1d', r: 3 }}
-          activeDot={{ r: 5, fill: '#ff4d1d' }}
+          dot={{ fill: BRAND_ORANGE, r: 3 }}
+          activeDot={{ r: 5, fill: BRAND_ORANGE }}
         />
       </LineChart>
     </ResponsiveContainer>

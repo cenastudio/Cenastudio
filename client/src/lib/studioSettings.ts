@@ -25,7 +25,7 @@ export const DEFAULT_STUDIO_SETTINGS: StudioSettings = {
   city: "",
   website: "",
   signature: "Responsavel comercial",
-  primaryColor: "#ff4d1d",
+  primaryColor: SITE_CONFIG.primaryColor,
 };
 
 export function readStudioSettings(): StudioSettings {

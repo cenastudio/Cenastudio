@@ -16,6 +16,7 @@ import {
   Printer,
 } from "lucide-react";
 import { toast } from "sonner";
+import { SITE_CONFIG } from "@shared/site";
 import {
   Dialog,
   DialogContent,
@@ -100,7 +101,7 @@ function printDreReport(docHtml: string) {
 }
 
 function buildDreReportHtml(report: DreReport, project: Project | null, studio: StudioSettings) {
-  const accent = "#e85002";
+  const accent = studio.primaryColor || SITE_CONFIG.primaryColor;
   const rows: Array<[string, number, boolean?]> = [
     ["Receita bruta", report.grossRevenue],
     ...report.deductions.map((d): [string, number] => [`(-) ${d.name}`, -d.amount]),
@@ -144,7 +145,7 @@ function buildDreReportHtml(report: DreReport, project: Project | null, studio: 
     .dre-row-label{color:#333}
     .dre-row-value{font-weight:700;font-family:monospace}
     .dre-row-negative{color:#c0392b}
-    .dre-row-total{font-weight:900;background:rgba(232,80,2,.06);border-top:2px solid ${accent};border-bottom:2px solid ${accent}}
+    .dre-row-total{font-weight:900;background:${accent}0f;border-top:2px solid ${accent};border-bottom:2px solid ${accent}}
     .doc-footer{margin-top:42px;padding-top:18px;border-top:1px solid #d8d0c3;display:flex;justify-content:space-between;gap:20px;color:#777;font-size:11px}
     @media screen{html,body{width:100%}.doc-page{width:100%;margin:0;box-shadow:0 22px 70px rgba(0,0,0,.16)}}
     @media print{html,body{width:210mm;min-height:297mm}.doc-page{width:210mm;min-height:297mm;height:auto;margin:0;padding:16mm;box-shadow:none}}

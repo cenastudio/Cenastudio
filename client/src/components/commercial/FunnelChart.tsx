@@ -5,13 +5,34 @@ interface FunnelChartProps {
   loading?: boolean;
 }
 
-const STAGE_CONFIG: Record<string, { color: string; gradient: string }> = {
-  prospect: { color: '#6366f1', gradient: 'from-indigo-500/20 to-indigo-500/5' },
-  qualified: { color: '#8b5cf6', gradient: 'from-violet-500/20 to-violet-500/5' },
-  proposal: { color: '#a855f7', gradient: 'from-purple-500/20 to-purple-500/5' },
-  negotiation: { color: '#e85002', gradient: 'from-orange-500/20 to-orange-500/5' },
-  won: { color: '#22c55e', gradient: 'from-green-500/20 to-green-500/5' },
-  lost: { color: '#ef4444', gradient: 'from-red-500/20 to-red-500/5' },
+interface StageConfig {
+  color: string;
+  background: string;
+  border: string;
+  fill: string;
+}
+
+function stageConfig(color: string): StageConfig {
+  return {
+    color,
+    background: `linear-gradient(90deg, ${color}22, ${color}08)`,
+    border: `1px solid ${color}30`,
+    fill: `linear-gradient(90deg, ${color}40, ${color}15)`,
+  };
+}
+
+const STAGE_CONFIG: Record<string, StageConfig> = {
+  prospect: stageConfig('#6366f1'),
+  qualified: stageConfig('#8b5cf6'),
+  proposal: stageConfig('#a855f7'),
+  negotiation: {
+    color: 'rgb(var(--ds-orange-rgb))',
+    background: 'linear-gradient(90deg, rgba(var(--ds-orange-rgb),0.13), rgba(var(--ds-orange-rgb),0.03))',
+    border: '1px solid rgba(var(--ds-orange-rgb),0.19)',
+    fill: 'linear-gradient(90deg, rgba(var(--ds-orange-rgb),0.25), rgba(var(--ds-orange-rgb),0.08))',
+  },
+  won: stageConfig('#22c55e'),
+  lost: stageConfig('#ef4444'),
 };
 
 export function FunnelChart({ data, loading = false }: FunnelChartProps) {
@@ -66,8 +87,8 @@ export function FunnelChart({ data, loading = false }: FunnelChartProps) {
               <div
                 className="relative h-10 overflow-hidden"
                 style={{
-                  background: `linear-gradient(90deg, ${config.color}22, ${config.color}08)`,
-                  border: `1px solid ${config.color}30`,
+                  background: config.background,
+                  border: config.border,
                 }}
               >
                 {/* Fill bar */}
@@ -75,7 +96,7 @@ export function FunnelChart({ data, loading = false }: FunnelChartProps) {
                   className="absolute inset-y-0 left-0 transition-all duration-700"
                   style={{
                     width: `${barFill}%`,
-                    background: `linear-gradient(90deg, ${config.color}40, ${config.color}15)`,
+                    background: config.fill,
                   }}
                 />
                 {/* Content */}

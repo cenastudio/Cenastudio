@@ -122,13 +122,13 @@ describe('ProgressBar Component', () => {
   });
 
   describe('Fill Color', () => {
-    it('should use default orange color (#FF6B00)', () => {
+    it('should use the default brand orange token', () => {
       render(<ProgressBar value={50} />);
 
       const progressBar = screen.getByRole('progressbar');
       const fill = progressBar.querySelector('.progress-bar-fill');
 
-      expect(fill).toHaveStyle({ backgroundColor: '#FF6B00' });
+      expect(fill).toHaveAttribute('style', expect.stringContaining('background-color: var(--ds-orange)'));
     });
 
     it('should accept custom color via props', () => {

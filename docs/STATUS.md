@@ -106,13 +106,11 @@ verificar, está dito explicitamente.
   revisar o grupo de **alta criticidade** do ADR-014 (03 Callsheet, 04 Orçamento,
   06 Contrato, 09 Checklist) para modelo pago, antes das faixas `medium` e
   `creative`. Hoje as três faixas rodam em modelo `:free` do OpenRouter, que é
-  pool compartilhado — o teto de qualidade é o do free tier, e é decisão
-  temporária registrada como tal no ADR-014. Ponto único de mudança:
-  `TIER_MODEL` em `server/services/aiService.ts`.
-  Gatilho anterior a este, independente de cliente pagante: aplicar em
-  `TIER_MODEL.high` o resultado do eval comparativo da Fase D do spec
-  `qualidade-raciocinio-ia` — a escolha atual da faixa alta ainda não é
-  respaldada por eval.
+  pool compartilhado — o teto de qualidade é o do free tier. Em 2026-08-14, o eval
+  da Fase D aplicou `nvidia/nemotron-3-super-120b-a12b:free` em
+  `TIER_MODEL.high`: o modelo provisório anterior (`poolside/laguna-m.1:free`)
+  retornou 404 em 16/16 casos; Nemotron Super marcou 63/76 critérios (82,9%) com
+  1 resposta vazia.
 - **Catálogo `:free` do OpenRouter envelhece sem aviso.** Na conferência de
   2026-07-27, 2 dos 5 modelos da cadeia de fallback já não existiam
   (`meta-llama/llama-3.3-70b-instruct:free`, `qwen/qwen3-next-80b-a3b-instruct:free`)
@@ -146,12 +144,14 @@ verificar, está dito explicitamente.
 
 Ordem de execução combinada. O conteúdo de cada frente vive na spec, não aqui.
 
-1. `.kiro/specs/00-fundacao-limpeza-e-documentacao/` — em andamento
-2. `.kiro/specs/qualidade-raciocinio-ia/` — **13 de 18 tasks feitas** (Fases A, B
-   e C fechadas; Fase D com runner e 41 casos de eval prontos). Retomar pelas
-   tasks 14 e 15 (eval comparativo e aplicação do modelo em `TIER_MODEL.high`);
-   o passo a passo da retomada está no topo do `tasks.md` da spec.
-3. `.kiro/specs/auditoria-ux-2026-07/`
+1. `.kiro/specs/landing-features-implementation/` — **58 de 58 tasks feitas**.
+   Tasks 7.1 a 7.4 concluídas em 2026-08-14 com validação local.
+2. `.kiro/specs/00-fundacao-limpeza-e-documentacao/` — **14 de 24 tasks feitas**.
+   Retomar pelas tasks 4.1 a 5.3: revisar `README.md`,
+   `COMO-O-SISTEMA-FUNCIONA.md`, `API_GUIDE.md`, conferir `AGENTS.md` e marcar
+   a Fase 0 como concluída quando bater com o código real.
+3. `.kiro/specs/auditoria-ux-2026-07/` — **6 de 47 tasks feitas**. Retomar só
+   depois das frentes acima, com foco em mobile/UX e validação visual real.
 
 Pausado por dependência externa, **não bloqueante**:
 

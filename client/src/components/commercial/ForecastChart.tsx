@@ -11,6 +11,8 @@ import {
 } from 'recharts';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+const BRAND_ORANGE = 'var(--ds-orange)';
+
 interface ForecastChartProps {
   data: {
     historical: Array<{ month: string; revenue: number; isForecast: boolean }>;
@@ -98,7 +100,7 @@ export function ForecastChart({ data, loading = false }: ForecastChartProps) {
               fontFamily: 'var(--font-mono)',
               fontSize: '12px',
             }}
-            labelStyle={{ color: '#ff4d1d', marginBottom: '4px' }}
+            labelStyle={{ color: BRAND_ORANGE, marginBottom: '4px' }}
             formatter={(value, _name, props: any) => {
               const isForecast = props.payload.isForecast;
               return [
@@ -128,10 +130,10 @@ export function ForecastChart({ data, loading = false }: ForecastChartProps) {
             type="monotone"
             dataKey="revenue"
             data={data.historical}
-            stroke="#ff4d1d"
+            stroke={BRAND_ORANGE}
             strokeWidth={2}
-            dot={{ fill: '#ff4d1d', r: 3 }}
-            activeDot={{ r: 5, fill: '#ff4d1d' }}
+            dot={{ fill: BRAND_ORANGE, r: 3 }}
+            activeDot={{ r: 5, fill: BRAND_ORANGE }}
             name={t('app.commercial.forecastActual')}
             connectNulls={false}
           />

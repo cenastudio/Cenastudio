@@ -185,10 +185,18 @@ Frontend
 
 ### P3 — Polish / dívida técnica (não bloqueia)
 
-- [ ] 7.1 Unificar oranges rogue (`#FF6B00`, `#ff4d1d`) → `--ds-orange` em `components/dashboard/*`, `ProgressBar`, `Documents`, charts, `studioSettings` default; ajustar testes que asseram valores antigos.
-- [ ] 7.2 Integração F4→F1: botão "Enviar horas para Orçamento" cria `budget_entry` categoria "Equipe".
-- [ ] 7.3 Integração F2→F3: sugerir equipamento por tipo de plano na shot list.
-- [ ] 7.4 Storage quota real em Assets (hoje número decorativo).
+- [x] 7.1 Unificar oranges rogue (`#FF6B00`, `#ff4d1d`) → `--ds-orange` em `ProgressBar`, `Documents`, charts, `CheckoutModal`, reset obrigatório e `studioSettings` default; ajustar testes que asseram valores antigos.
+  - 2026-08-14: removidos os laranjas antigos dos caminhos runtime da 7.1; defaults persistidos agora usam `SITE_CONFIG.primaryColor`, e UI usa `--ds-orange`/`--ds-orange-rgb` quando aplicável.
+  - Validação: `npm run test -- client/src/components/base/ProgressBar.test.tsx`, `npm run check`, `npm run build` verdes.
+- [x] 7.2 Integração F4→F1: botão "Enviar horas para Orçamento" cria `budget_entry` categoria "Equipe".
+  - 2026-08-14: registros fechados de Timesheet com projeto e taxa/hora agora exibem ação "Orçamento", criando lançamento em `Equipe` com custo calculado e descrição rastreável.
+  - Validação: `npm run check`, `npm run test -- server/controllers/domainFlow.test.ts client/src/components/base/ProgressBar.test.tsx`, `npm run build` verdes.
+- [x] 7.3 Integração F2→F3: sugerir equipamento por tipo de plano na shot list.
+  - 2026-08-14: modal de Shot List carrega inventário e mostra sugestões por tipo de plano; close/detalhe prioriza lentes, planos abertos/médios/drone priorizam câmeras, demais equipamentos entram como nota de produção.
+  - Validação: `npm run check`, `npm run test -- server/controllers/domainFlow.test.ts`, `npm run build` verdes.
+- [x] 7.4 Storage quota real em Assets (hoje número decorativo).
+  - 2026-08-14: `Assets` passou a usar `api.storage.getStats()` tipado e `totalUsed` oficial do backend, com soma da lista apenas como fallback best-effort.
+  - Validação: `npm run check`, `npm run test -- server/services/storageQuota.test.ts server/controllers/domainFlow.test.ts client/src/components/base/ProgressBar.test.tsx`, `npm run build` verdes.
 
 ## Notes
 

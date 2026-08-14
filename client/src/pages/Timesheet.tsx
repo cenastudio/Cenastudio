@@ -14,6 +14,7 @@ import {
   Loader2,
   ArrowRight,
   Calculator,
+  Wallet,
 } from "lucide-react";
 import PricingCalculatorModal from "@/components/production/PricingCalculatorModal";
 import { toast } from "sonner";
@@ -47,6 +48,11 @@ function formatCurrency(cents: number): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 }
 
+function entryCost(entry: TimeEntryItem): number {
+  if (entry.hourly_rate == null) return 0;
+  return Math.round((entry.duration_sec / 3600) * entry.hourly_rate);
+}
+
 function TimesheetContent() {
   const { projects } = useProject();
   const [entries, setEntries] = useState<TimeEntryItem[]>([]);
@@ -72,6 +78,8 @@ function TimesheetContent() {
   const [deleteTarget, setDeleteTarget] = useState<TimeEntryItem | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [calculatorOpen, setCalculatorOpen] = useState(false);
+  const [sendingBudgetId, setSendingBudgetId] = useState<number | null>(null);
+  const [sentBudgetIds, setSentBudgetIds] = useState<Set<number>>(new Set());
 
   const tickRef = useRef<number | null>(null);
 
@@ -190,6 +198,31 @@ function TimesheetContent() {
       toast.error(err instanceof Error ? err.message : "Falha ao remover registro");
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleSendToBudget = async (entry: TimeEntryItem) => {
+    const projectId = entry.project_id;
+    const amount = entryCost(entry);
+    if (!projectId || !entry.ended_at || amount <= 0) {
+      toast.error("Registro precisa ter projeto, fim e taxa/hora para virar custo");
+      return;
+    }
+
+    setSendingBudgetId(entry.id);
+    try {
+      await api.budgets.addEntry(projectId, {
+        category: "Equipe",
+        description: `Timesheet: ${entry.description || "Horas trabalhadas"} (${formatDuration(entry.duration_sec)})`,
+        amount,
+        entryDate: new Date(entry.ended_at).toISOString().slice(0, 10),
+      });
+      setSentBudgetIds((prev) => new Set(prev).add(entry.id));
+      toast.success("Horas enviadas para o orçamento");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao enviar horas para orçamento");
+    } finally {
+      setSendingBudgetId(null);
     }
   };
 
@@ -351,6 +384,10 @@ function TimesheetContent() {
             <div className="space-y-2">
               {entries.map((entry) => {
                 const project = projects.find((p) => p.id === entry.project_id);
+                const cost = entryCost(entry);
+                const canSendToBudget = Boolean(entry.project_id && entry.ended_at && cost > 0);
+                const isSendingBudget = sendingBudgetId === entry.id;
+                const wasSentBudget = sentBudgetIds.has(entry.id);
                 return (
                   <div
                     key={entry.id}
@@ -367,8 +404,20 @@ function TimesheetContent() {
                       <span className="text-sm font-mono text-frame-white">{formatDuration(entry.duration_sec)}</span>
                       {entry.hourly_rate != null && (
                         <span className="text-xs text-frame-gray-light">
-                          {formatCurrency(Math.round((entry.duration_sec / 3600) * entry.hourly_rate))}
+                          {formatCurrency(cost)}
                         </span>
+                      )}
+                      {canSendToBudget && (
+                        <button
+                          type="button"
+                          onClick={() => handleSendToBudget(entry)}
+                          disabled={isSendingBudget || wasSentBudget}
+                          className="inline-flex items-center gap-1.5 border border-frame-orange/30 px-2.5 py-1.5 text-[0.65rem] font-semibold text-frame-orange transition hover:border-frame-orange hover:bg-frame-orange/10 disabled:cursor-not-allowed disabled:opacity-55 max-md:min-h-11"
+                          title="Enviar horas para orçamento"
+                        >
+                          {isSendingBudget ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wallet className="w-3.5 h-3.5" />}
+                          {wasSentBudget ? "Enviado" : "Orçamento"}
+                        </button>
                       )}
                       <button
                         type="button"

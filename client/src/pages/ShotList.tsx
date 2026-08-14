@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRoute } from "wouter";
 import AppNavBar from "@/components/AppNavBar";
 import ProjectNav from "@/components/ProjectNav";
@@ -6,7 +6,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlanContext } from "@/contexts/PlanContext";
-import { api, type ShotItem } from "@/lib/api";
+import { api, type EquipmentItem, type ShotItem } from "@/lib/api";
 import {
   Clapperboard,
   Plus,
@@ -22,6 +22,11 @@ import {
   FileText,
   Upload,
   X,
+  Camera,
+  Aperture,
+  Lightbulb,
+  Mic,
+  Wrench,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -110,6 +115,14 @@ const CAMERA_MOVEMENTS_EN = [
   "Zoom in",
   "Zoom out",
 ];
+
+const EQUIPMENT_CATEGORY_LABELS: Record<string, string> = {
+  camera: "Câmera",
+  lens: "Lente",
+  light: "Luz",
+  audio: "Áudio",
+  accessory: "Acessório",
+};
 
 interface ShotFormState {
   scene: string;
@@ -515,6 +528,8 @@ function ShotListContent() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<ShotFormState>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [equipment, setEquipment] = useState<EquipmentItem[]>([]);
+  const [loadingEquipment, setLoadingEquipment] = useState(false);
 
   const [deleteTarget, setDeleteTarget] = useState<ShotItem | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -597,6 +612,19 @@ function ShotListContent() {
       .finally(() => setLoading(false));
   };
 
+  const loadEquipmentSuggestions = async () => {
+    if (equipment.length > 0 || loadingEquipment) return;
+    setLoadingEquipment(true);
+    try {
+      const items = await api.equipment.list();
+      setEquipment(items);
+    } catch {
+      setEquipment([]);
+    } finally {
+      setLoadingEquipment(false);
+    }
+  };
+
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -606,6 +634,7 @@ function ShotListContent() {
     setEditingId(null);
     setForm(emptyForm);
     setFormOpen(true);
+    void loadEquipmentSuggestions();
   };
 
   const openEditDialog = (shot: ShotItem) => {
@@ -624,6 +653,36 @@ function ShotListContent() {
       thumbnailFile: null,
     });
     setFormOpen(true);
+    void loadEquipmentSuggestions();
+  };
+
+  const equipmentSuggestions = useMemo(() => {
+    const shotType = form.shotType.toLowerCase();
+    const prefersLens = /close|detalhe|detail|macro/.test(shotType);
+    const prefersCamera = /wide|aberto|geral|m[eé]dio|medium|drone/.test(shotType);
+    const priority = prefersLens
+      ? ["lens", "camera", "light", "audio", "accessory"]
+      : prefersCamera
+        ? ["camera", "lens", "light", "audio", "accessory"]
+        : ["camera", "lens", "light", "audio", "accessory"];
+    const available = equipment.filter((item) => item.status !== "maintenance");
+
+    return [...available]
+      .sort((a, b) => priority.indexOf(a.category) - priority.indexOf(b.category))
+      .slice(0, 6);
+  }, [equipment, form.shotType]);
+
+  const applyEquipmentSuggestion = (item: EquipmentItem) => {
+    setForm((current) => {
+      if (item.category === "camera") return { ...current, camera: item.name };
+      if (item.category === "lens") return { ...current, lens: item.name };
+
+      const note = `Equipamento sugerido: ${item.name}`;
+      const productionNotes = current.productionNotes
+        ? `${current.productionNotes}\n${note}`
+        : note;
+      return { ...current, productionNotes };
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1202,6 +1261,47 @@ function ShotListContent() {
                 </select>
               </div>
             </div>
+
+            {(loadingEquipment || equipmentSuggestions.length > 0) && (
+              <div className="border border-frame-gray-3/60 bg-frame-gray-1/10 p-3 space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-frame-mono text-[0.6rem] uppercase tracking-wide text-frame-gray-light">
+                    Sugestões do inventário
+                  </p>
+                  {loadingEquipment && <Loader2 className="w-3.5 h-3.5 animate-spin text-frame-orange" />}
+                </div>
+                {equipmentSuggestions.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {equipmentSuggestions.map((item) => {
+                      const Icon = item.category === "lens"
+                        ? Aperture
+                        : item.category === "light"
+                          ? Lightbulb
+                          : item.category === "audio"
+                            ? Mic
+                            : item.category === "accessory"
+                              ? Wrench
+                              : Camera;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => applyEquipmentSuggestion(item)}
+                          className="inline-flex max-w-full items-center gap-1.5 border border-frame-gray-3/60 px-2.5 py-1.5 text-[0.68rem] text-frame-gray-light transition hover:border-frame-orange hover:text-frame-orange"
+                          title={`Usar ${item.name}`}
+                        >
+                          <Icon className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{item.name}</span>
+                          <span className="text-[0.58rem] uppercase text-frame-gray-muted">
+                            {EQUIPMENT_CATEGORY_LABELS[item.category] ?? item.category}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="max-w-[10rem]">
               <label className="block text-xs font-medium text-frame-gray-light mb-1.5">{t("app.shotlist.durationMinutes")}</label>

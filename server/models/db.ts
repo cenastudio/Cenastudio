@@ -249,7 +249,7 @@ function ensureStudioSettingsColumns() {
       city TEXT DEFAULT '',
       website TEXT DEFAULT '',
       signature TEXT DEFAULT 'Responsavel comercial',
-      primary_color TEXT DEFAULT '#ff4d1d',
+      primary_color TEXT DEFAULT '#e85002',
       logo_url TEXT,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))

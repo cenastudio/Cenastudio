@@ -716,9 +716,8 @@ introduzir tabela de preços própria do sistema (alternativa registrada em
 
 ### ADR-014: Roteamento de modelo e amostragem por criticidade da ferramenta
 
-**Status:** Aceito para a estrutura, **provisório para a escolha de modelo da
-faixa alta** (pendente do eval da Fase D — task D4.1 do spec
-`qualidade-raciocinio-ia`)
+**Status:** Aceito; escolha da faixa alta respaldada pelo eval da Fase D do spec
+`qualidade-raciocinio-ia` em 2026-08-14.
 **Data:** 2026-07-27
 **Contexto:** `resolveToolModel` agrupava as 12 ferramentas de IA por tema:
 `CALCULATION_TOOLS` (04 Orçamento, 05 Proposta, 06 Contrato) e `MARKETING_TOOLS`
@@ -754,16 +753,26 @@ Precedência: o perfil da ferramenta vence `OPENROUTER_TEMPERATURE` /
 `NVIDIA_TEMPERATURE`. O específico ganha do global; as variáveis continuam
 valendo para chamadas que não vêm de uma ferramenta (`server/services/ai/aiHelper.ts`).
 
-**O que ainda não está decidido:** qual modelo serve a faixa `high`. `TIER_MODEL`
-mantém `poolside/laguna-m.1:free`, que já atendia Orçamento e Contrato antes do
-reagrupamento, para não trocar modelo em produção por palpite. Os dois candidatos
-do design eram `nvidia/nemotron-3-ultra-550b-a55b:free` e
-`qwen/qwen3-next-80b-a3b-instruct:free`; a consulta a
-`GET https://openrouter.ai/api/v1/models` em 2026-07-27 mostra que **o segundo
-não é mais oferecido** — restam 15 modelos `:free` no catálogo. A mesma consulta
-revelou que a cadeia de fallback tinha 2 de 5 degraus mortos
-(`meta-llama/llama-3.3-70b-instruct:free` e o próprio qwen), corrigidos no mesmo
-commit.
+**Escolha da faixa `high`:** `TIER_MODEL.high` usa
+`nvidia/nemotron-3-super-120b-a12b:free`. O eval comparativo de 2026-08-14 mediu
+os 4 tools de alta criticidade (03 Callsheet, 04 Orçamento, 06 Contrato,
+09 Checklist), 16 casos e 87 critérios automáticos/manuais no runner
+`npm run eval:ai`.
+
+Resultados principais:
+
+- `poolside/laguna-m.1:free` (modelo provisório anterior): 16/16 chamadas com
+  `HTTP 404: No endpoints found`; não é mais operacional.
+- `nvidia/nemotron-3-ultra-550b-a55b:free`: 47/61 critérios automáticos (77,0%),
+  com 4 respostas vazias em 16 casos.
+- `google/gemma-4-31b-it:free`: 16/16 chamadas com `HTTP 429`; não mediu nada.
+- `nvidia/nemotron-3-super-120b-a12b:free`: 63/76 critérios automáticos (82,9%),
+  com 1 resposta vazia em 16 casos. Foi melhor em disponibilidade e placar geral.
+
+O resultado não encerra a qualidade das ferramentas. Orçamento e Checklist ainda
+mostraram falhas de aderência (disclaimer, markdown, caixas verificáveis e
+briefing mínimo), mas trocar o modelo provisório morto por Nemotron Super remove
+uma falha objetiva de produção e melhora o baseline da faixa alta.
 
 **Consequências:**
 - Positivas:
@@ -774,9 +783,9 @@ commit.
   - Faixa e perfil são função pura testável (`aiServiceRouting.test.ts`, 12
     testes), e "ferramenta nova sem classificação" deixa de ser falha silenciosa.
 - Negativas:
-  - Muda o modelo de 4 ferramentas em relação ao agrupamento anterior (03, 05,
-    09, 12) **sem eval por trás** — é o custo de reclassificar antes de medir. A
-    Fase D é o que fecha essa lacuna.
+  - A faixa `high` segue em modelo gratuito, portanto sujeita a rate limit,
+    degradação e retirada do catálogo sem aviso. O eval escolhe o melhor candidato
+    operacional do momento, não uma garantia de SLA.
   - Quem tinha ajustado `OPENROUTER_TEMPERATURE` no ambiente perde efeito nas 8
     ferramentas mapeadas.
   - O catálogo `:free` do OpenRouter muda sem aviso, então tanto `TIER_MODEL`
@@ -784,8 +793,10 @@ commit.
     mexida em roteamento.
 
 **Revisão:** ao fechar o primeiro cliente pagante, revisar a faixa `high` para
-modelo pago (gatilho em `docs/STATUS.md`, Seção 3). Antes disso, aplicar o
-resultado do eval comparativo da Fase D em `TIER_MODEL.high`.
+modelo pago (gatilho em `docs/STATUS.md`, Seção 3). Antes disso, as próximas
+melhorias de IA devem atacar as falhas observadas no eval: robustez do bloco
+`cena.budget.v1` em briefings mínimos e aderência de Checklist a itens
+verificáveis sem markdown.
 
 ---
 

@@ -402,13 +402,14 @@ export function resolveToolCriticality(toolId: string): CriticalityTier {
  * Modelo por faixa de criticidade. `undefined` = usa o padrão do provedor
  * (`OPENROUTER_MODEL`) e, na falha, a cadeia de fallback.
  *
- * PROVISÓRIO: a escolha de `high` ainda **não** é respaldada por eval. Mantém o
- * modelo que já servia Orçamento/Contrato antes do reagrupamento, para não
- * trocar modelo em produção com base em palpite. A troca definitiva é a task
- * D4.1, depois do eval comparativo da Fase D.
+ * A escolha de `high` é respaldada pelo eval da Fase D do spec
+ * `qualidade-raciocinio-ia` (2026-08-14). `poolside/laguna-m.1:free`, que era o
+ * modelo provisório, saiu do catálogo e retornou 404 em 16/16 casos. Entre os
+ * candidatos medidos, `nvidia/nemotron-3-super-120b-a12b:free` teve o melhor
+ * equilíbrio entre disponibilidade e critérios aprovados.
  */
 const TIER_MODEL: Record<CriticalityTier, string | undefined> = {
-  high: "poolside/laguna-m.1:free",
+  high: "nvidia/nemotron-3-super-120b-a12b:free",
   medium: undefined,
   creative: "nvidia/nemotron-3-super-120b-a12b:free",
 };

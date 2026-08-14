@@ -27,6 +27,7 @@ import { useProject } from "@/contexts/ProjectContext";
 import { buildDocumentPrefill } from "@/lib/studioContext";
 import type { Client } from "@/lib/api";
 import { getArtifactStatus, getArtifactVersion, type ArtifactStatus } from "@/lib/workflow";
+import { SITE_CONFIG } from "@shared/site";
 
 type DocType = "briefing" | "roteiro" | "callsheet" | "decupagem" | "orcamento" | "cronograma" | "checklist" | "entrega";
 
@@ -76,7 +77,7 @@ interface DocTypeDefinition {
 // in the UI (type tabs) and in the generated document itself.
 function getDocTypes(t: Translate): DocTypeDefinition[] {
   return [
-  { id: "briefing", label: t("app.documents.docTypeBriefing"), icon: FileText, accent: "#ff4d1d", description: t("app.documents.docTypeBriefingDesc") },
+  { id: "briefing", label: t("app.documents.docTypeBriefing"), icon: FileText, accent: SITE_CONFIG.primaryColor, description: t("app.documents.docTypeBriefingDesc") },
   { id: "roteiro", label: t("app.documents.docTypeScript"), icon: Film, accent: "#f59e0b", description: t("app.documents.docTypeScriptDesc") },
   { id: "callsheet", label: t("app.documents.docTypeCallsheet"), icon: ClipboardList, accent: "#06b6d4", description: t("app.documents.docTypeCallsheetDesc") },
   { id: "decupagem", label: t("app.documents.docTypeShotBreakdown"), icon: ListChecks, accent: "#8b5cf6", description: t("app.documents.docTypeShotBreakdownDesc") },

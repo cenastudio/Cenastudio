@@ -39,9 +39,9 @@ const PLANS = [
     name: "Pro",
     priceMonthly: 199,
     icon: Sparkles,
-    color: "#FF6B00",
-    colorBg: "rgba(255,107,0,0.06)",
-    colorBorder: "rgba(255,107,0,0.3)",
+    color: "var(--ds-orange)",
+    colorBg: "rgba(var(--ds-orange-rgb),0.06)",
+    colorBorder: "rgba(var(--ds-orange-rgb),0.3)",
     description: "Para freelancers e criadores",
     badge: "Popular",
     features: [

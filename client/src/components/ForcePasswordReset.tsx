@@ -73,7 +73,7 @@ export function ForcePasswordReset() {
         className="w-full max-w-md space-y-7 animate-stagger-1"
         style={{
           background: "linear-gradient(160deg, rgba(20,16,12,0.96) 0%, rgba(10,8,6,0.98) 100%)",
-          border: "1px solid rgba(255,107,0,0.35)",
+          border: "1px solid rgba(var(--ds-orange-rgb),0.35)",
           borderRadius: "16px",
           boxShadow: "0 32px 100px rgba(0,0,0,0.7), 0 0 60px rgba(var(--ds-orange-rgb),0.08)",
           padding: "2.5rem",

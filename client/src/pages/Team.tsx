@@ -51,7 +51,7 @@ function roleIcon(role: TeamRole) {
 
 function roleColor(role: TeamRole) {
   if (role === "producer") return "#FFB800";
-  if (role === "editor") return "#FF6B00";
+  if (role === "editor") return "var(--ds-orange)";
   return "#a7a7a7";
 }
 

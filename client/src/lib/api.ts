@@ -217,6 +217,26 @@ export interface UserDataStats {
   totalSize: number;
 }
 
+export interface StorageStats {
+  totalUsed: number;
+  quota: number;
+  byType: {
+    images: number;
+    videos: number;
+    documents: number;
+    audio: number;
+    other: number;
+  };
+  topFiles: Array<{
+    id: number;
+    name: string;
+    size: number;
+    project: string;
+    projectId: number | null;
+  }>;
+  fileCount: number;
+}
+
 export interface ClientAllowance {
   planId: "free" | "pro" | "studio";
   status: string;
@@ -849,6 +869,9 @@ export const api = {
         method: "PUT",
         body: JSON.stringify({ projectId }),
       }),
+  },
+  storage: {
+    getStats: () => request<StorageStats>("/storage/stats"),
   },
   studioSettings: {
     get: () => request<StudioSettingsPayload>("/studio-settings"),

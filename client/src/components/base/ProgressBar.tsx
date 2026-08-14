@@ -6,7 +6,7 @@
  *
  * Features:
  * - Smooth width transition animation (500ms ease-out)
- * - Configurable fill color (default: orange #FF6B00)
+ * - Configurable fill color (default: brand orange token)
  * - Optional percentage label display
  * - Theme-aware background colors
  * - ARIA attributes for accessibility
@@ -23,7 +23,7 @@ export interface ProgressBarProps {
   max?: number;
   /** Optional label text displayed next to the bar */
   label?: string;
-  /** Fill color (CSS color value, default: #FF6B00) */
+  /** Fill color (CSS color value, default: var(--ds-orange)) */
   color?: string;
   /** Whether to show percentage label (default: false) */
   showPercentage?: boolean;
@@ -46,7 +46,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   value,
   max = 100,
   label,
-  color = '#FF6B00',
+  color = 'var(--ds-orange)',
   showPercentage = false,
   className = '',
 }) => {

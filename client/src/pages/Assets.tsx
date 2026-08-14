@@ -81,6 +81,8 @@ function AssetsContent({ embedded }: { embedded?: boolean }) {
   const [filter, setFilter] = useState<AssetType | "all">("all");
   const [deleteTarget, setDeleteTarget] = useState<AssetItem | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [storageUsed, setStorageUsed] = useState<number | null>(null);
+  const [storageQuota, setStorageQuota] = useState<number | null>(null);
 
   const isEn = locale === "en";
 
@@ -98,15 +100,18 @@ function AssetsContent({ embedded }: { embedded?: boolean }) {
     loadAssets();
   }, []);
 
-  const [storageQuota, setStorageQuota] = useState<number | null>(null);
   useEffect(() => {
-    fetch("/api/storage/stats", { credentials: "include" })
-      .then((r) => r.json())
-      .then((d) => { if (d?.success) setStorageQuota(Number(d.data.quota)); })
+    api.storage
+      .getStats()
+      .then((stats) => {
+        setStorageUsed(Number(stats.totalUsed));
+        setStorageQuota(Number(stats.quota));
+      })
       .catch(() => { /* quota display is best-effort */ });
   }, []);
 
-  const totalSize = useMemo(() => assets.reduce((sum, a) => sum + (a.size || 0), 0), [assets]);
+  const listedSize = useMemo(() => assets.reduce((sum, a) => sum + (a.size || 0), 0), [assets]);
+  const totalSize = storageUsed ?? listedSize;
   // Real per-plan quota from the backend (-1 = unlimited).
   const isUnlimitedStorage = storageQuota != null && storageQuota < 0;
   const usagePercent = storageQuota != null && storageQuota > 0

@@ -2,33 +2,24 @@
 
 ## Overview
 
-18 tasks em 5 fases. **13 de 18 feitas.** Estado verificado contra o código em
-2026-07-27, não contra documentação anterior.
+18 tasks em 5 fases. **15 de 18 feitas.** Estado verificado contra o código em
+2026-08-14, não contra documentação anterior.
 
 - **Fase A (prompts) — concluída** (tasks 1 a 4, incluindo a medição da 4).
 - **Fase B (modelo por criticidade) — concluída** (tasks 5 a 8).
 - **Fase C (temperatura por perfil) — concluída** (task 9).
-- **Fase D (eval) — parada na execução.** Estrutura e runner (10) e os 41 casos
-  das 12 ferramentas (11, 12, 13) prontos e validados por `--dry-run`. **Faltam
-  as tasks 14 e 15**, já autorizadas pelo operador: rodar o eval comparativo
-  (`poolside/laguna-m.1:free` atual contra `nvidia/nemotron-3-ultra-550b-a55b:free`,
-  mais prompt antigo vs. novo) e aplicar o resultado em `TIER_MODEL.high`. Até
-  isso rodar, a escolha de modelo da faixa alta segue sendo palpite.
+- **Fase D (eval) — concluída para a faixa alta.** Estrutura e runner (10), casos
+  (11, 12, 13), eval comparativo (14) e aplicação do modelo (15) feitos. A faixa
+  `high` agora usa `nvidia/nemotron-3-super-120b-a12b:free`, escolhido por eval.
 - **Fase E (uso real) — pausada** (tasks 16 a 18). Aguardando acesso ao banco de
   produção. Não bloqueia nada acima.
 
 ### Retomada (próxima sessão)
 
-1. `npm run eval:ai -- --tier=high --model=nvidia/nemotron-3-ultra-550b-a55b:free --save=tmp/eval-nemotron.json`
-2. Mesmo comando com `--model=poolside/laguna-m.1:free`. **Atenção:** nas 8
-   chamadas feitas na medição da task 4, esse modelo devolveu 429 ou resposta
-   vazia em todas. Se repetir, isso por si só é resultado de eval — o modelo que
-   hoje atende a faixa alta em produção pode estar indisponível na prática.
-3. Comparação prompt antigo vs. novo: extrair o `promptRole` anterior de
-   `shared/tools.ts` via git (`git log --oneline -- shared/tools.ts`, o commit
-   anterior a `00e622c`), gravar como `{ "04": "..." }` e passar em
-   `--prompt-file`.
-4. Registrar o resultado em `docs/STATUS.md` com data e aplicar a task 15.
+1. Retomar pela Fase E (tasks 16 a 18), usando o banco de produção/Supabase agora
+   disponível para extrair volume, reuso e rating por ferramenta.
+2. Se mexer em roteamento de modelo novamente, reconferir o catálogo `:free` do
+   OpenRouter antes de editar `TIER_MODEL`.
 
 Decisão pendente do operador, herdada da task 4: a taxa de bloco inválido de 40%
 acionou o gatilho de revisão do ADR-013. A saída prevista é gerar o JSON numa
@@ -163,10 +154,10 @@ comportamento — está registrada como provisória no ADR-014 justamente por is
     pagante), a tabela das 3 faixas e a natureza temporária da decisão.
   - Deixar explícito o que **não** está decidido: qual modelo serve a faixa
     `high`.
-  - **Feito.** Status: "Aceito para a estrutura, provisório para a escolha de
-    modelo da faixa alta". `TIER_MODEL.high` mantém `poolside/laguna-m.1:free`,
-    que já atendia Orçamento e Contrato, para não trocar modelo em produção por
-    palpite — a troca é a task 15, depois do eval.
+  - **Feito.** O ADR começou com status provisório para a escolha de modelo da
+    faixa alta, sem trocar produção por palpite. Em 2026-08-14, a task 15 fechou
+    essa lacuna e aplicou `nvidia/nemotron-3-super-120b-a12b:free` em
+    `TIER_MODEL.high`.
   - _Requirements: B3_
 
 - [x] 8. Registrar o gatilho de revisão em `docs/STATUS.md`
@@ -270,8 +261,9 @@ comportamento — está registrada como provisória no ADR-014 justamente por is
     contador. O julgamento de gosto que sobrou está marcado como `manual`.
   - _Requirements: D2_
 
-- [ ] 14. Executar o eval comparativo e documentar
-  - Rodar os candidatos de alta criticidade: `poolside/laguna-m.1:free` (atual)
+- [x] 14. Executar o eval comparativo e documentar
+  - Rodar os candidatos de alta criticidade: `poolside/laguna-m.1:free` (modelo
+    provisório anterior)
     contra `nvidia/nemotron-3-ultra-550b-a55b:free`. O outro candidato do design
     saiu do catálogo (ver task 6) — escolher o substituto entre os 15 `:free`
     disponíveis no momento da execução.
@@ -280,14 +272,23 @@ comportamento — está registrada como provisória no ADR-014 justamente por is
     senão a base de comparação se perde.
   - Registrar resultado em `docs/STATUS.md` com data, e decidir o modelo da faixa
     alta com base nos números.
+  - **Feito em 2026-08-14.** `poolside/laguna-m.1:free` falhou 16/16 com 404;
+    `nvidia/nemotron-3-ultra-550b-a55b:free` marcou 47/61 (77,0%) com 4 respostas
+    vazias; `google/gemma-4-31b-it:free` falhou 16/16 com 429; o substituto
+    operacional `nvidia/nemotron-3-super-120b-a12b:free` marcou 63/76 (82,9%) com
+    1 resposta vazia. A comparação com prompt antigo confirmou ganho forte em
+    Orçamento: o prompt antigo não emite o bloco `cena.budget.v1`.
   - _Requirements: D3_
 
-- [ ] 15. Aplicar a decisão de modelo em produção
+- [x] 15. Aplicar a decisão de modelo em produção
   - Alterar `TIER_MODEL.high` em `aiService.ts` conforme o resultado da task 14.
   - Atualizar o ADR-014 com o resultado, promovendo a escolha de modelo de
     provisória a respaldada por eval.
   - Atenção ao commitar: o push está bloqueado pela pendência de rotação de
     credenciais (Seção 3 do `docs/STATUS.md`) — não empurrar com o PAT atual.
+  - **Feito em 2026-08-14.** `TIER_MODEL.high` passou para
+    `nvidia/nemotron-3-super-120b-a12b:free`; ADR-014 e `docs/STATUS.md`
+    atualizados.
   - _Requirements: D4_
 
 ### Fase E — Fechar o loop com uso real
