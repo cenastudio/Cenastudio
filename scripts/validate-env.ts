@@ -140,6 +140,7 @@ console.log("☁️  Supabase (Optional)");
 checkVar("SUPABASE_URL", false, validators.supabaseUrl);
 checkVar("SUPABASE_ANON_KEY", false);
 checkVar("SUPABASE_SERVICE_ROLE_KEY", false);
+checkVar("SUPABASE_DATABASE_URL", false, validators.postgresUrl);
 checkVar("VITE_SUPABASE_URL", false, validators.supabaseUrl);
 checkVar("VITE_SUPABASE_ANON_KEY", false);
 console.log("");
@@ -152,7 +153,10 @@ checkVar("POSTGRES_PRISMA_URL", false, validators.postgresUrl);
 checkVar("POSTGRES_URL", false, validators.postgresUrl);
 checkVar("ALLOW_EPHEMERAL_SQLITE", false);
 const hasPersistentDatabase = Boolean(
-  process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL || process.env.POSTGRES_URL,
+  process.env.SUPABASE_DATABASE_URL ||
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.POSTGRES_URL,
 );
 if (isProduction && !hasPersistentDatabase && process.env.ALLOW_EPHEMERAL_SQLITE !== "true") {
   results.push({
@@ -160,7 +164,7 @@ if (isProduction && !hasPersistentDatabase && process.env.ALLOW_EPHEMERAL_SQLITE
     required: true,
     present: false,
     valid: false,
-    message: "❌ DATABASE_URL, POSTGRES_PRISMA_URL, or POSTGRES_URL is required in production",
+    message: "❌ SUPABASE_DATABASE_URL, DATABASE_URL, POSTGRES_PRISMA_URL, or POSTGRES_URL is required in production",
   });
 }
 console.log("");

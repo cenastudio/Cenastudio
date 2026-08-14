@@ -5,7 +5,21 @@
 > de estado, edite a seção correspondente, não acrescente uma nova
 > no fim sem contexto. Data da última atualização no topo.
 
-**Última atualização:** 2026-07-26
+**Última atualização:** 2026-08-14
+
+## 0. Produção atual
+
+- **Deploy:** Vercel, projeto `cena-studio-prod`, domínio
+  `https://cena-studio-prod.vercel.app/`.
+- **Banco:** Supabase Postgres, via `SUPABASE_DATABASE_URL` com pooler.
+- **GitHub:** repositório `cenastudio/Cenastudio`, branch `main`.
+- **Verificado em 2026-08-14:** health/readiness, login admin, cadastro de conta,
+  listagem de ferramentas, geração IA, criação de projeto e Shot List.
+- **Correção pós-migração:** sequences do Postgres foram realinhadas em produção
+  depois de erros `Unique constraint failed on id` em notifications, sessions e
+  workspaces. Script permanente: `npm run db:reset-sequences`.
+- **Risco aberto:** RLS ainda precisa de política completa antes de ser ativado
+  com segurança nas tabelas públicas do Supabase.
 
 ## 1. Estado atual por módulo/feature
 
@@ -159,11 +173,12 @@ Tarefas soltas identificadas na verificação, sem spec própria ainda:
   `type` presente e diferente de `"app"`. Token sem a claim continua aceito, para
   não invalidar sessões emitidas antes da mudança. Verificado: token de portal
   rejeitado, token do app aceito, token legado aceito.
-- Completar `scripts/validate-env.ts`. O script checa **23** variáveis, mas o
+- Completar `scripts/validate-env.ts`. O script checa **24** variáveis, mas o
   código referencia **79** (`.env.example` declara 89 contando aliases e as
   comentadas). Passar no `npm run validate:env` hoje não significa que o ambiente
-  está completo — entre as não checadas estão `SUPABASE_SERVICE_ROLE_KEY`,
-  `MAX_UPLOAD_SIZE_MB`, `LGPD_DELETE_GRACE_DAYS` e os `STRIPE_PRICE_*_ANNUAL`.
+  está completo. Em 2026-08-14 foi adicionada a checagem de
+  `SUPABASE_DATABASE_URL`, mas ainda faltam variáveis como `MAX_UPLOAD_SIZE_MB`,
+  `LGPD_DELETE_GRACE_DAYS` e os `STRIPE_PRICE_*_ANNUAL`.
 - Conferir a documentação de entrada contra o código (Etapas 4.1–4.3 da spec
   `00-fundacao-limpeza-e-documentacao/`, ainda abertas): `README.md` e
   `COMO-O-SISTEMA-FUNCIONA.md` (features listadas batem com o que existe?) e

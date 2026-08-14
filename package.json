@@ -31,6 +31,7 @@
     "launch:check": "node scripts/launch-check.mjs",
     "production:smoke": "node scripts/production-auth-smoke.mjs",
     "smoke:prisma": "node scripts/smoke-prisma.mjs",
+    "db:reset-sequences": "node scripts/reset-postgres-sequences.mjs",
     "measure:budget-block": "tsx scripts/measure-budget-block.ts",
     "eval:ai": "tsx scripts/run-ai-eval.ts",
     "lint": "tsc --noEmit",

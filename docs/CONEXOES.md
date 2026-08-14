@@ -5,7 +5,7 @@
 > validar. Nomes de variáveis conferem com `.env.example`; nenhum valor real
 > aparece aqui.
 
-**Última atualização:** 2026-07-26
+**Última atualização:** 2026-08-14
 
 ## Validação rápida
 
@@ -19,49 +19,52 @@ Se `validate:env` passar e `smoke:prisma` conectar, o essencial está de pé.
 
 ---
 
-## 1. Banco de dados — Railway Postgres
+## 1. Banco de dados — Supabase Postgres
 
 **Faz:** é o banco de produção. Todo dado da aplicação vive aqui, via Prisma
 (47 models em `prisma/schema.prisma`).
 
-**Não faz:** não é Supabase. Supabase existe no projeto, mas só para storage e
-LGPD (seção 2). Confundir os dois é o erro histórico mais comum neste repo.
+**Hospedagem:** Vercel roda o app; Supabase hospeda o Postgres. Em Vercel
+serverless, preferir a URL do transaction pooler do Supabase.
 
 **Variáveis:**
 
 | Variável | Obrigatória | Observação |
 |---|---|---|
-| `DATABASE_URL` | sim | `postgresql://USUARIO:SENHA@HOST:PORTA/BANCO` |
+| `SUPABASE_DATABASE_URL` | sim | URL do pooler Supabase; prioridade no código |
+| `DATABASE_URL` | fallback | URL Postgres direta ou compatibilidade |
 | `DATABASE_POOL_MAX` | não | default no código |
 | `DATABASE_CONNECT_TIMEOUT_MS` | não | idem |
 | `DATABASE_IDLE_TIMEOUT_MS` | não | idem |
 | `DATABASE_TRANSIENT_RETRIES` | não | retry de erro transitório |
 | `DATABASE_PATH` | não | SQLite de desenvolvimento local |
 
-`POSTGRES_URL` e `POSTGRES_PRISMA_URL` aparecem comentadas no `.env.example`:
-são resíduo da época de deploy na Vercel e não são lidas em produção.
+`POSTGRES_URL` e `POSTGRES_PRISMA_URL` são aliases antigos. O código ainda os
+aceita, mas a configuração canônica atual é `SUPABASE_DATABASE_URL`.
 
 **Como reconectar:**
-1. Railway → projeto → serviço Postgres → aba *Variables* → copiar a connection
-   string
-2. Colar em `DATABASE_URL`
-3. `npx prisma migrate deploy` (o `start:prod` já faz isso no boot)
+1. Supabase → Project Settings → Database → Connection string → copiar a string
+   do pooler
+2. Colar em `SUPABASE_DATABASE_URL` na Vercel e no ambiente local seguro
+3. `npx prisma migrate deploy` quando houver migrations novas
 4. `npm run smoke:prisma` para confirmar
+5. Se dados forem importados manualmente, rodar `npm run db:reset-sequences`
+   para alinhar sequences/autoincrement e evitar `Unique constraint failed on id`
 
-**Onde olhar quando falhar:** `server/models/db.ts` concentra pool, timeout e
-retry. Skill de apoio: `.kiro/skills/database-connectivity.md`.
+**Onde olhar quando falhar:** `server/models/prisma.ts` define a prioridade das
+URLs de Postgres; `server/config/launchGuards.ts` bloqueia produção sem banco
+persistente. Skill de apoio: `.kiro/skills/database-connectivity.md`.
 
 ---
 
-## 2. Supabase — storage e LGPD
+## 2. Supabase — banco, storage e chaves públicas
 
-**Faz:** armazenamento de arquivos e as operações administrativas de LGPD
-(exportar e excluir dados de titular), em `server/services/supabaseStorage.ts` e
-`server/services/lgpdService.ts`.
+**Faz:** hospeda o Postgres de produção, fornece chaves públicas para integrações
+Supabase e pode servir storage/fluxos administrativos quando configurado.
 
-**Não faz:** não é o banco da aplicação (ver seção 1) e não é o provedor de
-autenticação. O ADR-008 menciona Supabase Auth como caminho futuro; o login real
-é JWT próprio (ADR-011) e o portal do cliente tem auth separada (ADR-012).
+**Atenção:** o login principal do app continua sendo JWT próprio do backend,
+com OAuth GitHub opcional. Não confundir com Supabase Auth como fonte principal
+de sessão do app.
 
 **Variáveis:**
 
@@ -70,6 +73,7 @@ autenticação. O ADR-008 menciona Supabase Auth como caminho futuro; o login re
 | `SUPABASE_URL` | sim | projeto Supabase |
 | `SUPABASE_ANON_KEY` | sim | chave pública |
 | `SUPABASE_SERVICE_ROLE_KEY` | sim, para LGPD | **nunca** expor no client |
+| `SUPABASE_DATABASE_URL` | sim, banco | string Postgres do pooler |
 | `SUPABASE_STORAGE_BUCKET` | não | default no código |
 | `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` | sim | duplicatas exigidas pelo Vite |
 
@@ -176,8 +180,9 @@ Para evitar caça a configuração inexistente:
   retry de webhook nem poda de `user_sessions` (ambos na Seção 4 do
   `docs/STATUS.md`). `ENABLE_CRON_JOBS` aparece em relatórios antigos, mas não
   existe no código.
-- **Vercel** — produção é Railway. A variável `VERCEL` é injetada pela
-  plataforma quando o build roda lá; não declare manualmente.
+- **Railway como produção atual** — foi substituído por Vercel + Supabase. Pode
+  existir conexão antiga para auditoria/migração, mas não deve ser fonte de
+  runtime.
 - **Bull Queue, S3, SendGrid** — citados em documentos antigos, nunca usados.
 
 ---
@@ -192,7 +197,7 @@ Consumidas por scripts de smoke test e captura de screenshots. Devem ficar
 
 ## 11. Ordem de bring-up do zero
 
-1. `DATABASE_URL` → `npx prisma migrate deploy` → `npm run smoke:prisma`
+1. `SUPABASE_DATABASE_URL` → `npx prisma migrate deploy` → `npm run smoke:prisma`
 2. `JWT_SECRET` e `CLIENT_ORIGIN` → app sobe e autentica
 3. `SUPABASE_*` → upload de arquivo e LGPD funcionam
 4. `CLOUDINARY_*` → mídia e thumbnails

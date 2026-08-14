@@ -31,20 +31,17 @@ Backend (Server)
 └── Passport.js (GitHub OAuth opcional)
 
 Infraestrutura
-├── Railway (Hosting + Postgres gerenciado)
+├── Vercel (hosting)
+├── Supabase Postgres (banco de produção)
 ├── Cloudinary (thumbnails/imagens)
-├── Supabase Storage (upload de arquivos de projeto, opcional — ver nota abaixo)
+├── Supabase Storage (upload de arquivos de projeto, opcional)
 └── GitHub Actions (CI: typecheck + build)
 ```
 
-> **Nota sobre Supabase:** o projeto migrou de Supabase Postgres para
-> Railway Postgres (ver ADR-002 abaixo). Supabase ainda é usado
-> opcionalmente como *storage* de arquivos (`server/services/supabaseStorage.ts`)
-> e como provedor alternativo de login social — nenhum dos dois é o
-> banco de dados principal hoje. Em produção, se as env vars
-> `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` não estiverem configuradas,
-> essas features ficam desativadas com erro claro (503), sem afetar o
-> resto do sistema.
+> **Nota sobre Supabase:** em 14/08/2026 a produção foi verificada em
+> Vercel + Supabase Postgres. O runtime usa `SUPABASE_DATABASE_URL` como
+> string preferencial de Postgres, com `DATABASE_URL`/`POSTGRES_*` apenas
+> como fallbacks de compatibilidade.
 
 ### Arquitetura de Camadas
 
@@ -106,13 +103,14 @@ Infraestrutura
 
 ### ADR-002: SQLite vs Postgres (Runtime)
 
-**Status:** Aceito, revisado em 14/07/2026 (migração de provedor Postgres: Supabase → Railway)
-**Data:** 2024, migrações subsequentes em 30/06/2026 e julho/2026
+**Status:** Aceito, revisado em 14/08/2026 (produção atual: Vercel + Supabase Postgres)
+**Data:** 2024, migrações subsequentes em 30/06/2026, julho/2026 e 14/08/2026
 **Contexto:** Escolher banco de dados para runtime.
 
 **Decisão:** PostgreSQL como banco principal (via Prisma + `@prisma/adapter-pg`),
-hospedado no Railway. SQLite (`better-sqlite3`) permanece como *fallback*
-automático quando nenhuma `DATABASE_URL`/`POSTGRES_URL` está configurada
+hospedado no Supabase. Em produção serverless, usar `SUPABASE_DATABASE_URL`
+com o transaction pooler do Supabase. SQLite (`better-sqlite3`) permanece como *fallback*
+automático quando nenhuma `SUPABASE_DATABASE_URL`/`DATABASE_URL`/`POSTGRES_URL` está configurada
 (`server/models/prisma.ts`, flag `shouldUsePrisma`) — útil para rodar o
 projeto localmente sem depender de um Postgres externo.
 
@@ -121,12 +119,10 @@ projeto localmente sem depender de um Postgres externo.
   - Zero configuração
   - Não requer credenciais externas para rodar `npm run dev`
 
-- PostgreSQL / Railway (produção):
+- PostgreSQL / Supabase (produção):
   - Escalável, backup gerenciado pela plataforma
-  - Mesmo provedor do hosting da aplicação (menor superfície operacional
-    do que manter contas em dois provedores diferentes)
-  - Pool de conexões dimensionado para concorrência real
-    (`DATABASE_POOL_MAX`, default 10 — ver incidente de 14/07/2026 abaixo)
+  - Pooler apropriado para Vercel serverless
+  - Integração direta com Supabase Auth/Storage quando esses recursos forem usados
 
 **Consequências:**
 - Positivas:
@@ -145,8 +141,13 @@ qualquer segunda requisição concorrente esperava a única conexão liberar
 e podia expirar por timeout. Corrigido para `max: 10` (o Postgres do
 Railway suporta até 100 conexões). Ver `CHANGELOG.md`.
 
-**Revisão:** Nenhuma migração de banco planejada. Reavaliar o tamanho do
-pool se o número de usuários simultâneos crescer significativamente.
+**Incidente relevante (14/08/2026):** após importação de dados para Supabase,
+as sequences de tabelas com `id` ficaram atrasadas, causando erros
+`Unique constraint failed on id` em notifications, sessions e workspaces.
+Mitigação permanente: `npm run db:reset-sequences` após importações manuais.
+
+**Revisão:** Antes de qualquer nova migração de provedor, validar dump, restore,
+sequences e smoke tests de autenticação/IA/Shot List no destino.
 
 ---
 
@@ -432,35 +433,32 @@ ninguém consegue pagar de verdade ainda. Ver `.private/PROXIMOS_PASSOS.md`.
 
 ### ADR-010: Vercel vs Railway vs Self-hosted
 
-**Status:** Aceito, revisado — migrado de Vercel para Railway
-**Data:** decisão original 2024, migração para Railway concluída em julho/2026
+**Status:** Aceito, revisado — produção atual em Vercel
+**Data:** decisão original 2024, Railway em julho/2026, retorno a Vercel em 14/08/2026
 **Contexto:** Escolher plataforma de hosting.
 
-**Decisão:** Railway (Nixpacks para build, Postgres gerenciado no mesmo
-provedor, deploy automático em push para `main`)
+**Decisão:** Vercel para hosting da aplicação; Supabase Postgres como banco
+gerenciado separado.
 
 **Rationale:**
-- Vercel foi a escolha original, mas o modelo serverless (functions
-  efêmeras) não combinava bem com um backend Express monolítico com
-  processos de longa duração e SQLite/Postgres — a migração para
-  Railway simplificou isso ao rodar a aplicação como um processo Node
-  persistente.
-- Railway:
-  - Deploy automático (git push → build → healthcheck → restart policy)
-  - Postgres gerenciado no mesmo painel/provedor da aplicação
-  - `railway.json`/`nixpacks.toml` versionados no repo definem o build
-    e o healthcheck (`GET /health`, timeout 100s, até 10 tentativas de
-    restart)
+- Vercel está conectado ao repositório `cenastudio/Cenastudio` e publica a
+  branch `main` automaticamente.
+- Supabase pooler removeu o bloqueio anterior de conexão direta Postgres em
+  ambiente serverless.
+- O backend Express é empacotado como handler único em `api/index.js`, mantendo
+  o monolito modular sem reescrever rotas para outro framework.
 
 **Consequências:**
 - Positivas:
-  - Um único provedor para app + banco
-  - Deploy simples, sem necessidade de configurar functions serverless
+  - Deploy simples via GitHub/Vercel
+  - Banco gerenciado no Supabase, separado do ciclo de build do app
+  - Domínio de produção e preview ficam no mesmo painel Vercel
 - Negativas:
-  - Vendor lock-in (mitigado: aplicação é um processo Node padrão,
-    portável para qualquer PaaS ou container)
+  - Exige pooler/connection string correta para evitar timeout em serverless
+  - Jobs longos e schedulers continuam inadequados dentro do runtime Vercel
 
-**Revisão:** Sem migração adicional planejada.
+**Revisão:** Se houver necessidade de workers persistentes ou jobs agendados,
+adicionar um serviço separado para jobs em vez de mover o app inteiro de volta.
 
 ---
 
@@ -942,7 +940,7 @@ export function useDebounce<T>(value: T, delay: number): T {
 ### Fase Atual
 
 - Monolito modular
-- PostgreSQL (Railway) via Prisma em produção; SQLite como fallback local
+- PostgreSQL (Supabase) via Prisma em produção; SQLite como fallback local
 - React + Vite
 - Express backend
 - JWT httpOnly cookie auth

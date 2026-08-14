@@ -34,7 +34,10 @@ if (process.env.NODE_ENV === "production" && process.env.CLIENT_ORIGIN?.includes
 }
 
 const persistentDatabaseUrl =
-  process.env.DATABASE_URL || process.env.POSTGRES_PRISMA_URL || process.env.POSTGRES_URL;
+  process.env.SUPABASE_DATABASE_URL ||
+  process.env.DATABASE_URL ||
+  process.env.POSTGRES_PRISMA_URL ||
+  process.env.POSTGRES_URL;
 
 if (
   process.env.VERCEL === "1" &&
@@ -49,7 +52,7 @@ if (
 }
 
 if (!persistentDatabaseUrl && process.env.ALLOW_EPHEMERAL_SQLITE !== "true") {
-  failures.push("DATABASE_URL, POSTGRES_PRISMA_URL, or POSTGRES_URL is required for persistent production data");
+  failures.push("SUPABASE_DATABASE_URL, DATABASE_URL, POSTGRES_PRISMA_URL, or POSTGRES_URL is required for persistent production data");
 }
 
 if (process.env.ALLOW_EPHEMERAL_SQLITE === "true") {
