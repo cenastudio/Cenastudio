@@ -19,7 +19,45 @@ Se `validate:env` passar e `smoke:prisma` conectar, o essencial está de pé.
 
 ---
 
-## 1. Banco de dados — Supabase Postgres
+## 1. Deploy e hospedagem — Vercel
+
+**Faz:** hospeda a aplicação de produção atual. O GitHub conectado é
+`cenastudio/Cenastudio`, branch `main`. Push em `main` dispara deploy de
+produção.
+
+**Projeto Vercel canônico:** `cena-studio-prod`.
+
+**Identificadores sem segredo:**
+
+| Campo | Valor |
+|---|---|
+| Project ID | `prj_XSyby5utPKeYoKKMgfGi2f1z3TB0` |
+| Org/Team ID local | `team_0ta6rNgoPiCfEXiG4SdEyqIN` |
+| Team visível no CLI | `cenastudio-3104s-projects` |
+| Domínio principal | `https://cena-studio-prod.vercel.app` |
+| Alias do projeto | `https://cena-studio-prod-cenastudio-3104s-projects.vercel.app` |
+| Alias branch main | `https://cena-studio-prod-git-main-cenastudio-3104s-projects.vercel.app` |
+
+**Arquivo local de vínculo:** `.vercel/project.json`. Ele precisa apontar para
+o `projectId` acima. Se o CLI disser `Not authorized` em `vercel deploy`, não
+assuma que o deploy falhou: verifique o deploy automático disparado pelo GitHub.
+
+**Como validar produção depois de push:**
+
+```bash
+npx vercel ls cena-studio-prod
+npx vercel inspect https://cena-studio-prod.vercel.app
+curl -I -L https://cena-studio-prod.vercel.app/
+curl -sS -L https://cena-studio-prod.vercel.app/health
+curl -sS -L https://cena-studio-prod.vercel.app/ready
+```
+
+Critério mínimo: deployment novo `Ready`, `/` com `HTTP 200`, `/health` com
+`status: ok`, `/ready` com `ready: true` e banco `ok`.
+
+---
+
+## 2. Banco de dados — Supabase Postgres
 
 **Faz:** é o banco de produção. Todo dado da aplicação vive aqui, via Prisma
 (47 models em `prisma/schema.prisma`).
@@ -57,7 +95,7 @@ persistente. Skill de apoio: `.kiro/skills/database-connectivity.md`.
 
 ---
 
-## 2. Supabase — banco, storage e chaves públicas
+## 3. Supabase — banco, storage e chaves públicas
 
 **Faz:** hospeda o Postgres de produção, fornece chaves públicas para integrações
 Supabase e pode servir storage/fluxos administrativos quando configurado.
@@ -83,7 +121,7 @@ O código aceita `SUPABASE_SECRET_KEY` como alias de
 
 ---
 
-## 3. Cloudinary — mídia
+## 4. Cloudinary — mídia
 
 **Faz:** upload e transformação de imagem/vídeo, incluindo thumbnails de shot
 list (`server/services/shotListService.ts`).
@@ -99,7 +137,7 @@ funciona.
 
 ---
 
-## 4. Stripe — cobrança
+## 5. Stripe — cobrança
 
 **Faz:** checkout e webhooks de assinatura.
 
@@ -112,7 +150,7 @@ funciona.
 
 ---
 
-## 5. Resend — e-mail
+## 6. Resend — e-mail
 
 **Faz:** todo envio transacional (`server/services/emailService.ts`).
 
@@ -126,7 +164,7 @@ dele.
 
 ---
 
-## 6. Provedores de IA
+## 7. Provedores de IA
 
 Cadeia com fallback: `AI_PROVIDER` define o primário, `FALLBACK_AI_PROVIDER` o
 reserva.
@@ -145,7 +183,7 @@ custo estimado.
 
 ---
 
-## 7. GitHub OAuth
+## 8. GitHub OAuth
 
 **Faz:** login social opcional.
 
@@ -154,7 +192,7 @@ custo estimado.
 
 ---
 
-## 8. Autenticação e sessão
+## 9. Autenticação e sessão
 
 Não é serviço externo, mas é conexão que quebra deploy quando mal configurada.
 
@@ -171,7 +209,7 @@ consequência negativa no ADR-012.
 
 ---
 
-## 9. O que NÃO existe
+## 10. O que NÃO existe
 
 Para evitar caça a configuração inexistente:
 
@@ -187,7 +225,7 @@ Para evitar caça a configuração inexistente:
 
 ---
 
-## 10. Variáveis de verificação
+## 11. Variáveis de verificação
 
 Consumidas por scripts de smoke test e captura de screenshots. Devem ficar
 **vazias em produção**: `SMOKE_BASE_URL`, `SMOKE_EMAIL`, `SMOKE_PASSWORD`,
@@ -195,7 +233,7 @@ Consumidas por scripts de smoke test e captura de screenshots. Devem ficar
 
 ---
 
-## 11. Ordem de bring-up do zero
+## 12. Ordem de bring-up do zero
 
 1. `SUPABASE_DATABASE_URL` → `npx prisma migrate deploy` → `npm run smoke:prisma`
 2. `JWT_SECRET` e `CLIENT_ORIGIN` → app sobe e autentica

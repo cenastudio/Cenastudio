@@ -138,7 +138,7 @@ vi.mock('@/lib/api', () => ({
       deleteEntry: vi.fn(),
     },
     equipment: {
-      list: vi.fn(),
+      list: vi.fn().mockResolvedValue([]),
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
@@ -153,6 +153,22 @@ vi.mock('@/lib/api', () => ({
       updateShot: vi.fn(),
       deleteShot: vi.fn(),
       reorder: vi.fn(),
+      uploadThumbnail: vi.fn(),
+      duplicateShot: vi.fn(),
+    },
+    shotTypes: {
+      list: vi.fn().mockResolvedValue([]),
+      create: vi.fn(),
+      delete: vi.fn(),
+    },
+    storage: {
+      getStats: vi.fn().mockResolvedValue({
+        totalUsed: 0,
+        quota: 25 * 1024 * 1024 * 1024,
+        byType: { images: 0, videos: 0, documents: 0, audio: 0, other: 0 },
+        topFiles: [],
+        fileCount: 0,
+      }),
     },
     timesheets: {
       list: vi.fn(),

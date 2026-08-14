@@ -4,6 +4,10 @@
 > trabalho neste repositório, antes de ler qualquer spec ou tocar em
 > qualquer código. Em caso de conflito entre este arquivo e um spec
 > antigo, este arquivo vence.
+>
+> Depois deste arquivo, leia `docs/CONEXOES.md` antes de mexer em deploy,
+> banco, Supabase, Vercel, variáveis de ambiente, login social, storage,
+> IA ou qualquer integração externa.
 
 ## Por que este arquivo existe
 Este projeto já acumulou 103 arquivos `.md`, boa parte deles relatórios
@@ -110,7 +114,7 @@ Não é preciso ler todas — leia a que casa com o problema.
 | `database-connectivity.md` | Qualquer problema de conexão com Postgres/Prisma, timeout, pool de conexões |
 | `prisma.md` | Migrations, schema, queries Prisma |
 | `deployment-validation.md` | Antes de declarar um deploy pronto/validado |
-| `vercel-deploy-fixer.md` / `vercel-serverless.md` | Problemas específicos de deploy na Vercel (nota: produção atual é Railway — usar só se o contexto for de fato Vercel) |
+| `vercel-deploy-fixer.md` / `vercel-serverless.md` | Problemas específicos de deploy na Vercel. Produção atual é Vercel + Supabase; Railway é histórico/legado. |
 | `fix-deploy-now.md` | Incidente de deploy quebrado em produção, ação imediata |
 | `debug-production.md` | Bug reproduzido apenas em produção |
 | `build-system.md` / `bundling.md` | Erros de build, esbuild/Vite, problemas de bundle |
