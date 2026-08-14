@@ -146,10 +146,12 @@ Ordem de execução combinada. O conteúdo de cada frente vive na spec, não aqu
 
 1. `.kiro/specs/landing-features-implementation/` — **58 de 58 tasks feitas**.
    Tasks 7.1 a 7.4 concluídas em 2026-08-14 com validação local.
-2. `.kiro/specs/00-fundacao-limpeza-e-documentacao/` — **14 de 24 tasks feitas**.
-   Retomar pelas tasks 4.1 a 5.3: revisar `README.md`,
-   `COMO-O-SISTEMA-FUNCIONA.md`, `API_GUIDE.md`, conferir `AGENTS.md` e marcar
-   a Fase 0 como concluída quando bater com o código real.
+2. `.kiro/specs/00-fundacao-limpeza-e-documentacao/` — **24 de 24 tasks feitas**.
+   Concluída em 2026-08-14. Documentos de entrada revisados contra o runtime
+   real: `README.md`, `COMO-O-SISTEMA-FUNCIONA.md`, `API_GUIDE.md`,
+   `docs/CONEXOES.md`, `docs/DESIGN_PATTERNS.md` e `AGENTS.md`. Produção
+   canônica: GitHub `cenastudio/Cenastudio` → Vercel `cena-studio-prod` →
+   Supabase Postgres. Railway fica apenas como histórico/legado.
 3. `.kiro/specs/auditoria-ux-2026-07/` — **6 de 47 tasks feitas**. Retomar só
    depois das frentes acima, com foco em mobile/UX e validação visual real.
 
@@ -184,13 +186,12 @@ Tarefas soltas identificadas na verificação, sem spec própria ainda:
   está completo. Em 2026-08-14 foi adicionada a checagem de
   `SUPABASE_DATABASE_URL`, mas ainda faltam variáveis como `MAX_UPLOAD_SIZE_MB`,
   `LGPD_DELETE_GRACE_DAYS` e os `STRIPE_PRICE_*_ANNUAL`.
-- Conferir a documentação de entrada contra o código (Etapas 4.1–4.3 da spec
-  `00-fundacao-limpeza-e-documentacao/`, ainda abertas): `README.md` e
-  `COMO-O-SISTEMA-FUNCIONA.md` (features listadas batem com o que existe?) e
-  `API_GUIDE.md` (endpoints conferem com `server/router.ts`?). Dado o que a
-  verificação dos 20 relatórios revelou, é provável que os três listem features
-  que não existem — Project Templates, Asset Library e Script Breakdown são os
-  suspeitos imediatos.
+- ~~Conferir a documentação de entrada contra o código (Etapas 4.1–4.3 da spec
+  `00-fundacao-limpeza-e-documentacao/`)~~ — **feito em 2026-08-14.**
+  `README.md` e `COMO-O-SISTEMA-FUNCIONA.md` foram corrigidos para Vercel +
+  Supabase; `API_GUIDE.md` recebeu base URL atual e mapa de rotas conferido
+  contra `server/router.ts`, `server/routes/*` e webhook Stripe em
+  `server/app.ts`.
 
 ## 5. Achados extraídos de documentos arquivados
 

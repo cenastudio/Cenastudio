@@ -1,6 +1,7 @@
 # API Guide - Cena Studio
 
-Guia completo da API do Cena Studio para desenvolvedores externos.
+Guia da API do Cena Studio para desenvolvedores externos e agentes internos.
+Este arquivo foi conferido contra `server/router.ts` em 2026-08-14.
 
 ## 📋 Índice
 
@@ -25,10 +26,10 @@ http://localhost:5001/api
 
 **Produção:**
 ```
-https://cenastudio-production.up.railway.app/api
+https://cena-studio-prod.vercel.app/api
 ```
 
-> ⚠️ **Pendente:** Domínio personalizado `cenastudio.com.br` ainda não está configurado.
+Infraestrutura atual: Vercel + Supabase Postgres. Railway é legado histórico.
 
 ### Endpoints Operacionais
 
@@ -61,8 +62,8 @@ Todas as respostas seguem este padrão:
 
 ### Versão da API
 
-Versão atual: `v1`
-URL inclui versão: `/api/v1/...` (planejado para futuro)
+Versão atual: `v1` conceitual. As rotas atuais não usam prefixo versionado; o
+prefixo real é `/api/...`.
 
 ---
 
@@ -100,12 +101,26 @@ As seguintes rotas não requerem autenticação:
 - `POST /api/auth/register`
 - `POST /api/auth/forgot-password`
 - `POST /api/auth/reset-password`
+- `POST /api/auth/supabase`
+- `GET /api/auth/github`
 - `GET /api/auth/providers`
 - `GET /api/tools`
 - `GET /api/tools/:id`
+- `GET /api/plans`
+- `GET /api/plans/:id`
 - `POST /api/contact`
 - `POST /api/contact/demo`
 - `GET /api/public/video-reviews/shared/:token`
+- `GET /api/public-review`
+- `GET /api/public-review-video`
+- `POST /api/public-review-comment`
+- `PATCH /api/public-review-status`
+- `GET /api/public-meeting/:token`
+- `GET /api/public-meeting/:token/ics`
+- `GET /api/public-proposal/:token`
+- `POST /api/public-proposal/:token/accept`
+- `POST /api/client-portal-auth/login`
+- `POST /api/client-portal-auth/logout`
 - `GET /health`
 - `GET /ready`
 
@@ -152,6 +167,28 @@ X-RateLimit-Reset: 1719792000
 ---
 
 ## 📚 Endpoints
+
+### Mapa Real de Rotas
+
+Resumo conferido contra `server/router.ts` e `server/routes/*`. Use as seções
+detalhadas abaixo para exemplos de payload quando existirem.
+
+| Área | Rotas principais |
+|---|---|
+| Auth | `/api/auth/login`, `/api/auth/register`, `/api/auth/logout`, `/api/auth/me`, `/api/auth/profile`, `/api/auth/change-password`, `/api/auth/github`, `/api/auth/supabase`, `/api/auth/2fa/*`, `/api/auth/api-keys`, `/api/auth/lgpd-*`, `/api/auth/*-preferences` |
+| Tools/IA | `/api/tools`, `/api/ai/generate`, `/api/ai/history/:toolId`, `/api/ai-features/*` |
+| Projetos | `/api/projects`, `/api/projects/:id`, `/api/projects/:id/states`, `/api/projects/:id/state`, `/api/projects/:id/state/:toolId` |
+| Clientes/CRM | `/api/clients`, `/api/clients/stats`, `/api/clients/allowance`, `/api/clients/lookup/cnpj/:cnpj`, `/api/clients/opportunities`, `/api/clients/interactions`, `/api/clients/meetings`, `/api/clients/proposals` |
+| Comercial | `/api/commercial/dashboard`, `/api/commercial/metrics`, `/api/commercial/revenue`, `/api/commercial/forecast`, `/api/commercial/funnel`, `/api/commercial/comparison` |
+| Pipeline aliases | `/api/opportunities`, `/api/opportunities/stats`, `/api/pipeline-*`, `/api/interactions`, `/api/interactions/follow-ups` |
+| Financeiro | `/api/budgets/:projectId`, `/api/budgets/:projectId/entries`, `/api/dre/:projectId`, `/api/financial-entries`, `/api/analytics/finance` |
+| Arquivos/Storage | `/api/files/all`, `/api/files/projects/:projectId`, `/api/files/upload`, `/api/files/:id/download`, `/api/storage/stats`, `/api/storage/stats/project/:projectId` |
+| Video Review | `/api/video-reviews`, `/api/video-reviews/projects/:projectId`, `/api/video-reviews/:id/share`, `/api/video-reviews/:id/comments`, `/api/public/video-reviews/*`, aliases `/api/video-review*` e `/api/public-review*` |
+| Produção | `/api/equipment`, `/api/equipment/:id/availability`, `/api/equipment/:id/bookings`, `/api/shotlists/:projectId`, `/api/shotlists/:projectId/export/pdf`, `/api/shot-types`, `/api/timesheets`, `/api/calendar/project/:projectId.ics`, `/api/tasks/*` |
+| Analytics/Admin | `/api/analytics/*`, `/api/dashboard/*`, `/api/admin/*`, aliases `/api/admin-users`, `/api/admin-user-role`, `/api/admin-user-plan` |
+| Colaboração | `/api/team`, `/api/team/context`, `/api/project-members/projects/:projectId`, `/api/notifications`, `/api/sessions`, `/api/webhooks` |
+| Cliente externo | `/api/client-portal-auth/*`, `/api/portal/projects`, `/api/portal/files`, `/api/portal/proposals`, `/api/portal/meetings`, `/api/portal/financial-summary` |
+| Billing/Export | `/api/checkout/session`, `/api/checkout/sync-session`, `/api/checkout/portal`, `/api/checkout/invoices`, `/api/export/*`, `/api/plans` |
 
 ### Autenticação
 
@@ -955,7 +992,7 @@ POST /api/video-reviews/:id/share
   "success": true,
   "data": {
     "shareToken": "abc123xyz",
-    "shareUrl": "https://cenastudio-production.up.railway.app/review/abc123xyz"
+    "shareUrl": "https://cena-studio-prod.vercel.app/review/abc123xyz"
   }
 }
 ```
@@ -1299,7 +1336,7 @@ project_data = project_response.json()
 **Configuração:**
 ```bash
 # No painel Stripe
-Webhook URL: https://cenastudio-production.up.railway.app/api/checkout/webhook
+Webhook URL: https://cena-studio-prod.vercel.app/api/checkout/webhook
 Secret: whsec_...  # Configure em STRIPE_WEBHOOK_SECRET
 ```
 
@@ -1330,9 +1367,9 @@ Secret: whsec_...  # Configure em STRIPE_WEBHOOK_SECRET
 
 ## 📞 Suporte
 
-- Email: contato@cenastudio.com.br
-- GitHub Issues: [abrir issue](https://github.com/seu-usuario/frameai-director-correto/issues)
+- Email: cenastudio@atomicmail.io
+- GitHub: `cenastudio/Cenastudio`
 
 ---
 
-**Última atualização:** 30 de Junho de 2026
+**Última atualização:** 14 de agosto de 2026

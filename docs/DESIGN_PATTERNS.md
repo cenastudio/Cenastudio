@@ -2,6 +2,32 @@
 
 Padrões consolidados de UX/UI para manter consistência em todo o app.
 
+**Última atualização:** 2026-08-14
+
+## Fonte de verdade
+
+- Tokens globais vivem em `client/src/design-system/tokens.css`.
+- Tokens por plano vivem em `client/src/design-system/plan-tokens/*.css`.
+- Classes utilitárias antigas `frame-*` continuam aceitas quando já existem no
+  componente, mas novas decisões visuais devem consumir tokens ou classes do
+  design system.
+- Hex direto em componente novo só é aceitável quando o valor é dado do usuário,
+  anotação/canvas, HTML exportado ou teste de contraste. Para UI normal, crie ou
+  reutilize token.
+- Não crie `.md` de conclusão/status para ajustes visuais. Atualize este arquivo
+  para padrão de design e `docs/STATUS.md` para estado de tarefa.
+
+## Hierarquia e mobile
+
+- Uma tela deve ter apenas um nível de hierarquia visual dominante por vez.
+  Evite competir hero, cards grandes e barras de ação no mesmo viewport.
+- Mobile é requisito, não bônus: validar largura pequena antes de marcar tarefa
+  de UX como pronta.
+- Toolbars, grids, tabs e botões de ícone precisam ter dimensões estáveis para
+  evitar shift ao carregar labels, hover, loading ou dados longos.
+- Use ícones `lucide-react` em comandos comuns quando o projeto já tiver ícone
+  equivalente.
+
 ## 🎨 Cores e Contraste
 
 ### Tema Adaptativo

@@ -1,102 +1,101 @@
 # Cena Studio
 
-**Software de gestão para produtoras de vídeo e profissionais audiovisuais**
+**Software de gestao para produtoras de video e profissionais audiovisuais**
 
-🔒 **CÓDIGO PROPRIETÁRIO — TODOS OS DIREITOS RESERVADOS**
+**CODIGO PROPRIETARIO — TODOS OS DIREITOS RESERVADOS**
 
-[![Deploy Status](https://img.shields.io/badge/deploy-online-success)](https://cenastudio-production.up.railway.app)
+[![Deploy Status](https://img.shields.io/badge/deploy-online-success)](https://cena-studio-prod.vercel.app)
 
 ---
 
-## 📋 Sobre
+## Sobre
 
-Cena Studio é uma plataforma SaaS para gestão de produtoras de vídeo e
-profissionais audiovisuais solo (filmmakers, dronistas/FPV, editores,
-fotógrafos): do briefing comercial à entrega final, com ferramentas de IA
-para gerar documentos de produção.
+Cena Studio e uma plataforma SaaS para gestao de produtoras de video e
+profissionais audiovisuais solo: do briefing comercial a entrega final, com
+ferramentas de IA para gerar documentos de producao e apoiar a operacao.
 
-### Principais áreas
+## Producao Atual
 
-- **Produção** — Shot List (PDF pronto para set, tipos de plano
-  customizáveis), Timesheet (timer + cálculo de custo por taxa/hora +
-  calculadora de precificação por trabalho), Equipment Inventory,
-  Video Reviews (aprovação de cliente com comentários por timestamp em
-  link público).
-- **Comercial** — Clientes (CRM), Pipeline de oportunidades, Propostas
-  digitais com link compartilhável e aceite rastreado, Interações.
-- **Financeiro** — Orçamento por projeto (orçado vs. realizado),
-  lançamentos financeiros.
-- **Estúdio de IA** — 12 ferramentas (Roteiro, Decupagem, Callsheet,
-  Orçamento, Proposta, Contrato, Briefing, Moodboard, Checklist,
-  Cronograma, Relatório de Entrega, Assistente Livre).
-- **Analytics Premium** — dashboards customizáveis com widgets
-  (KPI, gráficos, tabela, funil, medidor) puxando dados reais do sistema.
-- **Admin** — gestão de usuários e assinaturas, suspensão de conta,
-  reset de senha, indicações com recompensa automática, processamento de
-  solicitações LGPD, audit log de ações administrativas.
+- **Deploy:** Vercel, projeto `cena-studio-prod`
+- **Dominio:** `https://cena-studio-prod.vercel.app`
+- **Repositorio:** `cenastudio/Cenastudio`, branch `main`
+- **Banco:** Supabase Postgres via Prisma
+- **Storage:** Supabase Storage e Cloudinary para fluxos de midia especificos
 
-### Stack
+Leia antes de mexer em deploy, banco ou variaveis:
+
+- [`AGENTS.md`](./AGENTS.md) — constituicao operacional do repo
+- [`docs/CONEXOES.md`](./docs/CONEXOES.md) — Vercel, Supabase, GitHub, storage,
+  IA, Stripe, Resend e ordem de bring-up
+- [`docs/STATUS.md`](./docs/STATUS.md) — estado vivo das features e proximas
+  tarefas
+- [`ARCHITECTURE.md`](./ARCHITECTURE.md) — ADRs e decisoes de arquitetura
+
+## Areas Implementadas
+
+- **Producao:** Shot List, tipos de plano, thumbnails, PDF, Timesheet, Budget,
+  DRE por projeto, Equipment Inventory, tarefas e Video Reviews.
+- **Comercial:** clientes, oportunidades, pipeline, propostas, reunioes,
+  interacoes e exportacao.
+- **Arquivos e cliente:** upload/listagem de arquivos, Portal do Cliente,
+  acesso publico a propostas/reviews e storage stats.
+- **IA:** Studio de IA com roteamento por criticidade e fallback de provedores.
+- **Analytics/Admin:** dashboards, relatorios, metricas, usuarios, planos,
+  auditoria, LGPD, referrals e uso de IA.
+- **Integracoes:** Stripe, Resend, Cloudinary, Supabase, GitHub OAuth opcional e
+  webhooks configuraveis.
+
+O estado detalhado por modulo fica em [`docs/STATUS.md`](./docs/STATUS.md).
+Nao use documentos historicos como fonte de verdade.
+
+## Stack
 
 - **Frontend:** React + TypeScript + Vite + Tailwind CSS + Radix UI
 - **Backend:** Express + TypeScript + Prisma
-- **Banco de dados:** PostgreSQL (Railway)
-- **Storage de arquivos:** Cloudinary (thumbnails) + Supabase Storage
-  (uploads de projeto)
-- **IA:** OpenRouter (com cadeia de fallback de modelos), Anthropic
-  como alternativa
+- **Banco de dados:** Supabase Postgres
+- **Deploy:** Vercel
+- **IA:** OpenRouter/NVIDIA/Anthropic via camada de servico
 - **Pagamentos:** Stripe
-- **Deploy:** Railway (Nixpacks)
+- **E-mail:** Resend
 
-Ver [`ARCHITECTURE.md`](./ARCHITECTURE.md) para decisões de arquitetura
-detalhadas.
+## Desenvolvimento
 
----
+```bash
+npm install
+npm run check
+npm run test
+npm run build
+```
 
-## ⚖️ Licença e Propriedade Intelectual
+Para validar ambiente e banco:
 
-**Copyright © 2024–2026 Cena Studio. Todos os direitos reservados.**
+```bash
+npm run validate:env
+npm run smoke:prisma
+```
 
-Este software é **propriedade privada** e está protegido por leis de
-direitos autorais e propriedade intelectual do Brasil e tratados
-internacionais.
+## Licenca e Propriedade Intelectual
 
-### Proibições
+Copyright (c) 2024-2026 Cena Studio. Todos os direitos reservados.
 
-- Uso não autorizado deste código ou parte dele
-- Cópia, reprodução ou distribuição do código-fonte
-- Modificação ou criação de obras derivadas
-- Engenharia reversa, descompilação ou desmontagem
-- Comercialização ou sublicenciamento
+Este software e propriedade privada e esta protegido por leis de direitos
+autorais e propriedade intelectual do Brasil e tratados internacionais.
+
+## Proibicoes
+
+- Uso nao autorizado deste codigo ou parte dele
+- Copia, reproducao ou distribuicao do codigo-fonte
+- Modificacao ou criacao de obras derivadas
+- Engenharia reversa, descompilacao ou desmontagem
+- Comercializacao ou sublicenciamento
 - Uso em produtos concorrentes
 
-O uso não autorizado pode resultar em ações judiciais cíveis por
-violação de propriedade intelectual, indenizações, medidas cautelares e
-processos criminais conforme a Lei nº 9.609/98 (Lei do Software).
-
----
-
-## 🔐 Acesso ao Código
-
-Este repositório é **privado** e o acesso é restrito a desenvolvedores
-autorizados e membros da equipe interna. Qualquer acesso não autorizado
-será tratado como violação de segurança.
-
----
-
-## 📞 Contato
+## Contato
 
 **Cena Studio**
 
-🌐 https://cenastudio.dev
-📧 cenastudio@atomicmail.io
+- Site: https://cenastudio.dev
+- Email: cenastudio@atomicmail.io
 
----
-
-## 🚨 Aviso Legal
-
-Este software é fornecido "como está", sem garantias de qualquer tipo.
-A Cena Studio se reserva o direito de modificar ou descontinuar o
-software a qualquer momento.
-
-**Versão atual:** 1.0.0
-**Última atualização:** 14 de julho de 2026
+**Versao atual:** 1.0.0
+**Ultima atualizacao:** 14 de agosto de 2026
