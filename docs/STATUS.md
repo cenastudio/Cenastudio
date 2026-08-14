@@ -18,8 +18,13 @@
 - **Correção pós-migração:** sequences do Postgres foram realinhadas em produção
   depois de erros `Unique constraint failed on id` em notifications, sessions e
   workspaces. Script permanente: `npm run db:reset-sequences`.
-- **Risco aberto:** RLS ainda precisa de política completa antes de ser ativado
-  com segurança nas tabelas públicas do Supabase.
+- **RLS Supabase:** aplicado em 2026-08-14 para 48/48 tabelas públicas, sem
+  `FORCE ROW LEVEL SECURITY`. A Data API pública mantém leitura apenas de
+  `tools` e `plans`; `anon` não lê nem insere em `users`; `service_role` continua
+  acessando dados administrativos. Advisor de segurança do Supabase: sem issues.
+  Migração versionada:
+  `supabase/migrations/20260814142142_harden_public_rls.sql`; rollback de
+  emergência: `scripts/sql/rollback-supabase-public-rls.sql`.
 
 ## 1. Estado atual por módulo/feature
 
