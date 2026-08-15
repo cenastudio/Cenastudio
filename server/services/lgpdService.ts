@@ -14,11 +14,16 @@ import { createClient } from "@supabase/supabase-js";
 import { db } from "../models/db.js";
 import { prisma, shouldUsePrisma } from "../models/prisma.js";
 import { AppError } from "../middleware/errorHandler.js";
-import { sendEmail, isEmailConfigured } from "./emailService.js";
+import { isEmailConfigured } from "./emailService.js";
 import { cancelSubscriptionForErasure } from "./stripeService.js";
 import { jsonSafe } from "../utils/prismaSerialization.js";
 import { logger } from "../utils/logger.js";
 import { SITE_CONFIG } from "@shared/site";
+import {
+  sendPrivacyRequestReceivedEmail,
+  sendPrivacyRequestResolvedEmail,
+} from "./privacyEmailService.js";
+import type { TransactionalEmailLocale } from "./transactionalEmail.js";
 
 // ────────────────────────────────────────────────────────────────
 // TYPES
@@ -39,6 +44,37 @@ export interface PrivacySettings {
 }
 
 export type LgpdRequestType = "copy" | "correct" | "delete";
+
+interface PrivacyEmailRecipient {
+  email: string;
+  name: string | null;
+  locale: TransactionalEmailLocale;
+}
+
+function localeFromRegionalPrefs(value: unknown): TransactionalEmailLocale {
+  if (value && typeof value === "object" && (value as { locale?: unknown }).locale === "en") return "en";
+  if (typeof value === "string") {
+    try {
+      return (JSON.parse(value) as { locale?: unknown }).locale === "en" ? "en" : "pt";
+    } catch {
+      return "pt";
+    }
+  }
+  return "pt";
+}
+
+function getClientOrigin(): string {
+  return process.env.CLIENT_ORIGIN || "http://localhost:5173";
+}
+
+function parseRequestCreatedAt(value: string): Date {
+  // Prisma returns ISO 8601. SQLite's datetime('now') returns a UTC timestamp
+  // without the `Z`, which JavaScript otherwise treats as local time.
+  const normalized = value.includes("T") || /[zZ]$/.test(value)
+    ? value
+    : `${value.replace(" ", "T")}Z`;
+  return new Date(normalized);
+}
 
 // ────────────────────────────────────────────────────────────────
 // TRANSPARÊNCIA DE DADOS (LGPD Art. 9)
@@ -345,7 +381,8 @@ export async function createLgpdRequest(
   userId: number,
   type: LgpdRequestType,
   userEmail: string,
-  userName: string | null
+  userName: string | null,
+  locale: TransactionalEmailLocale = "pt",
 ): Promise<{ requestId: string; estimatedDays: number }> {
   // Gerar ID único
   const requestId = `LGPD-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
@@ -370,49 +407,19 @@ export async function createLgpdRequest(
     ).run(requestId, userId, type);
   }
 
-  // Enviar email de confirmação ao usuário (best-effort)
+  // E-mail transacional é best-effort: o pedido já foi persistido e não pode
+  // depender da disponibilidade do provedor para existir.
   if (isEmailConfigured) {
-    const typeLabels = {
-      copy: "Cópia dos Dados",
-      correct: "Correção de Dados",
-      delete: "Exclusão de Dados",
-    };
-
-    const typeDescriptions = {
-      copy: `Você receberá um arquivo JSON com todos os seus dados em até ${estimatedDays} dias, conforme LGPD Art. 18, II.`,
-      correct: `Entraremos em contato em até ${estimatedDays} dias úteis para corrigir os dados informados, conforme LGPD Art. 18, III.`,
-      delete: `Seus dados serão permanentemente excluídos em até ${estimatedDays} dias úteis, conforme LGPD Art. 18, VI. Esta ação é irreversível.`,
-    };
-
-    sendEmail({
+    sendPrivacyRequestReceivedEmail({
       to: userEmail,
-      subject: `Solicitação LGPD Recebida: ${typeLabels[type]} — ${SITE_CONFIG.brandName}`,
-      html: `
-        <p>Olá${userName ? ` ${userName}` : ""},</p>
-        <p>Recebemos sua solicitação LGPD de <strong>${typeLabels[type]}</strong>.</p>
-        <p><strong>Protocolo:</strong> ${requestId}</p>
-        <p>${typeDescriptions[type]}</p>
-        <hr/>
-        <p style="color:#888;font-size:0.9em">
-          Esta solicitação está em conformidade com a Lei nº 13.709/2018 (LGPD) e GDPR.<br/>
-          Para dúvidas, entre em contato: privacidade@cenastudio.com.br
-        </p>
-      `,
-      text: `
-Solicitação LGPD Recebida
-
-Olá${userName ? ` ${userName}` : ""},
-
-Recebemos sua solicitação de ${typeLabels[type]}.
-Protocolo: ${requestId}
-
-${typeDescriptions[type]}
-
-Esta solicitação está em conformidade com a LGPD (Lei nº 13.709/2018) e GDPR.
-Dúvidas: privacidade@cenastudio.com.br
-      `.trim(),
+      name: userName,
+      locale,
+      type,
+      requestId,
+      estimatedDays,
+      appUrl: getClientOrigin(),
     }).catch((err) => {
-      console.error(`[lgpdService] Falha ao enviar email de confirmação:`, err);
+      logger.warn({ err, requestId }, "[LGPD] Falha ao enviar e-mail de confirmação");
     });
   }
 
@@ -505,6 +512,31 @@ interface LgpdRequestRow {
   type: LgpdRequestType;
   status: string;
   createdAt: string;
+}
+
+async function getPrivacyEmailRecipient(userId: number): Promise<PrivacyEmailRecipient | null> {
+  if (shouldUsePrisma) {
+    const user = await prisma.user.findUnique({
+      where: { id: BigInt(userId) },
+      select: { email: true, name: true, regionalPrefs: true },
+    });
+    if (!user) return null;
+    return {
+      email: user.email,
+      name: user.name,
+      locale: localeFromRegionalPrefs(user.regionalPrefs),
+    };
+  }
+
+  const row = db.prepare(
+    "SELECT email, name, regional_prefs FROM users WHERE id = ?",
+  ).get(userId) as { email: string; name: string | null; regional_prefs: string | null } | undefined;
+  if (!row?.email) return null;
+  return {
+    email: row.email,
+    name: row.name,
+    locale: localeFromRegionalPrefs(row.regional_prefs),
+  };
 }
 
 async function getLgpdRequest(requestId: string): Promise<LgpdRequestRow | null> {
@@ -685,9 +717,12 @@ export async function processLgpdRequest(
 ): Promise<void> {
   const request = await getLgpdRequest(requestId);
   if (!request) throw new AppError("Solicitação LGPD não encontrada.", 404);
+  // Capture destination before an eventual anonymization removes it from the
+  // database. It is only held in memory long enough for the final notice.
+  const recipient = await getPrivacyEmailRecipient(request.userId);
 
   if (request.type === "delete" && status === "completed") {
-    const createdMs = new Date(request.createdAt).getTime();
+    const createdMs = parseRequestCreatedAt(request.createdAt).getTime();
     const readyMs = createdMs + DELETE_GRACE_DAYS * 24 * 60 * 60 * 1000;
     if (Number.isFinite(createdMs) && Date.now() < readyMs) {
       const readyDate = new Date(readyMs).toISOString().slice(0, 10);
@@ -718,6 +753,20 @@ export async function processLgpdRequest(
   }
 
   logger.info({ requestId, status, processedBy, type: request.type }, "[LGPD] Solicitação processada");
+
+  if (recipient && isEmailConfigured) {
+    sendPrivacyRequestResolvedEmail({
+      to: recipient.email,
+      name: recipient.name,
+      locale: recipient.locale,
+      type: request.type,
+      status,
+      requestId,
+      appUrl: getClientOrigin(),
+    }).catch((err) => {
+      logger.warn({ err, requestId, status }, "[LGPD] Falha ao enviar e-mail de resolução");
+    });
+  }
 }
 
 // ────────────────────────────────────────────────────────────────

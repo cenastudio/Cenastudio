@@ -898,20 +898,40 @@ export async function resetPassword(token: string, newPassword: string) {
   if (shouldUsePrisma) {
     const row = await prisma.resetToken.findFirst({
       where: { token, used: false, expiresAt: { gt: new Date() } },
+      include: {
+        user: {
+          select: { email: true, regionalPrefs: true, securityAlerts: true },
+        },
+      },
     });
     if (!row) throw new AppError("Token inválido ou expirado.", 400);
     await prisma.$transaction([
       prisma.user.update({ where: { id: row.userId }, data: { passwordHash: hashPassword(newPassword) } }),
       prisma.resetToken.update({ where: { id: row.id }, data: { used: true } }),
     ]);
-    return;
+    const locale: "pt" | "en" = (row.user.regionalPrefs as { locale?: string } | null)?.locale === "en" ? "en" : "pt";
+    const alerts = row.user.securityAlerts as { emailOnPasswordChange?: boolean } | null;
+    return {
+      email: row.user.email,
+      locale,
+      notifyPasswordChange: alerts?.emailOnPasswordChange !== false,
+    };
   }
 
   const row = db
     .prepare(
-      "SELECT * FROM reset_tokens WHERE token = ? AND used = 0 AND expires_at > datetime('now')",
+      `SELECT rt.id, rt.user_id, u.email, u.regional_prefs, u.security_alerts
+       FROM reset_tokens rt
+       INNER JOIN users u ON u.id = rt.user_id
+       WHERE rt.token = ? AND rt.used = 0 AND rt.expires_at > datetime('now')`,
     )
-    .get(token) as { id: number; user_id: number } | undefined;
+    .get(token) as {
+      id: number;
+      user_id: number;
+      email: string;
+      regional_prefs: string | null;
+      security_alerts: string | null;
+    } | undefined;
 
   if (!row) {
     throw new AppError("Token inválido ou expirado.", 400);
@@ -920,6 +940,20 @@ export async function resetPassword(token: string, newPassword: string) {
   const hash = hashPassword(newPassword);
   db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(hash, row.user_id);
   db.prepare("UPDATE reset_tokens SET used = 1 WHERE id = ?").run(row.id);
+
+  let locale: "pt" | "en" = "pt";
+  let notifyPasswordChange = true;
+  try {
+    const regionalPrefs = row.regional_prefs ? JSON.parse(row.regional_prefs) as { locale?: string } : null;
+    const securityAlerts = row.security_alerts ? JSON.parse(row.security_alerts) as { emailOnPasswordChange?: boolean } : null;
+    locale = regionalPrefs?.locale === "en" ? "en" : "pt";
+    notifyPasswordChange = securityAlerts?.emailOnPasswordChange !== false;
+  } catch {
+    // Existing installs can contain malformed legacy preferences. Keep the
+    // security notification enabled rather than silently suppressing it.
+  }
+
+  return { email: row.email, locale, notifyPasswordChange };
 }
 
 export async function countUsers(): Promise<number> {

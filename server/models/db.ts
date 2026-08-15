@@ -69,16 +69,30 @@ function ensureUserColumns() {
   if (!userCols.includes("must_reset_password")) {
     db.prepare("ALTER TABLE users ADD COLUMN must_reset_password INTEGER NOT NULL DEFAULT 0").run();
   }
-  // Security columns (2FA, LGPD privacy) — read/written by authService,
-  // twoFactorService and lgpdService. The Postgres/Prisma schema has these;
-  // the SQLite fallback must add them or getUserById() fails with
-  // "no such column: two_factor_enabled".
+  // Auth, security and preference fields must stay in sync with the Prisma
+  // schema. E2E deliberately exercises this SQLite fallback, so each field
+  // needs an additive migration for databases created by older versions.
   if (!userCols.includes("two_factor_enabled")) {
     db.prepare("ALTER TABLE users ADD COLUMN two_factor_enabled INTEGER NOT NULL DEFAULT 0").run();
   }
   if (!userCols.includes("two_factor_secret")) db.prepare("ALTER TABLE users ADD COLUMN two_factor_secret TEXT").run();
   if (!userCols.includes("backup_codes")) db.prepare("ALTER TABLE users ADD COLUMN backup_codes TEXT").run();
   if (!userCols.includes("privacy_settings")) db.prepare("ALTER TABLE users ADD COLUMN privacy_settings TEXT").run();
+  if (!userCols.includes("security_alerts")) {
+    db.prepare("ALTER TABLE users ADD COLUMN security_alerts TEXT NOT NULL DEFAULT '{\"emailOnNewLogin\":true,\"emailOnPasswordChange\":true,\"emailOnNewDevice\":true}'").run();
+  }
+  if (!userCols.includes("notification_prefs")) {
+    db.prepare("ALTER TABLE users ADD COLUMN notification_prefs TEXT NOT NULL DEFAULT '{\"newComments\":true,\"clientUploads\":true,\"projectDeadlines\":true,\"weeklyNewsletter\":false,\"mentions\":true,\"newProjects\":false,\"reviewApproved\":true,\"paymentSuccess\":true}'").run();
+  }
+  if (!userCols.includes("regional_prefs")) {
+    db.prepare("ALTER TABLE users ADD COLUMN regional_prefs TEXT NOT NULL DEFAULT '{\"locale\":\"pt\",\"timezone\":\"America/Sao_Paulo\",\"dateFormat\":\"DD/MM/YYYY\",\"currency\":\"BRL\"}'").run();
+  }
+  if (!userCols.includes("visual_prefs")) {
+    db.prepare("ALTER TABLE users ADD COLUMN visual_prefs TEXT NOT NULL DEFAULT '{\"themeMode\":\"dark\",\"density\":\"normal\",\"fontFamily\":\"inter\",\"reduceAnimations\":false}'").run();
+  }
+  if (!userCols.includes("behavior_prefs")) {
+    db.prepare("ALTER TABLE users ADD COLUMN behavior_prefs TEXT NOT NULL DEFAULT '{\"defaultProjectSort\":\"recent\",\"defaultView\":\"grid\",\"autoplayVideos\":true}'").run();
+  }
   if (!userCols.includes("disabled")) {
     db.prepare("ALTER TABLE users ADD COLUMN disabled INTEGER NOT NULL DEFAULT 0").run();
   }
@@ -405,6 +419,9 @@ function createIndexes() {
     "CREATE INDEX IF NOT EXISTS idx_client_portal_access_client_id ON client_portal_access(client_id)",
     "CREATE INDEX IF NOT EXISTS idx_client_portal_access_email ON client_portal_access(email)",
     "CREATE INDEX IF NOT EXISTS idx_reset_tokens_token ON reset_tokens(token)",
+    "CREATE INDEX IF NOT EXISTS idx_lgpd_requests_user_id ON lgpd_requests(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_lgpd_requests_status ON lgpd_requests(status)",
+    "CREATE INDEX IF NOT EXISTS idx_lgpd_requests_created_at ON lgpd_requests(created_at)",
     "CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_studio_settings_user_id ON studio_settings(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_workspaces_owner_user_id ON workspaces(owner_user_id)",
@@ -516,6 +533,17 @@ export async function initDatabase() {
       token TEXT NOT NULL UNIQUE,
       expires_at TEXT NOT NULL,
       used INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS lgpd_requests (
+      id TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      type TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      notes TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      processed_at TEXT,
+      processed_by TEXT
     );
 
     CREATE TABLE IF NOT EXISTS projects (

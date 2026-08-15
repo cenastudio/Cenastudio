@@ -25,6 +25,22 @@
   Migração versionada:
   `supabase/migrations/20260814142142_harden_public_rls.sql`; rollback de
   emergência: `scripts/sql/rollback-supabase-public-rls.sql`.
+- **E-mail transacional:** cadastro agora dispara boas-vindas, recuperação de
+  senha envia link de uso único e a troca efetiva de senha dispara alerta de
+  segurança, respeitando a preferência `emailOnPasswordChange`. Solicitações
+  LGPD agora recebem confirmação com protocolo e seu processamento envia
+  atualização; a exclusão confirma o término usando o endereço capturado só
+  em memória antes da anonimização. Todos usam o renderer dark comum em PT/EN,
+  com HTML seguro e fallback texto puro. A matriz de ciclo de conta (criação
+  até exclusão) está em
+  `.kiro/specs/email-transacional-cliente/`; ela separa eventos já reais de
+  automações que ainda exigem consentimento, scheduler ou idempotência de
+  cobrança. Testes do provedor e dos três fluxos passaram em 2026-08-14; um
+  envio sandbox foi aceito pela Resend. **Ainda não está habilitado para
+  clientes em produção:** a Vercel não contém `RESEND_API_KEY` nem
+  `EMAIL_FROM`, e o remetente sandbox só aceita o e-mail da conta Resend.
+  Gatilho: verificar domínio próprio na Resend, configurar as duas variáveis
+  na Vercel e repetir o teste de entrega externo.
 
 ## 1. Estado atual por módulo/feature
 
@@ -66,7 +82,7 @@ verificar, está dito explicitamente.
 - **Timesheet:** implementado. `/timesheets`, model `TimeEntry`.
 - **Google Calendar:** rota `/calendar` registrada. A integração real com a API do
   Google **não foi verificada** — só a existência da rota.
-- **Portal do Cliente:** MVP funcional em evolução (spec `portal-do-cliente/`).
+- **Portal do Cliente:** MVP funcional em evolução (spec `portal-do-cliente-OK/`).
   Rotas `/portal` e `/client-portal-auth`, model `ClientPortalAccess`, auth
   isolada, endpoints de projetos/arquivos/propostas/reuniões/resumo financeiro,
   app `/portal/*` e central de acesso em `ClientDetail.tsx`. Em 2026-08-14 o
@@ -127,6 +143,11 @@ verificar, está dito explicitamente.
   — custavam uma volta de latência cada antes de cair no degrau seguinte.
   Corrigidos. Gatilho: ao mexer em roteamento de modelo, reconferir contra
   `GET https://openrouter.ai/api/v1/models`.
+- **Gatilho: domínio próprio e descoberta no Google.** Quando o domínio for
+  comprado, apontado à Vercel e definido em `VITE_PUBLIC_URL`, verificar o
+  domínio no Google Search Console, publicar/enviar sitemap e robots, conferir
+  canonicals no domínio final e inspecionar as URLs públicas. Não fazer antes:
+  o domínio canônico ainda é o da Vercel.
 - **Rotação de credenciais — ADIADA por decisão do operador (2026-07-26).**
   Inventário completo em `docs/CREDENCIAIS_PARA_ROTACIONAR.md` (não versionado) e
   em `.private/CREDENCIAIS_ROTACIONAR.md` (procedência + valores). Nada foi
@@ -150,19 +171,21 @@ verificar, está dito explicitamente.
   fora da raiz → conferir se não está sendo engolido antes de assumir que foi
   versionado.
 
-## 4. Próximas tarefas
+## 4. Varredura de specs e próximas tarefas
 
-Ordem de execução combinada. O conteúdo de cada frente vive na spec, não aqui.
+O conteúdo de cada frente vive na spec. A varredura abaixo foi cruzada contra o
+código, testes e build atuais em 2026-08-14; um sufixo `-OK` só é aplicado quando
+nenhum item real permanece aberto.
 
-1. `.kiro/specs/landing-features-implementation/` — **58 de 58 tasks feitas**.
-   Tasks 7.1 a 7.4 concluídas em 2026-08-14 com validação local.
-2. `.kiro/specs/00-fundacao-limpeza-e-documentacao/` — **24 de 24 tasks feitas**.
-   Concluída em 2026-08-14. Documentos de entrada revisados contra o runtime
-   real: `README.md`, `COMO-O-SISTEMA-FUNCIONA.md`, `API_GUIDE.md`,
-   `docs/CONEXOES.md`, `docs/DESIGN_PATTERNS.md` e `AGENTS.md`. Produção
-   canônica: GitHub `cenastudio/Cenastudio` → Vercel `cena-studio-prod` →
-   Supabase Postgres. Railway fica apenas como histórico/legado.
-3. `.kiro/specs/auditoria-ux-2026-07/` — **30 de 47 tasks feitas**. Fase A
+**Concluídas (`-OK`):** `00-fundacao-limpeza-e-documentacao`,
+`client-hub-connected-workflows`, `dre-por-projeto`,
+`fase-1-testes-uso-real`, `fase-2-layout-mobile-e-tabs`,
+`landing-features-implementation`, `onboarding-primeiro-fluxo`,
+`portal-do-cliente` e `team-task-delegation`.
+
+1. `.kiro/specs/auditoria-ux-2026-07/` — implementação e verificação local
+   encerradas; resta apenas E7, validar metadata com crawlers externos em um
+   preview ou deployment público. Fase A
    avançou em 2026-08-14: delete de usuário voltou a exigir digitação do e-mail,
    teste mobile de touch target agora renderiza componente real, e Comercial
    mostra 5 abas diretas em desktop/tablet com dropdown mobile acessível em até
@@ -184,14 +207,49 @@ Ordem de execução combinada. O conteúdo de cada frente vive na spec, não aqu
    `npm run test -- client/src/test/ProjectNav.test.tsx`,
    `npm run test -- client/src/test/ProjectNav.test.tsx client/src/test/responsive-tabs.test.tsx client/src/test/appImport.test.ts`,
    `npx playwright test tests/e2e/commercial-nav-visibility.spec.ts` e
-   `npx playwright test --grep "@fase1"` (última rodada após Fase C:
+   `npx playwright test --grep "@fase1"` (duas execuções isoladas com
    6 passed, 6 skipped). Fase C avançou em 2026-08-14: `CommercialOverview`
    compactou os steps do fluxo para não competir com as tabs principais;
    `Studio` foi auditado nos componentes reais (`StudioShell`,
    `ProjectTimeline`, `ActionToolbar`), com select mobile para etapa e toolbar
-   com controles `min-h-11`. Próxima task: C6 ou Fase D, conforme decisão sobre
-   rodar a suíte Playwright completa.
-4. `.kiro/specs/portal-do-cliente/` — **MVP UX reforçado em 2026-08-14**.
+   com controles `min-h-11`. A suíte Playwright completa passou em 2026-08-14
+   (33 passed, 9 skipped). Fase D foi concluída: os 40 caminhos inicialmente
+   encontrados foram migrados para tokens, e cores que são dados de canvas,
+   seletor nativo ou HTML exportado foram centralizadas em
+   `client/src/design-system/color-presets.ts`. `npm run check` agora bloqueia
+   hex literal em `client/src/components` e `client/src/pages`; a regra foi
+   testada com fixture propositalmente inválida. `npm run check` e a suíte
+   Vitest completa passaram. Fase E avançou: metadata e canonical dinâmicos
+   existem no cliente para landing, review, proposta e reunião; Vercel agora
+   pode responder links públicos com title, description, Open Graph e Twitter
+   antes de o JavaScript carregar. A imagem social deixou de usar onboarding e
+   passou a mostrar o centro de projeto. Links compartilhados permanecem
+   `noindex` e não vazam detalhes de links expirados ou revogados. `npm run check`,
+   testes direcionados e `npm run build` passaram. Falta apenas E7, a validação
+   em preview publicado com crawlers externos.
+2. `.kiro/specs/landing-conversao-produto/` — implementação local encerrada;
+   resta somente 3.5, validação de crawler externo após deployment. A landing
+   agora conta o fluxo Comercial → Projeto → Produção → Aprovação → Entrega,
+   com cada etapa ligada a uma rota real. O catálogo de IA aparece por intenção
+   e os planos não usam mais carrossel horizontal: Free, Pro e Studio formam a
+   decisão principal; White-label e Enterprise são uma revelação discreta para
+   quem busca operação sob medida. No mobile, o hero privilegia os dois CTAs,
+   sem screenshot escuro comprimido nem repetição do bloco de fluxo. A revisão
+   manual confirmou 390px sem overflow, controles de 44px ou mais e paridade
+   visual de tablet/desktop. `npm run check`, 6 testes direcionados e
+   `npm run build` passaram nesta rodada.
+3. `.kiro/specs/qualidade-raciocinio-ia/` — tasks 14 e 15 (modelo high) foram
+   concluídas. As tasks 16 a 18 continuam abertas: exigem dados reais de uso,
+   reuso e avaliação que o schema e os dados locais ainda não comprovam.
+4. `.kiro/specs/fase-3-white-label/` — duas pendências reais e adiadas:
+   interpolação `{{brand}}` em i18n e upload de logo por `POST
+   /api/studio-settings/logo`. A configuração por ambiente existente continua
+   funcional, mas não substitui esses requisitos.
+5. `.kiro/specs/features-criticas-gap-analysis/` — Timesheet e calendário têm
+   implementação parcial, mas faltam o fluxo de timer/global rate/exportação e
+   a integração Google OAuth/Calendar; a validação final ainda cita Railway e
+   precisa ser replanejada para Vercel + Supabase antes de ser considerada feita.
+6. `.kiro/specs/portal-do-cliente-OK/` — **MVP UX reforçado em 2026-08-14**.
    Backend/auth/dados já cobertos por testes dedicados; frontend do portal foi
    reorganizado para funcionar como central real do cliente, com dashboard,
    reuniões, arquivos, propostas, projetos, conta e gestão de acesso pela
@@ -232,7 +290,7 @@ Tarefas soltas identificadas na verificação, sem spec própria ainda:
   `SUPABASE_DATABASE_URL`, mas ainda faltam variáveis como `MAX_UPLOAD_SIZE_MB`,
   `LGPD_DELETE_GRACE_DAYS` e os `STRIPE_PRICE_*_ANNUAL`.
 - ~~Conferir a documentação de entrada contra o código (Etapas 4.1–4.3 da spec
-  `00-fundacao-limpeza-e-documentacao/`)~~ — **feito em 2026-08-14.**
+  `00-fundacao-limpeza-e-documentacao-OK/`)~~ — **feito em 2026-08-14.**
   `README.md` e `COMO-O-SISTEMA-FUNCIONA.md` foram corrigidos para Vercel +
   Supabase; `API_GUIDE.md` recebeu base URL atual e mapa de rotas conferido
   contra `server/router.ts`, `server/routes/*` e webhook Stripe em
@@ -366,8 +424,9 @@ paralelo ao do app, sem nenhum registro em `ARCHITECTURE.md`:
 request, em vez de aceitar token sem linha).
 
 **Resolvido:** registrado como **ADR-012** em `ARCHITECTURE.md` com status
-`Proposed` — não `Aceito`, porque a spec `portal-do-cliente/` segue ativa e o
-código ainda não foi commitado. Promover a `Aceito` ao concluir a spec.
+`Aceito` — a spec `portal-do-cliente-OK/` foi encerrada após validação da
+implementação. A mitigação de token confusion permanece como pendência de
+segurança independente.
 
 Pendência de segurança derivada, ainda não aplicada (ver Seção 4): o
 `authenticate` do app não checa a claim `type`. Um token de portal só é rejeitado

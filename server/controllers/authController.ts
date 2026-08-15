@@ -7,8 +7,12 @@ import {
 } from "../middleware/authenticate.js";
 import * as authService from "../services/authService.js";
 import { isGitHubAuthConfigured } from "../config/passport.js";
-import { sendEmail, isEmailConfigured } from "../services/emailService.js";
-import { SITE_CONFIG } from "@shared/site";
+import { isEmailConfigured } from "../services/emailService.js";
+import {
+  sendAccountCreatedEmail,
+  sendPasswordChangedEmail,
+  sendPasswordResetEmail,
+} from "../services/authEmailService.js";
 import { trackSession, hashToken, revokeSession } from "../services/sessionService.js";
 import { db } from "../models/db.js";
 import { prisma, shouldUsePrisma } from "../models/prisma.js";
@@ -70,6 +74,20 @@ export const register: RequestHandler = async (req, res, next) => {
     res.cookie(COOKIE_NAME, token, cookieOptions);
     trackSession(user.id, token, req.headers["user-agent"], req.ip);
 
+    if (isEmailConfigured) {
+      try {
+        await sendAccountCreatedEmail({
+          to: user.email,
+          name: user.name,
+          locale: await authService.getUserLocaleByEmail(user.email),
+          planId: desiredPlan === "studio" ? "studio" : "pro",
+          appUrl: getClientOrigin(),
+        });
+      } catch (error) {
+        console.error("[register] Falha ao enviar email de boas-vindas:", error instanceof Error ? error.message : error);
+      }
+    }
+
     // Track referral conversion if code provided
     if (referralCode && typeof referralCode === 'string') {
       try {
@@ -103,30 +121,10 @@ export const forgotPassword: RequestHandler = async (req, res, next) => {
       // not always Portuguese. Looking this up doesn't leak anything to the
       // caller: it's only used for the email we already know we're sending.
       const locale = await authService.getUserLocaleByEmail(email);
-      const copy = locale === "en"
-        ? {
-          subject: `Password reset — ${SITE_CONFIG.brandName}`,
-          html: `
-            <p>We received a request to reset your password.</p>
-            <p><a href="${resetUrl}">Click here to create a new password</a></p>
-            <p>This link expires in 1 hour. If you didn't request this, ignore this email.</p>
-          `,
-          text: `Reset your password: ${resetUrl} (expires in 1 hour)`,
-        }
-        : {
-          subject: `Redefinição de senha — ${SITE_CONFIG.brandName}`,
-          html: `
-            <p>Recebemos uma solicitação para redefinir sua senha.</p>
-            <p><a href="${resetUrl}">Clique aqui para criar uma nova senha</a></p>
-            <p>Este link expira em 1 hora. Se você não solicitou isso, ignore este email.</p>
-          `,
-          text: `Redefina sua senha: ${resetUrl} (expira em 1 hora)`,
-        };
-      sendEmail({
+      sendPasswordResetEmail({
         to: email,
-        subject: copy.subject,
-        html: copy.html,
-        text: copy.text,
+        locale,
+        resetUrl,
       }).catch((err) => {
         console.error("[forgotPassword] Falha ao enviar email:", err instanceof Error ? err.message : err);
       });
@@ -143,7 +141,18 @@ export const forgotPassword: RequestHandler = async (req, res, next) => {
 
 export const resetPassword: RequestHandler = async (req, res, next) => {
   try {
-    await authService.resetPassword(req.body.token, req.body.password);
+    const reset = await authService.resetPassword(req.body.token, req.body.password);
+    if (reset.notifyPasswordChange && isEmailConfigured) {
+      try {
+        await sendPasswordChangedEmail({
+          to: reset.email,
+          locale: reset.locale,
+          appUrl: getClientOrigin(),
+        });
+      } catch (error) {
+        console.error("[resetPassword] Falha ao enviar alerta de segurança:", error instanceof Error ? error.message : error);
+      }
+    }
     res.json({
       success: true,
       data: { message: "Senha redefinida com sucesso." },
@@ -364,11 +373,13 @@ export const createLgpdRequest: RequestHandler = async (req, res, next) => {
       throw new AppError("type deve ser 'copy', 'correct' ou 'delete'", 400);
     }
 
+    const locale = await authService.getUserLocaleByEmail(req.user.email);
     const result = await lgpdService.createLgpdRequest(
       req.user.id,
       type as lgpdService.LgpdRequestType,
       req.user.email,
-      req.user.name || null
+      req.user.name || null,
+      locale,
     );
 
     res.status(201).json({ success: true, data: result });

@@ -152,15 +152,28 @@ funciona.
 
 ## 6. Resend — e-mail
 
-**Faz:** todo envio transacional (`server/services/emailService.ts`).
+**Faz:** todo envio transacional (`server/services/emailService.ts`), incluindo
+boas-vindas após cadastro, link de redefinição de senha, alerta após troca de
+senha, contato e convites de reunião.
 
 **Não faz:** nada se `RESEND_API_KEY` estiver ausente. O código expõe
 `isEmailConfigured` e lança erro explícito em vez de falhar silenciosamente —
 ou seja, ausência de e-mail não derruba o app, mas derruba o fluxo que depende
 dele.
 
-**Variáveis:** `RESEND_API_KEY`, `EMAIL_FROM` (default cai em
-`onboarding@resend.dev`, que só serve para teste).
+**Variáveis:** `RESEND_API_KEY`, `EMAIL_FROM`.
+
+**Remetente:** `onboarding@resend.dev` é apenas sandbox: a Resend aceita envio
+só para o e-mail da própria conta. Para entregar a clientes, verificar um
+domínio próprio em Resend e configurar `EMAIL_FROM` como, por exemplo,
+`Cena Studio <contato@seudominio.com>`. O domínio temporário da Vercel serve
+para os links do app, mas não pode ser remetente de e-mail.
+
+**Estado conferido em 2026-08-14:** a chave local e o sandbox responderam com
+aceite do provedor; a Vercel de produção ainda não tem `RESEND_API_KEY` nem
+`EMAIL_FROM`. Até essas duas variáveis serem configuradas com um remetente
+verificado, o código preserva cadastro e troca de senha, mas não entrega e-mail
+ao cliente.
 
 ---
 
