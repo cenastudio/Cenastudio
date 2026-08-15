@@ -15,6 +15,7 @@
 > auditoria são deliberadamente ignorados; não são produto nem devem entrar em
 > commits. Após o push, o deploy GitHub/Vercel é automático; não houve
 > acompanhamento manual do deployment por decisão do operador.
+> O mapa visual completo de conexões foi consolidado em `docs/CONEXOES.md`.
 
 ## 0. Produção atual
 

@@ -7,6 +7,97 @@
 
 **Última atualização:** 2026-08-14
 
+## Mapa visual completo
+
+> **Linha cheia:** tráfego ou dado de runtime. **Linha pontilhada:**
+> configuração, deploy ou integração opcional. A fonte de verdade operacional
+> continua nas seções abaixo; este diagrama é o mapa para orientar leitura,
+> incidentes e onboarding de dev/agente.
+
+```mermaid
+flowchart TB
+  classDef actor fill:#171717,stroke:#e85002,color:#ffffff,stroke-width:2px
+  classDef app fill:#202020,stroke:#f08a4b,color:#ffffff,stroke-width:2px
+  classDef data fill:#12302a,stroke:#4fd1a5,color:#ffffff,stroke-width:2px
+  classDef external fill:#1f2937,stroke:#8aa4c8,color:#ffffff,stroke-width:2px
+  classDef ops fill:#30231a,stroke:#f0b24b,color:#ffffff,stroke-width:2px
+
+  subgraph people["Pessoas e superfícies"]
+    Producer["Produtora, admin e equipe"]:::actor
+    Client["Cliente da produtora\nPortal do Cliente"]:::actor
+    Visitor["Visitante\nLanding, proposta, review e reunião pública"]:::actor
+  end
+
+  subgraph vercel["Cena Studio na Vercel"]
+    Web["React + Vite\nLanding, app, portal e páginas públicas"]:::app
+    API["Express serverless API\nAuth, CRM, projetos, produção, financeiro,\nportal, arquivos, IA, LGPD e webhooks"]:::app
+    Guard["Guards de runtime\nCORS, launch guards, JWT e autorização"]:::app
+    Web --> API
+    API --> Guard
+  end
+
+  subgraph data["Dados de produção - Supabase"]
+    DB["Postgres via Prisma\nUsuários, workspaces, clientes, projetos,\npropostas, reviews, financeiro, sessões e auditoria"]:::data
+    Store["Supabase Storage\nArquivos de projeto e LGPD"]:::data
+    DB <--> Store
+  end
+
+  subgraph product["Serviços de produto conectados"]
+    AI["IA\nOpenRouter, Anthropic ou NVIDIA\ncom fallback por ferramenta"]:::external
+    Media["Cloudinary\nMídia e thumbnails"]:::external
+    Billing["Stripe\nCheckout, assinatura e webhooks"]:::external
+    Mail["Resend\nE-mails transacionais"]:::external
+    GitHubOAuth["GitHub OAuth\nLogin social opcional"]:::external
+    Outbound["Webhooks da produtora\nIntegrações externas"]:::external
+  end
+
+  subgraph delivery["Entrega, código e configuração"]
+    Dev["Dev/agente local\n.env ignorado + testes"]:::ops
+    Repo["GitHub\ncenastudio/Cenastudio - main"]:::ops
+    Vercel["Vercel\ncena-studio-prod\nvariáveis de produção"]:::ops
+    SupabaseConsole["Console Supabase\nMigrations, RLS e chaves"]:::ops
+    ResendConsole["Console Resend\nDomínio e remetente verificados"]:::ops
+  end
+
+  Producer --> Web
+  Client --> Web
+  Visitor --> Web
+  Web --> Guard
+  Guard <--> DB
+  API <--> DB
+  API <--> Store
+  API <--> AI
+  API <--> Media
+  API <--> Billing
+  Billing -->|"webhook assinado"| API
+  API --> Mail
+  API <--> GitHubOAuth
+  API --> Outbound
+
+  Dev -. "commit e push" .-> Repo
+  Repo -. "deploy automático" .-> Vercel
+  Vercel -. "serve Web e API" .-> Web
+  Vercel -. "SUPABASE_DATABASE_URL e chaves" .-> DB
+  SupabaseConsole -. "schema, RLS e storage" .-> DB
+  ResendConsole -. "RESEND_API_KEY e EMAIL_FROM" .-> Mail
+```
+
+### Como ler o mapa
+
+- **Autenticação principal:** o Cena usa JWT próprio emitido pela API; GitHub
+  OAuth é uma porta opcional de entrada. O Portal do Cliente tem cookie e
+  token próprios, mas a autorização continua no mesmo backend e banco.
+- **Dados:** Supabase Postgres é a fonte de verdade. Storage guarda arquivos;
+  Cloudinary complementa mídia e thumbnails, não substitui o banco.
+- **Experiência pública:** landing, links de proposta, review e reunião passam
+  pela mesma entrega Vercel, mas cada rota aplica o token/escopo apropriado.
+- **Integrações:** IA, Stripe, Resend, Cloudinary e webhooks são isolados por
+  serviço. Uma indisponibilidade não deve derrubar autenticação ou os dados
+  essenciais do studio.
+- **Configuração:** valores reais ficam somente nos consoles dos provedores e
+  nas variáveis da Vercel ou `.env` local ignorado. Nenhum segredo vive neste
+  documento ou no Git.
+
 ## Validação rápida
 
 ```bash
