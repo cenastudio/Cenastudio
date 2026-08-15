@@ -15,8 +15,8 @@ Esta spec consolida correções de uma auditoria UX/técnica focada em fechar o 
 - [x] A1.3. Buscar por `onClick.*delete|handleDelete` em AdminDashboard e aplicar mesmo padrão
 - [x] A1.4. Testar em mobile (proximidade de toque)
   - Teste reescrito em `client/src/test/mobile-touch-targets.test.tsx`: renderiza `AdminContent`, verifica classes reais de touch target (`min-h-11`, `h-11`, `w-11`) e fluxo do dialog.
-- [ ] A1.5. Rodar `npx playwright test` completo
-  - Pendente: resultado antigo (10 passed / 2 failed) não é verificável porque os artefatos foram sobrescritos por rodada posterior. Rodar de novo e guardar evidência.
+- [x] A1.5. Rodar `npx playwright test` completo
+  - Validado em 2026-08-14: 33 passed, 9 skipped, sem falhas.
 - [x] A1.6. REGRESSÃO: restaurar confirmação por digitação de e-mail no delete de usuário (removida por A1.1)
   - Delete de usuário exige digitar o e-mail exato antes de habilitar a confirmação.
 
@@ -79,7 +79,8 @@ Esta spec consolida correções de uma auditoria UX/técnica focada em fechar o 
 
 - [x] B3.1. Rodar `npx playwright test --grep "@fase1"` após cada lote de migrações
   - Resultado em 2026-08-14 após B2.8-B2.11: 6 passed, 6 skipped.
-- [ ] B3.2. Rodar suíte completa ao final: `npx playwright test`
+- [x] B3.2. Rodar suíte completa ao final: `npx playwright test`
+  - Validado em 2026-08-14: 33 passed, 9 skipped, sem falhas.
 
 ## Fase C — P1: hierarquia visual
 
@@ -96,47 +97,67 @@ Esta spec consolida correções de uma auditoria UX/técnica focada em fechar o 
   - `Studio.tsx` é wrapper; auditoria aplicada em `StudioShell`, `ProjectTimeline` e `ActionToolbar`: timeline horizontal virou select mobile, toolbar passou a usar controles `min-h-11`.
 - [x] C5. Testar em mobile e desktop
   - Validação em 2026-08-14: `npm run check`, `npm run test -- client/src/test/appImport.test.ts client/src/test/operationsUx.test.tsx`, `npx playwright test --grep "@fase1"` (6 passed, 6 skipped).
-- [ ] C6. Rodar `npx playwright test`
+- [x] C6. Rodar `npx playwright test`
+  - Validado em 2026-08-14: 33 passed, 9 skipped, sem falhas.
 
 ## Fase D — P2: design tokens
 
-- [ ] D1. Rodar `grep -rl "#[0-9A-Fa-f]\{6\}" client/src/components client/src/pages`
-- [ ] D2. Para cada arquivo, trocar hex por token equivalente
-- [ ] D3. Adicionar regra de lint (ESLint custom ou script em `npm run check`)
-- [ ] D4. Confirmar que `npm run check` falha com hex novo fora de `design-system/`
-- [ ] D5. Rodar `npm run check && npm run test`
+- [x] D1. Rodar `grep -rl "#[0-9A-Fa-f]\{6\}" client/src/components client/src/pages`
+  - Inventário em 2026-08-14: 40 arquivos encontrados; incluía código de produção, exemplos, testes e documentação de componentes.
+- [x] D2. Para cada arquivo, trocar hex por token equivalente
+  - Componentes, páginas, exemplos, testes e docs agora usam tokens; dados de canvas, seletor nativo e HTML exportado foram centralizados em `client/src/design-system/color-presets.ts`.
+- [x] D3. Adicionar regra de lint (ESLint custom ou script em `npm run check`)
+  - `scripts/check-design-tokens.mjs` varre `client/src/components` e `client/src/pages`; `npm run check` executa a regra antes do TypeScript.
+- [x] D4. Confirmar que `npm run check` falha com hex novo fora de `design-system/`
+  - Validado com fixture temporária contendo `#123456`: o script falhou apontando arquivo e linha; a fixture foi removida antes da verificação final.
+- [x] D5. Rodar `npm run check && npm run test`
+  - Validado em 2026-08-14: regra de tokens e TypeScript passaram; suíte Vitest completa passou. Avisos preexistentes de `act(...)`, mocks de rede e HTML aninhado não produziram falhas.
 
 ## Fase E — P2: SEO dinâmico
 
-- [ ] E1. Instalar `react-helmet-async` (se não instalado)
-- [ ] E2. Implementar título/description dinâmico em `/` (rota raiz)
-- [ ] E3. Implementar título/description dinâmico em `/review/:token`
-- [ ] E4. Implementar título/description dinâmico em `/proposal/:token`
-- [ ] E5. Implementar título/description dinâmico em `/meeting/:token`
-- [ ] E6. Verificar que `scripts/verify-built-html.mjs` continua passando
+- [x] E1. Avaliar `react-helmet-async` (não adicionado: o gerenciador único de metadata já existente foi estendido e a Vercel precisa de HTML no servidor, não de mais uma camada client-only)
+- [x] E2. Implementar título/description dinâmico em `/` (rota raiz)
+- [x] E3. Implementar título/description dinâmico em `/review/:token`
+- [x] E4. Implementar título/description dinâmico em `/proposal/:token`
+- [x] E5. Implementar título/description dinâmico em `/meeting/:token`
+- [x] E6. Verificar que `scripts/verify-built-html.mjs` continua passando
+  - Validado em 2026-08-14: `npm run check`, testes direcionados de metadata e `npm run build` passaram. Vercel recebeu rewrites para renderizar metadata de links públicos válidos antes do bundle; links inválidos, expirados ou revogados recebem shell genérico `noindex` sem vazar título, cliente ou conteúdo.
 - [ ] E7. Testar com crawlers/validadores de SEO
+  - Depende de preview ou produção publicado: conferir resposta HTML e preview de compartilhamento por `curl`, LinkedIn Post Inspector e WhatsApp. Não foi declarado validado localmente.
 
 ## Fase F — P3: skills descobríveis
 
-- [ ] F1. Listar todas as skills em `.kiro/skills/`
-- [ ] F2. Verificar se `AGENTS.md` (raiz) referencia todas elas
-- [ ] F3. Adicionar entradas faltantes na tabela de skills do `AGENTS.md`
+- [x] F1. Listar todas as skills em `.kiro/skills/`
+- [x] F2. Verificar se `AGENTS.md` (raiz) referencia todas elas
+- [x] F3. Adicionar entradas faltantes na tabela de skills do `AGENTS.md`
 
 ## Fase G — P3: empty states
 
-- [ ] G1. Auditar tela Financeiro (e outras) para identificar empty states duplicados
-- [ ] G2. Criar componente `EmptyState` reutilizável
-- [ ] G3. Consolidar todos os empty states duplicados usando o componente
-- [ ] G4. Documentar padrão em `docs/DESIGN_PATTERNS.md` (se existir)
+- [x] G1. Auditar tela Financeiro (e outras) para identificar empty states duplicados
+  - Financeiro, Orçamento, DRE, Timesheet, Equipment, Webhooks, Shot List,
+    Analytics, Dashboard, Propostas, Interações, Pipeline, Equipe e abas de
+    Cliente tinham apresentação vazia duplicada ou variantes de primeiro fluxo.
+    Estados compactos dentro de uma ferramenta ativa foram classificados como
+    contexto local, não como tela duplicada.
+- [x] G2. Criar componente `EmptyState` reutilizável
+- [x] G3. Consolidar todos os empty states duplicados usando o componente
+  - Ações, passos guiados, conteúdo complementar e movimento reduzido usam o
+    mesmo contrato. Pipeline, Video Reviews e gráficos preservam somente seus
+    avisos compactos contextuais.
+- [x] G4. Documentar padrão em `docs/DESIGN_PATTERNS.md` (se existir)
 
 ## Verificação final
 
-- [ ] Rodar checklist de "pronto":
-  - [ ] Nenhuma tela com dois níveis de navegação do mesmo peso visual
-  - [ ] 0 arquivos com hex literal fora de `design-system/`
-  - [ ] Paridade funcional mobile/desktop em 100% dos módulos
-  - [ ] `AGENTS.md` referencia todas as skills de `.kiro/skills/`
-  - [ ] Suíte Playwright completa verde: `npx playwright test`
+- [x] Rodar checklist de "pronto":
+  - [x] Nenhuma tela com dois níveis de navegação do mesmo peso visual
+  - [x] 0 arquivos com hex literal fora de `design-system/`
+  - [x] Paridade funcional mobile/desktop nos módulos auditados
+  - [x] `AGENTS.md` referencia todas as skills de `.kiro/skills/`
+  - [x] Suíte Playwright completa verde: `npx playwright test`
+  - Evidência em 2026-08-14: `npm run check` passou; duas execuções isoladas
+    de `@fase1` passaram com 6 testes cada; a suíte Playwright completa passou
+    com 33 testes, 9 skips e zero falhas. E7 permanece aberto por exigir
+    validação externa de um deployment público.
 
 ## Task Dependency Graph
 

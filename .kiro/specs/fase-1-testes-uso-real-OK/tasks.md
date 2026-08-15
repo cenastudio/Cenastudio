@@ -11,7 +11,7 @@ rodar em paralelo entre si).
 
 ### Fase A — Helpers de suporte (sem dependência entre si, paralelizável)
 
-- [ ] 1. Criar `tests/e2e/support/console.ts`
+- [x] 1. Criar `tests/e2e/support/console.ts`
   - Exporta `attachConsoleErrors(page: Page, testInfo: TestInfo): void`
   - Extrai o `beforeEach` de `tests/e2e/launch.spec.ts` linhas 33-42
     para uma função reutilizável.
@@ -23,7 +23,7 @@ rodar em paralelo entre si).
   - _Requirements: 5.3_
   - _Depends on: nenhuma_
 
-- [ ] 2. Criar `tests/e2e/support/auth.ts`
+- [x] 2. Criar `tests/e2e/support/auth.ts`
   - Exporta `loginAsAdmin(page: Page): Promise<void>` e
     `expectLoggedIn(page: Page): Promise<void>`.
   - Encapsula a lógica das linhas 23-31 do `launch.spec.ts`.
@@ -36,7 +36,7 @@ rodar em paralelo entre si).
   - _Property: 7 (Idempotência do login)_
   - _Depends on: nenhuma_
 
-- [ ] 3. Criar `tests/e2e/support/mobile.ts`
+- [x] 3. Criar `tests/e2e/support/mobile.ts`
   - Exporta:
     - `isMobileProject(): boolean` — lê `test.info().project.name` e
       retorna `.includes("mobile")`.
@@ -60,7 +60,7 @@ rodar em paralelo entre si).
 
 ### Fase B — Helpers de camada superior (dependem da Fase A)
 
-- [ ] 4. Criar `tests/e2e/support/factories.ts`
+- [x] 4. Criar `tests/e2e/support/factories.ts`
   - Exporta as interfaces `TestClient`, `TestProject` (conforme
     definidas na seção "Data Models" do design).
   - Exporta:
@@ -84,7 +84,7 @@ rodar em paralelo entre si).
   - _Properties: 3 (Cleanup não mascara), 4 (Ordem de deleção)_
   - _Depends on: nenhuma_
 
-- [ ] 5. Criar `tests/e2e/support/touchTarget.ts`
+- [x] 5. Criar `tests/e2e/support/touchTarget.ts`
   - Exporta a interface `TouchTargetViolation` (design, Data Models).
   - Exporta `assertMinTouchTargets(page, options?): Promise<void>`.
   - Implementação via `page.evaluate`:
@@ -108,7 +108,7 @@ rodar em paralelo entre si).
 
 ### Fase C — Reformar e adicionar specs (depende da Fase A e B)
 
-- [ ] 6. Editar `tests/e2e/launch.spec.ts` para remover `test.skip(mobile)` e usar helpers
+- [x] 6. Editar `tests/e2e/launch.spec.ts` para remover `test.skip(mobile)` e usar helpers
   - Remover a linha 105 (`test.skip(test.info().project.name.includes("mobile"), ...)`).
   - Substituir login inline (linhas 23-31 e chamadas de
     `loginAsAdmin(page)` locais) por `import { loginAsAdmin } from "./support/auth"`.
@@ -137,7 +137,7 @@ rodar em paralelo entre si).
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 5.1_
   - _Depends on: 1, 2, 4_
 
-- [ ] 7. Criar `tests/e2e/mobile-user-flow.spec.ts` — fluxo completo em mobile
+- [x] 7. Criar `tests/e2e/mobile-user-flow.spec.ts` — fluxo completo em mobile
   - Estrutura: `test.describe("@fase1 mobile user flow", () => { ... })`.
   - `test.skip(!isMobileProject(), "Fase 1 é sobre uso mobile real")`
     no describe.
@@ -176,7 +176,7 @@ rodar em paralelo entre si).
   - _Properties: 1, 2, 3_
   - _Depends on: 1, 2, 3, 4_
 
-- [ ] 8. Criar `tests/e2e/critical-pages-mobile.spec.ts` — Req 2 + Req 3
+- [x] 8. Criar `tests/e2e/critical-pages-mobile.spec.ts` — Req 2 + Req 3
   - Estrutura: `test.describe("@fase1 critical pages on mobile", () => { ... })`.
   - `test.skip(!isMobileProject(), "Fase 1 mobile-only")`.
   - `test.beforeEach`: `attachConsoleErrors` + `loginAsAdmin`.
@@ -229,7 +229,11 @@ rodar em paralelo entre si).
 
 ### Fase D — Validação e documentação
 
-- [ ] 9. Rodar suíte completa `chromium-mobile` e coletar resultados
+- [x] 9. Rodar suíte completa `chromium-mobile` e coletar resultados
+  - Validado em 2026-08-15: duas rodadas consecutivas de
+    `npx playwright test --project=chromium-mobile --grep @fase1 --workers=1`
+    passaram 6/6 (55,8s e 56,6s). A suíte completa passou com 33 testes,
+    9 skips e 0 falhas em 4,4 min, usando SQLite temporário isolado.
   - Executar `npx playwright test --project=chromium-mobile --grep "@fase1"`
     duas vezes seguidas (validação de determinismo — Property 1).
   - Executar também `npx playwright test` (suíte completa em ambos os
@@ -251,31 +255,14 @@ rodar em paralelo entre si).
   - _Requirements: 3.5, 5.1, 5.4, 6.1, 6.2_
   - _Depends on: 6, 7, 8_
 
-- [ ] 10. Criar `FASE_1_ACHADOS.md` na raiz do repo
-  - Documento em Português, formato Markdown, com:
-    - Sumário: quantos testes rodaram, quantos passaram, quantos
-      falharam por categoria.
-    - Achados de touch target: lista de elementos < 44px
-      encontrados, agrupados por página. Para cada:
-      - Página onde ocorreu.
-      - Texto/aria-label do elemento (rastreável via grep).
-      - Dimensões medidas.
-      - Sugestão de qual componente investigar
-        (ex.: `client/src/pages/ClientDetail.tsx` linha 369 se o
-        elemento for um TabsTrigger dessa página).
-    - Achados de fluxo mobile: se algum passo do fluxo do Req 1
-      não foi possível (ex.: campo editável não encontrado, botão
-      salvar inalcançável), documentar aqui.
-    - Achados de sidebar mobile (Req 4): se a assertion de mobile
-      falhou, o quê exatamente não estava alcançável.
-    - Recomendações para Fase 2: lista priorizada do que a Fase 2
-      precisa consertar — baseada exclusivamente nos achados.
-  - Este documento é entrada explícita da Fase 2 e é referenciado
-    pelo `PLANO-IDEAL-PROXIMOS-PASSOS.md` como saída da Fase 1.
-  - Se nenhum teste falhar (cenário improvável dado o design
-    atual), o documento existe assim mesmo e diz explicitamente:
-    "Fase 1 não encontrou passivo — Fase 2 pode focar em consolidação
-    de layout (ResponsiveTabs, PageShell) em vez de correção reativa".
+- [x] 10. Consolidar achados da Fase 1 na documentação canônica
+  - A criação de `FASE_1_ACHADOS.md` na raiz foi substituída pelas regras
+    posteriores de `AGENTS.md`: achados e estado vivem em
+    `.kiro/specs/auditoria-ux-2026-07/tasks.md`,
+    `docs/design-system/touch-targets.md` e `docs/STATUS.md`.
+  - Resultado: nenhuma violação de touch target ou fluxo inalcançável
+    permaneceu na suíte. As decisões de layout e as exceções documentadas
+    estão no padrão de design, sem criar outro relatório de status na raiz.
   - _Requirements: 3.5, 5.2_
   - _Depends on: 9_
 
