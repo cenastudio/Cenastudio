@@ -3,6 +3,7 @@ import { useLanguage, type Translate } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
 import { useClientIdFromQuery } from "@/hooks/useClientIdFromQuery";
 import AppNavBar from "@/components/AppNavBar";
+import EmptyState from "@/components/EmptyState";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
 import { api } from "@/lib/api";
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { readStudioSettings, saveStudioSettings, type StudioSettings } from "@/lib/studioSettings";
+import { DOCUMENT_EXPORT_COLORS } from "@/design-system/color-presets";
 
 interface ServiceItem {
   id: string;
@@ -178,6 +180,7 @@ function printHtmlDocument(docHtml: string, preparationError: string) {
 }
 
 function buildProposalHtml(form: ProposalForm, lines: ProposalLine[], studio: StudioSettings, t: Translate, locale: "pt" | "en") {
+  const { dark } = DOCUMENT_EXPORT_COLORS;
   const subtotal = lines.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const discountValue = Math.round((subtotal * form.discount) / 100);
   const total = subtotal - discountValue;
@@ -199,27 +202,27 @@ function buildProposalHtml(form: ProposalForm, lines: ProposalLine[], studio: St
   <style>
     @page{size:A4;margin:0}
     *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    html,body{margin:0;min-height:100%;background:#0d0d0d;color:#e8e8e8;font-family:Arial,sans-serif}
-    body{background:radial-gradient(circle at 88% 5%,${studio.primaryColor}2e,transparent 34%),linear-gradient(135deg,#15100d 0%,#0d0d0d 42%,#050505 100%)}
-    .page{width:210mm;min-height:297mm;margin:0 auto;padding:18mm;background:radial-gradient(circle at 92% 4%,${studio.primaryColor}30,transparent 33%),linear-gradient(180deg,#111 0%,#0d0d0d 100%);position:relative;overflow:visible}
+    html,body{margin:0;min-height:100%;background:${dark.canvas};color:${dark.text};font-family:Arial,sans-serif}
+    body{background:radial-gradient(circle at 88% 5%,${studio.primaryColor}2e,transparent 34%),linear-gradient(135deg,${dark.canvasWarm} 0%,${dark.canvas} 42%,${dark.canvasDeep} 100%)}
+    .page{width:210mm;min-height:297mm;margin:0 auto;padding:18mm;background:radial-gradient(circle at 92% 4%,${studio.primaryColor}30,transparent 33%),linear-gradient(180deg,${dark.page} 0%,${dark.canvas} 100%);position:relative;overflow:visible}
     .page:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,${studio.primaryColor}14,transparent 32%),radial-gradient(circle at 10% 92%,rgba(217,195,171,.08),transparent 32%);pointer-events:none}
     .page>*{position:relative;z-index:1}.header{display:flex;justify-content:space-between;gap:32px;padding-bottom:28px;border-bottom:3px solid ${studio.primaryColor}}
-    .brand{font-size:34px;font-weight:900;letter-spacing:.06em;color:#fff}.brand span{color:${studio.primaryColor}}.sub{font-size:11px;color:${studio.primaryColor};font-weight:900;letter-spacing:.18em;text-transform:uppercase;margin-top:5px}
-    .doc{text-align:right}.doc small{display:block;color:#777;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.doc strong{display:block;color:${studio.primaryColor};font-size:28px;margin-top:4px}
-    h1{font-size:42px;line-height:1;margin:38px 0 10px;color:#fff}.muted{color:#999;line-height:1.55}
-    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:28px 0}.field{background:#151515;border:1px solid #252525;padding:13px 15px}.label{font-size:9px;color:#777;font-weight:900;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}.value{font-size:13px;color:#eee;font-weight:700}
+    .brand{font-size:34px;font-weight:900;letter-spacing:.06em;color:${dark.textStrong}}.brand span{color:${studio.primaryColor}}.sub{font-size:11px;color:${studio.primaryColor};font-weight:900;letter-spacing:.18em;text-transform:uppercase;margin-top:5px}
+    .doc{text-align:right}.doc small{display:block;color:${dark.textSubtle};font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.doc strong{display:block;color:${studio.primaryColor};font-size:28px;margin-top:4px}
+    h1{font-size:42px;line-height:1;margin:38px 0 10px;color:${dark.textStrong}}.muted{color:${dark.textMuted};line-height:1.55}
+    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:28px 0}.field{background:${dark.panel};border:1px solid ${dark.border};padding:13px 15px}.label{font-size:9px;color:${dark.textSubtle};font-weight:900;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}.value{font-size:13px;color:${dark.textValue};font-weight:700}
     .section{margin-top:34px}.section-title{font-size:11px;color:${studio.primaryColor};font-weight:900;letter-spacing:.16em;text-transform:uppercase;margin-bottom:12px}
-    table{width:100%;border-collapse:collapse;background:#141414;border:1px solid #252525} th{padding:12px 14px;text-align:left;background:#1b1b1b;color:#777;font-size:10px;text-transform:uppercase;letter-spacing:.1em}
-    td{padding:13px 14px;border-top:1px solid #252525;color:#ddd;font-size:13px;vertical-align:top}td:nth-child(2){text-align:center}td:nth-child(3),td:nth-child(4){text-align:right}td small{display:block;color:#777;font-size:11px;margin-top:3px;line-height:1.35}
-    .totals{margin-top:12px;background:#141414;border:1px solid #252525}.total-row{display:flex;justify-content:space-between;padding:12px 18px;border-top:1px solid #252525;color:#aaa}.total-row:first-child{border-top:0}
+    table{width:100%;border-collapse:collapse;background:${dark.table};border:1px solid ${dark.border}} th{padding:12px 14px;text-align:left;background:${dark.tableHeader};color:${dark.textSubtle};font-size:10px;text-transform:uppercase;letter-spacing:.1em}
+    td{padding:13px 14px;border-top:1px solid ${dark.border};color:${dark.textSoft};font-size:13px;vertical-align:top}td:nth-child(2){text-align:center}td:nth-child(3),td:nth-child(4){text-align:right}td small{display:block;color:${dark.textSubtle};font-size:11px;margin-top:3px;line-height:1.35}
+    .totals{margin-top:12px;background:${dark.table};border:1px solid ${dark.border}}.total-row{display:flex;justify-content:space-between;padding:12px 18px;border-top:1px solid ${dark.border};color:${dark.textFaint}}.total-row:first-child{border-top:0}
     .final{margin-top:16px;display:flex;justify-content:space-between;align-items:center;gap:20px;padding:22px 24px;border:1px solid ${studio.primaryColor}77;background:linear-gradient(135deg,${studio.primaryColor}29,rgba(0,0,0,0))}
-    .final small{display:block;color:${studio.primaryColor};font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.12em}.final strong{font-size:40px;color:#fff}
-    .terms{background:#111;border:1px solid #242424;padding:20px;margin-top:28px;color:#aaa;font-size:12px;line-height:1.7}.footer{display:flex;justify-content:space-between;gap:40px;margin-top:56px}.sign{width:240px;border-top:1px solid #333;padding-top:8px;text-align:center;color:#777;font-size:10px}
+    .final small{display:block;color:${studio.primaryColor};font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.12em}.final strong{font-size:40px;color:${dark.textStrong}}
+    .terms{background:${dark.page};border:1px solid ${dark.borderSoft};padding:20px;margin-top:28px;color:${dark.textFaint};font-size:12px;line-height:1.7}.footer{display:flex;justify-content:space-between;gap:40px;margin-top:56px}.sign{width:240px;border-top:1px solid ${dark.signBorder};padding-top:8px;text-align:center;color:${dark.textSubtle};font-size:10px}
     @media screen{.page{box-shadow:0 22px 70px rgba(0,0,0,.34)}}
     @media print{
-      html,body{width:210mm;min-height:297mm;background:#0d0d0d}
-      body:before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 92% 4%,${studio.primaryColor}24,transparent 33%),linear-gradient(180deg,#111 0%,#0d0d0d 100%);z-index:0}
-      .page{width:210mm;min-height:297mm;height:auto;margin:0;padding:16mm;box-shadow:none;background:radial-gradient(circle at 92% 4%,${studio.primaryColor}24,transparent 33%),linear-gradient(180deg,#111 0%,#0d0d0d 100%);overflow:visible;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+      html,body{width:210mm;min-height:297mm;background:${dark.canvas}}
+      body:before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 92% 4%,${studio.primaryColor}24,transparent 33%),linear-gradient(180deg,${dark.page} 0%,${dark.canvas} 100%);z-index:0}
+      .page{width:210mm;min-height:297mm;height:auto;margin:0;padding:16mm;box-shadow:none;background:radial-gradient(circle at 92% 4%,${studio.primaryColor}24,transparent 33%),linear-gradient(180deg,${dark.page} 0%,${dark.canvas} 100%);overflow:visible;-webkit-box-decoration-break:clone;box-decoration-break:clone}
       .page:before{display:none}
       .page>*{position:relative;z-index:1}
       .header,.field,.totals,.final,.terms,.footer,tr{break-inside:avoid;page-break-inside:avoid}
@@ -466,23 +469,16 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
         {/* Client gate: require client selection first */}
         {!hasClients ? (
           <section className="max-w-2xl mx-auto py-16 space-y-6 text-center">
-            <div className="frame-empty-state p-12 space-y-6">
-              <div className="w-16 h-16 mx-auto border border-frame-orange/30 bg-frame-orange/10 flex items-center justify-center">
-                <FileSignature className="w-8 h-8 text-frame-orange" />
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-frame-white">
-                  {t("app.proposals.startWithClient") as string}
-                </h2>
-                <p className="text-sm text-frame-gray-light max-w-sm mx-auto leading-relaxed">
-                  {t("app.proposals.startWithClientDesc") as string}
-                </p>
-              </div>
-              <button type="button" onClick={() => setLocation("/clients/new")} className="frame-btn-primary inline-flex items-center gap-2 !py-3 !px-6">
-                <Plus className="w-4 h-4" />
-                {t("app.proposals.registerFirstClient") as string}
-              </button>
-            </div>
+            <EmptyState
+              icon={FileSignature}
+              title={t("app.proposals.startWithClient") as string}
+              description={t("app.proposals.startWithClientDesc") as string}
+              action={{
+                label: t("app.proposals.registerFirstClient") as string,
+                icon: Plus,
+                onClick: () => setLocation("/clients/new"),
+              }}
+            />
           </section>
         ) : !hasSelectedClient ? (
           <section className="max-w-3xl mx-auto py-10 space-y-8">
@@ -774,7 +770,7 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
               <span className="text-[0.62rem] text-frame-gray-light">{formatCurrency(total)}</span>
             </div>
             {selected.length ? (
-              <iframe title={t("app.proposals.proposalPreview") as string} srcDoc={proposalHtml} className="w-full h-[680px] bg-[#0d0d0d]" />
+              <iframe title={t("app.proposals.proposalPreview") as string} srcDoc={proposalHtml} className="w-full h-[680px] bg-[var(--ds-surface-tooltip)]" />
             ) : (
               <div className="proposal-preview-empty h-[680px] flex items-center justify-center p-8 text-center text-frame-gray-light">
                 <div className="proposal-paper-ghost">

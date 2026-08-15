@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useRoute } from "wouter";
 import AppNavBar from "@/components/AppNavBar";
+import EmptyState from "@/components/EmptyState";
 import ProjectNav from "@/components/ProjectNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
 import { api, type BudgetOverview, type BudgetEntryItem } from "@/lib/api";
 import { useAutocomplete } from "@/hooks/useAutocomplete";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { ValidatedInput } from "@/components/forms/ValidatedInput";
 import {
   Wallet,
@@ -53,6 +55,7 @@ interface CategoryDraft {
 }
 
 function BudgetContent() {
+  const { t } = useLanguage();
   const [, params] = useRoute("/project/:projectId/budget");
   const projectId = Number(params?.projectId);
 
@@ -235,54 +238,19 @@ function BudgetContent() {
 
         {/* Empty state — orange square + 01/02/03 flow, same pattern as Webhooks/Documents */}
         {!loading && !hasBaseline && (
-          <section className="max-w-2xl mx-auto py-10 space-y-8">
-            <div className="frame-empty-state p-10 sm:p-12 space-y-6 text-center">
-              <div className="w-16 h-16 mx-auto border border-frame-orange/30 bg-frame-orange/10 flex items-center justify-center">
-                <Wallet className="w-8 h-8 text-frame-orange" />
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-frame-white">Controle o orçamento do projeto</h2>
-                <p className="text-sm text-frame-gray-light max-w-md mx-auto leading-relaxed">
-                  Defina quanto pode gastar em cada categoria (equipe, equipamento, locação...) e lance os
-                  gastos reais conforme acontecem. Você vê na hora se está no azul ou no vermelho.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={openBaselineDialog}
-                className="frame-btn-primary inline-flex items-center gap-2 !py-3 !px-6"
-              >
-                <Plus className="w-4 h-4" />
-                Definir orçamento
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-adaptive-primary tracking-wider block mb-2">01</span>
-                <p className="text-sm font-semibold text-frame-white">Defina orçamento</p>
-                <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
-                  Valor previsto por categoria (Equipe, Equipamento, Locação...).
-                </p>
-              </div>
-              <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-adaptive-primary tracking-wider block mb-2">02</span>
-                <p className="text-sm font-semibold text-frame-white">Lance gastos</p>
-                <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
-                  Cada despesa real entra na categoria certa, com data e descrição.
-                </p>
-              </div>
-              <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-adaptive-primary tracking-wider block mb-2">03</span>
-                <p className="text-sm font-semibold text-frame-white">Previsto vs realizado</p>
-                <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
-                  Barras de progresso e alertas automáticos quando uma categoria estoura.
-                </p>
-              </div>
-            </div>
+          <section className="mx-auto max-w-4xl py-10">
+            <EmptyState
+              icon={Wallet}
+              eyebrow={t("app.budget.onboardEyebrow")}
+              title={t("app.budget.onboardTitle")}
+              description={t("app.budget.onboardDesc")}
+              action={{ label: t("app.budget.onboardCta"), onClick: openBaselineDialog, icon: Plus }}
+              steps={[
+                { title: t("app.budget.onboardStep1"), description: t("app.budget.onboardStep1Desc") },
+                { title: t("app.budget.onboardStep2"), description: t("app.budget.onboardStep2Desc") },
+                { title: t("app.budget.onboardStep3"), description: t("app.budget.onboardStep3Desc") },
+              ]}
+            />
           </section>
         )}
 

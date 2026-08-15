@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRoute } from "wouter";
 import AppNavBar from "@/components/AppNavBar";
+import EmptyState from "@/components/EmptyState";
 import ProjectNav from "@/components/ProjectNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
@@ -29,6 +30,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { toast } from "sonner";
+import { DOCUMENT_EXPORT_COLORS } from "@/design-system/color-presets";
 import {
   Dialog,
   DialogContent,
@@ -401,6 +403,7 @@ function SceneGroup({
 
 /** Opens a hidden iframe with the shot list rendered as a simple printable table. */
 function printShotList(shots: ShotItem[], projectId: number, t: (key: string) => string) {
+  const { paper } = DOCUMENT_EXPORT_COLORS;
   const statusShot = t("app.shotlist.statusShot");
   const statusPending = t("app.shotlist.statusPending");
   const rows = shots
@@ -429,12 +432,12 @@ function printShotList(shots: ShotItem[], projectId: number, t: (key: string) =>
       <head>
         <title>${title}</title>
         <style>
-          body { font-family: sans-serif; padding: 24px; color: #111; }
+          body { font-family: sans-serif; padding: 24px; color: ${paper.shotText}; }
           h1 { font-size: 18px; margin-bottom: 4px; }
-          p.summary { font-size: 12px; color: #555; margin: 0 0 12px; }
+          p.summary { font-size: 12px; color: ${paper.shotMuted}; margin: 0 0 12px; }
           table { width: 100%; border-collapse: collapse; font-size: 12px; }
-          th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
-          th { background: #f3f3f3; }
+          th, td { border: 1px solid ${paper.shotBorder}; padding: 6px 8px; text-align: left; }
+          th { background: ${paper.shotHeader}; }
         </style>
       </head>
       <body>
@@ -1010,54 +1013,19 @@ function ShotListContent() {
 
         {/* Empty state — orange square + 01/02/03 flow */}
         {!loading && shots.length === 0 && (
-          <section className="max-w-2xl mx-auto py-10 space-y-8">
-            <div className="frame-empty-state p-10 sm:p-12 space-y-6 text-center">
-              <div className="w-16 h-16 mx-auto border border-frame-orange/30 bg-frame-orange/10 flex items-center justify-center">
-                <Clapperboard className="w-8 h-8 text-frame-orange" />
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-frame-white">{t("app.shotlist.emptyTitle")}</h2>
-                <p className="text-sm text-frame-gray-light max-w-md mx-auto leading-relaxed">
-                  {t("app.shotlist.emptyDesc")}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={openCreateDialog}
-                className="frame-btn-primary inline-flex items-center gap-2 !py-3 !px-6"
-                disabled={isAtLimit}
-              >
-                <Plus className="w-4 h-4" />
-                {t("app.shotlist.addFirstShot")}
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-frame-orange tracking-wider block mb-2">01</span>
-                <p className="text-sm font-semibold text-frame-white">{t("app.shotlist.step1Title")}</p>
-                <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
-                  {t("app.shotlist.step1Desc")}
-                </p>
-              </div>
-              <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-frame-orange tracking-wider block mb-2">02</span>
-                <p className="text-sm font-semibold text-frame-white">{t("app.shotlist.step2Title")}</p>
-                <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
-                  {t("app.shotlist.step2Desc")}
-                </p>
-              </div>
-              <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-frame-orange tracking-wider block mb-2">03</span>
-                <p className="text-sm font-semibold text-frame-white">{t("app.shotlist.step3Title")}</p>
-                <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
-                  {t("app.shotlist.step3Desc")}
-                </p>
-              </div>
-            </div>
+          <section className="mx-auto max-w-4xl py-10">
+            <EmptyState
+              icon={Clapperboard}
+              eyebrow={t("app.shotlist.onboardEyebrow")}
+              title={t("app.shotlist.emptyTitle")}
+              description={t("app.shotlist.emptyDesc")}
+              action={{ label: t("app.shotlist.addFirstShot"), onClick: openCreateDialog, icon: Plus, disabled: isAtLimit }}
+              steps={[
+                { title: t("app.shotlist.step1Title"), description: t("app.shotlist.step1Desc") },
+                { title: t("app.shotlist.step2Title"), description: t("app.shotlist.step2Desc") },
+                { title: t("app.shotlist.step3Title"), description: t("app.shotlist.step3Desc") },
+              ]}
+            />
           </section>
         )}
 

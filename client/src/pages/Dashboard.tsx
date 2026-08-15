@@ -5,6 +5,7 @@ import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { api, type Client, type Project, type RecentActivity } from "@/lib/api";
 import AppNavBar from "@/components/AppNavBar";
+import EmptyState from "@/components/EmptyState";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import WelcomeModal from "@/components/onboarding/WelcomeModal";
@@ -286,17 +287,22 @@ function DashboardContent() {
 
   const handleStartTour = () => {
     setIsWelcomeOpen(false);
-    setTimeout(() => setIsTourOpen(true), 300);
+    setIsTourOpen(true);
   };
 
   const handleTourComplete = () => {
     setIsTourOpen(false);
-    setTimeout(() => setIsWelcomeOpen(true), 300);
+    localStorage.setItem("cena-studio-welcome-completed", "true");
+    toast.success(locale === "en" ? `Welcome to ${SITE_CONFIG.brandName}.` : `Bem-vindo ao ${SITE_CONFIG.brandName}.`);
   };
 
   const handleWelcomeComplete = () => {
     setIsWelcomeOpen(false);
-    toast.success(locale === "en" ? `Welcome to ${SITE_CONFIG.brandName}! 🎬` : `Bem-vindo ao ${SITE_CONFIG.brandName}! 🎬`);
+  };
+
+  const handleStartCommercial = () => {
+    setIsWelcomeOpen(false);
+    setLocation("/clients/new");
   };
 
   const getActivityLabel = (act: RecentActivity) => {
@@ -626,39 +632,23 @@ function DashboardContent() {
 
         {/* ─── EMPTY STATE (sem nenhum projeto) ─── */}
         {!isProjectsLoading && projects.length === 0 && !focusProject && (
-          <section className="frame-empty-state p-12 text-center space-y-5 animate-stagger-5">
-            <div className="w-16 h-16 mx-auto flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-full">
-              <Plus className="w-7 h-7 text-frame-orange" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-frame-white">Comece sua história</h3>
-              <p className="text-sm text-frame-gray-light max-w-sm mx-auto leading-relaxed">
-                Cadastre o cliente, crie o projeto e mantenha briefing, proposta, produção e financeiro no mesmo lugar.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg mx-auto text-left py-2">
-              <div className="border border-frame-orange/20 bg-frame-orange/[0.04] p-3 rounded-lg">
-                <span className="block font-frame-mono text-[0.55rem] text-frame-orange uppercase tracking-wider mb-1">1. Cliente</span>
-                <span className="text-[0.7rem] text-frame-gray-light">Cadastre quem contratou o job</span>
-              </div>
-              <div className="border border-frame-orange/20 bg-frame-orange/[0.04] p-3 rounded-lg">
-                <span className="block font-frame-mono text-[0.55rem] text-frame-orange uppercase tracking-wider mb-1">2. Projeto</span>
-                <span className="text-[0.7rem] text-frame-gray-light">Crie o job com briefing e prazo</span>
-              </div>
-              <div className="border border-frame-orange/20 bg-frame-orange/[0.04] p-3 rounded-lg">
-                <span className="block font-frame-mono text-[0.55rem] text-frame-orange uppercase tracking-wider mb-1">3. Operar</span>
-                <span className="text-[0.7rem] text-frame-gray-light">IA, arquivos, revisão e entrega</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={startProjectFromClient}
-              className="frame-btn-primary inline-flex items-center gap-2 px-6 py-3"
-            >
-              <Plus className="w-4 h-4" />
-              Começar primeiro job
-            </button>
-          </section>
+          <EmptyState
+            icon={Plus}
+            eyebrow={t("app.dashboard.emptyEyebrow") as string}
+            title={t("app.dashboard.emptyTitle") as string}
+            description={t("app.dashboard.emptyDescription") as string}
+            steps={[
+              { title: t("app.onboarding.journeyClient") as string, description: t("app.dashboard.emptyClientDescription") as string },
+              { title: t("app.onboarding.journeyProject") as string, description: t("app.dashboard.emptyProjectDescription") as string },
+              { title: t("app.onboarding.journeyDelivery") as string, description: t("app.dashboard.emptyOperationDescription") as string },
+            ]}
+            action={{
+              label: t("app.dashboard.emptyAction") as string,
+              icon: Plus,
+              onClick: startProjectFromClient,
+            }}
+            className="animate-stagger-5"
+          />
         )}
       </main>
 
@@ -723,7 +713,7 @@ function DashboardContent() {
                 placeholder={t("app.studio.projectSelector.projectNamePlaceholder") as string}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-[#111] border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none"
+                className="w-full bg-[var(--ds-surface-input)] border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none"
               />
             </div>
 
@@ -736,7 +726,7 @@ function DashboardContent() {
                 disabled={isSubmitting}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full bg-[#111] border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition resize-none h-[75px] focus:border-frame-orange rounded-none"
+                className="w-full bg-[var(--ds-surface-input)] border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition resize-none h-[75px] focus:border-frame-orange rounded-none"
               />
             </div>
 
@@ -749,7 +739,7 @@ function DashboardContent() {
                   disabled={isSubmitting}
                   value={projectType}
                   onChange={(e) => setProjectType(e.target.value)}
-                  className="w-full bg-[#111] border border-frame-gray-3 text-frame-white px-3 py-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none appearance-none cursor-pointer"
+                  className="w-full bg-[var(--ds-surface-input)] border border-frame-gray-3 text-frame-white px-3 py-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none appearance-none cursor-pointer"
                 >
                   <option value="Comercial">{t("app.dashboard.typeCommercial") as string}</option>
                   <option value="Institucional">{t("app.dashboard.typeInstitutional") as string}</option>
@@ -768,7 +758,7 @@ function DashboardContent() {
                   disabled={isSubmitting}
                   value={deadline}
                   onChange={(e) => setDeadline(e.target.value)}
-                  className="w-full bg-[#111] border border-frame-gray-3 text-frame-white px-3 py-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none"
+                  className="w-full bg-[var(--ds-surface-input)] border border-frame-gray-3 text-frame-white px-3 py-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none"
                 />
               </div>
             </div>
@@ -784,7 +774,7 @@ function DashboardContent() {
                   placeholder={locale === "en" ? "e.g. 30s film, reels, case study, teaser" : "ex: filme 30s, reels, case, teaser"}
                   value={format}
                   onChange={(e) => setFormat(e.target.value)}
-                  className="w-full bg-[#111] border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none"
+                  className="w-full bg-[var(--ds-surface-input)] border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none"
                 />
               </div>
               <div className="space-y-1.5">
@@ -797,7 +787,7 @@ function DashboardContent() {
                   placeholder={locale === "en" ? "e.g. elegant, energetic, documentary" : "ex: elegante, energético, documental"}
                   value={tone}
                   onChange={(e) => setTone(e.target.value)}
-                  className="w-full bg-[#111] border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none"
+                  className="w-full bg-[var(--ds-surface-input)] border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none"
                 />
               </div>
             </div>
@@ -811,7 +801,7 @@ function DashboardContent() {
                 disabled={isSubmitting}
                 value={objective}
                 onChange={(e) => setObjective(e.target.value)}
-                className="w-full bg-[#111] border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition resize-none h-[70px] focus:border-frame-orange rounded-none"
+                className="w-full bg-[var(--ds-surface-input)] border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition resize-none h-[70px] focus:border-frame-orange rounded-none"
               />
             </div>
 
@@ -825,7 +815,7 @@ function DashboardContent() {
                   disabled={isSubmitting}
                   value={clientId}
                   onChange={(e) => setClientId(e.target.value)}
-                  className="w-full bg-[#111] border border-frame-gray-3 text-frame-white pl-10 pr-4 py-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none appearance-none cursor-pointer"
+                  className="w-full bg-[var(--ds-surface-input)] border border-frame-gray-3 text-frame-white pl-10 pr-4 py-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none appearance-none cursor-pointer"
                 >
                   <option value="">{locale === "en" ? "Select a client" : "Selecione um cliente"}</option>
                   {clients.map((client) => (
@@ -837,7 +827,7 @@ function DashboardContent() {
               </div>
             </div>
 
-            <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t border-[#1a1a1a]">
+            <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t border-[var(--ds-surface-elevated)]">
               <button
                 type="button"
                 disabled={isSubmitting}
@@ -885,6 +875,7 @@ function DashboardContent() {
         onClose={() => setIsWelcomeOpen(false)}
         onComplete={handleWelcomeComplete}
         onStartTour={handleStartTour}
+        onStartCommercial={handleStartCommercial}
         userName={user?.name || undefined}
       />
 

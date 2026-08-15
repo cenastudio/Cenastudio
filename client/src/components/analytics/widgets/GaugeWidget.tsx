@@ -20,14 +20,14 @@ export default function GaugeWidget({ title, data, config }: GaugeWidgetProps) {
   // Create gauge data (semicircle)
   const gaugeData = [
     { value: percentage, color: getGaugeColor(percentage) },
-    { value: 100 - percentage, color: "#2a2a2a" }
+    { value: 100 - percentage, color: "var(--ds-chart-grid)" }
   ];
 
   function getGaugeColor(percent: number) {
-    if (percent >= 80) return "#10b981"; // Green
-    if (percent >= 60) return "#f59e0b"; // Yellow
-    if (percent >= 40) return "#ff4e00"; // Orange
-    return "#ef4444"; // Red
+    if (percent >= 80) return "var(--status-success)";
+    if (percent >= 60) return "var(--status-warning)";
+    if (percent >= 40) return "var(--ds-chart-accent)";
+    return "var(--status-danger)";
   }
 
   const formatCurrency = (value: number) => {

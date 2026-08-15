@@ -44,7 +44,7 @@ test("critical authenticated app screens render without layout breaks", async ({
   // Percorre 5 rotas sequenciais contra o Postgres real (não local) — sob
   // execução paralela com outros specs competindo pela mesma conexão, o
   // orçamento padrão de 45s fica apertado (achado documentado em
-  // FASE_1_ACHADOS.md). O teste em si não valida velocidade, só layout.
+  // auditoria UX/mobile). O teste em si não valida velocidade, só layout.
   test.setTimeout(90_000);
 
   await loginAsAdmin(page);
@@ -74,13 +74,25 @@ test("light theme project dialog keeps readable light inputs", async ({ page }) 
   });
 
   try {
-    // O toggle de tema no AppNavBar descreve o estado ATUAL (ex.: "Modo
-    // escuro..." quando dark, não o destino) e só aparece em hover no menu
-    // do avatar — não é confiável em mobile. A página de Perfil tem botões
-    // explícitos "Escuro"/"Claro" que funcionam em qualquer viewport.
+    // A aba de preferências é um select no mobile e botões no desktop. O
+    // controle de modo visual tem rótulo estável, então o mesmo fluxo cobre
+    // os dois viewports sem depender do menu de avatar.
     await page.goto("/profile");
-    await page.getByRole("button", { name: /preferências|preferences/i }).click();
-    await page.getByRole("button", { name: /claro|light/i }).last().click();
+    const mobileProfileTabs = page.locator("#profile-mobile-tabs");
+    if ((page.viewportSize()?.width ?? 1024) < 768) {
+      await expect(mobileProfileTabs).toBeVisible();
+      await mobileProfileTabs.selectOption("preferences");
+    } else {
+      await page.getByRole("button", { name: /preferências|preferences/i }).click();
+    }
+
+    const themeMode = page.getByText(/^Modo de Tema$|^Theme Mode$/i).last().locator("..");
+    await expect(themeMode).toBeVisible();
+    const [themeResponse] = await Promise.all([
+      page.waitForResponse((response) => response.url().includes("/api/auth/visual-preferences") && response.request().method() === "PUT"),
+      themeMode.getByRole("button", { name: /claro|light/i }).click(),
+    ]);
+    expect(themeResponse.ok()).toBe(true);
     await expect
       .poll(() => page.evaluate(() => document.documentElement.getAttribute("data-theme")))
       .toBe("light");
@@ -138,27 +150,36 @@ test("client, project and studio workflow stay connected", async ({ page }) => {
   try {
     await page.goto(`/project/${project.id}/studio/briefing`);
 
-    // Aguarda a sidebar carregar antes de coletar labels — antes esse wait
-    // implícito vinha das assertions de category label (removidas por não
-    // funcionarem em mobile, ver design.md).
-    await expect(page.locator(".studio-sidebar .studio-tool-nav").first()).toBeVisible({
-      timeout: 10_000,
-    });
-
-    const workflowLabels = await page.locator(".studio-sidebar .studio-tool-nav").evaluateAll((nodes) =>
-      nodes.slice(0, 9).map((node) => node.textContent?.replace(/^(\d)(\S)/, "$1 $2").replace(/\s+/g, " ").trim()),
-    );
-    expect(workflowLabels).toEqual([
-      "1 Briefing Inteligente",
-      "2 Orçamento Automático",
-      "3 Proposta Comercial",
-      "4 Contratos",
-      "1 Gerador de Roteiro",
-      "2 Decupagem Técnica",
-      "3 Callsheet Inteligente",
-      "4 Cronograma",
-      "5 Checklist de Set",
-    ]);
+    const desktopTools = page.locator(".studio-sidebar .studio-tool-nav");
+    const compactStudio = (page.viewportSize()?.width ?? 1024) < 1024;
+    if (!compactStudio) {
+      await expect(desktopTools.first()).toBeVisible();
+      const workflowLabels = await desktopTools.evaluateAll((nodes) =>
+        nodes.slice(0, 9).map((node) => node.textContent?.replace(/^(\d)(\S)/, "$1 $2").replace(/\s+/g, " ").trim()),
+      );
+      expect(workflowLabels).toEqual([
+        "1 Briefing Inteligente",
+        "2 Orçamento Automático",
+        "3 Proposta Comercial",
+        "4 Contratos",
+        "1 Gerador de Roteiro",
+        "2 Decupagem Técnica",
+        "3 Callsheet Inteligente",
+        "4 Cronograma",
+        "5 Checklist de Set",
+      ]);
+    } else {
+      const categorySelect = page.getByLabel(/categoria de ferramenta|tool category/i);
+      const toolSelect = page.getByLabel(/ferramenta ativa|active tool/i);
+      const sidebarToggle = page.getByTitle(/mostrar ferramentas|esconder ferramentas|show tools|hide tools/i);
+      await expect(sidebarToggle).toBeVisible();
+      if ((await sidebarToggle.getAttribute("title"))?.match(/mostrar|show/i)) {
+        await sidebarToggle.click();
+      }
+      await expect(categorySelect).toBeVisible();
+      await expect(toolSelect).toBeVisible();
+      await expect(toolSelect.locator("option").first()).toContainText(/briefing inteligente/i);
+    }
 
     await expect(page.locator(`input[value="${client.company}"]`)).toBeVisible();
     await expectNoHorizontalOverflow(page);

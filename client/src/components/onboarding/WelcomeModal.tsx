@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronRight, ChevronLeft, Check, Sparkles, Target, Zap, Rocket, Loader2 } from "lucide-react";
+import { useEffect, useId, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { ArrowRight, FolderPlus, LayoutDashboard, Loader2, Route, X } from "lucide-react";
 import { useLocation } from "wouter";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
@@ -11,397 +11,180 @@ interface WelcomeModalProps {
   onClose: () => void;
   onComplete: () => void;
   onStartTour?: () => void;
+  onStartCommercial?: () => void;
   userName?: string;
 }
-
-const stepIcons = [Sparkles, Target, Zap, Rocket];
 
 export default function WelcomeModal({
   isOpen,
   onClose,
   onComplete,
   onStartTour,
+  onStartCommercial,
   userName,
 }: WelcomeModalProps) {
   const { t } = useLanguage();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [neverShowAgain, setNeverShowAgain] = useState(false);
+  const reduceMotion = useReducedMotion();
+  const titleId = useId();
   const [isCreatingDemo, setIsCreatingDemo] = useState(false);
   const [demoProjectId, setDemoProjectId] = useState<number | null>(null);
   const [, setLocation] = useLocation();
 
-  const steps = [
-    {
-      id: "welcome",
-      icon: Sparkles,
-      title: t("app.onboarding.welcomeTitle"),
-      description: t("app.onboarding.welcomeDescription"),
-      features: [
-        t("app.onboarding.welcomeFeature1"),
-        t("app.onboarding.welcomeFeature2"),
-        t("app.onboarding.welcomeFeature3"),
-        t("app.onboarding.welcomeFeature4"),
-      ],
-    },
-    {
-      id: "tour",
-      icon: Target,
-      title: t("app.onboarding.tourTitle"),
-      description: t("app.onboarding.tourDescription"),
-      features: [
-        t("app.onboarding.tourFeature1"),
-        t("app.onboarding.tourFeature2"),
-        t("app.onboarding.tourFeature3"),
-        t("app.onboarding.tourFeature4"),
-      ],
-    },
-    {
-      id: "demo",
-      icon: Zap,
-      title: t("app.onboarding.demoTitle"),
-      description: t("app.onboarding.demoDescription"),
-      features: [
-        t("app.onboarding.demoFeature1"),
-        t("app.onboarding.demoFeature2"),
-        t("app.onboarding.demoFeature3"),
-        t("app.onboarding.demoFeature4"),
-      ],
-    },
-    {
-      id: "start",
-      icon: Rocket,
-      title: t("app.onboarding.startTitle"),
-      description: t("app.onboarding.startDescription"),
-      features: [
-        t("app.onboarding.startFeature1"),
-        t("app.onboarding.startFeature2"),
-        t("app.onboarding.startFeature3"),
-        t("app.onboarding.startFeature4"),
-      ],
-    },
-  ];
-
-  const step = steps[currentStep];
-  const isFirstStep = currentStep === 0;
-  const isLastStep = currentStep === steps.length - 1;
-  const Icon = step.icon;
-
-  // Prevent body scroll when open
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-      // Force dark theme
-      document.documentElement.classList.add('dark');
-      document.documentElement.setAttribute('data-theme', 'dark');
-    } else {
-      document.body.style.overflow = "";
-    }
+    if (!isOpen) return;
+
+    document.body.style.overflow = "hidden";
+    api.demo
+      .check()
+      .then((result) => setDemoProjectId(result.exists && result.project ? result.project.id : null))
+      .catch(() => setDemoProjectId(null));
+
     return () => {
       document.body.style.overflow = "";
     };
   }, [isOpen]);
 
-  // Check if demo project exists when opening Step 3
-  useEffect(() => {
-    if (isOpen && currentStep === 2) {
-      api.demo
-        .check()
-        .then((result) => {
-          if (result.exists && result.project) {
-            setDemoProjectId(result.project.id);
-          }
-        })
-        .catch(() => {
-          // Silently fail, demo check is not critical
-        });
-    }
-  }, [isOpen, currentStep]);
-
-  const handleNext = () => {
-    // Step 2: Tour - if onStartTour provided, trigger tour
-    if (currentStep === 1 && onStartTour) {
-      onStartTour();
-      return;
-    }
-
-    if (isLastStep) {
-      handleComplete();
-    } else {
-      setCurrentStep((prev) => prev + 1);
-    }
-  };
-
-  const handleBack = () => {
-    if (!isFirstStep) {
-      setCurrentStep((prev) => prev - 1);
-    }
-  };
-
-  const handleSkip = () => {
-    if (neverShowAgain) {
-      localStorage.setItem("cena-studio-welcome-dismissed", "true");
-    }
-    onClose();
-  };
-
-  const handleComplete = () => {
+  const complete = () => {
     localStorage.setItem("cena-studio-welcome-completed", "true");
-    if (neverShowAgain) {
-      localStorage.setItem("cena-studio-welcome-dismissed", "true");
-    }
     onComplete();
   };
 
-  const handleCreateDemo = async () => {
+  const defer = () => {
+    localStorage.setItem("cena-studio-welcome-dismissed", "true");
+    onClose();
+  };
+
+  const startCommercial = () => {
+    complete();
+    onStartCommercial?.();
+  };
+
+  const startTour = () => {
+    onStartTour?.();
+  };
+
+  const openDemo = async () => {
+    if (demoProjectId) {
+      complete();
+      setLocation(`/project/${demoProjectId}`);
+      return;
+    }
+
     setIsCreatingDemo(true);
     try {
       const result = await api.demo.create();
-      setDemoProjectId(result.data.project.id);
-      toast.success(result.message);
-    } catch (error: any) {
-      toast.error(error.message || t("app.onboarding.errorDemo"));
+      complete();
+      setLocation(`/project/${result.data.project.id}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t("app.onboarding.errorDemo"));
     } finally {
       setIsCreatingDemo(false);
     }
   };
 
-  const handleViewDemo = () => {
-    if (demoProjectId) {
-      handleComplete();
-      setLocation(`/project/${demoProjectId}`);
-    }
-  };
+  const options = [
+    {
+      icon: FolderPlus,
+      title: t("app.onboarding.startCommercial"),
+      description: t("app.onboarding.startCommercialDesc"),
+      action: startCommercial,
+      primary: true,
+    },
+    {
+      icon: Route,
+      title: demoProjectId ? t("app.onboarding.viewDemo") : t("app.onboarding.exploreDemo"),
+      description: t("app.onboarding.exploreDemoDesc"),
+      action: openDemo,
+      loading: isCreatingDemo,
+    },
+    {
+      icon: LayoutDashboard,
+      title: t("app.onboarding.tourAction"),
+      description: t("app.onboarding.tourActionDesc"),
+      action: startTour,
+    },
+  ];
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
-          {/* Cinematic Backdrop with Grid */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[9998] pointer-events-none"
-            style={{
-              background: `
-                radial-gradient(circle at 50% 50%, rgba(255, 107, 0, 0.15) 0%, transparent 50%),
-                linear-gradient(to bottom, #000000 0%, #0a0a0a 100%)
-              `,
-            }}
+        <div className="fixed inset-0 z-[9999] flex items-end bg-frame-black/85 p-3 sm:items-center sm:justify-center sm:p-6">
+          <motion.section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            initial={reduceMotion ? false : { opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 18 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+            className="relative max-h-[calc(100dvh-1.5rem)] w-full max-w-xl overflow-y-auto border border-frame-gray-3 bg-frame-black shadow-2xl"
           >
-            {/* Animated Grid Pattern */}
-            <div
-              className="absolute inset-0 opacity-20"
-              style={{
-                backgroundImage: `
-                  linear-gradient(rgba(255, 107, 0, 0.1) 1px, transparent 1px),
-                  linear-gradient(90deg, rgba(255, 107, 0, 0.1) 1px, transparent 1px)
-                `,
-                backgroundSize: '50px 50px',
-              }}
-            />
-
-            {/* Blur Layer */}
-            <div className="absolute inset-0 backdrop-blur-sm" />
-          </motion.div>
-
-          {/* Modal */}
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="w-full max-w-2xl relative pointer-events-auto"
-              style={{
-                background: 'linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%)',
-                border: '1px solid rgba(255, 107, 0, 0.2)',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 100px rgba(255, 107, 0, 0.1)',
-              }}
+            <button
+              type="button"
+              onClick={defer}
+              className="absolute right-3 top-3 grid h-11 w-11 place-items-center border border-transparent text-frame-gray-light transition hover:border-frame-gray-3 hover:text-frame-white"
+              aria-label={t("app.onboarding.close")}
             >
-              {/* Close Button */}
-              <button
-                onClick={handleSkip}
-                className="absolute top-4 right-4 p-2 hover:bg-frame-gray-2 rounded transition z-10"
-                aria-label={t("app.onboarding.close")}
-              >
-                <X className="w-5 h-5 text-frame-gray-light hover:text-frame-white" />
-              </button>
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
 
-              {/* Progress Dots */}
-              <div className="absolute top-6 left-1/2 -translate-x-1/2 flex gap-2">
-                {steps.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentStep(index)}
-                    className={`w-2 h-2 rounded-full transition ${
-                      index === currentStep
-                        ? "bg-frame-orange w-6"
-                        : index < currentStep
-                        ? "bg-frame-orange/50"
-                        : "bg-frame-gray-3"
-                    }`}
-                    aria-label={t("app.onboarding.goToStep").replace("{step}", String(index + 1))}
-                  />
+            <div className="p-5 pb-4 sm:p-8 sm:pb-6">
+              <p className="mb-3 font-frame-mono text-[0.6rem] uppercase tracking-[0.14em] text-frame-orange">
+                {t("app.onboarding.welcomeEyebrow")}
+              </p>
+              <h2 id={titleId} className="max-w-md pr-10 text-2xl font-bold text-frame-white sm:text-3xl">
+                {userName ? t("app.onboarding.hello").replace("{name}", userName) : t("app.onboarding.welcomeTitle")}
+              </h2>
+              <p className="mt-3 max-w-lg text-sm leading-relaxed text-frame-gray-light sm:text-base">
+                {t("app.onboarding.welcomeLead")}
+              </p>
+
+              <ol className="mt-6 grid grid-cols-3 border-y border-frame-gray-3/70 py-4">
+                {["journeyClient", "journeyProject", "journeyDelivery"].map((key, index) => (
+                  <li key={key} className="min-w-0 px-2 first:pl-0 last:pr-0">
+                    <span className="block font-frame-mono text-[0.55rem] tracking-[0.14em] text-frame-orange">{String(index + 1).padStart(2, "0")}</span>
+                    <span className="mt-1 block text-xs font-medium text-frame-white">{t(`app.onboarding.${key}`)}</span>
+                  </li>
                 ))}
-              </div>
+              </ol>
 
-              {/* Content */}
-              <div className="p-8 pt-16 min-h-[500px] flex flex-col">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentStep}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
-                    className="flex-1 flex flex-col"
-                  >
-                    {/* Icon */}
-                    <div className="mb-6">
-                      <div className="inline-flex p-4 bg-frame-orange/10 border border-frame-orange/30 rounded-lg">
-                        <Icon className="w-8 h-8 text-frame-orange" />
-                      </div>
-                    </div>
-
-                    {/* Title */}
-                    <h2 className="text-3xl font-bold text-frame-white mb-3">
-                      {currentStep === 0 && userName
-                        ? t("app.onboarding.hello").replace("{name}", userName)
-                        : step.title}
-                    </h2>
-
-                    {/* Description */}
-                    <p className="text-frame-gray-light text-lg mb-8 leading-relaxed">
-                      {step.description}
-                    </p>
-
-                    {/* Features */}
-                    <div className="space-y-3 mb-8">
-                      {step.features.map((feature, index) => (
-                        <motion.div
-                          key={feature}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          className="flex items-start gap-3"
-                        >
-                          <div className="mt-1 p-1 bg-frame-orange/20 rounded">
-                            <Check className="w-4 h-4 text-frame-orange" />
-                          </div>
-                          <p className="text-frame-white text-sm">{feature}</p>
-                        </motion.div>
-                      ))}
-                    </div>
-
-                    {/* Step 3: Demo Project Actions */}
-                    {currentStep === 2 && (
-                      <div className="mb-8 border border-frame-gray-3 bg-frame-gray-2/50 p-6">
-                        <p className="text-frame-gray-light text-sm mb-4">
-                          {demoProjectId
-                            ? t("app.onboarding.demoExists")
-                            : t("app.onboarding.demoCreate")}
-                        </p>
-                        <div className="flex gap-3">
-                          {demoProjectId ? (
-                            <button
-                              onClick={handleViewDemo}
-                              className="frame-btn-primary flex items-center gap-2"
-                            >
-                              <Target className="w-4 h-4" />
-                              {t("app.onboarding.viewDemo")}
-                            </button>
-                          ) : (
-                            <button
-                              onClick={handleCreateDemo}
-                              disabled={isCreatingDemo}
-                              className="frame-btn-primary flex items-center gap-2"
-                            >
-                              {isCreatingDemo ? (
-                                <>
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                  {t("app.onboarding.creating")}
-                                </>
-                              ) : (
-                                <>
-                                  <Zap className="w-4 h-4" />
-                                  {t("app.onboarding.createDemo")}
-                                </>
-                              )}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </motion.div>
-                </AnimatePresence>
-
-                {/* Footer */}
-                <div className="pt-6 border-t border-frame-gray-3">
-                  <div className="flex items-center justify-between">
-                    {/* Never show again */}
-                    <label className="flex items-center gap-2 cursor-pointer group">
-                      <input
-                        type="checkbox"
-                        checked={neverShowAgain}
-                        onChange={(e) => setNeverShowAgain(e.target.checked)}
-                        className="w-4 h-4 bg-frame-gray-2 border border-frame-gray-3 rounded accent-frame-orange cursor-pointer"
-                      />
-                      <span className="text-xs text-frame-gray-light group-hover:text-frame-white transition">
-                        {t("app.onboarding.dontShowAgain")}
+              <div className="mt-5 space-y-2">
+                {options.map((option) => {
+                  const Icon = option.icon;
+                  return (
+                    <button
+                      key={option.title}
+                      type="button"
+                      onClick={option.action}
+                      disabled={option.loading}
+                      className={`group flex min-h-14 w-full items-center gap-3 border p-3 text-left transition disabled:cursor-wait disabled:opacity-70 ${
+                        option.primary
+                          ? "border-frame-orange bg-frame-orange text-frame-black hover:bg-frame-orange-dark"
+                          : "border-frame-gray-3 bg-frame-gray-1/20 text-frame-white hover:border-frame-orange/60"
+                      }`}
+                    >
+                      <span className={`grid h-9 w-9 shrink-0 place-items-center border ${option.primary ? "border-frame-black/20 bg-frame-black/10" : "border-frame-orange/30 bg-frame-orange/10"}`}>
+                        {option.loading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Icon className={`h-4 w-4 ${option.primary ? "text-frame-black" : "text-frame-orange"}`} aria-hidden="true" />}
                       </span>
-                    </label>
-
-                    {/* Navigation */}
-                    <div className="flex items-center gap-3">
-                      {!isFirstStep && (
-                        <button
-                          onClick={handleBack}
-                          className="frame-btn-ghost flex items-center gap-2"
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                          {t("app.onboarding.back")}
-                        </button>
-                      )}
-
-                      {!isLastStep && (
-                        <button
-                          onClick={handleSkip}
-                          className="frame-btn-ghost"
-                        >
-                          {t("app.onboarding.skip")}
-                        </button>
-                      )}
-
-                      <button
-                        onClick={handleNext}
-                        className="frame-btn-primary flex items-center gap-2"
-                      >
-                        {currentStep === 1 ? (
-                          <>
-                            <Target className="w-4 h-4" />
-                            {t("app.onboarding.startTour")}
-                          </>
-                        ) : isLastStep ? (
-                          <>
-                            <Rocket className="w-4 h-4" />
-                            {t("app.onboarding.start")}
-                          </>
-                        ) : (
-                          <>
-                            {t("app.onboarding.next")}
-                            <ChevronRight className="w-4 h-4" />
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-semibold">{option.title}</span>
+                        <span className={`mt-0.5 block text-xs leading-relaxed ${option.primary ? "text-frame-black/75" : "text-frame-gray-light"}`}>{option.description}</span>
+                      </span>
+                      <ArrowRight className={`h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5 ${option.primary ? "text-frame-black" : "text-frame-orange"}`} aria-hidden="true" />
+                    </button>
+                  );
+                })}
               </div>
-            </motion.div>
-          </div>
-        </>
+            </div>
+
+            <div className="flex items-center justify-between border-t border-frame-gray-3 px-5 py-3 sm:px-8">
+              <p className="text-xs text-frame-gray-light">{t("app.onboarding.welcomeFooter")}</p>
+              <button type="button" onClick={defer} className="min-h-11 px-2 text-xs text-frame-gray-light transition hover:text-frame-white">
+                {t("app.onboarding.defer")}
+              </button>
+            </div>
+          </motion.section>
+        </div>
       )}
     </AnimatePresence>
   );

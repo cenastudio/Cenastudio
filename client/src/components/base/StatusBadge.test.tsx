@@ -4,8 +4,8 @@
  * Tests cover all acceptance criteria:
  * 1. Component created with TypeScript interface ✓
  * 2. Color mapping correct for all 5 types ✓
- * 3. Background color: rgba with alpha 0.1, border: rgba with alpha 0.3 ✓
- * 4. Text color: full opacity, bold weight ✓
+ * 3. Background, border and text use the semantic status tokens ✓
+ * 4. Text color token and bold weight ✓
  * 5. Border radius: 999px (pill), padding responsive to size prop ✓
  * 6. Optional icon renders before text ✓
  * 7. Pulse animation applies when pulse=true ✓
@@ -56,33 +56,33 @@ describe('StatusBadge', () => {
     }> = [
       {
         type: 'success',
-        expectedBg: 'rgba(16, 185, 129, 0.1)',
-        expectedBorder: 'rgba(16, 185, 129, 0.3)',
-        expectedText: 'rgb(16, 185, 129)',
+        expectedBg: 'var(--status-success-bg)',
+        expectedBorder: 'var(--status-success-border)',
+        expectedText: 'var(--status-success)',
       },
       {
         type: 'warning',
-        expectedBg: 'rgba(245, 158, 11, 0.1)',
-        expectedBorder: 'rgba(245, 158, 11, 0.3)',
-        expectedText: 'rgb(245, 158, 11)',
+        expectedBg: 'var(--status-warning-bg)',
+        expectedBorder: 'var(--status-warning-border)',
+        expectedText: 'var(--status-warning)',
       },
       {
         type: 'danger',
-        expectedBg: 'rgba(239, 68, 68, 0.1)',
-        expectedBorder: 'rgba(239, 68, 68, 0.3)',
-        expectedText: 'rgb(239, 68, 68)',
+        expectedBg: 'var(--status-danger-bg)',
+        expectedBorder: 'var(--status-danger-border)',
+        expectedText: 'var(--status-danger)',
       },
       {
         type: 'info',
-        expectedBg: 'rgba(59, 130, 246, 0.1)',
-        expectedBorder: 'rgba(59, 130, 246, 0.3)',
-        expectedText: 'rgb(59, 130, 246)',
+        expectedBg: 'var(--status-info-bg)',
+        expectedBorder: 'var(--status-info-border)',
+        expectedText: 'var(--status-info)',
       },
       {
         type: 'neutral',
-        expectedBg: 'rgba(107, 114, 128, 0.1)',
-        expectedBorder: 'rgba(107, 114, 128, 0.3)',
-        expectedText: 'rgb(107, 114, 128)',
+        expectedBg: 'var(--status-neutral-bg)',
+        expectedBorder: 'var(--status-neutral-border)',
+        expectedText: 'var(--status-neutral)',
       },
     ];
 
@@ -91,17 +91,9 @@ describe('StatusBadge', () => {
         render(<StatusBadge type={type} text={type.toUpperCase()} />);
 
         const badge = screen.getByTestId('status-badge');
-        const styles = window.getComputedStyle(badge);
-
-        // Check background color (alpha 0.1)
-        expect(styles.backgroundColor).toBe(expectedBg);
-
-        // Check border color (alpha 0.3)
-        expect(styles.borderColor).toBe(expectedBorder);
-
-        // Check text color (full opacity) - test environment may use hex format
-        expect(styles.color).toBeTruthy();
-        expect(styles.color.length).toBeGreaterThan(0);
+        expect(badge.style.getPropertyValue('--status-badge-bg')).toBe(expectedBg);
+        expect(badge.style.getPropertyValue('--status-badge-border')).toBe(expectedBorder);
+        expect(badge.style.getPropertyValue('--status-badge-text')).toBe(expectedText);
       });
     });
   });

@@ -70,7 +70,7 @@ export default function Navigation() {
           <button
             type="button"
             onClick={() => setLocation("/register")}
-            className="min-h-10 rounded-md bg-frame-orange px-5 text-xs font-medium text-black transition hover:bg-[#f16001]"
+            className="min-h-10 rounded-md bg-frame-orange px-5 text-xs font-medium text-black transition hover:bg-[var(--ds-orange-3)]"
           >
             {t("start") as string}
           </button>

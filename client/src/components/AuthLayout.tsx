@@ -1,6 +1,8 @@
 import { useLocation } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
 import BrandLogo from "@/components/BrandLogo";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { ArrowLeft } from "lucide-react";
 
 interface AuthLayoutProps {
   title: string;
@@ -17,8 +19,6 @@ export default function AuthLayout({ title, subtitle, children, mode }: AuthLayo
   return (
     <div className="cena-auth cinematic-theme dark min-h-screen flex flex-col lg:flex-row text-frame-white">
       <div className="relative hidden overflow-hidden lg:flex lg:w-[52%] items-center p-14 xl:p-20">
-        <div className="landing-glow-orbit -left-36 top-12" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_42%_38%,rgba(var(--ds-orange-rgb),0.2),transparent_34%)]" />
         <div className="relative z-10 max-w-[520px]">
           <div className="flex items-baseline gap-3">
             <BrandLogo tone="onDark" className="text-3xl font-semibold" />
@@ -43,14 +43,39 @@ export default function AuthLayout({ title, subtitle, children, mode }: AuthLayo
       </div>
 
       {/* Right panel — form */}
-      <div className="flex-1 flex items-center justify-center px-5 sm:px-9 py-11">
+      <div className="auth-form-area flex-1 flex flex-col items-center justify-start lg:justify-center px-5 sm:px-9 py-5 lg:py-11">
+        <div className="auth-mobile-header lg:hidden">
+          <button
+            type="button"
+            onClick={() => setLocation("/")}
+            className="auth-home-control"
+            aria-label={t("app.auth.backToLanding")}
+            title={t("app.auth.backToLanding")}
+          >
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setLocation("/")}
+            className="auth-mobile-brand"
+            aria-label={t("app.auth.backToLanding")}
+          >
+            <BrandLogo tone="onDark" className="text-[1.55rem] font-semibold" />
+          </button>
+          <LanguageSwitcher compact />
+        </div>
+
+        <div className="auth-desktop-language hidden lg:block">
+          <LanguageSwitcher compact />
+        </div>
+
         <div className="auth-panel w-full max-w-[430px] p-6 sm:p-8">
           {mode && (
-            <div className="mb-8 flex border border-frame-gray-3 bg-frame-gray-1/30 p-1">
+            <div className="auth-desktop-switch mb-8 hidden border border-frame-gray-3 bg-frame-gray-1/30 p-1 lg:flex">
               <button
                 type="button"
                 onClick={() => setLocation("/login")}
-                className={`flex-1 py-2.5 font-frame-mono text-[0.63rem] tracking-[0.12em] uppercase transition ${
+                className={`min-h-11 flex-1 py-2.5 font-frame-mono text-[0.63rem] tracking-[0.12em] uppercase transition ${
                   mode === "login"
                     ? "bg-frame-orange text-frame-black"
                     : "bg-transparent text-frame-gray-light hover:text-frame-white"
@@ -61,7 +86,7 @@ export default function AuthLayout({ title, subtitle, children, mode }: AuthLayo
               <button
                 type="button"
                 onClick={() => setLocation("/register")}
-                className={`flex-1 py-2.5 font-frame-mono text-[0.63rem] tracking-[0.12em] uppercase transition ${
+                className={`min-h-11 flex-1 py-2.5 font-frame-mono text-[0.63rem] tracking-[0.12em] uppercase transition ${
                   mode === "register"
                     ? "bg-frame-orange text-frame-black"
                     : "bg-transparent text-frame-gray-light hover:text-frame-white"
@@ -85,13 +110,17 @@ export default function AuthLayout({ title, subtitle, children, mode }: AuthLayo
 export function AuthField({
   label,
   children,
+  htmlFor,
+  className = "",
 }: {
   label: string;
   children: React.ReactNode;
+  htmlFor?: string;
+  className?: string;
 }) {
   return (
-    <div className="mb-4">
-      <label className="block font-frame-mono text-[0.64rem] tracking-[0.15em] uppercase text-frame-gray-light mb-1.5">
+    <div className={`mb-4 ${className}`}>
+      <label htmlFor={htmlFor} className="block font-frame-mono text-[0.64rem] tracking-[0.15em] uppercase text-frame-gray-light mb-1.5">
         {label}
       </label>
       {children}

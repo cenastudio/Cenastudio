@@ -123,7 +123,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
         }
 
         .glass-card--clickable:focus-visible {
-          outline: 2px solid var(--ds-primary, #e85002);
+          outline: 2px solid var(--ds-primary);
           outline-offset: 2px;
         }
 

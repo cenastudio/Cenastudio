@@ -7,7 +7,7 @@ Elementos interativos DEVEM ter área de toque renderizada de no mínimo
 
 - WCAG 2.5.5 Target Size (Enhanced, AAA).
 - Apple Human Interface Guidelines — 44 pt mínimo.
-- Origem no projeto: [`FASE_1_ACHADOS.md`](../../FASE_1_ACHADOS.md).
+- Origem no projeto: [auditoria UX/mobile](../../.kiro/specs/auditoria-ux-2026-07/tasks.md).
 
 Elementos cobertos por default pela verificação automatizada
 (`tests/e2e/support/touchTarget.ts`):
@@ -68,5 +68,5 @@ cada violação com nome do elemento, dimensões medidas e comandos
 
 - Testes: `tests/e2e/critical-pages-mobile.spec.ts`
 - Helper: `tests/e2e/support/touchTarget.ts`
-- Achados originais: `FASE_1_ACHADOS.md` seções 2 e 8
-- Requirements da Fase 2: `.kiro/specs/fase-2-layout-mobile-e-tabs/requirements.md`
+- Achados e validação: `.kiro/specs/auditoria-ux-2026-07/tasks.md`
+- Requirements da Fase 2: `.kiro/specs/fase-2-layout-mobile-e-tabs-OK/requirements.md`

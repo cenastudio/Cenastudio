@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import path from "node:path";
 import { defineConfig, loadEnv, type Plugin } from "vite";
 
-const DEFAULT_PUBLIC_URL = "https://cenastudio-production.up.railway.app";
+const DEFAULT_PUBLIC_URL = "https://cena-studio-prod.vercel.app";
 
 function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, (character) => ({
@@ -38,7 +38,7 @@ export default defineConfig(({ mode }) => {
   const seoTitle = env.VITE_APP_SEO_TITLE?.trim() || `${appName} — Software para Produtoras de Vídeo | Gestão com IA`;
   const description = env.VITE_APP_DESCRIPTION?.trim() ||
     "Software para produtoras de vídeo: gerencie clientes, projetos, arquivos e aprovações em um só lugar. Gere documentos com IA e economize tempo operacional.";
-  const socialImageUrl = `${publicUrl}/landing/product/dashboard.png`;
+  const socialImageUrl = `${publicUrl}/landing/social/cena-product.png`;
   const structuredData = JSON.stringify({
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",

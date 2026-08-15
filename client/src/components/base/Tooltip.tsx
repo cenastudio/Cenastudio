@@ -255,7 +255,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
 
         /* Ensure focus visibility */
         .tooltip-wrapper:focus-visible {
-          outline: 2px solid var(--ds-primary, #e85002);
+          outline: 2px solid var(--ds-primary);
           outline-offset: 2px;
           border-radius: 2px;
         }

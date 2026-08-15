@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import AppNavBar from "@/components/AppNavBar";
+import EmptyState from "@/components/EmptyState";
 import ProductionNav from "@/components/ProductionNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
 import { api } from "@/lib/api";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Webhook as WebhookIcon,
   Plus,
@@ -60,6 +62,7 @@ function formatDate(iso: string | null) {
 }
 
 function WebhooksContent() {
+  const { t } = useLanguage();
   const [webhooks, setWebhooks] = useState<WebhookItem[]>([]);
   const [events, setEvents] = useState<WebhookEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -200,58 +203,20 @@ function WebhooksContent() {
 
         {/* Empty state — explains what webhooks are for, with the orange-square icon pattern */}
         {!loading && webhooks.length === 0 && (
-          <section className="max-w-2xl mx-auto py-10 space-y-8">
-            <div className="frame-empty-state p-10 sm:p-12 space-y-6 text-center">
-              <div className="w-16 h-16 mx-auto border border-frame-orange/30 bg-frame-orange/10 flex items-center justify-center">
-                <WebhookIcon className="w-8 h-8 text-frame-orange" />
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-frame-white">Conecte o Cena a outras ferramentas</h2>
-                <p className="text-sm text-frame-gray-light max-w-md mx-auto leading-relaxed">
-                  Um webhook é um aviso automático: quando algo acontece aqui (ex: cliente aprova um vídeo),
-                  disparamos uma mensagem para a URL que você cadastrar — na hora, sem você precisar entrar no
-                  sistema para checar.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setCreateOpen(true)}
-                className="frame-btn-primary inline-flex items-center gap-2 !py-3 !px-6"
-              >
-                <Plus className="w-4 h-4" />
-                Criar meu primeiro webhook
-              </button>
-            </div>
+          <section className="mx-auto max-w-4xl py-10 space-y-5">
+            <EmptyState
+              icon={WebhookIcon}
+              eyebrow={t("app.webhooks.onboardEyebrow")}
+              title={t("app.webhooks.onboardTitle")}
+              description={t("app.webhooks.onboardDesc")}
+              action={{ label: t("app.webhooks.onboardCta"), onClick: () => setCreateOpen(true), icon: Plus }}
+              steps={[
+                { title: t("app.webhooks.onboardStep1"), description: t("app.webhooks.onboardStep1Desc") },
+                { title: t("app.webhooks.onboardStep2"), description: t("app.webhooks.onboardStep2Desc") },
+                { title: t("app.webhooks.onboardStep3"), description: t("app.webhooks.onboardStep3Desc") },
+              ]}
+            />
 
-            {/* Flow explanation — 01/02/03 steps, same pattern as Documents/Proposals/Pipeline */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-frame-orange tracking-wider block mb-2">01</span>
-                <p className="text-sm font-semibold text-frame-white">Algo acontece no Cena</p>
-                <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
-                  Ex: cliente aprova um vídeo, um projeto é criado, ou uma proposta é aceita.
-                </p>
-              </div>
-              <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-frame-orange tracking-wider block mb-2">02</span>
-                <p className="text-sm font-semibold text-frame-white">Disparamos um aviso</p>
-                <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
-                  Enviamos os dados do evento em JSON, assinado, para a URL que você cadastrou.
-                </p>
-              </div>
-              <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-frame-orange tracking-wider block mb-2">03</span>
-                <p className="text-sm font-semibold text-frame-white">Sua ferramenta reage</p>
-                <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
-                  Zapier, Make, Slack, uma planilha — o que você conectar do outro lado processa na hora.
-                </p>
-              </div>
-            </div>
-
-            {/* Concrete examples */}
             <div className="border border-frame-gray-3/50 bg-frame-gray-1/10 p-5">
               <p className="font-frame-mono text-[0.6rem] uppercase tracking-[0.14em] text-frame-orange mb-4">
                 Exemplos de uso

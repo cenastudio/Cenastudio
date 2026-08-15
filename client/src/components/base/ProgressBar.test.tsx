@@ -128,16 +128,16 @@ describe('ProgressBar Component', () => {
       const progressBar = screen.getByRole('progressbar');
       const fill = progressBar.querySelector('.progress-bar-fill');
 
-      expect(fill).toHaveAttribute('style', expect.stringContaining('background-color: var(--ds-orange)'));
+      expect(fill).toHaveAttribute('style', expect.stringContaining('--progress-fill: var(--ds-orange)'));
     });
 
     it('should accept custom color via props', () => {
-      render(<ProgressBar value={50} color="#3b82f6" />);
+      render(<ProgressBar value={50} color="var(--status-info)" />);
 
       const progressBar = screen.getByRole('progressbar');
       const fill = progressBar.querySelector('.progress-bar-fill');
 
-      expect(fill).toHaveStyle({ backgroundColor: '#3b82f6' });
+      expect(fill).toHaveAttribute('style', expect.stringContaining('--progress-fill: var(--status-info)'));
     });
 
     it('should accept custom color with rgba format', () => {

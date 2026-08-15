@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import AppNavBar from "@/components/AppNavBar";
+import EmptyState from "@/components/EmptyState";
 import ProductionNav from "@/components/ProductionNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
 import { useProject } from "@/contexts/ProjectContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { api, type TimeEntryItem } from "@/lib/api";
 import {
   Clock,
@@ -54,6 +56,7 @@ function entryCost(entry: TimeEntryItem): number {
 }
 
 function TimesheetContent() {
+  const { t } = useLanguage();
   const { projects } = useProject();
   const [entries, setEntries] = useState<TimeEntryItem[]>([]);
   const [totals, setTotals] = useState({ totalDurationSec: 0, totalCost: 0 });
@@ -324,46 +327,18 @@ function TimesheetContent() {
 
         {/* Empty state — orange square + 01/02/03 flow */}
         {!loading && !hasEntries && (
-          <section className="max-w-2xl mx-auto py-6 space-y-8">
-            <div className="frame-empty-state p-10 sm:p-12 space-y-6 text-center">
-              <div className="w-16 h-16 mx-auto border border-frame-orange/30 bg-frame-orange/10 flex items-center justify-center">
-                <Clock className="w-8 h-8 text-frame-orange" />
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-frame-white">Registre suas horas de trabalho</h2>
-                <p className="text-sm text-frame-gray-light max-w-md mx-auto leading-relaxed">
-                  Inicie o timer acima quando começar a trabalhar, ou adicione um registro manual com
-                  horário de início e fim.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-adaptive-primary tracking-wider block mb-2">01</span>
-                <p className="text-sm font-semibold text-frame-white">Inicie timer</p>
-                <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
-                  Descreva a tarefa e inicie o cronômetro.
-                </p>
-              </div>
-              <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-adaptive-primary tracking-wider block mb-2">02</span>
-                <p className="text-sm font-semibold text-frame-white">Vincule projeto</p>
-                <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
-                  Associe o tempo a um projeto para o custo entrar no relatório certo.
-                </p>
-              </div>
-              <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-adaptive-primary tracking-wider block mb-2">03</span>
-                <p className="text-sm font-semibold text-frame-white">Veja horas e custo</p>
-                <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
-                  Defina a taxa/hora ao parar e o custo é calculado automaticamente.
-                </p>
-              </div>
-            </div>
+          <section className="mx-auto max-w-4xl py-6">
+            <EmptyState
+              icon={Clock}
+              eyebrow={t("app.timesheet.onboardEyebrow")}
+              title={t("app.timesheet.onboardTitle")}
+              description={t("app.timesheet.onboardDesc")}
+              steps={[
+                { title: t("app.timesheet.onboardStep1"), description: t("app.timesheet.onboardStep1Desc") },
+                { title: t("app.timesheet.onboardStep2"), description: t("app.timesheet.onboardStep2Desc") },
+                { title: t("app.timesheet.onboardStep3"), description: t("app.timesheet.onboardStep3Desc") },
+              ]}
+            />
           </section>
         )}
 

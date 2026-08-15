@@ -21,6 +21,34 @@
   --ds-gray: #646464;
   --ds-dark-gray: #333333;
 
+  /* Component and data-visualization semantics */
+  --ds-surface-deep: #050505;
+  --ds-surface-input: #111111;
+  --ds-surface-tooltip: #0a0a0a;
+  --ds-surface-elevated: #1a1a1a;
+  --ds-chart-grid: #2a2a2a;
+  --ds-chart-axis: #999999;
+  --ds-chart-reference: #666666;
+  --ds-chart-accent: #ff4e00;
+  --ds-metric-info: #4d9fff;
+  --ds-stage-prospect: #6366f1;
+  --ds-stage-qualified: #8b5cf6;
+  --ds-stage-proposal: #a855f7;
+  --ds-stage-won: #22c55e;
+  --ds-stage-callsheet: #06b6d4;
+  --ds-stage-schedule: #38bdf8;
+  --ds-stage-checklist: #eab308;
+  --ds-hero-stroke: #f5f0e8;
+  --ds-document-preview-paper: #f8f4ed;
+  --ds-language-border: #ded6cf;
+  --ds-language-shadow: 0 8px 22px rgba(30, 20, 15, 0.08);
+  --ds-brand-whatsapp: #25d366;
+  --ds-brand-twitter: #1da1f2;
+  --ds-brand-discord: #5865f2;
+  --ds-brand-discord-hover: #4752c4;
+  --ds-brand-discord-label: #9ba3ff;
+  --ds-brand-discord-rgb: 88, 101, 242;
+
   --ds-surface-0: #000000; /* app bg */
   --ds-surface-1: #101010; /* chrome */
   --ds-surface-2: #181818; /* cards */
@@ -130,6 +158,7 @@
   --ds-success: #00c864;
   --ds-danger: #ff3b3b;
   --ds-warning: #ffb800;
+  --ds-warning-rgb: 255, 184, 0;
 
   /* Hover states */
   --ds-orange-hover: #f16001;

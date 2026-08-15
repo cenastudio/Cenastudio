@@ -4,7 +4,15 @@
   "buildCommand": "npm run build",
   "installCommand": "npm install --include=dev",
   "outputDirectory": "dist/public",
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "dist/public/index.html"
+    }
+  },
   "rewrites": [
+    { "source": "/review/:token", "destination": "/api?publicSeo=review&token=:token" },
+    { "source": "/proposal/:token", "destination": "/api?publicSeo=proposal&token=:token" },
+    { "source": "/meeting/:token", "destination": "/api?publicSeo=meeting&token=:token" },
     { "source": "/api/(.*)", "destination": "/api" },
     { "source": "/api", "destination": "/api" },
     { "source": "/health", "destination": "/api" },

@@ -228,7 +228,7 @@ const {
 ### Colors
 - Background: Dark theme (from design system)
 - Text: Light/white text on dark background
-- Accent: Orange (#FF6B00) for primary actions
+- Accent: primary brand token for primary actions
 - Glass effect: Subtle transparency on GreetingSection
 
 ### Typography

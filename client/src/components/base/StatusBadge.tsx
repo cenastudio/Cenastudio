@@ -47,34 +47,34 @@ export interface StatusBadgeProps {
  */
 const STATUS_COLORS: Record<StatusType, { base: string; bg: string; border: string; text: string }> = {
   success: {
-    base: '#10b981',
-    bg: 'rgba(16, 185, 129, 0.1)',
-    border: 'rgba(16, 185, 129, 0.3)',
-    text: '#10b981',
+    base: 'var(--status-success)',
+    bg: 'var(--status-success-bg)',
+    border: 'var(--status-success-border)',
+    text: 'var(--status-success)',
   },
   warning: {
-    base: '#f59e0b',
-    bg: 'rgba(245, 158, 11, 0.1)',
-    border: 'rgba(245, 158, 11, 0.3)',
-    text: '#f59e0b',
+    base: 'var(--status-warning)',
+    bg: 'var(--status-warning-bg)',
+    border: 'var(--status-warning-border)',
+    text: 'var(--status-warning)',
   },
   danger: {
-    base: '#ef4444',
-    bg: 'rgba(239, 68, 68, 0.1)',
-    border: 'rgba(239, 68, 68, 0.3)',
-    text: '#ef4444',
+    base: 'var(--status-danger)',
+    bg: 'var(--status-danger-bg)',
+    border: 'var(--status-danger-border)',
+    text: 'var(--status-danger)',
   },
   info: {
-    base: '#3b82f6',
-    bg: 'rgba(59, 130, 246, 0.1)',
-    border: 'rgba(59, 130, 246, 0.3)',
-    text: '#3b82f6',
+    base: 'var(--status-info)',
+    bg: 'var(--status-info-bg)',
+    border: 'var(--status-info-border)',
+    text: 'var(--status-info)',
   },
   neutral: {
-    base: '#6b7280',
-    bg: 'rgba(107, 114, 128, 0.1)',
-    border: 'rgba(107, 114, 128, 0.3)',
-    text: '#6b7280',
+    base: 'var(--status-neutral)',
+    bg: 'var(--status-neutral-bg)',
+    border: 'var(--status-neutral-border)',
+    text: 'var(--status-neutral)',
   },
 };
 
@@ -106,13 +106,16 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
   const colors = STATUS_COLORS[type];
   const sizeConfig = SIZE_CONFIG[size];
 
-  const badgeStyles: React.CSSProperties = {
-    backgroundColor: colors.bg,
-    borderColor: colors.border,
-    color: colors.text,
+  const badgeStyles = {
+    "--status-badge-bg": colors.bg,
+    "--status-badge-border": colors.border,
+    "--status-badge-text": colors.text,
+    backgroundColor: "var(--status-badge-bg)",
+    borderColor: "var(--status-badge-border)",
+    color: "var(--status-badge-text)",
     padding: sizeConfig.padding,
     fontSize: sizeConfig.fontSize,
-  };
+  } as React.CSSProperties;
 
   return (
     <span

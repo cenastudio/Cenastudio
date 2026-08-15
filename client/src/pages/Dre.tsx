@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useRoute } from "wouter";
 import AppNavBar from "@/components/AppNavBar";
+import EmptyState from "@/components/EmptyState";
 import ProjectNav from "@/components/ProjectNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
 import { api, type DreReport, type DreDeduction, type Project } from "@/lib/api";
 import { readStudioSettings, type StudioSettings } from "@/lib/studioSettings";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   FileBarChart,
   Plus,
@@ -17,6 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { SITE_CONFIG } from "@shared/site";
+import { DOCUMENT_EXPORT_COLORS } from "@/design-system/color-presets";
 import {
   Dialog,
   DialogContent,
@@ -101,6 +104,7 @@ function printDreReport(docHtml: string) {
 }
 
 function buildDreReportHtml(report: DreReport, project: Project | null, studio: StudioSettings) {
+  const { paper } = DOCUMENT_EXPORT_COLORS;
   const accent = studio.primaryColor || SITE_CONFIG.primaryColor;
   const rows: Array<[string, number, boolean?]> = [
     ["Receita bruta", report.grossRevenue],
@@ -130,23 +134,23 @@ function buildDreReportHtml(report: DreReport, project: Project | null, studio: 
   <style>
     @page{size:A4;margin:0}
     *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    html,body{margin:0;min-height:100%;background:#f2ede4;color:#141414;font-family:Arial,sans-serif}
-    .doc-page{width:210mm;min-height:297mm;margin:0 auto;background:#fbf7f0;padding:18mm}
+    html,body{margin:0;min-height:100%;background:${paper.canvas};color:${paper.text};font-family:Arial,sans-serif}
+    .doc-page{width:210mm;min-height:297mm;margin:0 auto;background:${paper.page};padding:18mm}
     .doc-kicker{font-size:10px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:${accent}}
-    .doc-title{font-size:36px;line-height:1;margin:10px 0;font-weight:900;color:#111}
+    .doc-title{font-size:36px;line-height:1;margin:10px 0;font-weight:900;color:${paper.shotText}}
     .doc-header{display:flex;justify-content:space-between;gap:24px;border-bottom:3px solid ${accent};padding-bottom:22px}
-    .doc-brand{text-align:right;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#666}
+    .doc-brand{text-align:right;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:${paper.textMuted}}
     .doc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:24px}
-    .doc-field{border:1px solid #ddd4c7;background:rgba(255,253,248,.88);padding:11px}
-    .doc-field-label{font-size:9px;color:#777;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
-    .doc-field-value{font-size:12px;color:#1a1a1a;font-weight:700}
-    .dre-table{margin-top:28px;border-top:1px solid #d8d0c3}
-    .dre-row{display:flex;justify-content:space-between;padding:10px 4px;border-bottom:1px solid #e5ddce;font-size:13px}
-    .dre-row-label{color:#333}
+    .doc-field{border:1px solid ${paper.border};background:rgba(255,253,248,.88);padding:11px}
+    .doc-field-label{font-size:9px;color:${paper.textMuted};font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+    .doc-field-value{font-size:12px;color:${paper.textStrong};font-weight:700}
+    .dre-table{margin-top:28px;border-top:1px solid ${paper.borderStrong}}
+    .dre-row{display:flex;justify-content:space-between;padding:10px 4px;border-bottom:1px solid ${paper.borderSoft};font-size:13px}
+    .dre-row-label{color:${paper.textDefault}}
     .dre-row-value{font-weight:700;font-family:monospace}
-    .dre-row-negative{color:#c0392b}
+    .dre-row-negative{color:${paper.negative}}
     .dre-row-total{font-weight:900;background:${accent}0f;border-top:2px solid ${accent};border-bottom:2px solid ${accent}}
-    .doc-footer{margin-top:42px;padding-top:18px;border-top:1px solid #d8d0c3;display:flex;justify-content:space-between;gap:20px;color:#777;font-size:11px}
+    .doc-footer{margin-top:42px;padding-top:18px;border-top:1px solid ${paper.borderStrong};display:flex;justify-content:space-between;gap:20px;color:${paper.textMuted};font-size:11px}
     @media screen{html,body{width:100%}.doc-page{width:100%;margin:0;box-shadow:0 22px 70px rgba(0,0,0,.16)}}
     @media print{html,body{width:210mm;min-height:297mm}.doc-page{width:210mm;min-height:297mm;height:auto;margin:0;padding:16mm;box-shadow:none}}
   </style>
@@ -172,6 +176,7 @@ function buildDreReportHtml(report: DreReport, project: Project | null, studio: 
 }
 
 function DreContent() {
+  const { t } = useLanguage();
   const [, params] = useRoute("/project/:projectId/dre");
   const projectId = Number(params?.projectId);
 
@@ -311,46 +316,18 @@ function DreContent() {
 
         {/* Empty state — orange square + 01/02/03 flow, same pattern as Budget.tsx */}
         {!loading && isEmpty && (
-          <section className="max-w-2xl mx-auto py-10 space-y-8">
-            <div className="frame-empty-state p-10 sm:p-12 space-y-6 text-center">
-              <div className="w-16 h-16 mx-auto border border-frame-orange/30 bg-frame-orange/10 flex items-center justify-center">
-                <FileBarChart className="w-8 h-8 text-frame-orange" />
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-frame-white">Veja o resultado real do projeto</h2>
-                <p className="text-sm text-frame-gray-light max-w-md mx-auto leading-relaxed">
-                  Vincule receitas do financeiro a este projeto e defina o orçamento para gerar o
-                  demonstrativo de resultado completo.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-adaptive-primary tracking-wider block mb-2">01</span>
-                <p className="text-sm font-semibold text-frame-white">Vincule receita</p>
-                <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
-                  No Financeiro, vincule lançamentos de receita a este projeto.
-                </p>
-              </div>
-              <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-adaptive-primary tracking-wider block mb-2">02</span>
-                <p className="text-sm font-semibold text-frame-white">Defina orçamento</p>
-                <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
-                  Na aba Orçamento, registre os custos diretos do projeto.
-                </p>
-              </div>
-              <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-adaptive-primary tracking-wider block mb-2">03</span>
-                <p className="text-sm font-semibold text-frame-white">Veja o resultado</p>
-                <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
-                  O DRE calcula o resultado líquido automaticamente.
-                </p>
-              </div>
-            </div>
+          <section className="mx-auto max-w-4xl py-10">
+            <EmptyState
+              icon={FileBarChart}
+              eyebrow={t("app.dre.onboardEyebrow")}
+              title={t("app.dre.onboardTitle")}
+              description={t("app.dre.onboardDesc")}
+              steps={[
+                { title: t("app.dre.onboardStep1"), description: t("app.dre.onboardStep1Desc") },
+                { title: t("app.dre.onboardStep2"), description: t("app.dre.onboardStep2Desc") },
+                { title: t("app.dre.onboardStep3"), description: t("app.dre.onboardStep3Desc") },
+              ]}
+            />
           </section>
         )}
 

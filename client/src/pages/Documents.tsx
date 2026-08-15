@@ -28,6 +28,7 @@ import { buildDocumentPrefill } from "@/lib/studioContext";
 import type { Client } from "@/lib/api";
 import { getArtifactStatus, getArtifactVersion, type ArtifactStatus } from "@/lib/workflow";
 import { SITE_CONFIG } from "@shared/site";
+import { DOCUMENT_EXPORT_COLORS, DOCUMENT_TYPE_ACCENTS } from "@/design-system/color-presets";
 
 type DocType = "briefing" | "roteiro" | "callsheet" | "decupagem" | "orcamento" | "cronograma" | "checklist" | "entrega";
 
@@ -78,13 +79,13 @@ interface DocTypeDefinition {
 function getDocTypes(t: Translate): DocTypeDefinition[] {
   return [
   { id: "briefing", label: t("app.documents.docTypeBriefing"), icon: FileText, accent: SITE_CONFIG.primaryColor, description: t("app.documents.docTypeBriefingDesc") },
-  { id: "roteiro", label: t("app.documents.docTypeScript"), icon: Film, accent: "#f59e0b", description: t("app.documents.docTypeScriptDesc") },
-  { id: "callsheet", label: t("app.documents.docTypeCallsheet"), icon: ClipboardList, accent: "#06b6d4", description: t("app.documents.docTypeCallsheetDesc") },
-  { id: "decupagem", label: t("app.documents.docTypeShotBreakdown"), icon: ListChecks, accent: "#8b5cf6", description: t("app.documents.docTypeShotBreakdownDesc") },
-  { id: "orcamento", label: t("app.documents.docTypeBudget"), icon: FileText, accent: "#22c55e", description: t("app.documents.docTypeBudgetDesc") },
-  { id: "cronograma", label: t("app.documents.docTypeSchedule"), icon: CalendarDays, accent: "#38bdf8", description: t("app.documents.docTypeScheduleDesc") },
-  { id: "checklist", label: t("app.documents.docTypeChecklist"), icon: Check, accent: "#eab308", description: t("app.documents.docTypeChecklistDesc") },
-  { id: "entrega", label: t("app.documents.docTypeDelivery"), icon: Download, accent: "#10b981", description: t("app.documents.docTypeDeliveryDesc") },
+  { id: "roteiro", label: t("app.documents.docTypeScript"), icon: Film, accent: DOCUMENT_TYPE_ACCENTS.roteiro, description: t("app.documents.docTypeScriptDesc") },
+  { id: "callsheet", label: t("app.documents.docTypeCallsheet"), icon: ClipboardList, accent: DOCUMENT_TYPE_ACCENTS.callsheet, description: t("app.documents.docTypeCallsheetDesc") },
+  { id: "decupagem", label: t("app.documents.docTypeShotBreakdown"), icon: ListChecks, accent: DOCUMENT_TYPE_ACCENTS.decupagem, description: t("app.documents.docTypeShotBreakdownDesc") },
+  { id: "orcamento", label: t("app.documents.docTypeBudget"), icon: FileText, accent: DOCUMENT_TYPE_ACCENTS.orcamento, description: t("app.documents.docTypeBudgetDesc") },
+  { id: "cronograma", label: t("app.documents.docTypeSchedule"), icon: CalendarDays, accent: DOCUMENT_TYPE_ACCENTS.cronograma, description: t("app.documents.docTypeScheduleDesc") },
+  { id: "checklist", label: t("app.documents.docTypeChecklist"), icon: Check, accent: DOCUMENT_TYPE_ACCENTS.checklist, description: t("app.documents.docTypeChecklistDesc") },
+  { id: "entrega", label: t("app.documents.docTypeDelivery"), icon: Download, accent: DOCUMENT_TYPE_ACCENTS.entrega, description: t("app.documents.docTypeDeliveryDesc") },
   ];
 }
 
@@ -329,6 +330,7 @@ function documentSections(form: DocumentForm, t: Translate) {
 }
 
 function buildDocumentHtml(form: DocumentForm, studio: StudioSettings, t: Translate, locale: "pt" | "en" = "pt") {
+  const { paper } = DOCUMENT_EXPORT_COLORS;
   const docTypes = getDocTypes(t);
   const doc = docTypes.find((item) => item.id === form.type) || docTypes[0];
   const accent = doc.accent;
@@ -358,29 +360,29 @@ function buildDocumentHtml(form: DocumentForm, studio: StudioSettings, t: Transl
   <style>
     @page{size:A4;margin:0}
     *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    html,body{margin:0;min-height:100%;background:#f2ede4;color:#141414;font-family:Arial,sans-serif}
-    body{background:linear-gradient(135deg,${accentSoft},#f7f1e8 38%,#eee6da 100%)}
-    .doc-page{width:210mm;min-height:297mm;margin:0 auto;background:linear-gradient(180deg,#fbf7f0 0%,#f5eee4 100%);padding:18mm;position:relative;overflow:visible}
+    html,body{margin:0;min-height:100%;background:${paper.canvas};color:${paper.text};font-family:Arial,sans-serif}
+    body{background:linear-gradient(135deg,${accentSoft},${paper.pageWarm} 38%,${paper.pageWarmEnd} 100%)}
+    .doc-page{width:210mm;min-height:297mm;margin:0 auto;background:linear-gradient(180deg,${paper.page} 0%,${paper.pageEnd} 100%);padding:18mm;position:relative;overflow:visible}
     .doc-page:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 12% 4%,${accentTint},transparent 34%),radial-gradient(circle at 92% 92%,rgba(217,195,171,.32),transparent 34%);pointer-events:none}
     .doc-page>*{position:relative;z-index:1}
     .doc-kicker{font-size:10px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:${accent}}
-    .doc-title{font-size:44px;line-height:.95;margin:10px 0 10px;font-weight:900;color:#111}
-    .doc-muted{color:#666;line-height:1.5;font-size:14px}
+    .doc-title{font-size:44px;line-height:.95;margin:10px 0 10px;font-weight:900;color:${paper.shotText}}
+    .doc-muted{color:${paper.textMuted};line-height:1.5;font-size:14px}
     .doc-header{display:flex;justify-content:space-between;gap:24px;border-bottom:3px solid ${accent};padding-bottom:22px}
-    .doc-brand{text-align:right;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#666}
+    .doc-brand{text-align:right;font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:${paper.textMuted}}
     .doc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:24px}
-    .doc-field{border:1px solid #ddd4c7;background:rgba(255,253,248,.88);padding:11px}
-    .doc-field-label{font-size:9px;color:#777;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
-    .doc-field-value{font-size:12px;color:#1a1a1a;font-weight:700;line-height:1.45}
-    .doc-section{margin-top:26px;padding-top:15px;border-top:1px solid #d8d0c3}
+    .doc-field{border:1px solid ${paper.border};background:rgba(255,253,248,.88);padding:11px}
+    .doc-field-label{font-size:9px;color:${paper.textMuted};font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+    .doc-field-value{font-size:12px;color:${paper.textStrong};font-weight:700;line-height:1.45}
+    .doc-section{margin-top:26px;padding-top:15px;border-top:1px solid ${paper.borderStrong}}
     .doc-section h2{font-size:11px;text-transform:uppercase;letter-spacing:.16em;margin:0 0 10px}
     .doc-list{display:grid;gap:7px}.doc-item{font-size:12px;line-height:1.48;padding:9px 11px;border-left:3px solid;background:rgba(255,253,248,.9)}
-    .doc-footer{margin-top:42px;padding-top:18px;border-top:1px solid #d8d0c3;display:flex;justify-content:space-between;gap:20px;color:#777;font-size:11px}
+    .doc-footer{margin-top:42px;padding-top:18px;border-top:1px solid ${paper.borderStrong};display:flex;justify-content:space-between;gap:20px;color:${paper.textMuted};font-size:11px}
     @media screen{html,body{width:100%}.doc-page{width:100%;margin:0;box-shadow:0 22px 70px rgba(0,0,0,.16)}}
     @media print{
-      html,body{width:210mm;min-height:297mm;background:#f2ede4}
-      body:before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 12% 4%,${accentTint},transparent 34%),radial-gradient(circle at 92% 92%,rgba(217,195,171,.26),transparent 34%),linear-gradient(180deg,#fbf7f0 0%,#f5eee4 100%);z-index:0}
-      .doc-page{width:210mm;min-height:297mm;height:auto;margin:0;padding:16mm;box-shadow:none;background:linear-gradient(180deg,#fbf7f0 0%,#f5eee4 100%);overflow:visible;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+      html,body{width:210mm;min-height:297mm;background:${paper.canvas}}
+      body:before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 12% 4%,${accentTint},transparent 34%),radial-gradient(circle at 92% 92%,rgba(217,195,171,.26),transparent 34%),linear-gradient(180deg,${paper.page} 0%,${paper.pageEnd} 100%);z-index:0}
+      .doc-page{width:210mm;min-height:297mm;height:auto;margin:0;padding:16mm;box-shadow:none;background:linear-gradient(180deg,${paper.page} 0%,${paper.pageEnd} 100%);overflow:visible;-webkit-box-decoration-break:clone;box-decoration-break:clone}
       .doc-page:before{display:none}
       .doc-page>*{position:relative;z-index:1}
       .doc-header,.doc-field,.doc-item,.doc-footer{break-inside:avoid;page-break-inside:avoid}
@@ -870,7 +872,7 @@ function DocumentsContent() {
                 <iframe
                   title="Preview do documento"
                   srcDoc={html}
-                  className="mx-auto w-full max-w-[820px] h-[min(850px,calc(100vh-220px))] min-h-[550px] bg-[#f8f4ed] shadow-[0_18px_60px_rgba(0,0,0,0.25)]"
+                  className="mx-auto w-full max-w-[820px] h-[min(850px,calc(100vh-220px))] min-h-[550px] bg-[var(--ds-document-preview-paper)] shadow-[0_18px_60px_rgba(0,0,0,0.25)]"
                 />
               </div>
             </section>

@@ -20,6 +20,7 @@ import { GlobalProgressBar } from "@/components/GlobalProgressBar";
 import ErrorBoundary from "./components/ErrorBoundary";
 import WorkspaceLoadingShell from "@/components/WorkspaceLoadingShell";
 import { ForcePasswordReset } from "@/components/ForcePasswordReset";
+import { applyDocumentMetadata } from "@/lib/documentMetadata";
 
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 const AdminUsers = lazy(() => import("@/pages/AdminUsers"));
@@ -175,6 +176,8 @@ const PUBLIC_DARK_ROUTES = new Set([
 const APP_NAME = import.meta.env.VITE_APP_NAME?.trim() || "Cena Studio";
 const APP_SEO_TITLE = import.meta.env.VITE_APP_SEO_TITLE?.trim()
   || `${APP_NAME} — Software para Produtoras de Vídeo | Gestão com IA`;
+const APP_SEO_DESCRIPTION = import.meta.env.VITE_APP_DESCRIPTION?.trim()
+  || "Software para produtoras de vídeo: gerencie clientes, projetos, arquivos e aprovações em um só lugar. Gere documentos com IA e economize tempo operacional.";
 const ROUTE_TITLES: Record<string, string> = {
   login: "Entrar",
   register: "Criar conta",
@@ -213,22 +216,12 @@ function App() {
   useEffect(() => {
     const isLanding = path === "/";
     const routeSegment = path.split("/").filter(Boolean)[0] || "";
-    document.title = isLanding
-      ? APP_SEO_TITLE
-      : `${ROUTE_TITLES[routeSegment] || "Área segura"} | ${APP_NAME}`;
-
-    const robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
-    if (robots) {
-      robots.content = isLanding
-        ? "index, follow, max-image-preview:large"
-        : "noindex, nofollow, noarchive";
-    }
-
-    const publicUrl = (import.meta.env.VITE_PUBLIC_URL?.trim() || window.location.origin).replace(/\/$/, "");
-    const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    if (canonical) canonical.href = `${publicUrl}/`;
-    const openGraphUrl = document.querySelector<HTMLMetaElement>('meta[property="og:url"]');
-    if (openGraphUrl) openGraphUrl.content = `${publicUrl}/`;
+    applyDocumentMetadata({
+      title: isLanding ? APP_SEO_TITLE : `${ROUTE_TITLES[routeSegment] || "Área segura"} | ${APP_NAME}`,
+      description: isLanding ? APP_SEO_DESCRIPTION : `${APP_NAME} é o centro operacional da sua produtora.`,
+      robots: isLanding ? "index, follow, max-image-preview:large" : "noindex, nofollow, noarchive",
+      path,
+    });
   }, [path]);
 
   return (

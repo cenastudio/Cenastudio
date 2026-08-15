@@ -1,5 +1,6 @@
 import AuthLayout, { AuthError, AuthField, AuthLink } from "@/components/AuthLayout";
 import { api } from "@/lib/api";
+import { isStrongPassword } from "@/lib/passwordPolicy";
 import { Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLocation } from "wouter";
@@ -25,8 +26,8 @@ export default function ResetPassword() {
       setError(t("app.errors.invalidToken"));
       return;
     }
-    if (password.length < 8) {
-      setError(t("app.errors.passwordMinChars"));
+    if (!isStrongPassword(password)) {
+      setError(t("app.auth.passwordRulesIncomplete"));
       return;
     }
     if (password !== confirmPassword) {

@@ -1,6 +1,7 @@
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import express, { type Request, type Response } from "express";
+import express, { type NextFunction, type Request, type Response } from "express";
+import { readFile } from "fs/promises";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import path from "path";
@@ -16,6 +17,13 @@ import { assertLaunchReadyEnvironment } from "./config/launchGuards.js";
 import apiRouter from "./router.js";
 import healthRoutes from "./routes/health.js";
 import { shouldUsePrisma } from "./models/prisma.js";
+import {
+  buildGenericPublicShareMetadata,
+  getPublicShareLocale,
+  getPublicShareMetadata,
+  isPublicShareKind,
+  renderPublicShareHtml,
+} from "./services/publicShareSeo.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -58,6 +66,42 @@ export function createSpaFallbackHandler(staticPath: string) {
       res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
     }
     res.sendFile(path.join(staticPath, "index.html"));
+  };
+}
+
+/**
+ * Shared links must carry their metadata in the server response. Social crawlers
+ * generally do not execute the client bundle, so client-side document updates
+ * alone cannot produce a reliable preview. Invalid, revoked and expired links
+ * receive a generic noindex shell and never disclose record details.
+ */
+export function createPublicShareSeoHandler(staticPath: string) {
+  let spaShell: Promise<string> | null = null;
+
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const kind = req.query.publicSeo;
+    if (!isPublicShareKind(kind)) {
+      next();
+      return;
+    }
+
+    try {
+      const locale = getPublicShareLocale(req.get("accept-language"));
+      const token = typeof req.query.token === "string" ? req.query.token : "";
+      const metadata = await getPublicShareMetadata(kind, token, locale)
+        || buildGenericPublicShareMetadata({
+          locale,
+          publicOrigin: process.env.VITE_PUBLIC_URL || process.env.CLIENT_ORIGIN,
+        });
+      spaShell ??= readFile(path.join(staticPath, "index.html"), "utf8");
+
+      res.setHeader("Cache-Control", "private, no-store");
+      res.setHeader("Vary", "Accept-Language");
+      res.setHeader("X-Robots-Tag", metadata.robots);
+      res.type("html").send(renderPublicShareHtml(await spaShell, metadata));
+    } catch (error) {
+      next(error);
+    }
   };
 }
 
@@ -139,6 +183,10 @@ export function createApp() {
   app.use("/api/contact", formLimiter);
   app.use("/api/checkout", formLimiter);
   app.use("/api/admin", adminLimiter);
+
+  // Vercel rewrites public links here so social crawlers receive metadata
+  // before the SPA bundle loads. This route intentionally remains public.
+  app.get("/api", createPublicShareSeoHandler(path.resolve(__dirname, "public")));
 
   app.use("/api", apiRouter);
 

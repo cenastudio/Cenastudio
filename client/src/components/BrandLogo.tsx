@@ -29,7 +29,7 @@ export default function BrandLogo({
   tone = "auto",
 }: BrandLogoProps) {
   const [imageErrored, setImageErrored] = useState(false);
-  const textTone = tone === "onDark" ? "text-[#f9f9f9]" : "text-frame-white";
+  const textTone = tone === "onDark" ? "text-[var(--ds-white)]" : "text-frame-white";
   const useImage = variant === "image" && !!SITE_CONFIG.logoUrl && !imageErrored;
 
   if (useImage) {

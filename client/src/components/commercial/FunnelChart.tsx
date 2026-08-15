@@ -15,24 +15,24 @@ interface StageConfig {
 function stageConfig(color: string): StageConfig {
   return {
     color,
-    background: `linear-gradient(90deg, ${color}22, ${color}08)`,
-    border: `1px solid ${color}30`,
-    fill: `linear-gradient(90deg, ${color}40, ${color}15)`,
+    background: `linear-gradient(90deg, color-mix(in srgb, ${color} 13%, transparent), color-mix(in srgb, ${color} 3%, transparent))`,
+    border: `1px solid color-mix(in srgb, ${color} 19%, transparent)`,
+    fill: `linear-gradient(90deg, color-mix(in srgb, ${color} 25%, transparent), color-mix(in srgb, ${color} 8%, transparent))`,
   };
 }
 
 const STAGE_CONFIG: Record<string, StageConfig> = {
-  prospect: stageConfig('#6366f1'),
-  qualified: stageConfig('#8b5cf6'),
-  proposal: stageConfig('#a855f7'),
+  prospect: stageConfig('var(--ds-stage-prospect)'),
+  qualified: stageConfig('var(--ds-stage-qualified)'),
+  proposal: stageConfig('var(--ds-stage-proposal)'),
   negotiation: {
     color: 'rgb(var(--ds-orange-rgb))',
     background: 'linear-gradient(90deg, rgba(var(--ds-orange-rgb),0.13), rgba(var(--ds-orange-rgb),0.03))',
     border: '1px solid rgba(var(--ds-orange-rgb),0.19)',
     fill: 'linear-gradient(90deg, rgba(var(--ds-orange-rgb),0.25), rgba(var(--ds-orange-rgb),0.08))',
   },
-  won: stageConfig('#22c55e'),
-  lost: stageConfig('#ef4444'),
+  won: stageConfig('var(--ds-stage-won)'),
+  lost: stageConfig('var(--status-danger)'),
 };
 
 export function FunnelChart({ data, loading = false }: FunnelChartProps) {

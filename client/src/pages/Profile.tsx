@@ -2384,7 +2384,8 @@ function ProfileContent() {
                     href={`https://wa.me/?text=Tô usando o CENA Studio pra gerenciar meus projetos audiovisuais e tá incrível! 🎬 Se inscreve por esse link e a gente ganha desconto: ${referralInfo?.url || `https://cenastudio.com.br/r/${user?.email?.split('@')[0] || 'user'}`}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#25D366]/10 border border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/20 transition text-sm"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg transition text-sm"
+                    style={{ backgroundColor: "color-mix(in srgb, var(--ds-brand-whatsapp) 10%, transparent)", borderColor: "color-mix(in srgb, var(--ds-brand-whatsapp) 30%, transparent)", color: "var(--ds-brand-whatsapp)" }}
                   >
                     <MessageCircle className="w-4 h-4" />
                     WhatsApp
@@ -2393,7 +2394,8 @@ function ProfileContent() {
                     href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Tô usando o CENA Studio pra gerenciar meus projetos audiovisuais! 🎬`)}&url=${referralInfo?.url || `https://cenastudio.com.br/r/${user?.email?.split('@')[0] || 'user'}`}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1DA1F2]/10 border border-[#1DA1F2]/30 text-[#1DA1F2] hover:bg-[#1DA1F2]/20 transition text-sm"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg transition text-sm"
+                    style={{ backgroundColor: "color-mix(in srgb, var(--ds-brand-twitter) 10%, transparent)", borderColor: "color-mix(in srgb, var(--ds-brand-twitter) 30%, transparent)", color: "var(--ds-brand-twitter)" }}
                   >
                     <ExternalLink className="w-4 h-4" />
                     Twitter
@@ -3002,15 +3004,15 @@ function ProfileContent() {
             </div>
 
             {/* Discord */}
-            <div className="liquid-glass p-6 space-y-4" style={{ borderColor: "rgba(88, 101, 242, 0.4)", background: "linear-gradient(135deg, rgba(88,101,242,0.08) 0%, rgba(88,101,242,0.02) 100%)" }}>
+            <div className="liquid-glass p-6 space-y-4" style={{ borderColor: "rgba(var(--ds-brand-discord-rgb), 0.4)", background: "linear-gradient(135deg, rgba(var(--ds-brand-discord-rgb),0.08) 0%, rgba(var(--ds-brand-discord-rgb),0.02) 100%)" }}>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="font-frame-mono text-[0.6rem] tracking-[0.18em] text-[#9BA3FF] uppercase">{t("app.profile.community")}</p>
+                  <p className="font-frame-mono text-[0.6rem] tracking-[0.18em] text-[var(--ds-brand-discord-label)] uppercase">{t("app.profile.community")}</p>
                   <h3 className="text-lg font-bold mt-1">{t("app.profile.discordTitle")}</h3>
                   <p className="text-frame-gray-light text-xs mt-1">{t("app.profile.discordDesc")}</p>
                 </div>
                 <a href="https://discord.gg/VYCVMHKKT" target="_blank" rel="noreferrer"
-                  className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 bg-[#5865F2] hover:bg-[#4752C4] px-4 py-2 font-frame-mono text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-white transition rounded-lg"
+                  className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 bg-[var(--ds-brand-discord)] hover:bg-[var(--ds-brand-discord-hover)] px-4 py-2 font-frame-mono text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-white transition rounded-lg"
                 >
                   <MessageCircle className="w-4 h-4" />
                   {t("app.profile.joinDiscord")}

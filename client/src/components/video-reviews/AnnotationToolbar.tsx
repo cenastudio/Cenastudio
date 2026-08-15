@@ -18,6 +18,7 @@ import {
   Trash2,
   Palette,
 } from "lucide-react";
+import { ANNOTATION_TOOL_COLORS } from "@/design-system/color-presets";
 
 export type AnnotationTool =
   | 'select'
@@ -76,16 +77,7 @@ const TOOLS: Array<{
   { id: 'eraser', icon: Eraser, label: 'Apagar', hotkey: 'E' },
 ];
 
-const COLORS = [
-  { value: '#E85002', label: 'Laranja' },
-  { value: '#EF4444', label: 'Vermelho' },
-  { value: '#F59E0B', label: 'Amarelo' },
-  { value: '#10B981', label: 'Verde' },
-  { value: '#3B82F6', label: 'Azul' },
-  { value: '#8B5CF6', label: 'Roxo' },
-  { value: '#EC4899', label: 'Rosa' },
-  { value: '#FFFFFF', label: 'Branco' },
-];
+const COLORS = ANNOTATION_TOOL_COLORS;
 
 export function AnnotationToolbar({
   selectedTool,

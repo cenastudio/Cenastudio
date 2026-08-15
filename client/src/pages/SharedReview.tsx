@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { applyDocumentMetadata } from "@/lib/documentMetadata";
 
 interface SharedReview {
   id: number;
@@ -120,6 +121,16 @@ export default function SharedReview() {
       document.removeEventListener("visibilitychange", refreshWhenVisible);
     };
   }, [loadSharedReview]);
+
+  useEffect(() => {
+    if (!review || !token) return;
+    applyDocumentMetadata({
+      title: `${review.title} | ${t("app.publicShare.review.label") as string} | ${SITE_CONFIG.brandName}`,
+      description: t("app.publicShare.review.description") as string,
+      path: `/review/${token}`,
+      robots: "noindex, nofollow, noarchive",
+    });
+  }, [review, token, t]);
 
   useEffect(() => {
     const savedName = window.localStorage.getItem("cena-review-author");
@@ -385,7 +396,7 @@ export default function SharedReview() {
             </span>
           </div>
 
-          <div className="border border-frame-gray-3 bg-[radial-gradient(circle_at_50%_38%,rgba(var(--ds-orange-rgb),0.11),rgba(16,13,12,0.96)_50%,#050505_100%)] p-2 sm:p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
+          <div className="border border-frame-gray-3 p-2 sm:p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]" style={{ background: "radial-gradient(circle at 50% 38%, rgba(var(--ds-orange-rgb),0.11), rgba(16,13,12,0.96) 50%, var(--ds-surface-deep) 100%)" }}>
             <VideoPlayer
               url={resolveVideoUrl(review)}
               onProgress={handlePlayerProgress}

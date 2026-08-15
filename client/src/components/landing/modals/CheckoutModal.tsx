@@ -62,9 +62,9 @@ const PLANS = [
     name: "Studio",
     priceMonthly: 399,
     icon: Crown,
-    color: "#FFB800",
-    colorBg: "rgba(255,184,0,0.06)",
-    colorBorder: "rgba(255,184,0,0.35)",
+    color: "var(--ds-warning)",
+    colorBg: "rgba(var(--ds-warning-rgb),0.06)",
+    colorBorder: "rgba(var(--ds-warning-rgb),0.35)",
     description: "Para produtoras e agências",
     badge: "Completo",
     features: [
@@ -164,16 +164,16 @@ export function CheckoutModal() {
                     {plan.badge && (
                       <span
                         className="absolute -top-2 left-1/2 -translate-x-1/2 font-frame-mono text-[0.55rem] uppercase tracking-[0.1em] px-2 py-0.5 rounded-full"
-                        style={{ background: plan.color, color: "#000", fontWeight: 700 }}
+                        style={{ background: plan.color, color: "var(--ds-black)", fontWeight: 700 }}
                       >
                         {plan.badge}
                       </span>
                     )}
-                    <Icon className="w-4 h-4" style={{ color: activePlan === plan.id && !isFree ? plan.color : "#a7a7a7" }} />
-                    <span className="font-frame-mono text-[0.68rem] uppercase tracking-[0.1em]" style={{ color: activePlan === plan.id && !isFree ? plan.color : "#a7a7a7" }}>
+                    <Icon className="w-4 h-4" style={{ color: activePlan === plan.id && !isFree ? plan.color : "var(--ds-light-gray)" }} />
+                    <span className="font-frame-mono text-[0.68rem] uppercase tracking-[0.1em]" style={{ color: activePlan === plan.id && !isFree ? plan.color : "var(--ds-light-gray)" }}>
                       {plan.name}
                     </span>
-                    <span className="font-bold text-[0.9rem]" style={{ color: activePlan === plan.id && !isFree ? "#f9f9f9" : "#646464" }}>
+                    <span className="font-bold text-[0.9rem]" style={{ color: activePlan === plan.id && !isFree ? "var(--ds-white)" : "var(--ds-gray)" }}>
                       {plan.priceMonthly === 0 ? "Grátis" : `R$ ${plan.priceMonthly}`}
                     </span>
                   </button>

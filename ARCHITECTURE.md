@@ -504,13 +504,13 @@ segurança real.
 
 ### ADR-012: Dois domínios de autenticação (app e Portal do Cliente)
 
-**Status:** Proposed
+**Status:** Aceito
 **Data:** 2026-07-26
 **Contexto:** O Portal do Cliente expõe projetos a pessoas externas ao estúdio,
 que não têm conta em `users`. Era preciso autenticá-las sem criá-las como
 usuários do app nem lhes dar qualquer alcance sobre rotas internas. A spec
-`.kiro/specs/portal-do-cliente/` ainda está ativa e o código ainda não foi
-commitado — daí o status `Proposed` em vez de `Aceito`.
+`.kiro/specs/portal-do-cliente-OK/` foi encerrada após a implementação e a
+validação dos fluxos de acesso, por isso a decisão é `Aceito`.
 
 **Decisão:** Um segundo domínio de autenticação, paralelo ao do app.
 
@@ -561,9 +561,9 @@ caminho. Mitigação de baixo custo, ainda não aplicada: exigir explicitamente
 `type !== "client-portal"` no `authenticate` do app, e passar a emitir o token do
 app com uma claim `type: "app"`.
 
-**Revisão:** ao concluir a spec `portal-do-cliente/`, promover para `Aceito` ou
-ajustar conforme o que o código de fato entregar. Revisar também se o portal
-passar a receber tráfego relevante (ver nota sobre `hashSync`).
+**Revisão:** revisar se o portal passar a receber tráfego relevante (ver nota
+sobre `hashSync`) e aplicar a mitigação explícita contra token confusion antes
+de ampliar autenticação compartilhada.
 
 ---
 

@@ -57,7 +57,7 @@ function ToolsContent({ embedded }: { embedded?: boolean }) {
           <div>
             <p className="frame-label mb-3">// {t("app.tools.allTools")}</p>
             <h1 className="frame-title text-[clamp(2.3rem,4.3vw,3.8rem)] text-frame-white">
-              ORGANIZE O JOB <em className="not-italic text-transparent [-webkit-text-stroke:1px_#f5f0e8]">COM IA</em>
+              ORGANIZE O JOB <em className="not-italic text-transparent [-webkit-text-stroke:1px_var(--ds-hero-stroke)]">COM IA</em>
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-frame-gray-light">
               {t("app.tools.pageDescription") as string}

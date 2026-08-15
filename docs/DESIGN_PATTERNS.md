@@ -11,9 +11,11 @@ Padrões consolidados de UX/UI para manter consistência em todo o app.
 - Classes utilitárias antigas `frame-*` continuam aceitas quando já existem no
   componente, mas novas decisões visuais devem consumir tokens ou classes do
   design system.
-- Hex direto em componente novo só é aceitável quando o valor é dado do usuário,
-  anotação/canvas, HTML exportado ou teste de contraste. Para UI normal, crie ou
-  reutilize token.
+- Hex direto não é aceito em `client/src/components` ou `client/src/pages`.
+  Para UI normal, crie ou reutilize token. Dados que realmente exigem uma cor
+  literal (seletor nativo, anotação/canvas ou HTML exportado) vivem em
+  `client/src/design-system/color-presets.ts`; componentes importam esse dado,
+  nunca repetem o valor. `npm run check` garante a regra.
 - Não crie `.md` de conclusão/status para ajustes visuais. Atualize este arquivo
   para padrão de design e `docs/STATUS.md` para estado de tarefa.
 
@@ -159,7 +161,7 @@ toast.error("Erro ao processar solicitação")
 
 ### Componente Reutilizável
 ```tsx
-import { EmptyState } from "@/components/EmptyState"
+import EmptyState from "@/components/EmptyState"
 
 <EmptyState
   icon={Users}
@@ -171,6 +173,35 @@ import { EmptyState } from "@/components/EmptyState"
   }}
 />
 ```
+
+### Fluxos Guiados
+
+Quando a ausência de dados representa o primeiro passo de uma jornada real,
+use `steps` para mostrar no máximo três etapas que o usuário realmente pode
+executar. `footer` recebe contexto operacional específico do módulo, como
+exemplos de interações ou como o pipeline se conecta.
+
+```tsx
+<EmptyState
+  icon={FolderKanban}
+  eyebrow={t("app.dashboard.emptyEyebrow")}
+  title={t("app.dashboard.emptyTitle")}
+  description={t("app.dashboard.emptyDescription")}
+  steps={[
+    { title: t("app.onboarding.journeyClient"), description: t("app.dashboard.emptyClientDescription") },
+    { title: t("app.onboarding.journeyProject"), description: t("app.dashboard.emptyProjectDescription") },
+  ]}
+  action={{ label: t("app.dashboard.emptyAction"), icon: Plus, onClick: startProject }}
+/>
+```
+
+- A animação é discreta e informa prioridade, não deve competir com a tarefa.
+  O componente respeita `prefers-reduced-motion`.
+- Estados vazios dentro de uma ferramenta já ativa permanecem compactos e
+  locais: célula sem oportunidade no pipeline, fila de review e lacunas de
+  gráfico. Eles não devem virar uma segunda tela de onboarding.
+- Não recrie ícone, título, descrição, CTA e tratamento de responsividade
+  manualmente em uma página quando `EmptyState` cobre o caso.
 
 ### Casos Específicos
 - **Lista vazia:** Ícone + texto + botão "Criar"

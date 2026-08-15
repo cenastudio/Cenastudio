@@ -167,7 +167,7 @@ Dark theme is detected via `[data-theme="dark"]` or `.dark` class on parent elem
 
 - Focus-visible styles applied with orange outline
 - Outline offset: `2px`
-- Outline color: `#e85002` (brand orange)
+- Outline color: `var(--ds-primary)` (brand orange)
 
 ## Testing
 

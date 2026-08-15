@@ -1,7 +1,8 @@
 import AuthLayout, { AuthError, AuthField, AuthLink } from "@/components/AuthLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError, startCheckout } from "@/lib/api";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { isStrongPassword, passwordRequirements } from "@/lib/passwordPolicy";
+import { Check, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useLocation, useSearch } from "wouter";
 import { toast } from "sonner";
@@ -23,24 +24,35 @@ export default function Register() {
   const params = new URLSearchParams(search);
   const requestedPlan = params.get("plan");
   const desiredPlan = requestedPlan === "studio" ? "studio" : requestedPlan === "pro" ? "pro" : undefined;
+  const passwordRules = passwordRequirements(password);
+  const passwordIsStrong = isStrongPassword(password);
+  const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword;
 
   // Capture referral code from URL and store in sessionStorage
   useEffect(() => {
     const ref = params.get('ref');
     if (ref) {
       sessionStorage.setItem('referralCode', ref);
-      console.log('[Referral] Code captured from register URL:', ref);
     }
   }, [search]);
 
-  const handleRegister = async () => {
+  const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setInlineError(null);
     if (!name.trim() || !email.trim() || !password.trim()) {
       setInlineError(t("app.errors.fillAllFields"));
       return;
     }
-    if (password.length < 8) {
-      setInlineError(t("app.errors.passwordMinChars"));
+    if (name.trim().length < 2) {
+      setInlineError(t("app.auth.nameMinChars"));
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setInlineError(t("app.auth.invalidEmail"));
+      return;
+    }
+    if (!passwordIsStrong) {
+      setInlineError(t("app.auth.passwordRulesIncomplete"));
       return;
     }
     if (password !== confirmPassword) {
@@ -84,92 +96,124 @@ export default function Register() {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") handleRegister();
-  };
-
   return (
-    <AuthLayout mode="register" title={t("app.auth.createAccount")} subtitle={t("app.auth.trialIncluded")}>
-      {inlineError && <AuthError message={inlineError} />}
+    <AuthLayout mode="register" title={t("app.auth.createAccount")} subtitle={t("app.auth.registerSubtitle")}>
+      <form noValidate onSubmit={handleRegister}>
+        {inlineError && <AuthError message={inlineError} />}
 
-      <AuthField label={t("app.auth.name")}>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={handleKeyPress}
-          className="frame-input"
-          placeholder={t("app.auth.namePlaceholder")}
-        />
-      </AuthField>
+        <div className="auth-register-trial" aria-label={t("app.auth.trialIncluded")}>
+          <span aria-hidden="true" />
+          <p>{t("app.auth.trialIncluded")}</p>
+        </div>
 
-      <AuthField label={t("app.auth.email")}>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          onKeyDown={handleKeyPress}
-          className="frame-input"
-          placeholder={t("app.auth.emailPlaceholder")}
-        />
-      </AuthField>
-
-      <AuthField label={t("app.auth.password")}>
-        <div className="relative">
+        <AuthField label={t("app.auth.name")} htmlFor="register-name" className="mb-3">
           <input
-            type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={handleKeyPress}
-            className="frame-input pr-10"
-            placeholder={t("app.auth.passwordMinChars")}
+            id="register-name"
+            autoComplete="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={submitting}
+            className="frame-input"
+            placeholder={t("app.auth.namePlaceholder")}
           />
+        </AuthField>
+
+        <AuthField label={t("app.auth.email")} htmlFor="register-email" className="mb-3">
+          <input
+            id="register-email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={submitting}
+            className="frame-input"
+            placeholder={t("app.auth.emailPlaceholder")}
+          />
+        </AuthField>
+
+        <AuthField label={t("app.auth.password")} htmlFor="register-password" className="mb-3">
+          <div className="relative">
+            <input
+              id="register-password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={submitting}
+              className="frame-input pr-12"
+              placeholder={t("app.auth.passwordPlaceholder")}
+              aria-describedby="register-password-rules"
+              aria-invalid={password.length > 0 && !passwordIsStrong}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((current) => !current)}
+              className="auth-password-visibility"
+              aria-label={showPassword ? t("app.auth.hidePassword") : t("app.auth.showPassword")}
+              title={showPassword ? t("app.auth.hidePassword") : t("app.auth.showPassword")}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" aria-hidden="true" /> : <Eye className="w-4 h-4" aria-hidden="true" />}
+            </button>
+          </div>
+          <div id="register-password-rules" className="auth-password-rules" aria-live="polite">
+            <p>{t("app.auth.passwordRulesHint")}</p>
+            <ul>
+              {passwordRules.map((rule) => (
+                <li key={rule.key} data-met={rule.met || undefined}>
+                  <Check className="h-3 w-3" aria-hidden="true" />
+                  {t(rule.key)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </AuthField>
+
+        <AuthField label={t("app.auth.confirmPassword")} htmlFor="register-confirm-password" className="mb-3">
+          <input
+            id="register-confirm-password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            disabled={submitting}
+            className="frame-input"
+            placeholder={t("app.auth.repeatPassword")}
+            aria-invalid={confirmPassword.length > 0 && !passwordsMatch}
+          />
+          {confirmPassword && (
+            <p className={`auth-password-match ${passwordsMatch ? "is-valid" : "is-invalid"}`} role="status">
+              <Check className="h-3 w-3" aria-hidden="true" />
+              {passwordsMatch ? t("app.auth.passwordsMatch") : t("app.auth.passwordsDontMatch")}
+            </p>
+          )}
+        </AuthField>
+
+        <button
+          type="submit"
+          disabled={submitting}
+          className="frame-btn-primary w-full mt-1.5 flex items-center justify-center gap-2"
+        >
+          {submitting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              {t("app.auth.creatingAccount")}
+            </>
+          ) : (
+            desiredPlan === "studio" ? t("app.auth.createAndCheckout") : t("app.auth.createAndStart")
+          )}
+        </button>
+
+        <AuthLink>
+          {t("app.auth.haveAccount")} {" "}
           <button
             type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-frame-gray-light hover:text-frame-white bg-transparent border-none"
+            onClick={() => setLocation("/login")}
+            className="auth-text-link"
           >
-            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            {t("app.auth.loginTab")}
           </button>
-        </div>
-      </AuthField>
-
-      <AuthField label={t("app.auth.confirmPassword")}>
-        <input
-          type={showPassword ? "text" : "password"}
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          onKeyDown={handleKeyPress}
-          className="frame-input"
-          placeholder={t("app.auth.repeatPassword")}
-        />
-      </AuthField>
-
-      <button
-        type="button"
-        onClick={handleRegister}
-        disabled={submitting}
-        className="frame-btn-primary w-full mt-1.5 flex items-center justify-center gap-2"
-      >
-        {submitting ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            {t("app.auth.creatingAccount")}
-          </>
-        ) : (
-          desiredPlan === "studio" ? "Criar conta e ir para pagamento" : t("app.auth.createFreeAccount")
-        )}
-      </button>
-
-      <AuthLink>
-        {t("app.auth.haveAccount")} {" "}
-        <button
-          type="button"
-          onClick={() => setLocation("/login")}
-          className="text-frame-orange bg-transparent border-none font-inherit"
-        >
-          {t("app.auth.loginTab")}
-        </button>
-      </AuthLink>
+        </AuthLink>
+      </form>
     </AuthLayout>
   );
 }

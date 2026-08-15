@@ -24,7 +24,7 @@ interface LineChartWidgetProps {
   config?: any;
 }
 
-const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"];
+const COLORS = ["var(--status-success)", "var(--status-info)", "var(--status-warning)", "var(--status-danger)", "var(--ds-stage-qualified)"];
 
 export default function LineChartWidget({ title, data, config }: LineChartWidgetProps) {
   // Transform data for Recharts format
@@ -66,21 +66,21 @@ export default function LineChartWidget({ title, data, config }: LineChartWidget
       <div className="w-full" style={{ height: 300 }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--ds-chart-grid)" />
             <XAxis
               dataKey="name"
-              stroke="#666"
+              stroke="var(--ds-chart-reference)"
               style={{ fontSize: "0.75rem" }}
             />
             <YAxis
-              stroke="#666"
+              stroke="var(--ds-chart-reference)"
               style={{ fontSize: "0.75rem" }}
               tickFormatter={isCurrency ? formatCurrency : formatNumber}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "#1a1a1a",
-                border: "1px solid #333",
+                backgroundColor: "var(--ds-surface-elevated)",
+                border: "1px solid var(--ds-dark-gray)",
                 borderRadius: "4px",
                 fontSize: "0.875rem"
               }}

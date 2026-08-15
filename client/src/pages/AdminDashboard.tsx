@@ -391,10 +391,10 @@ export function AdminContent() {
                 { label: t("app.admin.users"), value: metrics?.totalUsers ?? users.length, icon: Users, accent: "border-b-frame-orange" },
                 { label: "MRR (R$)", value: metrics ? metrics.mrrBrl.toLocaleString("pt-BR") : "—", icon: DollarSign, accent: "border-b-frame-green" },
                 { label: t("app.admin.paidAccounts"), value: metrics?.paidActive ?? stats.paid, icon: Sparkles, accent: "border-b-frame-green" },
-                { label: "Em trial", value: metrics?.trials ?? "—", icon: Clock, accent: "border-b-[#4d9fff]" },
+                { label: "Em trial", value: metrics?.trials ?? "—", icon: Clock, accent: "border-b-[var(--ds-metric-info)]" },
                 { label: "Novos (30d)", value: metrics?.newUsers30d ?? "—", icon: TrendingUp, accent: "border-b-frame-orange" },
-                { label: "Novos (7d)", value: metrics?.newUsers7d ?? "—", icon: TrendingUp, accent: "border-b-[#4d9fff]" },
-                { label: t("app.admin.admins"), value: metrics?.admins ?? stats.admins, icon: Crown, accent: "border-b-[#4d9fff]" },
+                { label: "Novos (7d)", value: metrics?.newUsers7d ?? "—", icon: TrendingUp, accent: "border-b-[var(--ds-metric-info)]" },
+                { label: t("app.admin.admins"), value: metrics?.admins ?? stats.admins, icon: Crown, accent: "border-b-[var(--ds-metric-info)]" },
                 { label: "Suspensos", value: metrics?.disabled ?? "—", icon: Ban, accent: "border-b-red-500" },
               ].map((stat) => {
                 const Icon = stat.icon;
@@ -690,7 +690,7 @@ export function AdminContent() {
                     <div key={entry.id} className="border border-frame-gray-3 bg-frame-gray-1/20 p-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                       <span className={`text-[0.62rem] font-frame-mono uppercase border px-1.5 py-0.5 shrink-0 w-fit ${
                         entry.status === "rewarded" ? "border-frame-green/40 text-frame-green"
-                        : entry.status === "converted" ? "border-[#4d9fff]/40 text-[#4d9fff]"
+                        : entry.status === "converted" ? "border-[var(--ds-metric-info)]/40 text-[var(--ds-metric-info)]"
                         : "border-frame-gray-3 text-frame-gray-light"
                       }`}>
                         {entry.status}

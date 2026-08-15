@@ -66,12 +66,12 @@ export function TooltipExamples() {
           </Tooltip>
 
           <Tooltip content="Additional information about this link">
-            <a href="#" style={{ color: '#e85002' }}>Link with tooltip</a>
+            <a href="#" style={{ color: 'var(--ds-orange)' }}>Link with tooltip</a>
           </Tooltip>
 
           <Tooltip content="Click to perform an action" position="bottom">
             <button style={{
-              background: '#e85002',
+              background: 'var(--ds-orange)',
               color: 'white',
               padding: '0.5rem 1rem',
               borderRadius: '4px',
@@ -94,8 +94,8 @@ export function TooltipExamples() {
           >
             <div style={{
               padding: '1rem',
-              background: '#121212',
-              color: '#f9f9f9',
+              background: 'var(--ds-surface-1)',
+              color: 'var(--ds-white)',
               borderRadius: '8px',
               border: '1px solid rgba(255, 255, 255, 0.12)'
             }}>
@@ -111,7 +111,7 @@ export function TooltipExamples() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <label htmlFor="username">Username</label>
             <Tooltip content="Your username must be 3-20 characters">
-              <span style={{ cursor: 'help', color: '#666' }}>(?)</span>
+              <span style={{ cursor: 'help', color: 'var(--ds-chart-reference)' }}>(?)</span>
             </Tooltip>
           </div>
           <input
@@ -121,14 +121,14 @@ export function TooltipExamples() {
             style={{
               padding: '0.5rem',
               borderRadius: '4px',
-              border: '1px solid #ccc'
+              border: '1px solid var(--ds-language-border)'
             }}
           />
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <label htmlFor="email">Email</label>
             <Tooltip content="We'll never share your email" position="right">
-              <span style={{ cursor: 'help', color: '#666' }}>(?)</span>
+              <span style={{ cursor: 'help', color: 'var(--ds-chart-reference)' }}>(?)</span>
             </Tooltip>
           </div>
           <input
@@ -138,7 +138,7 @@ export function TooltipExamples() {
             style={{
               padding: '0.5rem',
               borderRadius: '4px',
-              border: '1px solid #ccc'
+              border: '1px solid var(--ds-language-border)'
             }}
           />
         </div>

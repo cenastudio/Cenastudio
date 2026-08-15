@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
 import AppNavBar from '@/components/AppNavBar';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { AppProvider } from '@/contexts/AppContext';
@@ -255,6 +255,37 @@ describe('Theme Toggle Integration - Task 1.2.4', () => {
       await waitFor(() => {
         expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
       });
+    });
+
+    it('keeps a newly selected theme when the initial preferences request resolves late', async () => {
+      let resolvePreferences: ((preferences: {
+        themeMode: 'dark';
+        density: 'normal';
+        fontFamily: 'inter';
+        reduceAnimations: false;
+      }) => void) | undefined;
+      (api.auth.getVisualPreferences as any).mockImplementationOnce(
+        () => new Promise((resolve) => {
+          resolvePreferences = resolve;
+        }),
+      );
+
+      render(
+        <AllProviders>
+          <AppNavBar />
+        </AllProviders>
+      );
+
+      const themeButton = await screen.findByTitle(/modo escuro/i);
+      await waitFor(() => expect(api.auth.getVisualPreferences).toHaveBeenCalled());
+      fireEvent.click(themeButton);
+      expect(resolvePreferences).toBeDefined();
+      await act(async () => {
+        resolvePreferences?.({ themeMode: 'dark', density: 'normal', fontFamily: 'inter', reduceAnimations: false });
+        await Promise.resolve();
+      });
+
+      expect(document.documentElement.getAttribute('data-theme')).toBe('light');
     });
   });
 

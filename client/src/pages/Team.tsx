@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import AppNavBar from "@/components/AppNavBar";
 import ProductionNav from "@/components/ProductionNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import EmptyState from "@/components/EmptyState";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { api } from "@/lib/api";
@@ -50,9 +51,9 @@ function roleIcon(role: TeamRole) {
 }
 
 function roleColor(role: TeamRole) {
-  if (role === "producer") return "#FFB800";
+  if (role === "producer") return "var(--ds-warning)";
   if (role === "editor") return "var(--ds-orange)";
-  return "#a7a7a7";
+  return "var(--ds-light-gray)";
 }
 
 function generatePassword() {
@@ -229,28 +230,25 @@ function TeamContent() {
             <Loader2 className="w-6 h-6 animate-spin text-frame-orange mx-auto" />
           </div>
         ) : members.length === 0 ? (
-          <div className="frame-empty-state p-12 text-center space-y-4">
-            <div className="w-14 h-14 mx-auto flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-full animate-icon-float">
-              <Users className="w-6 h-6 text-frame-orange" />
-            </div>
-            <div>
-              <h3 className="text-base font-semibold text-frame-white">{t("app.team.emptyTitle") as string}</h3>
-              <p className="text-sm text-frame-gray-light mt-1">{t("app.team.emptyDescription") as string}</p>
-            </div>
-            <div className="border-t border-frame-orange/20 pt-4 space-y-1.5 text-left max-w-xs mx-auto">
-              <p className="font-frame-mono text-[0.55rem] uppercase tracking-wider text-frame-orange mb-2">{t("app.team.howItWorks") as string}</p>
-              <p className="text-[0.65rem] text-frame-gray-light">{t("app.team.howStep1") as string}</p>
-              <p className="text-[0.65rem] text-frame-gray-light">{t("app.team.howStep2") as string}</p>
-              <p className="text-[0.65rem] text-frame-gray-light">{t("app.team.howStep3") as string}</p>
-              <p className="text-[0.65rem] text-frame-gray-light">{t("app.team.howStep4") as string}</p>
-            </div>
-            {isStudio && (
-              <button type="button" onClick={openCreate} className="frame-btn-primary inline-flex items-center gap-2">
-                <Plus className="w-4 h-4" />
-                {t("app.team.createFirstMember") as string}
-              </button>
+          <EmptyState
+            icon={Users}
+            title={t("app.team.emptyTitle") as string}
+            description={t("app.team.emptyDescription") as string}
+            action={isStudio ? {
+              label: t("app.team.createFirstMember") as string,
+              icon: Plus,
+              onClick: openCreate,
+            } : undefined}
+            footer={(
+              <div className="space-y-1.5 border-t border-frame-orange/20 pt-4 text-left">
+                <p className="mb-2 font-frame-mono text-[0.55rem] uppercase tracking-wider text-frame-orange">{t("app.team.howItWorks") as string}</p>
+                <p className="text-[0.65rem] text-frame-gray-light">{t("app.team.howStep1") as string}</p>
+                <p className="text-[0.65rem] text-frame-gray-light">{t("app.team.howStep2") as string}</p>
+                <p className="text-[0.65rem] text-frame-gray-light">{t("app.team.howStep3") as string}</p>
+                <p className="text-[0.65rem] text-frame-gray-light">{t("app.team.howStep4") as string}</p>
+              </div>
             )}
-          </div>
+          />
         ) : (
           <div className="space-y-3">
             {members.map((member) => (
@@ -364,8 +362,8 @@ function TeamContent() {
                         background: role === r.id ? `${roleColor(r.id)}10` : "rgba(255,255,255,0.02)",
                       }}
                     >
-                      <Icon className="w-4 h-4" style={{ color: role === r.id ? roleColor(r.id) : "#a7a7a7" }} />
-                      <span className="font-frame-mono text-[0.62rem] uppercase" style={{ color: role === r.id ? roleColor(r.id) : "#a7a7a7" }}>
+                      <Icon className="w-4 h-4" style={{ color: role === r.id ? roleColor(r.id) : "var(--ds-light-gray)" }} />
+                      <span className="font-frame-mono text-[0.62rem] uppercase" style={{ color: role === r.id ? roleColor(r.id) : "var(--ds-light-gray)" }}>
                         {r.label}
                       </span>
                       <span className="text-[0.6rem] text-frame-gray-light leading-tight">{t(r.descKey) as string}</span>
@@ -444,7 +442,7 @@ function TeamContent() {
               onClick={handleDelete}
               disabled={submitting}
               className="frame-btn-primary bg-frame-red text-white text-xs py-2 px-4 flex items-center gap-2"
-              style={{ background: "#ff3b3b" }}
+              style={{ background: "var(--ds-danger)" }}
             >
               {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
               {t("app.team.remove") as string}

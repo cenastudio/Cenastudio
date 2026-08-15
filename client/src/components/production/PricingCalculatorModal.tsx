@@ -9,6 +9,7 @@ import {
 import { Calculator, Plane, Film, Scissors, Camera, Building2, Plus, Trash2, Info, Wallet, FileText, Loader2, ExternalLink, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { api, type Client, type Project } from "@/lib/api";
+import { DOCUMENT_EXPORT_COLORS } from "@/design-system/color-presets";
 
 /**
  * Pricing Calculator (Phase 1 — standalone, no persistence yet).
@@ -245,7 +246,7 @@ export default function PricingCalculatorModal({ open, onOpenChange }: PricingCa
       <p>${activePreset.label}</p>
       <table style="width:100%;border-collapse:collapse;margin-top:16px">
         ${rows}
-        <tr style="font-weight:bold;border-top:2px solid #333">
+        <tr style="font-weight:bold;border-top:2px solid ${DOCUMENT_EXPORT_COLORS.dark.signBorder}">
           <td style="padding-top:8px">Total</td>
           <td style="text-align:right;padding-top:8px">${formatBRL(breakdown.total)}</td>
         </tr>

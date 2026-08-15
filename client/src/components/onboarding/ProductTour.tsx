@@ -1,29 +1,25 @@
-import { useState, useEffect, useRef, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import {
-  X,
-  ChevronRight,
-  ChevronLeft,
-  Sparkles,
-  LayoutDashboard,
-  FolderKanban,
+  BarChart3,
   Building2,
   CheckSquare,
-  BarChart3,
+  ChevronLeft,
+  ChevronRight,
+  FolderKanban,
+  LayoutDashboard,
   Settings,
+  X,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface TourStep {
   id: string;
-  target: string; // CSS selector
+  target: string;
   title: string;
   description: string;
-  icon: any;
-  position: "top" | "bottom" | "left" | "right" | "center";
-  action?: () => void;
-  highlightPadding?: number;
+  icon: ComponentType<{ className?: string }>;
 }
 
 interface ProductTourProps {
@@ -32,392 +28,212 @@ interface ProductTourProps {
   onComplete: () => void;
 }
 
-export default function ProductTour({
-  isOpen,
-  onClose,
-  onComplete,
-}: ProductTourProps) {
+interface TourCardProps {
+  step: TourStep;
+  currentStep: number;
+  totalSteps: number;
+  isFirstStep: boolean;
+  isLastStep: boolean;
+  onBack: () => void;
+  onNext: () => void;
+  onSkip: () => void;
+  t: (key: string) => string;
+}
+
+function TourCard({ step, currentStep, totalSteps, isFirstStep, isLastStep, onBack, onNext, onSkip, t }: TourCardProps) {
+  const Icon = step.icon;
+
+  return (
+    <div className="bg-frame-black">
+      <div className="flex items-center justify-between border-b border-frame-gray-3 px-5 py-3">
+        <span className="font-frame-mono text-[0.6rem] uppercase tracking-[0.14em] text-frame-orange">
+          {String(currentStep + 1).padStart(2, "0")} / {String(totalSteps).padStart(2, "0")}
+        </span>
+        <button type="button" onClick={onSkip} className="grid h-11 w-11 place-items-center text-frame-gray-light transition hover:text-frame-white" aria-label={t("app.onboarding.tour.skipTour")}>
+          <X className="h-4 w-4" aria-hidden="true" />
+        </button>
+      </div>
+
+      <div className="p-5 sm:p-6">
+        <div className="mb-4 grid h-11 w-11 place-items-center border border-frame-orange/30 bg-frame-orange/10">
+          <span aria-hidden="true"><Icon className="h-5 w-5 text-frame-orange" /></span>
+        </div>
+        <h2 className="text-xl font-bold text-frame-white">{step.title}</h2>
+        <p className="mt-2 text-sm leading-relaxed text-frame-gray-light">{step.description}</p>
+
+        <div className="mt-5 flex items-center justify-between border-t border-frame-gray-3 pt-3">
+          <button type="button" onClick={onSkip} className="min-h-11 px-1 text-xs text-frame-gray-light transition hover:text-frame-white">
+            {t("app.onboarding.tour.skipTour")}
+          </button>
+          <div className="flex items-center gap-2">
+            {!isFirstStep && (
+              <button type="button" onClick={onBack} className="frame-btn-ghost inline-flex min-h-11 items-center gap-1 !px-3 !py-2 text-xs">
+                <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
+                {t("app.onboarding.back")}
+              </button>
+            )}
+            <button type="button" onClick={onNext} className="frame-btn-primary inline-flex min-h-11 items-center gap-1 !px-3 !py-2 text-xs">
+              {isLastStep ? t("app.onboarding.tour.finish") : t("app.onboarding.next")}
+              {!isLastStep && <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function ProductTour({ isOpen, onClose, onComplete }: ProductTourProps) {
   const { t } = useLanguage();
   const { isTeamMember } = useAuth();
+  const reduceMotion = useReducedMotion();
   const [currentStep, setCurrentStep] = useState(0);
   const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
-  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
-  const tooltipRef = useRef<HTMLDivElement>(null);
+  const [desktopPosition, setDesktopPosition] = useState({ top: 24, left: 24 });
+  const desktopCardRef = useRef<HTMLDivElement>(null);
 
-  // O tour roda apenas no Dashboard (ver Dashboard.tsx) — por isso todo alvo
-  // aqui precisa existir de fato nessa página. "Comercial" e "Financeiro"
-  // ficam de fora para membros de equipe porque AppNavBar já os esconde
-  // nesse caso (ver primaryNavItems em AppNavBar.tsx).
-  const tourSteps: TourStep[] = useMemo(() => {
+  const tourSteps = useMemo<TourStep[]>(() => {
     const steps: TourStep[] = [
-      {
-        id: "dashboard",
-        target: '[data-tour="dashboard"]',
-        title: t("app.onboarding.tour.dashboardTitle"),
-        description: t("app.onboarding.tour.dashboardDesc"),
-        icon: LayoutDashboard,
-        position: "bottom",
-        highlightPadding: 8,
-      },
-      {
-        id: "mytasks",
-        target: '[data-tour="mytasks"]',
-        title: t("app.onboarding.tour.myTasksTitle"),
-        description: t("app.onboarding.tour.myTasksDesc"),
-        icon: CheckSquare,
-        position: "top",
-        highlightPadding: 8,
-      },
-      {
-        id: "projects",
-        target: '[data-tour="projects"]',
-        title: t("app.onboarding.tour.projectsTitle"),
-        description: t("app.onboarding.tour.projectsDesc"),
-        icon: FolderKanban,
-        position: "bottom",
-        highlightPadding: 8,
-      },
+      { id: "dashboard", target: '[data-tour="dashboard"]', title: t("app.onboarding.tour.dashboardTitle"), description: t("app.onboarding.tour.dashboardDesc"), icon: LayoutDashboard },
+      { id: "mytasks", target: '[data-tour="mytasks"]', title: t("app.onboarding.tour.myTasksTitle"), description: t("app.onboarding.tour.myTasksDesc"), icon: CheckSquare },
+      { id: "projects", target: '[data-tour="projects"]', title: t("app.onboarding.tour.projectsTitle"), description: t("app.onboarding.tour.projectsDesc"), icon: FolderKanban },
     ];
 
     if (!isTeamMember) {
       steps.push(
-        {
-          id: "clients",
-          target: '[data-tour="clients"]',
-          title: t("app.onboarding.tour.clientsTitle"),
-          description: t("app.onboarding.tour.clientsDesc"),
-          icon: Building2,
-          position: "bottom",
-          highlightPadding: 8,
-        },
-        {
-          id: "analytics",
-          target: '[data-tour="analytics"]',
-          title: t("app.onboarding.tour.analyticsTitle"),
-          description: t("app.onboarding.tour.analyticsDesc"),
-          icon: BarChart3,
-          position: "bottom",
-          highlightPadding: 8,
-        },
+        { id: "clients", target: '[data-tour="clients"]', title: t("app.onboarding.tour.clientsTitle"), description: t("app.onboarding.tour.clientsDesc"), icon: Building2 },
+        { id: "analytics", target: '[data-tour="analytics"]', title: t("app.onboarding.tour.analyticsTitle"), description: t("app.onboarding.tour.analyticsDesc"), icon: BarChart3 },
       );
     }
 
-    steps.push({
-      id: "profile",
-      target: '[data-tour="profile"]',
-      title: t("app.onboarding.tour.profileTitle"),
-      description: t("app.onboarding.tour.profileDesc"),
-      icon: Settings,
-      position: "left",
-      highlightPadding: 8,
-    });
-
+    steps.push({ id: "profile", target: '[data-tour="profile"]', title: t("app.onboarding.tour.profileTitle"), description: t("app.onboarding.tour.profileDesc"), icon: Settings });
     return steps;
   }, [isTeamMember, t]);
 
   const step = tourSteps[currentStep];
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === tourSteps.length - 1;
-  const Icon = step?.icon || Sparkles;
 
-  // Calculate highlight and tooltip position
   useEffect(() => {
-    if (!isOpen || !step) return;
-
-    const updatePositions = () => {
-      const targetElement = document.querySelector(step.target);
-      if (!targetElement) {
-        console.warn(`Tour target not found: ${step.target}`);
-        return;
-      }
-
-      const rect = targetElement.getBoundingClientRect();
-      setHighlightRect(rect);
-
-      // Calculate tooltip position based on step.position
-      const tooltipEl = tooltipRef.current;
-      if (!tooltipEl) return;
-
-      const tooltipRect = tooltipEl.getBoundingClientRect();
-      const padding = step.highlightPadding || 8;
-      const gap = 16;
-
-      let top = 0;
-      let left = 0;
-
-      switch (step.position) {
-        case "bottom":
-          top = rect.bottom + gap;
-          left = rect.left + rect.width / 2 - tooltipRect.width / 2;
-          break;
-        case "top":
-          top = rect.top - tooltipRect.height - gap;
-          left = rect.left + rect.width / 2 - tooltipRect.width / 2;
-          break;
-        case "left":
-          top = rect.top + rect.height / 2 - tooltipRect.height / 2;
-          left = rect.left - tooltipRect.width - gap;
-          break;
-        case "right":
-          top = rect.top + rect.height / 2 - tooltipRect.height / 2;
-          left = rect.right + gap;
-          break;
-        case "center":
-          top = window.innerHeight / 2 - tooltipRect.height / 2;
-          left = window.innerWidth / 2 - tooltipRect.width / 2;
-          break;
-      }
-
-      // Bounds checking
-      const maxLeft = window.innerWidth - tooltipRect.width - 20;
-      const maxTop = window.innerHeight - tooltipRect.height - 20;
-
-      left = Math.max(20, Math.min(left, maxLeft));
-      top = Math.max(20, Math.min(top, maxTop));
-
-      setTooltipPosition({ top, left });
-    };
-
-    // Initial calculation
-    setTimeout(updatePositions, 100);
-
-    // Recalculate on resize/scroll
-    window.addEventListener("resize", updatePositions);
-    window.addEventListener("scroll", updatePositions, true);
-
-    return () => {
-      window.removeEventListener("resize", updatePositions);
-      window.removeEventListener("scroll", updatePositions, true);
-    };
-  }, [isOpen, step, currentStep]);
-
-  // Prevent body scroll when open, and reset to the first step each time
-  // the tour is (re)opened.
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-      setCurrentStep(0);
-    } else {
-      document.body.style.overflow = "";
-    }
+    if (!isOpen) return;
+    setCurrentStep(0);
+    document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = "";
     };
   }, [isOpen]);
 
-  const handleNext = () => {
-    if (isLastStep) {
-      handleComplete();
-    } else {
-      setCurrentStep((prev) => prev + 1);
-    }
-  };
+  useEffect(() => {
+    if (!isOpen || !step) return;
 
-  const handleBack = () => {
-    if (!isFirstStep) {
-      setCurrentStep((prev) => prev - 1);
-    }
-  };
+    const updatePosition = () => {
+      const targets = Array.from(document.querySelectorAll<HTMLElement>(step.target));
+      const target = targets.find((element) => {
+        const rect = element.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      }) ?? targets[0];
 
-  const handleSkip = () => {
-    localStorage.setItem("cena-studio-tour-skipped", "true");
-    onClose();
-  };
+      if (!target) {
+        setHighlightRect(null);
+        return;
+      }
 
-  const handleComplete = () => {
+      if (window.innerWidth < 1024) {
+        target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center", inline: "nearest" });
+      }
+
+      const rect = target.getBoundingClientRect();
+      setHighlightRect(rect);
+      const card = desktopCardRef.current;
+      if (!card) return;
+
+      const cardRect = card.getBoundingClientRect();
+      const gap = 16;
+      const left = Math.max(20, Math.min(rect.left + rect.width / 2 - cardRect.width / 2, window.innerWidth - cardRect.width - 20));
+      const top = rect.bottom + gap + cardRect.height <= window.innerHeight - 20
+        ? rect.bottom + gap
+        : Math.max(20, rect.top - cardRect.height - gap);
+      setDesktopPosition({ top, left });
+    };
+
+    const frame = window.requestAnimationFrame(updatePosition);
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [currentStep, isOpen, reduceMotion, step]);
+
+  const complete = () => {
     localStorage.setItem("cena-studio-tour-completed", "true");
+    localStorage.setItem("cena-studio-welcome-completed", "true");
     onComplete();
+  };
+
+  const skip = () => {
+    localStorage.setItem("cena-studio-tour-skipped", "true");
+    localStorage.setItem("cena-studio-welcome-dismissed", "true");
+    onClose();
   };
 
   if (!isOpen || !step) return null;
 
+  const cardProps: TourCardProps = {
+    step,
+    currentStep,
+    totalSteps: tourSteps.length,
+    isFirstStep,
+    isLastStep,
+    onBack: () => setCurrentStep((value) => Math.max(0, value - 1)),
+    onNext: () => (isLastStep ? complete() : setCurrentStep((value) => value + 1)),
+    onSkip: skip,
+    t,
+  };
+
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Overlay with spotlight effect */}
-          <div className="fixed inset-0 z-[9997] pointer-events-none">
-            {/* Dark backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-              style={{
-                clipPath: highlightRect
-                  ? `polygon(
-                      0% 0%,
-                      0% 100%,
-                      ${highlightRect.left - (step.highlightPadding || 8)}px 100%,
-                      ${highlightRect.left - (step.highlightPadding || 8)}px ${highlightRect.top - (step.highlightPadding || 8)}px,
-                      ${highlightRect.right + (step.highlightPadding || 8)}px ${highlightRect.top - (step.highlightPadding || 8)}px,
-                      ${highlightRect.right + (step.highlightPadding || 8)}px ${highlightRect.bottom + (step.highlightPadding || 8)}px,
-                      ${highlightRect.left - (step.highlightPadding || 8)}px ${highlightRect.bottom + (step.highlightPadding || 8)}px,
-                      ${highlightRect.left - (step.highlightPadding || 8)}px 100%,
-                      100% 100%,
-                      100% 0%
-                    )`
-                  : "none",
-              }}
-            />
-
-            {/* Highlight border */}
-            {highlightRect && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="absolute border-2 border-frame-orange shadow-[0_0_20px_rgba(255,111,15,0.5)] pointer-events-none"
-                style={{
-                  top: highlightRect.top - (step.highlightPadding || 8),
-                  left: highlightRect.left - (step.highlightPadding || 8),
-                  width: highlightRect.width + (step.highlightPadding || 8) * 2,
-                  height:
-                    highlightRect.height + (step.highlightPadding || 8) * 2,
-                }}
-              />
-            )}
-
-            {/* Pulsing dot indicator */}
-            {highlightRect && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: [0, 1, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="absolute w-4 h-4 bg-frame-orange rounded-full pointer-events-none"
-                style={{
-                  top: highlightRect.top + highlightRect.height / 2 - 8,
-                  left: highlightRect.left + highlightRect.width / 2 - 8,
-                  boxShadow: "0 0 20px rgba(255,111,15,0.8)",
-                }}
-              />
-            )}
-          </div>
-
-          {/* Tooltip */}
-          <motion.div
-            ref={tooltipRef}
-            initial={{ opacity: 0, scale: 0.9, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 10 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className="fixed z-[9998] w-full max-w-md bg-frame-gray-1 border-2 border-frame-orange shadow-2xl pointer-events-auto"
-            style={{
-              top: tooltipPosition.top,
-              left: tooltipPosition.left,
-            }}
-          >
-            {/* Close Button */}
-            <button
-              onClick={handleSkip}
-              className="absolute top-3 right-3 p-1.5 hover:bg-frame-gray-2 rounded transition z-10"
-              aria-label={t("app.onboarding.tour.skipTour")}
-            >
-              <X className="w-4 h-4 text-frame-gray-light hover:text-frame-white" />
-            </button>
-
-            {/* Progress */}
-            <div className="absolute top-3 left-3 flex items-center gap-2">
-              <span className="font-frame-mono text-[0.6rem] text-frame-orange uppercase tracking-wider">
-                {currentStep + 1}/{tourSteps.length}
-              </span>
-            </div>
-
-            {/* Content */}
-            <div className="p-6 pt-10">
-              {/* Icon */}
-              <div className="mb-4">
-                <div className="inline-flex p-3 bg-frame-orange/10 border border-frame-orange/30 rounded">
-                  <Icon className="w-6 h-6 text-frame-orange" />
-                </div>
-              </div>
-
-              {/* Title */}
-              <h3 className="text-xl font-bold text-frame-white mb-2">
-                {step.title}
-              </h3>
-
-              {/* Description */}
-              <p className="text-sm text-frame-gray-light leading-relaxed mb-6">
-                {step.description}
-              </p>
-
-              {/* Navigation */}
-              <div className="flex items-center justify-between pt-4 border-t border-frame-gray-3">
-                <button
-                  onClick={handleSkip}
-                  className="text-xs text-frame-gray-light hover:text-frame-white transition"
-                >
-                  {t("app.onboarding.tour.skipTour")}
-                </button>
-
-                <div className="flex items-center gap-2">
-                  {!isFirstStep && (
-                    <button
-                      onClick={handleBack}
-                      className="frame-btn-ghost !py-1.5 !px-3 !text-xs flex items-center gap-1"
-                    >
-                      <ChevronLeft className="w-3.5 h-3.5" />
-                      {t("app.onboarding.back")}
-                    </button>
-                  )}
-
-                  <button
-                    onClick={handleNext}
-                    className="frame-btn-primary !py-1.5 !px-4 !text-xs flex items-center gap-1"
-                  >
-                    {isLastStep ? (
-                      <>
-                        {t("app.onboarding.tour.finish")}
-                        <Sparkles className="w-3.5 h-3.5" />
-                      </>
-                    ) : (
-                      <>
-                        {t("app.onboarding.next")}
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Arrow indicator pointing to target */}
-            {step.position === "bottom" && (
-              <div
-                className="absolute -top-3 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[12px] border-r-[12px] border-b-[12px] border-l-transparent border-r-transparent border-b-frame-orange"
-                style={{
-                  filter: "drop-shadow(0 -2px 4px rgba(0,0,0,0.3))",
-                }}
-              />
-            )}
-            {step.position === "top" && (
-              <div
-                className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[12px] border-r-[12px] border-t-[12px] border-l-transparent border-r-transparent border-t-frame-orange"
-                style={{
-                  filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
-                }}
-              />
-            )}
-            {step.position === "left" && (
-              <div
-                className="absolute -right-3 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[12px] border-b-[12px] border-l-[12px] border-t-transparent border-b-transparent border-l-frame-orange"
-                style={{
-                  filter: "drop-shadow(2px 0 4px rgba(0,0,0,0.3))",
-                }}
-              />
-            )}
-            {step.position === "right" && (
-              <div
-                className="absolute -left-3 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[12px] border-b-[12px] border-r-[12px] border-t-transparent border-b-transparent border-r-frame-orange"
-                style={{
-                  filter: "drop-shadow(-2px 0 4px rgba(0,0,0,0.3))",
-                }}
-              />
-            )}
-          </motion.div>
-        </>
+    <div className="fixed inset-0 z-[9998]" aria-live="polite">
+      <div className="pointer-events-none absolute inset-0 bg-frame-black/80 backdrop-blur-sm" />
+      {highlightRect && (
+        <motion.div
+          aria-hidden="true"
+          initial={reduceMotion ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="pointer-events-none absolute hidden border border-frame-orange lg:block"
+          style={{
+            top: highlightRect.top - 6,
+            left: highlightRect.left - 6,
+            width: highlightRect.width + 12,
+            height: highlightRect.height + 12,
+          }}
+        />
       )}
-    </AnimatePresence>
+
+      <motion.div
+        ref={desktopCardRef}
+        data-testid="product-tour-desktop-card"
+        role="dialog"
+        aria-modal="true"
+        initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="pointer-events-auto fixed z-[9999] hidden w-[min(26rem,calc(100vw-2.5rem))] border border-frame-orange bg-frame-black shadow-2xl lg:block"
+        style={desktopPosition}
+      >
+        <TourCard {...cardProps} />
+      </motion.div>
+
+      <motion.div
+        data-testid="product-tour-sheet"
+        role="dialog"
+        aria-modal="true"
+        initial={reduceMotion ? false : { opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="pointer-events-auto fixed inset-x-0 bottom-0 z-[9999] border-t border-frame-orange bg-frame-black shadow-2xl lg:hidden"
+      >
+        <div className="mx-auto h-1 w-10 bg-frame-gray-3" aria-hidden="true" />
+        <TourCard {...cardProps} />
+      </motion.div>
+    </div>
   );
 }

@@ -14,9 +14,6 @@ export default function FinalCTASection() {
 
   return (
     <section className="landing-section relative overflow-hidden">
-      {/* Background Glow */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-frame-orange/5 to-transparent pointer-events-none" />
-
       <div className="landing-shell relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

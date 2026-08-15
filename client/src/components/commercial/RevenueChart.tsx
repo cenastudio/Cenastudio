@@ -30,21 +30,21 @@ export function RevenueChart({ data, loading = false }: RevenueChartProps) {
   return (
     <ResponsiveContainer width="100%" height={256}>
       <LineChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--ds-surface-elevated)" />
         <XAxis
           dataKey="month"
-          stroke="#999"
+          stroke="var(--ds-chart-axis)"
           style={{ fontSize: '11px', fontFamily: 'var(--font-mono)' }}
         />
         <YAxis
-          stroke="#999"
+          stroke="var(--ds-chart-axis)"
           style={{ fontSize: '11px', fontFamily: 'var(--font-mono)' }}
           tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
         />
         <Tooltip
           contentStyle={{
-            backgroundColor: '#0a0a0a',
-            border: '1px solid #333',
+            backgroundColor: 'var(--ds-surface-tooltip)',
+            border: '1px solid var(--ds-dark-gray)',
             borderRadius: 0,
             fontFamily: 'var(--font-mono)',
             fontSize: '12px'

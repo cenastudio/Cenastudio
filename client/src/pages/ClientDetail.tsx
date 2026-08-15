@@ -8,12 +8,13 @@ import { TabsContent } from "@/components/ui/tabs";
 import { ResponsiveTabs } from "@/components/ui/responsive-tabs";
 import {
   ArrowLeft, BriefcaseBusiness, Building2, Calendar, Copy, DollarSign, FileText, Film, FolderOpen,
-  Globe2, Mail, MessageSquare, Phone, Trash2, User, Loader2, Video,
+  Globe2, Mail, MessageSquare, Phone, Plus, Trash2, User, Loader2, Video,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import ScheduleMeetingModal from "@/components/ScheduleMeetingModal";
 import ClientPortalAccessSection from "@/components/ClientPortalAccessSection";
+import EmptyState from "@/components/EmptyState";
 
 interface ClientData {
   id: number;
@@ -405,11 +406,15 @@ function ClientDetailContent() {
           {/* PROJETOS */}
           <TabsContent value="projects">
             {projects.length === 0 ? (
-              <div className="frame-empty-state p-12 text-center">
-                <FileText className="w-12 h-12 text-frame-gray-3 mx-auto mb-4" />
-                <p className="text-sm text-frame-gray-light mb-5">Nenhum projeto vinculado a este cliente.</p>
-                <button onClick={() => setLocation("/dashboard?newProject=1&clientId=" + clientId)} className="frame-btn-primary">+ Novo projeto</button>
-              </div>
+              <EmptyState
+                icon={FileText}
+                title={t("app.clientDetail.emptyProjects") as string}
+                action={{
+                  label: t("app.clientDetail.newProject") as string,
+                  icon: Plus,
+                  onClick: () => setLocation(`/dashboard?newProject=1&clientId=${clientId}`),
+                }}
+              />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {projects.map((proj) => (
@@ -432,13 +437,15 @@ function ClientDetailContent() {
           {/* OPORTUNIDADES */}
           <TabsContent value="oportunidades">
             {opportunities.length === 0 ? (
-              <div className="frame-empty-state p-12 text-center">
-                <DollarSign className="w-12 h-12 text-frame-gray-3 mx-auto mb-4" />
-                <p className="text-sm text-frame-gray-light mb-5">Nenhuma oportunidade vinculada a este cliente.</p>
-                <button onClick={() => setLocation(`/pipeline?new=1&clientId=${clientId}`)} className="frame-btn-primary">
-                  + Nova Oportunidade
-                </button>
-              </div>
+              <EmptyState
+                icon={DollarSign}
+                title={t("app.clientDetail.emptyOpportunities") as string}
+                action={{
+                  label: t("app.clientDetail.newOpportunity") as string,
+                  icon: Plus,
+                  onClick: () => setLocation(`/pipeline?new=1&clientId=${clientId}`),
+                }}
+              />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {opportunities.map((opp) => (
@@ -481,11 +488,15 @@ function ClientDetailContent() {
           {/* INTERAÇÕES */}
           <TabsContent value="interactions">
             {interactions.length === 0 ? (
-              <div className="frame-empty-state p-12 text-center">
-                <MessageSquare className="w-12 h-12 text-frame-gray-3 mx-auto mb-4" />
-                <p className="text-sm text-frame-gray-light mb-5">Nenhuma interação registrada com este cliente.</p>
-                <button onClick={() => setLocation(`/interactions?new=1&clientId=${clientId}`)} className="frame-btn-primary">+ Registrar interação</button>
-              </div>
+              <EmptyState
+                icon={MessageSquare}
+                title={t("app.clientDetail.emptyInteractions") as string}
+                action={{
+                  label: t("app.clientDetail.registerInteraction") as string,
+                  icon: Plus,
+                  onClick: () => setLocation(`/interactions?new=1&clientId=${clientId}`),
+                }}
+              />
             ) : (
               <div className="space-y-3">
                 {interactions.map((int) => (
@@ -509,10 +520,7 @@ function ClientDetailContent() {
           {/* ARQUIVOS */}
           <TabsContent value="files">
             {files.length === 0 ? (
-              <div className="frame-empty-state p-12 text-center">
-                <FolderOpen className="w-12 h-12 text-frame-gray-3 mx-auto mb-4" />
-                <p className="text-sm text-frame-gray-light">Nenhum arquivo nos projetos deste cliente.</p>
-              </div>
+              <EmptyState icon={FolderOpen} title={t("app.clientDetail.emptyFiles") as string} />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {files.map((file) => (
@@ -632,11 +640,15 @@ function ClientDetailContent() {
 
             {/* Financial Entries List */}
             {financial.length === 0 ? (
-              <div className="frame-empty-state p-12 text-center">
-                <DollarSign className="w-12 h-12 text-frame-gray-3 mx-auto mb-4" />
-                <p className="text-sm text-frame-gray-light mb-5">Nenhum lançamento financeiro vinculado a este cliente.</p>
-                <button onClick={() => setLocation(`/analytics?newEntry=1&clientId=${clientId}`)} className="frame-btn-primary">Novo Lançamento</button>
-              </div>
+              <EmptyState
+                icon={DollarSign}
+                title={t("app.clientDetail.emptyFinancial") as string}
+                action={{
+                  label: t("app.clientDetail.newFinancial") as string,
+                  icon: Plus,
+                  onClick: () => setLocation(`/analytics?newEntry=1&clientId=${clientId}`),
+                }}
+              />
             ) : (
               <>
                 <h3 className="font-frame-mono text-[0.65rem] uppercase tracking-wider text-frame-orange mb-4">Histórico de Lançamentos</h3>
@@ -701,33 +713,21 @@ function ClientDetailContent() {
             </div>
 
             {proposals.length === 0 ? (
-              <div className="frame-empty-state p-12 text-center space-y-5">
-                <div className="w-16 h-16 mx-auto border border-frame-orange/30 bg-frame-orange/10 flex items-center justify-center">
-                  <FileText className="w-8 h-8 text-frame-orange" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-frame-white mb-2">Nenhuma proposta criada</p>
-                  <p className="text-xs text-frame-gray-light max-w-sm mx-auto leading-relaxed">
-                    Crie propostas usando IA ou monte manualmente com o catálogo de serviços
-                  </p>
-                </div>
-                <div className="flex gap-2 justify-center">
-                  <button
-                    onClick={() => setLocation(`/studio/proposta?clientId=${clientId}`)}
-                    className="frame-btn-ghost flex items-center gap-1.5"
-                  >
-                    <BriefcaseBusiness className="w-4 h-4" />
-                    Gerar com IA
-                  </button>
-                  <button
-                    onClick={() => setLocation(`/proposals?clientId=${clientId}`)}
-                    className="frame-btn-primary flex items-center gap-1.5"
-                  >
-                    <FileText className="w-4 h-4" />
-                    Criar no Catálogo
-                  </button>
-                </div>
-              </div>
+              <EmptyState
+                icon={FileText}
+                title={t("app.clientDetail.emptyProposals") as string}
+                description={t("app.clientDetail.emptyProposalsDescription") as string}
+                action={{
+                  label: t("app.clientDetail.createFromCatalog") as string,
+                  icon: FileText,
+                  onClick: () => setLocation(`/proposals?clientId=${clientId}`),
+                }}
+                secondaryAction={{
+                  label: t("app.clientDetail.generateWithAi") as string,
+                  icon: BriefcaseBusiness,
+                  onClick: () => setLocation(`/studio/proposta?clientId=${clientId}`),
+                }}
+              />
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {proposals.map((proposal) => {
@@ -849,10 +849,7 @@ function ClientDetailContent() {
           {/* VÍDEO REVIEWS */}
           <TabsContent value="video-reviews">
             {videoReviews.length === 0 ? (
-              <div className="frame-empty-state p-12 text-center">
-                <Video className="w-12 h-12 text-frame-gray-3 mx-auto mb-4" />
-                <p className="text-sm text-frame-gray-light">Nenhum vídeo review vinculado a este cliente.</p>
-              </div>
+              <EmptyState icon={Video} title={t("app.clientDetail.emptyVideoReviews") as string} />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {videoReviews.map((review) => (

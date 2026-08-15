@@ -4,6 +4,8 @@ import { apiUrl } from "@/lib/api";
 import BrandLogo from "@/components/BrandLogo";
 import { CheckCircle2, AlertCircle, Loader2, FileSignature, Download } from "lucide-react";
 import { toast } from "sonner";
+import { applyDocumentMetadata } from "@/lib/documentMetadata";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
  * Opens a hidden iframe with the proposal HTML and triggers the browser's
@@ -124,6 +126,7 @@ function isRestrictedInAppBrowser(): boolean {
 }
 
 export default function ProposalView() {
+  const { t } = useLanguage();
   const { token } = useParams<{ token: string }>();
   const [proposal, setProposal] = useState<PublicProposal | null>(null);
   const [loading, setLoading] = useState(true);
@@ -151,6 +154,16 @@ export default function ProposalView() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
+
+  useEffect(() => {
+    if (!proposal || !token) return;
+    applyDocumentMetadata({
+      title: `${proposal.title} | ${t("app.publicShare.proposal.label") as string} | Cena Studio`,
+      description: t("app.publicShare.proposal.description") as string,
+      path: `/proposal/${token}`,
+      robots: "noindex, nofollow, noarchive",
+    });
+  }, [proposal, token, t]);
 
   const handleAccept = async () => {
     if (!name.trim()) {
@@ -237,7 +250,7 @@ export default function ProposalView() {
             ref={iframeRef}
             title="Proposta"
             srcDoc={proposal.html}
-            className="bg-[#0d0d0d] border-0"
+            className="bg-[var(--ds-surface-tooltip)] border-0"
             style={{
               width: scale < 1 ? `${100 / scale}%` : "100%",
               height: scale < 1 ? `${100 / scale}%` : "70vh",

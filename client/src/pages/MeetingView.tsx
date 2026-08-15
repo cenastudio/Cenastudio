@@ -3,6 +3,8 @@ import { useParams } from "wouter";
 import { apiUrl } from "@/lib/api";
 import BrandLogo from "@/components/BrandLogo";
 import { Calendar, Clock, MapPin, Download, AlertCircle, Loader2 } from "lucide-react";
+import { applyDocumentMetadata } from "@/lib/documentMetadata";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PublicMeeting {
   title: string;
@@ -19,6 +21,7 @@ interface PublicMeeting {
  * No login required — anyone with the token can view and download the .ics.
  */
 export default function MeetingView() {
+  const { t } = useLanguage();
   const { token } = useParams<{ token: string }>();
   const [meeting, setMeeting] = useState<PublicMeeting | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,6 +38,16 @@ export default function MeetingView() {
       .catch((err) => setError(err instanceof Error ? err.message : "Erro ao carregar reunião."))
       .finally(() => setLoading(false));
   }, [token]);
+
+  useEffect(() => {
+    if (!meeting || !token) return;
+    applyDocumentMetadata({
+      title: `${meeting.title} | ${t("app.publicShare.meeting.label") as string} | ${meeting.studio_name || "Cena Studio"}`,
+      description: t("app.publicShare.meeting.description") as string,
+      path: `/meeting/${token}`,
+      robots: "noindex, nofollow, noarchive",
+    });
+  }, [meeting, token, t]);
 
   if (loading) {
     return (

@@ -91,7 +91,7 @@ export const LazyImage = memo(function LazyImage({
     aspectRatio,
     position: "relative",
     overflow: "hidden",
-    backgroundColor: "#1a1a1a",
+    backgroundColor: "var(--ds-surface-elevated)",
   };
 
   const imgStyle: React.CSSProperties = {

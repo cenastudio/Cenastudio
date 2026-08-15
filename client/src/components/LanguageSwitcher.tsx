@@ -17,7 +17,7 @@ export default function LanguageSwitcher({ compact = false }: { compact?: boolea
 
   if (compact) {
     return (
-      <span className="inline-flex items-center overflow-hidden border border-[#ded6cf] bg-white shadow-[0_8px_22px_rgba(30,20,15,0.08)] dark:border-frame-gray-3 dark:bg-frame-black/50 dark:shadow-none" role="group" aria-label={ariaLabel}>
+      <span className="inline-flex items-center overflow-hidden border border-[var(--ds-language-border)] bg-white shadow-[var(--ds-language-shadow)] dark:border-frame-gray-3 dark:bg-frame-black/50 dark:shadow-none" role="group" aria-label={ariaLabel}>
         <button
           type="button"
           onClick={() => setLocale("pt")}
@@ -38,7 +38,7 @@ export default function LanguageSwitcher({ compact = false }: { compact?: boolea
   }
 
   return (
-      <span className="inline-flex items-center overflow-hidden border border-[#ded6cf] bg-white shadow-[0_8px_22px_rgba(30,20,15,0.08)] dark:border-frame-gray-3 dark:bg-frame-black/50 dark:shadow-none" role="group" aria-label={ariaLabel}>
+      <span className="inline-flex items-center overflow-hidden border border-[var(--ds-language-border)] bg-white shadow-[var(--ds-language-shadow)] dark:border-frame-gray-3 dark:bg-frame-black/50 dark:shadow-none" role="group" aria-label={ariaLabel}>
       <button
         type="button"
         onClick={() => setLocale("pt")}

@@ -44,24 +44,24 @@ export default function BarChartWidget({ title, data, config }: BarChartWidgetPr
       <div className="w-full" style={{ height: 300 }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--ds-chart-grid)" />
             <XAxis
               dataKey="name"
-              stroke="#666"
+              stroke="var(--ds-chart-reference)"
               style={{ fontSize: "0.75rem" }}
               angle={-45}
               textAnchor="end"
               height={80}
             />
             <YAxis
-              stroke="#666"
+              stroke="var(--ds-chart-reference)"
               style={{ fontSize: "0.75rem" }}
               tickFormatter={formatNumber}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "#1a1a1a",
-                border: "1px solid #333",
+                backgroundColor: "var(--ds-surface-elevated)",
+                border: "1px solid var(--ds-dark-gray)",
                 borderRadius: "4px",
                 fontSize: "0.875rem"
               }}
@@ -69,7 +69,7 @@ export default function BarChartWidget({ title, data, config }: BarChartWidgetPr
             />
             <Bar
               dataKey="value"
-              fill="#ff4e00"
+              fill="var(--ds-chart-accent)"
               radius={[4, 4, 0, 0]}
             />
           </BarChart>

@@ -16,6 +16,7 @@ import { motion, type Variants } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { SITE_CONFIG } from "@shared/site";
 import { hexToRgba } from "@shared/color";
+import { DOCUMENT_EXPORT_COLORS } from "@/design-system/color-presets";
 
 
 interface CommercialStats {
@@ -356,6 +357,7 @@ export default function CommercialOverview() {
   }
 
   function exportToPrintablePdf(data: any) {
+    const { dark } = DOCUMENT_EXPORT_COLORS;
     // Generate a beautiful dark-theme PDF report via print
     const color = SITE_CONFIG.primaryColor;
     const brandFadeRgba = hexToRgba(color, 0.06);
@@ -374,29 +376,29 @@ export default function CommercialOverview() {
 <style>
 @page{size:A4;margin:0}
 *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-html,body{margin:0;min-height:100%;background:#0d0d0d;color:#e8e8e8;font-family:Arial,sans-serif}
-body{background:radial-gradient(circle at 88% 5%,${color}2e,transparent 34%),linear-gradient(135deg,#15100d 0%,#0d0d0d 42%,#050505 100%)}
+html,body{margin:0;min-height:100%;background:${dark.canvas};color:${dark.text};font-family:Arial,sans-serif}
+body{background:radial-gradient(circle at 88% 5%,${color}2e,transparent 34%),linear-gradient(135deg,${dark.canvasWarm} 0%,${dark.canvas} 42%,${dark.canvasDeep} 100%)}
 .page{width:210mm;min-height:297mm;margin:0 auto;padding:18mm;position:relative}
 .page:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,${brandFadeRgba},transparent 32%);pointer-events:none}
 .page>*{position:relative;z-index:1}
 .header{display:flex;justify-content:space-between;padding-bottom:24px;border-bottom:3px solid ${color}}
-.brand{font-size:30px;font-weight:900;letter-spacing:.06em;color:#fff}.brand span{color:${color}}
-.doc{text-align:right}.doc small{display:block;color:#777;font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+.brand{font-size:30px;font-weight:900;letter-spacing:.06em;color:${dark.textStrong}}.brand span{color:${color}}
+.doc{text-align:right}.doc small{display:block;color:${dark.textSubtle};font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
 .doc strong{display:block;color:${color};font-size:11px;margin-top:4px}
-h1{font-size:32px;margin:28px 0 6px;color:#fff;letter-spacing:.02em}
-.muted{color:#999;font-size:12px}
+h1{font-size:32px;margin:28px 0 6px;color:${dark.textStrong};letter-spacing:.02em}
+.muted{color:${dark.textMuted};font-size:12px}
 .divider{height:1px;background:linear-gradient(90deg,${color}44,transparent);margin:24px 0}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0}
-.stat{background:#151515;border:1px solid #252525;padding:14px}
-.stat .label{font-size:9px;color:#777;font-weight:900;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
-.stat .value{font-size:18px;color:#fff;font-weight:800}
+.stat{background:${dark.panel};border:1px solid ${dark.border};padding:14px}
+.stat .label{font-size:9px;color:${dark.textSubtle};font-weight:900;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.stat .value{font-size:18px;color:${dark.textStrong};font-weight:800}
 .section{margin-top:28px}
 .section-title{font-size:10px;color:${color};font-weight:900;letter-spacing:.16em;text-transform:uppercase;margin-bottom:12px}
-table{width:100%;border-collapse:collapse;background:#141414;border:1px solid #252525}
-th{padding:10px 12px;text-align:left;background:#1b1b1b;color:#777;font-size:9px;text-transform:uppercase;letter-spacing:.1em}
-td{padding:10px 12px;border-top:1px solid #252525;color:#ddd;font-size:12px}
-.footer{margin-top:40px;padding-top:16px;border-top:1px solid #252525;display:flex;justify-content:space-between;color:#555;font-size:10px}
-@media print{html,body{background:#0d0d0d}.page{box-shadow:none}table,tr,td,th,.stat{break-inside:avoid}}
+table{width:100%;border-collapse:collapse;background:${dark.table};border:1px solid ${dark.border}}
+th{padding:10px 12px;text-align:left;background:${dark.tableHeader};color:${dark.textSubtle};font-size:9px;text-transform:uppercase;letter-spacing:.1em}
+td{padding:10px 12px;border-top:1px solid ${dark.border};color:${dark.textSoft};font-size:12px}
+.footer{margin-top:40px;padding-top:16px;border-top:1px solid ${dark.border};display:flex;justify-content:space-between;color:${dark.textFooter};font-size:10px}
+@media print{html,body{background:${dark.canvas}}.page{box-shadow:none}table,tr,td,th,.stat{break-inside:avoid}}
 </style></head><body><main class="page">
 <header class="header"><div><div class="brand">Cena<span>.</span> Studio</div></div><div class="doc"><small>${t("app.commercial.exportDocDetailed")}</small><strong>${formattedDate}</strong></div></header>
 <h1>${t("app.commercial.title")}</h1><p class="muted">${t("app.commercial.subtitle")}</p>
@@ -843,11 +845,11 @@ td{padding:10px 12px;border-top:1px solid #252525;color:#ddd;font-size:12px}
                 <div className="liquid-glass p-6 space-y-1">
                   {(() => {
                     const STAGES = [
-                      { key: 'prospect',    label: t('app.commercial.stageProspect'),  step: '01', color: '#6366f1' },
-                      { key: 'qualified',   label: t('app.commercial.stageQualified'), step: '02', color: '#8b5cf6' },
-                      { key: 'proposal',    label: t('app.commercial.stageProposal'),    step: '03', color: '#a855f7' },
+                      { key: 'prospect',    label: t('app.commercial.stageProspect'),  step: '01', color: 'var(--ds-stage-prospect)' },
+                      { key: 'qualified',   label: t('app.commercial.stageQualified'), step: '02', color: 'var(--ds-stage-qualified)' },
+                      { key: 'proposal',    label: t('app.commercial.stageProposal'),    step: '03', color: 'var(--ds-stage-proposal)' },
                       { key: 'negotiation', label: t('app.commercial.stageNegotiation'),  step: '04', color: SITE_CONFIG.primaryColor },
-                      { key: 'won',         label: t('app.commercial.stageWon'),       step: '05', color: '#22c55e' },
+                      { key: 'won',         label: t('app.commercial.stageWon'),       step: '05', color: 'var(--ds-stage-won)' },
                     ];
                     const firstStage = funnelData.find(f => f.stage === 'prospect');
                     const firstCount = firstStage?.count || 1;

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 
@@ -54,6 +54,7 @@ export function VisualPreferencesProvider({ children, forcedTheme }: { children:
   const [preferences, setPreferences] = useState<VisualPreferences>(readCachedPreferences);
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => forcedTheme ?? resolveTheme(readCachedPreferences().themeMode));
   const [isLoading, setIsLoading] = useState(true);
+  const preferenceVersion = useRef(0);
 
   useLayoutEffect(() => {
     setResolvedTheme(applyPreferences(preferences, forcedTheme));
@@ -67,8 +68,21 @@ export function VisualPreferencesProvider({ children, forcedTheme }: { children:
   useEffect(() => {
     if (authLoading) return;
     if (!isAuthenticated) { setIsLoading(false); return; }
+    let isCurrent = true;
+    const versionAtRequest = preferenceVersion.current;
     setIsLoading(true);
-    api.auth.getVisualPreferences().then(setPreferences).catch(console.error).finally(() => setIsLoading(false));
+    api.auth.getVisualPreferences()
+      .then((nextPreferences) => {
+        if (isCurrent && preferenceVersion.current === versionAtRequest) {
+          setPreferences(nextPreferences);
+        }
+      })
+      .catch(console.error)
+      .finally(() => {
+        if (isCurrent) setIsLoading(false);
+      });
+
+    return () => { isCurrent = false; };
   }, [authLoading, isAuthenticated]);
 
   const value = useMemo<VisualPreferencesContextType>(() => ({
@@ -78,6 +92,7 @@ export function VisualPreferencesProvider({ children, forcedTheme }: { children:
     updatePreference: async (key, nextValue) => {
       const previous = preferences;
       const next = { ...previous, [key]: nextValue };
+      preferenceVersion.current += 1;
       setPreferences(next);
       try { await api.auth.updateVisualPreferences(next); }
       catch (error) { setPreferences(previous); throw error; }

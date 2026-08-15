@@ -18,7 +18,7 @@ import { isMobileProject, openMobileNavIfPresent } from "./support/mobile";
  * Este teste roda apenas no project `chromium-mobile`. Se algum passo do
  * fluxo não for alcançável na UI mobile atual, a asserção falha explícito
  * apontando o que a Fase 2 precisa expor — a falha alimenta
- * `FASE_1_ACHADOS.md` (Task 10) e não deve ser mascarada como skip.
+ * a auditoria UX/mobile canônica e não deve ser mascarada como skip.
  */
 test.describe("@fase1 mobile user flow", () => {
   test.beforeEach(async ({ page }, testInfo) => {
@@ -124,8 +124,6 @@ test.describe("@fase1 mobile user flow", () => {
       // ============================================================
       // Após criar, o app pode redirecionar para /project/:id ou listar o
       // projeto no dashboard. Tentamos os dois caminhos.
-      await page.waitForLoadState("networkidle");
-
       let projectId: string | null = null;
       const urlMatch = page.url().match(/\/project\/([^/?#]+)/);
       if (urlMatch) {
@@ -135,7 +133,7 @@ test.describe("@fase1 mobile user flow", () => {
         const projectLink = page.getByText(projectName).first();
         if ((await projectLink.count()) > 0) {
           await projectLink.click();
-          await page.waitForLoadState("networkidle");
+          await expect(page).toHaveURL(/\/project\//);
           const linkedMatch = page.url().match(/\/project\/([^/?#]+)/);
           if (linkedMatch) projectId = linkedMatch[1];
         }
@@ -164,18 +162,20 @@ test.describe("@fase1 mobile user flow", () => {
       const projectHubUrl = `/project/${projectId}`;
       const editableInput = page.locator('[data-testid="project-name-editable"]');
 
-      // Logo após o POST de criação, um GET imediato ao mesmo recurso pode
-      // ocasionalmente cair numa conexão do pool que ainda não viu o write
-      // (latência real contra o Postgres hospedado, não um bug do app) —
-      // "Projeto não encontrado" aparece por 1-2s e desaparece no retry.
-      // Tenta algumas vezes antes de declarar falha real de UI ausente.
-      let editableCount = 0;
+      // O HTML inicial pode chegar antes da hidratação do hub. Esperar o
+      // campo visível é a evidência real de que a tela está pronta; contar o
+      // locator logo após `goto` gerava falso negativo em mobile.
+      let editableReady = false;
       for (let attempt = 0; attempt < 3; attempt++) {
         await page.goto(projectHubUrl);
-        await page.waitForLoadState("networkidle");
-        editableCount = await editableInput.count();
-        if (editableCount > 0) break;
-        await page.waitForTimeout(1000);
+        try {
+          await expect(editableInput).toBeVisible({ timeout: 5_000 });
+          editableReady = true;
+          break;
+        } catch {
+          // O retry abaixo cobre a pequena janela entre criação e leitura no
+          // banco hospedado sem depender de uma pausa fixa.
+        }
       }
 
       // Fase 2 expõe explicitamente o input editável do nome do projeto
@@ -183,7 +183,7 @@ test.describe("@fase1 mobile user flow", () => {
       // (input[type=text]) foi trocado por este testid porque a página
       // tinha múltiplos inputs (client.company, filtros, etc.), o que
       // fazia o teste editar o campo errado e falhar após o reload.
-      if (editableCount === 0) {
+      if (!editableReady) {
         throw new Error(
           'campo `[data-testid="project-name-editable"]` não encontrado em /project/:id — Fase 2 precisa expor um',
         );
@@ -222,7 +222,6 @@ test.describe("@fase1 mobile user flow", () => {
       // Passo 6: Reload
       // ============================================================
       await page.reload();
-      await page.waitForLoadState("networkidle");
 
       // ============================================================
       // Passo 7: Confirmar que o valor persistiu

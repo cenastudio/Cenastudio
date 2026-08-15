@@ -44,7 +44,7 @@ export const ProgressBarExamples: React.FC = () => {
         <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
           Progress bar with custom blue color instead of default orange.
         </p>
-        <ProgressBar value={60} max={100} color="#3b82f6" showPercentage />
+        <ProgressBar value={60} max={100} color="var(--status-info)" showPercentage />
       </section>
 
       {/* Example 4: Success Color (Green) */}
@@ -55,7 +55,7 @@ export const ProgressBarExamples: React.FC = () => {
         <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
           Using green color for successful completion.
         </p>
-        <ProgressBar value={100} max={100} color="#10b981" showPercentage />
+        <ProgressBar value={100} max={100} color="var(--status-success)" showPercentage />
       </section>
 
       {/* Example 5: Warning State (Yellow) */}
@@ -66,7 +66,7 @@ export const ProgressBarExamples: React.FC = () => {
         <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
           Using yellow/amber color to indicate warning state.
         </p>
-        <ProgressBar value={25} max={100} color="#f59e0b" showPercentage />
+        <ProgressBar value={25} max={100} color="var(--status-warning)" showPercentage />
       </section>
 
       {/* Example 6: Custom Max Value */}
@@ -115,25 +115,25 @@ export const ProgressBarExamples: React.FC = () => {
             <div style={{ marginBottom: '0.25rem', fontSize: '0.875rem', fontWeight: '500' }}>
               Job 1: Pre-production
             </div>
-            <ProgressBar value={30} max={100} color="#f59e0b" showPercentage />
+            <ProgressBar value={30} max={100} color="var(--status-warning)" showPercentage />
           </div>
           <div>
             <div style={{ marginBottom: '0.25rem', fontSize: '0.875rem', fontWeight: '500' }}>
               Job 2: Production
             </div>
-            <ProgressBar value={65} max={100} color="#FF6B00" showPercentage />
+            <ProgressBar value={65} max={100} color="var(--ds-orange-3)" showPercentage />
           </div>
           <div>
             <div style={{ marginBottom: '0.25rem', fontSize: '0.875rem', fontWeight: '500' }}>
               Job 3: Post-production
             </div>
-            <ProgressBar value={90} max={100} color="#3b82f6" showPercentage />
+            <ProgressBar value={90} max={100} color="var(--status-info)" showPercentage />
           </div>
           <div>
             <div style={{ marginBottom: '0.25rem', fontSize: '0.875rem', fontWeight: '500' }}>
               Job 4: Delivered
             </div>
-            <ProgressBar value={100} max={100} color="#10b981" showPercentage />
+            <ProgressBar value={100} max={100} color="var(--status-success)" showPercentage />
           </div>
         </div>
       </section>
@@ -195,7 +195,7 @@ export const ProgressBarExamples: React.FC = () => {
           <li>Animation respects `prefers-reduced-motion` accessibility setting</li>
           <li>Background color adapts to light/dark theme automatically</li>
           <li>Fully accessible with ARIA attributes (role, aria-valuenow, etc.)</li>
-          <li>Default color is orange (#FF6B00) matching the brand</li>
+          <li>Default color is the primary brand token</li>
           <li>Percentage label is optional via the `showPercentage` prop</li>
           <li>Custom max values can be used for non-percentage progress</li>
         </ul>

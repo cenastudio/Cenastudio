@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import AppNavBar from "@/components/AppNavBar";
+import EmptyState from "@/components/EmptyState";
 import ProductionNav from "@/components/ProductionNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
 import { useProject } from "@/contexts/ProjectContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { api, type EquipmentItem, type EquipmentBookingItem } from "@/lib/api";
 import {
   Camera,
@@ -67,6 +69,7 @@ function formatDate(iso: string) {
 }
 
 function EquipmentContent() {
+  const { t } = useLanguage();
   const { projects } = useProject();
   const [items, setItems] = useState<EquipmentItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -286,54 +289,19 @@ function EquipmentContent() {
 
         {/* Empty state — orange square + 01/02/03 flow */}
         {!loading && items.length === 0 && (
-          <section className="max-w-2xl mx-auto py-10 space-y-8">
-            <div className="frame-empty-state p-10 sm:p-12 space-y-6 text-center">
-              <div className="w-16 h-16 mx-auto border border-frame-orange/30 bg-frame-orange/10 flex items-center justify-center">
-                <Camera className="w-8 h-8 text-frame-orange" />
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-frame-white">Organize seu inventário de equipamento</h2>
-                <p className="text-sm text-frame-gray-light max-w-md mx-auto leading-relaxed">
-                  Cadastre câmeras, lentes, iluminação e acessórios. Depois reserve cada item por projeto e
-                  data — o sistema bloqueia automaticamente reservas conflitantes.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={openCreateDialog}
-                className="frame-btn-primary inline-flex items-center gap-2 !py-3 !px-6"
-              >
-                <Plus className="w-4 h-4" />
-                Cadastrar primeiro equipamento
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-frame-orange tracking-wider block mb-2">01</span>
-                <p className="text-sm font-semibold text-frame-white">Cadastre</p>
-                <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
-                  Nome, categoria e custo por dia de cada item do seu inventário.
-                </p>
-              </div>
-              <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-frame-orange tracking-wider block mb-2">02</span>
-                <p className="text-sm font-semibold text-frame-white">Reserve por projeto</p>
-                <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
-                  Escolha o projeto e o período — conflitos são bloqueados automaticamente.
-                </p>
-              </div>
-              <div className="border border-frame-orange/40 bg-frame-orange/[0.08] p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-frame-orange" />
-                <span className="font-frame-mono text-[0.6rem] text-frame-orange tracking-wider block mb-2">03</span>
-                <p className="text-sm font-semibold text-frame-white">Controle disponibilidade</p>
-                <p className="text-[0.65rem] text-frame-gray-light mt-1 leading-relaxed">
-                  Veja o status de cada equipamento e a agenda de reservas.
-                </p>
-              </div>
-            </div>
+          <section className="mx-auto max-w-4xl py-10">
+            <EmptyState
+              icon={Camera}
+              eyebrow={t("app.equipment.onboardEyebrow")}
+              title={t("app.equipment.onboardTitle")}
+              description={t("app.equipment.onboardDesc")}
+              action={{ label: t("app.equipment.onboardCta"), onClick: openCreateDialog, icon: Plus }}
+              steps={[
+                { title: t("app.equipment.onboardStep1"), description: t("app.equipment.onboardStep1Desc") },
+                { title: t("app.equipment.onboardStep2"), description: t("app.equipment.onboardStep2Desc") },
+                { title: t("app.equipment.onboardStep3"), description: t("app.equipment.onboardStep3Desc") },
+              ]}
+            />
           </section>
         )}
 

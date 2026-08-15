@@ -12,7 +12,7 @@ export const GlassCardExamples = () => {
   return (
     <div style={{
       padding: '40px',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg, var(--ds-stage-prospect) 0%, var(--ds-stage-qualified) 100%)',
       minHeight: '100vh',
     }}>
       <h1 style={{ color: 'white', marginBottom: '32px' }}>GlassCard Examples</h1>
@@ -41,8 +41,8 @@ export const GlassCardExamples = () => {
           </GlassCard>
 
           <GlassCard variant="light">
-            <h3 style={{ margin: 0, marginBottom: '8px', color: '#333' }}>Light Variant</h3>
-            <p style={{ margin: 0, color: '#666' }}>
+            <h3 style={{ margin: 0, marginBottom: '8px', color: 'var(--ds-dark-gray)' }}>Light Variant</h3>
+            <p style={{ margin: 0, color: 'var(--ds-chart-reference)' }}>
               Background: rgba(255, 255, 255, 0.7)<br />
               Border: rgba(0, 0, 0, 0.08)
             </p>
@@ -139,8 +139,8 @@ export const GlassCardExamples = () => {
             hover
             onClick={() => alert('Card 2 clicked!')}
           >
-            <h3 style={{ margin: 0, marginBottom: '8px', color: '#333' }}>Light Clickable Card</h3>
-            <p style={{ margin: 0, color: '#666' }}>
+            <h3 style={{ margin: 0, marginBottom: '8px', color: 'var(--ds-dark-gray)' }}>Light Clickable Card</h3>
+            <p style={{ margin: 0, color: 'var(--ds-chart-reference)' }}>
               Fully keyboard accessible
             </p>
           </GlassCard>
@@ -161,7 +161,7 @@ export const GlassCardExamples = () => {
               width: '60px',
               height: '60px',
               borderRadius: '50%',
-              background: 'var(--ds-orange, #e85002)',
+              background: 'var(--ds-orange)',
               flexShrink: 0,
               display: 'flex',
               alignItems: 'center',
@@ -178,7 +178,7 @@ export const GlassCardExamples = () => {
               </p>
               <button style={{
                 padding: '8px 16px',
-                background: 'var(--ds-orange, #e85002)',
+                background: 'var(--ds-orange)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
@@ -205,10 +205,10 @@ export const GlassCardExamples = () => {
         >
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎬</div>
-            <h3 style={{ margin: 0, marginBottom: '8px', color: '#333', fontSize: '24px' }}>
+            <h3 style={{ margin: 0, marginBottom: '8px', color: 'var(--ds-dark-gray)', fontSize: '24px' }}>
               Premium Feature
             </h3>
-            <p style={{ margin: 0, color: '#666', lineHeight: 1.6 }}>
+            <p style={{ margin: 0, color: 'var(--ds-chart-reference)', lineHeight: 1.6 }}>
               This card combines all available features: light variant, extra-large padding,
               32px border radius, hover animation, click handler, and custom className.
             </p>
@@ -218,10 +218,10 @@ export const GlassCardExamples = () => {
 
       {/* Accessibility Note */}
       <GlassCard variant="light" padding="lg" borderRadius="16px">
-        <h3 style={{ margin: 0, marginBottom: '12px', color: '#333' }}>
+        <h3 style={{ margin: 0, marginBottom: '12px', color: 'var(--ds-dark-gray)' }}>
           ♿ Accessibility Features
         </h3>
-        <ul style={{ margin: 0, paddingLeft: '20px', color: '#666', lineHeight: 1.8 }}>
+        <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--ds-chart-reference)', lineHeight: 1.8 }}>
           <li>Respects <code>prefers-reduced-motion</code> - animations disabled for users who prefer reduced motion</li>
           <li>Keyboard accessible - clickable cards can be activated with Enter or Space</li>
           <li>Focus visible outline for keyboard navigation</li>

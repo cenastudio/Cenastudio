@@ -14,13 +14,14 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
 import { SITE_CONFIG } from "@shared/site";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
+import { COMPANY_PRIMARY_COLOR_PRESETS } from "@/design-system/color-presets";
 
 // Preview mini-doc component
 function DocPreview({ settings }: { settings: StudioSettings }) {
   const color = settings.primaryColor || SITE_CONFIG.primaryColor;
   return (
     <div className="rounded-lg overflow-hidden border border-frame-gray-3/50 shadow-2xl"
-      style={{ background: "linear-gradient(180deg, #111 0%, #0a0a0a 100%)" }}>
+      style={{ background: "linear-gradient(180deg, var(--ds-surface-input) 0%, var(--ds-surface-tooltip) 100%)" }}>
       {/* Header */}
       <div className="p-5 border-b border-white/10" style={{ borderBottom: `2px solid ${color}` }}>
         <div className="flex items-start justify-between">
@@ -38,7 +39,7 @@ function DocPreview({ settings }: { settings: StudioSettings }) {
           </div>
           <div className="text-right">
             <div className="text-[0.5rem] font-mono uppercase tracking-wider text-white/40">Proposta</div>
-            <div className="text-lg font-bold mt-0.5" style={{ color }}>#001</div>
+            <div className="text-lg font-bold mt-0.5" style={{ color }}>{"\\u0023001"}</div>
             <div className="text-[0.5rem] text-white/40">{new Date().toLocaleDateString("pt-BR")}</div>
           </div>
         </div>
@@ -422,10 +423,10 @@ function CompanySettingsContent() {
                         style={{ background: color }} />
                     </div>
                     <div className="flex gap-2 flex-wrap">
-                      {[SITE_CONFIG.primaryColor, "#e63946", "#2563eb", "#7c3aed", "#059669"].map((c) => (
+                      {[SITE_CONFIG.primaryColor, ...COMPANY_PRIMARY_COLOR_PRESETS].map((c) => (
                         <button key={c} type="button" onClick={() => update("primaryColor", c)}
                           className="w-7 h-7 rounded-full border-2 transition-transform hover:scale-110"
-                          style={{ background: c, borderColor: settings.primaryColor === c ? "#fff" : "transparent" }} />
+                          style={{ background: c, borderColor: settings.primaryColor === c ? "var(--ds-text-1)" : "transparent" }} />
                       ))}
                     </div>
                     <p className="text-[0.7rem] text-frame-gray-light leading-relaxed">

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import AppNavBar from "@/components/AppNavBar";
+import EmptyState from "@/components/EmptyState";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useClientIdFromQuery } from "@/hooks/useClientIdFromQuery";
 import {
@@ -467,44 +468,29 @@ function AnalyticsContent() {
 
         {/* ═══ CONDITIONAL: Empty Onboarding vs Data View ═══ */}
         {!finance.recentEntries.length && !finance.monthlyCashflow.some(m => m.income > 0 || m.expenses > 0) ? (
-          /* ═══ UNIFIED EMPTY STATE ═══ */
-          <section className="border border-frame-orange/20 bg-gradient-to-b from-frame-orange/[0.04] to-transparent p-8 sm:p-12 text-center space-y-8">
-            <div>
-              <div className="w-16 h-16 mx-auto flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-full mb-5">
-                <ArrowUpRight className="w-8 h-8 text-frame-orange" />
+          <EmptyState
+            icon={ArrowUpRight}
+            eyebrow={t("app.finance.onboardEyebrow")}
+            title={t("app.finance.onboardTitle")}
+            description={t("app.finance.onboardDesc")}
+            action={{ label: t("app.finance.onboardCta"), onClick: () => setShowEntryForm(true), icon: Plus }}
+            steps={[
+              { title: t("app.finance.onboardStep1"), description: t("app.finance.onboardStep1Desc") },
+              { title: t("app.finance.onboardStep2"), description: t("app.finance.onboardStep2Desc") },
+              { title: t("app.finance.onboardStep3"), description: t("app.finance.onboardStep3Desc") },
+            ]}
+            footer={(
+              <div className="border-t border-frame-gray-3/40 pt-5 text-left">
+                <p className="mb-3 font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-orange">{t("app.finance.onboardExamples")}</p>
+                <div className="space-y-1.5">
+                  <p className="flex items-center gap-2 text-[0.7rem] text-frame-gray-light"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-green-400" />{t("app.finance.onboardEx1")}</p>
+                  <p className="flex items-center gap-2 text-[0.7rem] text-frame-gray-light"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />{t("app.finance.onboardEx2")}</p>
+                  <p className="flex items-center gap-2 text-[0.7rem] text-frame-gray-light"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />{t("app.finance.onboardEx3")}</p>
+                </div>
               </div>
-              <h2 className="text-2xl font-bold text-frame-white">{t("app.finance.onboardTitle")}</h2>
-              <p className="text-sm text-frame-gray-light mt-2 max-w-md mx-auto leading-relaxed">{t("app.finance.onboardDesc")}</p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xl mx-auto">
-              <div className="border border-frame-orange/25 bg-frame-orange/[0.06] p-4 relative">
-                <div className="absolute -top-2.5 left-3 px-2 py-0.5 bg-frame-orange text-frame-black text-[0.55rem] font-bold uppercase tracking-wider">01</div>
-                <p className="text-sm font-semibold text-frame-white mt-2">{t("app.finance.onboardStep1")}</p>
-                <p className="text-[0.65rem] text-frame-gray-light mt-1">{t("app.finance.onboardStep1Desc")}</p>
-              </div>
-              <div className="border border-frame-gray-3/50 p-4 relative">
-                <div className="absolute -top-2.5 left-3 px-2 py-0.5 bg-frame-gray-3 text-frame-gray-light text-[0.55rem] font-bold uppercase tracking-wider">02</div>
-                <p className="text-sm font-semibold text-frame-white mt-2">{t("app.finance.onboardStep2")}</p>
-                <p className="text-[0.65rem] text-frame-gray-light mt-1">{t("app.finance.onboardStep2Desc")}</p>
-              </div>
-              <div className="border border-frame-gray-3/50 p-4 relative">
-                <div className="absolute -top-2.5 left-3 px-2 py-0.5 bg-frame-gray-3 text-frame-gray-light text-[0.55rem] font-bold uppercase tracking-wider">03</div>
-                <p className="text-sm font-semibold text-frame-white mt-2">{t("app.finance.onboardStep3")}</p>
-                <p className="text-[0.65rem] text-frame-gray-light mt-1">{t("app.finance.onboardStep3Desc")}</p>
-              </div>
-            </div>
-            <div className="border-t border-frame-gray-3/40 pt-6 max-w-lg mx-auto">
-              <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-orange mb-3">{t("app.finance.onboardExamples")}</p>
-              <div className="space-y-1.5 text-left">
-                <p className="text-[0.7rem] text-frame-gray-light flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" />{t("app.finance.onboardEx1")}</p>
-                <p className="text-[0.7rem] text-frame-gray-light flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />{t("app.finance.onboardEx2")}</p>
-                <p className="text-[0.7rem] text-frame-gray-light flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />{t("app.finance.onboardEx3")}</p>
-              </div>
-            </div>
-            <button type="button" onClick={() => setShowEntryForm(true)} className="frame-btn-primary inline-flex items-center gap-2 !py-3 !px-6">
-              <Plus className="w-4 h-4" /> {t("app.finance.onboardCta")}
-            </button>
-          </section>
+            )}
+            className="p-8 sm:p-12"
+          />
         ) : (
           <>
         {/* ═══ TWO COLUMNS: Cashflow + Pendentes ═══ */}

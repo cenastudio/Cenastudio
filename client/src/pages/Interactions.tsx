@@ -402,27 +402,25 @@ function InteractionsContent({ embedded }: { embedded?: boolean }) {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-frame-orange" />
           </div>
         ) : getFilteredInteractions().length === 0 ? (
-          <div className="frame-empty-state p-10 text-center space-y-5 max-w-lg mx-auto">
-            <MessageSquare className="w-10 h-10 mx-auto text-frame-orange/60" />
-            <div className="space-y-2">
-              <h2 className="text-lg font-semibold text-frame-white">{t("app.commercial.interactions.empty")}</h2>
-              <p className="text-sm text-frame-gray-light leading-relaxed">
-                {t("app.commercial.interactions.emptyDesc")}
-              </p>
-            </div>
-            <div className="border-t border-frame-orange/20 pt-4 space-y-2 text-left max-w-xs mx-auto">
-              <p className="font-frame-mono text-[0.55rem] uppercase tracking-wider text-frame-orange">{t("app.commercial.interactions.examples")}</p>
-              <p className="text-[0.65rem] text-frame-gray-light">{t("app.commercial.interactions.example1")}</p>
-              <p className="text-[0.65rem] text-frame-gray-light">{t("app.commercial.interactions.example2")}</p>
-              <p className="text-[0.65rem] text-frame-gray-light">{t("app.commercial.interactions.example3")}</p>
-            </div>
-            <button
-              onClick={() => { resetForm(); setIsCreateOpen(true); }}
-              className="frame-btn-primary inline-flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" /> {t("app.commercial.interactions.registerFirst")}
-            </button>
-          </div>
+          <EmptyState
+            icon={MessageSquare}
+            title={t("app.commercial.interactions.empty") as string}
+            description={t("app.commercial.interactions.emptyDesc") as string}
+            action={{
+              label: t("app.commercial.interactions.registerFirst") as string,
+              icon: Plus,
+              onClick: () => { resetForm(); setIsCreateOpen(true); },
+            }}
+            footer={(
+              <div className="space-y-2 border-t border-frame-orange/20 pt-4 text-left">
+                <p className="font-frame-mono text-[0.55rem] uppercase tracking-wider text-frame-orange">{t("app.commercial.interactions.examples")}</p>
+                <p className="text-[0.65rem] text-frame-gray-light">{t("app.commercial.interactions.example1")}</p>
+                <p className="text-[0.65rem] text-frame-gray-light">{t("app.commercial.interactions.example2")}</p>
+                <p className="text-[0.65rem] text-frame-gray-light">{t("app.commercial.interactions.example3")}</p>
+              </div>
+            )}
+            className="mx-auto max-w-lg"
+          />
         ) : (
           <div className="space-y-4">
             {getFilteredInteractions().map((interaction) => {

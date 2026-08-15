@@ -72,14 +72,14 @@ All base components follow the design token system established in Task 1.1.1:
 import { colors } from '@/design-system/tokens';
 
 // Semantic colors
-colors.semantic.success  // #22C55E
-colors.semantic.warning  // #F59E0B
-colors.semantic.error    // #EF4444
-colors.semantic.info     // #3B82F6
+colors.semantic.success  // success token
+colors.semantic.warning  // warning token
+colors.semantic.error    // danger token
+colors.semantic.info     // info token
 
 // Neutrals
-colors.neutral.black     // #0A0A0A
-colors.neutral.white     // #F9F9F9
+colors.neutral.black     // surface token
+colors.neutral.white     // text token
 ```
 
 ### Typography Scale

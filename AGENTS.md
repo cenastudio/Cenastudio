@@ -94,7 +94,7 @@ Nunca escreva "✅ concluído", "pronto para deploy" ou equivalente sem:
 - Tarefas grandes (uma fase inteira de um spec) devem ser quebradas em
   sub-tarefas menores, cada uma terminável dentro de uma sessão, com
   checkpoint de confirmação antes de seguir pra próxima — como já é
-  feito em `fase-2-layout-mobile-e-tabs/tasks.md`, que é o padrão de
+  feito em `fase-2-layout-mobile-e-tabs-OK/tasks.md`, que é o padrão de
   referência a seguir.
 - Antes de abrir um arquivo grande de contexto (um audit antigo, um
   diagnóstico de deploy passado), pergunte-se: isso ainda é verdade?
@@ -121,6 +121,7 @@ Não é preciso ler todas — leia a que casa com o problema.
 | `module-resolution.md` | Erros de import/resolução de módulo |
 | `systematic-debugging.md` / `root-cause-analysis.md` | Bug difícil de reproduzir, precisa de método antes de tentar corrigir |
 | `seo-specialist.md` | Qualquer tarefa envolvendo meta tags, indexação, SEO técnico |
+| `MASTER-DIAGNOSTICO-COMPLETO.md` | Registro histórico de um incidente de deploy de julho de 2026. Consulte apenas para investigar aquele contexto; `docs/CONEXOES.md` e as skills de deploy são a fonte operacional atual. |
 
 Se uma tarefa nova precisar de um tipo de expertise que nenhuma skill
 cobre, crie uma skill nova em `.kiro/skills/` (curta, focada em
@@ -136,7 +137,7 @@ tarefas" — não neste arquivo, e não em `IMPLEMENTATION_QUEUE.md` (esse
 arquivo antigo deve ser arquivado na Fase 0 de limpeza). Ordem de
 execução combinada:
 
-1. `.kiro/specs/00-fundacao-limpeza-e-documentacao/` (limpeza,
+1. `.kiro/specs/00-fundacao-limpeza-e-documentacao-OK/` (limpeza,
    `.env.example`, `docs/CONEXOES.md`, `docs/STATUS.md`) — **pré-requisito
    de tudo abaixo.**
 2. `.kiro/specs/auditoria-ux-<data>/` (achados de navegação mobile,

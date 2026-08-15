@@ -100,11 +100,11 @@ export interface StatusBadgeProps {
 
 | Type    | Base Color | Background (α=0.1)        | Border (α=0.3)            | Text (Full Opacity) |
 |---------|------------|---------------------------|---------------------------|---------------------|
-| success | #10b981    | rgba(16, 185, 129, 0.1)   | rgba(16, 185, 129, 0.3)   | #10b981             |
-| warning | #f59e0b    | rgba(245, 158, 11, 0.1)   | rgba(245, 158, 11, 0.3)   | #f59e0b             |
-| danger  | #ef4444    | rgba(239, 68, 68, 0.1)    | rgba(239, 68, 68, 0.3)    | #ef4444             |
-| info    | #3b82f6    | rgba(59, 130, 246, 0.1)   | rgba(59, 130, 246, 0.3)   | #3b82f6             |
-| neutral | #6b7280    | rgba(107, 114, 128, 0.1)  | rgba(107, 114, 128, 0.3)  | #6b7280             |
+| success | `--status-success` | `--status-success-bg` | `--status-success-border` | `--status-success` |
+| warning | `--status-warning` | `--status-warning-bg` | `--status-warning-border` | `--status-warning` |
+| danger  | `--status-danger` | `--status-danger-bg` | `--status-danger-border` | `--status-danger` |
+| info    | `--status-info` | `--status-info-bg` | `--status-info-border` | `--status-info` |
+| neutral | `--status-neutral` | `--status-neutral-bg` | `--status-neutral-border` | `--status-neutral` |
 
 ## Size Specification
 
@@ -197,11 +197,11 @@ import { colors } from '@/design-system/tokens';
 
 // Colors are hardcoded in component but align with token system
 const STATUS_COLORS = {
-  success: colors.semantic.success,  // #10b981
-  warning: colors.semantic.warning,  // #f59e0b
-  danger: colors.semantic.error,     // #ef4444
-  info: colors.extended.blue[500],   // #3b82f6
-  neutral: { base: '#6b7280' }       // Custom neutral gray
+  success: 'var(--status-success)',
+  warning: 'var(--status-warning)',
+  danger: 'var(--status-danger)',
+  info: 'var(--status-info)',
+  neutral: 'var(--status-neutral)'
 };
 ```
 

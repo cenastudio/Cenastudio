@@ -39,7 +39,7 @@ export interface ProgressBarProps {
  * @example
  * ```tsx
  * <ProgressBar value={75} max={100} showPercentage />
- * <ProgressBar value={30} max={100} color="#3b82f6" label="Loading..." />
+ * <ProgressBar value={30} max={100} color="var(--status-info)" label="Loading..." />
  * ```
  */
 export const ProgressBar: React.FC<ProgressBarProps> = ({
@@ -75,12 +75,13 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
         <div
           className="progress-bar-fill"
           style={{
+            "--progress-fill": color,
             height: '100%',
             width: `${percentage}%`,
-            backgroundColor: color,
+            backgroundColor: 'var(--progress-fill)',
             borderRadius: '9999px',
             transition: 'width 500ms ease-out',
-          }}
+          } as React.CSSProperties}
         />
       </div>
 

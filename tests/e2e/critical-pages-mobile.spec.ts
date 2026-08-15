@@ -30,7 +30,7 @@ import { assertMinTouchTargets } from "./support/touchTarget";
  *
  * Convenção "Opção A" do design.md:
  *   - `assertMinTouchTargets` pode falhar aqui — a intenção é observar a
- *     realidade do app. Falhas viram entradas em FASE_1_ACHADOS.md (Task 10).
+ *     realidade do app. Falhas alimentam a auditoria UX/mobile canônica.
  *   - `throw new Error("...Fase 2 precisa...")` sinaliza que a estrutura da
  *     página divergiu do esperado (ex.: menos de 2 abas onde deveríamos ter
  *     abas). Isso não é bug: é escopo para a próxima fase.
@@ -93,21 +93,17 @@ test.describe("@fase1 critical pages on mobile", () => {
     page,
   }) => {
     await page.goto("/commercial");
-    await page.waitForLoadState("networkidle");
 
     // Clients — sem marcador estável, valida somente URL.
     await page.goto("/clients");
-    await page.waitForLoadState("networkidle");
     await expect(page).toHaveURL(/\/clients/);
 
     // Pipeline — sem marcador estável, valida somente URL.
     await page.goto("/pipeline");
-    await page.waitForLoadState("networkidle");
     await expect(page).toHaveURL(/\/pipeline/);
 
     // Proposals — usa o marcador conhecido do launch.spec.ts.
     await page.goto("/proposals");
-    await page.waitForLoadState("networkidle");
     await expect(
       page.getByText(/Propostas|Proposals/i).first(),
     ).toBeVisible();
@@ -125,7 +121,6 @@ test.describe("@fase1 critical pages on mobile", () => {
 
     try {
       await page.goto(`/clients/${client.id}`);
-      await page.waitForLoadState("networkidle");
 
       const tabs = page.getByRole("tab");
       await expect(tabs.first()).toBeVisible({ timeout: 10_000 });
@@ -222,7 +217,6 @@ test.describe("@fase1 critical pages on mobile", () => {
       project = await createProjectViaApi(page, client.id);
 
       await page.goto(`/project/${project.id}`);
-      await page.waitForLoadState("networkidle");
 
       // Validar que carregou algum conteúdo principal do projeto.
       const mainContent = page.locator('main, [role="main"]').first();

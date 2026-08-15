@@ -104,6 +104,7 @@ export default function PricingSection() {
   const [, setLocation] = useLocation();
   const { isAuthenticated } = useAuth();
   const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
+  const [showTailoredPlans, setShowTailoredPlans] = useState(false);
 
   const handleSelectPlan = async (planId: string) => {
     if (planId === "iniciante") {
@@ -171,6 +172,99 @@ export default function PricingSection() {
     },
   };
 
+  const selfServePlans = PRICING.filter((plan) => ["iniciante", "profissional", "produtora"].includes(plan.id));
+  const tailoredPlans = PRICING.filter((plan) => ["whitelabel", "enterprise"].includes(plan.id));
+
+  const renderPlan = (plan: (typeof PRICING)[number]) => (
+    <motion.article
+      key={plan.id}
+      variants={cardVariants}
+      whileHover={{ y: -8 }}
+      className={`landing-card relative overflow-hidden ${plan.highlight ? "border-frame-orange/70" : ""}`}
+      data-testid={`pricing-plan-${plan.id}`}
+    >
+      <div className="relative z-10 p-7 sm:p-8 lg:p-9">
+        <div className="mb-4 font-frame-mono text-[0.64rem] uppercase tracking-[0.2em] text-frame-orange">
+          {plan.tier.replace(/^\/\/\s*/, "")}
+        </div>
+
+        <div className="mb-2">
+          <span className="landing-heading text-[3.2rem]">{plan.price}</span>
+          <span className="ml-2 text-sm font-light text-[var(--landing-muted)]">{translatePlanText(plan.period, isEn)}</span>
+        </div>
+
+        <p className="mb-7 text-sm font-light leading-relaxed text-[var(--landing-muted)]">
+          {translatePlanText(plan.description, isEn)}
+        </p>
+
+        {plan.roi && (
+          <div className="mb-6 border border-frame-orange/30 bg-frame-orange/10 px-3 py-2">
+            <p className="text-xs font-medium text-frame-orange">{translatePlanText(plan.roi, isEn)}</p>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => void handleSelectPlan(plan.id)}
+          className={`mb-7 flex min-h-11 w-full items-center justify-center gap-2 ${
+            plan.highlight ? "frame-btn-primary" : "frame-btn-ghost"
+          }`}
+        >
+          <CreditCard className="h-4 w-4" />
+          {ctaLabel(plan.id)}
+        </button>
+
+        <ul className="space-y-4">
+          {plan.features.slice(0, 5).map((feature: string) => (
+            <li key={feature} className="flex items-start gap-3">
+              <Check size={18} className="mt-0.5 shrink-0 text-frame-orange" />
+              <span className="text-sm font-light text-[var(--landing-subtle)]">{translatePlanText(feature, isEn)}</span>
+            </li>
+          ))}
+
+          <AnimatePresence>
+            {expandedPlan === plan.id && plan.features.slice(5).map((feature: string) => (
+              <motion.li
+                key={feature}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-start gap-3"
+              >
+                <Check size={18} className="mt-0.5 shrink-0 text-frame-orange" />
+                <span className="text-sm font-light text-[var(--landing-subtle)]">{translatePlanText(feature, isEn)}</span>
+              </motion.li>
+            ))}
+          </AnimatePresence>
+
+          {plan.features.length > 5 && (
+            <li className="pt-2">
+              <button
+                type="button"
+                onClick={() => setExpandedPlan(expandedPlan === plan.id ? null : plan.id)}
+                className="flex min-h-11 items-center gap-2 text-sm text-frame-orange transition-colors hover:text-frame-orange/80"
+                aria-expanded={expandedPlan === plan.id}
+              >
+                <span>{expandedPlan === plan.id ? (isEn ? "Show less" : "Ver menos") : (isEn ? "Show all features" : "Ver todas as features")}</span>
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform duration-200 ${expandedPlan === plan.id ? "rotate-180" : ""}`}
+                />
+              </button>
+            </li>
+          )}
+        </ul>
+      </div>
+
+      {plan.highlight && (
+        <div className="absolute right-0 top-0 bg-frame-orange px-4 py-2 font-frame-mono text-[0.64rem] font-semibold uppercase tracking-[0.15em] text-black">
+          {t("app.landing.pricing.popular") as string}
+        </div>
+      )}
+    </motion.article>
+  );
+
   return (
     <section id="pricing" className="landing-section">
       <div className="landing-shell">
@@ -189,108 +283,52 @@ export default function PricingSection() {
           </p>
         </motion.div>
 
-        <div className="relative -mx-4 px-4 md:mx-0 md:px-0">
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory md:grid md:grid-cols-2 md:overflow-visible lg:grid-cols-3 xl:grid-cols-5"
-            style={{ scrollbarWidth: 'thin' }}
-          >
-          {PRICING.map((plan, idx) => (
-            <motion.div
-              key={idx}
-              variants={cardVariants}
-              whileHover={{ y: -8 }}
-              className={`landing-card relative overflow-hidden min-w-[280px] flex-shrink-0 snap-center md:min-w-0 ${plan.highlight ? "md:scale-[1.03] border-frame-orange/70" : ""}`}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          data-testid="pricing-core-plans"
+        >
+          {selfServePlans.map(renderPlan)}
+        </motion.div>
+
+        <div className="mt-14 border-t border-[var(--landing-line)] pt-10">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <div className="max-w-2xl">
+              <p className="landing-eyebrow mb-3">{t("app.landing.pricing.tailoredEyebrow") as string}</p>
+              <h3 className="landing-heading text-[clamp(1.5rem,3vw,2.35rem)]">{t("app.landing.pricing.tailoredHeading") as string}</h3>
+              <p className="landing-copy mt-3">{t("app.landing.pricing.tailoredCopy") as string}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowTailoredPlans((current) => !current)}
+              className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 border border-white/20 px-4 text-sm font-medium text-white transition hover:border-frame-orange hover:text-frame-orange"
+              aria-expanded={showTailoredPlans}
+              aria-controls="pricing-tailored-plans"
+              data-testid="pricing-tailored-toggle"
             >
-              <div className="relative z-10 p-8 md:p-10">
-                <div className="mb-4 font-frame-mono text-[0.64rem] uppercase tracking-[0.2em] text-frame-orange">
-                  {plan.tier}
-                </div>
+              {t(showTailoredPlans ? "app.landing.pricing.tailoredHide" : "app.landing.pricing.tailoredShow") as string}
+              <ChevronDown size={16} className={`transition-transform duration-200 ${showTailoredPlans ? "rotate-180" : ""}`} />
+            </button>
+          </div>
 
-                <div className="mb-2">
-                  <span className="landing-heading text-[3.2rem]">
-                    {plan.price}
-                  </span>
-                  <span className="ml-2 text-sm font-light text-[var(--landing-muted)]">{translatePlanText(plan.period, isEn)}</span>
-                </div>
-
-                <p className="mb-8 text-sm font-light leading-relaxed text-[var(--landing-muted)]">
-                  {translatePlanText(plan.description, isEn)}
-                </p>
-
-                {/* ROI Badge */}
-                {plan.roi && (
-                  <div className="mb-6 inline-block rounded border border-frame-orange/30 bg-frame-orange/10 px-3 py-1.5">
-                    <p className="text-xs font-medium text-frame-orange">{plan.roi}</p>
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => void handleSelectPlan(plan.id)}
-                  className={`w-full mb-8 flex items-center justify-center gap-2 ${
-                    plan.highlight ? "frame-btn-primary" : "frame-btn-ghost"
-                  }`}
-                >
-                  <CreditCard className="w-4 h-4" />
-                  {ctaLabel(plan.id)}
-                </button>
-
-                <ul className="space-y-4">
-                  {plan.features.slice(0, 5).map((feature: string, fidx: number) => (
-                    <li key={fidx} className="flex items-start gap-3">
-                      <Check size={18} className="text-frame-orange flex-shrink-0 mt-0.5" />
-                      <span className="text-sm font-light text-[var(--landing-subtle)]">{translatePlanText(feature, isEn)}</span>
-                    </li>
-                  ))}
-
-                  {/* Collapsible features for mobile */}
-                  <AnimatePresence>
-                    {expandedPlan === plan.id && plan.features.slice(5).map((feature: string, fidx: number) => (
-                      <motion.li
-                        key={`expanded-${fidx}`}
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="flex items-start gap-3"
-                      >
-                        <Check size={18} className="text-frame-orange flex-shrink-0 mt-0.5" />
-                        <span className="text-sm font-light text-[var(--landing-subtle)]">{translatePlanText(feature, isEn)}</span>
-                      </motion.li>
-                    ))}
-                  </AnimatePresence>
-
-                  {/* Show more/less button */}
-                  {plan.features.length > 5 && (
-                    <li className="pt-2">
-                      <button
-                        type="button"
-                        onClick={() => setExpandedPlan(expandedPlan === plan.id ? null : plan.id)}
-                        className="flex items-center gap-2 text-sm text-frame-orange hover:text-frame-orange/80 transition-colors"
-                      >
-                        <span>{expandedPlan === plan.id ? (isEn ? "Show less" : "Ver menos") : (isEn ? "Show all features" : "Ver todas as features")}</span>
-                        <ChevronDown
-                          size={16}
-                          className={`transition-transform duration-200 ${expandedPlan === plan.id ? "rotate-180" : ""}`}
-                        />
-                      </button>
-                    </li>
-                  )}
-                </ul>
-              </div>
-
-              {plan.highlight && (
-                <div className="absolute right-0 top-0 bg-frame-orange px-4 py-2 font-frame-mono text-[0.64rem] font-semibold uppercase tracking-[0.15em] text-black">
-                  {t("app.landing.pricing.popular") as string}
-                </div>
-              )}
-            </motion.div>
-          ))}
-          </motion.div>
+          <AnimatePresence initial={false}>
+            {showTailoredPlans && (
+              <motion.div
+                id="pricing-tailored-plans"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="hidden"
+                className="mt-7 grid grid-cols-1 gap-4 md:grid-cols-2"
+                data-testid="pricing-tailored-plans"
+              >
+                {tailoredPlans.map(renderPlan)}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <motion.p

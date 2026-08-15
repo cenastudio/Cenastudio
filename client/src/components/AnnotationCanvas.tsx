@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ArrowUpRight, Square, Circle, Pencil, Type, Undo2, RotateCcw } from "lucide-react";
+import { ANNOTATION_CANVAS_COLORS } from "@/design-system/color-presets";
 
 export type AnnotationTool = "arrow" | "rect" | "circle" | "draw" | "text";
 
@@ -25,7 +26,7 @@ interface AnnotationCanvasProps {
   active?: boolean;
 }
 
-const COLORS = ["#f97316", "#ef4444", "#22c55e", "#3b82f6", "#eab308", "#ffffff"];
+const COLORS = ANNOTATION_CANVAS_COLORS;
 
 export default function AnnotationCanvas({
   width,
@@ -37,7 +38,7 @@ export default function AnnotationCanvas({
   const { t } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [tool, setTool] = useState<AnnotationTool>("arrow");
-  const [color, setColor] = useState(COLORS[0]);
+  const [color, setColor] = useState<string>(COLORS[0]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentPoints, setCurrentPoints] = useState<Point[]>([]);
   const [startPoint, setStartPoint] = useState<Point | null>(null);

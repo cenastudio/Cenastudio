@@ -628,34 +628,25 @@ function PipelineContent({ embedded }: { embedded?: boolean }) {
             />
           </div>
         ) : filteredOpportunities.length === 0 ? (
-          <div className="frame-empty-state p-10 max-w-2xl mx-auto text-center space-y-5">
-            <Inbox className="w-10 h-10 mx-auto text-frame-orange/60" />
-            <div className="space-y-2">
-              <h2 className="text-lg font-semibold text-frame-white">
-                {hasActiveFilters ? t("app.commercial.pipeline.emptyFiltered") : t("app.commercial.pipeline.emptyNone")}
-              </h2>
-              <p className="text-sm text-frame-gray-light leading-relaxed">
-                {hasActiveFilters
-                  ? t("app.commercial.pipeline.emptyFilteredDesc")
-                  : t("app.commercial.pipeline.emptyNoneDesc")}
-              </p>
-            </div>
-            {!hasActiveFilters && (
-              <div className="border-t border-frame-orange/20 pt-4 space-y-2 text-left max-w-sm mx-auto">
+          <EmptyState
+            icon={Inbox}
+            title={(hasActiveFilters ? t("app.commercial.pipeline.emptyFiltered") : t("app.commercial.pipeline.emptyNone")) as string}
+            description={(hasActiveFilters ? t("app.commercial.pipeline.emptyFilteredDesc") : t("app.commercial.pipeline.emptyNoneDesc")) as string}
+            action={{
+              label: (hasActiveFilters ? t("app.commercial.pipeline.clearFilters") : t("app.commercial.pipeline.newDeal")) as string,
+              icon: Plus,
+              onClick: hasActiveFilters ? clearFilters : openCreateModal,
+            }}
+            footer={!hasActiveFilters ? (
+              <div className="space-y-2 border-t border-frame-orange/20 pt-4 text-left">
                 <p className="font-frame-mono text-[0.55rem] uppercase tracking-wider text-frame-orange">{t("app.commercial.pipeline.howConnects")}</p>
                 <p className="text-[0.65rem] text-frame-gray-light">{t("app.commercial.pipeline.connectClient")}</p>
                 <p className="text-[0.65rem] text-frame-gray-light">{t("app.commercial.pipeline.connectProposal")}</p>
                 <p className="text-[0.65rem] text-frame-gray-light">{t("app.commercial.pipeline.connectJob")}</p>
               </div>
-            )}
-            <button
-              onClick={hasActiveFilters ? clearFilters : openCreateModal}
-              className="frame-btn-primary inline-flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              {hasActiveFilters ? t("app.commercial.pipeline.clearFilters") : t("app.commercial.pipeline.newDeal")}
-            </button>
-          </div>
+            ) : undefined}
+            className="mx-auto max-w-2xl"
+          />
         ) : isMobile ? (
           // Mobile: stacked list per stage, no drag-and-drop. Moving a deal
           // uses the same prev/next stage buttons already built into each

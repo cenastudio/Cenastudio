@@ -34,7 +34,7 @@ export interface ResponsiveTabsProps {
  * - Scroll horizontal quando labels não cabem
  * - Suporte a contador via prop `count`
  *
- * Ver FASE_1_ACHADOS.md seção 8 (P1 item 4) para contexto.
+ * Ver a auditoria UX/mobile para o contexto e a cobertura de touch targets.
  */
 export function ResponsiveTabs({
   tabs,

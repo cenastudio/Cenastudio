@@ -697,7 +697,7 @@ function VideoReviewsContent({ embedded }: { embedded?: boolean }) {
             </aside>
 
             <section className="relative overflow-hidden bg-frame-black min-h-[420px] xl:min-h-0 flex flex-col"
-              style={{ background: "radial-gradient(circle at 50% 38%, rgba(var(--ds-orange-rgb),0.12), var(--color-frame-black, #050505) 46%)" }}
+              style={{ background: "radial-gradient(circle at 50% 38%, rgba(var(--ds-orange-rgb),0.12), var(--ds-surface-deep) 46%)" }}
             >
               <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.025),transparent_38%,rgba(var(--ds-orange-rgb),0.035))]" />
               <div className="relative border-b border-frame-gray-3 px-4 py-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">

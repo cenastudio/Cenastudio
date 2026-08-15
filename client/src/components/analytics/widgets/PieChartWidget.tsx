@@ -19,7 +19,7 @@ interface PieChartWidgetProps {
   config?: any;
 }
 
-const DEFAULT_COLORS = ["#ff4e00", "#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"];
+const DEFAULT_COLORS = ["var(--ds-chart-accent)", "var(--status-success)", "var(--status-info)", "var(--status-warning)", "var(--status-danger)", "var(--ds-stage-qualified)"];
 
 export default function PieChartWidget({ title, data, config }: PieChartWidgetProps) {
   // Transform data for Recharts format
@@ -63,7 +63,7 @@ export default function PieChartWidget({ title, data, config }: PieChartWidgetPr
               labelLine={false}
               label={({ percent }) => `${((percent ?? 0) * 100).toFixed(0)}%`}
               outerRadius={80}
-              fill="#8884d8"
+              fill="var(--ds-stage-qualified)"
               dataKey="value"
             >
               {chartData.map((entry, index) => (
@@ -72,8 +72,8 @@ export default function PieChartWidget({ title, data, config }: PieChartWidgetPr
             </Pie>
             <Tooltip
               contentStyle={{
-                backgroundColor: "#1a1a1a",
-                border: "1px solid #333",
+                backgroundColor: "var(--ds-surface-elevated)",
+                border: "1px solid var(--ds-dark-gray)",
                 borderRadius: "4px",
                 fontSize: "0.875rem"
               }}
