@@ -55,6 +55,11 @@ supabase/.branches/
 # Misc
 uploads/
 .cache/
+/tmp/
+
+# Capturas locais de auditoria servem como evidência de sessão, não como
+# artefato de produto. As specs registram a verificação no tasks.md.
+/.kiro/specs/auditoria-ux-2026-07/screenshots/
 
 # Deploy docs contendo credenciais (local scratch)
 SETUP_ACCOUNTS.md

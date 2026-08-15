@@ -7,6 +7,15 @@
 
 **Última atualização:** 2026-08-14
 
+> **Handoff desta sessão:** os commits `2aab029`, `fada13e`, `b396ce4` e
+> `ef68cb5` consolidam proteção contra segredos, ciclo de e-mail da conta,
+> fechamento de specs verificadas e o lote de UX/mobile, onboarding, landing
+> e SEO. Validação realizada no estado final: `npm run check`, `npm run build`
+> e os 8 testes focados de e-mail/LGPD passaram. `tmp/` e capturas locais da
+> auditoria são deliberadamente ignorados; não são produto nem devem entrar em
+> commits. Após o push, o deploy GitHub/Vercel é automático; não houve
+> acompanhamento manual do deployment por decisão do operador.
+
 ## 0. Produção atual
 
 - **Deploy:** Vercel, projeto `cena-studio-prod`, domínio
