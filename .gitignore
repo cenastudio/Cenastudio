@@ -17,6 +17,16 @@ build/
 .env
 .env.*
 !.env.example
+.envrc
+
+# Material criptográfico e pastas operacionais locais — nunca versionar.
+*.pem
+*.p12
+*.pfx
+*.keystore
+secrets/
+credentials/
+docs/private/
 
 # Database
 *.db
