@@ -431,15 +431,24 @@ export async function resetPassword(userId: number, clientId: number, newPasswor
   if (shouldUsePrisma) {
     await prisma.clientPortalAccess.update({
       where: { clientId: BigInt(clientId) },
-      data: { passwordHash, updatedAt: new Date() },
+      data: {
+        passwordHash,
+        active: true,
+        activationTokenHash: null,
+        activationTokenExpiresAt: null,
+        activationAcceptedAt: new Date(),
+        updatedAt: new Date(),
+      },
     });
     return;
   }
 
-  db.prepare("UPDATE client_portal_access SET password_hash = ?, updated_at = datetime('now') WHERE client_id = ?").run(
-    passwordHash,
-    clientId,
-  );
+  db.prepare(
+    `UPDATE client_portal_access
+     SET password_hash = ?, active = 1, activation_token_hash = NULL,
+         activation_token_expires_at = NULL, activation_accepted_at = ?, updated_at = datetime('now')
+     WHERE client_id = ?`,
+  ).run(passwordHash, new Date().toISOString(), clientId);
 }
 
 /** Login do cliente. Erro 401 genérico tanto para credenciais erradas quanto para acesso inativo. */

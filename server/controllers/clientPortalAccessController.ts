@@ -46,11 +46,11 @@ export const getPortalAccessStatus: RequestHandler = async (req, res, next) => {
 export const createPortalAccess: RequestHandler = async (req, res, next) => {
   try {
     const clientId = parseClientId(req);
-    const { email } = req.body as { email?: string };
+    const { email, password } = req.body as { email?: string; password?: string };
     if (!email?.trim()) {
       throw new AppError("Email é obrigatório", 400);
     }
-    const result = await clientPortalAuthService.createAccess(req.user!.id, clientId, email);
+    const result = await clientPortalAuthService.createAccess(req.user!.id, clientId, email, password?.trim() || undefined);
     if ("access" in result) {
       res.json({ success: true, data: serializeActivationResult(result) });
       return;
@@ -76,6 +76,13 @@ export const updatePortalAccessStatus: RequestHandler = async (req, res, next) =
 export const resetPortalPassword: RequestHandler = async (req, res, next) => {
   try {
     const clientId = parseClientId(req);
+    const { password } = req.body as { password?: string };
+    if (password?.trim()) {
+      await clientPortalAuthService.resetPassword(req.user!.id, clientId, password.trim());
+      const record = await clientPortalAuthService.getAccessStatus(req.user!.id, clientId);
+      res.json({ success: true, data: serializeStatus(record, clientId) });
+      return;
+    }
     const result = await clientPortalAuthService.issueActivationLink(req.user!.id, clientId);
     res.json({ success: true, data: serializeActivationResult(result) });
   } catch (e) {

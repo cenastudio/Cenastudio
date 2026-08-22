@@ -5,5 +5,5 @@ export interface ProjectFilesTabProps {
 }
 
 export default function ProjectFilesTab(props: ProjectFilesTabProps) {
-  return <Files embedded />;
+  return <Files embedded initialProjectId={props.initialProjectId} />;
 }

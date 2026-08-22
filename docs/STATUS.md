@@ -48,11 +48,12 @@
   cobrança. Em 2026-08-22, o convite de reunião também passou a usar o renderer
   transacional comum, preservando `.ics`, `replyTo`, idioma da produtora e dados
   da reunião; o envio agora repassa `contentType: "text/calendar"` ao anexo.
-  Também em 2026-08-22, a ativação do Portal do Cliente deixou de depender de
-  senha criada pela produtora: a produtora informa apenas o e-mail, o banco
-  guarda hash SHA-256 de um token temporal, e o cliente cria a própria senha em
-  `/portal/activate?token=...`. Reenvio de acesso gera novo token, e o e-mail de
-  ativação usa o renderer transacional comum quando Resend está configurado.
+  Também em 2026-08-22, a ativação do Portal do Cliente ganhou dois caminhos:
+  a produtora pode definir uma senha inicial diretamente no cadastro do cliente
+  ou enviar um link seguro para o cliente criar a própria senha em
+  `/portal/activate?token=...`. O caminho por link guarda hash SHA-256 de um
+  token temporal; redefinição manual pela produtora ativa o acesso, limpa token
+  pendente e invalida sessões antigas pelo `updatedAt`.
   A proposta ao cliente também ganhou ação explícita autenticada:
   `POST /api/clients/proposals/:id/send` valida propriedade da produtora, bloqueia
   proposta revogada/aceita, transforma rascunho em `sent`, pode liberar no Portal
@@ -175,7 +176,11 @@ verificar, está dito explicitamente.
   `visible_in_client_portal`, controlada pela produtora na tela de Arquivos.
   Propostas e reuniões seguem o mesmo princípio: criar/enviar internamente não
   publica no portal; a produtora precisa liberar o item explicitamente, e revogar
-  proposta/cancelar reunião remove o item do portal.
+  proposta/cancelar reunião remove o item do portal. Em 2026-08-22, a central
+  do portal no cadastro do cliente foi ajustada para deixar ações operacionais
+  explícitas: definir senha e ativar, enviar convite por link, redefinir senha,
+  copiar link de login e abrir as áreas que alimentam o portal. Próxima frente
+  recomendada: redesenhar Comercial como jornada guiada, não como abas isoladas.
 - **Project Templates:** presets no frontend (`PROJECT_TEMPLATES` em
   `Dashboard.tsx`, `lib/studioContext.ts`, `components/studio/ToolWorkspace.tsx`).
   Sem entidade persistida nem rota.

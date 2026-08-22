@@ -520,7 +520,7 @@ export const api = {
     portalAccess: {
       allowance: () => request<ClientPortalAllowance>("/clients/portal-access/allowance"),
       getStatus: (clientId: number) => request<ClientPortalAccessStatus>(`/clients/${clientId}/portal-access`),
-      create: (clientId: number, data: { email: string }) =>
+      create: (clientId: number, data: { email: string; password?: string }) =>
         request<ClientPortalAccessStatus>(`/clients/${clientId}/portal-access`, {
           method: "POST",
           body: JSON.stringify(data),
@@ -530,9 +530,10 @@ export const api = {
           method: "PATCH",
           body: JSON.stringify({ active }),
         }),
-      resetPassword: (clientId: number) =>
+      resetPassword: (clientId: number, password?: string) =>
         request<ClientPortalAccessStatus>(`/clients/${clientId}/portal-access/reset-password`, {
           method: "POST",
+          body: password ? JSON.stringify({ password }) : undefined,
         }),
     },
   },

@@ -20,6 +20,7 @@ import {
   ArrowRight,
   CalendarRange,
   X,
+  Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -75,6 +76,7 @@ function EquipmentContent() {
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -109,12 +111,29 @@ function EquipmentContent() {
   }, []);
 
   const filtered = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
     return items.filter((item) => {
+      if (query && !`${item.name} ${categoryLabel(item.category)} ${item.status}`.toLowerCase().includes(query)) return false;
       if (categoryFilter !== "all" && item.category !== categoryFilter) return false;
       if (statusFilter !== "all" && item.status !== statusFilter) return false;
       return true;
     });
-  }, [items, categoryFilter, statusFilter]);
+  }, [items, categoryFilter, statusFilter, searchQuery]);
+
+  const inventoryStats = useMemo(() => {
+    const available = items.filter((item) => item.status === "available").length;
+    const reservedOrUse = items.filter((item) => item.status === "in_use" || item.status === "rented").length;
+    const maintenance = items.filter((item) => item.status === "maintenance").length;
+    const dailyValue = items.reduce((total, item) => total + (item.cost_per_day || 0), 0);
+    return { available, reservedOrUse, maintenance, dailyValue };
+  }, [items]);
+
+  const groupedFiltered = useMemo(() => {
+    return CATEGORIES.map((categoryItem) => ({
+      ...categoryItem,
+      items: filtered.filter((item) => item.category === categoryItem.id),
+    })).filter((categoryItem) => categoryItem.items.length > 0);
+  }, [filtered]);
 
   const resetForm = () => {
     setEditingId(null);
@@ -237,14 +256,35 @@ function EquipmentContent() {
       <AppNavBar />
       <ProductionNav />
       <main id="main-content" className="px-4 sm:px-6 py-5 sm:py-6 max-w-[1200px] mx-auto space-y-6">
-        <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-frame-gray-3 pb-4">
-          <div>
-            <p className="frame-label mb-1">// Produção</p>
-            <h1 className="frame-title text-[clamp(1.5rem,3vw,2.2rem)] leading-none">Equipamento</h1>
-            <p className="text-xs text-frame-gray-light mt-2 max-w-lg leading-relaxed">
-              Cadastre suas câmeras, lentes e acessórios, e reserve por projeto para nunca agendar o mesmo
-              equipamento em dois jobs no mesmo dia.
+        <header className="grid gap-5 border-b border-frame-gray-3 pb-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
+          <div className="max-w-3xl">
+            <p className="frame-label mb-1">// Almoxarifado de produção</p>
+            <h1 className="frame-title text-[clamp(1.5rem,3vw,2.2rem)] leading-none">Armazém de equipamento</h1>
+            <p className="text-sm text-frame-gray-light mt-3 max-w-2xl leading-relaxed">
+              Controle câmeras, lentes, áudio, luz e acessórios como um estoque vivo da produtora, com disponibilidade e reservas por projeto.
             </p>
+            {!loading && items.length > 0 && (
+              <div className="mt-5 grid gap-2 sm:grid-cols-4">
+                <div className="border border-frame-orange/30 bg-frame-orange/[0.06] px-3 py-3">
+                  <span className="block font-frame-mono text-[0.52rem] uppercase tracking-[0.14em] text-frame-orange">Inventário</span>
+                  <span className="mt-1 block text-sm font-semibold text-frame-white">{items.length} itens</span>
+                </div>
+                <div className="border border-frame-gray-3 bg-frame-gray-1/15 px-3 py-3">
+                  <span className="block font-frame-mono text-[0.52rem] uppercase tracking-[0.14em] text-frame-gray-light">Disponível</span>
+                  <span className="mt-1 block text-sm font-semibold text-frame-white">{inventoryStats.available}</span>
+                </div>
+                <div className="border border-frame-gray-3 bg-frame-gray-1/15 px-3 py-3">
+                  <span className="block font-frame-mono text-[0.52rem] uppercase tracking-[0.14em] text-frame-gray-light">Reservado/uso</span>
+                  <span className="mt-1 block text-sm font-semibold text-frame-white">{inventoryStats.reservedOrUse}</span>
+                </div>
+                <div className="border border-frame-gray-3 bg-frame-gray-1/15 px-3 py-3">
+                  <span className="block font-frame-mono text-[0.52rem] uppercase tracking-[0.14em] text-frame-gray-light">Valor/dia</span>
+                  <span className="mt-1 block text-sm font-semibold text-frame-white">
+                    {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(inventoryStats.dailyValue / 100)}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
           <button
             type="button"
@@ -257,11 +297,21 @@ function EquipmentContent() {
         </header>
 
         {!loading && items.length > 0 && (
-          <div className="flex flex-wrap gap-3">
+          <div className="grid gap-3 border border-frame-gray-3 bg-frame-gray-1/10 p-3 lg:grid-cols-[minmax(240px,1fr)_auto_auto]">
+            <label className="relative block">
+              <span className="sr-only">Buscar equipamento</span>
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-frame-gray-light" />
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar por nome, categoria ou status"
+                className="frame-input w-full pl-9 text-xs"
+              />
+            </label>
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="frame-input !w-auto text-xs"
+              className="frame-input text-xs lg:w-[190px]"
             >
               <option value="all">Todas categorias</option>
               {CATEGORIES.map((c) => (
@@ -271,7 +321,7 @@ function EquipmentContent() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="frame-input !w-auto text-xs"
+              className="frame-input text-xs lg:w-[170px]"
             >
               <option value="all">Todos status</option>
               {Object.entries(STATUSES).map(([id, s]) => (
@@ -305,63 +355,100 @@ function EquipmentContent() {
           </section>
         )}
 
-        {/* Grid of equipment */}
+        {/* Warehouse grouped inventory */}
         {!loading && items.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {filtered.map((item) => {
-              const statusInfo = STATUSES[item.status] ?? { label: item.status, className: "border-frame-gray-3/50 text-frame-gray-light" };
-              const catInfo = categoryInfo(item.category);
-              const CategoryIcon = catInfo.icon;
+          <div className="space-y-5">
+            {groupedFiltered.length === 0 ? (
+              <div className="border border-frame-gray-3 bg-frame-gray-1/10 p-8 text-center">
+                <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.14em] text-frame-orange">Nenhum item encontrado</p>
+                <p className="mt-2 text-sm text-frame-gray-light">Ajuste busca, categoria ou status para ver o armazém.</p>
+              </div>
+            ) : groupedFiltered.map((group) => {
+              const GroupIcon = group.icon;
               return (
-                <div key={item.id} className="border border-frame-gray-3/60 bg-frame-gray-1/10 p-4 space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-start gap-3 min-w-0">
-                      <div className={`w-10 h-10 shrink-0 border flex items-center justify-center ${catInfo.className}`}>
-                        <CategoryIcon className="w-5 h-5" />
+                <section key={group.id} className="border border-frame-gray-3 bg-frame-gray-1/10">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-frame-gray-3 px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`flex h-10 w-10 items-center justify-center border ${group.className}`}>
+                        <GroupIcon className="h-5 w-5" />
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-frame-white truncate">{item.name}</p>
-                        <p className="text-[0.65rem] text-frame-gray-light">{categoryLabel(item.category)}</p>
+                      <div>
+                        <h2 className="text-sm font-semibold text-frame-white">{group.label}</h2>
+                        <p className="text-[0.65rem] text-frame-gray-light">{group.items.length} itens no armazém</p>
                       </div>
                     </div>
-                    <span className={`text-[0.6rem] font-frame-mono uppercase px-1.5 py-0.5 border shrink-0 ${statusInfo.className}`}>
-                      {statusInfo.label}
+                    <span className="font-frame-mono text-[0.58rem] uppercase tracking-[0.14em] text-frame-gray-light">
+                      {group.items.filter((item) => item.status === "available").length} disponíveis
                     </span>
                   </div>
+                  <div className="grid grid-cols-1 gap-3 p-3 md:grid-cols-2 xl:grid-cols-3">
+                    {group.items.map((item) => {
+                      const statusInfo = STATUSES[item.status] ?? { label: item.status, className: "border-frame-gray-3/50 text-frame-gray-light" };
+                      const catInfo = categoryInfo(item.category);
+                      const CategoryIcon = catInfo.icon;
+                      return (
+                        <div key={item.id} className="border border-frame-gray-3/60 bg-frame-black/20 p-4 space-y-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-start gap-3 min-w-0">
+                              <div className={`w-10 h-10 shrink-0 border flex items-center justify-center ${catInfo.className}`}>
+                                <CategoryIcon className="w-5 h-5" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold text-frame-white truncate">{item.name}</p>
+                                <p className="text-[0.65rem] text-frame-gray-light">{item.is_owned ? "Próprio" : "Locado"} · {categoryLabel(item.category)}</p>
+                              </div>
+                            </div>
+                            <span className={`text-[0.6rem] font-frame-mono uppercase px-1.5 py-0.5 border shrink-0 ${statusInfo.className}`}>
+                              {statusInfo.label}
+                            </span>
+                          </div>
 
-                  {item.cost_per_day != null && (
-                    <p className="text-xs text-frame-gray-light">
-                      {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(item.cost_per_day / 100)}/dia
-                    </p>
-                  )}
+                          <div className="grid grid-cols-2 gap-2 border-y border-frame-gray-3/40 py-2 text-xs">
+                            <div>
+                              <span className="block font-frame-mono text-[0.5rem] uppercase tracking-[0.12em] text-frame-gray-light">Custo/dia</span>
+                              <span className="mt-1 block text-frame-white">
+                                {item.cost_per_day != null
+                                  ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(item.cost_per_day / 100)
+                                  : "Sem custo"}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="block font-frame-mono text-[0.5rem] uppercase tracking-[0.12em] text-frame-gray-light">Agenda</span>
+                              <span className="mt-1 block text-frame-white">{item.status === "available" ? "Livre" : statusInfo.label}</span>
+                            </div>
+                          </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-frame-gray-3/40">
-                    <button
-                      type="button"
-                      onClick={() => openBookings(item)}
-                      className="flex-1 frame-btn-ghost !py-1.5 text-xs inline-flex items-center justify-center gap-1.5"
-                    >
-                      <CalendarRange className="w-3.5 h-3.5" />
-                      Reservas
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => openEditDialog(item)}
-                      className="p-2 border border-frame-gray-3/50 hover:border-frame-orange hover:text-frame-orange transition"
-                      title="Editar"
-                    >
-                      <Edit className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeleteTarget(item)}
-                      className="p-2 border border-frame-gray-3/50 hover:border-red-500 hover:text-red-500 transition"
-                      title="Excluir"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => openBookings(item)}
+                              className="flex-1 frame-btn-ghost !py-1.5 text-xs inline-flex items-center justify-center gap-1.5"
+                            >
+                              <CalendarRange className="w-3.5 h-3.5" />
+                              Reservas
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => openEditDialog(item)}
+                              className="p-2 border border-frame-gray-3/50 hover:border-frame-orange hover:text-frame-orange transition"
+                              title="Editar"
+                            >
+                              <Edit className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeleteTarget(item)}
+                              className="p-2 border border-frame-gray-3/50 hover:border-red-500 hover:text-red-500 transition"
+                              title="Excluir"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                </div>
+                </section>
               );
             })}
           </div>

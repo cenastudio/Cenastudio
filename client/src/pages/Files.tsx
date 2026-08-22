@@ -44,13 +44,16 @@ type UploadTab = "file" | "link";
 
 interface FilesContentProps {
   embedded?: boolean;
+  initialProjectId?: number | null;
 }
 
-function FilesContent({ embedded }: FilesContentProps) {
+function FilesContent({ embedded, initialProjectId }: FilesContentProps) {
   const { t } = useLanguage();
   const params = useParams();
   const [location, setLocation] = useLocation();
-  const projectId = params.projectId ? parseInt(params.projectId) : null;
+  const routeProjectId = params.projectId ? parseInt(params.projectId) : null;
+  const [embeddedProjectId, setEmbeddedProjectId] = useState<number | null>(initialProjectId || null);
+  const projectId = routeProjectId || (embedded ? embeddedProjectId : null);
   const isProjectScoped = location.startsWith("/project/");
 
   const [files, setFiles] = useState<FileData[]>([]);
@@ -83,6 +86,12 @@ function FilesContent({ embedded }: FilesContentProps) {
   const [newFileName, setNewFileName] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (embedded && initialProjectId) {
+      setEmbeddedProjectId(initialProjectId);
+    }
+  }, [embedded, initialProjectId]);
 
   useEffect(() => {
     loadProjects();
@@ -128,7 +137,11 @@ function FilesContent({ embedded }: FilesContentProps) {
         setShowNewProject(false);
         setNewProjectName("");
         loadProjects();
-        setLocation(isProjectScoped ? `/project/${data.data.id}/files` : `/files/${data.data.id}`);
+        if (embedded) {
+          setEmbeddedProjectId(data.data.id);
+        } else {
+          setLocation(isProjectScoped ? `/project/${data.data.id}/files` : `/files/${data.data.id}`);
+        }
       }
     } catch {
       toast.error(t("app.errors.createProject"));
@@ -136,6 +149,10 @@ function FilesContent({ embedded }: FilesContentProps) {
   };
 
   const handleSelectProject = (id: number) => {
+    if (embedded) {
+      setEmbeddedProjectId(id);
+      return;
+    }
     setLocation(isProjectScoped ? `/project/${id}/files` : `/files/${id}`);
   };
 
@@ -409,7 +426,13 @@ function FilesContent({ embedded }: FilesContentProps) {
                   ))}
                 </select>
                 <button
-                  onClick={() => setLocation(isProjectScoped ? `/project/${projectId}` : "/files")}
+                  onClick={() => {
+                    if (embedded) {
+                      setEmbeddedProjectId(null);
+                      return;
+                    }
+                    setLocation(isProjectScoped ? `/project/${projectId}` : "/files");
+                  }}
                   className="text-xs text-frame-gray-light hover:text-frame-white transition"
                 >
                   {isProjectScoped ? t("app.files.overview") : t("app.files.leaveProject")}
@@ -912,8 +935,8 @@ function FilesContent({ embedded }: FilesContentProps) {
   );
 }
 
-export default function Files({ embedded }: { embedded?: boolean }) {
-  if (embedded) return <FilesContent embedded />;
+export default function Files({ embedded, initialProjectId }: { embedded?: boolean; initialProjectId?: number | null }) {
+  if (embedded) return <FilesContent embedded initialProjectId={initialProjectId} />;
 
   return (
     <ProtectedRoute>

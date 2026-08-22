@@ -551,6 +551,9 @@ function DocumentsContent() {
   const selectedDoc = docTypes.find((item) => item.id === form.type) || docTypes[0];
   const documentForms = useMemo(() => createDocumentForms(t), [t]);
   const activeGroups = documentForms[form.type];
+  const activeFields = useMemo(() => activeGroups.flatMap((group) => group.fields), [activeGroups]);
+  const filledFields = activeFields.filter((field) => String(form[field.key] || "").trim()).length;
+  const completionPercent = activeFields.length ? Math.round((filledFields / activeFields.length) * 100) : 0;
   const html = useMemo(() => buildDocumentHtml(form, studio, t, locale), [form, studio, t, locale]);
   const visibleDocs = useMemo(
     () => projectIdParam
@@ -721,37 +724,32 @@ function DocumentsContent() {
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body">
       <AppNavBar />
       {projectIdParam ? <ProjectNav projectId={projectIdParam} /> : <ProductionNav />}
-      <main id="main-content" className="px-4 sm:px-6 py-5 sm:py-6 max-w-[1680px] mx-auto space-y-4">
+      <main id="main-content" className="px-4 sm:px-6 py-5 sm:py-7 max-w-[1500px] mx-auto space-y-5">
 
         {/* ═══ HEADER ═══ */}
-        <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-frame-gray-3 pb-4">
-          <div>
+        <header className="grid gap-5 border-b border-frame-gray-3 pb-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
+          <div className="max-w-3xl">
             <p className="frame-label mb-1">// Documentos de produção</p>
             <h1 className="frame-title text-[clamp(1.5rem,3vw,2.2rem)] leading-none">Documentos do job</h1>
-            <p className="text-xs text-frame-gray-light mt-2 max-w-md leading-relaxed">
-              Escolha o tipo de documento, preencha os campos à esquerda e veja o PDF profissional sendo montado em tempo real à direita. Quando pronto, exporte ou salve uma versão.
+            <p className="text-sm text-frame-gray-light mt-3 max-w-2xl leading-relaxed">
+              Monte briefing, roteiro, callsheet, orçamento e entrega com campos guiados, contexto do projeto e preview profissional em tempo real.
             </p>
-            {/* Workflow steps */}
-            <div className="flex gap-2 mt-3">
-              <div className="border border-frame-orange/30 bg-frame-orange/[0.06] px-2.5 py-1.5 text-center">
-                <span className="block font-frame-mono text-[0.48rem] text-frame-orange">01</span>
-                <span className="block text-[0.55rem] font-medium text-frame-white mt-0.5">Escolher tipo</span>
+            <div className="mt-5 grid gap-2 sm:grid-cols-3">
+              <div className="border border-frame-orange/30 bg-frame-orange/[0.06] px-3 py-3">
+                <span className="block font-frame-mono text-[0.52rem] uppercase tracking-[0.14em] text-frame-orange">Tipo ativo</span>
+                <span className="mt-1 block text-sm font-semibold text-frame-white">{selectedDoc.label}</span>
               </div>
-              <div className="border border-frame-gray-3/40 px-2.5 py-1.5 text-center">
-                <span className="block font-frame-mono text-[0.48rem] text-frame-gray-light">02</span>
-                <span className="block text-[0.55rem] font-medium text-frame-gray-light mt-0.5">Preencher</span>
+              <div className="border border-frame-gray-3 bg-frame-gray-1/15 px-3 py-3">
+                <span className="block font-frame-mono text-[0.52rem] uppercase tracking-[0.14em] text-frame-gray-light">Preenchimento</span>
+                <span className="mt-1 block text-sm font-semibold text-frame-white">{filledFields}/{activeFields.length} campos · {completionPercent}%</span>
               </div>
-              <div className="border border-frame-gray-3/40 px-2.5 py-1.5 text-center">
-                <span className="block font-frame-mono text-[0.48rem] text-frame-gray-light">03</span>
-                <span className="block text-[0.55rem] font-medium text-frame-gray-light mt-0.5">Revisar preview</span>
-              </div>
-              <div className="border border-frame-gray-3/40 px-2.5 py-1.5 text-center">
-                <span className="block font-frame-mono text-[0.48rem] text-frame-gray-light">04</span>
-                <span className="block text-[0.55rem] font-medium text-frame-gray-light mt-0.5">Exportar PDF</span>
+              <div className="border border-frame-gray-3 bg-frame-gray-1/15 px-3 py-3">
+                <span className="block font-frame-mono text-[0.52rem] uppercase tracking-[0.14em] text-frame-gray-light">Histórico</span>
+                <span className="mt-1 block text-sm font-semibold text-frame-white">{visibleDocs.length} versões salvas</span>
               </div>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 shrink-0">
+          <div className="grid gap-2 sm:grid-cols-2 xl:w-[420px]">
             {activeProject && (
               <button type="button" onClick={applyLinkedContext} className="frame-btn-ghost flex items-center gap-2">
                 <Link2 className="w-4 h-4" /> Contexto
@@ -788,7 +786,7 @@ function DocumentsContent() {
             </option>
           ))}
         </select>
-        <nav className="hidden gap-1.5 sm:flex sm:flex-wrap">
+        <nav className="hidden gap-2 border border-frame-gray-3 bg-frame-gray-1/10 p-2 sm:flex sm:flex-wrap">
           {docTypes.map((doc) => {
             const Icon = doc.icon;
             const active = form.type === doc.id;
@@ -826,15 +824,20 @@ function DocumentsContent() {
         )}
 
         {/* ═══ SPLIT VIEW: Form (left) | Preview (right) ═══ */}
-        <div className="grid grid-cols-1 xl:grid-cols-[440px_minmax(0,1fr)] gap-4 items-start">
+        <div className="grid grid-cols-1 xl:grid-cols-[480px_minmax(0,1fr)] gap-5 items-start">
 
           {/* LEFT: Inline Form */}
-          <aside className="space-y-3 xl:sticky xl:top-20 xl:max-h-[calc(100vh-100px)] xl:overflow-y-auto xl:pr-2 scrollbar-thin">
+          <aside className="space-y-3 xl:sticky xl:top-24 xl:max-h-[calc(100vh-120px)] xl:overflow-y-auto xl:pr-2 scrollbar-thin">
             {activeGroups.map((group) => (
-              <section key={group.title} className="border border-frame-gray-3 bg-frame-gray-1/15 p-4">
-                <p className="mb-3 font-frame-mono text-[0.58rem] uppercase tracking-[0.14em]" style={{ color: selectedDoc.accent }}>
-                  {group.title}
-                </p>
+              <section key={group.title} className="border border-frame-gray-3 bg-frame-gray-1/15 p-5">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.14em]" style={{ color: selectedDoc.accent }}>
+                    {group.title}
+                  </p>
+                  <span className="font-frame-mono text-[0.5rem] uppercase tracking-[0.12em] text-frame-gray-light">
+                    {group.fields.filter((field) => String(form[field.key] || "").trim()).length}/{group.fields.length}
+                  </span>
+                </div>
                 <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                   {group.fields.map((field) => (
                     <FormField
@@ -859,8 +862,8 @@ function DocumentsContent() {
 
           {/* RIGHT: Live Preview + History */}
           <div className="space-y-4">
-            <section className="border border-frame-gray-3 overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-2.5 border-b border-frame-gray-3 bg-frame-gray-1/20">
+            <section className="border border-frame-gray-3 overflow-hidden bg-frame-gray-1/10">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-frame-gray-3 bg-frame-gray-1/20">
                 <span className="font-frame-mono text-[0.58rem] uppercase tracking-[0.1em]" style={{ color: selectedDoc.accent }}>
                   Preview · {selectedDoc.label}
                 </span>
@@ -868,11 +871,11 @@ function DocumentsContent() {
                   <Download className="w-3.5 h-3.5" />
                 </button>
               </div>
-              <div className="bg-frame-black/30 p-3 sm:p-4">
+              <div className="bg-frame-black/30 p-3 sm:p-5">
                 <iframe
                   title="Preview do documento"
                   srcDoc={html}
-                  className="mx-auto w-full max-w-[820px] h-[min(850px,calc(100vh-220px))] min-h-[550px] bg-[var(--ds-document-preview-paper)] shadow-[0_18px_60px_rgba(0,0,0,0.25)]"
+                  className="mx-auto w-full max-w-[860px] h-[min(900px,calc(100vh-200px))] min-h-[620px] bg-[var(--ds-document-preview-paper)] shadow-[0_18px_60px_rgba(0,0,0,0.25)]"
                 />
               </div>
             </section>
