@@ -52,6 +52,8 @@ model User {
   referrals      Referral[] @relation("UserReferrals")      // Pessoas que esse usuário indicou
   referredBy     Referral[] @relation("UserReferredBy")     // Quem indicou esse usuário
   shotTypes      ShotType[] // Custom shot types
+  shotStoryboardFrames ShotStoryboardFrame[]
+  shotStoryboardApprovals ShotStoryboardFrame[] @relation("ShotStoryboardApproval")
   interactions   Interaction[]
   meetings       Meeting[]
   proposals      Proposal[]
@@ -344,6 +346,7 @@ model Project {
   budget        Budget?
   equipmentBookings EquipmentBooking[]
   shotLists     ShotList[]
+  shotStoryboardFrames ShotStoryboardFrame[]
   timeEntries   TimeEntry[]
   tasks         Task[]
   financialEntries FinancialEntry[]
@@ -925,9 +928,40 @@ model Shot {
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   shotList ShotList @relation(fields: [shotListId], references: [id], onDelete: Cascade)
+  storyboardFrames ShotStoryboardFrame[]
 
   @@index([shotListId], map: "idx_shots_shot_list_id")
   @@map("shots")
+}
+
+model ShotStoryboardFrame {
+  id           BigInt    @id @default(autoincrement())
+  userId       BigInt    @map("user_id")
+  projectId    BigInt    @map("project_id")
+  shotId       BigInt    @map("shot_id")
+  prompt       String
+  finalPrompt  String    @map("final_prompt")
+  provider     String
+  model        String?
+  imageUrl     String?   @map("image_url")
+  storagePath  String?   @map("storage_path")
+  status       String    @default("queued")
+  errorMessage String?   @map("error_message")
+  revision     Int       @default(1)
+  approvedAt   DateTime? @map("approved_at") @db.Timestamptz
+  approvedById BigInt?   @map("approved_by_id")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project    Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  shot       Shot    @relation(fields: [shotId], references: [id], onDelete: Cascade)
+  approvedBy User?   @relation("ShotStoryboardApproval", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([userId], map: "idx_shot_storyboard_frames_user_id")
+  @@index([projectId], map: "idx_shot_storyboard_frames_project_id")
+  @@index([shotId], map: "idx_shot_storyboard_frames_shot_id")
+  @@map("shot_storyboard_frames")
 }
 
 // ===============================================

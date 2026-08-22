@@ -8,11 +8,12 @@
 
 ## Fase G1 — base de dados e contrato backend
 
-- [ ] G1.1 Adicionar model `ShotStoryboardFrame` em `prisma/schema.prisma`.
-- [ ] G1.2 Criar migration SQL para Postgres e garantir fallback SQLite em `server/models/db.ts`.
-- [ ] G1.3 Adicionar relações reversas em `User`, `Project` e `Shot`.
-- [ ] G1.4 Criar `shotStoryboardService` com ownership, list, create failed/generated, approve e delete.
-- [ ] G1.5 Criar testes de service cobrindo isolamento entre produtoras, revisão e approve atualizando `shots.thumbnail_url`.
+- [x] G1.1 Adicionar model `ShotStoryboardFrame` em `prisma/schema.prisma`.
+- [x] G1.2 Criar migration SQL para Postgres e garantir fallback SQLite em `server/models/db.ts`.
+- [x] G1.3 Adicionar relações reversas em `User`, `Project` e `Shot`.
+- [x] G1.4 Criar `shotStoryboardService` com ownership, list, create failed/generated, approve e delete.
+- [x] G1.5 Criar testes de service cobrindo isolamento entre produtoras, revisão e approve atualizando `shots.thumbnail_url`.
+- _2026-08-22: G1 concluído com `ShotStoryboardFrame`, migration `20260822145000_add_shot_storyboard_frames`, fallback SQLite, service backend e teste `server/services/shotStoryboardService.test.ts`._
 
 ## Fase G2 — adapter de imagem
 

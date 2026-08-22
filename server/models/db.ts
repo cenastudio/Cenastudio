@@ -466,6 +466,9 @@ function createIndexes() {
     "CREATE INDEX IF NOT EXISTS idx_shot_lists_user_id ON shot_lists(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_shot_lists_project_id ON shot_lists(project_id)",
     "CREATE INDEX IF NOT EXISTS idx_shots_shot_list_id ON shots(shot_list_id)",
+    "CREATE INDEX IF NOT EXISTS idx_shot_storyboard_frames_user_id ON shot_storyboard_frames(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_shot_storyboard_frames_project_id ON shot_storyboard_frames(project_id)",
+    "CREATE INDEX IF NOT EXISTS idx_shot_storyboard_frames_shot_id ON shot_storyboard_frames(shot_id)",
     "CREATE INDEX IF NOT EXISTS idx_time_entries_user_id ON time_entries(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_time_entries_project_id ON time_entries(project_id)",
     "CREATE INDEX IF NOT EXISTS idx_tasks_project_id ON tasks(project_id)",
@@ -853,6 +856,26 @@ export async function initDatabase() {
       thumbnail_url TEXT,
       status TEXT DEFAULT 'pending',
       created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS shot_storyboard_frames (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      shot_id INTEGER NOT NULL REFERENCES shots(id) ON DELETE CASCADE,
+      prompt TEXT NOT NULL,
+      final_prompt TEXT NOT NULL,
+      provider TEXT NOT NULL,
+      model TEXT,
+      image_url TEXT,
+      storage_path TEXT,
+      status TEXT NOT NULL DEFAULT 'queued',
+      error_message TEXT,
+      revision INTEGER NOT NULL DEFAULT 1,
+      approved_at TEXT,
+      approved_by_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
     );
 
     CREATE TABLE IF NOT EXISTS time_entries (

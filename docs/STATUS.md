@@ -268,6 +268,14 @@ G1, criar `ShotStoryboardFrame`, migration/fallback SQLite e service com
 isolamento entre produtoras, sem escolher provider de imagem antes da credencial
 e da política de storage.
 
+**Bloco G1 concluído — base Storyboard IA:** `ShotStoryboardFrame` foi criado no
+Prisma, com migration Postgres e fallback SQLite. O service
+`shotStoryboardService` cobre listagem por shot, criação de revisões, aprovação
+com atualização de `shots.thumbnail_url` e delete, sempre filtrando por
+produtora. Teste focal: `server/services/shotStoryboardService.test.ts`. Ainda
+não há rotas/UI/provider de imagem; próximo corte é G2/G3, adapter de imagem
+explícito e endpoints autenticados sob `/api/shotlists`.
+
 **P1B auditada:** a ficha do cliente já oferece CRM 360 com projetos,
 oportunidades, interações, arquivos, financeiro, propostas, vídeo reviews e
 gestão de Portal. A jornada de acesso foi validada localmente em 2026-08-22:
