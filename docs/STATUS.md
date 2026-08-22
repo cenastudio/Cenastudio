@@ -53,7 +53,15 @@
   ou enviar um link seguro para o cliente criar a própria senha em
   `/portal/activate?token=...`. O caminho por link guarda hash SHA-256 de um
   token temporal; redefinição manual pela produtora ativa o acesso, limpa token
-  pendente e invalida sessões antigas pelo `updatedAt`.
+  pendente e invalida sessões antigas pelo `updatedAt`. Após deploy do commit
+  `8c0fa41`, produção retornou 500 no Portal porque o Supabase ainda não tinha
+  as colunas `client_portal_access.activation_token_*`; o mesmo drift também
+  quebrou listagem de propostas por falta de `proposals.project_id`. Em
+  2026-08-22, foram aplicadas diretamente no Supabase linkado
+  `arnrvmldotpoawowcbll` as migrations aditivas
+  `20260822013000_link_proposals_to_budget` e
+  `20260822072000_add_client_portal_activation_token`; consulta em
+  `information_schema` confirmou as colunas, e `/ready` retornou banco `ok`.
   A proposta ao cliente também ganhou ação explícita autenticada:
   `POST /api/clients/proposals/:id/send` valida propriedade da produtora, bloqueia
   proposta revogada/aceita, transforma rascunho em `sent`, pode liberar no Portal
@@ -181,6 +189,12 @@ verificar, está dito explicitamente.
   explícitas: definir senha e ativar, enviar convite por link, redefinir senha,
   copiar link de login e abrir as áreas que alimentam o portal. Próxima frente
   recomendada: redesenhar Comercial como jornada guiada, não como abas isoladas.
+  Observação de aceite UX em 2026-08-22: o módulo de Equipamento/almoxarifado foi
+  aprovado visualmente pelo operador; Documentos não foi aprovado e deve voltar
+  para redesenho. O problema transversal continua sendo descoberta e condução de
+  tarefa: Comercial e áreas conectadas precisam contar a jornada operacional
+  Cliente → oportunidade → proposta → aprovação → portal → financeiro, em vez de
+  depender de abas e ferramentas escondidas.
 - **Project Templates:** presets no frontend (`PROJECT_TEMPLATES` em
   `Dashboard.tsx`, `lib/studioContext.ts`, `components/studio/ToolWorkspace.tsx`).
   Sem entidade persistida nem rota.
