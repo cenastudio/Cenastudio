@@ -102,6 +102,7 @@ interface SavedProposal {
   visibleInClientPortal?: boolean;
   projectName?: string | null;
   sourceBudgetId?: number | null;
+  revision?: number;
 }
 
 function ClientDetailContent() {
@@ -141,7 +142,7 @@ function ClientDetailContent() {
   const loadProposals = () => {
     if (!clientId) return;
     api.proposals
-      .list(clientId)
+      .list({ clientId })
       .then((rows) =>
         setProposals(
           rows.map((row) => ({
@@ -158,6 +159,7 @@ function ClientDetailContent() {
             visibleInClientPortal: Boolean(row.visible_in_client_portal),
             projectName: row.project_name,
             sourceBudgetId: row.source_budget_id,
+            revision: row.commercial_snapshot?.revision,
           })),
         ),
       )
@@ -780,7 +782,7 @@ function ClientDetailContent() {
                           </p>
                           {proposal.sourceBudgetId && proposal.projectName && (
                             <p className="text-[0.6rem] text-frame-orange mt-1">
-                              Origem: orçamento de {proposal.projectName}
+                              {locale === "en" ? "Source" : "Origem"}: {locale === "en" ? "budget for" : "orçamento de"} {proposal.projectName}{proposal.revision ? ` · v${proposal.revision}` : ""}
                             </p>
                           )}
                           {proposal.status === "accepted" && proposal.acceptedByName && (

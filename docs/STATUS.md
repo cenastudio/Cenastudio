@@ -212,10 +212,12 @@ o `generationId` persistido para criar/atualizar esse mesmo rascunho; o servidor
 revalida o vínculo projeto/estúdio e lê a narrativa da geração no banco, sem
 aceitar texto comercial reenviado pelo navegador. Se ainda faltar cliente ou
 baseline, a geração segue salva e a interface informa a pré-condição, sem
-publicar nada. Evidência local: 38 testes focados, `npm run check` e `npm run
-build` passaram em 2026-08-22. Ainda faltam: aplicar/testar a migration em
-Postgres com janela controlada e tornar a origem visível no Projeto e na tela
-Comercial.
+publicar nada. Cada atualização do rascunho incrementa uma revisão comercial,
+visível no Hub do Projeto, na ficha do cliente e em Comercial; o histórico local
+do construtor não é apresentado como fonte de verdade. Evidência local: 38
+testes da ponte IA, 22 testes da origem/revisão, `npm run check` e `npm run
+build` passaram em 2026-08-22. Ainda falta aplicar/testar a migration em
+Postgres com janela controlada.
 
 **Concluídas (`-OK`):** `00-fundacao-limpeza-e-documentacao`,
 `client-hub-connected-workflows`, `dre-por-projeto`,

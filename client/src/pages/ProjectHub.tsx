@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   Film,
   FileText,
+  FileSignature,
   Video,
   Users,
   Calendar,
@@ -26,7 +27,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { api } from "@/lib/api";
+import { api, type ProposalItem } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { isActionComplete, WORKFLOW_STAGES, type WorkflowStage } from "@/lib/workflow";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
@@ -179,6 +180,7 @@ function ProjectHubContent() {
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [recentFiles, setRecentFiles] = useState<ProjectFile[]>([]);
   const [recentReviews, setRecentReviews] = useState<ProjectReview[]>([]);
+  const [commercialProposals, setCommercialProposals] = useState<ProposalItem[]>([]);
   const [populatedStates, setPopulatedStates] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [projectName, setProjectName] = useState("");
@@ -251,14 +253,16 @@ function ProjectHubContent() {
       fetch(`/api/files/projects/${projectId}`, { credentials: "include" }).then((r) => r.json()).catch(() => ({ success: false })),
       fetch(`/api/video-reviews/projects/${projectId}`, { credentials: "include" }).then((r) => r.json()).catch(() => ({ success: false, data: [] })),
       api.projects.populatedStates(projectId).catch(() => []),
+      api.proposals.list({ projectId }).catch(() => []),
     ])
-      .then(([projRes, colRes, filesRes, reviewsRes, statesRes]) => {
+      .then(([projRes, colRes, filesRes, reviewsRes, statesRes, proposalRows]) => {
         if (projRes.success) setProject(projRes.data);
         else toast.error(t("app.hub.toastNotFound"));
         if (colRes.success) setMembers(colRes.data || []);
         if (filesRes.success) setRecentFiles((filesRes.data?.files || filesRes.data || []).slice(0, 5));
         if (reviewsRes.success) setRecentReviews((reviewsRes.data || []).slice(0, 5));
         setPopulatedStates((statesRes || []).map((state) => state.toolId));
+        setCommercialProposals(proposalRows);
       })
       .catch(() => toast.error(t("app.hub.toastLoadError")))
       .finally(() => setLoading(false));
@@ -308,6 +312,7 @@ function ProjectHubContent() {
   const updatedAt = project.updatedAt || project.updated_at;
   const pendingReviews = recentReviews.filter((review) => review.status !== "approved").length;
   const clientName = project.clientName || metadata.creativeGoals?.client;
+  const currentCommercialProposal = commercialProposals.find((proposal) => proposal.source_budget_id);
 
   return (
     <div className="min-h-screen bg-frame-black text-frame-white flex flex-col">
@@ -358,6 +363,34 @@ function ProjectHubContent() {
               </div>
 
               <ClientLink clientId={project.clientId ?? null} clientName={clientName ?? null} />
+
+              {currentCommercialProposal && (
+                <button
+                  type="button"
+                  onClick={() => setLocation(`/clients/${currentCommercialProposal.client_id}?tab=propostas`)}
+                  className="flex w-full max-w-lg items-center gap-3 border border-frame-orange/35 bg-frame-orange/[0.04] px-3 py-3 text-left transition hover:border-frame-orange"
+                >
+                  <FileSignature className="h-4 w-4 shrink-0 text-frame-orange" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-frame-mono text-[0.56rem] uppercase tracking-[0.13em] text-frame-orange">
+                      {locale === "en" ? "Commercial source" : "Origem comercial"}
+                    </span>
+                    <span className="mt-1 block truncate text-sm text-frame-white">
+                      {currentCommercialProposal.status === "draft"
+                        ? locale === "en" ? "Internal proposal draft" : "Rascunho interno de proposta"
+                        : currentCommercialProposal.title}
+                    </span>
+                    <span className="mt-1 block text-[0.62rem] text-frame-gray-light">
+                      {currentCommercialProposal.source_generation_id
+                        ? locale === "en" ? "AI proposal + project budget" : "Proposta de IA + orçamento do projeto"
+                        : locale === "en" ? "Project budget" : "Orçamento do projeto"}
+                    </span>
+                  </span>
+                  <span className="font-frame-mono text-[0.58rem] text-frame-orange">
+                    v{currentCommercialProposal.commercial_snapshot?.revision ?? 1}
+                  </span>
+                </button>
+              )}
 
               {/* Origin context: client + objective */}
               {clientName && (

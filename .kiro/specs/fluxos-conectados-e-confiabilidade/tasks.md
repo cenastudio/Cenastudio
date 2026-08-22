@@ -64,9 +64,7 @@ reproduzir contra Postgres/Supabase exige janela controlada e não foi executado
   enviada/aceita.
 - [x] P1A.4 Implementar serviço transacional: orçamento IA → rascunho de
   proposta vinculado.
-- [ ] P1A.5 Exibir origem e versões no projeto, ficha do cliente e Comercial.
-  A origem já aparece na ficha do cliente; faltam as superfícies de Projeto e
-  Comercial, para não duplicar um histórico local como se fosse dado do banco.
+- [x] P1A.5 Exibir origem e versões no projeto, ficha do cliente e Comercial.
 - [x] P1A.6 Conectar gerador de proposta da IA ao payload comercial estruturado.
 
 ## Fase P1B — CRM, portal e documento

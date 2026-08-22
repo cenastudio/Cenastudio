@@ -554,8 +554,13 @@ export const api = {
     delete: (id: number) => request<{ id: number }>(`/clients/meetings/${id}`, { method: "DELETE" }),
   },
   proposals: {
-    list: (clientId?: number) =>
-      request<ProposalItem[]>(`/clients/proposals${clientId ? `?clientId=${clientId}` : ""}`),
+    list: (filters: { clientId?: number; projectId?: number } = {}) => {
+      const query = new URLSearchParams();
+      if (filters.clientId) query.set("clientId", String(filters.clientId));
+      if (filters.projectId) query.set("projectId", String(filters.projectId));
+      const suffix = query.size ? `?${query.toString()}` : "";
+      return request<ProposalItem[]>(`/clients/proposals${suffix}`);
+    },
     create: (data: { clientId: number; title: string; html: string; total: number }) =>
       request<ProposalCreatedResponse>("/clients/proposals", {
         method: "POST",
@@ -1313,6 +1318,11 @@ export interface ProposalItem {
   project_id?: number | null;
   source_budget_id?: number | null;
   source_generation_id?: number | null;
+  commercial_snapshot?: {
+    version?: number;
+    revision?: number;
+    source?: "ai-budget" | "manual" | "calculator";
+  } | null;
   title: string;
   total: number;
   status: "draft" | "sent" | "viewed" | "accepted" | "rejected" | "revoked";

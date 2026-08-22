@@ -48,6 +48,16 @@ function proposalClientIdValue(value: unknown) {
   return BigInt(parsed);
 }
 
+function proposalProjectIdValue(value: unknown) {
+  const parsed = typeof value === "string" && !/^\d+$/.test(value.trim())
+    ? Number.NaN
+    : Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+    throw new AppError("O ID do projeto é inválido", 400);
+  }
+  return BigInt(parsed);
+}
+
 export function validateProposalPayload(input: Record<string, unknown>) {
   const clientId = proposalClientIdValue(input.clientId);
   const total = input.total;
@@ -73,6 +83,7 @@ function serializeProposal(value: any) {
   const result = withSnakeCase(value, {
     userId: "user_id", clientId: "client_id", shareToken: "share_token",
     projectId: "project_id", sourceBudgetId: "source_budget_id", sourceGenerationId: "source_generation_id",
+    commercialSnapshot: "commercial_snapshot",
     documentHash: "document_hash", acceptedAt: "accepted_at", acceptedByName: "accepted_by_name",
     acceptedIp: "accepted_ip", acceptedUserAgent: "accepted_user_agent",
     visibleInClientPortal: "visible_in_client_portal",
@@ -94,18 +105,21 @@ function serializeProposal(value: any) {
 export const listProposals: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
-    const { clientId } = req.query;
+    const { clientId, projectId } = req.query;
     const linkedClientId = clientId === undefined ? undefined : proposalClientIdValue(clientId);
+    const linkedProjectId = projectId === undefined ? undefined : proposalProjectIdValue(projectId);
 
     const rows = await prisma.proposal.findMany({
       where: {
         userId: BigInt(userId),
         ...(linkedClientId ? { clientId: linkedClientId } : {}),
+        ...(linkedProjectId ? { projectId: linkedProjectId } : {}),
       },
       orderBy: { createdAt: "desc" },
       take: 100,
       select: {
         id: true, userId: true, clientId: true, projectId: true, sourceBudgetId: true, sourceGenerationId: true,
+        commercialSnapshot: true,
         title: true, total: true, status: true,
         shareToken: true, documentHash: true, acceptedAt: true, acceptedByName: true,
         acceptedIp: true, acceptedUserAgent: true, visibleInClientPortal: true, createdAt: true, updatedAt: true,

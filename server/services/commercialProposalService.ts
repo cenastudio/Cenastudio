@@ -6,6 +6,7 @@ export type CommercialSnapshotSource = "ai-budget" | "manual" | "calculator";
 
 export interface CommercialSnapshot {
   version: 1;
+  revision: number;
   source: CommercialSnapshotSource;
   generationId?: number;
   currency: string;
@@ -48,6 +49,12 @@ function renderNarrative(value?: string): string {
     .join("");
 }
 
+function currentRevision(value: unknown): number {
+  if (!value || typeof value !== "object") return 0;
+  const revision = (value as { revision?: unknown }).revision;
+  return typeof revision === "number" && Number.isSafeInteger(revision) && revision > 0 ? revision : 0;
+}
+
 function parseBudgetCategories(value: unknown): Array<{ key: string; label: string; total: number }> {
   if (!Array.isArray(value)) throw new AppError("As categorias do orçamento são inválidas", 409);
 
@@ -76,6 +83,7 @@ export function buildCommercialSnapshot(
   source: CommercialSnapshotSource,
   generatedAt = new Date().toISOString(),
   aiContent?: { generationId: number; narrative: string },
+  revision = 1,
 ): CommercialSnapshot {
   const currency = budget.currency.trim().toUpperCase();
   if (!/^[A-Z]{3}$/.test(currency) || !Number.isSafeInteger(budget.totalAmount) || budget.totalAmount <= 0) {
@@ -90,6 +98,7 @@ export function buildCommercialSnapshot(
 
   return {
     version: 1,
+    revision,
     source,
     currency,
     categories,
@@ -159,14 +168,20 @@ export async function createOrUpdateDraftFromBudget(
     }
 
     const source: CommercialSnapshotSource = sourceGenerationId ? "ai-budget" : requestedSource as CommercialSnapshotSource;
-    const snapshot = buildCommercialSnapshot(project.budget, source, new Date().toISOString(), aiContent);
-    const title = `Proposta comercial — ${project.name}`;
-    const html = renderCommercialDraftHtml(title, snapshot);
-    const documentHash = createHash("sha256").update(html, "utf8").digest("hex");
     const existingDraft = await tx.proposal.findFirst({
       where: { userId: ownerId, sourceBudgetId: project.budget.id, status: "draft" },
       orderBy: { updatedAt: "desc" },
     });
+    const snapshot = buildCommercialSnapshot(
+      project.budget,
+      source,
+      new Date().toISOString(),
+      aiContent,
+      currentRevision(existingDraft?.commercialSnapshot) + 1,
+    );
+    const title = `Proposta comercial — ${project.name}`;
+    const html = renderCommercialDraftHtml(title, snapshot);
+    const documentHash = createHash("sha256").update(html, "utf8").digest("hex");
     const data = {
       clientId: project.clientId,
       projectId: project.id,

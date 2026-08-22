@@ -48,6 +48,7 @@ describe("commercialProposalService", () => {
   it("builds an immutable snapshot from the budget categories", () => {
     expect(buildCommercialSnapshot(budget, "ai-budget", "2026-08-22T00:00:00.000Z")).toEqual({
       version: 1,
+      revision: 1,
       source: "ai-budget",
       currency: "BRL",
       categories: [
@@ -82,7 +83,7 @@ describe("commercialProposalService", () => {
   });
 
   it("updates only an existing draft for the same source budget", async () => {
-    prismaMock.proposal.findFirst.mockResolvedValue({ id: 15n, status: "draft" });
+    prismaMock.proposal.findFirst.mockResolvedValue({ id: 15n, status: "draft", commercialSnapshot: { revision: 2 } });
     prismaMock.proposal.update.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
       id: 15n,
       ...data,
@@ -92,7 +93,10 @@ describe("commercialProposalService", () => {
     const result = await createOrUpdateDraftFromBudget(1, { projectId: 7 });
 
     expect(result.reused).toBe(true);
-    expect(prismaMock.proposal.update).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 15n } }));
+    expect(prismaMock.proposal.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 15n },
+      data: expect.objectContaining({ commercialSnapshot: expect.objectContaining({ revision: 3 }) }),
+    }));
     expect(prismaMock.proposal.create).not.toHaveBeenCalled();
   });
 

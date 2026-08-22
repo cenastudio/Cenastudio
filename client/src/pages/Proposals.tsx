@@ -6,7 +6,7 @@ import AppNavBar from "@/components/AppNavBar";
 import EmptyState from "@/components/EmptyState";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
-import { api } from "@/lib/api";
+import { api, type ProposalItem } from "@/lib/api";
 import {
   BriefcaseBusiness,
   Copy,
@@ -287,6 +287,7 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
   const [proposal, setProposal] = useState<ProposalForm>(initialProposal);
   const [selected, setSelected] = useState<ProposalLine[]>([]);
   const [history, setHistory] = useState<SavedProposal[]>([]);
+  const [connectedProposals, setConnectedProposals] = useState<ProposalItem[]>([]);
   const [studio, setStudio] = useState<StudioSettings>(() => readStudioSettings());
   const [clients, setClients] = useState<Array<{ id: number; name: string; company?: string | null; email?: string | null; phone?: string | null }>>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>("");
@@ -321,6 +322,7 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
         saveStudioSettings(data);
       })
       .catch(() => null);
+    api.proposals.list().then(setConnectedProposals).catch(() => setConnectedProposals([]));
     // Fetch real clients
     fetch("/api/clients", { credentials: "include" })
       .then((r) => r.json())
@@ -350,6 +352,7 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
   const discountValue = Math.round((subtotal * proposal.discount) / 100);
   const total = subtotal - discountValue;
   const proposalHtml = useMemo(() => buildProposalHtml(proposal, selected, studio, t, locale), [proposal, selected, studio, t, locale]);
+  const projectBackedProposals = connectedProposals.filter((item) => item.source_budget_id);
 
   const persistCatalog = (items: ServiceItem[]) => {
     setCatalog(items);
@@ -595,6 +598,43 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
             </div>
           </div>
         </section>
+
+        {projectBackedProposals.length > 0 && (
+          <section className="border border-frame-orange/35 bg-frame-orange/[0.04] p-4 sm:p-5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="frame-label">{locale === "en" ? "Connected commercial work" : "Comercial conectado"}</p>
+                <p className="mt-1 text-sm text-frame-gray-light">
+                  {locale === "en"
+                    ? "Project budgets and AI proposals already turned into internal commercial drafts."
+                    : "Orçamentos de projeto e propostas de IA já transformados em rascunhos internos."}
+                </p>
+              </div>
+              <span className="font-frame-mono text-[0.58rem] text-frame-orange">{projectBackedProposals.length}</span>
+            </div>
+            <div className="mt-4 grid grid-cols-1 gap-2 lg:grid-cols-3">
+              {projectBackedProposals.slice(0, 3).map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setLocation(`/clients/${item.client_id}?tab=propostas`)}
+                  className="flex min-h-11 items-center gap-3 border border-frame-gray-3/70 bg-frame-black/30 px-3 py-3 text-left transition hover:border-frame-orange/60"
+                >
+                  <FileSignature className="h-4 w-4 shrink-0 text-frame-orange" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm text-frame-white">{item.project_name || item.title}</span>
+                    <span className="mt-1 block text-[0.6rem] text-frame-gray-light">
+                      {item.source_generation_id
+                        ? locale === "en" ? "AI + budget" : "IA + orçamento"
+                        : locale === "en" ? "Project budget" : "Orçamento do projeto"}
+                    </span>
+                  </span>
+                  <span className="font-frame-mono text-[0.58rem] text-frame-orange">v{item.commercial_snapshot?.revision ?? 1}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="grid grid-cols-1 2xl:grid-cols-[360px_minmax(0,1fr)_440px] gap-6 items-start">
           <aside className="space-y-4">
