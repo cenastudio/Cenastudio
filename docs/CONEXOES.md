@@ -311,6 +311,22 @@ Parte das ferramentas roda em modelo gratuito com fallback, e o sistema **não**
 registra custo por chamada — por isso o painel admin mostra volume de uso, não
 custo estimado.
 
+### Storyboard IA
+
+O Storyboard IA do Shot List já tem banco, quotas, rotas, UI e exportação PDF,
+mas a geração real de imagem ainda não está ligada a um provider externo.
+
+| Variável | Estado | Observação |
+|---|---|---|
+| `STORYBOARD_IMAGE_PROVIDER` | opcional | vazio/`disabled` mantém 503 controlado; `mock` só para teste/local |
+| `STORYBOARD_IMAGE_API_KEY` | futuro | reservar para o provider real escolhido |
+| `STORYBOARD_IMAGE_MODEL` | futuro | reservar para o modelo real escolhido |
+
+Antes de habilitar em produção: escolher provider, implementar adapter em
+`server/services/imageGenerationService.ts`, gravar a imagem final em Supabase
+Storage ou storage equivalente, validar bucket/URL pública em staging/produção e
+atualizar `.kiro/specs/storyboard-ia-shotlist/tasks.md`.
+
 ---
 
 ## 8. GitHub OAuth

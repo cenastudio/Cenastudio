@@ -323,8 +323,12 @@ White Label 300/mês e Enterprise/admin ilimitado. A contagem usa
 `shot_storyboard_frames` do mês atual com status `generated`/`approved`, separada
 das gerações textuais de IA. Quando a quota acaba, o service bloqueia antes de
 chamar provider e antes de criar frame, evitando frame fantasma. Teste focal:
-`server/services/shotStoryboardService.test.ts`. Ainda aberto: escolher provider
-real, validar Supabase Storage em staging/produção e então completar G6.3/G6.4.
+`server/services/shotStoryboardService.test.ts`. Em 2026-08-22, `.env.example` e
+`docs/CONEXOES.md` passaram a explicitar que `STORYBOARD_IMAGE_PROVIDER`
+vazio/`disabled` mantém 503 controlado, `mock` é apenas local/teste e nenhum
+provider real está ativo. Ainda aberto: escolher provider real, implementar
+adapter de imagem, validar storage em staging/produção e então completar G2.3 e
+G6.3.
 
 **P1B auditada:** a ficha do cliente já oferece CRM 360 com projetos,
 oportunidades, interações, arquivos, financeiro, propostas, vídeo reviews e
