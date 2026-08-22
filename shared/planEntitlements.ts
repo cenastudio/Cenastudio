@@ -41,6 +41,7 @@ export interface PlanEntitlement {
   equipmentInventory: boolean;
   shotList: boolean;
   shotListLimit: number; // -1 = unlimited
+  storyboardGenerationLimit: number; // monthly, -1 = unlimited, 0 = unavailable
   timesheet: boolean;
   customBranding: boolean;
   // "CRM completo + pipeline comercial" — opportunities pipeline + interaction
@@ -69,6 +70,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     equipmentInventory: false,
     shotList: false,
     shotListLimit: 20,
+    storyboardGenerationLimit: 0,
     timesheet: false,
     customBranding: false,
     pipeline: false,
@@ -88,6 +90,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     equipmentInventory: false,
     shotList: true,
     shotListLimit: 100,
+    storyboardGenerationLimit: 25,
     timesheet: true,
     customBranding: false,
     pipeline: true,
@@ -107,6 +110,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     equipmentInventory: true,
     shotList: true,
     shotListLimit: -1, // unlimited
+    storyboardGenerationLimit: 100,
     timesheet: true,
     customBranding: false,
     pipeline: true,
@@ -126,6 +130,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     equipmentInventory: true,
     shotList: true,
     shotListLimit: -1, // unlimited
+    storyboardGenerationLimit: 300,
     timesheet: true,
     customBranding: true,
     pipeline: true,
@@ -145,6 +150,7 @@ export const PLAN_ENTITLEMENTS: Record<OperationalPlanId, PlanEntitlement> = {
     equipmentInventory: true,
     shotList: true,
     shotListLimit: -1, // unlimited
+    storyboardGenerationLimit: -1,
     timesheet: true,
     customBranding: true,
     pipeline: true,

@@ -32,10 +32,13 @@ describe("shotStoryboardService", () => {
     db.prepare("DELETE FROM shot_storyboard_frames").run();
     db.prepare("DELETE FROM shots").run();
     db.prepare("DELETE FROM shot_lists").run();
+    db.prepare("DELETE FROM subscriptions").run();
     db.prepare("DELETE FROM projects").run();
     db.prepare("DELETE FROM users").run();
     db.prepare("INSERT INTO users (id, email, password_hash) VALUES (?, ?, ?)").run(ownerId, "storyboard-owner@example.com", "hash");
     db.prepare("INSERT INTO users (id, email, password_hash) VALUES (?, ?, ?)").run(otherUserId, "storyboard-other@example.com", "hash");
+    db.prepare("INSERT INTO subscriptions (user_id, plan_id, status, current_period_end) VALUES (?, 'pro', 'active', datetime('now', '+1 month'))").run(ownerId);
+    db.prepare("INSERT INTO subscriptions (user_id, plan_id, status, current_period_end) VALUES (?, 'pro', 'active', datetime('now', '+1 month'))").run(otherUserId);
     db.prepare("INSERT INTO projects (id, user_id, name) VALUES (?, ?, ?)").run(projectId, ownerId, "Projeto Storyboard");
     db.prepare("INSERT INTO projects (id, user_id, name) VALUES (?, ?, ?)").run(otherProjectId, otherUserId, "Projeto Outro");
   });
@@ -190,5 +193,31 @@ describe("shotStoryboardService", () => {
       image_url: expect.stringContaining("mock-storyboard"),
     });
     expect(frame.final_prompt).toContain("Style: black and white pencil storyboard sketch");
+  });
+
+  it("blocks monthly storyboard generation before creating a frame when the plan quota is reached", async () => {
+    const shot = await createOwnerShot();
+    process.env.STORYBOARD_IMAGE_PROVIDER = "mock";
+
+    for (let index = 0; index < 25; index++) {
+      await shotStoryboardService.createFrame(ownerId, shot.id, {
+        prompt: `Frame ${index + 1}`,
+        finalPrompt: `quota frame ${index + 1}`,
+        provider: "mock",
+        imageUrl: `https://cdn.example.com/quota-${index + 1}.png`,
+        status: "generated",
+      });
+    }
+
+    const allowance = await shotStoryboardService.getStoryboardGenerationAllowance(ownerId);
+    expect(allowance).toMatchObject({ planId: "pro", used: 25, limit: 25, remaining: 0 });
+
+    await expect(
+      shotStoryboardService.generateFrame(ownerId, shot.id, { prompt: "Frame que excede a quota" }),
+    ).rejects.toMatchObject({ status: 429 });
+
+    const frames = await shotStoryboardService.listFrames(ownerId, shot.id);
+    expect(frames).toHaveLength(25);
+    expect(frames.some((frame) => frame.prompt === "Frame que excede a quota")).toBe(false);
   });
 });

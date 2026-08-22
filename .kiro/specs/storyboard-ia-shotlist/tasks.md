@@ -48,7 +48,8 @@
 
 ## Fase G6 — limites e produção
 
-- [ ] G6.1 Definir quota mensal por plano.
-- [ ] G6.2 Bloquear geração quando quota estourar sem criar frame fantasma.
+- [x] G6.1 Definir quota mensal por plano.
+- [x] G6.2 Bloquear geração quando quota estourar sem criar frame fantasma.
 - [ ] G6.3 Validar Supabase Storage em staging/produção.
 - [ ] G6.4 Atualizar `docs/STATUS.md` com provider, envs e limitações reais.
+- _2026-08-22: quotas mensais definidas em `shared/planEntitlements.ts`: Free 0, Pro 25, Studio 100, White Label 300, Enterprise/admin ilimitado. O service bloqueia antes de chamar provider e antes de criar frame quando a quota acabou. Teste focal: `server/services/shotStoryboardService.test.ts`._

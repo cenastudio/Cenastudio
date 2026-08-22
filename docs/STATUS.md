@@ -300,6 +300,15 @@ storyboard. Se a imagem aprovada não carregar, o PDF não quebra: mantém um
 placeholder textual para a referência visual. Teste focal:
 `server/services/shotListPdfExport.test.ts`.
 
+**Bloco G6.1/G6.2 concluído — quota mensal de Storyboard IA:** os limites ficaram
+em `shared/planEntitlements.ts`: Free 0, Pro 25/mês, Studio 100/mês,
+White Label 300/mês e Enterprise/admin ilimitado. A contagem usa
+`shot_storyboard_frames` do mês atual com status `generated`/`approved`, separada
+das gerações textuais de IA. Quando a quota acaba, o service bloqueia antes de
+chamar provider e antes de criar frame, evitando frame fantasma. Teste focal:
+`server/services/shotStoryboardService.test.ts`. Ainda aberto: escolher provider
+real, validar Supabase Storage em staging/produção e então completar G6.3/G6.4.
+
 **P1B auditada:** a ficha do cliente já oferece CRM 360 com projetos,
 oportunidades, interações, arquivos, financeiro, propostas, vídeo reviews e
 gestão de Portal. A jornada de acesso foi validada localmente em 2026-08-22:

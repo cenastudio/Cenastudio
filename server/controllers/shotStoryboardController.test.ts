@@ -62,9 +62,11 @@ describe("shotStoryboardController", () => {
     db.prepare("DELETE FROM shot_storyboard_frames").run();
     db.prepare("DELETE FROM shots").run();
     db.prepare("DELETE FROM shot_lists").run();
+    db.prepare("DELETE FROM subscriptions").run();
     db.prepare("DELETE FROM projects").run();
     db.prepare("DELETE FROM users").run();
     db.prepare("INSERT INTO users (id, email, password_hash) VALUES (?, ?, ?)").run(user.id, "storyboard-controller@example.com", "hash");
+    db.prepare("INSERT INTO subscriptions (user_id, plan_id, status, current_period_end) VALUES (?, 'pro', 'active', datetime('now', '+1 month'))").run(user.id);
     db.prepare("INSERT INTO projects (id, user_id, name) VALUES (?, ?, ?)").run(projectId, user.id, "Projeto Storyboard Controller");
   });
 

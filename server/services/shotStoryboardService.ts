@@ -7,6 +7,7 @@ import {
   sanitizeImageGenerationError,
   type GenerateImageInput,
 } from "./imageGenerationService.js";
+import { getUserEntitlements } from "./entitlementService.js";
 
 export const STORYBOARD_FRAME_STATUSES = ["queued", "generating", "generated", "approved", "failed"] as const;
 export type StoryboardFrameStatus = (typeof STORYBOARD_FRAME_STATUSES)[number];
@@ -57,6 +58,14 @@ interface ShotStoryboardContext {
   lens: string;
   movement: string;
   productionNotes: string | null;
+}
+
+interface StoryboardGenerationAllowance {
+  planId: string;
+  period: string;
+  used: number;
+  limit: number;
+  remaining: number | null;
 }
 
 function serializeFrame(value: any): StoryboardFrameRecord {
@@ -174,6 +183,73 @@ async function getFrameOwnedByUser(userId: number, frameId: number): Promise<Sto
   return serializeFrame(frame);
 }
 
+function getCurrentPeriodRange() {
+  const now = new Date();
+  const period = now.toISOString().slice(0, 7);
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const nextMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+  return { period, monthStart, nextMonth };
+}
+
+async function shouldBypassStoryboardQuota(userId: number): Promise<boolean> {
+  if (shouldUsePrisma) {
+    const user = await prisma.user.findUnique({ where: { id: BigInt(userId) }, select: { role: true } });
+    return user?.role === "admin";
+  }
+  const user = db.prepare("SELECT role FROM users WHERE id = ?").get(userId) as { role: string } | undefined;
+  return user?.role === "admin";
+}
+
+export async function getStoryboardGenerationAllowance(userId: number): Promise<StoryboardGenerationAllowance> {
+  const entitlement = await getUserEntitlements(userId);
+  const { period, monthStart, nextMonth } = getCurrentPeriodRange();
+  const statuses = ["generated", "approved"];
+
+  const used = shouldUsePrisma
+    ? await prisma.shotStoryboardFrame.count({
+        where: {
+          userId: BigInt(userId),
+          status: { in: statuses },
+          createdAt: { gte: monthStart, lt: nextMonth },
+        },
+      })
+    : (
+        db.prepare(
+          `SELECT COUNT(*) AS count
+           FROM shot_storyboard_frames
+           WHERE user_id = ?
+             AND status IN ('generated', 'approved')
+             AND strftime('%Y-%m', created_at) = ?`,
+        ).get(userId, period) as { count: number }
+      ).count;
+
+  const limit = entitlement.storyboardGenerationLimit;
+  return {
+    planId: entitlement.planId,
+    period,
+    used,
+    limit,
+    remaining: limit < 0 ? null : Math.max(0, limit - used),
+  };
+}
+
+export async function assertStoryboardGenerationCapacity(userId: number): Promise<StoryboardGenerationAllowance> {
+  if (await shouldBypassStoryboardQuota(userId)) {
+    const { period } = getCurrentPeriodRange();
+    return { planId: "admin", period, used: 0, limit: -1, remaining: null };
+  }
+
+  const allowance = await getStoryboardGenerationAllowance(userId);
+  if (allowance.limit < 0) return allowance;
+  if (allowance.used >= allowance.limit) {
+    throw new AppError(
+      `Limite mensal de storyboard atingido no plano ${allowance.planId.toUpperCase()} (${allowance.limit}/mês). O plano não foi gerado; faça upgrade ou aguarde o próximo ciclo.`,
+      429,
+    );
+  }
+  return allowance;
+}
+
 export async function listFrames(userId: number, shotId: number): Promise<StoryboardFrameRecord[]> {
   await getShotContextOwnedByUser(userId, shotId);
 
@@ -289,6 +365,7 @@ export async function generateFrame(
   const prompt = normalizeRequiredText(input.prompt, "Prompt");
   const aspectRatio = input.aspectRatio ?? "16:9";
   const finalPrompt = buildFinalPrompt(context, prompt);
+  await assertStoryboardGenerationCapacity(userId);
 
   try {
     const result = await generateStoryboardImage({
