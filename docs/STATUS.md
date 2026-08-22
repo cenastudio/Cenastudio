@@ -205,8 +205,10 @@ verificar, está dito explicitamente.
 - **Gatilho: domínio próprio e descoberta no Google.** Quando o domínio for
   comprado, apontado à Vercel e definido em `VITE_PUBLIC_URL`, verificar o
   domínio no Google Search Console, publicar/enviar sitemap e robots, conferir
-  canonicals no domínio final e inspecionar as URLs públicas. Não fazer antes:
-  o domínio canônico ainda é o da Vercel.
+  canonicals no domínio final e inspecionar as URLs públicas. Em 2026-08-22, o
+  `robots.txt` e o `sitemap.xml` públicos foram corrigidos do domínio Railway
+  legado para `https://cena-studio-prod.vercel.app/`. Não fazer Search Console
+  antes: o domínio canônico ainda é o da Vercel.
 - **Rotação de credenciais — ADIADA por decisão do operador (2026-07-26).**
   Inventário completo em `docs/CREDENCIAIS_PARA_ROTACIONAR.md` (não versionado) e
   em `.private/CREDENCIAIS_ROTACIONAR.md` (procedência + valores). Nada foi
