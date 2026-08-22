@@ -1121,6 +1121,17 @@ body.light .border-adaptive-primary {
   position: absolute;
   top: var(--ds-space-8);
   right: var(--ds-space-9);
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .auth-mobile-header {
+    display: none;
+  }
+
+  .auth-desktop-language {
+    display: block;
+  }
 }
 
 .auth-register-handoff {
