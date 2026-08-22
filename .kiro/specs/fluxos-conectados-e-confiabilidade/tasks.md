@@ -92,7 +92,7 @@ reproduzir contra Postgres/Supabase exige janela controlada e não foi executado
 ## Fase P1C — Navegação e Conta
 
 - [ ] P1C.1 Redesenhar a navegação de Produção por intenção de trabalho.
-- [ ] P1C.2 Mover webhooks e API keys para Conta > Integrações sem quebrar URLs.
+- [x] P1C.2 Mover webhooks e API keys para Conta > Integrações sem quebrar URLs.
 - [x] P1C.3 Auditar Conta contra o inventário de capacidades e apresentar os
   gaps para aprovação antes de implementar novas superfícies.
 - [ ] P1C.4 Validar navegação em desktop, tablet e mobile.
@@ -105,7 +105,7 @@ reproduzir contra Postgres/Supabase exige janela controlada e não foi executado
 - [ ] P1C.C Centralizar integrações em Conta e preservar redirecionamentos.
   - [x] P1C.C.1 Expor Webhooks em `Conta > Integrações` sem remover a rota
     legada `/webhooks`.
-  - [ ] P1C.C.2 Mover gestão de chaves de API de Segurança para Integrações,
+  - [x] P1C.C.2 Mover gestão de chaves de API de Segurança para Integrações,
     preservando criação, cópia única, listagem e revogação.
 - [ ] P1C.D Testar descoberta, touch targets e retorno de navegação em 390px,
   tablet e desktop.

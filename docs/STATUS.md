@@ -265,8 +265,14 @@ rota legada, antes de qualquer novo redesenho de Produção.
 
 **P1C.C em andamento:** Webhooks agora também está em `Conta > Integrações`,
 com a mesma superfície funcional e PT/EN; a rota `/webhooks` foi preservada
-para links existentes. Chaves de API ainda aparecem em Segurança e são a
-próxima migração dentro desta mesma frente, antes de marcar P1C.2 concluída.
+para links existentes. A migração das chaves de API foi concluída no mesmo
+bloco e o detalhe operacional atualizado abaixo.
+
+**P1C.2 concluída:** as chaves de API agora vivem exclusivamente em
+`Conta > Integrações`, ao lado de Webhooks. O componente próprio preserva
+listagem, criação com exibição única do segredo, cópia e revogação; Segurança
+não busca nem mostra mais esses dados. A rota `/webhooks` permanece como
+entrada compatível para links existentes.
 
 **Concluídas (`-OK`):** `00-fundacao-limpeza-e-documentacao`,
 `client-hub-connected-workflows`, `dre-por-projeto`,

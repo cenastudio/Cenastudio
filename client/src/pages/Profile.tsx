@@ -15,6 +15,7 @@ import { SITE_CONFIG } from "@shared/site";
 import { hexToRgba } from "@shared/color";
 import { WebhooksContent } from "@/pages/Webhooks";
 import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
+import ApiKeysManager from "@/components/account/ApiKeysManager";
 import { useEffect, useState, useRef } from "react";
 import {
   CalendarClock, Crown, LogOut, ShieldCheck, UserRound, Zap, Settings,
@@ -415,14 +416,7 @@ function ProfileContent() {
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const [enabling2FA, setEnabling2FA] = useState(false);
 
-  // 2. API Keys
-  const [apiKeys, setApiKeys] = useState<Array<{ id: string; name: string; key: string; createdAt: string; lastUsed: string | null }>>([]);
-  const [showNewApiKey, setShowNewApiKey] = useState(false);
-  const [newApiKeyName, setNewApiKeyName] = useState("");
-  const [creatingApiKey, setCreatingApiKey] = useState(false);
-  const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
-
-  // 3. Activity Log
+  // 2. Activity Log
   const [activityLog, setActivityLog] = useState<Array<{
     id: number;
     action: string;
@@ -716,50 +710,6 @@ function ProfileContent() {
     }
   };
 
-  // API Keys
-  const handleCreateApiKey = async () => {
-    if (!newApiKeyName.trim()) {
-      toast.error("Digite um nome para a chave");
-      return;
-    }
-    setCreatingApiKey(true);
-    try {
-      const result = await api.auth.createApiKey(newApiKeyName.trim());
-
-      setApiKeys((prev) => [...prev, {
-        id: result.id,
-        name: result.name,
-        key: result.key,
-        createdAt: result.createdAt,
-        lastUsed: null,
-      }]);
-      setNewlyCreatedKey(result.key);
-      setNewApiKeyName("");
-      setShowNewApiKey(false);
-      toast.success("Chave API criada! Copie agora, não será exibida novamente");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao criar chave");
-    } finally {
-      setCreatingApiKey(false);
-    }
-  };
-
-  const handleRevokeApiKey = async (id: string) => {
-    try {
-      await api.auth.revokeApiKey(id);
-
-      setApiKeys((prev) => prev.filter((k) => k.id !== id));
-      toast.success("Chave revogada");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao revogar chave");
-    }
-  };
-
-  const handleCopyApiKey = (key: string) => {
-    navigator.clipboard.writeText(key);
-    toast.success("Chave copiada!");
-  };
-
   // Activity Log
   const loadActivityLog = async () => {
     setLoadingActivity(true);
@@ -782,20 +732,6 @@ function ProfileContent() {
         console.error("Erro ao carregar security alerts");
       });
 
-      // Carregar API Keys existentes (chaves criadas em sessões anteriores)
-      api.auth.listApiKeys().then((res) => {
-        setApiKeys(
-          res.keys.map((k) => ({
-            id: k.id,
-            name: k.name,
-            key: k.keyPrefix,
-            createdAt: k.createdAt,
-            lastUsed: k.lastUsed,
-          })),
-        );
-      }).catch(() => {
-        console.error("Erro ao carregar API keys");
-      });
     }
   }, [activeTab]);
 
@@ -1515,139 +1451,6 @@ function ProfileContent() {
               )}
             </div>
 
-            {/* 3. Chaves de API */}
-            <div className="liquid-glass p-6 space-y-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg">
-                    <Key className="w-5 h-5 text-frame-orange" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold">Chaves de API</h3>
-                    <p className="text-frame-gray-light text-xs">Gerencie chaves para integrações e automações</p>
-                  </div>
-                </div>
-                {!showNewApiKey && (
-                  <button
-                    type="button"
-                    onClick={() => setShowNewApiKey(true)}
-                    className="frame-btn-primary text-sm px-4 py-2 flex items-center gap-2"
-                  >
-                    <Key className="w-4 h-4" />
-                    Nova Chave
-                  </button>
-                )}
-              </div>
-
-              {/* Criar nova chave */}
-              {showNewApiKey && (
-                <div className="p-4 border border-frame-orange/30 rounded-lg bg-frame-orange/5 space-y-4">
-                  <label className="space-y-1.5">
-                    <span className="frame-label text-frame-gray-light">Nome da chave (ex: "Webhook Produção")</span>
-                    <input
-                      type="text"
-                      value={newApiKeyName}
-                      onChange={(e) => setNewApiKeyName(e.target.value)}
-                      className="frame-input w-full"
-                      placeholder="Minha Integração"
-                      autoFocus
-                    />
-                  </label>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={handleCreateApiKey}
-                      disabled={creatingApiKey || !newApiKeyName.trim()}
-                      className="frame-btn-primary disabled:opacity-40"
-                    >
-                      {creatingApiKey ? "Criando..." : "Criar Chave"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setShowNewApiKey(false); setNewApiKeyName(""); }}
-                      className="frame-btn-ghost"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Chave recém-criada (mostrar apenas uma vez) */}
-              {newlyCreatedKey && (
-                <div className="p-4 bg-frame-green/10 border border-frame-green/30 rounded-lg space-y-3">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="w-5 h-5 text-frame-green shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-frame-green">Chave criada com sucesso!</p>
-                      <p className="text-xs text-frame-gray-light mt-1">
-                        Copie agora. Por segurança, ela não será exibida novamente.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 px-3 py-2 bg-frame-gray-2 border border-frame-gray-3 rounded text-xs font-mono text-frame-white break-all">
-                      {newlyCreatedKey}
-                    </code>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyApiKey(newlyCreatedKey)}
-                      className="frame-btn-primary p-2 shrink-0"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setNewlyCreatedKey(null)}
-                    className="text-xs text-frame-gray-light hover:text-frame-white transition"
-                  >
-                    OK, já copiei
-                  </button>
-                </div>
-              )}
-
-              {/* Lista de chaves */}
-              {apiKeys.length === 0 ? (
-                <p className="text-xs text-frame-gray-light py-4 text-center">
-                  Nenhuma chave de API criada ainda
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {apiKeys.map((key) => (
-                    <div key={key.id} className="glow-card p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-3 flex-1 min-w-0">
-                          <Key className="w-4 h-4 text-frame-orange shrink-0 mt-0.5" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-frame-white">{key.name}</p>
-                            <code className="text-xs font-mono text-frame-gray-light">
-                              {key.key}••••••
-                            </code>
-                            <div className="flex items-center gap-3 mt-2 text-[0.65rem] text-frame-gray-light">
-                              <span>Criada: {formatDate(key.createdAt, "—", locale)}</span>
-                              {key.lastUsed ? (
-                                <span>Último uso: {formatDate(key.lastUsed, "—", locale)}</span>
-                              ) : (
-                                <span className="text-frame-orange/70">Nunca usada</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRevokeApiKey(key.id)}
-                          className="frame-btn-ghost text-xs text-frame-red/70 hover:text-frame-red px-3 py-1.5"
-                        >
-                          Revogar
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
             {/* 4. Log de Atividades */}
             <div className="liquid-glass p-6 space-y-5">
               <div className="flex items-center justify-between">
@@ -1835,6 +1638,7 @@ function ProfileContent() {
             <FeatureUpgradeRequired feature="webhooks" variant="full">
               <WebhooksContent embedded />
             </FeatureUpgradeRequired>
+            <ApiKeysManager />
           </section>
         )}
 
