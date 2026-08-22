@@ -87,13 +87,19 @@ verificar, está dito explicitamente.
   singulares), controllers `videoReviewsController.ts` / `videoUploadController.ts`,
   models `VideoReview` e `VideoComment`. Esteve quebrado em 07/2026 por
   desregistro de rotas; corrigido desde então.
-- **Session Management:** funcional com lacunas. `/sessions` (`router.ts:179`),
+- **Session Management:** funcional. `/sessions` (`router.ts:179`),
   model `UserSession`, revogação remota funcionando (`revokedAt` → 401 via
   `isTokenRevoked` em `authenticate`). Estratégia de invalidação é deny-list, não
-  a allow-list da spec original — ver ADR-011. Faltam: geolocalização (descartada,
-  sem campo `location`), `ua-parser-js` (substituído por `parseDeviceLabel()`
-  próprio), poda da tabela (ver Seção 4) e teste unitário do service. UI vive em
-  `client/src/pages/Profile.tsx`, não em página dedicada.
+  a allow-list da spec original — ver ADR-011. Geolocalização foi descartada
+  (sem campo `location`) e `ua-parser-js` foi substituído por
+  `parseDeviceLabel()` próprio. Em 2026-08-22, `cleanupExpiredSessions()` passou
+  a remover sessões inativas há mais de 7 dias e sessões revogadas somente após
+  a janela de expiração do JWT, preservando segurança contra reativação de token
+  revogado. O job periódico roda apenas no servidor tradicional, com opt-out por
+  `ENABLE_SESSION_CLEANUP_JOB=false`; em Vercel/serverless a limpeza deve ser
+  chamada por job externo se necessário. Teste focal:
+  `server/services/sessionService.test.ts`. UI vive em `client/src/pages/Profile.tsx`,
+  não em página dedicada.
 - **Webhooks:** funcional sem retry. `/webhooks` (`router.ts:180`), models
   `Webhook` e `WebhookDelivery`, `server/services/webhookService.ts` (377 linhas)
   com CRUD, HMAC, `listDeliveries`, `sendTestPing` e `dispatchWebhookEvent`. Tela
@@ -521,10 +527,11 @@ Pausado por dependência externa, **não bloqueante**:
 
 Tarefas soltas identificadas na verificação, sem spec própria ainda:
 
-- Implementar poda da tabela `user_sessions`. Não existe cron nem `setInterval` no
-  projeto; sessões revogadas e inativas acumulam indefinidamente. A spec original
-  previa limpeza diária de registros com `lastActiveAt` acima de 7 dias (o expiry
-  do JWT).
+- ~~Implementar poda da tabela `user_sessions`.~~ **Feito em 2026-08-22.**
+  `cleanupExpiredSessions()` remove sessões inativas antigas e só remove
+  sessões revogadas após a janela de expiração do JWT, para não reabilitar token
+  revogado. `startSessionCleanupJob()` agenda a execução diária em servidor
+  tradicional; em Vercel/serverless depende de job externo.
 - Implementar retry de webhook delivery. Hoje uma entrega que falha morre ali: não
   há reprocessamento, campo de agendamento (`nextRetryAt`) nem scheduler. Exige
   migration (campo no `WebhookDelivery`), função no service e um scheduler — o

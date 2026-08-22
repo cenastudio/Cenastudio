@@ -45,6 +45,11 @@ export interface SessionRecord {
   current: boolean;
 }
 
+export interface SessionCleanupResult {
+  deleted: number;
+  cutoff: string;
+}
+
 /**
  * Records or refreshes a session row for a just-verified token.
  * Fire-and-forget from the caller's perspective — failures are logged, not thrown,
@@ -191,4 +196,38 @@ export async function isTokenRevoked(token: string): Promise<boolean> {
     | { revoked_at: string | null }
     | undefined;
   return Boolean(row?.revoked_at);
+}
+
+/**
+ * Removes session rows that can no longer represent a valid app JWT.
+ *
+ * Revoked rows are kept until the JWT expiry window has passed; deleting them
+ * earlier would make `isTokenRevoked()` return false for a still-valid token.
+ */
+export async function cleanupExpiredSessions(retentionDays = 7): Promise<SessionCleanupResult> {
+  const safeRetentionDays = Math.max(1, Math.floor(retentionDays));
+  const cutoffDate = new Date(Date.now() - safeRetentionDays * 24 * 60 * 60 * 1000);
+  const cutoff = cutoffDate.toISOString();
+
+  if (shouldUsePrisma) {
+    const result = await prisma.userSession.deleteMany({
+      where: {
+        OR: [
+          { lastActiveAt: { lt: cutoffDate } },
+          { revokedAt: { not: null, lt: cutoffDate } },
+        ],
+      },
+    });
+    return { deleted: result.count, cutoff };
+  }
+
+  const result = db
+    .prepare(
+      `DELETE FROM user_sessions
+       WHERE datetime(last_active_at) < datetime(?)
+          OR (revoked_at IS NOT NULL AND datetime(revoked_at) < datetime(?))`,
+    )
+    .run(cutoff, cutoff);
+
+  return { deleted: (result as any).changes ?? 0, cutoff };
 }
