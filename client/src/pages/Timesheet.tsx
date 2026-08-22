@@ -17,6 +17,8 @@ import {
   ArrowRight,
   Calculator,
   Wallet,
+  Download,
+  SlidersHorizontal,
 } from "lucide-react";
 import PricingCalculatorModal from "@/components/production/PricingCalculatorModal";
 import { toast } from "sonner";
@@ -69,6 +71,10 @@ function TimesheetContent() {
   const [timerProjectId, setTimerProjectId] = useState<number | "">("");
   const [stopHourlyRateInput, setStopHourlyRateInput] = useState("");
   const [stopDialogOpen, setStopDialogOpen] = useState(false);
+  const [filterProjectId, setFilterProjectId] = useState<number | "">("");
+  const [filterFrom, setFilterFrom] = useState("");
+  const [filterTo, setFilterTo] = useState("");
+  const [exportingCsv, setExportingCsv] = useState(false);
 
   const [manualOpen, setManualOpen] = useState(false);
   const [manualProjectId, setManualProjectId] = useState<number | "">("");
@@ -86,7 +92,28 @@ function TimesheetContent() {
 
   const tickRef = useRef<number | null>(null);
 
+  const currentFilters = () => ({
+    projectId: filterProjectId ? Number(filterProjectId) : undefined,
+    from: filterFrom || undefined,
+    to: filterTo || undefined,
+  });
+
   const load = () => {
+    setLoading(true);
+    Promise.all([api.timesheets.list(currentFilters()), api.timesheets.getRunning()])
+      .then(([listResult, runningResult]) => {
+        setEntries(listResult.entries);
+        setTotals(listResult.totals);
+        setRunning(runningResult);
+      })
+      .catch((e) => toast.error(e instanceof Error ? e.message : "Falha ao carregar timesheet"))
+      .finally(() => setLoading(false));
+  };
+
+  const handleResetFilters = () => {
+    setFilterProjectId("");
+    setFilterFrom("");
+    setFilterTo("");
     setLoading(true);
     Promise.all([api.timesheets.list(), api.timesheets.getRunning()])
       .then(([listResult, runningResult]) => {
@@ -96,6 +123,28 @@ function TimesheetContent() {
       })
       .catch((e) => toast.error(e instanceof Error ? e.message : "Falha ao carregar timesheet"))
       .finally(() => setLoading(false));
+  };
+
+  const handleExportCsv = async () => {
+    setExportingCsv(true);
+    try {
+      const response = await api.timesheets.exportCsv(currentFilters());
+      if (!response.ok) throw new Error("Falha ao exportar CSV");
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "timesheet.csv";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("CSV exportado");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao exportar CSV");
+    } finally {
+      setExportingCsv(false);
+    }
   };
 
   useEffect(() => {
@@ -319,6 +368,68 @@ function TimesheetContent() {
           )}
         </div>
 
+        <section className="border border-frame-gray-3/60 bg-frame-gray-1/10 p-4">
+          <div className="flex flex-col xl:flex-row xl:items-end gap-3">
+            <div className="flex items-center gap-2 xl:w-40">
+              <SlidersHorizontal className="w-4 h-4 text-frame-orange" />
+              <div>
+                <p className="font-frame-mono text-[0.6rem] uppercase tracking-wide text-frame-gray-light">Filtros</p>
+                <p className="text-xs text-frame-white">Período e projeto</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1">
+              <label className="block">
+                <span className="block text-xs font-medium text-frame-gray-light mb-1.5">Projeto</span>
+                <select
+                  value={filterProjectId}
+                  onChange={(e) => setFilterProjectId(e.target.value ? Number(e.target.value) : "")}
+                  className="frame-input w-full"
+                >
+                  <option value="">Todos os projetos</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <span className="block text-xs font-medium text-frame-gray-light mb-1.5">De</span>
+                <input
+                  type="date"
+                  value={filterFrom}
+                  onChange={(e) => setFilterFrom(e.target.value)}
+                  className="frame-input w-full"
+                />
+              </label>
+              <label className="block">
+                <span className="block text-xs font-medium text-frame-gray-light mb-1.5">Até</span>
+                <input
+                  type="date"
+                  value={filterTo}
+                  onChange={(e) => setFilterTo(e.target.value)}
+                  className="frame-input w-full"
+                />
+              </label>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 xl:flex gap-2 xl:shrink-0">
+              <button type="button" onClick={load} className="frame-btn-primary">
+                Aplicar
+              </button>
+              <button type="button" onClick={handleResetFilters} className="frame-btn-ghost">
+                Limpar
+              </button>
+              <button
+                type="button"
+                onClick={handleExportCsv}
+                disabled={exportingCsv}
+                className="frame-btn-ghost inline-flex items-center justify-center gap-2"
+              >
+                {exportingCsv ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                CSV
+              </button>
+            </div>
+          </div>
+        </section>
+
         {loading && (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-6 h-6 animate-spin text-frame-orange" />
@@ -371,7 +482,7 @@ function TimesheetContent() {
                     <div className="min-w-0 flex-1">
                       <p className="text-sm text-frame-white truncate">{entry.description || "Sem descrição"}</p>
                       <p className="text-[0.65rem] text-frame-gray-light">
-                        {project?.name ?? "Sem projeto"} · {new Date(entry.started_at).toLocaleDateString("pt-BR")}
+                        {project?.name ?? entry.project_name ?? "Sem projeto"} · {new Date(entry.started_at).toLocaleDateString("pt-BR")}
                         {!entry.ended_at && <span className="text-frame-orange ml-1">· em andamento</span>}
                       </p>
                     </div>

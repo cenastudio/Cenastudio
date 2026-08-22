@@ -822,6 +822,18 @@ export const api = {
         `/timesheets${qs ? `?${qs}` : ""}`,
       );
     },
+    exportCsv: (filters?: { projectId?: number; from?: string; to?: string }) => {
+      const params = new URLSearchParams();
+      if (filters?.projectId) params.set("projectId", String(filters.projectId));
+      if (filters?.from) params.set("from", filters.from);
+      if (filters?.to) params.set("to", filters.to);
+      const qs = params.toString();
+      return fetch(apiUrl(`/timesheets/export.csv${qs ? `?${qs}` : ""}`), {
+        method: "GET",
+        credentials: "include",
+        headers: { Accept: "text/csv" },
+      });
+    },
     getRunning: () => request<TimeEntryItem | null>("/timesheets/running"),
     start: (data: { projectId?: number | null; description?: string }) =>
       request<TimeEntryItem>("/timesheets/start", { method: "POST", body: JSON.stringify(data) }),
@@ -1522,6 +1534,7 @@ export interface TimeEntryItem {
   id: number;
   user_id: number;
   project_id: number | null;
+  project_name?: string | null;
   description: string;
   started_at: string;
   ended_at: string | null;

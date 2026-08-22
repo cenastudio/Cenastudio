@@ -9,6 +9,7 @@ import {
   addManualEntry,
   deleteEntry,
   getReport,
+  exportEntriesCsv,
 } from "../controllers/timesheetController.js";
 
 const router = Router();
@@ -17,6 +18,7 @@ router.use(authenticate, requireStudioPlan("timesheet"));
 
 router.get("/", listEntries);
 router.get("/running", getRunningTimer);
+router.get("/export.csv", exportEntriesCsv);
 router.post("/start", startTimer);
 router.post("/:id/stop", stopTimer);
 router.post("/", addManualEntry);

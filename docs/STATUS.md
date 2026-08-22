@@ -113,7 +113,11 @@ verificar, está dito explicitamente.
   registrada como ADR** — ver nota de PARE ao final desta seção.
 - **Shot List:** implementado. `/shotlists` e `/shot-types`, models `ShotList`,
   `Shot`, `ShotType`.
-- **Timesheet:** implementado. `/timesheets`, model `TimeEntry`.
+- **Timesheet:** MVP em evolução. `/timesheets`, model `TimeEntry`, timer,
+  registros manuais, totais, envio de horas para orçamento, filtros por
+  projeto/período e export CSV autenticado estão implementados. Pendências reais:
+  `TimerContext`/widget global, botão de iniciar timer em tarefas, taxa horária em
+  Settings/resumo por projeto e retenção por plano.
 - **Google Calendar:** rota `/calendar` registrada. A integração real com a API do
   Google **não foi verificada** — só a existência da rota.
 - **Portal do Cliente:** MVP funcional em evolução (spec `portal-do-cliente-OK/`).

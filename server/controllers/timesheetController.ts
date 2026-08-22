@@ -8,15 +8,31 @@ function parseId(value: string | undefined, label = "ID"): number {
   return id;
 }
 
+function parseFilters(query: { projectId?: string; from?: string; to?: string }) {
+  return {
+    projectId: query.projectId ? Number.parseInt(query.projectId, 10) : undefined,
+    from: query.from,
+    to: query.to,
+  };
+}
+
 export const listEntries: RequestHandler = async (req, res, next) => {
   try {
     const { projectId, from, to } = req.query as { projectId?: string; from?: string; to?: string };
-    const result = await timesheetService.listEntries(req.user!.id, {
-      projectId: projectId ? Number.parseInt(projectId, 10) : undefined,
-      from,
-      to,
-    });
+    const result = await timesheetService.listEntries(req.user!.id, parseFilters({ projectId, from, to }));
     res.json({ success: true, data: result });
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const exportEntriesCsv: RequestHandler = async (req, res, next) => {
+  try {
+    const { projectId, from, to } = req.query as { projectId?: string; from?: string; to?: string };
+    const csv = await timesheetService.exportCSV(req.user!.id, parseFilters({ projectId, from, to }));
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", 'attachment; filename="timesheet.csv"');
+    res.send(csv);
   } catch (e) {
     next(e);
   }

@@ -475,7 +475,7 @@ describe("CRM, files and finance controller flow", () => {
     const manual = await invoke(timesheetController.addManualEntry, {
       user,
       body: {
-        description: "Revisão com cliente",
+        description: 'Revisão, cliente "A"',
         startedAt: "2026-07-01T10:00:00.000Z",
         endedAt: "2026-07-01T12:00:00.000Z",
         hourlyRate: 5000,
@@ -486,6 +486,15 @@ describe("CRM, files and finance controller flow", () => {
     const listed = await invoke(timesheetController.listEntries, { user, query: {} });
     expect(listed.body.data.entries.length).toBeGreaterThanOrEqual(3);
     expect(listed.body.data.totals.totalCost).toBeGreaterThanOrEqual(10000 + 5000 * (0 / 3600)); // manual entry cost alone
+
+    const filtered = await invoke(timesheetController.listEntries, { user, query: { from: "2026-07-01", to: "2026-07-01" } });
+    expect(filtered.body.data.entries.some((e: any) => e.id === manual.body.data.id)).toBe(true);
+
+    const exported = await invoke(timesheetController.exportEntriesCsv, { user, query: { from: "2026-07-01", to: "2026-07-01" } });
+    expect(exported.headers["Content-Type"]).toContain("text/csv");
+    expect(exported.headers["Content-Disposition"]).toContain("timesheet.csv");
+    expect(exported.sent).toContain('"Revisão, cliente ""A"""');
+    expect(exported.sent).toContain("TOTAL");
 
     const deleted = await invoke(timesheetController.deleteEntry, { user, params: { id: String(manual.body.data.id) } });
     expect(deleted.body.success).toBe(true);

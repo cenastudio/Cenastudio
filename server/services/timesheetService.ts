@@ -16,6 +16,7 @@ export interface TimeEntryRecord {
   id: number;
   user_id: number;
   project_id: number | null;
+  project_name?: string | null;
   description: string;
   started_at: string;
   ended_at: string | null;
@@ -30,7 +31,7 @@ export interface TimesheetTotals {
 }
 
 function serializeEntry(value: any): TimeEntryRecord {
-  return withSnakeCase(value, {
+  const serialized = withSnakeCase(value, {
     userId: "user_id",
     projectId: "project_id",
     startedAt: "started_at",
@@ -38,12 +39,31 @@ function serializeEntry(value: any): TimeEntryRecord {
     durationSec: "duration_sec",
     hourlyRate: "hourly_rate",
     createdAt: "created_at",
-  }) as unknown as TimeEntryRecord;
+  }) as Record<string, unknown>;
+
+  if (serialized.project && typeof serialized.project === "object" && "name" in serialized.project) {
+    serialized.project_name = (serialized.project as { name?: string | null }).name ?? null;
+    delete serialized.project;
+  }
+
+  return serialized as unknown as TimeEntryRecord;
 }
 
 function entryCost(entry: { duration_sec: number; hourly_rate: number | null }): number {
   if (!entry.hourly_rate) return 0;
   return Math.round((entry.duration_sec / 3600) * entry.hourly_rate);
+}
+
+function normalizeDateFilter(value: string | undefined, mode: "from" | "to"): Date | undefined {
+  if (!value) return undefined;
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value);
+  const date = new Date(dateOnly && mode === "to" ? `${value}T23:59:59.999Z` : value);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+function normalizeSqliteDateFilter(value: string | undefined, mode: "from" | "to"): string | undefined {
+  const date = normalizeDateFilter(value, mode);
+  return date ? date.toISOString() : undefined;
 }
 
 async function assertProjectOwnershipIfProvided(userId: number, projectId?: number | null): Promise<void> {
@@ -65,25 +85,35 @@ export async function listEntries(
   let entries: TimeEntryRecord[];
 
   if (shouldUsePrisma) {
+    const from = normalizeDateFilter(filters.from, "from");
+    const to = normalizeDateFilter(filters.to, "to");
     const rows = await prisma.timeEntry.findMany({
       where: {
         userId: BigInt(userId),
         ...(filters.projectId ? { projectId: BigInt(filters.projectId) } : {}),
-        ...(filters.from ? { startedAt: { gte: new Date(filters.from) } } : {}),
-        ...(filters.to ? { startedAt: { lte: new Date(filters.to) } } : {}),
+        ...((from || to) ? { startedAt: { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) } } : {}),
       },
+      include: { project: { select: { name: true } } },
       orderBy: { startedAt: "desc" },
     });
     entries = rows.map(serializeEntry);
   } else {
-    const clauses = ["user_id = ?"];
+    const clauses = ["time_entries.user_id = ?"];
     const args: unknown[] = [userId];
-    if (filters.projectId) { clauses.push("project_id = ?"); args.push(filters.projectId); }
-    if (filters.from) { clauses.push("started_at >= ?"); args.push(filters.from); }
-    if (filters.to) { clauses.push("started_at <= ?"); args.push(filters.to); }
+    if (filters.projectId) { clauses.push("time_entries.project_id = ?"); args.push(filters.projectId); }
+    const from = normalizeSqliteDateFilter(filters.from, "from");
+    const to = normalizeSqliteDateFilter(filters.to, "to");
+    if (from) { clauses.push("time_entries.started_at >= ?"); args.push(from); }
+    if (to) { clauses.push("time_entries.started_at <= ?"); args.push(to); }
 
     const rows = db
-      .prepare(`SELECT * FROM time_entries WHERE ${clauses.join(" AND ")} ORDER BY started_at DESC`)
+      .prepare(`
+        SELECT time_entries.*, projects.name AS project_name
+        FROM time_entries
+        LEFT JOIN projects ON projects.id = time_entries.project_id
+        WHERE ${clauses.join(" AND ")}
+        ORDER BY started_at DESC
+      `)
       .all(...args);
     entries = (rows as any[]).map(serializeEntry);
   }
@@ -97,6 +127,34 @@ export async function listEntries(
   );
 
   return { entries, totals };
+}
+
+function escapeCsvCell(value: unknown): string {
+  const text = value == null ? "" : String(value);
+  return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function formatCsvDate(value: string | null): string {
+  return value ? new Date(value).toISOString() : "";
+}
+
+/** Exports the filtered ledger as CSV for finance reconciliation. */
+export async function exportCSV(userId: number, filters: { projectId?: number; from?: string; to?: string } = {}): Promise<string> {
+  const { entries, totals } = await listEntries(userId, filters);
+  const header = ["Data", "Projeto", "Descricao", "Inicio", "Fim", "Duracao segundos", "Horas", "Taxa hora centavos", "Custo centavos"];
+  const rows = entries.map((entry) => [
+    entry.started_at.slice(0, 10),
+    entry.project_name ?? (entry.project_id ? `Projeto #${entry.project_id}` : "Sem projeto"),
+    entry.description,
+    formatCsvDate(entry.started_at),
+    formatCsvDate(entry.ended_at),
+    entry.duration_sec,
+    (entry.duration_sec / 3600).toFixed(2),
+    entry.hourly_rate ?? "",
+    entryCost(entry),
+  ]);
+  rows.push(["TOTAL", "", "", "", "", totals.totalDurationSec, (totals.totalDurationSec / 3600).toFixed(2), "", totals.totalCost]);
+  return [header, ...rows].map((row) => row.map(escapeCsvCell).join(",")).join("\n");
 }
 
 /** The currently running timer for a user (endedAt = null), or null if none. */

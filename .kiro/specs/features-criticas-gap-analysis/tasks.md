@@ -248,6 +248,7 @@
   - Plan gating: Free retention 30 dias (soft filter em queries), Pro 1 ano, Studio ilimitado.
   - Testes cobrindo: prevent duplicate active timer, duration calc, CSV formatting, retention filter.
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.10_
+  - _2026-08-22: timer/list/manual/report já estavam implementados; E1 adicionou filtros por período/projeto e export CSV autenticado com total. Pendente para marcar task: retenção por plano._
 
 - [ ] 24. Frontend: `TimerContext` global + `Timesheet` page
   - Criar `client/src/contexts/TimerContext.tsx`: state global do timer ativo (currentTimer, elapsed, start, pause, stop).
@@ -260,6 +261,7 @@
   - Modificar `client/src/components/tasks/TaskCard.tsx`: botão "▶️ Iniciar Timer" que chama `TimerContext.start(projectId, taskId)`.
   - Adicionar rota `/timesheet` no App.tsx + link no AppNavBar.
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.7, 7.8, 7.9_
+  - _2026-08-22: página `/timesheet` já existia; E1 adicionou filtros responsivos e export CSV. Pendente para marcar task: `TimerContext`, widget global, diálogo dedicado e botão em `TaskCard`._
 
 - [ ] 25. Settings: taxa horária + resumo por projeto
   - Modificar `client/src/pages/Settings.tsx`: adicionar campo "Taxa horária (R$/hora)" que salva em `user.hourlyRate` via PUT `/api/users/me`.
