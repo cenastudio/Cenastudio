@@ -119,6 +119,32 @@ describe("commercialProposalService", () => {
     }));
   });
 
+  it("records the persisted AI generation as escaped commercial narrative", async () => {
+    prismaMock.generation.findFirst.mockResolvedValue({
+      id: 33n,
+      output: "Solução sob medida.\n\n<script>alert(1)</script>",
+    });
+
+    await createOrUpdateDraftFromBudget(1, {
+      projectId: 7,
+      source: "manual",
+      sourceGenerationId: 33,
+    });
+
+    expect(prismaMock.proposal.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        sourceGenerationId: 33n,
+        commercialSnapshot: expect.objectContaining({
+          source: "ai-budget",
+          generationId: 33,
+          narrative: "Solução sob medida.\n\n<script>alert(1)</script>",
+        }),
+      }),
+    }));
+    const html = prismaMock.proposal.create.mock.calls[0][0].data.html as string;
+    expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
+  });
+
   it("renders source labels as text, never executable markup", () => {
     const snapshot = buildCommercialSnapshot({
       ...budget,

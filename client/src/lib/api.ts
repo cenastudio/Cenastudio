@@ -561,10 +561,14 @@ export const api = {
         method: "POST",
         body: JSON.stringify(data),
       }),
-    createDraftFromBudget: (projectId: number, sourceGenerationId?: number) =>
+    createDraftFromBudget: (
+      projectId: number,
+      sourceGenerationId?: number,
+      source: "ai-budget" | "manual" | "calculator" = "manual",
+    ) =>
       request<ProposalDraftResponse>("/clients/proposals/from-budget", {
         method: "POST",
-        body: JSON.stringify({ projectId, sourceGenerationId }),
+        body: JSON.stringify({ projectId, sourceGenerationId, source }),
       }),
     updatePortalVisibility: (id: number, visible: boolean) =>
       request<ProposalItem>(`/clients/proposals/${id}/portal-visibility`, {

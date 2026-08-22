@@ -60,6 +60,7 @@ export default function StudioShell() {
   const [workspaceCollapsed, setWorkspaceCollapsed] = useState(false);
   const [linkedContext, setLinkedContext] = useState<StudioLinkedContext | null>(null);
   const [selectedModel, setSelectedModel] = useState(() => localStorage.getItem("cena-ai-model") || "");
+  const [commercialDraft, setCommercialDraft] = useState<{ clientId: number; reused: boolean } | null>(null);
 
   // Listen for model changes from ContextPanel
   useEffect(() => {
@@ -234,6 +235,7 @@ export default function StudioShell() {
       const result = await api.ai.generate(tool.id, formData, activeProject?.id, selectedModel || undefined);
       setOutput(result.output);
       toast.success(t("app.studio.generationComplete") as string);
+      setCommercialDraft(null);
       if (activeProject) {
         const nextForm = {
           ...formData,
@@ -242,6 +244,18 @@ export default function StudioShell() {
         };
         setFormData(nextForm);
         saveToolStateImmediately(tool.id, nextForm, result.output);
+
+        if (tool.id === "05") {
+          try {
+            const draft = await api.proposals.createDraftFromBudget(activeProject.id, result.generationId, "ai-budget");
+            setCommercialDraft({ clientId: draft.client_id, reused: draft.reused });
+          } catch (draftError) {
+            const message = draftError instanceof Error ? draftError.message : "";
+            toast.info(message || (locale === "en"
+              ? "The AI proposal was saved. Link a client and project budget to create its commercial draft."
+              : "A proposta da IA foi salva. Vincule cliente e orçamento ao projeto para criar o rascunho comercial."));
+          }
+        }
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : t("app.studio.generationError") as string;
@@ -434,6 +448,23 @@ export default function StudioShell() {
                         {t("app.studio.viewPlans") as string}
                       </button>
                     </div>
+                  </div>
+                )}
+
+                {tool.id === "05" && commercialDraft && (
+                  <div className="mx-6 mt-4 px-4 py-3 border border-frame-orange/40 bg-frame-orange/5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0">
+                    <p className="text-sm text-frame-white">
+                      {locale === "en"
+                        ? commercialDraft.reused ? "Commercial draft updated from this AI proposal." : "Commercial draft created from this AI proposal."
+                        : commercialDraft.reused ? "Rascunho comercial atualizado a partir desta proposta de IA." : "Rascunho comercial criado a partir desta proposta de IA."}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setLocation(`/clients/${commercialDraft.clientId}?tab=propostas`)}
+                      className="frame-btn-ghost !py-2 !px-3 shrink-0"
+                    >
+                      {locale === "en" ? "Open commercial record" : "Abrir ficha comercial"}
+                    </button>
                   </div>
                 )}
 

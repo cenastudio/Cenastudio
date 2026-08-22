@@ -7,10 +7,12 @@ export type CommercialSnapshotSource = "ai-budget" | "manual" | "calculator";
 export interface CommercialSnapshot {
   version: 1;
   source: CommercialSnapshotSource;
+  generationId?: number;
   currency: string;
   categories: Array<{ key: string; label: string; total: number }>;
   subtotal: number;
   total: number;
+  narrative?: string;
   generatedAt: string;
 }
 
@@ -33,6 +35,17 @@ function escapeHtml(value: string): string {
 
 function formatCurrency(cents: number, currency: string): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency }).format(cents / 100);
+}
+
+function renderNarrative(value?: string): string {
+  if (!value) return "";
+
+  return value
+    .trim()
+    .split(/\n{2,}/)
+    .filter(Boolean)
+    .map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, "<br>")}</p>`)
+    .join("");
 }
 
 function parseBudgetCategories(value: unknown): Array<{ key: string; label: string; total: number }> {
@@ -62,6 +75,7 @@ export function buildCommercialSnapshot(
   budget: BudgetSource,
   source: CommercialSnapshotSource,
   generatedAt = new Date().toISOString(),
+  aiContent?: { generationId: number; narrative: string },
 ): CommercialSnapshot {
   const currency = budget.currency.trim().toUpperCase();
   if (!/^[A-Z]{3}$/.test(currency) || !Number.isSafeInteger(budget.totalAmount) || budget.totalAmount <= 0) {
@@ -74,7 +88,16 @@ export function buildCommercialSnapshot(
     throw new AppError("O total do orçamento não corresponde às categorias. Revise o baseline antes de continuar.", 409);
   }
 
-  return { version: 1, source, currency, categories, subtotal, total: subtotal, generatedAt };
+  return {
+    version: 1,
+    source,
+    currency,
+    categories,
+    subtotal,
+    total: subtotal,
+    ...(aiContent ? { generationId: aiContent.generationId, narrative: aiContent.narrative } : {}),
+    generatedAt,
+  };
 }
 
 export function renderCommercialDraftHtml(title: string, snapshot: CommercialSnapshot): string {
@@ -82,7 +105,7 @@ export function renderCommercialDraftHtml(title: string, snapshot: CommercialSna
     .map((category) => `<tr><td>${escapeHtml(category.label)}</td><td>${formatCurrency(category.total, snapshot.currency)}</td></tr>`)
     .join("");
 
-  return `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title></head><body><main><p>Rascunho interno. Revise os valores comerciais antes de enviar ao cliente.</p><h1>${escapeHtml(title)}</h1><table><tbody>${rows}</tbody><tfoot><tr><th>Total base</th><th>${formatCurrency(snapshot.total, snapshot.currency)}</th></tr></tfoot></table></main></body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title></head><body><main><p>Rascunho interno. Revise os valores comerciais antes de enviar ao cliente.</p><h1>${escapeHtml(title)}</h1>${renderNarrative(snapshot.narrative)}<table><tbody>${rows}</tbody><tfoot><tr><th>Total base</th><th>${formatCurrency(snapshot.total, snapshot.currency)}</th></tr></tfoot></table></main></body></html>`;
 }
 
 function proposalId(value: unknown, field: string): bigint | undefined {
@@ -99,9 +122,9 @@ export async function createOrUpdateDraftFromBudget(
   const projectId = proposalId(input.projectId, "Projeto");
   if (!projectId) throw new AppError("Projeto é obrigatório", 400);
   const sourceGenerationId = proposalId(input.sourceGenerationId, "Geração de IA");
-  const source = input.source ?? "manual";
+  const requestedSource = input.source ?? "manual";
 
-  if (typeof source !== "string" || !(["ai-budget", "manual", "calculator"] as string[]).includes(source)) {
+  if (typeof requestedSource !== "string" || !(["ai-budget", "manual", "calculator"] as string[]).includes(requestedSource)) {
     throw new AppError("Origem comercial inválida", 400);
   }
 
@@ -119,15 +142,24 @@ export async function createOrUpdateDraftFromBudget(
       throw new AppError("Defina o orçamento do projeto antes de criar uma proposta comercial", 409);
     }
 
+    let aiContent: { generationId: number; narrative: string } | undefined;
     if (sourceGenerationId) {
       const generation = await tx.generation.findFirst({
         where: { id: sourceGenerationId, userId: ownerId, projectId },
-        select: { id: true },
+        select: { id: true, output: true },
       });
       if (!generation) throw new AppError("Geração de IA não encontrada para este projeto", 404);
+      const narrative = generation.output?.trim();
+      if (narrative) {
+        aiContent = {
+          generationId: Number(generation.id),
+          narrative,
+        };
+      }
     }
 
-    const snapshot = buildCommercialSnapshot(project.budget, source as CommercialSnapshotSource);
+    const source: CommercialSnapshotSource = sourceGenerationId ? "ai-budget" : requestedSource as CommercialSnapshotSource;
+    const snapshot = buildCommercialSnapshot(project.budget, source, new Date().toISOString(), aiContent);
     const title = `Proposta comercial — ${project.name}`;
     const html = renderCommercialDraftHtml(title, snapshot);
     const documentHash = createHash("sha256").update(html, "utf8").digest("hex");

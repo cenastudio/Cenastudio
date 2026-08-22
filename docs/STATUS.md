@@ -207,10 +207,15 @@ backup aprovados. Não houve push ou deploy desta frente.
 atualiza somente o rascunho associado ao orçamento de um projeto que pertence à
 produtora; propostas enviadas/aceitas não entram na consulta mutável. A ficha do
 cliente mostra a origem do rascunho, e links públicos/portal recusam rascunhos.
-Evidência local: 28 testes focados, `npm run check` e `npm run build` passaram
-em 2026-08-22. Ainda faltam: aplicar/testar a migration em Postgres com janela
-controlada, tornar a origem visível no Projeto e no Comercial e conectar o
-gerador de proposta da IA ao payload estruturado.
+Quando a ferramenta Studio `05` gera uma proposta dentro de um projeto, ela usa
+o `generationId` persistido para criar/atualizar esse mesmo rascunho; o servidor
+revalida o vínculo projeto/estúdio e lê a narrativa da geração no banco, sem
+aceitar texto comercial reenviado pelo navegador. Se ainda faltar cliente ou
+baseline, a geração segue salva e a interface informa a pré-condição, sem
+publicar nada. Evidência local: 38 testes focados, `npm run check` e `npm run
+build` passaram em 2026-08-22. Ainda faltam: aplicar/testar a migration em
+Postgres com janela controlada e tornar a origem visível no Projeto e na tela
+Comercial.
 
 **Concluídas (`-OK`):** `00-fundacao-limpeza-e-documentacao`,
 `client-hub-connected-workflows`, `dre-por-projeto`,
