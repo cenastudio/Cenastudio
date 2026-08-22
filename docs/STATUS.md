@@ -203,8 +203,14 @@ backup aprovados. Não houve push ou deploy desta frente.
 **P1A em andamento:** ADR-015 registra o vínculo aditivo entre `Proposal`,
 `Project`, `Budget` e `Generation`, com snapshot comercial imutável. A migration
 `20260822013000_link_proposals_to_budget` foi criada e validada no schema, mas
-**não foi aplicada** a Supabase/produção; a próxima etapa é testar a migration e
-implementar o serviço transacional de rascunho.
+**não foi aplicada** a Supabase/produção. O serviço transacional já cria ou
+atualiza somente o rascunho associado ao orçamento de um projeto que pertence à
+produtora; propostas enviadas/aceitas não entram na consulta mutável. A ficha do
+cliente mostra a origem do rascunho, e links públicos/portal recusam rascunhos.
+Evidência local: 28 testes focados, `npm run check` e `npm run build` passaram
+em 2026-08-22. Ainda faltam: aplicar/testar a migration em Postgres com janela
+controlada, tornar a origem visível no Projeto e no Comercial e conectar o
+gerador de proposta da IA ao payload estruturado.
 
 **Concluídas (`-OK`):** `00-fundacao-limpeza-e-documentacao`,
 `client-hub-connected-workflows`, `dre-por-projeto`,

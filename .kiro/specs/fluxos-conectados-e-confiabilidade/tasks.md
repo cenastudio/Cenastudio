@@ -62,9 +62,11 @@ reproduzir contra Postgres/Supabase exige janela controlada e não foi executado
 - [ ] P1A.2 Criar migration aditiva e backfill idempotente para origem/snapshot.
 - [ ] P1A.3 Criar testes de migração, ownership e imutabilidade de proposta
   enviada/aceita.
-- [ ] P1A.4 Implementar serviço transacional: orçamento IA → rascunho de
+- [x] P1A.4 Implementar serviço transacional: orçamento IA → rascunho de
   proposta vinculado.
 - [ ] P1A.5 Exibir origem e versões no projeto, ficha do cliente e Comercial.
+  A origem já aparece na ficha do cliente; faltam as superfícies de Projeto e
+  Comercial, para não duplicar um histórico local como se fosse dado do banco.
 - [ ] P1A.6 Conectar gerador de proposta da IA ao payload comercial estruturado.
 
 ## Fase P1B — CRM, portal e documento

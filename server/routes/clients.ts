@@ -54,6 +54,7 @@ router.delete("/meetings/:id", meetingsController.deleteMeeting);
 const proposalsGate = requireStudioPlan("proposals");
 router.get("/proposals", proposalsGate, proposalsController.listProposals);
 router.get("/proposals/:id", proposalsGate, proposalsController.getProposal);
+router.post("/proposals/from-budget", proposalsGate, proposalsController.createDraftFromBudget);
 router.post("/proposals", proposalsGate, proposalsController.createProposal);
 router.patch("/proposals/:id/portal-visibility", proposalsGate, proposalsController.updatePortalVisibility);
 router.post("/proposals/:id/revoke", proposalsGate, proposalsController.revokeProposal);

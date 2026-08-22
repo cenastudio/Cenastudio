@@ -5,6 +5,7 @@ import { prisma } from "../models/prisma.js";
 import { withSnakeCase } from "../utils/prismaSerialization.js";
 import { notifyUser } from "../services/notificationService.js";
 import { dispatchWebhookEvent } from "../services/webhookService.js";
+import * as commercialProposalService from "../services/commercialProposalService.js";
 
 function hashDocument(html: string): string {
   return createHash("sha256").update(html, "utf8").digest("hex");
@@ -17,6 +18,9 @@ const PROPOSAL_SHARE_TTL_DAYS = Math.max(1, Number(process.env.PROPOSAL_SHARE_TT
 
 /** Blocks a public share link that was revoked by the owner or has expired. */
 export function assertProposalLinkUsable(proposal: { status: string; createdAt: Date }) {
+  if (proposal.status === "draft") {
+    throw new AppError("Esta proposta ainda não foi enviada ao cliente.", 404);
+  }
   if (proposal.status === "revoked") {
     throw new AppError("Este link de proposta foi revogado pelo remetente.", 410);
   }
@@ -68,6 +72,7 @@ export function validateProposalPayload(input: Record<string, unknown>) {
 function serializeProposal(value: any) {
   const result = withSnakeCase(value, {
     userId: "user_id", clientId: "client_id", shareToken: "share_token",
+    projectId: "project_id", sourceBudgetId: "source_budget_id", sourceGenerationId: "source_generation_id",
     documentHash: "document_hash", acceptedAt: "accepted_at", acceptedByName: "accepted_by_name",
     acceptedIp: "accepted_ip", acceptedUserAgent: "accepted_user_agent",
     visibleInClientPortal: "visible_in_client_portal",
@@ -77,6 +82,10 @@ function serializeProposal(value: any) {
     result.client_name = result.client.name;
     result.client_email = result.client.email;
     delete result.client;
+  }
+  if (result.project) {
+    result.project_name = result.project.name;
+    delete result.project;
   }
   return result;
 }
@@ -96,10 +105,12 @@ export const listProposals: RequestHandler = async (req, res, next) => {
       orderBy: { createdAt: "desc" },
       take: 100,
       select: {
-        id: true, userId: true, clientId: true, title: true, total: true, status: true,
+        id: true, userId: true, clientId: true, projectId: true, sourceBudgetId: true, sourceGenerationId: true,
+        title: true, total: true, status: true,
         shareToken: true, documentHash: true, acceptedAt: true, acceptedByName: true,
         acceptedIp: true, acceptedUserAgent: true, visibleInClientPortal: true, createdAt: true, updatedAt: true,
         client: { select: { name: true, email: true } },
+        project: { select: { name: true } },
         // html intentionally excluded from list — can be large; fetched via getProposal
       },
     });
@@ -114,7 +125,7 @@ export const getProposal: RequestHandler = async (req, res, next) => {
     const userId = req.user!.id;
     const proposal = await prisma.proposal.findFirst({
       where: { id: proposalIdValue(req.params.id), userId: BigInt(userId) },
-      include: { client: { select: { name: true, email: true } } },
+      include: { client: { select: { name: true, email: true } }, project: { select: { name: true } } },
     });
     if (!proposal) throw new AppError("Proposta não encontrada", 404);
     res.json({ success: true, data: serializeProposal(proposal) });
@@ -162,6 +173,24 @@ export const createProposal: RequestHandler = async (req, res, next) => {
   }
 };
 
+// Builds a private commercial draft from a project's internal budget. It is
+// intentionally separate from createProposal, which preserves the legacy
+// behavior of immediately sending a manually assembled proposal.
+export const createDraftFromBudget: RequestHandler = async (req, res, next) => {
+  try {
+    const { proposal, reused } = await commercialProposalService.createOrUpdateDraftFromBudget(
+      req.user!.id,
+      req.body ?? {},
+    );
+    res.status(reused ? 200 : 201).json({
+      success: true,
+      data: { ...serializeProposal(proposal), reused },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const deleteProposal: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
@@ -186,8 +215,8 @@ export const updatePortalVisibility: RequestHandler = async (req, res, next) => 
       select: { id: true, status: true },
     });
     if (!proposal) throw new AppError("Proposta não encontrada ou acesso não autorizado", 404);
-    if (visible && proposal.status === "revoked") {
-      throw new AppError("Uma proposta revogada não pode ser liberada no portal.", 409);
+    if (visible && (proposal.status === "revoked" || proposal.status === "draft")) {
+      throw new AppError("Envie a proposta antes de liberá-la no portal.", 409);
     }
 
     const updated = await prisma.proposal.update({

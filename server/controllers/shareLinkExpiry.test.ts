@@ -14,6 +14,11 @@ describe("proposal public link guard", () => {
       .toThrowError(expect.objectContaining({ status: 410 }));
   });
 
+  it("blocks a draft proposal before it is sent", () => {
+    expect(() => assertProposalLinkUsable({ status: "draft", createdAt: new Date() }))
+      .toThrowError(expect.objectContaining({ status: 404 }));
+  });
+
   it("blocks a non-accepted proposal past the TTL (410)", () => {
     const old = new Date(Date.now() - 1000 * DAY);
     expect(() => assertProposalLinkUsable({ status: "sent", createdAt: old }))

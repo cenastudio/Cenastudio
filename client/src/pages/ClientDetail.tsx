@@ -100,6 +100,8 @@ interface SavedProposal {
   acceptedAt?: string;
   shareToken?: string;
   visibleInClientPortal?: boolean;
+  projectName?: string | null;
+  sourceBudgetId?: number | null;
 }
 
 function ClientDetailContent() {
@@ -107,6 +109,7 @@ function ClientDetailContent() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const clientId = parseInt(id || "0");
+  const initialTab = new URLSearchParams(window.location.search).get("tab") === "propostas" ? "propostas" : "projects";
 
   const [client, setClient] = useState<ClientData | null>(null);
   const [projects, setProjects] = useState<ProjectItem[]>([]);
@@ -153,6 +156,8 @@ function ClientDetailContent() {
             acceptedAt: row.accepted_at ?? undefined,
             shareToken: row.share_token,
             visibleInClientPortal: Boolean(row.visible_in_client_portal),
+            projectName: row.project_name,
+            sourceBudgetId: row.source_budget_id,
           })),
         ),
       )
@@ -390,7 +395,7 @@ function ClientDetailContent() {
 
         {/* Tabs */}
         <ResponsiveTabs
-          defaultValue="projects"
+          defaultValue={initialTab}
           tabs={[
             { value: "projects", label: "Projetos", count: projects.length },
             { value: "oportunidades", label: "Oportunidades", count: opportunities.length },
@@ -773,6 +778,11 @@ function ClientDetailContent() {
                           <p className="text-[0.6rem] text-frame-gray-light mt-1">
                             Criada em {proposal.createdAt ? formatDate(proposal.createdAt) : "—"}
                           </p>
+                          {proposal.sourceBudgetId && proposal.projectName && (
+                            <p className="text-[0.6rem] text-frame-orange mt-1">
+                              Origem: orçamento de {proposal.projectName}
+                            </p>
+                          )}
                           {proposal.status === "accepted" && proposal.acceptedByName && (
                             <p className="text-[0.6rem] text-green-400 mt-1">
                               Aceita por {proposal.acceptedByName}
@@ -789,7 +799,7 @@ function ClientDetailContent() {
 
                       {/* Actions */}
                       <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-frame-gray-3/40">
-                        {proposal.shareToken && (
+                        {proposal.status !== "draft" && proposal.shareToken && (
                           <button
                             onClick={async () => {
                               const url = `${window.location.origin}/proposal/${proposal.shareToken}`;
@@ -809,7 +819,7 @@ function ClientDetailContent() {
                             proposal.visibleInClientPortal ? "text-frame-green" : ""
                           }`}
                           title={proposal.visibleInClientPortal ? "Remover do portal do cliente" : "Liberar no portal do cliente"}
-                          disabled={proposal.status === "revoked"}
+                          disabled={proposal.status === "revoked" || proposal.status === "draft"}
                         >
                           <Globe2 className="w-3.5 h-3.5" />
                           {proposal.visibleInClientPortal ? "No portal" : "Liberar"}

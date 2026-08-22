@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useRoute } from "wouter";
+import { useLocation, useRoute } from "wouter";
 import AppNavBar from "@/components/AppNavBar";
 import EmptyState from "@/components/EmptyState";
 import ProjectNav from "@/components/ProjectNav";
@@ -16,6 +16,7 @@ import {
   Loader2,
   AlertTriangle,
   ArrowRight,
+  FileSignature,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -57,6 +58,7 @@ interface CategoryDraft {
 function BudgetContent() {
   const { t } = useLanguage();
   const [, params] = useRoute("/project/:projectId/budget");
+  const [, setLocation] = useLocation();
   const projectId = Number(params?.projectId);
 
   const [overview, setOverview] = useState<BudgetOverview | null>(null);
@@ -74,6 +76,7 @@ function BudgetContent() {
   const [entryAmountInput, setEntryAmountInput] = useState("");
   const [entryDate, setEntryDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [savingEntry, setSavingEntry] = useState(false);
+  const [creatingCommercialDraft, setCreatingCommercialDraft] = useState(false);
 
   const [deleteTarget, setDeleteTarget] = useState<BudgetEntryItem | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -193,6 +196,19 @@ function BudgetContent() {
     }
   };
 
+  const handleCreateCommercialDraft = async () => {
+    setCreatingCommercialDraft(true);
+    try {
+      const draft = await api.proposals.createDraftFromBudget(projectId);
+      toast.success(draft.reused ? "Rascunho comercial atualizado" : "Rascunho comercial criado");
+      setLocation(`/clients/${draft.client_id}?tab=propostas`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível criar o rascunho comercial");
+    } finally {
+      setCreatingCommercialDraft(false);
+    }
+  };
+
   const hasBaseline = overview && overview.byCategory.length > 0;
   const currencyForDisplay = overview?.currency ?? "BRL";
 
@@ -210,10 +226,21 @@ function BudgetContent() {
               projeto está dentro do previsto.
             </p>
           </div>
-          <div className="flex items-center gap-2 shrink-0 self-start">
+          <div className="flex flex-wrap items-center gap-2 shrink-0 self-start">
             <button type="button" onClick={openBaselineDialog} className="frame-btn-ghost">
               {hasBaseline ? "Editar orçamento" : "Definir orçamento"}
             </button>
+            {hasBaseline && (
+              <button
+                type="button"
+                onClick={handleCreateCommercialDraft}
+                disabled={creatingCommercialDraft}
+                className="frame-btn-ghost inline-flex items-center gap-2 disabled:opacity-40"
+              >
+                {creatingCommercialDraft ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSignature className="w-4 h-4" />}
+                Rascunho comercial
+              </button>
+            )}
             {hasBaseline && (
               <button
                 type="button"

@@ -561,6 +561,11 @@ export const api = {
         method: "POST",
         body: JSON.stringify(data),
       }),
+    createDraftFromBudget: (projectId: number, sourceGenerationId?: number) =>
+      request<ProposalDraftResponse>("/clients/proposals/from-budget", {
+        method: "POST",
+        body: JSON.stringify({ projectId, sourceGenerationId }),
+      }),
     updatePortalVisibility: (id: number, visible: boolean) =>
       request<ProposalItem>(`/clients/proposals/${id}/portal-visibility`, {
         method: "PATCH",
@@ -1301,6 +1306,9 @@ export interface MeetingCreatedResponse extends MeetingItem {
 export interface ProposalItem {
   id: number;
   client_id: number;
+  project_id?: number | null;
+  source_budget_id?: number | null;
+  source_generation_id?: number | null;
   title: string;
   total: number;
   status: "draft" | "sent" | "viewed" | "accepted" | "rejected" | "revoked";
@@ -1311,11 +1319,16 @@ export interface ProposalItem {
   accepted_by_name?: string | null;
   client_name?: string;
   client_email?: string | null;
+  project_name?: string | null;
   created_at: string;
 }
 
 export interface ProposalCreatedResponse extends ProposalItem {
   proposal_url: string;
+}
+
+export interface ProposalDraftResponse extends ProposalItem {
+  reused: boolean;
 }
 
 export interface CnpjCompanyData {
