@@ -250,6 +250,11 @@ export interface ClientPortalAccessStatus {
   clientId: number;
   active: boolean;
   email: string | null;
+  activationPending?: boolean;
+  activationTokenExpiresAt?: string | null;
+  activationUrl?: string;
+  activationEmailSent?: boolean;
+  activationExpiresAt?: string;
   lastLoginAt: string | null;
   createdAt: string | null; // null = nunca criado
 }
@@ -513,7 +518,7 @@ export const api = {
     portalAccess: {
       allowance: () => request<ClientPortalAllowance>("/clients/portal-access/allowance"),
       getStatus: (clientId: number) => request<ClientPortalAccessStatus>(`/clients/${clientId}/portal-access`),
-      create: (clientId: number, data: { email: string; password: string }) =>
+      create: (clientId: number, data: { email: string }) =>
         request<ClientPortalAccessStatus>(`/clients/${clientId}/portal-access`, {
           method: "POST",
           body: JSON.stringify(data),
@@ -523,10 +528,9 @@ export const api = {
           method: "PATCH",
           body: JSON.stringify({ active }),
         }),
-      resetPassword: (clientId: number, password: string) =>
-        request<null>(`/clients/${clientId}/portal-access/reset-password`, {
+      resetPassword: (clientId: number) =>
+        request<ClientPortalAccessStatus>(`/clients/${clientId}/portal-access/reset-password`, {
           method: "POST",
-          body: JSON.stringify({ password }),
         }),
     },
   },

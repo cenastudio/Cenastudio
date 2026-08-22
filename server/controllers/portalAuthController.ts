@@ -24,6 +24,21 @@ export const login: RequestHandler = async (req, res, next) => {
   }
 };
 
+export const activate: RequestHandler = async (req, res, next) => {
+  try {
+    const { token, password } = req.body as { token?: string; password?: string };
+    if (!token?.trim() || !password) {
+      throw new AppError("Token e senha são obrigatórios", 400);
+    }
+    const { clientId, userId } = await clientPortalAuthService.activateWithToken(token, password);
+    const sessionToken = signClientPortalToken({ clientId, userId });
+    res.cookie(PORTAL_COOKIE_NAME, sessionToken, portalCookieOptions);
+    res.json({ success: true, data: { clientId } });
+  } catch (e) {
+    next(e);
+  }
+};
+
 export const logout: RequestHandler = async (_req, res) => {
   res.clearCookie(PORTAL_COOKIE_NAME, { path: "/" });
   res.json({ success: true });

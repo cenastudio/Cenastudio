@@ -17,9 +17,8 @@ export default function ClientPortalAccessSection({ clientId, defaultEmail }: Cl
   const [allowance, setAllowance] = useState<ClientPortalAllowance | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showResetForm, setShowResetForm] = useState(false);
   const [email, setEmail] = useState(defaultEmail || "");
-  const [password, setPassword] = useState("");
+  const [activationUrl, setActivationUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const load = () => {
@@ -45,10 +44,10 @@ export default function ClientPortalAccessSection({ clientId, defaultEmail }: Cl
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await api.clients.portalAccess.create(clientId, { email, password });
-      toast.success("Acesso ao portal criado. Compartilhe a senha com o cliente.");
+      const created = await api.clients.portalAccess.create(clientId, { email });
+      setActivationUrl(created.activationUrl || null);
+      toast.success(created.activationEmailSent ? "Convite enviado para o cliente." : "Convite criado. Copie o link de ativação.");
       setShowCreateForm(false);
-      setPassword("");
       load();
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Não foi possível criar o acesso.");
@@ -71,14 +70,13 @@ export default function ClientPortalAccessSection({ clientId, defaultEmail }: Cl
     }
   }
 
-  async function handleResetPassword(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleResetPassword() {
     setIsSubmitting(true);
     try {
-      await api.clients.portalAccess.resetPassword(clientId, password);
-      toast.success("Senha redefinida. Compartilhe a nova senha com o cliente.");
-      setShowResetForm(false);
-      setPassword("");
+      const result = await api.clients.portalAccess.resetPassword(clientId);
+      setActivationUrl(result.activationUrl || null);
+      toast.success(result.activationEmailSent ? "Novo convite enviado para o cliente." : "Novo link de ativação criado.");
+      load();
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "Não foi possível redefinir a senha.");
     } finally {
@@ -89,6 +87,11 @@ export default function ClientPortalAccessSection({ clientId, defaultEmail }: Cl
   function copyPortalLink() {
     const url = `${window.location.origin}/portal/login`;
     navigator.clipboard.writeText(url).then(() => toast.success("Link do portal copiado."));
+  }
+
+  function copyActivationLink() {
+    if (!activationUrl) return;
+    navigator.clipboard.writeText(activationUrl).then(() => toast.success("Link de ativação copiado."));
   }
 
   if (loading) {
@@ -110,7 +113,7 @@ export default function ClientPortalAccessSection({ clientId, defaultEmail }: Cl
         <div>
           <h3 className="font-frame-mono text-xs uppercase tracking-wider text-frame-gray-light">Portal do Cliente</h3>
           <p className="mt-2 max-w-2xl text-sm text-frame-gray-light leading-relaxed">
-            Central para controlar o acesso do cliente e confirmar o que ele consegue acompanhar: projetos, arquivos, propostas e reunioes ligados a este cadastro.
+            Central para controlar o acesso do cliente e confirmar o que ele consegue acompanhar: projetos, arquivos, propostas e reunioes ligados a este cadastro. O cliente cria a propria senha por link seguro.
           </p>
         </div>
         {hasAccess && (
@@ -177,24 +180,12 @@ export default function ClientPortalAccessSection({ clientId, defaultEmail }: Cl
               className="min-h-11 w-full bg-frame-black border border-frame-gray-3 px-3 py-2 text-frame-white text-sm focus:outline-none focus:border-frame-orange"
             />
           </div>
-          <div>
-            <label htmlFor="portal-access-password" className="block font-frame-mono text-[0.6rem] uppercase text-frame-gray-light mb-1">
-              Senha inicial
-            </label>
-            <input
-              id="portal-access-password"
-              type="text"
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Defina uma senha para o cliente"
-              className="min-h-11 w-full bg-frame-black border border-frame-gray-3 px-3 py-2 text-frame-white text-sm focus:outline-none focus:border-frame-orange"
-            />
-          </div>
+          <p className="text-xs leading-relaxed text-frame-gray-light">
+            O cliente recebera um convite para criar a propria senha. Nenhuma senha temporaria precisa ser compartilhada pela produtora.
+          </p>
           <div className="flex flex-wrap gap-2">
             <button type="submit" disabled={isSubmitting} className="frame-btn-primary min-h-11 justify-center">
-              Criar acesso
+              Enviar convite
             </button>
             <button type="button" onClick={() => setShowCreateForm(false)} className="frame-btn-secondary min-h-11 justify-center">
               Cancelar
@@ -209,6 +200,11 @@ export default function ClientPortalAccessSection({ clientId, defaultEmail }: Cl
             <div className="border border-frame-gray-3/70 bg-frame-black/20 p-4">
               <p className="frame-label mb-2">Login do cliente</p>
               <p className="text-sm text-frame-white break-words">{status?.email}</p>
+              {status?.activationPending && (
+                <p className="text-xs text-frame-orange mt-2">
+                  Convite pendente ate {status.activationTokenExpiresAt ? new Date(status.activationTokenExpiresAt).toLocaleString("pt-BR") : "expirar"}.
+                </p>
+              )}
               {status?.lastLoginAt && (
                 <p className="text-xs text-frame-gray-light mt-2">Ultimo acesso: {new Date(status.lastLoginAt).toLocaleString("pt-BR")}</p>
               )}
@@ -240,33 +236,31 @@ export default function ClientPortalAccessSection({ clientId, defaultEmail }: Cl
             </button>
             <button
               type="button"
-              onClick={() => setShowResetForm((v) => !v)}
+              onClick={handleResetPassword}
+              disabled={isSubmitting}
               className="frame-btn-secondary min-h-11 flex items-center gap-1.5 text-xs"
             >
-              <KeyRound className="w-3.5 h-3.5" /> Redefinir senha
+              <KeyRound className="w-3.5 h-3.5" /> Enviar novo link de senha
             </button>
           </div>
 
-          {showResetForm && (
-            <form onSubmit={handleResetPassword} className="flex flex-wrap items-end gap-2 max-w-sm">
-              <div className="flex-1 min-w-[180px]">
-                <label htmlFor="portal-reset-password" className="block font-frame-mono text-[0.6rem] uppercase text-frame-gray-light mb-1">
-                  Nova senha
-                </label>
+          {activationUrl && (
+            <div className="border border-frame-orange/30 bg-frame-orange/[0.04] p-4">
+              <p className="font-frame-mono text-[0.65rem] uppercase tracking-wider text-frame-orange">Link de ativacao</p>
+              <p className="mt-2 text-sm leading-relaxed text-frame-gray-light">
+                Use este link somente se o e-mail transacional ainda nao estiver configurado no ambiente.
+              </p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                 <input
-                  id="portal-reset-password"
-                  type="text"
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="min-h-11 w-full bg-frame-black border border-frame-gray-3 px-3 py-2 text-frame-white text-sm focus:outline-none focus:border-frame-orange"
+                  readOnly
+                  value={activationUrl}
+                  className="min-h-11 flex-1 bg-frame-black border border-frame-gray-3 px-3 py-2 text-frame-gray-light text-sm focus:outline-none"
                 />
+                <button type="button" onClick={copyActivationLink} className="frame-btn-secondary min-h-11 justify-center">
+                  <Copy className="w-3.5 h-3.5" /> Copiar
+                </button>
               </div>
-              <button type="submit" disabled={isSubmitting} className="frame-btn-primary min-h-11 justify-center">
-                Salvar
-              </button>
-            </form>
+            </div>
           )}
 
           <div className="border border-frame-orange/30 bg-frame-orange/[0.04] p-4">

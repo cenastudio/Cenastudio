@@ -108,6 +108,11 @@ export const portalApi = {
         method: "POST",
         body: JSON.stringify({ email, password }),
       }),
+    activate: (token: string, password: string) =>
+      portalRequest<{ clientId: number }>("/client-portal-auth/activate", {
+        method: "POST",
+        body: JSON.stringify({ token, password }),
+      }),
     logout: () => portalRequest<null>("/client-portal-auth/logout", { method: "POST" }),
     me: () => portalRequest<PortalClient>("/client-portal-auth/me"),
     changePassword: (currentPassword: string, newPassword: string) =>

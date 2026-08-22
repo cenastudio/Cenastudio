@@ -114,6 +114,36 @@ describe("Client Portal E2E Flow", () => {
     });
   });
 
+  it("E2E: client activates portal access from a token instead of a producer-created password", async () => {
+    const tempClientId = (database.prepare("INSERT INTO clients (user_id, name) VALUES (?, ?)").run(
+      producerUserId,
+      "Activation E2E Client",
+    ) as any).lastInsertRowid;
+    const email = `e2e-activation-${Date.now()}@example.com`;
+
+    const result = await clientPortalAuthService.createAccess(producerUserId, tempClientId, email);
+    expect("activationUrl" in result).toBe(true);
+    if (!("activationUrl" in result)) throw new Error("Expected activation result");
+
+    expect(result.access.activationPending).toBe(true);
+    expect(result.activationUrl).toContain("/portal/activate?token=");
+    const token = new URL(result.activationUrl).searchParams.get("token");
+    expect(token).toBeTruthy();
+
+    await expect(clientPortalAuthService.login(email, "ClientPortal1!")).rejects.toMatchObject({ status: 401 });
+    await expect(clientPortalAuthService.activateWithToken(token!, "weak-pass")).rejects.toMatchObject({ status: 400 });
+
+    await expect(clientPortalAuthService.activateWithToken(token!, "ClientPortal1!")).resolves.toMatchObject({
+      clientId: tempClientId,
+      userId: producerUserId,
+    });
+    await expect(clientPortalAuthService.login(email, "ClientPortal1!")).resolves.toMatchObject({
+      clientId: tempClientId,
+      userId: producerUserId,
+    });
+    await expect(clientPortalAuthService.activateWithToken(token!, "AnotherPortal1!")).rejects.toMatchObject({ status: 400 });
+  });
+
   it("E2E: client logs in with their credentials", async () => {
     // Criar um cliente separado para este teste
     const insertClient = database.prepare("INSERT INTO clients (user_id, name) VALUES (?, ?)");

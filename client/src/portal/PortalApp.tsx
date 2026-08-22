@@ -8,6 +8,7 @@ import PortalFiles from "./pages/PortalFiles";
 import PortalProposals from "./pages/PortalProposals";
 import PortalMeetings from "./pages/PortalMeetings";
 import PortalAccount from "./pages/PortalAccount";
+import PortalActivate from "./pages/PortalActivate";
 
 /**
  * Portal do Cliente (spec: portal-do-cliente) — sub-árvore isolada montada
@@ -19,6 +20,7 @@ export default function PortalApp() {
     <PortalAuthProvider>
       <Switch>
         <Route path="/portal/login" component={PortalLogin} />
+        <Route path="/portal/activate" component={PortalActivate} />
         <Route path="/portal/dashboard">
           {() => (
             <PortalProtectedRoute>

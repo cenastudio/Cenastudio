@@ -306,6 +306,9 @@ model ClientPortalAccess {
   email        String    @unique
   passwordHash String    @map("password_hash")
   active       Boolean   @default(true)
+  activationTokenHash String?   @unique @map("activation_token_hash")
+  activationTokenExpiresAt DateTime? @map("activation_token_expires_at") @db.Timestamptz
+  activationAcceptedAt DateTime? @map("activation_accepted_at") @db.Timestamptz
   lastLoginAt  DateTime? @map("last_login_at") @db.Timestamptz
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime  @default(now()) @map("updated_at") @db.Timestamptz
@@ -314,6 +317,7 @@ model ClientPortalAccess {
 
   @@index([clientId], map: "idx_client_portal_access_client_id")
   @@index([email], map: "idx_client_portal_access_email")
+  @@index([activationTokenHash], map: "idx_client_portal_access_activation_token_hash")
   @@map("client_portal_access")
 }
 

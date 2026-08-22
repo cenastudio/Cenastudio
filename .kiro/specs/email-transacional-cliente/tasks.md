@@ -22,8 +22,18 @@
     O adaptador da Resend também repassa `contentType: "text/calendar"` para
     o anexo. Validação: `npm run test -- server/controllers/shareLinkExpiry.test.ts server/services/emailService.test.ts server/services/transactionalEmail.test.ts`,
     `npm run check` e `npm run build`.
-- [ ] 2.2 Projetar ativação segura do Portal do Cliente (definir senha via
+- [x] 2.2 Projetar ativação segura do Portal do Cliente (definir senha via
   token); não enviar senha criada pela produtora por e-mail.
+  - Portal do Cliente agora cria acesso por convite com token temporal
+    armazenado apenas como SHA-256 no banco. A produtora informa só o e-mail;
+    o cliente define a própria senha em `/portal/activate?token=...`, com
+    política forte igual à criação de conta. Reenvio de acesso gera novo token
+    em vez de senha manual. O e-mail de ativação usa o renderer transacional
+    comum quando Resend está configurado; em ambiente sem Resend, a resposta
+    autenticada retorna o link para cópia manual. Validação:
+    `npx prisma generate`, `npm run test -- server/clientPortalFlow.test.ts`,
+    `npm run check`, `npm run test -- client/src/test/appImport.test.ts client/src/test/translations.test.ts`
+    e `npm run build`.
 - [ ] 2.3 Implementar ação explícita para enviar proposta ao cliente, com
   link temporal e autorização da produtora.
 - [ ] 2.4 Implementar ação explícita para enviar review de vídeo ao cliente,

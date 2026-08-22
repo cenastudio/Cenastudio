@@ -319,11 +319,25 @@ function ensureClientPortalTable() {
       email TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
       active INTEGER NOT NULL DEFAULT 1,
+      activation_token_hash TEXT UNIQUE,
+      activation_token_expires_at TEXT,
+      activation_accepted_at TEXT,
       last_login_at TEXT,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     );
   `);
+  const cols = (db.prepare("PRAGMA table_info(client_portal_access)").all() as { name: string }[]).map((c) => c.name);
+  if (!cols.includes("activation_token_hash")) {
+    db.prepare("ALTER TABLE client_portal_access ADD COLUMN activation_token_hash TEXT").run();
+  }
+  if (!cols.includes("activation_token_expires_at")) {
+    db.prepare("ALTER TABLE client_portal_access ADD COLUMN activation_token_expires_at TEXT").run();
+  }
+  if (!cols.includes("activation_accepted_at")) {
+    db.prepare("ALTER TABLE client_portal_access ADD COLUMN activation_accepted_at TEXT").run();
+  }
+  db.exec("CREATE INDEX IF NOT EXISTS idx_client_portal_access_activation_token_hash ON client_portal_access(activation_token_hash)");
 }
 
 function ensureProposalTable() {

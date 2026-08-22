@@ -48,9 +48,16 @@
   cobrança. Em 2026-08-22, o convite de reunião também passou a usar o renderer
   transacional comum, preservando `.ics`, `replyTo`, idioma da produtora e dados
   da reunião; o envio agora repassa `contentType: "text/calendar"` ao anexo.
+  Também em 2026-08-22, a ativação do Portal do Cliente deixou de depender de
+  senha criada pela produtora: a produtora informa apenas o e-mail, o banco
+  guarda hash SHA-256 de um token temporal, e o cliente cria a própria senha em
+  `/portal/activate?token=...`. Reenvio de acesso gera novo token, e o e-mail de
+  ativação usa o renderer transacional comum quando Resend está configurado.
   Testes do provedor e dos três fluxos passaram em 2026-08-14; um
   envio sandbox foi aceito pela Resend. A migração de reunião foi validada com
-  testes focados, `npm run check` e `npm run build`. **Ainda não está habilitado para
+  testes focados, `npm run check` e `npm run build`; a ativação do portal foi
+  validada com `npx prisma generate`, `server/clientPortalFlow.test.ts`,
+  `npm run check`, testes de import/traduções e `npm run build`. **Ainda não está habilitado para
   clientes em produção:** a Vercel não contém `RESEND_API_KEY` nem
   `EMAIL_FROM`, e o remetente sandbox só aceita o e-mail da conta Resend.
   Gatilho: verificar domínio próprio na Resend, configurar as duas variáveis
