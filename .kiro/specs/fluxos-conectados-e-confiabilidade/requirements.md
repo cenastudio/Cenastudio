@@ -159,8 +159,9 @@ um menu “mais” genérico.
    financeiros e operacionais que tenham fonte de dados real.
 2. Antes de código, há plano financeiro em fases: caixa, recebíveis derivados
    de proposta aprovada e despesas/resultados por projeto.
-3. “Piso de faixa” e “Teto de faixa” passam a “Valor mínimo” e “Valor máximo”,
-   com ajuda contextual PT/EN.
+3. “Piso de faixa” e “Teto de faixa” deixam de ser a linguagem principal e
+   passam a “Estimativa enxuta” e “Estimativa protegida”, com ajuda contextual
+   PT/EN.
 
 ### R10 — Compatibilidade e segurança (transversal)
 

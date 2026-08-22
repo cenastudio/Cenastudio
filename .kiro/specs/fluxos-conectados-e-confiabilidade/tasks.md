@@ -112,10 +112,18 @@ reproduzir contra Postgres/Supabase exige janela controlada e não foi executado
 
 ## Fase P2 — Decisão de evolução
 
-- [ ] P2.1 Propor dashboard com métricas cuja fonte exista no banco.
-- [ ] P2.2 Propor financeiro por fases: caixa, recebíveis e resultado por projeto.
+- [x] P2.1 Propor dashboard com métricas cuja fonte exista no banco.
+- [x] P2.2 Propor financeiro por fases: caixa, recebíveis e resultado por projeto.
 - [x] P2.3 Trocar nomenclatura de faixa e adicionar ajuda contextual PT/EN.
 - [ ] P2.4 Implementar somente blocos P2 aprovados.
+
+**P2.1/P2.2 concluídas em 2026-08-22:** `design.md` agora define o dashboard
+somente com fontes existentes (`financial_entries`, `opportunities`,
+`proposals`, `projects`, `project_states`, `video_reviews`, `tasks`) e separa o
+Financeiro em três fases: caixa atual, recebíveis explícitos e resultado por
+projeto. A proposta registra lacunas antes de código: ausência de `proposalId`
+em `FinancialEntry`, ausência de `currency` em lançamentos financeiros e regra
+de que proposta aceita não vira caixa automaticamente.
 
 **P2.3 concluída em 2026-08-22:** a ponte Orçamento IA → Orçamento do projeto
 deixou de expor "Piso/Teto da faixa" como decisão principal. A UI agora usa

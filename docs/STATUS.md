@@ -318,6 +318,16 @@ alertas antes da gravação. A lógica interna `min/max` foi preservada. Valida�
 passaram, e os E2E `budget-bridge-flow` e `budget-bridge-mobile` passaram nos
 projetos `chromium-desktop` e `chromium-mobile`.
 
+**P2.1/P2.2 concluídas como decisão de produto:** o spec
+`fluxos-conectados-e-confiabilidade` agora propõe dashboard e evolução do
+Financeiro somente com fontes reais. Dashboard: caixa do mês, a receber crítico,
+pipeline ponderado, jobs com pressão e propostas em decisão. Financeiro: fase 1
+caixa via `financial_entries`; fase 2 recebíveis explícitos derivados de
+proposta aceita, exigindo migration aditiva para `proposalId`; fase 3 resultado
+por projeto via `financial_entries.projectId`, `budgets`, `budget_entries` e
+`dre_settings`. Limite importante registrado: proposta aceita não vira caixa
+automaticamente, e lançamentos financeiros ainda não têm `currency`.
+
 **Concluídas (`-OK`):** `00-fundacao-limpeza-e-documentacao`,
 `client-hub-connected-workflows`, `dre-por-projeto`,
 `fase-1-testes-uso-real`, `fase-2-layout-mobile-e-tabs`,
