@@ -14,6 +14,13 @@
 > continua nas seções abaixo; este diagrama é o mapa para orientar leitura,
 > incidentes e onboarding de dev/agente.
 
+![Mapa completo de conexões do Cena Studio](diagrams/cena-system-map.svg)
+
+Fonte editável: [`docs/diagrams/cena-system-map.mmd`](diagrams/cena-system-map.mmd).
+Para regenerar o SVG: `npm run docs:render-system-map`. Em Macs que não
+suportam o Chromium baixado, definir `PUPPETEER_EXECUTABLE_PATH` para o Chrome
+instalado antes de executar o comando.
+
 ```mermaid
 flowchart TB
   classDef actor fill:#171717,stroke:#e85002,color:#ffffff,stroke-width:2px
@@ -145,6 +152,24 @@ curl -sS -L https://cena-studio-prod.vercel.app/ready
 
 Critério mínimo: deployment novo `Ready`, `/` com `HTTP 200`, `/health` com
 `status: ok`, `/ready` com `ready: true` e banco `ok`.
+
+**Cron interno de manutenção:** `vercel.json` agenda
+`/api/internal/cron/maintenance` diariamente. A rota executa retry de webhooks e
+poda de sessões expiradas/revogadas. Ela exige `CRON_SECRET` como variável
+sensível na Vercel; a plataforma envia `Authorization: Bearer <CRON_SECRET>` nas
+chamadas do Cron Job. Em 2026-08-22, `CRON_SECRET` foi criado em Production no
+projeto `cena-studio-prod`. Não registrar o valor em docs, `.env.example`,
+prints ou commits.
+
+**Como validar o cron sem expor segredo:**
+
+```bash
+npx vercel env ls | rg CRON_SECRET
+```
+
+Critério mínimo: `CRON_SECRET` aparece como `Hidden`, `Sensitive`,
+`Production`. Validação manual do endpoint deve ser feita apenas com valor
+seguro local/console, nunca colado em chat ou commit.
 
 ---
 

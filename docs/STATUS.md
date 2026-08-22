@@ -114,8 +114,10 @@ verificar, está dito explicitamente.
   roda a cada 6h em servidor tradicional, com opt-out por
   `ENABLE_WEBHOOK_RETRY_JOB=false`. Em Vercel/serverless, `vercel.json` agenda
   `GET /api/internal/cron/maintenance` diariamente; a rota exige
-  `Authorization: Bearer $CRON_SECRET` e chama o mesmo service. Teste focal:
-  `server/services/webhookService.test.ts` e `server/routes/internalCron.test.ts`.
+  `Authorization: Bearer $CRON_SECRET` e chama o mesmo service. `CRON_SECRET`
+  foi criado como env sensível de Production na Vercel em 2026-08-22. Teste
+  focal: `server/services/webhookService.test.ts` e
+  `server/routes/internalCron.test.ts`.
 - **Portal do Cliente (auth):** autenticação própria, separada da do app. Login
   por e-mail + senha (bcrypt cost 12) em `client_portal_access`; JWT de 7 dias em
   cookie httpOnly `client_portal_token`, assinado com o **mesmo** segredo do app,
