@@ -9,6 +9,12 @@
       "includeFiles": "dist/public/index.html"
     }
   },
+  "crons": [
+    {
+      "path": "/api/internal/cron/maintenance",
+      "schedule": "0 8 * * *"
+    }
+  ],
   "rewrites": [
     { "source": "/review/:token", "destination": "/api?publicSeo=review&token=:token" },
     { "source": "/proposal/:token", "destination": "/api?publicSeo=proposal&token=:token" },

@@ -112,9 +112,10 @@ verificar, está dito explicitamente.
   gravar `next_retry_at`; o runner tenta novamente até 3 tentativas, finaliza 4xx
   sem novo agendamento e guarda `final_failed_at`. O job `startWebhookRetryJob()`
   roda a cada 6h em servidor tradicional, com opt-out por
-  `ENABLE_WEBHOOK_RETRY_JOB=false`; em Vercel/serverless a execução periódica
-  depende de cron/job externo chamando o mesmo service. Teste focal:
-  `server/services/webhookService.test.ts`.
+  `ENABLE_WEBHOOK_RETRY_JOB=false`. Em Vercel/serverless, `vercel.json` agenda
+  `GET /api/internal/cron/maintenance` diariamente; a rota exige
+  `Authorization: Bearer $CRON_SECRET` e chama o mesmo service. Teste focal:
+  `server/services/webhookService.test.ts` e `server/routes/internalCron.test.ts`.
 - **Portal do Cliente (auth):** autenticação própria, separada da do app. Login
   por e-mail + senha (bcrypt cost 12) em `client_portal_access`; JWT de 7 dias em
   cookie httpOnly `client_portal_token`, assinado com o **mesmo** segredo do app,
@@ -541,7 +542,8 @@ Tarefas soltas identificadas na verificação, sem spec própria ainda:
   `WebhookDelivery` ganhou `next_retry_at` e `final_failed_at`; falhas
   transitórias são retomadas por `retryFailedDeliveries()`, enquanto 4xx viram
   falha final sem retry. `startWebhookRetryJob()` agenda execução em servidor
-  tradicional; Vercel/serverless exige cron/job externo.
+  tradicional; `vercel.json` agenda `/api/internal/cron/maintenance` para
+  Vercel Cron, protegido por `CRON_SECRET`.
 - ~~Fechar a checagem de claim `type` na autenticação (ADR-012, risco aceito)~~ —
   **feito.** `signToken` emite `type: "app"`; `authenticate` rejeita qualquer
   `type` presente e diferente de `"app"`. Token sem a claim continua aceito, para

@@ -86,6 +86,7 @@ import storageRoutes from "./routes/storage.js";
 import referralsRoutes from "./routes/referrals.js";
 import portalAuthRoutes from "./routes/portalAuth.js";
 import portalRoutes from "./routes/portal.js";
+import internalCronRoutes from "./routes/internalCron.js";
 
 const router = Router();
 
@@ -192,5 +193,6 @@ router.use("/storage", storageRoutes);
 router.use("/referrals", referralsRoutes);
 router.use("/client-portal-auth", portalAuthRoutes);
 router.use("/portal", portalRoutes);
+router.use("/internal/cron", internalCronRoutes);
 
 export default router;
