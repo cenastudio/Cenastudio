@@ -797,6 +797,20 @@ export const api = {
       }),
     duplicateShot: (shotId: number) =>
       request<ShotItem>(`/shotlists/shots/${shotId}/duplicate`, { method: "POST" }),
+    listStoryboardFrames: (shotId: number) =>
+      request<ShotStoryboardFrameItem[]>(`/shotlists/shots/${shotId}/storyboard`),
+    generateStoryboardFrame: (
+      shotId: number,
+      data: { prompt: string; aspectRatio?: "16:9" | "4:3" | "1:1" },
+    ) =>
+      request<ShotStoryboardFrameItem>(`/shotlists/shots/${shotId}/storyboard/generate`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    approveStoryboardFrame: (frameId: number) =>
+      request<ShotStoryboardFrameItem>(`/shotlists/storyboard/${frameId}/approve`, { method: "POST" }),
+    deleteStoryboardFrame: (frameId: number) =>
+      request<null>(`/shotlists/storyboard/${frameId}`, { method: "DELETE" }),
     exportPdf: (projectId: number) =>
       fetch(apiUrl(`/shotlists/${projectId}/export/pdf`), {
         method: "GET",
@@ -1530,6 +1544,26 @@ export interface ShotItem {
   thumbnail_url: string | null;
   production_notes: string | null;
   created_at: string;
+}
+
+export interface ShotStoryboardFrameItem {
+  id: number;
+  user_id: number;
+  project_id: number;
+  shot_id: number;
+  prompt: string;
+  final_prompt: string;
+  provider: string;
+  model: string | null;
+  image_url: string | null;
+  storage_path: string | null;
+  status: "queued" | "generating" | "generated" | "approved" | "failed" | string;
+  error_message: string | null;
+  revision: number;
+  approved_at: string | null;
+  approved_by_id: number | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface TimeEntryItem {

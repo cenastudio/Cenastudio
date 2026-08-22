@@ -284,6 +284,13 @@ e é bloqueado em produção. Endpoints autenticados/gateados em `/api/shotlists
 listar frames do shot, gerar, aprovar e excluir. Provider real e storage de
 imagem continuam abertos para G2.3/G6; UI começa no G4.
 
+**Bloco G4 parcial concluído — UI Storyboard no Shot List:** a tela de Shot List
+ganhou botão de storyboard em cada shot, dialog responsivo com prompt, histórico
+de revisões, estados `generated/approved/failed`, aprovação atualizando a
+thumbnail local e strings PT/EN. API client e mocks de teste foram atualizados.
+Teste focal: `client/src/test/ShotList.test.tsx`. Ainda falta validação visual
+mobile com viewport/screenshot para marcar G4.5.
+
 **P1B auditada:** a ficha do cliente já oferece CRM 360 com projetos,
 oportunidades, interações, arquivos, financeiro, propostas, vídeo reviews e
 gestão de Portal. A jornada de acesso foi validada localmente em 2026-08-22:

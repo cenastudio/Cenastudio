@@ -7,7 +7,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlanContext } from "@/contexts/PlanContext";
-import { api, type EquipmentItem, type ShotItem } from "@/lib/api";
+import { api, type EquipmentItem, type ShotItem, type ShotStoryboardFrameItem } from "@/lib/api";
 import {
   Clapperboard,
   Plus,
@@ -23,6 +23,8 @@ import {
   FileText,
   Upload,
   X,
+  Image as ImageIcon,
+  Sparkles,
   Camera,
   Aperture,
   Lightbulb,
@@ -166,6 +168,7 @@ function ShotRowContent({
   onEdit,
   onDelete,
   onDuplicate,
+  onStoryboard,
   t,
   dragHandleProps,
   isOverlay = false,
@@ -175,6 +178,7 @@ function ShotRowContent({
   onEdit?: (shot: ShotItem) => void;
   onDelete?: (shot: ShotItem) => void;
   onDuplicate?: (shot: ShotItem) => void;
+  onStoryboard?: (shot: ShotItem) => void;
   t: (key: string) => string;
   dragHandleProps?: { attributes: React.HTMLAttributes<HTMLButtonElement>; listeners: Record<string, unknown> | undefined };
   isOverlay?: boolean;
@@ -255,6 +259,15 @@ function ShotRowContent({
         <div className="flex items-center gap-1.5 shrink-0">
           <button
             type="button"
+            onClick={() => onStoryboard?.(shot)}
+            className="p-2 border border-frame-gray-3/50 hover:border-frame-orange hover:text-frame-orange transition"
+            title={t("app.shotlist.storyboard")}
+            aria-label={t("app.shotlist.storyboard")}
+          >
+            <ImageIcon className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
             onClick={() => onEdit?.(shot)}
             className="p-2 border border-frame-gray-3/50 hover:border-frame-orange hover:text-frame-orange transition"
             title={t("app.shotlist.edit")}
@@ -289,6 +302,7 @@ function SortableShotRow({
   onEdit,
   onDelete,
   onDuplicate,
+  onStoryboard,
   t,
 }: {
   shot: ShotItem;
@@ -296,6 +310,7 @@ function SortableShotRow({
   onEdit: (shot: ShotItem) => void;
   onDelete: (shot: ShotItem) => void;
   onDuplicate: (shot: ShotItem) => void;
+  onStoryboard: (shot: ShotItem) => void;
   t: (key: string) => string;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: shot.id });
@@ -313,6 +328,7 @@ function SortableShotRow({
         onEdit={onEdit}
         onDelete={onDelete}
         onDuplicate={onDuplicate}
+        onStoryboard={onStoryboard}
         t={t}
         dragHandleProps={{ attributes, listeners }}
       />
@@ -334,6 +350,7 @@ function SceneGroup({
   onEdit,
   onDelete,
   onDuplicate,
+  onStoryboard,
   t,
 }: {
   group: ShotGroup;
@@ -343,6 +360,7 @@ function SceneGroup({
   onEdit: (shot: ShotItem) => void;
   onDelete: (shot: ShotItem) => void;
   onDuplicate: (shot: ShotItem) => void;
+  onStoryboard: (shot: ShotItem) => void;
   t: (key: string) => string;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `scene:${group.scene}` });
@@ -390,6 +408,7 @@ function SceneGroup({
                   onEdit={onEdit}
                   onDelete={onDelete}
                   onDuplicate={onDuplicate}
+                  onStoryboard={onStoryboard}
                   t={t}
                 />
               ))
@@ -536,6 +555,13 @@ function ShotListContent() {
 
   const [deleteTarget, setDeleteTarget] = useState<ShotItem | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [storyboardShot, setStoryboardShot] = useState<ShotItem | null>(null);
+  const [storyboardFrames, setStoryboardFrames] = useState<ShotStoryboardFrameItem[]>([]);
+  const [storyboardPrompt, setStoryboardPrompt] = useState("");
+  const [loadingStoryboard, setLoadingStoryboard] = useState(false);
+  const [generatingStoryboard, setGeneratingStoryboard] = useState(false);
+  const [approvingStoryboardId, setApprovingStoryboardId] = useState<number | null>(null);
+  const [deletingStoryboardId, setDeletingStoryboardId] = useState<number | null>(null);
 
   // Shot types manager
   const [showTypesManager, setShowTypesManager] = useState(false);
@@ -779,6 +805,81 @@ function ShotListContent() {
       toast.success("Plano duplicado com sucesso");
     } catch (err) {
       toast.error("Erro ao duplicar plano");
+    }
+  };
+
+  const loadStoryboardFrames = async (shotId: number) => {
+    setLoadingStoryboard(true);
+    try {
+      const frames = await api.shotlists.listStoryboardFrames(shotId);
+      setStoryboardFrames(frames);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("app.shotlist.storyboardErrorLoad"));
+      setStoryboardFrames([]);
+    } finally {
+      setLoadingStoryboard(false);
+    }
+  };
+
+  const openStoryboardDialog = (shot: ShotItem) => {
+    setStoryboardShot(shot);
+    setStoryboardPrompt("");
+    setStoryboardFrames([]);
+    void loadStoryboardFrames(shot.id);
+  };
+
+  const handleGenerateStoryboard = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!storyboardShot) return;
+    if (!storyboardPrompt.trim()) {
+      toast.error(t("app.shotlist.storyboardErrorPrompt"));
+      return;
+    }
+    setGeneratingStoryboard(true);
+    try {
+      const frame = await api.shotlists.generateStoryboardFrame(storyboardShot.id, {
+        prompt: storyboardPrompt.trim(),
+        aspectRatio: "16:9",
+      });
+      setStoryboardFrames((prev) => [frame, ...prev]);
+      setStoryboardPrompt("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("app.shotlist.storyboardErrorGenerate"));
+      await loadStoryboardFrames(storyboardShot.id);
+    } finally {
+      setGeneratingStoryboard(false);
+    }
+  };
+
+  const handleApproveStoryboard = async (frame: ShotStoryboardFrameItem) => {
+    if (!storyboardShot) return;
+    setApprovingStoryboardId(frame.id);
+    try {
+      const approved = await api.shotlists.approveStoryboardFrame(frame.id);
+      setStoryboardFrames((prev) => prev.map((item) => (item.id === approved.id ? approved : item)));
+      if (approved.image_url) {
+        setShots((prev) => prev.map((shot) => (
+          shot.id === storyboardShot.id ? { ...shot, thumbnail_url: approved.image_url } : shot
+        )));
+        setStoryboardShot((current) => current ? { ...current, thumbnail_url: approved.image_url } : current);
+      }
+      toast.success(t("app.shotlist.storyboardSuccessApproved"));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("app.shotlist.storyboardErrorApprove"));
+    } finally {
+      setApprovingStoryboardId(null);
+    }
+  };
+
+  const handleDeleteStoryboard = async (frameId: number) => {
+    setDeletingStoryboardId(frameId);
+    try {
+      await api.shotlists.deleteStoryboardFrame(frameId);
+      setStoryboardFrames((prev) => prev.filter((frame) => frame.id !== frameId));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("app.shotlist.errorDelete"));
+    } finally {
+      setDeletingStoryboardId(null);
     }
   };
 
@@ -1075,6 +1176,7 @@ function ShotListContent() {
                     onEdit={openEditDialog}
                     onDelete={setDeleteTarget}
                     onDuplicate={handleDuplicate}
+                    onStoryboard={openStoryboardDialog}
                     t={t}
                   />
                 ))}
@@ -1356,6 +1458,121 @@ function ShotListContent() {
               </button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Storyboard */}
+      <Dialog open={!!storyboardShot} onOpenChange={(open) => !open && setStoryboardShot(null)}>
+        <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white w-[calc(100vw-1.5rem)] max-w-3xl max-h-[92vh] overflow-y-auto rounded-none p-0">
+          <div className="p-4 sm:p-6 space-y-5">
+            <DialogHeader>
+              <DialogTitle className="frame-title text-2xl flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-frame-orange" />
+                {t("app.shotlist.storyboardTitle")}
+              </DialogTitle>
+              <DialogDescription className="text-frame-gray-light text-sm">
+                {storyboardShot?.description || t("app.shotlist.storyboardDescription")}
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleGenerateStoryboard} className="space-y-3">
+              <label className="block text-xs font-medium text-frame-gray-light">
+                {t("app.shotlist.storyboardPrompt")}
+              </label>
+              <textarea
+                value={storyboardPrompt}
+                onChange={(event) => setStoryboardPrompt(event.target.value)}
+                placeholder={t("app.shotlist.storyboardPromptPlaceholder")}
+                className="frame-input min-h-[96px] w-full resize-none"
+                maxLength={600}
+              />
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <p className="font-frame-mono text-[0.6rem] uppercase tracking-wide text-frame-gray-light">
+                  {storyboardPrompt.length}/600
+                </p>
+                <button
+                  type="submit"
+                  className="frame-btn-primary inline-flex items-center justify-center gap-2"
+                  disabled={generatingStoryboard}
+                >
+                  {generatingStoryboard ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  {generatingStoryboard ? t("app.shotlist.storyboardGenerating") : t("app.shotlist.storyboardGenerate")}
+                </button>
+              </div>
+            </form>
+
+            <section className="space-y-3">
+              <div className="flex items-center justify-between gap-3 border-t border-frame-gray-3 pt-4">
+                <h3 className="font-frame-mono text-[0.7rem] uppercase tracking-wider text-frame-white">
+                  {t("app.shotlist.storyboardHistory")}
+                </h3>
+                {loadingStoryboard && <Loader2 className="w-4 h-4 animate-spin text-frame-orange" />}
+              </div>
+
+              {!loadingStoryboard && storyboardFrames.length === 0 && (
+                <div className="border border-frame-gray-3/60 bg-frame-gray-1/10 p-4 text-sm text-frame-gray-light">
+                  {t("app.shotlist.storyboardEmpty")}
+                </div>
+              )}
+
+              {storyboardFrames.map((frame) => (
+                <article
+                  key={frame.id}
+                  className="grid grid-cols-1 sm:grid-cols-[minmax(160px,220px)_1fr] gap-3 border border-frame-gray-3/60 bg-frame-gray-1/10 p-3"
+                >
+                  <div className="aspect-video bg-frame-gray-1 border border-frame-gray-3/60 overflow-hidden flex items-center justify-center">
+                    {frame.image_url ? (
+                      <img src={frame.image_url} alt={frame.prompt} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-center text-frame-gray-light text-xs px-3">
+                        <ImageIcon className="w-6 h-6 mx-auto mb-2 opacity-70" />
+                        {frame.status === "failed" ? t("app.shotlist.storyboardFailed") : t("app.shotlist.storyboardNoImage")}
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-frame-mono text-[0.6rem] uppercase tracking-wider text-frame-orange">
+                          v{frame.revision} · {frame.status === "approved"
+                            ? t("app.shotlist.storyboardApproved")
+                            : frame.status === "failed"
+                              ? t("app.shotlist.storyboardFailed")
+                              : frame.status}
+                        </p>
+                        <p className="text-sm text-frame-white mt-1 break-words">{frame.prompt}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteStoryboard(frame.id)}
+                        className="p-2 border border-frame-gray-3/50 hover:border-red-500 hover:text-red-500 transition shrink-0"
+                        title={t("app.shotlist.delete")}
+                        disabled={deletingStoryboardId === frame.id}
+                      >
+                        {deletingStoryboardId === frame.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                    {frame.error_message && (
+                      <p className="text-xs text-red-300 bg-red-500/10 border border-red-500/30 p-2">
+                        {frame.error_message}
+                      </p>
+                    )}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleApproveStoryboard(frame)}
+                        className="frame-btn-ghost inline-flex items-center justify-center gap-2"
+                        disabled={!frame.image_url || approvingStoryboardId === frame.id}
+                      >
+                        {approvingStoryboardId === frame.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                        {frame.status === "approved" ? t("app.shotlist.storyboardApproved") : t("app.shotlist.storyboardApprove")}
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </section>
+          </div>
         </DialogContent>
       </Dialog>
 

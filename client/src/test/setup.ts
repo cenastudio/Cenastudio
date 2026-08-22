@@ -158,6 +158,10 @@ vi.mock('@/lib/api', () => ({
       reorder: vi.fn(),
       uploadThumbnail: vi.fn(),
       duplicateShot: vi.fn(),
+      listStoryboardFrames: vi.fn(),
+      generateStoryboardFrame: vi.fn(),
+      approveStoryboardFrame: vi.fn(),
+      deleteStoryboardFrame: vi.fn(),
     },
     shotTypes: {
       list: vi.fn().mockResolvedValue([]),

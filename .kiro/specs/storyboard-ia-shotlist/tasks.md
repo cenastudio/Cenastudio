@@ -32,11 +32,12 @@
 
 ## Fase G4 — UI no Shot List
 
-- [ ] G4.1 Adicionar botão de storyboard no row do shot.
-- [ ] G4.2 Criar dialog responsivo para prompt, preview, histórico e aprovação.
-- [ ] G4.3 Mostrar estado por shot: sem quadro, gerando, gerado, aprovado, falhou.
-- [ ] G4.4 Garantir PT/EN em todas as strings novas.
+- [x] G4.1 Adicionar botão de storyboard no row do shot.
+- [x] G4.2 Criar dialog responsivo para prompt, preview, histórico e aprovação.
+- [x] G4.3 Mostrar estado por shot: sem quadro, gerando, gerado, aprovado, falhou.
+- [x] G4.4 Garantir PT/EN em todas as strings novas.
 - [ ] G4.5 Testar mobile sem carrossel horizontal obrigatório.
+- _2026-08-22: UI integrada à página `ShotList.tsx` com botão por shot, dialog de storyboard, histórico de revisões, geração e aprovação atualizando thumbnail local. API client e mocks atualizados. Teste focal: `client/src/test/ShotList.test.tsx`. Falta validação visual mobile/screenshot para marcar G4.5._
 
 ## Fase G5 — exportação
 

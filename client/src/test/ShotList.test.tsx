@@ -49,6 +49,10 @@ describe("ShotList page — grouped by scene (step 2)", () => {
   beforeEach(() => {
     localStorage.clear();
     vi.mocked(api.shotlists.get).mockReset();
+    vi.mocked(api.shotlists.listStoryboardFrames).mockReset();
+    vi.mocked(api.shotlists.generateStoryboardFrame).mockReset();
+    vi.mocked(api.shotlists.approveStoryboardFrame).mockReset();
+    vi.mocked(api.shotlists.deleteStoryboardFrame).mockReset();
   });
 
   afterEach(() => {
@@ -111,6 +115,91 @@ describe("ShotList page — grouped by scene (step 2)", () => {
     // shot rows rather than reading them synchronously.
     expect(await screen.findByText("Com cena")).toBeInTheDocument();
     expect(await screen.findByText("Sem cena ainda")).toBeInTheDocument();
+  });
+});
+
+describe("ShotList page — storyboard frames (G4)", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    vi.mocked(api.shotlists.get).mockReset();
+    vi.mocked(api.shotlists.listStoryboardFrames).mockReset();
+    vi.mocked(api.shotlists.generateStoryboardFrame).mockReset();
+    vi.mocked(api.shotlists.approveStoryboardFrame).mockReset();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("generates and approves a storyboard frame from a shot row", async () => {
+    vi.mocked(api.shotlists.get).mockResolvedValue({
+      shotList: { id: 1, user_id: 1, project_id: 5, title: "", created_at: "", updated_at: "" },
+      shots: [makeShot({ id: 7, scene: "3A", description: "Entrada heroica" })],
+    });
+    vi.mocked(api.shotlists.listStoryboardFrames).mockResolvedValue([]);
+    vi.mocked(api.shotlists.generateStoryboardFrame).mockResolvedValue({
+      id: 10,
+      user_id: 1,
+      project_id: 5,
+      shot_id: 7,
+      prompt: "Luz recortando personagem",
+      final_prompt: "final prompt",
+      provider: "mock",
+      model: "storyboard-mock",
+      image_url: "https://cdn.example.com/storyboard.png",
+      storage_path: null,
+      status: "generated",
+      error_message: null,
+      revision: 1,
+      approved_at: null,
+      approved_by_id: null,
+      created_at: "2026-08-22T00:00:00.000Z",
+      updated_at: "2026-08-22T00:00:00.000Z",
+    });
+    vi.mocked(api.shotlists.approveStoryboardFrame).mockResolvedValue({
+      id: 10,
+      user_id: 1,
+      project_id: 5,
+      shot_id: 7,
+      prompt: "Luz recortando personagem",
+      final_prompt: "final prompt",
+      provider: "mock",
+      model: "storyboard-mock",
+      image_url: "https://cdn.example.com/storyboard.png",
+      storage_path: null,
+      status: "approved",
+      error_message: null,
+      revision: 1,
+      approved_at: "2026-08-22T00:01:00.000Z",
+      approved_by_id: 1,
+      created_at: "2026-08-22T00:00:00.000Z",
+      updated_at: "2026-08-22T00:01:00.000Z",
+    });
+
+    const { default: ShotList } = await import("@/pages/ShotList");
+    renderWithLanguage(<ShotList />);
+
+    await screen.findByText("Entrada heroica");
+    fireEvent.click(screen.getByRole("button", { name: "Storyboard" }));
+
+    expect(await screen.findByText("Storyboard do plano")).toBeInTheDocument();
+    fireEvent.change(screen.getByPlaceholderText("Ex: desenho a lápis com contraluz e câmera baixa"), {
+      target: { value: "Luz recortando personagem" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /gerar frame/i }));
+
+    await waitFor(() =>
+      expect(api.shotlists.generateStoryboardFrame).toHaveBeenCalledWith(7, {
+        prompt: "Luz recortando personagem",
+        aspectRatio: "16:9",
+      }),
+    );
+    expect(await screen.findByText("Luz recortando personagem")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Aprovar" }));
+
+    await waitFor(() => expect(api.shotlists.approveStoryboardFrame).toHaveBeenCalledWith(10));
+    expect(await screen.findByText("Aprovado")).toBeInTheDocument();
   });
 });
 
