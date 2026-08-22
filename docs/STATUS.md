@@ -70,11 +70,12 @@
   `npm run check`, testes de import/traduções e `npm run build`; envio explícito
   de proposta foi validado com `server/controllers/proposalLifecycle.test.ts` e
   `npm run check`; envio de review foi validado com
-  `server/controllers/videoReviewsSend.test.ts` e `npm run check`. **Ainda não está habilitado para
-  clientes em produção:** a Vercel não contém `RESEND_API_KEY` nem
-  `EMAIL_FROM`, e o remetente sandbox só aceita o e-mail da conta Resend.
-  Gatilho: verificar domínio próprio na Resend, configurar as duas variáveis
-  na Vercel e repetir o teste de entrega externo.
+  `server/controllers/videoReviewsSend.test.ts` e `npm run check`. Em
+  2026-08-22, `RESEND_API_KEY` e `EMAIL_FROM` foram configurados como envs
+  sensíveis em Production na Vercel. **Ainda não está habilitado para clientes
+  em produção:** teste direto para `oldbarbier@gmail.com` retornou `403` porque
+  `atomicmail.io` não está verificado na Resend. Gatilho: verificar o domínio
+  próprio na Resend e repetir o teste de entrega externo.
 
 ## 1. Estado atual por módulo/feature
 

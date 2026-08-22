@@ -285,11 +285,12 @@ domínio próprio em Resend e configurar `EMAIL_FROM` como, por exemplo,
 `Cena Studio <contato@seudominio.com>`. O domínio temporário da Vercel serve
 para os links do app, mas não pode ser remetente de e-mail.
 
-**Estado conferido em 2026-08-14:** a chave local e o sandbox responderam com
-aceite do provedor; a Vercel de produção ainda não tem `RESEND_API_KEY` nem
-`EMAIL_FROM`. Até essas duas variáveis serem configuradas com um remetente
-verificado, o código preserva cadastro e troca de senha, mas não entrega e-mail
-ao cliente.
+**Estado conferido em 2026-08-22:** `RESEND_API_KEY` e `EMAIL_FROM` existem na
+Vercel Production como variáveis sensíveis. O teste direto para
+`oldbarbier@gmail.com` foi recusado pela Resend com `403` porque o domínio
+`atomicmail.io` ainda não está verificado. Até verificar o domínio em Resend, o
+código preserva cadastro e troca de senha, mas não entrega e-mail ao cliente
+real.
 
 ---
 
