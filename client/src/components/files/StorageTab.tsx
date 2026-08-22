@@ -10,12 +10,40 @@ interface StorageStats {
     videos: number;
     documents: number;
     audio: number;
+    other?: number;
   };
   topFiles: Array<{
+    id?: number;
     name: string;
     size: number;
     project: string;
+    projectId?: number | null;
   }>;
+  fileCount?: number;
+}
+
+const STORAGE_TYPE_LABELS: Record<string, { en: string; pt: string }> = {
+  images: { en: "Images", pt: "Imagens" },
+  videos: { en: "Videos", pt: "Vídeos" },
+  documents: { en: "Documents", pt: "Documentos" },
+  audio: { en: "Audio", pt: "Áudio" },
+  other: { en: "Other", pt: "Outros" },
+};
+
+function normalizeStorageStats(stats?: Partial<StorageStats> | null): StorageStats {
+  return {
+    ...stats,
+    totalUsed: Number.isFinite(stats?.totalUsed) ? Number(stats?.totalUsed) : 0,
+    quota: Number.isFinite(stats?.quota) ? Number(stats?.quota) : 0,
+    byType: {
+      images: stats?.byType?.images || 0,
+      videos: stats?.byType?.videos || 0,
+      documents: stats?.byType?.documents || 0,
+      audio: stats?.byType?.audio || 0,
+      other: stats?.byType?.other || 0,
+    },
+    topFiles: Array.isArray(stats?.topFiles) ? stats.topFiles : [],
+  };
 }
 
 export default function StorageTab() {
@@ -31,7 +59,7 @@ export default function StorageTab() {
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
-          setStats(data.data);
+          setStats(normalizeStorageStats(data.data));
         } else {
           console.error("Failed to load storage stats:", data.error);
         }
@@ -68,7 +96,8 @@ export default function StorageTab() {
   }
 
   const isUnlimited = stats.quota < 0;
-  const usagePercent = isUnlimited ? 0 : Math.min(100, (stats.totalUsed / stats.quota) * 100);
+  const usagePercent = isUnlimited || stats.quota <= 0 ? 0 : Math.min(100, (stats.totalUsed / stats.quota) * 100);
+  const safeUsagePercent = Number.isFinite(usagePercent) ? usagePercent : 0;
 
   return (
     <div className="space-y-6">
@@ -92,14 +121,14 @@ export default function StorageTab() {
           <div className="w-full h-3 bg-frame-gray-2 rounded-full overflow-hidden">
             <div
               className={`h-full transition-all ${isUnlimited ? "bg-gradient-to-r from-frame-green to-frame-green/60 w-full" : "bg-gradient-to-r from-frame-orange to-frame-orange/60"}`}
-              style={isUnlimited ? undefined : { width: `${usagePercent}%` }}
+              style={isUnlimited ? undefined : { width: `${safeUsagePercent}%` }}
             />
           </div>
 
           <p className="text-xs text-frame-gray-muted">
             {isUnlimited
               ? (isEn ? "Unlimited storage on your plan" : "Armazenamento ilimitado no seu plano")
-              : `${usagePercent.toFixed(1)}% ${isEn ? "of your storage quota" : "da sua cota de armazenamento"}`}
+              : `${safeUsagePercent.toFixed(1)}% ${isEn ? "of your storage quota" : "da sua cota de armazenamento"}`}
           </p>
         </div>
       </div>
@@ -115,17 +144,12 @@ export default function StorageTab() {
 
         <div className="space-y-3">
           {Object.entries(stats.byType).map(([type, size]) => {
-            const percent = (size / stats.totalUsed) * 100;
-            const labels: Record<string, { en: string; pt: string }> = {
-              images: { en: "Images", pt: "Imagens" },
-              videos: { en: "Videos", pt: "Vídeos" },
-              documents: { en: "Documents", pt: "Documentos" },
-              audio: { en: "Audio", pt: "Áudio" },
-            };
+            const percent = stats.totalUsed > 0 ? (size / stats.totalUsed) * 100 : 0;
+            const label = STORAGE_TYPE_LABELS[type] || { en: type, pt: type };
             return (
               <div key={type} className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-frame-gray-light">{isEn ? labels[type].en : labels[type].pt}</span>
+                  <span className="text-frame-gray-light">{isEn ? label.en : label.pt}</span>
                   <span className="text-frame-white">{formatSize(size)} ({percent.toFixed(1)}%)</span>
                 </div>
                 <div className="w-full h-2 bg-frame-gray-2 rounded-full overflow-hidden">
