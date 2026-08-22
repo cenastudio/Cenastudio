@@ -185,7 +185,7 @@ function ShotRowContent({
 }) {
   return (
     <div
-      className={`flex items-center gap-3 border p-3 transition bg-frame-black relative ${
+      className={`flex flex-wrap items-center gap-3 border p-3 transition bg-frame-black relative sm:flex-nowrap ${
         shot.status === "shot" ? "border-green-500/30 bg-green-500/5" : "border-frame-gray-3/60 bg-frame-gray-1/10"
       } ${isOverlay ? "shadow-[0_8px_24px_rgba(0,0,0,0.5)] border-frame-orange/50" : ""}`}
     >
@@ -201,7 +201,7 @@ function ShotRowContent({
           type="button"
           {...dragHandleProps.attributes}
           {...(dragHandleProps.listeners as object)}
-          className="p-1.5 text-frame-gray-light hover:text-frame-orange cursor-grab active:cursor-grabbing shrink-0 touch-none"
+          className="min-h-11 min-w-11 inline-flex items-center justify-center text-frame-gray-light hover:text-frame-orange cursor-grab active:cursor-grabbing shrink-0 touch-none"
           aria-label={t("app.shotlist.dragToReorder")}
         >
           <GripVertical className="w-4 h-4" />
@@ -211,7 +211,7 @@ function ShotRowContent({
       <button
         type="button"
         onClick={() => onToggleStatus?.(shot)}
-        className="shrink-0"
+        className="min-h-11 min-w-11 inline-flex items-center justify-center shrink-0"
         title={t("app.shotlist.markShot")}
         disabled={isOverlay}
       >
@@ -233,7 +233,7 @@ function ShotRowContent({
         </div>
       )}
 
-      <div className="min-w-0 flex-1">
+      <div className="min-w-[10rem] flex-1">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-frame-mono text-frame-orange">{shot.scene || "—"}</span>
           {shot.shot_type && (
@@ -256,11 +256,11 @@ function ShotRowContent({
       </div>
 
       {!isOverlay && (
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="ml-auto flex items-center justify-end gap-1.5 shrink-0 flex-wrap">
           <button
             type="button"
             onClick={() => onStoryboard?.(shot)}
-            className="p-2 border border-frame-gray-3/50 hover:border-frame-orange hover:text-frame-orange transition"
+            className="min-h-11 min-w-11 inline-flex items-center justify-center border border-frame-gray-3/50 hover:border-frame-orange hover:text-frame-orange transition"
             title={t("app.shotlist.storyboard")}
             aria-label={t("app.shotlist.storyboard")}
           >
@@ -269,7 +269,7 @@ function ShotRowContent({
           <button
             type="button"
             onClick={() => onEdit?.(shot)}
-            className="p-2 border border-frame-gray-3/50 hover:border-frame-orange hover:text-frame-orange transition"
+            className="min-h-11 min-w-11 inline-flex items-center justify-center border border-frame-gray-3/50 hover:border-frame-orange hover:text-frame-orange transition"
             title={t("app.shotlist.edit")}
           >
             <Edit className="w-3.5 h-3.5" />
@@ -277,7 +277,7 @@ function ShotRowContent({
           <button
             type="button"
             onClick={() => onDuplicate?.(shot)}
-            className="p-2 border border-frame-gray-3/50 hover:border-frame-orange hover:text-frame-orange transition"
+            className="min-h-11 min-w-11 inline-flex items-center justify-center border border-frame-gray-3/50 hover:border-frame-orange hover:text-frame-orange transition"
             title="Duplicar plano"
           >
             <Copy className="w-3.5 h-3.5" />
@@ -285,7 +285,7 @@ function ShotRowContent({
           <button
             type="button"
             onClick={() => onDelete?.(shot)}
-            className="p-2 border border-frame-gray-3/50 hover:border-red-500 hover:text-red-500 transition"
+            className="min-h-11 min-w-11 inline-flex items-center justify-center border border-frame-gray-3/50 hover:border-red-500 hover:text-red-500 transition"
             title={t("app.shotlist.delete")}
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -1048,13 +1048,13 @@ function ShotListContent() {
               {t("app.shotlist.description")}
             </p>
           </div>
-          <div className="flex items-center gap-2 shrink-0 self-start">
+          <div className="flex w-full flex-wrap items-center gap-2 self-start sm:w-auto lg:shrink-0">
             {shots.length > 0 && (
               <>
                 <button
                   type="button"
                   onClick={() => printShotList(shots, projectId, t)}
-                  className="frame-btn-ghost inline-flex items-center gap-2"
+                  className="frame-btn-ghost inline-flex flex-1 items-center justify-center gap-2 sm:flex-none"
                 >
                   <Printer className="w-4 h-4" />
                   {t("app.shotlist.export")}
@@ -1062,7 +1062,7 @@ function ShotListContent() {
                 <button
                   type="button"
                   onClick={handleExportPdf}
-                  className="frame-btn-ghost inline-flex items-center gap-2"
+                  className="frame-btn-ghost inline-flex flex-1 items-center justify-center gap-2 sm:flex-none"
                 >
                   <FileText className="w-4 h-4" />
                   Exportar PDF
@@ -1072,7 +1072,7 @@ function ShotListContent() {
             <button
               type="button"
               onClick={openCreateDialog}
-              className="frame-btn-primary inline-flex items-center gap-2"
+              className="frame-btn-primary inline-flex flex-1 items-center justify-center gap-2 sm:flex-none"
               disabled={isAtLimit}
               title={isAtLimit ? `Limite de ${shotLimit} shots atingido` : undefined}
             >
@@ -1476,10 +1476,11 @@ function ShotListContent() {
             </DialogHeader>
 
             <form onSubmit={handleGenerateStoryboard} className="space-y-3">
-              <label className="block text-xs font-medium text-frame-gray-light">
+              <label htmlFor="shot-storyboard-prompt" className="block text-xs font-medium text-frame-gray-light">
                 {t("app.shotlist.storyboardPrompt")}
               </label>
               <textarea
+                id="shot-storyboard-prompt"
                 value={storyboardPrompt}
                 onChange={(event) => setStoryboardPrompt(event.target.value)}
                 placeholder={t("app.shotlist.storyboardPromptPlaceholder")}
@@ -1545,7 +1546,7 @@ function ShotListContent() {
                       <button
                         type="button"
                         onClick={() => handleDeleteStoryboard(frame.id)}
-                        className="p-2 border border-frame-gray-3/50 hover:border-red-500 hover:text-red-500 transition shrink-0"
+                        className="min-h-11 min-w-11 inline-flex items-center justify-center border border-frame-gray-3/50 hover:border-red-500 hover:text-red-500 transition shrink-0"
                         title={t("app.shotlist.delete")}
                         disabled={deletingStoryboardId === frame.id}
                       >
@@ -1561,7 +1562,7 @@ function ShotListContent() {
                       <button
                         type="button"
                         onClick={() => handleApproveStoryboard(frame)}
-                        className="frame-btn-ghost inline-flex items-center justify-center gap-2"
+                        className="frame-btn-ghost inline-flex min-h-11 items-center justify-center gap-2"
                         disabled={!frame.image_url || approvingStoryboardId === frame.id}
                       >
                         {approvingStoryboardId === frame.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}

@@ -36,8 +36,8 @@
 - [x] G4.2 Criar dialog responsivo para prompt, preview, histórico e aprovação.
 - [x] G4.3 Mostrar estado por shot: sem quadro, gerando, gerado, aprovado, falhou.
 - [x] G4.4 Garantir PT/EN em todas as strings novas.
-- [ ] G4.5 Testar mobile sem carrossel horizontal obrigatório.
-- _2026-08-22: UI integrada à página `ShotList.tsx` com botão por shot, dialog de storyboard, histórico de revisões, geração e aprovação atualizando thumbnail local. API client e mocks atualizados. Teste focal: `client/src/test/ShotList.test.tsx`. Falta validação visual mobile/screenshot para marcar G4.5._
+- [x] G4.5 Testar mobile sem carrossel horizontal obrigatório.
+- _2026-08-22: UI integrada à página `ShotList.tsx` com botão por shot, dialog de storyboard, histórico de revisões, geração e aprovação atualizando thumbnail local. API client e mocks atualizados. Testes focais: `client/src/test/ShotList.test.tsx` e `tests/e2e/shotlist-storyboard-mobile.spec.ts`. Validação G4.5 passou em viewport mobile Chromium, sem overflow horizontal obrigatório no conteúdo do Shot List/dialog, com touch targets >=44px no dialog e screenshot local `tmp/g4-shotlist-storyboard-mobile.png`._
 
 ## Fase G5 — exportação
 

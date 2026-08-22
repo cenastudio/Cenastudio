@@ -284,12 +284,15 @@ e é bloqueado em produção. Endpoints autenticados/gateados em `/api/shotlists
 listar frames do shot, gerar, aprovar e excluir. Provider real e storage de
 imagem continuam abertos para G2.3/G6; UI começa no G4.
 
-**Bloco G4 parcial concluído — UI Storyboard no Shot List:** a tela de Shot List
+**Bloco G4 concluído — UI Storyboard no Shot List:** a tela de Shot List
 ganhou botão de storyboard em cada shot, dialog responsivo com prompt, histórico
 de revisões, estados `generated/approved/failed`, aprovação atualizando a
 thumbnail local e strings PT/EN. API client e mocks de teste foram atualizados.
-Teste focal: `client/src/test/ShotList.test.tsx`. Ainda falta validação visual
-mobile com viewport/screenshot para marcar G4.5.
+Testes focais: `client/src/test/ShotList.test.tsx` e
+`tests/e2e/shotlist-storyboard-mobile.spec.ts`. Em 2026-08-22, G4.5 passou no
+Chromium mobile: gerar/aprovar abriu sem overflow horizontal obrigatório no
+conteúdo do Shot List/dialog, touch targets do dialog ficaram >=44px e a
+evidência visual local foi salva em `tmp/g4-shotlist-storyboard-mobile.png`.
 
 **P1B auditada:** a ficha do cliente já oferece CRM 360 com projetos,
 oportunidades, interações, arquivos, financeiro, propostas, vídeo reviews e
