@@ -557,6 +557,12 @@ export async function generateShotListPdf(userId: number, projectId: number): Pr
     // Thumbnail (large, centered) if available. Fetch + embed as data URL,
     // since server-side jsPDF can't load a remote URL directly.
     if (shot.thumbnail_url) {
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(255, 107, 0);
+      doc.text("STORYBOARD / THUMBNAIL APROVADO", 105, y - 4, { align: "center" });
+      doc.setTextColor(0);
+
       const image = await fetchImageForPdf(shot.thumbnail_url);
       let added = false;
       if (image) {
@@ -574,7 +580,8 @@ export async function generateShotListPdf(userId: number, projectId: number): Pr
         doc.rect(45, y, 120, 90);
         doc.setFontSize(8);
         doc.setTextColor(150);
-        doc.text("Thumbnail indisponível", 105, y + 45, { align: "center" });
+        doc.text("Storyboard/thumbnail indisponível", 105, y + 45, { align: "center" });
+        doc.text("Referência visual aprovada, mas a imagem não carregou no PDF.", 105, y + 51, { align: "center" });
         doc.setTextColor(0);
       }
       y += 95;

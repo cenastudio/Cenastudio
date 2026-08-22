@@ -294,6 +294,12 @@ Chromium mobile: gerar/aprovar abriu sem overflow horizontal obrigatório no
 conteúdo do Shot List/dialog, touch targets do dialog ficaram >=44px e a
 evidência visual local foi salva em `tmp/g4-shotlist-storyboard-mobile.png`.
 
+**Bloco G5 concluído — Storyboard no PDF do Shot List:** a exportação PDF agora
+identifica e tenta embutir a `thumbnail_url` atualizada pelo frame aprovado do
+storyboard. Se a imagem aprovada não carregar, o PDF não quebra: mantém um
+placeholder textual para a referência visual. Teste focal:
+`server/services/shotListPdfExport.test.ts`.
+
 **P1B auditada:** a ficha do cliente já oferece CRM 360 com projetos,
 oportunidades, interações, arquivos, financeiro, propostas, vídeo reviews e
 gestão de Portal. A jornada de acesso foi validada localmente em 2026-08-22:

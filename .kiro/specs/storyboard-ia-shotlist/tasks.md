@@ -41,9 +41,10 @@
 
 ## Fase G5 — exportação
 
-- [ ] G5.1 Incluir frame aprovado no PDF do Shot List.
-- [ ] G5.2 Manter fallback textual quando imagem não carregar.
-- [ ] G5.3 Testar PDF com e sem imagens aprovadas.
+- [x] G5.1 Incluir frame aprovado no PDF do Shot List.
+- [x] G5.2 Manter fallback textual quando imagem não carregar.
+- [x] G5.3 Testar PDF com e sem imagens aprovadas.
+- _2026-08-22: exportação PDF usa a `thumbnail_url` atualizada pela aprovação do storyboard para embutir a referência visual aprovada. Quando a imagem não carrega, o PDF continua sendo gerado com fallback textual. Teste focal: `server/services/shotListPdfExport.test.ts`._
 
 ## Fase G6 — limites e produção
 
