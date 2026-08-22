@@ -233,6 +233,15 @@ gestão de Portal. A jornada de acesso foi validada localmente em 2026-08-22:
 limites de plano e isolamento entre produtoras. Quatro cenários de propostas e
 reuniões no Portal permanecem pendentes de Postgres real e fazem parte da P1B.4.
 
+**P1B.3 concluída localmente:** `shared/proposalDocument.ts` é o contrato único
+para a proposta manual, a calculadora e o rascunho comercial gerado a partir de
+orçamento. Ele recebe valores em centavos, dados do estúdio e locale PT/EN,
+escapa conteúdo livre e gera o HTML usado na impressão. O rascunho de orçamento
+busca as configurações persistidas do estúdio dentro da transação; links públicos
+continuam usando o HTML salvo da proposta. Validação focada: 15 testes passaram
+em `proposalDocument`, `commercialProposalService` e calculadora; `npm run check`
+passou. A P1B.4 ainda exige Postgres real e E2E do fluxo completo.
+
 **Concluídas (`-OK`):** `00-fundacao-limpeza-e-documentacao`,
 `client-hub-connected-workflows`, `dre-por-projeto`,
 `fase-1-testes-uso-real`, `fase-2-layout-mobile-e-tabs`,

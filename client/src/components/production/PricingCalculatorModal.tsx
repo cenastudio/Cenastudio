@@ -9,7 +9,9 @@ import {
 import { Calculator, Plane, Film, Scissors, Camera, Building2, Plus, Trash2, Info, Wallet, FileText, Loader2, ExternalLink, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { api, type Client, type Project } from "@/lib/api";
-import { DOCUMENT_EXPORT_COLORS } from "@/design-system/color-presets";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { readStudioSettings } from "@/lib/studioSettings";
+import { renderProposalDocument } from "@shared/proposalDocument";
 
 /**
  * Pricing Calculator (Phase 1 — standalone, no persistence yet).
@@ -140,6 +142,7 @@ interface PricingCalculatorModalProps {
 }
 
 export default function PricingCalculatorModal({ open, onOpenChange }: PricingCalculatorModalProps) {
+  const { locale } = useLanguage();
   const [presetId, setPresetId] = useState<string>(PRESETS[0].id);
   const [hours, setHours] = useState("4");
   const [hourlyRate, setHourlyRate] = useState(PRESETS[0].defaultHourlyRate);
@@ -262,28 +265,27 @@ export default function PricingCalculatorModal({ open, onOpenChange }: PricingCa
   };
 
   const buildProposalHtml = () => {
-    const rows = [
-      `<tr><td>Mão de obra (${breakdown.hoursNum}h × ${formatBRL(breakdown.rateNum)})</td><td style="text-align:right">${formatBRL(breakdown.laborCost)}</td></tr>`,
-      ...fixedCosts
-        .filter((c) => c.label.trim())
-        .map((c) => `<tr><td>${escapeProposalHtml(c.label)}</td><td style="text-align:right">${formatBRL(parseBRL(c.value))}</td></tr>`),
-      isRush && breakdown.rushAmount > 0
-        ? `<tr><td>Acréscimo de urgência</td><td style="text-align:right">${formatBRL(breakdown.rushAmount)}</td></tr>`
-        : "",
-      `<tr><td>Margem</td><td style="text-align:right">${formatBRL(breakdown.marginAmount)}</td></tr>`,
-    ].filter(Boolean).join("");
-
-    return `
-      <h2>${escapeProposalHtml(defaultTitle)}</h2>
-      <p>${escapeProposalHtml(activePreset.label)}</p>
-      <table style="width:100%;border-collapse:collapse;margin-top:16px">
-        ${rows}
-        <tr style="font-weight:bold;border-top:2px solid ${DOCUMENT_EXPORT_COLORS.dark.signBorder}">
-          <td style="padding-top:8px">Total</td>
-          <td style="text-align:right;padding-top:8px">${formatBRL(breakdown.total)}</td>
-        </tr>
-      </table>
-    `;
+    const studio = readStudioSettings();
+    const calculatorSubtotalCents = Math.round(breakdown.subtotal * 100);
+    const laborLabel = locale === "en" ? `Labor (${breakdown.hoursNum}h)` : `Mão de obra (${breakdown.hoursNum}h)`;
+    const rushLabel = locale === "en" ? "Rush surcharge" : "Acréscimo de urgência";
+    const marginLabel = locale === "en" ? "Commercial margin" : "Margem comercial";
+    return renderProposalDocument({
+      locale,
+      currency: "BRL",
+      title: defaultTitle,
+      studio: { name: studio.studioName, legalName: studio.legalName, email: studio.email, signature: studio.signature, city: studio.city, primaryColor: studio.primaryColor },
+      recipient: { name: clients.find((client) => client.id === selectedClientId)?.name },
+      lines: [
+        { name: laborLabel, quantity: breakdown.hoursNum, unitPrice: Math.round(breakdown.rateNum * 100), total: Math.round(breakdown.laborCost * 100) },
+        ...fixedCosts.filter((cost) => cost.label.trim()).map((cost) => ({ name: cost.label, total: Math.round(parseBRL(cost.value) * 100) })),
+        ...(isRush && breakdown.rushAmount > 0 ? [{ name: rushLabel, total: Math.round(breakdown.rushAmount * 100) }] : []),
+        { name: marginLabel, total: Math.round(breakdown.marginAmount * 100) },
+      ],
+      subtotal: calculatorSubtotalCents,
+      total: totalCents,
+      notes: activePreset.label,
+    });
   };
 
   const handleGenerateProposal = async () => {

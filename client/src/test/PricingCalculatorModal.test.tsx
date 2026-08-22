@@ -3,6 +3,15 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import PricingCalculatorModal, { escapeProposalHtml } from "@/components/production/PricingCalculatorModal";
+import { LanguageProvider } from "@/contexts/LanguageContext";
+
+function renderPricingCalculator() {
+  return render(
+    <LanguageProvider>
+      <PricingCalculatorModal open onOpenChange={vi.fn()} />
+    </LanguageProvider>,
+  );
+}
 
 describe("PricingCalculatorModal", () => {
   beforeEach(() => {
@@ -13,7 +22,7 @@ describe("PricingCalculatorModal", () => {
     vi.mocked(api.projects.list).mockRejectedValue(new Error("Falha na rede"));
     vi.mocked(api.clients.list).mockResolvedValue([]);
 
-    render(<PricingCalculatorModal open onOpenChange={vi.fn()} />);
+    renderPricingCalculator();
 
     expect(screen.getByRole("button", { name: /lançar no orçamento/i })).toBeDisabled();
     expect(screen.getByRole("button", { name: /gerar proposta/i })).toBeDisabled();

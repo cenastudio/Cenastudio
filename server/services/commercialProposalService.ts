@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
+import { renderProposalDocument } from "../../shared/proposalDocument.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { prisma } from "../models/prisma.js";
 
@@ -24,30 +25,14 @@ type BudgetSource = {
   categories: unknown;
 };
 
-function escapeHtml(value: string): string {
-  return value.replace(/[&<>"']/g, (character) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;",
-  }[character] ?? character));
-}
-
-function formatCurrency(cents: number, currency: string): string {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency }).format(cents / 100);
-}
-
-function renderNarrative(value?: string): string {
-  if (!value) return "";
-
-  return value
-    .trim()
-    .split(/\n{2,}/)
-    .filter(Boolean)
-    .map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, "<br>")}</p>`)
-    .join("");
-}
+type CommercialStudio = {
+  studioName?: string;
+  legalName?: string;
+  email?: string;
+  signature?: string;
+  city?: string;
+  primaryColor?: string;
+} | null;
 
 function currentRevision(value: unknown): number {
   if (!value || typeof value !== "object") return 0;
@@ -109,12 +94,29 @@ export function buildCommercialSnapshot(
   };
 }
 
-export function renderCommercialDraftHtml(title: string, snapshot: CommercialSnapshot): string {
-  const rows = snapshot.categories
-    .map((category) => `<tr><td>${escapeHtml(category.label)}</td><td>${formatCurrency(category.total, snapshot.currency)}</td></tr>`)
-    .join("");
+export function renderCommercialDraftHtml(title: string, snapshot: CommercialSnapshot, studio: CommercialStudio = null): string {
+  const notes = ["Rascunho interno. Revise os valores comerciais antes de enviar ao cliente.", snapshot.narrative]
+    .filter((value): value is string => Boolean(value?.trim()))
+    .join("\n\n");
 
-  return `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title></head><body><main><p>Rascunho interno. Revise os valores comerciais antes de enviar ao cliente.</p><h1>${escapeHtml(title)}</h1>${renderNarrative(snapshot.narrative)}<table><tbody>${rows}</tbody><tfoot><tr><th>Total base</th><th>${formatCurrency(snapshot.total, snapshot.currency)}</th></tr></tfoot></table></main></body></html>`;
+  return renderProposalDocument({
+    locale: "pt",
+    currency: snapshot.currency,
+    title,
+    studio: {
+      name: studio?.studioName || "Cena Studio",
+      legalName: studio?.legalName,
+      email: studio?.email,
+      signature: studio?.signature,
+      city: studio?.city,
+      primaryColor: studio?.primaryColor,
+    },
+    recipient: {},
+    lines: snapshot.categories.map((category) => ({ name: category.label, total: category.total })),
+    subtotal: snapshot.subtotal,
+    total: snapshot.total,
+    notes,
+  });
 }
 
 function proposalId(value: unknown, field: string): bigint | undefined {
@@ -179,8 +181,19 @@ export async function createOrUpdateDraftFromBudget(
       aiContent,
       currentRevision(existingDraft?.commercialSnapshot) + 1,
     );
+    const studio = await tx.studioSetting.findUnique({
+      where: { userId: ownerId },
+      select: {
+        studioName: true,
+        legalName: true,
+        email: true,
+        signature: true,
+        city: true,
+        primaryColor: true,
+      },
+    });
     const title = `Proposta comercial — ${project.name}`;
-    const html = renderCommercialDraftHtml(title, snapshot);
+    const html = renderCommercialDraftHtml(title, snapshot, studio);
     const documentHash = createHash("sha256").update(html, "utf8").digest("hex");
     const data = {
       clientId: project.clientId,

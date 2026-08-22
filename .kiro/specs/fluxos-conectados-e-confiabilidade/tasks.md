@@ -72,9 +72,21 @@ reproduzir contra Postgres/Supabase exige janela controlada e não foi executado
 - [x] P1B.1 Criar jornada explícita Dados → Projeto → Acesso na ficha do cliente.
 - [x] P1B.2 Transformar a ficha em CRM 360 com pipeline, interações, propostas,
   reuniões e projetos contextuais.
-- [ ] P1B.3 Consolidar renderer de proposta/PDF com identidade Cena, locale e
+- [x] P1B.3 Consolidar renderer de proposta/PDF com identidade Cena, locale e
   dados do estúdio.
+  - [x] P1B.3.1 Definir contrato puro de documento comercial: dados do estúdio,
+    cliente, itens em centavos, locale, moeda, termos e metadados.
+  - [x] P1B.3.2 Implementar renderer único, escapado e independente de UI para
+    HTML/impressão, sem executar scripts do conteúdo.
+  - [x] P1B.3.3 Migrar Propostas, Calculadora de Precificação e rascunho de
+    orçamento para o mesmo contrato, preservando links públicos existentes.
+  - [x] P1B.3.4 Cobrir identidade, locale PT/EN, moeda, sanitização e impressão nos
+    testes relevantes.
 - [ ] P1B.4 Cobrir criação, envio, visualização, aceite e portal do cliente.
+  - [ ] P1B.4.1 Cobrir estados privados: rascunho, revisão, envio e revogação.
+  - [ ] P1B.4.2 Cobrir visualização/aceite e isolamento no Portal com Postgres.
+  - [ ] P1B.4.3 Executar E2E desktop e mobile do fluxo Cliente → Projeto →
+    Orçamento → Proposta → Portal.
 
 ## Fase P1C — Navegação e Conta
 
@@ -83,6 +95,15 @@ reproduzir contra Postgres/Supabase exige janela controlada e não foi executado
 - [ ] P1C.3 Auditar Conta contra o inventário de capacidades e apresentar os
   gaps para aprovação antes de implementar novas superfícies.
 - [ ] P1C.4 Validar navegação em desktop, tablet e mobile.
+
+### Sequência P1C
+
+- [ ] P1C.A Inventariar rotas e ações por intenção, removendo apenas duplicação
+  comprovada.
+- [ ] P1C.B Projetar e implementar a nova entrada de Produção sem quebrar URLs.
+- [ ] P1C.C Centralizar integrações em Conta e preservar redirecionamentos.
+- [ ] P1C.D Testar descoberta, touch targets e retorno de navegação em 390px,
+  tablet e desktop.
 
 ## Fase P2 — Decisão de evolução
 

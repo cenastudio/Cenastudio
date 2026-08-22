@@ -4,6 +4,7 @@ const prismaMock = vi.hoisted(() => ({
   $transaction: vi.fn(),
   project: { findFirst: vi.fn() },
   generation: { findFirst: vi.fn() },
+  studioSetting: { findUnique: vi.fn() },
   proposal: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
 }));
 
@@ -38,6 +39,14 @@ describe("commercialProposalService", () => {
       budget,
     });
     prismaMock.proposal.findFirst.mockResolvedValue(null);
+    prismaMock.studioSetting.findUnique.mockResolvedValue({
+      studioName: "Aurora Filmes",
+      legalName: "Aurora Filmes LTDA",
+      email: "contato@aurora.test",
+      signature: "Comercial Aurora",
+      city: "São Paulo",
+      primaryColor: "#e85002",
+    });
     prismaMock.proposal.create.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({
       id: 12n,
       ...data,
@@ -157,5 +166,16 @@ describe("commercialProposalService", () => {
 
     expect(renderCommercialDraftHtml("<script>alert(1)</script>", snapshot)).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
     expect(renderCommercialDraftHtml("Título", snapshot)).toContain("&lt;img src=x onerror=&quot;alert(1)&quot;&gt;");
+  });
+
+  it("uses the studio profile in the generated commercial document", async () => {
+    await createOrUpdateDraftFromBudget(1, { projectId: 7 });
+
+    expect(prismaMock.studioSetting.findUnique).toHaveBeenCalledWith(expect.objectContaining({
+      where: { userId: 1n },
+    }));
+    const html = prismaMock.proposal.create.mock.calls[0][0].data.html as string;
+    expect(html).toContain("Aurora Filmes LTDA");
+    expect(html).toContain("Comercial Aurora");
   });
 });

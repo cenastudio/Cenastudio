@@ -20,6 +20,7 @@ import {
 import { toast } from "sonner";
 import { readStudioSettings, saveStudioSettings, type StudioSettings } from "@/lib/studioSettings";
 import { DOCUMENT_EXPORT_COLORS } from "@/design-system/color-presets";
+import { renderProposalDocument } from "@shared/proposalDocument";
 
 interface ServiceItem {
   id: string;
@@ -271,6 +272,33 @@ function buildProposalHtml(form: ProposalForm, lines: ProposalLine[], studio: St
 </html>`;
 }
 
+function buildUnifiedProposalHtml(form: ProposalForm, lines: ProposalLine[], studio: StudioSettings, locale: "pt" | "en") {
+  const subtotal = lines.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const discount = Math.round((subtotal * form.discount) / 100);
+  return renderProposalDocument({
+    locale,
+    currency: "BRL",
+    title: form.projectTitle || (locale === "en" ? "Audiovisual proposal" : "Proposta audiovisual"),
+    studio: {
+      name: studio.studioName,
+      legalName: studio.legalName,
+      email: studio.email,
+      signature: studio.signature,
+      city: studio.city,
+      primaryColor: studio.primaryColor,
+    },
+    recipient: { name: form.clientName, company: form.company, email: form.email, phone: form.phone, city: form.city },
+    lines: lines.map((item) => ({ name: item.name, description: item.description, quantity: item.quantity, unitPrice: item.price, total: item.price * item.quantity })),
+    subtotal,
+    discount,
+    total: subtotal - discount,
+    deadline: form.deadline,
+    paymentTerms: form.paymentTerms,
+    validityDays: form.validityDays,
+    notes: form.notes,
+  });
+}
+
 function ProposalsContent({ embedded }: { embedded?: boolean }) {
   const { t, locale } = useLanguage();
   const [, setLocation] = useLocation();
@@ -351,7 +379,7 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
   const subtotal = selected.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const discountValue = Math.round((subtotal * proposal.discount) / 100);
   const total = subtotal - discountValue;
-  const proposalHtml = useMemo(() => buildProposalHtml(proposal, selected, studio, t, locale), [proposal, selected, studio, t, locale]);
+  const proposalHtml = useMemo(() => buildUnifiedProposalHtml(proposal, selected, studio, locale), [proposal, selected, studio, locale]);
   const projectBackedProposals = connectedProposals.filter((item) => item.source_budget_id);
 
   const persistCatalog = (items: ServiceItem[]) => {
