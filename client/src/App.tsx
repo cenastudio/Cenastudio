@@ -12,10 +12,12 @@ import { PlanProvider } from "@/contexts/PlanContext";
 import { ProgressProvider } from "@/contexts/ProgressContext";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { TimerProvider } from "@/contexts/TimerContext";
 import { VisualPreferencesProvider, useVisualPreferences } from "@/contexts/VisualPreferencesContext";
 import { BehaviorPreferencesProvider } from "@/contexts/BehaviorPreferencesContext";
 import CommandPalette from "@/components/CommandPalette";
 import QuickActionsMenu from "@/components/QuickActionsMenu";
+import GlobalTimerWidget from "@/components/timesheet/GlobalTimerWidget";
 import { GlobalProgressBar } from "@/components/GlobalProgressBar";
 import ErrorBoundary from "./components/ErrorBoundary";
 import WorkspaceLoadingShell from "@/components/WorkspaceLoadingShell";
@@ -235,22 +237,25 @@ function App() {
                   <PlanProvider>
                     <ProgressProvider>
                       <ProjectProvider>
-                        <AppProvider>
-                          <TooltipProvider>
-                            <FrameShell>
-                              <Toaster />
-                              <GlobalProgressBar isLoading={false} />
-                              <QuickActionsMenu />
-                              <Suspense fallback={<PageFallback />}>
-                                <Router />
-                                <CheckoutModal />
-                                <DemoModal />
-                                <ForcePasswordReset />
-                              </Suspense>
-                              <SpeedInsights />
-                            </FrameShell>
-                          </TooltipProvider>
-                        </AppProvider>
+                        <TimerProvider>
+                          <AppProvider>
+                            <TooltipProvider>
+                              <FrameShell>
+                                <Toaster />
+                                <GlobalProgressBar isLoading={false} />
+                                <QuickActionsMenu />
+                                <GlobalTimerWidget />
+                                <Suspense fallback={<PageFallback />}>
+                                  <Router />
+                                  <CheckoutModal />
+                                  <DemoModal />
+                                  <ForcePasswordReset />
+                                </Suspense>
+                                <SpeedInsights />
+                              </FrameShell>
+                            </TooltipProvider>
+                          </AppProvider>
+                        </TimerProvider>
                       </ProjectProvider>
                     </ProgressProvider>
                   </PlanProvider>

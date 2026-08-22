@@ -261,7 +261,7 @@
   - Modificar `client/src/components/tasks/TaskCard.tsx`: botão "▶️ Iniciar Timer" que chama `TimerContext.start(projectId, taskId)`.
   - Adicionar rota `/timesheet` no App.tsx + link no AppNavBar.
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.7, 7.8, 7.9_
-  - _2026-08-22: página `/timesheet` já existia; E1 adicionou filtros responsivos e export CSV. Pendente para marcar task: `TimerContext`, widget global, diálogo dedicado e botão em `TaskCard`._
+  - _2026-08-22: página `/timesheet` já existia; E1 adicionou filtros responsivos e export CSV. E2 adicionou `TimerContext`, polling/recovery, widget global e início de timer nos painéis de tarefas. Pendente para marcar task: extrair diálogo dedicado e cobrir vínculo direto em qualquer `TaskCard` futuro._
 
 - [ ] 25. Settings: taxa horária + resumo por projeto
   - Modificar `client/src/pages/Settings.tsx`: adicionar campo "Taxa horária (R$/hora)" que salva em `user.hourlyRate` via PUT `/api/users/me`.

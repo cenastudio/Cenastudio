@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { Plus, ListTodo, Loader2, ArrowRight, Trash2 } from "lucide-react";
+import { Plus, ListTodo, Loader2, ArrowRight, Trash2, Play } from "lucide-react";
 import { toast } from "sonner";
 import { api, type TaskItem } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTimer } from "@/contexts/TimerContext";
 import { getRouteForTaskLink, WORKFLOW_STAGES } from "@/lib/workflow";
 import EmptyState from "@/components/EmptyState";
 import {
@@ -37,6 +38,7 @@ const STATUS_LABELS: Record<TaskItem["status"], string> = {
  */
 export default function ProjectTasksPanel({ projectId, canManage }: ProjectTasksPanelProps) {
   const { t, locale } = useLanguage();
+  const { activeTimer, isStarting, startTimer } = useTimer();
   const [, setLocation] = useLocation();
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [members, setMembers] = useState<Array<{ id: number; name: string; email: string }>>([]);
@@ -185,7 +187,16 @@ export default function ProjectTasksPanel({ projectId, canManage }: ProjectTasks
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 max-sm:flex-col max-sm:items-end">
+                  <button
+                    type="button"
+                    onClick={() => void startTimer({ projectId: task.project_id, description: task.title })}
+                    disabled={isStarting || Boolean(activeTimer)}
+                    className="flex min-h-9 items-center gap-1 border border-frame-gray-3/60 px-2 font-frame-mono text-[0.58rem] uppercase tracking-wider text-frame-gray-light transition hover:border-frame-orange hover:text-frame-orange disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {isStarting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
+                    {t("app.tasks.startTimer") as string}
+                  </button>
                   {hasLink && (
                     <button
                       type="button"

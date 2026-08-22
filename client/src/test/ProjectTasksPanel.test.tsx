@@ -5,9 +5,14 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { api } from "@/lib/api";
 
 const routerState = vi.hoisted(() => ({ setLocation: vi.fn() }));
+const timerState = vi.hoisted(() => ({ startTimer: vi.fn() }));
 
 vi.mock("wouter", () => ({
   useLocation: () => ["/project/5", routerState.setLocation],
+}));
+
+vi.mock("@/contexts/TimerContext", () => ({
+  useTimer: () => ({ startTimer: timerState.startTimer, activeTimer: null, isStarting: false }),
 }));
 
 function renderWithLanguage(component: React.ReactElement) {
@@ -35,6 +40,7 @@ const sampleTask = {
 describe("ProjectTasksPanel", () => {
   beforeEach(() => {
     routerState.setLocation.mockClear();
+    timerState.startTimer.mockClear();
   });
 
   afterEach(() => {
@@ -61,6 +67,21 @@ describe("ProjectTasksPanel", () => {
     expect(screen.getByText("Editor")).toBeInTheDocument();
     expect(screen.getByText("Pendente")).toBeInTheDocument();
     expect(screen.getByText("Nova Tarefa")).toBeInTheDocument();
+  });
+
+  it("starts a timesheet timer from the project task list", async () => {
+    vi.mocked(api.tasks.listByProject).mockResolvedValue([sampleTask]);
+
+    const { default: ProjectTasksPanel } = await import("@/components/ProjectTasksPanel");
+    renderWithLanguage(<ProjectTasksPanel projectId={5} canManage />);
+
+    await screen.findByText("Gravar cena 3");
+    fireEvent.click(screen.getByText("Iniciar timer"));
+
+    expect(timerState.startTimer).toHaveBeenCalledWith({
+      projectId: 5,
+      description: "Gravar cena 3",
+    });
   });
 
   it("opens the create dialog, loads assignable members and submits a new task", async () => {

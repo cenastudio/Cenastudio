@@ -5,9 +5,14 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { api } from "@/lib/api";
 
 const routerState = vi.hoisted(() => ({ setLocation: vi.fn() }));
+const timerState = vi.hoisted(() => ({ startTimer: vi.fn() }));
 
 vi.mock("wouter", () => ({
   useLocation: () => ["/dashboard", routerState.setLocation],
+}));
+
+vi.mock("@/contexts/TimerContext", () => ({
+  useTimer: () => ({ startTimer: timerState.startTimer, activeTimer: null, isStarting: false }),
 }));
 
 function renderWithLanguage(component: React.ReactElement) {
@@ -17,6 +22,7 @@ function renderWithLanguage(component: React.ReactElement) {
 describe("MyTasksPanel", () => {
   beforeEach(() => {
     routerState.setLocation.mockClear();
+    timerState.startTimer.mockClear();
     vi.mocked(api.tasks.update).mockReset();
   });
 
@@ -62,6 +68,39 @@ describe("MyTasksPanel", () => {
 
     fireEvent.click(screen.getByText("Abrir"));
     expect(routerState.setLocation).toHaveBeenCalledWith("/project/5/studio/callsheet");
+  });
+
+  it("starts a timesheet timer from a task without leaving the dashboard", async () => {
+    vi.mocked(api.tasks.listMine).mockResolvedValue([
+      {
+        id: 1,
+        project_id: 5,
+        assignee_user_id: 2,
+        created_by_user_id: 1,
+        title: "Decupar material",
+        description: null,
+        due_date: null,
+        status: "pending",
+        stage_id: null,
+        tool_slug: null,
+        completed_at: null,
+        created_at: "2026-07-01T00:00:00.000Z",
+        updated_at: "2026-07-01T00:00:00.000Z",
+        project_name: "Job Aurora",
+      },
+    ]);
+
+    const { default: MyTasksPanel } = await import("@/components/MyTasksPanel");
+    renderWithLanguage(<MyTasksPanel />);
+
+    await screen.findByText("Decupar material");
+    fireEvent.click(screen.getByText("Iniciar timer"));
+
+    expect(timerState.startTimer).toHaveBeenCalledWith({
+      projectId: 5,
+      description: "Decupar material",
+    });
+    expect(routerState.setLocation).not.toHaveBeenCalled();
   });
 
   it("marks a task as done inline without navigating", async () => {

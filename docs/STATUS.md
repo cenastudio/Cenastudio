@@ -115,9 +115,11 @@ verificar, está dito explicitamente.
   `Shot`, `ShotType`.
 - **Timesheet:** MVP em evolução. `/timesheets`, model `TimeEntry`, timer,
   registros manuais, totais, envio de horas para orçamento, filtros por
-  projeto/período e export CSV autenticado estão implementados. Pendências reais:
-  `TimerContext`/widget global, botão de iniciar timer em tarefas, taxa horária em
-  Settings/resumo por projeto e retenção por plano.
+  projeto/período, export CSV autenticado, `TimerContext` com polling/recovery,
+  widget global e início de timer a partir das tarefas estão implementados.
+  Pendências reais: taxa horária em Settings/resumo por projeto, retenção por
+  plano e refinamento do diálogo dedicado de parada/categoria caso o produto
+  mantenha categoria de tempo.
 - **Google Calendar:** rota `/calendar` registrada. A integração real com a API do
   Google **não foi verificada** — só a existência da rota.
 - **Portal do Cliente:** MVP funcional em evolução (spec `portal-do-cliente-OK/`).

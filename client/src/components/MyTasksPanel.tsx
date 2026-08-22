@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { CheckSquare, Circle, ArrowRight } from "lucide-react";
+import { CheckSquare, Circle, ArrowRight, Play, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { api, type TaskItem } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTimer } from "@/contexts/TimerContext";
 import { getRouteForTaskLink } from "@/lib/workflow";
 import EmptyState from "@/components/EmptyState";
 
@@ -17,6 +18,7 @@ import EmptyState from "@/components/EmptyState";
  */
 export default function MyTasksPanel() {
   const { t, locale } = useLanguage();
+  const { activeTimer, isStarting, startTimer } = useTimer();
   const [, setLocation] = useLocation();
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -132,16 +134,27 @@ export default function MyTasksPanel() {
                     )}
                   </div>
                 </div>
-                {hasLink && (
+                <div className="flex shrink-0 flex-col items-end gap-2">
                   <button
                     type="button"
-                    onClick={() => setLocation(getRouteForTaskLink(task.project_id, task.stage_id, task.tool_slug))}
-                    className="shrink-0 flex items-center gap-1 font-frame-mono text-[0.58rem] uppercase tracking-wider text-frame-orange hover:text-frame-white transition mt-0.5"
+                    onClick={() => void startTimer({ projectId: task.project_id, description: task.title })}
+                    disabled={isStarting || Boolean(activeTimer)}
+                    className="flex min-h-9 items-center gap-1 border border-frame-gray-3/60 px-2 font-frame-mono text-[0.58rem] uppercase tracking-wider text-frame-gray-light transition hover:border-frame-orange hover:text-frame-orange disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    {t("app.tasks.open") as string}
-                    <ArrowRight className="w-3 h-3" />
+                    {isStarting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
+                    {t("app.tasks.startTimer") as string}
                   </button>
-                )}
+                  {hasLink && (
+                    <button
+                      type="button"
+                      onClick={() => setLocation(getRouteForTaskLink(task.project_id, task.stage_id, task.tool_slug))}
+                      className="flex items-center gap-1 font-frame-mono text-[0.58rem] uppercase tracking-wider text-frame-orange hover:text-frame-white transition"
+                    >
+                      {t("app.tasks.open") as string}
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })}

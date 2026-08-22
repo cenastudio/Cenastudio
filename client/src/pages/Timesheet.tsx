@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import AppNavBar from "@/components/AppNavBar";
 import EmptyState from "@/components/EmptyState";
 import ProductionNav from "@/components/ProductionNav";
@@ -6,6 +6,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTimer } from "@/contexts/TimerContext";
 import { api, type TimeEntryItem } from "@/lib/api";
 import {
   Clock,
@@ -60,13 +61,18 @@ function entryCost(entry: TimeEntryItem): number {
 function TimesheetContent() {
   const { t } = useLanguage();
   const { projects } = useProject();
+  const {
+    activeTimer: running,
+    elapsed,
+    isStarting: starting,
+    isStopping: stopping,
+    startTimer,
+    stopTimer,
+    refreshTimer,
+  } = useTimer();
   const [entries, setEntries] = useState<TimeEntryItem[]>([]);
   const [totals, setTotals] = useState({ totalDurationSec: 0, totalCost: 0 });
-  const [running, setRunning] = useState<TimeEntryItem | null>(null);
-  const [elapsed, setElapsed] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [starting, setStarting] = useState(false);
-  const [stopping, setStopping] = useState(false);
   const [timerDescription, setTimerDescription] = useState("");
   const [timerProjectId, setTimerProjectId] = useState<number | "">("");
   const [stopHourlyRateInput, setStopHourlyRateInput] = useState("");
@@ -90,8 +96,6 @@ function TimesheetContent() {
   const [sendingBudgetId, setSendingBudgetId] = useState<number | null>(null);
   const [sentBudgetIds, setSentBudgetIds] = useState<Set<number>>(new Set());
 
-  const tickRef = useRef<number | null>(null);
-
   const currentFilters = () => ({
     projectId: filterProjectId ? Number(filterProjectId) : undefined,
     from: filterFrom || undefined,
@@ -100,11 +104,11 @@ function TimesheetContent() {
 
   const load = () => {
     setLoading(true);
-    Promise.all([api.timesheets.list(currentFilters()), api.timesheets.getRunning()])
-      .then(([listResult, runningResult]) => {
+    api.timesheets
+      .list(currentFilters())
+      .then((listResult) => {
         setEntries(listResult.entries);
         setTotals(listResult.totals);
-        setRunning(runningResult);
       })
       .catch((e) => toast.error(e instanceof Error ? e.message : "Falha ao carregar timesheet"))
       .finally(() => setLoading(false));
@@ -115,11 +119,11 @@ function TimesheetContent() {
     setFilterFrom("");
     setFilterTo("");
     setLoading(true);
-    Promise.all([api.timesheets.list(), api.timesheets.getRunning()])
-      .then(([listResult, runningResult]) => {
+    api.timesheets
+      .list()
+      .then((listResult) => {
         setEntries(listResult.entries);
         setTotals(listResult.totals);
-        setRunning(runningResult);
       })
       .catch((e) => toast.error(e instanceof Error ? e.message : "Falha ao carregar timesheet"))
       .finally(() => setLoading(false));
@@ -151,34 +155,14 @@ function TimesheetContent() {
     load();
   }, []);
 
-  useEffect(() => {
-    if (!running) {
-      setElapsed(0);
-      return;
-    }
-    const startedAt = new Date(running.started_at).getTime();
-    const tick = () => setElapsed(Math.floor((Date.now() - startedAt) / 1000));
-    tick();
-    tickRef.current = window.setInterval(tick, 1000);
-    return () => {
-      if (tickRef.current) window.clearInterval(tickRef.current);
-    };
-  }, [running]);
-
   const handleStart = async () => {
-    setStarting(true);
-    try {
-      const created = await api.timesheets.start({
-        projectId: timerProjectId ? Number(timerProjectId) : null,
-        description: timerDescription.trim(),
-      });
-      setRunning(created);
+    const created = await startTimer({
+      projectId: timerProjectId ? Number(timerProjectId) : null,
+      description: timerDescription.trim(),
+    });
+    if (created) {
       setTimerDescription("");
-      toast.success("Timer iniciado");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao iniciar timer");
-    } finally {
-      setStarting(false);
+      void load();
     }
   };
 
@@ -189,18 +173,11 @@ function TimesheetContent() {
       ? Math.round(Number.parseFloat(stopHourlyRateInput.replace(",", ".")) * 100)
       : undefined;
 
-    setStopping(true);
-    try {
-      await api.timesheets.stop(running.id, hourlyRate ?? null);
-      setRunning(null);
+    const stopped = await stopTimer(hourlyRate ?? null);
+    if (stopped) {
       setStopDialogOpen(false);
       setStopHourlyRateInput("");
-      toast.success("Timer parado");
       load();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao parar timer");
-    } finally {
-      setStopping(false);
     }
   };
 
@@ -230,6 +207,7 @@ function TimesheetContent() {
       setManualEnd("");
       setManualRateInput("");
       load();
+      await refreshTimer();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao adicionar registro");
     } finally {
@@ -246,6 +224,7 @@ function TimesheetContent() {
       toast.success("Registro removido");
       setDeleteTarget(null);
       load();
+      await refreshTimer();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao remover registro");
     } finally {
