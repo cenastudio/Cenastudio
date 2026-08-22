@@ -103,6 +103,10 @@ reproduzir contra Postgres/Supabase exige janela controlada e não foi executado
   comprovada.
 - [ ] P1C.B Projetar e implementar a nova entrada de Produção sem quebrar URLs.
 - [ ] P1C.C Centralizar integrações em Conta e preservar redirecionamentos.
+  - [x] P1C.C.1 Expor Webhooks em `Conta > Integrações` sem remover a rota
+    legada `/webhooks`.
+  - [ ] P1C.C.2 Mover gestão de chaves de API de Segurança para Integrações,
+    preservando criação, cópia única, listagem e revogação.
 - [ ] P1C.D Testar descoberta, touch targets e retorno de navegação em 390px,
   tablet e desktop.
 
