@@ -219,6 +219,20 @@ testes da ponte IA, 22 testes da origem/revisão, `npm run check` e `npm run
 build` passaram em 2026-08-22. Ainda falta aplicar/testar a migration em
 Postgres com janela controlada.
 
+**Backlog aprovado — Storyboard IA conectado ao Shot List:** será uma visão do
+Shot List do projeto, não uma ferramenta escondida. Cada shot poderá gerar e
+aprovar quadros de referência (por exemplo, sketch de lápis), mantendo prompt,
+revisão e responsável vinculados ao mesmo plano. A frente começa somente após a
+P1B atual e ganha spec própria para definir modelo de imagem, Supabase Storage,
+custos, permissões e exportação de set.
+
+**P1B auditada:** a ficha do cliente já oferece CRM 360 com projetos,
+oportunidades, interações, arquivos, financeiro, propostas, vídeo reviews e
+gestão de Portal. A jornada de acesso foi validada localmente em 2026-08-22:
+43 testes passaram para criação, login, alteração/reset de senha, desativação,
+limites de plano e isolamento entre produtoras. Quatro cenários de propostas e
+reuniões no Portal permanecem pendentes de Postgres real e fazem parte da P1B.4.
+
 **Concluídas (`-OK`):** `00-fundacao-limpeza-e-documentacao`,
 `client-hub-connected-workflows`, `dre-por-projeto`,
 `fase-1-testes-uso-real`, `fase-2-layout-mobile-e-tabs`,

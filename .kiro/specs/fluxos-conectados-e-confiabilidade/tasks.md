@@ -69,8 +69,8 @@ reproduzir contra Postgres/Supabase exige janela controlada e não foi executado
 
 ## Fase P1B — CRM, portal e documento
 
-- [ ] P1B.1 Criar jornada explícita Dados → Projeto → Acesso na ficha do cliente.
-- [ ] P1B.2 Transformar a ficha em CRM 360 com pipeline, interações, propostas,
+- [x] P1B.1 Criar jornada explícita Dados → Projeto → Acesso na ficha do cliente.
+- [x] P1B.2 Transformar a ficha em CRM 360 com pipeline, interações, propostas,
   reuniões e projetos contextuais.
 - [ ] P1B.3 Consolidar renderer de proposta/PDF com identidade Cena, locale e
   dados do estúdio.
@@ -90,6 +90,17 @@ reproduzir contra Postgres/Supabase exige janela controlada e não foi executado
 - [ ] P2.2 Propor financeiro por fases: caixa, recebíveis e resultado por projeto.
 - [ ] P2.3 Trocar nomenclatura de faixa e adicionar ajuda contextual PT/EN.
 - [ ] P2.4 Implementar somente blocos P2 aprovados.
+
+## Backlog aprovado — Storyboard IA conectado ao Shot List
+
+- [ ] SB.1 Abrir spec própria para Storyboard IA como visão do Shot List, não
+  como ferramenta isolada.
+- [ ] SB.2 Gerar variações de quadro por shot a partir de cena, enquadramento,
+  lente, movimento, ação, luz e referências visuais.
+- [ ] SB.3 Vincular quadro aprovado, prompt, revisão e responsável ao shot;
+  suportar Lista, Storyboard e Plano de gravação.
+- [ ] SB.4 Persistir os assets no storage autorizado, com limites de custo,
+  permissões e exportação de PDF de set para mobile/desktop.
 
 ## Verificação final
 
