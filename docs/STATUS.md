@@ -118,9 +118,12 @@ verificar, está dito explicitamente.
   projeto/período, export CSV autenticado, `TimerContext` com polling/recovery,
   widget global, início de timer a partir das tarefas, taxa horária padrão em
   Company Settings (`studio_settings.default_hourly_rate`) e resumo de horas/custo
-  no hub do projeto estão implementados. Pendências reais: retenção por plano e
-  refinamento do diálogo dedicado de parada/categoria caso o produto mantenha
-  categoria de tempo.
+  no hub do projeto estão implementados. Em 2026-08-22, a retenção por plano foi
+  aplicada como soft filter nas queries, CSV e report: Pro enxerga 1 ano;
+  Studio/White Label/Enterprise/admin enxergam histórico completo; Free segue
+  bloqueado pelo gate de Timesheet e mantém fallback de 30 dias no service.
+  Categoria de tempo saiu do escopo ativo porque não existe no schema/UI atual;
+  Timesheet passa a operar por projeto, descrição, período, duração e custo.
 - **Google Calendar:** rota `/calendar` registrada. A integração real com a API do
   Google **não foi verificada** — só a existência da rota.
 - **Portal do Cliente:** MVP funcional em evolução (spec `portal-do-cliente-OK/`).

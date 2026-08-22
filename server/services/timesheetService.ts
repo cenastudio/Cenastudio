@@ -2,6 +2,7 @@ import { AppError } from "../middleware/errorHandler.js";
 import { db } from "../models/db.js";
 import { prisma, shouldUsePrisma } from "../models/prisma.js";
 import { withSnakeCase } from "../utils/prismaSerialization.js";
+import type { OperationalPlanId } from "../../shared/planEntitlements.js";
 
 /**
  * Timesheet (spec: landing-features-implementation, F4).
@@ -28,6 +29,13 @@ export interface TimeEntryRecord {
 export interface TimesheetTotals {
   totalDurationSec: number;
   totalCost: number;
+}
+
+interface TimesheetFilters {
+  projectId?: number;
+  from?: string;
+  to?: string;
+  retentionDays?: number | null;
 }
 
 function serializeEntry(value: any): TimeEntryRecord {
@@ -66,6 +74,30 @@ function normalizeSqliteDateFilter(value: string | undefined, mode: "from" | "to
   return date ? date.toISOString() : undefined;
 }
 
+export function resolveTimesheetRetentionDays(
+  planId: OperationalPlanId | string | null | undefined,
+  role?: "user" | "admin",
+): number | null {
+  if (role === "admin") return null;
+  if (planId === "studio" || planId === "whitelabel" || planId === "enterprise") return null;
+  if (planId === "pro") return 365;
+  return 30;
+}
+
+function getRetentionStart(retentionDays?: number | null): Date | undefined {
+  if (retentionDays == null) return undefined;
+  const safeDays = Math.max(0, retentionDays);
+  return new Date(Date.now() - safeDays * 24 * 60 * 60 * 1000);
+}
+
+function getEffectiveFromDate(filters: TimesheetFilters): Date | undefined {
+  const from = normalizeDateFilter(filters.from, "from");
+  const retentionStart = getRetentionStart(filters.retentionDays);
+  if (!from) return retentionStart;
+  if (!retentionStart) return from;
+  return from > retentionStart ? from : retentionStart;
+}
+
 async function assertProjectOwnershipIfProvided(userId: number, projectId?: number | null): Promise<void> {
   if (projectId == null) return;
   if (shouldUsePrisma) {
@@ -80,12 +112,12 @@ async function assertProjectOwnershipIfProvided(userId: number, projectId?: numb
 /** Lists entries for a user, optionally scoped to a project, most recent first, with aggregate totals. */
 export async function listEntries(
   userId: number,
-  filters: { projectId?: number; from?: string; to?: string } = {},
+  filters: TimesheetFilters = {},
 ): Promise<{ entries: TimeEntryRecord[]; totals: TimesheetTotals }> {
   let entries: TimeEntryRecord[];
 
   if (shouldUsePrisma) {
-    const from = normalizeDateFilter(filters.from, "from");
+    const from = getEffectiveFromDate(filters);
     const to = normalizeDateFilter(filters.to, "to");
     const rows = await prisma.timeEntry.findMany({
       where: {
@@ -101,7 +133,7 @@ export async function listEntries(
     const clauses = ["time_entries.user_id = ?"];
     const args: unknown[] = [userId];
     if (filters.projectId) { clauses.push("time_entries.project_id = ?"); args.push(filters.projectId); }
-    const from = normalizeSqliteDateFilter(filters.from, "from");
+    const from = getEffectiveFromDate(filters)?.toISOString();
     const to = normalizeSqliteDateFilter(filters.to, "to");
     if (from) { clauses.push("time_entries.started_at >= ?"); args.push(from); }
     if (to) { clauses.push("time_entries.started_at <= ?"); args.push(to); }
@@ -139,7 +171,7 @@ function formatCsvDate(value: string | null): string {
 }
 
 /** Exports the filtered ledger as CSV for finance reconciliation. */
-export async function exportCSV(userId: number, filters: { projectId?: number; from?: string; to?: string } = {}): Promise<string> {
+export async function exportCSV(userId: number, filters: TimesheetFilters = {}): Promise<string> {
   const { entries, totals } = await listEntries(userId, filters);
   const header = ["Data", "Projeto", "Descricao", "Inicio", "Fim", "Duracao segundos", "Horas", "Taxa hora centavos", "Custo centavos"];
   const rows = entries.map((entry) => [
@@ -291,8 +323,8 @@ export interface TimesheetReportRow {
 }
 
 /** Groups closed entries by project, for a simple per-project cost/hours report. */
-export async function getReport(userId: number): Promise<TimesheetReportRow[]> {
-  const { entries } = await listEntries(userId);
+export async function getReport(userId: number, filters: Pick<TimesheetFilters, "retentionDays"> = {}): Promise<TimesheetReportRow[]> {
+  const { entries } = await listEntries(userId, filters);
   const byProject = new Map<number | null, TimesheetReportRow>();
 
   for (const entry of entries) {

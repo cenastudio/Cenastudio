@@ -503,6 +503,46 @@ describe("CRM, files and finance controller flow", () => {
     expect(afterDelete.body.data.entries.some((e: any) => e.id === manual.body.data.id)).toBe(false);
   });
 
+  it("applies timesheet retention to Pro ledgers without deleting old entries (F4)", async () => {
+    const proUser = await authService.registerUser(
+      "Pro Timesheet",
+      `timesheet-pro-${Date.now()}@example.com`,
+      "password-123",
+    );
+    const oldStartedAt = new Date(Date.now() - 400 * 24 * 60 * 60 * 1000);
+    const recentStartedAt = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+
+    const oldEntry = await invoke(timesheetController.addManualEntry, {
+      user: proUser,
+      body: {
+        description: "Horas antigas fora da retencao",
+        startedAt: oldStartedAt.toISOString(),
+        endedAt: new Date(oldStartedAt.getTime() + 60 * 60 * 1000).toISOString(),
+        hourlyRate: 4000,
+      },
+    });
+    const recentEntry = await invoke(timesheetController.addManualEntry, {
+      user: proUser,
+      body: {
+        description: "Horas recentes dentro da retencao",
+        startedAt: recentStartedAt.toISOString(),
+        endedAt: new Date(recentStartedAt.getTime() + 60 * 60 * 1000).toISOString(),
+        hourlyRate: 4000,
+      },
+    });
+
+    const listed = await invoke(timesheetController.listEntries, { user: proUser, query: {} });
+    expect(listed.body.data.entries.some((entry: any) => entry.id === recentEntry.body.data.id)).toBe(true);
+    expect(listed.body.data.entries.some((entry: any) => entry.id === oldEntry.body.data.id)).toBe(false);
+
+    const exported = await invoke(timesheetController.exportEntriesCsv, { user: proUser, query: {} });
+    expect(exported.sent).toContain("Horas recentes dentro da retencao");
+    expect(exported.sent).not.toContain("Horas antigas fora da retencao");
+
+    const report = await invoke(timesheetController.getReport, { user: proUser });
+    expect(report.body.data.reduce((sum: number, row: any) => sum + row.totalDurationSec, 0)).toBe(3600);
+  });
+
   it("covers project schedule .ics export with deadline + meeting (F5)", async () => {
     const client = await invoke(clientsController.createClient, {
       user,

@@ -1,5 +1,6 @@
 import type { RequestHandler } from "express";
 import { AppError } from "../middleware/errorHandler.js";
+import { getUserEntitlements } from "../services/entitlementService.js";
 import * as timesheetService from "../services/timesheetService.js";
 
 function parseId(value: string | undefined, label = "ID"): number {
@@ -16,10 +17,16 @@ function parseFilters(query: { projectId?: string; from?: string; to?: string })
   };
 }
 
+async function getRetentionDaysForRequest(req: Parameters<RequestHandler>[0]) {
+  const entitlements = await getUserEntitlements(req.user!.id);
+  return timesheetService.resolveTimesheetRetentionDays(entitlements.planId, req.user!.role);
+}
+
 export const listEntries: RequestHandler = async (req, res, next) => {
   try {
     const { projectId, from, to } = req.query as { projectId?: string; from?: string; to?: string };
-    const result = await timesheetService.listEntries(req.user!.id, parseFilters({ projectId, from, to }));
+    const retentionDays = await getRetentionDaysForRequest(req);
+    const result = await timesheetService.listEntries(req.user!.id, { ...parseFilters({ projectId, from, to }), retentionDays });
     res.json({ success: true, data: result });
   } catch (e) {
     next(e);
@@ -29,7 +36,8 @@ export const listEntries: RequestHandler = async (req, res, next) => {
 export const exportEntriesCsv: RequestHandler = async (req, res, next) => {
   try {
     const { projectId, from, to } = req.query as { projectId?: string; from?: string; to?: string };
-    const csv = await timesheetService.exportCSV(req.user!.id, parseFilters({ projectId, from, to }));
+    const retentionDays = await getRetentionDaysForRequest(req);
+    const csv = await timesheetService.exportCSV(req.user!.id, { ...parseFilters({ projectId, from, to }), retentionDays });
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", 'attachment; filename="timesheet.csv"');
     res.send(csv);
@@ -105,7 +113,8 @@ export const deleteEntry: RequestHandler = async (req, res, next) => {
 
 export const getReport: RequestHandler = async (req, res, next) => {
   try {
-    const report = await timesheetService.getReport(req.user!.id);
+    const retentionDays = await getRetentionDaysForRequest(req);
+    const report = await timesheetService.getReport(req.user!.id, { retentionDays });
     res.json({ success: true, data: report });
   } catch (e) {
     next(e);

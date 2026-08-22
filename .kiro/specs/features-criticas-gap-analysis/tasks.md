@@ -236,32 +236,32 @@
   - Rodar `npx prisma migrate dev --name add_time_entries`.
   - _Requirements: 7.1_
 
-- [ ] 23. Backend: `timesheetService` com timer state
+- [x] 23. Backend: `timesheetService` com timer state
   - Criar `server/services/timesheetService.ts`:
     - `startTimer(userId, projectId, taskId?)`: verifica se já existe timer ativo (retorna 409 se sim, OR auto-para o anterior).
-    - `stopTimer(timerId, description, category)`: calcula duração, salva `TimeEntry`, remove state de timer ativo.
+    - `stopTimer(timerId, description)`: calcula duração, salva `TimeEntry`, remove state de timer ativo.
     - `getActiveTimer(userId)`: retorna timer em andamento se existir.
-    - `listEntries(userId, filters)`: filtros date range, projectId, category.
+    - `listEntries(userId, filters)`: filtros date range e projectId.
     - `exportCSV(userId, filters)`: gera string CSV com colunas + total + valor (se `hourlyRate` setado).
   - Timer state: guardar em coluna `activeTimerStart DateTime?` no User OR tabela `active_timers` separada. **Escolher tabela separada** (mais limpo).
   - Controller/routes conforme design (7 endpoints).
   - Plan gating: Free retention 30 dias (soft filter em queries), Pro 1 ano, Studio ilimitado.
   - Testes cobrindo: prevent duplicate active timer, duration calc, CSV formatting, retention filter.
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.10_
-  - _2026-08-22: timer/list/manual/report já estavam implementados; E1 adicionou filtros por período/projeto e export CSV autenticado com total. Pendente para marcar task: retenção por plano._
+  - _2026-08-22: concluído com timer/list/manual/report, filtros por período/projeto, export CSV autenticado com total, bloqueio de timer duplicado e retenção por plano em queries/CSV/report. Como Timesheet é Pro+ no produto atual, Free continua bloqueado no route gate; fallback de service mantém 30 dias para planos sem Timesheet. Pro retém 1 ano; Studio/White Label/Enterprise/admin têm histórico completo. Categoria de tempo saiu do escopo ativo porque não existe no schema/UI atual._
 
-- [ ] 24. Frontend: `TimerContext` global + `Timesheet` page
+- [x] 24. Frontend: `TimerContext` global + `Timesheet` page
   - Criar `client/src/contexts/TimerContext.tsx`: state global do timer ativo (currentTimer, elapsed, start, pause, stop).
   - Persistir estado via polling do `/api/timesheet/active` a cada 30s (para recovery após refresh).
   - Envolver App em `<TimerProvider>`.
   - Criar `client/src/components/timesheet/TimerWidget.tsx`: widget flutuante ou no AppNavBar mostrando timer ativo com contador HH:MM:SS e botão parar.
-  - Criar `client/src/pages/Timesheet.tsx` (rota `/timesheet`): tabela com filtros de data/projeto/categoria + total footer + export CSV.
-  - Criar `client/src/components/timesheet/TimeEntryDialog.tsx`: modal ao parar timer (descrição + categoria).
+  - Criar `client/src/pages/Timesheet.tsx` (rota `/timesheet`): tabela com filtros de data/projeto + total footer + export CSV.
+  - Criar fluxo de parada/manual com descrição + taxa horária quando necessário.
   - Criar `client/src/components/timesheet/TimesheetFilters.tsx`: filtros combináveis com Radix Select + date picker.
   - Modificar `client/src/components/tasks/TaskCard.tsx`: botão "▶️ Iniciar Timer" que chama `TimerContext.start(projectId, taskId)`.
   - Adicionar rota `/timesheet` no App.tsx + link no AppNavBar.
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.7, 7.8, 7.9_
-  - _2026-08-22: página `/timesheet` já existia; E1 adicionou filtros responsivos e export CSV. E2 adicionou `TimerContext`, polling/recovery, widget global e início de timer nos painéis de tarefas. Pendente para marcar task: extrair diálogo dedicado e cobrir vínculo direto em qualquer `TaskCard` futuro._
+  - _2026-08-22: concluído por implementação equivalente no produto real. A página `/timesheet` tem filtros responsivos e export CSV; E2 adicionou `TimerContext`, polling/recovery, widget global e início de timer nos painéis de tarefas existentes. Não há `TaskCard.tsx` canônico hoje; categoria de tempo foi removida do escopo ativo para evitar campo morto._
 
 - [x] 25. Settings: taxa horária + resumo por projeto
   - Modificar `client/src/pages/Settings.tsx`: adicionar campo "Taxa horária (R$/hora)" que salva em `user.hourlyRate` via PUT `/api/users/me`.
