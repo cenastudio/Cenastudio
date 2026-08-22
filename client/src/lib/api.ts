@@ -277,6 +277,8 @@ export interface StudioSettingsPayload {
   website: string;
   signature: string;
   primaryColor: string;
+  logoUrl?: string | null;
+  defaultHourlyRate?: number | null;
 }
 
 export const api = {

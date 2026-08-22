@@ -7,7 +7,7 @@ import {
   Building2, Check, FileText, Globe2, Mail, Palette, Phone, Save,
   BadgeCheck, ShieldCheck, MapPin, PenLine, Sparkles, Camera,
   FileSignature, Users, Receipt, ExternalLink, ChevronRight, Lock,
-  Crown, Trash2,
+  Crown, Trash2, Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -67,8 +67,8 @@ function DocPreview({ settings }: { settings: StudioSettings }) {
             ))}
           </div>
           <div className="grid grid-cols-4 px-2 py-1.5 border-t border-white/5">
-            {["Filmagem 1 diária", "1x", "R$ 5.000", "R$ 5.000"].map((v) => (
-              <div key={v} className="text-[0.55rem] text-white/60">{v}</div>
+            {["Filmagem 1 diária", "1x", "R$ 5.000", "R$ 5.000"].map((v, index) => (
+              <div key={`${v}-${index}`} className="text-[0.55rem] text-white/60">{v}</div>
             ))}
           </div>
         </div>
@@ -124,8 +124,22 @@ function CompanySettingsContent() {
     return () => window.removeEventListener("beforeunload", warn);
   }, [isDirty]);
 
-  const update = (key: keyof StudioSettings, value: string) =>
+  const update = <K extends keyof StudioSettings>(key: K, value: StudioSettings[K]) =>
     setSettings((prev) => ({ ...prev, [key]: value }));
+
+  const formatHourlyRateInput = (value?: number | null) =>
+    value == null ? "" : String(value / 100).replace(".", ",");
+
+  const updateDefaultHourlyRate = (value: string) => {
+    const normalized = value.trim().replace(",", ".");
+    if (!normalized) {
+      update("defaultHourlyRate", null);
+      return;
+    }
+    const parsed = Number.parseFloat(normalized);
+    if (!Number.isFinite(parsed) || parsed < 0) return;
+    update("defaultHourlyRate", Math.round(parsed * 100));
+  };
 
   const handleLogoFile = async (file: File | undefined) => {
     if (!file) return;
@@ -315,6 +329,34 @@ function CompanySettingsContent() {
                   </div>
                 </label>
               </div>
+            </div>
+
+            {/* Operação */}
+            <div className="liquid-glass p-6 space-y-5">
+              <div className="flex items-center gap-3 pb-4 border-b border-frame-gray-3/50">
+                <div className="w-9 h-9 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg">
+                  <Clock className="w-4 h-4 text-frame-orange" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-frame-white">{t("app.company.operationsTitle")}</h2>
+                  <p className="text-[0.65rem] text-frame-gray-light">{t("app.company.operationsDesc")}</p>
+                </div>
+              </div>
+              <label className="space-y-1.5 block">
+                <span className="frame-label text-frame-gray-light">{t("app.company.defaultHourlyRate")}</span>
+                <div className="relative">
+                  <Receipt className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-frame-gray-light" />
+                  <input
+                    className="frame-input w-full pl-10 font-mono"
+                    aria-label={t("app.company.defaultHourlyRate") as string}
+                    inputMode="decimal"
+                    value={formatHourlyRateInput(settings.defaultHourlyRate)}
+                    onChange={(e) => updateDefaultHourlyRate(e.target.value)}
+                    placeholder="150,00"
+                  />
+                </div>
+                <p className="text-[0.62rem] text-frame-gray-light">{t("app.company.defaultHourlyRateHint")}</p>
+              </label>
             </div>
 
             {/* Assinatura e cor */}

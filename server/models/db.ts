@@ -274,6 +274,7 @@ function ensureStudioSettingsColumns() {
       signature TEXT DEFAULT 'Responsavel comercial',
       primary_color TEXT DEFAULT '#e85002',
       logo_url TEXT,
+      default_hourly_rate INTEGER,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     );
@@ -284,6 +285,9 @@ function ensureStudioSettingsColumns() {
   );
   if (!cols.includes("logo_url")) {
     db.prepare("ALTER TABLE studio_settings ADD COLUMN logo_url TEXT").run();
+  }
+  if (!cols.includes("default_hourly_rate")) {
+    db.prepare("ALTER TABLE studio_settings ADD COLUMN default_hourly_rate INTEGER").run();
   }
 }
 

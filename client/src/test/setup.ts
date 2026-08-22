@@ -137,6 +137,9 @@ vi.mock('@/lib/api', () => ({
       addEntry: vi.fn(),
       deleteEntry: vi.fn(),
     },
+    proposals: {
+      list: vi.fn().mockResolvedValue([]),
+    },
     equipment: {
       list: vi.fn().mockResolvedValue([]),
       create: vi.fn(),
@@ -177,7 +180,7 @@ vi.mock('@/lib/api', () => ({
       stop: vi.fn(),
       addManualEntry: vi.fn(),
       deleteEntry: vi.fn(),
-      getReport: vi.fn(),
+      getReport: vi.fn().mockResolvedValue([]),
     },
     calendar: {
       projectIcsUrl: vi.fn((projectId: number) => `/api/calendar/project/${projectId}.ics`),

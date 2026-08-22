@@ -263,10 +263,11 @@
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.7, 7.8, 7.9_
   - _2026-08-22: página `/timesheet` já existia; E1 adicionou filtros responsivos e export CSV. E2 adicionou `TimerContext`, polling/recovery, widget global e início de timer nos painéis de tarefas. Pendente para marcar task: extrair diálogo dedicado e cobrir vínculo direto em qualquer `TaskCard` futuro._
 
-- [ ] 25. Settings: taxa horária + resumo por projeto
+- [x] 25. Settings: taxa horária + resumo por projeto
   - Modificar `client/src/pages/Settings.tsx`: adicionar campo "Taxa horária (R$/hora)" que salva em `user.hourlyRate` via PUT `/api/users/me`.
   - Criar `client/src/components/timesheet/ProjectTimeSummary.tsx`: componente exibido em `ProjectDetails.tsx` mostrando total de horas trabalhadas no projeto + breakdown por categoria + valor calculado.
   - _Requirements: 7.6, 7.9, 7.10_
+  - _2026-08-22: concluído em `CompanySettings`/`ProjectHub`. A taxa padrão foi salva em `studio_settings.default_hourly_rate`, não em `users.hourly_rate`, porque a coluna de usuário foi removida em migration anterior por ser legado morto._
 
 #### Feature H: Google Calendar Sync
 

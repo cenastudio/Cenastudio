@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PlanProvider } from "@/contexts/PlanContext";
+import { TimerProvider } from "@/contexts/TimerContext";
 import { api } from "@/lib/api";
 import { DEFAULT_STUDIO_SETTINGS } from "@/lib/studioSettings";
 
@@ -41,7 +42,9 @@ function renderWithLanguage(component: React.ReactElement, overridePlanMode?: im
   return render(
     <AuthProvider>
       <PlanProvider overridePlanMode={overridePlanMode}>
-        <LanguageProvider>{component}</LanguageProvider>
+        <TimerProvider>
+          <LanguageProvider>{component}</LanguageProvider>
+        </TimerProvider>
       </PlanProvider>
     </AuthProvider>,
   );
@@ -82,17 +85,19 @@ describe("operational UI and UX flows", () => {
     renderWithLanguage(<CompanySettings />);
 
     const studioName = await screen.findByRole("textbox", { name: "Nome do estúdio *" });
+    const hourlyRate = await screen.findByRole("textbox", { name: "Taxa horária padrão" });
     const savedButtons = await screen.findAllByRole("button", { name: "Tudo salvo" });
     expect(savedButtons[0]).toBeDisabled();
 
     fireEvent.change(studioName, { target: { value: "Aurora Filmes" } });
+    fireEvent.change(hourlyRate, { target: { value: "150" } });
     expect(screen.getByText("Alterações pendentes")).toBeInTheDocument();
 
     const saveButton = screen.getByRole("button", { name: "Salvar empresa" });
     fireEvent.click(saveButton);
 
     await waitFor(() => expect(api.studioSettings.update).toHaveBeenCalledWith(
-      expect.objectContaining({ studioName: "Aurora Filmes" }),
+      expect.objectContaining({ studioName: "Aurora Filmes", defaultHourlyRate: 15000 }),
     ));
     await waitFor(() => expect(screen.getByRole("button", { name: "Tudo salvo" })).toBeDisabled());
   });

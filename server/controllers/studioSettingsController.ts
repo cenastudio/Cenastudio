@@ -16,6 +16,7 @@ interface StudioSettingsRow {
   signature: string | null;
   primary_color: string | null;
   logo_url: string | null;
+  default_hourly_rate: number | null;
 }
 
 const DEFAULT_SETTINGS = {
@@ -29,6 +30,7 @@ const DEFAULT_SETTINGS = {
   signature: "Responsavel comercial",
   primaryColor: SITE_CONFIG.primaryColor,
   logoUrl: null as string | null,
+  defaultHourlyRate: null as number | null,
 };
 
 function toClient(row?: StudioSettingsRow | null) {
@@ -44,6 +46,7 @@ function toClient(row?: StudioSettingsRow | null) {
     signature: row.signature || DEFAULT_SETTINGS.signature,
     primaryColor: row.primary_color || DEFAULT_SETTINGS.primaryColor,
     logoUrl: row.logo_url ?? null,
+    defaultHourlyRate: row.default_hourly_rate ?? null,
   };
 }
 
@@ -71,6 +74,15 @@ function normalizeLogoUrl(value: unknown): string | null {
   return trimmed;
 }
 
+function normalizeHourlyRate(value: unknown): number | null {
+  if (value === undefined || value === null || value === "") return null;
+  const parsed = typeof value === "number" ? value : Number.parseInt(String(value), 10);
+  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100_000_000) {
+    throw new AppError("Taxa horária inválida", 400);
+  }
+  return Math.round(parsed);
+}
+
 export const getStudioSettings: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
@@ -81,12 +93,13 @@ export const getStudioSettings: RequestHandler = async (req, res, next) => {
         email: row.email, phone: row.phone, city: row.city, website: row.website,
         signature: row.signature, primaryColor: row.primaryColor,
         logoUrl: row.logoUrl ?? null,
+        defaultHourlyRate: row.defaultHourlyRate ?? null,
       } : DEFAULT_SETTINGS });
       return;
     }
     const row = db
       .prepare(
-        `SELECT studio_name, legal_name, document, email, phone, city, website, signature, primary_color, logo_url
+        `SELECT studio_name, legal_name, document, email, phone, city, website, signature, primary_color, logo_url, default_hourly_rate
          FROM studio_settings WHERE user_id = ?`,
       )
       .get(userId) as StudioSettingsRow | undefined;
@@ -128,6 +141,7 @@ export const updateStudioSettings: RequestHandler = async (req, res, next) => {
       signature: clean(req.body.signature, DEFAULT_SETTINGS.signature) || DEFAULT_SETTINGS.signature,
       primaryColor: validatedPrimaryColor,
       logoUrl,
+      defaultHourlyRate: normalizeHourlyRate(req.body.defaultHourlyRate),
     };
 
     if (shouldUsePrisma) {
@@ -142,8 +156,8 @@ export const updateStudioSettings: RequestHandler = async (req, res, next) => {
 
     db.prepare(
       `INSERT INTO studio_settings (
-        user_id, studio_name, legal_name, document, email, phone, city, website, signature, primary_color, logo_url
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        user_id, studio_name, legal_name, document, email, phone, city, website, signature, primary_color, logo_url, default_hourly_rate
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(user_id) DO UPDATE SET
         studio_name = excluded.studio_name,
         legal_name = excluded.legal_name,
@@ -155,6 +169,7 @@ export const updateStudioSettings: RequestHandler = async (req, res, next) => {
         signature = excluded.signature,
         primary_color = excluded.primary_color,
         logo_url = excluded.logo_url,
+        default_hourly_rate = excluded.default_hourly_rate,
         updated_at = datetime('now')`,
     ).run(
       userId,
@@ -168,6 +183,7 @@ export const updateStudioSettings: RequestHandler = async (req, res, next) => {
       settings.signature,
       settings.primaryColor,
       settings.logoUrl,
+      settings.defaultHourlyRate,
     );
 
     res.json({ success: true, data: settings });

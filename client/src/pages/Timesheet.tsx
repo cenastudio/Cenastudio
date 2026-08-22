@@ -81,6 +81,7 @@ function TimesheetContent() {
   const [filterFrom, setFilterFrom] = useState("");
   const [filterTo, setFilterTo] = useState("");
   const [exportingCsv, setExportingCsv] = useState(false);
+  const [defaultHourlyRate, setDefaultHourlyRate] = useState<number | null>(null);
 
   const [manualOpen, setManualOpen] = useState(false);
   const [manualProjectId, setManualProjectId] = useState<number | "">("");
@@ -153,6 +154,13 @@ function TimesheetContent() {
 
   useEffect(() => {
     load();
+    api.studioSettings.get().then((data) => {
+      setDefaultHourlyRate(data.defaultHourlyRate ?? null);
+      if (data.defaultHourlyRate != null) {
+        setStopHourlyRateInput(String(data.defaultHourlyRate / 100).replace(".", ","));
+        setManualRateInput(String(data.defaultHourlyRate / 100).replace(".", ","));
+      }
+    }).catch(() => null);
   }, []);
 
   const handleStart = async () => {
@@ -171,7 +179,7 @@ function TimesheetContent() {
     if (!running) return;
     const hourlyRate = stopHourlyRateInput.trim()
       ? Math.round(Number.parseFloat(stopHourlyRateInput.replace(",", ".")) * 100)
-      : undefined;
+      : defaultHourlyRate ?? undefined;
 
     const stopped = await stopTimer(hourlyRate ?? null);
     if (stopped) {
@@ -189,7 +197,7 @@ function TimesheetContent() {
     }
     const hourlyRate = manualRateInput.trim()
       ? Math.round(Number.parseFloat(manualRateInput.replace(",", ".")) * 100)
-      : null;
+      : defaultHourlyRate ?? null;
 
     setSavingManual(true);
     try {
@@ -519,7 +527,7 @@ function TimesheetContent() {
                 type="text"
                 value={stopHourlyRateInput}
                 onChange={(e) => setStopHourlyRateInput(e.target.value)}
-                placeholder="0,00"
+                placeholder={defaultHourlyRate != null ? String(defaultHourlyRate / 100).replace(".", ",") : "0,00"}
                 className="frame-input w-full font-mono"
               />
             </div>
@@ -598,7 +606,7 @@ function TimesheetContent() {
                 type="text"
                 value={manualRateInput}
                 onChange={(e) => setManualRateInput(e.target.value)}
-                placeholder="0,00"
+                placeholder={defaultHourlyRate != null ? String(defaultHourlyRate / 100).replace(".", ",") : "0,00"}
                 className="frame-input w-full font-mono"
               />
             </div>

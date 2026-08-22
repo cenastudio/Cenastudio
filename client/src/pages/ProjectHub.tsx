@@ -4,6 +4,7 @@ import AppNavBar from "@/components/AppNavBar";
 import ProjectNav from "@/components/ProjectNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ProjectTasksPanel from "@/components/ProjectTasksPanel";
+import ProjectTimeSummary from "@/components/timesheet/ProjectTimeSummary";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Film,
@@ -594,6 +595,8 @@ function ProjectHubContent() {
 
             {/* Tarefas do Projeto (spec: team-task-delegation) */}
             <ProjectTasksPanel projectId={projectId} canManage={canManageTasks} />
+
+            <ProjectTimeSummary projectId={projectId} />
 
             {/* Recent Files */}
             <section>

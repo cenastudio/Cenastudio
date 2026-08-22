@@ -11,7 +11,8 @@ export interface StudioSettings {
   website: string;
   signature: string;
   primaryColor: string;
-  logoUrl?: string; // Studio logo shown on generated documents
+  logoUrl?: string | null; // Studio logo shown on generated documents
+  defaultHourlyRate?: number | null; // cents per hour
 }
 
 export const STUDIO_SETTINGS_KEY = "frame.studio.settings.v1";
@@ -26,6 +27,7 @@ export const DEFAULT_STUDIO_SETTINGS: StudioSettings = {
   website: "",
   signature: "Responsavel comercial",
   primaryColor: SITE_CONFIG.primaryColor,
+  defaultHourlyRate: null,
 };
 
 export function readStudioSettings(): StudioSettings {

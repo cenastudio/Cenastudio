@@ -205,6 +205,7 @@ describe("collaboration, notifications and studio settings", () => {
         website: "https://aurora.example",
         signature: "  Direcao comercial  ",
         primaryColor: "not-a-color",
+        defaultHourlyRate: 15000,
       },
     });
     const { SITE_CONFIG: SITE_CONFIG_FOR_UPDATED } = await import("@shared/site");
@@ -212,12 +213,14 @@ describe("collaboration, notifications and studio settings", () => {
       studioName: "Aurora Filmes",
       email: "contato@aurora.example",
       signature: "Direcao comercial",
+      defaultHourlyRate: 15000,
       // Invalid color falls back to the env-driven default.
       primaryColor: SITE_CONFIG_FOR_UPDATED.primaryColor,
     });
 
     const persisted = await invoke(studioSettingsController.getStudioSettings, { user });
     expect(persisted.body.data.studioName).toBe("Aurora Filmes");
+    expect(persisted.body.data.defaultHourlyRate).toBe(15000);
 
     const otherDefaults = await invoke(studioSettingsController.getStudioSettings, { user: otherUser });
     expect(otherDefaults.body.data.studioName).toBe(SITE_CONFIG_FOR_UPDATED.brandName);
