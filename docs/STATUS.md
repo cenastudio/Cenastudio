@@ -263,6 +263,11 @@ misturadas em Segurança e Webhooks está fora da Conta. A próxima implementaç
 move essas superfícies para `Conta > Integrações`, preservando `/webhooks` como
 rota legada, antes de qualquer novo redesenho de Produção.
 
+**P1C.C em andamento:** Webhooks agora também está em `Conta > Integrações`,
+com a mesma superfície funcional e PT/EN; a rota `/webhooks` foi preservada
+para links existentes. Chaves de API ainda aparecem em Segurança e são a
+próxima migração dentro desta mesma frente, antes de marcar P1C.2 concluída.
+
 **Concluídas (`-OK`):** `00-fundacao-limpeza-e-documentacao`,
 `client-hub-connected-workflows`, `dre-por-projeto`,
 `fase-1-testes-uso-real`, `fase-2-layout-mobile-e-tabs`,
