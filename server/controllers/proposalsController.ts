@@ -7,6 +7,15 @@ import { withSnakeCase } from "../utils/prismaSerialization.js";
 import { notifyUser } from "../services/notificationService.js";
 import { dispatchWebhookEvent } from "../services/webhookService.js";
 import * as commercialProposalService from "../services/commercialProposalService.js";
+import { sendEmail, isEmailConfigured } from "../services/emailService.js";
+import { renderTransactionalEmail, type TransactionalEmailLocale } from "../services/transactionalEmail.js";
+import { SITE_CONFIG } from "@shared/site";
+
+const CONTACT_EMAIL = process.env.SUPPORT_EMAIL || SITE_CONFIG.supportEmail || "cenastudio@atomicmail.io";
+
+function getClientOrigin() {
+  return process.env.CLIENT_ORIGIN || "http://localhost:5173";
+}
 
 function hashDocument(html: string): string {
   return createHash("sha256").update(html, "utf8").digest("hex");
@@ -57,6 +66,88 @@ function proposalProjectIdValue(value: unknown) {
     throw new AppError("O ID do projeto é inválido", 400);
   }
   return BigInt(parsed);
+}
+
+function proposalUrl(shareToken: string) {
+  return `${getClientOrigin()}/proposal/${shareToken}`;
+}
+
+function firstName(value: string | null | undefined) {
+  return (value || "").trim().split(" ")[0] || value || "";
+}
+
+function currencyValue(total: number, locale: TransactionalEmailLocale) {
+  return new Intl.NumberFormat(locale === "en" ? "en-US" : "pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(total / 100);
+}
+
+function resolveOwnerLocale(regionalPrefs: unknown): TransactionalEmailLocale {
+  return (regionalPrefs as { locale?: string } | null)?.locale === "en" ? "en" : "pt";
+}
+
+function renderProposalSendEmail(input: {
+  locale: TransactionalEmailLocale;
+  studioName: string;
+  contactLine?: string | null;
+  clientName: string;
+  proposalTitle: string;
+  total: number;
+  url: string;
+}) {
+  const locale = input.locale === "en" ? "en" : "pt";
+  const copy = locale === "en"
+    ? {
+        eyebrow: "Commercial proposal",
+        title: "Your proposal is ready for review",
+        greeting: (name: string) => `Hi, ${name}.`,
+        intro: (title: string, studio: string) => `${studio} sent the proposal "${title}" for your review.`,
+        action: "Review Proposal",
+        total: "Investment",
+        validity: "Link validity",
+        validityValue: `${PROPOSAL_SHARE_TTL_DAYS} days`,
+        note: "Use this secure link to view and accept the proposal. If anything needs to change, reply to this email before accepting.",
+        safety: "This link is transactional and expires automatically. Do not forward it to people outside the approval flow.",
+        subject: (studio: string) => `${studio} sent you a proposal`,
+      }
+    : {
+        eyebrow: "Proposta comercial",
+        title: "Sua proposta esta pronta para revisao",
+        greeting: (name: string) => `Ola, ${name}.`,
+        intro: (title: string, studio: string) => `${studio} enviou a proposta "${title}" para sua revisao.`,
+        action: "Revisar proposta",
+        total: "Investimento",
+        validity: "Validade do link",
+        validityValue: `${PROPOSAL_SHARE_TTL_DAYS} dias`,
+        note: "Use este link seguro para visualizar e aceitar a proposta. Se algo precisar mudar, responda este e-mail antes do aceite.",
+        safety: "Este link e transacional e expira automaticamente. Nao encaminhe para pessoas fora do fluxo de aprovacao.",
+        subject: (studio: string) => `${studio} enviou uma proposta para voce`,
+      };
+
+  const rendered = renderTransactionalEmail({
+    locale,
+    eyebrow: copy.eyebrow,
+    title: copy.title,
+    greeting: copy.greeting(firstName(input.clientName)),
+    paragraphs: [
+      copy.intro(input.proposalTitle, input.studioName),
+      copy.note,
+    ],
+    details: [
+      { label: copy.total, value: currencyValue(input.total, locale) },
+      { label: copy.validity, value: copy.validityValue },
+    ],
+    action: { label: copy.action, url: input.url },
+    safetyNote: copy.safety,
+    footer: [input.studioName, input.contactLine || null].filter(Boolean).join("\n"),
+  });
+
+  return {
+    subject: copy.subject(input.studioName),
+    html: rendered.html,
+    text: rendered.text,
+  };
 }
 
 export function validateProposalPayload(input: Record<string, unknown>) {
@@ -248,7 +339,7 @@ export const createProposal: RequestHandler = async (req, res, next) => {
         success: true,
         data: {
           ...serializeSqliteProposal(row),
-          proposal_url: `${process.env.CLIENT_ORIGIN || "http://localhost:5173"}/proposal/${shareToken}`,
+          proposal_url: proposalUrl(shareToken),
         },
       });
       return;
@@ -275,7 +366,117 @@ export const createProposal: RequestHandler = async (req, res, next) => {
       success: true,
       data: {
         ...serializeProposal({ ...proposal, client }),
-        proposal_url: `${process.env.CLIENT_ORIGIN || "http://localhost:5173"}/proposal/${shareToken}`,
+        proposal_url: proposalUrl(shareToken),
+      },
+    });
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const sendProposalToClient: RequestHandler = async (req, res, next) => {
+  try {
+    const userId = req.user!.id;
+    const id = proposalIdValue(req.params.id);
+    const { visibleInClientPortal } = req.body as { visibleInClientPortal?: boolean };
+    if (visibleInClientPortal !== undefined && typeof visibleInClientPortal !== "boolean") {
+      throw new AppError("visibleInClientPortal deve ser booleano", 400);
+    }
+
+    if (!shouldUsePrisma) {
+      const row = selectSqliteProposalById(id, userId);
+      if (!row) throw new AppError("Proposta não encontrada ou acesso não autorizado", 404);
+      if (row.status === "revoked") throw new AppError("Uma proposta revogada não pode ser enviada.", 409);
+      if (row.status === "accepted") throw new AppError("Uma proposta já aceita não deve ser reenviada.", 409);
+      if (!row.client_email) throw new AppError("Cadastre um e-mail no cliente antes de enviar a proposta.", 409);
+
+      const nextStatus = row.status === "draft" ? "sent" : row.status;
+      db
+        .prepare(
+          `UPDATE proposals
+           SET status = ?, visible_in_client_portal = CASE WHEN ? IS NULL THEN visible_in_client_portal ELSE ? END, updated_at = datetime('now')
+           WHERE id = ? AND user_id = ?`,
+        )
+        .run(nextStatus, visibleInClientPortal === undefined ? null : 1, visibleInClientPortal ? 1 : 0, Number(id), userId);
+      const updated = selectSqliteProposalById(id, userId);
+      res.json({
+        success: true,
+        data: {
+          ...serializeSqliteProposal(updated),
+          proposal_url: proposalUrl(updated.share_token),
+          email_sent: false,
+          email_configured: false,
+          email_error: isEmailConfigured ? "Envio de e-mail indisponível no fallback SQLite." : null,
+        },
+      });
+      return;
+    }
+
+    const owner = BigInt(userId);
+    const proposal = await prisma.proposal.findFirst({
+      where: { id, userId: owner },
+      include: { client: { select: { name: true, email: true } } },
+    });
+    if (!proposal) throw new AppError("Proposta não encontrada ou acesso não autorizado", 404);
+    if (proposal.status === "revoked") throw new AppError("Uma proposta revogada não pode ser enviada.", 409);
+    if (proposal.status === "accepted") throw new AppError("Uma proposta já aceita não deve ser reenviada.", 409);
+    if (!proposal.client.email) throw new AppError("Cadastre um e-mail no cliente antes de enviar a proposta.", 409);
+
+    const url = proposalUrl(proposal.shareToken);
+    const ownerUser = await prisma.user.findUnique({
+      where: { id: owner },
+      select: { regionalPrefs: true, name: true },
+    });
+    const studioSettings = await prisma.studioSetting.findUnique({ where: { userId: owner } });
+    const studioName = studioSettings?.studioName || ownerUser?.name || SITE_CONFIG.brandName;
+    const studioReplyTo = studioSettings?.email?.trim() || CONTACT_EMAIL;
+    const contactLine = [studioSettings?.phone?.trim(), studioSettings?.website?.trim()].filter(Boolean).join(" · ");
+    const locale = resolveOwnerLocale(ownerUser?.regionalPrefs);
+
+    let emailSent = false;
+    let emailError: string | null = null;
+
+    if (isEmailConfigured) {
+      try {
+        const email = renderProposalSendEmail({
+          locale,
+          studioName,
+          contactLine,
+          clientName: proposal.client.name,
+          proposalTitle: proposal.title,
+          total: proposal.total,
+          url,
+        });
+        await sendEmail({
+          to: proposal.client.email,
+          replyTo: studioReplyTo,
+          subject: email.subject,
+          html: email.html,
+          text: email.text,
+        });
+        emailSent = true;
+      } catch (error) {
+        emailError = error instanceof Error ? error.message : "Erro desconhecido ao enviar e-mail.";
+      }
+    }
+
+    const updated = await prisma.proposal.update({
+      where: { id: proposal.id },
+      data: {
+        status: proposal.status === "draft" ? "sent" : proposal.status,
+        ...(visibleInClientPortal === undefined ? {} : { visibleInClientPortal }),
+      },
+      include: { client: { select: { name: true, email: true } }, project: { select: { name: true } } },
+    });
+
+    res.json({
+      success: true,
+      data: {
+        ...serializeProposal(updated),
+        proposal_url: url,
+        email_sent: emailSent,
+        email_configured: isEmailConfigured,
+        email_error: emailError,
       },
     });
   } catch (e) {

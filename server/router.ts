@@ -64,6 +64,7 @@ import {
   generateShareLink,
   getVideoReview,
   resolveComment,
+  sendVideoReviewToClient,
   streamSharedReviewVideo,
   updateSharedReviewStatus,
   updateVideoReview,
@@ -160,6 +161,7 @@ router.get("/stats", authenticate, getOverallAnalytics);
 router.get("/video-review", authenticate, withParam("id", "id", getVideoReview));
 router.put("/video-review", authenticate, withParam("id", "id", updateVideoReview));
 router.post("/video-review-share", authenticate, withParam("id", "reviewId", generateShareLink));
+router.post("/video-review-send", authenticate, withParam("id", "reviewId", sendVideoReviewToClient));
 router.post("/video-review-comment", authenticate, withParam("id", "reviewId", addComment));
 router.put("/video-review-comment-resolve", authenticate, withParam("id", "commentId", resolveComment));
 router.delete("/video-review-comment", authenticate, withParam("id", "commentId", deleteComment));

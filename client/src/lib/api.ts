@@ -584,6 +584,11 @@ export const api = {
         method: "PATCH",
         body: JSON.stringify({ visible }),
       }),
+    sendToClient: (id: number, options: { visibleInClientPortal?: boolean } = {}) =>
+      request<ProposalSendResponse>(`/clients/proposals/${id}/send`, {
+        method: "POST",
+        body: JSON.stringify(options),
+      }),
     delete: (id: number) => request<{ id: number }>(`/clients/proposals/${id}`, { method: "DELETE" }),
   },
   ai: {
@@ -1343,6 +1348,13 @@ export interface ProposalItem {
 
 export interface ProposalCreatedResponse extends ProposalItem {
   proposal_url: string;
+}
+
+export interface ProposalSendResponse extends ProposalItem {
+  proposal_url: string;
+  email_sent: boolean;
+  email_configured: boolean;
+  email_error?: string | null;
 }
 
 export interface ProposalDraftResponse extends ProposalItem {

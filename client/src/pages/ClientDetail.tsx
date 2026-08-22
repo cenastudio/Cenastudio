@@ -8,7 +8,7 @@ import { TabsContent } from "@/components/ui/tabs";
 import { ResponsiveTabs } from "@/components/ui/responsive-tabs";
 import {
   ArrowLeft, BriefcaseBusiness, Building2, Calendar, Copy, DollarSign, FileText, Film, FolderOpen,
-  Globe2, Mail, MessageSquare, Phone, Plus, Trash2, User, Loader2, Video,
+  Globe2, Mail, MessageSquare, Phone, Plus, Send, Trash2, User, Loader2, Video,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
@@ -122,6 +122,7 @@ function ClientDetailContent() {
   const [proposals, setProposals] = useState<SavedProposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
+  const [sendingProposalId, setSendingProposalId] = useState<string | null>(null);
 
   const financialSummary = useMemo(() => {
     const totalIncome = financial
@@ -184,6 +185,40 @@ function ClientDetailContent() {
       toast.success(nextVisible ? "Proposta liberada no portal do cliente" : "Proposta removida do portal do cliente");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao atualizar portal da proposta");
+    }
+  };
+
+  const sendProposalToClient = async (proposal: SavedProposal) => {
+    const publishToPortal = !proposal.visibleInClientPortal;
+    setSendingProposalId(proposal.id);
+    try {
+      const updated = await api.proposals.sendToClient(Number(proposal.id), {
+        visibleInClientPortal: publishToPortal ? true : undefined,
+      });
+      setProposals((current) =>
+        current.map((item) =>
+          item.id === proposal.id
+            ? {
+                ...item,
+                status: updated.status,
+                visibleInClientPortal: Boolean(updated.visible_in_client_portal),
+                shareToken: updated.share_token,
+              }
+            : item,
+        ),
+      );
+      if (updated.email_sent) {
+        toast.success(publishToPortal ? "Proposta enviada e liberada no portal" : "Proposta enviada ao cliente");
+      } else if (!updated.email_configured) {
+        await navigator.clipboard.writeText(updated.proposal_url);
+        toast.success("E-mail nao configurado. Link copiado para envio manual.");
+      } else {
+        toast.error(updated.email_error || "Proposta preparada, mas o e-mail falhou.");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao enviar proposta");
+    } finally {
+      setSendingProposalId(null);
     }
   };
 
@@ -801,6 +836,17 @@ function ClientDetailContent() {
 
                       {/* Actions */}
                       <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-frame-gray-3/40">
+                        {proposal.status !== "accepted" && proposal.status !== "revoked" && (
+                          <button
+                            onClick={() => sendProposalToClient(proposal)}
+                            className="flex-1 min-w-[150px] frame-btn flex items-center justify-center gap-1.5 text-xs"
+                            title="Enviar proposta por e-mail ao cliente"
+                            disabled={sendingProposalId === proposal.id}
+                          >
+                            {sendingProposalId === proposal.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                            Enviar
+                          </button>
+                        )}
                         {proposal.status !== "draft" && proposal.shareToken && (
                           <button
                             onClick={async () => {

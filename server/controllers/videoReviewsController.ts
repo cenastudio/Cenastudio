@@ -9,6 +9,11 @@ import { prisma, shouldUsePrisma } from "../models/prisma.js";
 import { withSnakeCase } from "../utils/prismaSerialization.js";
 import { createProjectFileUrl } from "../services/supabaseStorage.js";
 import { dispatchWebhookEvent } from "../services/webhookService.js";
+import { sendEmail, isEmailConfigured } from "../services/emailService.js";
+import { renderTransactionalEmail, type TransactionalEmailLocale } from "../services/transactionalEmail.js";
+import { SITE_CONFIG } from "@shared/site";
+
+const CONTACT_EMAIL = process.env.SUPPORT_EMAIL || SITE_CONFIG.supportEmail || "cenastudio@atomicmail.io";
 
 function serializeComment(value: any) {
   return withSnakeCase(value, {
@@ -112,6 +117,85 @@ function createShareData(review: {
     shareToken: token,
     shareUrl: `${getClientOrigin()}/review/${token}`,
     expiresAt: expiresAt.toISOString(),
+  };
+}
+
+function isEmail(value: unknown): value is string {
+  return typeof value === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
+function resolveOwnerLocale(regionalPrefs: unknown): TransactionalEmailLocale {
+  return (regionalPrefs as { locale?: string } | null)?.locale === "en" ? "en" : "pt";
+}
+
+function firstName(value: string | null | undefined) {
+  return (value || "").trim().split(" ")[0] || value || "";
+}
+
+function renderReviewSendEmail(input: {
+  locale: TransactionalEmailLocale;
+  studioName: string;
+  clientName: string;
+  reviewTitle: string;
+  projectName: string;
+  expiresAt: Date;
+  url: string;
+  contactLine?: string | null;
+}) {
+  const locale = input.locale === "en" ? "en" : "pt";
+  const date = input.expiresAt.toLocaleDateString(locale === "en" ? "en-US" : "pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+  const copy = locale === "en"
+    ? {
+        eyebrow: "Video review",
+        title: "A review room is ready for your feedback",
+        greeting: (name: string) => `Hi, ${name}.`,
+        intro: (studio: string, title: string) => `${studio} shared "${title}" for your review.`,
+        note: "Open the secure link to watch, comment on the timeline and send your final decision.",
+        action: "Open Review Room",
+        project: "Project",
+        expires: "Link expires",
+        safety: "This link is transactional and temporary. Do not forward it outside the approval flow.",
+        subject: (studio: string) => `${studio} sent a video for review`,
+      }
+    : {
+        eyebrow: "Review de video",
+        title: "Uma sala de aprovacao esta pronta para seu feedback",
+        greeting: (name: string) => `Ola, ${name}.`,
+        intro: (studio: string, title: string) => `${studio} compartilhou "${title}" para sua revisao.`,
+        note: "Abra o link seguro para assistir, comentar na timeline e enviar sua decisao final.",
+        action: "Abrir sala de review",
+        project: "Projeto",
+        expires: "Link expira",
+        safety: "Este link e transacional e temporario. Nao encaminhe para fora do fluxo de aprovacao.",
+        subject: (studio: string) => `${studio} enviou um video para review`,
+      };
+
+  const rendered = renderTransactionalEmail({
+    locale,
+    eyebrow: copy.eyebrow,
+    title: copy.title,
+    greeting: copy.greeting(firstName(input.clientName)),
+    paragraphs: [
+      copy.intro(input.studioName, input.reviewTitle),
+      copy.note,
+    ],
+    details: [
+      { label: copy.project, value: input.projectName },
+      { label: copy.expires, value: date },
+    ],
+    action: { label: copy.action, url: input.url },
+    safetyNote: copy.safety,
+    footer: [input.studioName, input.contactLine || null].filter(Boolean).join("\n"),
+  });
+
+  return {
+    subject: copy.subject(input.studioName),
+    html: rendered.html,
+    text: rendered.text,
   };
 }
 
@@ -542,6 +626,127 @@ export const generateShareLink: RequestHandler = async (req, res, next) => {
       .run(shareData.shareToken, shareData.expiresAt, reviewId);
 
     res.json({ success: true, data: { shareUrl: shareData.shareUrl, expiresAt: shareData.expiresAt } });
+  } catch (e) {
+    next(e);
+  }
+};
+
+export const sendVideoReviewToClient: RequestHandler = async (req, res, next) => {
+  try {
+    const userId = req.user!.id;
+    const reviewId = parseInt(req.params.id);
+    const { recipientEmail, expiresInDays } = req.body as { recipientEmail?: unknown; expiresInDays?: unknown };
+    if (!reviewId) throw new AppError("Review ID is required", 400);
+    if (recipientEmail !== undefined && !isEmail(recipientEmail)) {
+      throw new AppError("E-mail do destinatário inválido", 400);
+    }
+    const days = Math.max(1, Math.min(30, Number(expiresInDays) || 7));
+
+    if (shouldUsePrisma) {
+      const owner = BigInt(userId);
+      const review = await prisma.videoReview.findFirst({
+        where: { id: BigInt(reviewId), userId: owner },
+        include: {
+          project: { select: { name: true, client: { select: { name: true, email: true } } } },
+        },
+      });
+      if (!review) throw new AppError("Review not found or access denied", 404);
+      if (review.status === "approved" || review.status === "rejected") {
+        throw new AppError("Um review finalizado não deve ser reenviado como nova solicitação.", 409);
+      }
+
+      const to = (isEmail(recipientEmail) ? recipientEmail.trim() : review.project.client?.email?.trim()) || "";
+      if (!to) throw new AppError("Vincule um cliente com e-mail ao projeto ou informe um destinatário.", 409);
+
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + days);
+      const shareToken = randomBytes(32).toString("hex");
+      const shareUrl = `${getClientOrigin()}/review/${shareToken}`;
+
+      const ownerUser = await prisma.user.findUnique({
+        where: { id: owner },
+        select: { regionalPrefs: true, name: true },
+      });
+      const studioSettings = await prisma.studioSetting.findUnique({ where: { userId: owner } });
+      const studioName = studioSettings?.studioName || ownerUser?.name || SITE_CONFIG.brandName;
+      const studioReplyTo = studioSettings?.email?.trim() || CONTACT_EMAIL;
+      const contactLine = [studioSettings?.phone?.trim(), studioSettings?.website?.trim()].filter(Boolean).join(" · ");
+      const locale = resolveOwnerLocale(ownerUser?.regionalPrefs);
+
+      let emailSent = false;
+      let emailError: string | null = null;
+      if (isEmailConfigured) {
+        try {
+          const email = renderReviewSendEmail({
+            locale,
+            studioName,
+            clientName: review.project.client?.name || to,
+            reviewTitle: review.title,
+            projectName: review.project.name,
+            expiresAt,
+            url: shareUrl,
+            contactLine,
+          });
+          await sendEmail({
+            to,
+            replyTo: studioReplyTo,
+            subject: email.subject,
+            html: email.html,
+            text: email.text,
+          });
+          emailSent = true;
+        } catch (error) {
+          emailError = error instanceof Error ? error.message : "Erro desconhecido ao enviar e-mail.";
+        }
+      }
+
+      const updated = await prisma.videoReview.update({
+        where: { id: review.id },
+        data: { shareToken, expiresAt, status: "pending_review", updatedAt: new Date() },
+        include: { file: true, project: { select: { name: true } } },
+      });
+
+      res.json({
+        success: true,
+        data: {
+          ...serializeReview(updated),
+          shareUrl,
+          email_sent: emailSent,
+          email_configured: isEmailConfigured,
+          email_error: emailError,
+          recipient_email: to,
+        },
+      });
+      return;
+    }
+
+    const review = db.prepare("SELECT * FROM video_reviews WHERE id = ? AND user_id = ?").get(reviewId, userId) as any;
+    if (!review) throw new AppError("Review not found or access denied", 404);
+    if (review.status === "approved" || review.status === "rejected") {
+      throw new AppError("Um review finalizado não deve ser reenviado como nova solicitação.", 409);
+    }
+    const to = isEmail(recipientEmail) ? recipientEmail.trim() : "";
+    if (!to) throw new AppError("Informe um destinatário para enviar este review.", 409);
+    const shareData = createShareData(review, days);
+    db
+      .prepare(
+        `UPDATE video_reviews
+         SET share_token = ?, expires_at = ?, status = 'pending_review', updated_at = datetime('now')
+         WHERE id = ? AND user_id = ?`,
+      )
+      .run(shareData.shareToken, shareData.expiresAt, reviewId, userId);
+    const updated = db.prepare("SELECT * FROM video_reviews WHERE id = ?").get(reviewId) as any;
+    res.json({
+      success: true,
+      data: {
+        ...updated,
+        shareUrl: shareData.shareUrl,
+        email_sent: false,
+        email_configured: false,
+        email_error: isEmailConfigured ? "Envio de e-mail indisponível no fallback SQLite." : null,
+        recipient_email: to,
+      },
+    });
   } catch (e) {
     next(e);
   }

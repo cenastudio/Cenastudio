@@ -9,6 +9,7 @@ import {
   updateVideoReview,
   deleteVideoReview,
   generateShareLink,
+  sendVideoReviewToClient,
   accessSharedReview,
   streamSharedReviewVideo,
   addComment,
@@ -44,6 +45,9 @@ router.delete("/:id", deleteVideoReview);
 
 // Generate shareable link
 router.post("/:id/share", generateShareLink);
+
+// Send review request to the linked client or an explicit recipient.
+router.post("/:id/send", sendVideoReviewToClient);
 
 // Add comment to a review
 router.post("/:id/comments", addComment);

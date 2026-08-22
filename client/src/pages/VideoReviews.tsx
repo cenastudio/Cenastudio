@@ -27,6 +27,7 @@ import {
   PenLine,
   Plus,
   RefreshCw,
+  Send,
   Share2,
   Square,
   Trash2,
@@ -138,6 +139,7 @@ function VideoReviewsContent({ embedded }: { embedded?: boolean }) {
   const [selectedFileId, setSelectedFileId] = useState("");
   const [driveLink, setDriveLink] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [isSendingReview, setIsSendingReview] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [newCommentTimestamp, setNewCommentTimestamp] = useState<number | null>(null);
   const [seekTo, setSeekTo] = useState<number | null>(null);
@@ -359,6 +361,51 @@ function VideoReviewsContent({ embedded }: { embedded?: boolean }) {
     }
   };
 
+  const handleSendReview = async () => {
+    if (!selectedReview) return;
+    setIsSendingReview(true);
+    try {
+      const response = await fetch("/api/video-review-send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ reviewId: selectedReview.id, expiresInDays: 7 }),
+      });
+      const data = await response.json();
+      if (!data.success) {
+        toast.error(data.error || "Nao foi possivel enviar o review");
+        return;
+      }
+
+      const nextReview = {
+        status: data.data.status,
+        share_token: data.data.share_token,
+        expires_at: data.data.expires_at,
+      };
+      setReviews((current) =>
+        current.map((review) => review.id === selectedReview.id ? { ...review, ...nextReview } : review),
+      );
+      setSelectedReview((current) => current ? { ...current, ...nextReview } : current);
+
+      const nextShareUrl = normalizeShareUrl(data.data.shareUrl, data.data.share_token);
+      setShareUrl(nextShareUrl);
+      if (data.data.email_sent) {
+        toast.success("Review enviado ao cliente");
+      } else if (!data.data.email_configured) {
+        await navigator.clipboard.writeText(nextShareUrl);
+        toast.success("E-mail nao configurado. Link copiado para envio manual.");
+        setShowShareModal(true);
+      } else {
+        toast.error(data.data.email_error || "Review preparado, mas o e-mail falhou.");
+        setShowShareModal(true);
+      }
+    } catch {
+      toast.error("Nao foi possivel enviar o review");
+    } finally {
+      setIsSendingReview(false);
+    }
+  };
+
   const handleUpdateReviewStatus = async (status: string) => {
     if (!selectedReview) return;
     try {
@@ -543,6 +590,12 @@ function VideoReviewsContent({ embedded }: { embedded?: boolean }) {
               <button onClick={handleGenerateShareLink} className="frame-btn-primary flex items-center gap-2">
                 <Share2 className="w-4 h-4" />
                 {selectedShareUrl ? t("app.videoReviews.updateLink") : t("app.videoReviews.generateLink")}
+              </button>
+            )}
+            {selectedReview && selectedReview.status !== "approved" && selectedReview.status !== "rejected" && (
+              <button onClick={handleSendReview} disabled={isSendingReview} className="frame-btn flex items-center gap-2">
+                {isSendingReview ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                Enviar
               </button>
             )}
           </div>

@@ -53,11 +53,24 @@
   guarda hash SHA-256 de um token temporal, e o cliente cria a própria senha em
   `/portal/activate?token=...`. Reenvio de acesso gera novo token, e o e-mail de
   ativação usa o renderer transacional comum quando Resend está configurado.
+  A proposta ao cliente também ganhou ação explícita autenticada:
+  `POST /api/clients/proposals/:id/send` valida propriedade da produtora, bloqueia
+  proposta revogada/aceita, transforma rascunho em `sent`, pode liberar no Portal
+  do Cliente e envia e-mail transacional com `replyTo` da produtora; falha ou
+  ausência de Resend devolve `proposal_url` para fallback manual.
+  O review de vídeo também passou a ter envio explícito:
+  `POST /api/video-reviews/:id/send`/`POST /api/video-review-send` valida
+  propriedade, bloqueia estados finalizados, usa e-mail do cliente do projeto
+  ou destinatário explícito validado, renova o token temporal, marca
+  `pending_review` e envia e-mail transacional com fallback por `shareUrl`.
   Testes do provedor e dos três fluxos passaram em 2026-08-14; um
   envio sandbox foi aceito pela Resend. A migração de reunião foi validada com
   testes focados, `npm run check` e `npm run build`; a ativação do portal foi
   validada com `npx prisma generate`, `server/clientPortalFlow.test.ts`,
-  `npm run check`, testes de import/traduções e `npm run build`. **Ainda não está habilitado para
+  `npm run check`, testes de import/traduções e `npm run build`; envio explícito
+  de proposta foi validado com `server/controllers/proposalLifecycle.test.ts` e
+  `npm run check`; envio de review foi validado com
+  `server/controllers/videoReviewsSend.test.ts` e `npm run check`. **Ainda não está habilitado para
   clientes em produção:** a Vercel não contém `RESEND_API_KEY` nem
   `EMAIL_FROM`, e o remetente sandbox só aceita o e-mail da conta Resend.
   Gatilho: verificar domínio próprio na Resend, configurar as duas variáveis
