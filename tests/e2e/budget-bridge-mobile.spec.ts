@@ -82,9 +82,10 @@ test.describe("@budget-bridge ponte de orçamento no mobile", () => {
       await expect(dialog).toBeVisible();
       await expect(dialog).toBeInViewport();
 
-      // Teto pré-selecionado (ADR-013) e total = 5500 + 3600.
-      await expect(page.getByRole("radio", { name: /Teto da faixa/i })).toBeChecked();
-      await expect(page.getByRole("radio", { name: /Piso da faixa/i })).not.toBeChecked();
+      // Estimativa protegida pré-selecionada (ADR-013) e total = 5500 + 3600.
+      await expect(page.getByRole("radio", { name: /Estimativa protegida/i })).toBeChecked();
+      await expect(page.getByRole("radio", { name: /Estimativa enxuta/i })).not.toBeChecked();
+      await expect(dialog.getByText(/Escolha quanto risco quer absorver/i)).toBeVisible();
       await expect(dialog.getByText("R$ 9.100,00", { exact: true })).toBeVisible();
       await expect(dialog.getByText(/Não entra no orçamento/i)).toBeVisible();
 

@@ -697,9 +697,9 @@ SUBTOTAL ADMINISTRATIVO: R$ 3.042 – R$ 5.544
 TOTAL GERAL: R$ 11.500 – R$ 20.900 (arredondado)
 
 O QUE EMPURRA PARA CADA EXTREMO
-- Piso da faixa: equipe já conhecida, galpão cedido ou com desconto, kit de
+- Estimativa enxuta: equipe já conhecida, galpão cedido ou com desconto, kit de
   câmera do próprio DOP, prazo de pós folgado.
-- Teto da faixa: aluguel de câmera em rental, diária estourando 12h,
+- Estimativa protegida: aluguel de câmera em rental, diária estourando 12h,
   entrega em menos de 2 semanas, mais de um corte ou versões para redes.
 
 CONDIÇÕES DE PAGAMENTO

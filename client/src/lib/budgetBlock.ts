@@ -210,7 +210,7 @@ export function extractBudgetBlock(output: string | null | undefined): BudgetBlo
       return;
     }
     if (!range) {
-      dropped.push({ label, reason: "valores inválidos (piso/teto)" });
+      dropped.push({ label, reason: "valores inválidos na estimativa" });
       return;
     }
     if (categories.length >= BUDGET_BLOCK_MAX_CATEGORIES) {

@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { AlertTriangle, ArrowRight, Loader2, Wallet } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Dialog,
   DialogContent,
@@ -43,6 +44,7 @@ export default function BudgetBridgeAction({
   projectId,
   onApplyBaseline,
 }: BudgetBridgeActionProps) {
+  const { t } = useLanguage();
   const [, setLocation] = useLocation();
   const [open, setOpen] = useState(false);
   const [bound, setBound] = useState<BudgetBound>("max");
@@ -110,7 +112,7 @@ export default function BudgetBridgeAction({
       });
       setOpen(false);
     } catch (error) {
-      // Diálogo fica aberto de propósito: o usuário pode corrigir piso/teto e
+      // Diálogo fica aberto de propósito: o usuário pode trocar a estimativa e
       // tentar de novo sem reabrir e revisar tudo.
       toast.error(error instanceof Error ? error.message : "Falha ao gravar o orçamento");
     } finally {
@@ -179,8 +181,7 @@ export default function BudgetBridgeAction({
             Usar este orçamento no módulo
           </p>
           <p className="mt-1 text-[0.76rem] leading-relaxed text-frame-gray-light">
-            {block.categories.length} rubricas estimadas em faixa. Você escolhe piso ou teto e revisa
-            antes de qualquer gravação.
+            {block.categories.length} {t("app.studio.budgetBridge.estimatedLines")}
           </p>
         </div>
         <button
@@ -207,13 +208,24 @@ export default function BudgetBridgeAction({
           <div className="space-y-4">
             <fieldset className="border border-frame-gray-3/60 p-3">
               <legend className="px-1 font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-orange">
-                Valor que vai para o orçamento
+                {t("app.studio.budgetBridge.boundLegend")}
               </legend>
+              <p className="mt-1 text-[0.72rem] leading-relaxed text-frame-gray-light">
+                {t("app.studio.budgetBridge.boundHelp")}
+              </p>
               <div className="mt-1 grid gap-2 sm:grid-cols-2">
                 {(
                   [
-                    ["max", "Teto da faixa", "Recomendado: o orçado é o limite autorizado."],
-                    ["min", "Piso da faixa", "Mais apertado — pode marcar “estourado” cedo."],
+                    [
+                      "max",
+                      t("app.studio.budgetBridge.protectedEstimate"),
+                      t("app.studio.budgetBridge.protectedEstimateHint"),
+                    ],
+                    [
+                      "min",
+                      t("app.studio.budgetBridge.leanEstimate"),
+                      t("app.studio.budgetBridge.leanEstimateHint"),
+                    ],
                   ] as const
                 ).map(([value, label, hint]) => (
                   <label

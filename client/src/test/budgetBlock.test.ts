@@ -88,8 +88,8 @@ describe("extractBudgetBlock", () => {
     expect(result.ok).toBe(true);
     expect(result.categories.map((c) => c.label)).toEqual(["Equipe", "transporte"]);
     expect(result.dropped).toEqual([
-      { label: "Locação", reason: "valores inválidos (piso/teto)" },
-      { label: "Arte", reason: "valores inválidos (piso/teto)" },
+      { label: "Locação", reason: "valores inválidos na estimativa" },
+      { label: "Arte", reason: "valores inválidos na estimativa" },
     ]);
   });
 
@@ -131,7 +131,7 @@ describe("extractBudgetBlock", () => {
     ) as BudgetBlockValid;
 
     expect(result.categories.map((c) => c.label)).toEqual(["Arte"]);
-    expect(result.dropped).toEqual([{ label: "Equipe", reason: "valores inválidos (piso/teto)" }]);
+    expect(result.dropped).toEqual([{ label: "Equipe", reason: "valores inválidos na estimativa" }]);
   });
 
   it("mantém as 12 primeiras rubricas e reporta o excedente como descartado", () => {

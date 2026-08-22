@@ -114,8 +114,20 @@ reproduzir contra Postgres/Supabase exige janela controlada e não foi executado
 
 - [ ] P2.1 Propor dashboard com métricas cuja fonte exista no banco.
 - [ ] P2.2 Propor financeiro por fases: caixa, recebíveis e resultado por projeto.
-- [ ] P2.3 Trocar nomenclatura de faixa e adicionar ajuda contextual PT/EN.
+- [x] P2.3 Trocar nomenclatura de faixa e adicionar ajuda contextual PT/EN.
 - [ ] P2.4 Implementar somente blocos P2 aprovados.
+
+**P2.3 concluída em 2026-08-22:** a ponte Orçamento IA → Orçamento do projeto
+deixou de expor "Piso/Teto da faixa" como decisão principal. A UI agora usa
+"Estimativa protegida" como padrão e "Estimativa enxuta" como alternativa, com
+ajuda contextual em PT/EN explicando risco, escopo travado e impacto nos
+alertas. A lógica interna `min/max` foi preservada.
+
+**Evidência P2.3:** `npm run test -- client/src/test/BudgetBridgeAction.test.tsx
+client/src/test/budgetBlock.test.ts client/src/test/translations.test.ts`,
+`npm run check`, `npm run build` e `npx playwright test tests/e2e/budget-bridge-flow.spec.ts
+tests/e2e/budget-bridge-mobile.spec.ts --project=chromium-desktop
+--project=chromium-mobile` passaram.
 
 ## Backlog aprovado — Storyboard IA conectado ao Shot List
 

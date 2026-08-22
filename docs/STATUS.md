@@ -310,6 +310,14 @@ overflow horizontal, touch targets dentro da navegação e ida/volta entre área
 diárias e secundárias. Rodou verde nos projetos `chromium-desktop` e
 `chromium-mobile`.
 
+**P2.3 concluída:** a ponte Orçamento IA → Orçamento do projeto trocou
+"Piso/Teto da faixa" por "Estimativa protegida" e "Estimativa enxuta", com
+ajuda contextual em PT/EN para explicar risco, escopo travado e impacto nos
+alertas antes da gravação. A lógica interna `min/max` foi preservada. Validação:
+34 testes unitários/tradução passaram, `npm run check` e `npm run build`
+passaram, e os E2E `budget-bridge-flow` e `budget-bridge-mobile` passaram nos
+projetos `chromium-desktop` e `chromium-mobile`.
+
 **Concluídas (`-OK`):** `00-fundacao-limpeza-e-documentacao`,
 `client-hub-connected-workflows`, `dre-por-projeto`,
 `fase-1-testes-uso-real`, `fase-2-layout-mobile-e-tabs`,

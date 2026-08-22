@@ -25,7 +25,7 @@ import { isMobileProject } from "./support/mobile";
  * aqui a corrida é do fluxo de dados, então roda só no projeto desktop.
  */
 
-/** Faixas do bloco: teto = 5500 + 3600 = 9100; piso = 3300 + 1800 = 5100. */
+/** Faixas do bloco: protegida = 5500 + 3600 = 9100; enxuta = 3300 + 1800 = 5100. */
 const SEEDED_OUTPUT = [
   "ORCAMENTO AUDIOVISUAL",
   "Estimativa em faixa — valide com 2-3 orcamentos reais de mercado.",
@@ -99,9 +99,10 @@ test.describe("@budget-bridge fluxo completo da ponte de orçamento", () => {
 
       const dialog = await openBridgeDialog(page, project.id);
 
-      // Teto pré-selecionado (ADR-013) e projeto sem baseline: nada de aviso de
+      // Estimativa protegida pré-selecionada (ADR-013) e projeto sem baseline: nada de aviso de
       // substituição, confirmação liberada de saída.
-      await expect(dialog.getByRole("radio", { name: /Teto da faixa/i })).toBeChecked();
+      await expect(dialog.getByRole("radio", { name: /Estimativa protegida/i })).toBeChecked();
+      await expect(dialog.getByText(/Escolha quanto risco quer absorver/i)).toBeVisible();
       await expect(dialog.getByText(/Salvar substitui as categorias existentes/i)).toHaveCount(0);
       await expect(dialog.getByText("R$ 9.100,00", { exact: true })).toBeVisible();
       // Margem aparece no diálogo mas não entra no baseline.
@@ -137,7 +138,7 @@ test.describe("@budget-bridge fluxo completo da ponte de orçamento", () => {
       await expect(main.getByText("Pós-produção", { exact: true })).toBeVisible();
       await expect(main.getByText("R$ 0,00 / R$ 5.500,00")).toBeVisible();
       await expect(main.getByText("R$ 0,00 / R$ 3.600,00")).toBeVisible();
-      // Nenhuma categoria nasce "Estourado": teto como orçado é o motivo do padrão.
+      // Nenhuma categoria nasce "Estourado": estimativa protegida como orçado é o motivo do padrão.
       await expect(main.getByText("Estourado")).toHaveCount(0);
     } finally {
       await cleanupTestData(page, { projects: project ? [project] : [], clients: [client] });
@@ -171,8 +172,8 @@ test.describe("@budget-bridge fluxo completo da ponte de orçamento", () => {
       const confirm = dialog.getByRole("button", { name: /Confirmar e enviar/i });
       await expect(confirm).toBeDisabled();
 
-      // Piso em vez do teto, para o caminho não-padrão também cair no banco.
-      await dialog.getByRole("radio", { name: /Piso da faixa/i }).check();
+      // Estimativa enxuta, para o caminho não-padrão também cair no banco.
+      await dialog.getByRole("radio", { name: /Estimativa enxuta/i }).check();
       await expect(dialog.getByText("R$ 5.100,00", { exact: true })).toBeVisible();
 
       await dialog.getByRole("checkbox", { name: /categorias atuais serão substituídas/i }).check();
@@ -231,7 +232,7 @@ test.describe("@budget-bridge fluxo completo da ponte de orçamento", () => {
 
       await expect(page.getByText("Seu plano não inclui este recurso.", { exact: true })).toBeVisible();
       await expect(dialog).toBeVisible();
-      await expect(dialog.getByRole("radio", { name: /Teto da faixa/i })).toBeChecked();
+      await expect(dialog.getByRole("radio", { name: /Estimativa protegida/i })).toBeChecked();
       await expect(confirm).toBeEnabled();
     } finally {
       await cleanupTestData(page, { projects: project ? [project] : [], clients: [client] });

@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { toast } from "sonner";
 import { api, ApiError } from "@/lib/api";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import BudgetBridgeAction from "@/components/studio/BudgetBridgeAction";
 
 const routerState = vi.hoisted(() => ({ setLocation: vi.fn() }));
@@ -40,6 +41,10 @@ function emptyOverview(categories: Array<{ name: string }> = []) {
   } as any;
 }
 
+function renderBudgetBridge(ui: React.ReactElement) {
+  return render(ui, { wrapper: LanguageProvider });
+}
+
 describe("BudgetBridgeAction", () => {
   beforeEach(() => {
     routerState.setLocation.mockClear();
@@ -51,14 +56,14 @@ describe("BudgetBridgeAction", () => {
   });
 
   it("explica que o orçamento é por projeto quando não há projeto selecionado", () => {
-    render(<BudgetBridgeAction output={outputWithBlock} projectId={null} />);
+    renderBudgetBridge(<BudgetBridgeAction output={outputWithBlock} projectId={null} />);
 
     expect(screen.getByText(/O orçamento do módulo é por projeto/i)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Usar este orçamento no módulo de Orçamento/i })).toBeNull();
   });
 
   it("fica inerte com explicação e link quando o bloco estruturado não existe", () => {
-    render(<BudgetBridgeAction output="ORÇAMENTO\nTOTAL GERAL: R$ 12.000" projectId={5} />);
+    renderBudgetBridge(<BudgetBridgeAction output="ORÇAMENTO\nTOTAL GERAL: R$ 12.000" projectId={5} />);
 
     expect(screen.getByText(/este orçamento foi gerado sem os dados estruturados/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Usar no módulo/i })).toBeDisabled();
@@ -68,31 +73,36 @@ describe("BudgetBridgeAction", () => {
   });
 
   it("abre o diálogo com teto pré-selecionado, total somado e margem fora do baseline", async () => {
-    render(<BudgetBridgeAction output={outputWithBlock} projectId={5} />);
+    renderBudgetBridge(<BudgetBridgeAction output={outputWithBlock} projectId={5} />);
 
     fireEvent.click(screen.getByRole("button", { name: /Usar este orçamento no módulo de Orçamento/i }));
 
     expect(await screen.findByText(/Enviar orçamento para o módulo/i)).toBeInTheDocument();
-    const teto = screen.getByRole("radio", { name: /Teto da faixa/i }) as HTMLInputElement;
-    const piso = screen.getByRole("radio", { name: /Piso da faixa/i }) as HTMLInputElement;
-    expect(teto.checked).toBe(true);
-    expect(piso.checked).toBe(false);
+    const protectedEstimate = screen.getByRole("radio", {
+      name: /Estimativa protegida/i,
+    }) as HTMLInputElement;
+    const leanEstimate = screen.getByRole("radio", {
+      name: /Estimativa enxuta/i,
+    }) as HTMLInputElement;
+    expect(protectedEstimate.checked).toBe(true);
+    expect(leanEstimate.checked).toBe(false);
+    expect(screen.getByText(/Escolha quanto risco quer absorver/i)).toBeInTheDocument();
 
-    // Σ dos tetos = 5500 + 3600 = 9100
+    // Estimativa protegida = 5500 + 3600 = 9100
     expect(screen.getByText("Total do orçamento").parentElement?.textContent).toContain("9.100");
     expect(screen.getByText(/Não entra no orçamento/i)).toBeInTheDocument();
     expect(screen.getByText(/1 diária de 10h em BH/i)).toBeInTheDocument();
 
-    // Piso = 3300 + 1800 = 5100
-    fireEvent.click(piso);
+    // Estimativa enxuta = 3300 + 1800 = 5100
+    fireEvent.click(leanEstimate);
     await waitFor(() =>
       expect(screen.getByText("Total do orçamento").parentElement?.textContent).toContain("5.100"),
     );
   });
 
-  it("nada é enviado até a confirmação, e o piso/teto escolhido vira o valor gravado", async () => {
+  it("nada é enviado até a confirmação, e a estimativa escolhida vira o valor gravado", async () => {
     const onApplyBaseline = vi.fn().mockResolvedValue(undefined);
-    render(
+    renderBudgetBridge(
       <BudgetBridgeAction output={outputWithBlock} projectId={5} onApplyBaseline={onApplyBaseline} />,
     );
 
@@ -117,7 +127,7 @@ describe("BudgetBridgeAction", () => {
   it("grava o baseline pelo endpoint do módulo quando não há override (A4.5)", async () => {
     vi.mocked(api.budgets.updateBaseline).mockResolvedValue({} as any);
 
-    render(<BudgetBridgeAction output={outputWithBlock} projectId={5} />);
+    renderBudgetBridge(<BudgetBridgeAction output={outputWithBlock} projectId={5} />);
 
     fireEvent.click(screen.getByRole("button", { name: /Usar este orçamento no módulo de Orçamento/i }));
     await screen.findByText(/Enviar orçamento para o módulo/i);
@@ -142,7 +152,7 @@ describe("BudgetBridgeAction", () => {
   it("mantém o diálogo aberto e mostra o erro real quando a gravação falha", async () => {
     vi.mocked(api.budgets.updateBaseline).mockRejectedValue(new ApiError("Projeto não encontrado", 404));
 
-    render(<BudgetBridgeAction output={outputWithBlock} projectId={5} />);
+    renderBudgetBridge(<BudgetBridgeAction output={outputWithBlock} projectId={5} />);
 
     fireEvent.click(screen.getByRole("button", { name: /Usar este orçamento no módulo de Orçamento/i }));
     const confirm = await screen.findByRole("button", { name: /Confirmar e enviar/i });
@@ -159,7 +169,7 @@ describe("BudgetBridgeAction", () => {
     vi.mocked(api.budgets.getOverview).mockResolvedValue(emptyOverview([{ name: "Equipe" }]));
     const onApplyBaseline = vi.fn().mockResolvedValue(undefined);
 
-    render(
+    renderBudgetBridge(
       <BudgetBridgeAction output={outputWithBlock} projectId={5} onApplyBaseline={onApplyBaseline} />,
     );
 
@@ -177,7 +187,7 @@ describe("BudgetBridgeAction", () => {
   });
 
   it("expõe diálogo rotulado, grupo de rádio real e alvos de toque de 44px", async () => {
-    render(<BudgetBridgeAction output={outputWithBlock} projectId={5} />);
+    renderBudgetBridge(<BudgetBridgeAction output={outputWithBlock} projectId={5} />);
     const trigger = screen.getByRole("button", { name: /Usar este orçamento no módulo de Orçamento/i });
     // Alvo de toque mínimo (WCAG 2.5.5): min-h-11 = 44px.
     expect(trigger.className).toContain("min-h-11");
@@ -189,7 +199,7 @@ describe("BudgetBridgeAction", () => {
     expect(dialog).toHaveAccessibleDescription(/Nada é gravado no projeto até você confirmar/i);
 
     // Grupo de rádio real: fieldset + legend, dois inputs com o mesmo name.
-    const group = screen.getByRole("group", { name: /Valor que vai para o orçamento/i });
+    const group = screen.getByRole("group", { name: /Leitura de risco do orçamento/i });
     const radios = screen.getAllByRole("radio");
     expect(radios).toHaveLength(2);
     radios.forEach((radio) => {
@@ -215,7 +225,7 @@ describe("BudgetBridgeAction", () => {
       "CENA_BUDGET_JSON>>>",
     ].join("\n");
 
-    render(<BudgetBridgeAction output={output} projectId={5} />);
+    renderBudgetBridge(<BudgetBridgeAction output={output} projectId={5} />);
     fireEvent.click(screen.getByRole("button", { name: /Usar este orçamento no módulo de Orçamento/i }));
 
     expect(await screen.findByText(/Rubricas descartadas/i)).toBeInTheDocument();
