@@ -79,6 +79,7 @@
   Resend o delivery fica `skipped`. Validação:
   `NODE_OPTIONS=--max-old-space-size=4096 npm run check` e
   `npm run test -- server/services/stripeService.test.ts server/services/emailService.test.ts server/services/transactionalEmail.test.ts`.
+  Em 2026-08-22, a migration foi aplicada no Supabase junto com Google Calendar.
   Também em 2026-08-22, `RESEND_API_KEY` e `EMAIL_FROM` foram configurados como
   envs sensíveis em Production na Vercel. **Ainda não está habilitado para clientes
   em produção:** teste direto para `oldbarbier@gmail.com` retornou `403` porque
@@ -155,10 +156,13 @@ verificar, está dito explicitamente.
   fallback `.ics` continua disponível. Validação local: `npx prisma generate`,
   `NODE_OPTIONS=--max-old-space-size=4096 npm run check` e
   `npm run test -- server/controllers/domainFlow.test.ts server/services/icsService.test.ts`.
-  Ainda aberto: configurar credenciais reais no Google Cloud/Vercel
-  (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`,
-  `PUBLIC_APP_URL`), rodar `npx prisma migrate deploy` em produção e testar OAuth
-  + criação real de eventos.
+  Em 2026-08-22, as migrations foram aplicadas no Supabase: `prisma migrate
+  status` retornou "Database schema is up to date" e a checagem SQL confirmou
+  `calendar_events`, `email_deliveries` e `users.google_refresh_token`. Também
+  foram configuradas na Vercel Production as envs `PUBLIC_APP_URL` e
+  `GOOGLE_REDIRECT_URI`. Ainda aberto: criar OAuth App no Google Cloud e
+  configurar `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` na Vercel, redeployar e
+  testar OAuth + criação real de eventos.
 - **Portal do Cliente:** MVP funcional em evolução (spec `portal-do-cliente-OK/`).
   Rotas `/portal` e `/client-portal-auth`, model `ClientPortalAccess`, auth
   isolada, endpoints de projetos/arquivos/propostas/reuniões/resumo financeiro,

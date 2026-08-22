@@ -384,6 +384,11 @@ Para ativar:
    autorizar a conta, voltar ao app e confirmar eventos criados no Google
    Calendar + linhas em `calendar_events`.
 
+**Estado em 2026-08-22:** migrations de Google Calendar e `email_deliveries`
+foram aplicadas no Supabase; `PUBLIC_APP_URL` e `GOOGLE_REDIRECT_URI` foram
+configuradas na Vercel Production. Faltam `GOOGLE_CLIENT_ID` e
+`GOOGLE_CLIENT_SECRET` do OAuth App real.
+
 ---
 
 ## 10. Cloudflare Turnstile
