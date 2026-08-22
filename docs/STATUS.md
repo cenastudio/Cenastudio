@@ -242,6 +242,14 @@ continuam usando o HTML salvo da proposta. Validação focada: 15 testes passara
 em `proposalDocument`, `commercialProposalService` e calculadora; `npm run check`
 passou. A P1B.4 ainda exige Postgres real e E2E do fluxo completo.
 
+**P1B.4.1 concluída localmente:** a suíte do ciclo de vida da proposta cobre
+ownership na criação, envio, bloqueio de rascunho no Portal, primeira
+visualização, aceite com hash íntegro e revogação que também remove a proposta
+do Portal. A conexão de produção baixada via Vercel CLI mascara segredos por
+design, portanto não fornece uma URL utilizável para executar a P1B.4.2 contra
+Supabase. Essa subetapa e o E2E P1B.4.3 permanecem abertas até existir uma
+conexão de teste controlada, sem usar o Railway legado local.
+
 **Concluídas (`-OK`):** `00-fundacao-limpeza-e-documentacao`,
 `client-hub-connected-workflows`, `dre-por-projeto`,
 `fase-1-testes-uso-real`, `fase-2-layout-mobile-e-tabs`,
