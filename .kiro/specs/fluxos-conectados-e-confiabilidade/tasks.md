@@ -93,13 +93,13 @@ reproduzir contra Postgres/Supabase exige janela controlada e não foi executado
 
 - [ ] P1C.1 Redesenhar a navegação de Produção por intenção de trabalho.
 - [ ] P1C.2 Mover webhooks e API keys para Conta > Integrações sem quebrar URLs.
-- [ ] P1C.3 Auditar Conta contra o inventário de capacidades e apresentar os
+- [x] P1C.3 Auditar Conta contra o inventário de capacidades e apresentar os
   gaps para aprovação antes de implementar novas superfícies.
 - [ ] P1C.4 Validar navegação em desktop, tablet e mobile.
 
 ### Sequência P1C
 
-- [ ] P1C.A Inventariar rotas e ações por intenção, removendo apenas duplicação
+- [x] P1C.A Inventariar rotas e ações por intenção, removendo apenas duplicação
   comprovada.
 - [ ] P1C.B Projetar e implementar a nova entrada de Produção sem quebrar URLs.
 - [ ] P1C.C Centralizar integrações em Conta e preservar redirecionamentos.

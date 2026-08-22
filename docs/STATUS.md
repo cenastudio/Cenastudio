@@ -254,6 +254,15 @@ outro cliente. O teste reproduzível sem segredos está em
 `scripts/verify-portal-isolation.sql`. Só o E2E P1B.4.3 permanece aberto, sem
 usar o Railway legado local.
 
+**P1C.A / P1C.3 auditadas:** Produção já tem entradas diárias claras para Jobs,
+Estúdio IA e Aprovações, mas Arquivos, Documentos, Equipamento, Timesheet,
+Equipe e Webhooks ainda competem no menu secundário. A Conta já cobre perfil,
+segurança, plano, preferências e privacidade; identidade do estúdio fica em
+Empresa e membros em Equipe. O gap real é Integrações: chaves de API estão
+misturadas em Segurança e Webhooks está fora da Conta. A próxima implementação
+move essas superfícies para `Conta > Integrações`, preservando `/webhooks` como
+rota legada, antes de qualquer novo redesenho de Produção.
+
 **Concluídas (`-OK`):** `00-fundacao-limpeza-e-documentacao`,
 `client-hub-connected-workflows`, `dre-por-projeto`,
 `fase-1-testes-uso-real`, `fase-2-layout-mobile-e-tabs`,
