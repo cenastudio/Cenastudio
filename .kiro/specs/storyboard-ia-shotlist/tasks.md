@@ -17,16 +17,18 @@
 
 ## Fase G2 — adapter de imagem
 
-- [ ] G2.1 Criar `imageGenerationService` com interface provider-agnostic.
-- [ ] G2.2 Implementar modo explicitamente indisponível quando env de imagem não existe.
+- [x] G2.1 Criar `imageGenerationService` com interface provider-agnostic.
+- [x] G2.2 Implementar modo explicitamente indisponível quando env de imagem não existe.
 - [ ] G2.3 Definir provider inicial somente quando houver credencial/decisão.
-- [ ] G2.4 Sanitizar erro de provider e registrar status `failed` sem secret.
+- [x] G2.4 Sanitizar erro de provider e registrar status `failed` sem secret.
+- _2026-08-22: adapter criado em `imageGenerationService`. Sem `STORYBOARD_IMAGE_PROVIDER`, geração retorna 503 explícito e o service registra frame `failed` com erro sanitizado. Provider real segue aberto; há `mock` apenas para test/local e bloqueado em produção._
 
 ## Fase G3 — rotas
 
-- [ ] G3.1 Adicionar rotas em `/api/shotlists/shots/:id/storyboard`.
-- [ ] G3.2 Aplicar `authenticate` + `requireStudioPlan("shotList")`.
-- [ ] G3.3 Testar 401/402/404, geração sem provider, aprovação e tenant isolation.
+- [x] G3.1 Adicionar rotas em `/api/shotlists/shots/:id/storyboard`.
+- [x] G3.2 Aplicar `authenticate` + `requireStudioPlan("shotList")`.
+- [x] G3.3 Testar 401/402/404, geração sem provider, aprovação e tenant isolation.
+- _2026-08-22: endpoints criados sob `/api/shotlists`: list, generate, approve e delete. O gate fica herdado de `routes/shotlists.ts` (`authenticate` + `requireStudioPlan("shotList")`). Testes focais: `shotStoryboardService.test.ts` e `shotStoryboardController.test.ts`._
 
 ## Fase G4 — UI no Shot List
 

@@ -276,6 +276,14 @@ produtora. Teste focal: `server/services/shotStoryboardService.test.ts`. Ainda
 não há rotas/UI/provider de imagem; próximo corte é G2/G3, adapter de imagem
 explícito e endpoints autenticados sob `/api/shotlists`.
 
+**Bloco G2/G3 concluído — adapter e endpoints Storyboard IA:** foi criado
+`imageGenerationService` com interface provider-agnostic. Sem
+`STORYBOARD_IMAGE_PROVIDER`, a geração falha com 503 explícito e salva uma
+revisão `failed` sem vazar segredo; provider `mock` existe apenas para teste/local
+e é bloqueado em produção. Endpoints autenticados/gateados em `/api/shotlists`:
+listar frames do shot, gerar, aprovar e excluir. Provider real e storage de
+imagem continuam abertos para G2.3/G6; UI começa no G4.
+
 **P1B auditada:** a ficha do cliente já oferece CRM 360 com projetos,
 oportunidades, interações, arquivos, financeiro, propostas, vídeo reviews e
 gestão de Portal. A jornada de acesso foi validada localmente em 2026-08-22:

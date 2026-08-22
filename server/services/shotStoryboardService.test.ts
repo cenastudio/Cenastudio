@@ -156,4 +156,39 @@ describe("shotStoryboardService", () => {
 
     await expect(shotStoryboardService.approveFrame(ownerId, failed.id)).rejects.toMatchObject({ status: 400 });
   });
+
+  it("persists a failed frame when image generation is not configured", async () => {
+    const shot = await createOwnerShot();
+    delete process.env.STORYBOARD_IMAGE_PROVIDER;
+
+    await expect(
+      shotStoryboardService.generateFrame(ownerId, shot.id, { prompt: "Desenhar entrada dramática" }),
+    ).rejects.toMatchObject({ status: 503 });
+
+    const frames = await shotStoryboardService.listFrames(ownerId, shot.id);
+    expect(frames).toHaveLength(1);
+    expect(frames[0]).toMatchObject({
+      status: "failed",
+      provider: "unconfigured",
+      prompt: "Desenhar entrada dramática",
+      error_message: "Storyboard image generation is not configured.",
+    });
+    expect(frames[0].final_prompt).toContain("Personagem entra no set escuro");
+    expect(frames[0].final_prompt).toContain("Alexa Mini");
+  });
+
+  it("creates a generated frame through the mock image adapter in test/local mode", async () => {
+    const shot = await createOwnerShot();
+    process.env.STORYBOARD_IMAGE_PROVIDER = "mock";
+
+    const frame = await shotStoryboardService.generateFrame(ownerId, shot.id, { prompt: "Quadro com luz de recorte" });
+
+    expect(frame).toMatchObject({
+      status: "generated",
+      provider: "mock",
+      model: "storyboard-mock",
+      image_url: expect.stringContaining("mock-storyboard"),
+    });
+    expect(frame.final_prompt).toContain("Style: black and white pencil storyboard sketch");
+  });
 });

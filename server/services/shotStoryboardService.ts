@@ -2,6 +2,11 @@ import { AppError } from "../middleware/errorHandler.js";
 import { db } from "../models/db.js";
 import { prisma, shouldUsePrisma } from "../models/prisma.js";
 import { withSnakeCase } from "../utils/prismaSerialization.js";
+import {
+  generateStoryboardImage,
+  sanitizeImageGenerationError,
+  type GenerateImageInput,
+} from "./imageGenerationService.js";
 
 export const STORYBOARD_FRAME_STATUSES = ["queued", "generating", "generated", "approved", "failed"] as const;
 export type StoryboardFrameStatus = (typeof STORYBOARD_FRAME_STATUSES)[number];
@@ -35,6 +40,23 @@ export interface CreateStoryboardFrameInput {
   storagePath?: string | null;
   status?: StoryboardFrameStatus;
   errorMessage?: string | null;
+}
+
+export interface GenerateStoryboardFrameInput {
+  prompt: string;
+  aspectRatio?: GenerateImageInput["aspectRatio"];
+}
+
+interface ShotStoryboardContext {
+  shotId: number;
+  projectId: number;
+  scene: string;
+  shotType: string;
+  description: string;
+  camera: string;
+  lens: string;
+  movement: string;
+  productionNotes: string | null;
 }
 
 function serializeFrame(value: any): StoryboardFrameRecord {
@@ -72,26 +94,68 @@ function normalizeStatus(value: unknown): StoryboardFrameStatus {
   return status as StoryboardFrameStatus;
 }
 
-async function getShotContextOwnedByUser(userId: number, shotId: number): Promise<{ shotId: number; projectId: number }> {
+async function getShotContextOwnedByUser(userId: number, shotId: number): Promise<ShotStoryboardContext> {
   if (shouldUsePrisma) {
     const shot = await prisma.shot.findFirst({
       where: { id: BigInt(shotId), shotList: { userId: BigInt(userId) } },
-      select: { id: true, shotList: { select: { projectId: true } } },
+      select: {
+        id: true,
+        scene: true,
+        shotType: true,
+        description: true,
+        camera: true,
+        lens: true,
+        movement: true,
+        productionNotes: true,
+        shotList: { select: { projectId: true } },
+      },
     });
     if (!shot) throw new AppError("Plano não encontrado", 404);
-    return { shotId: Number(shot.id), projectId: Number(shot.shotList.projectId) };
+    return {
+      shotId: Number(shot.id),
+      projectId: Number(shot.shotList.projectId),
+      scene: shot.scene,
+      shotType: shot.shotType,
+      description: shot.description,
+      camera: shot.camera,
+      lens: shot.lens,
+      movement: shot.movement,
+      productionNotes: shot.productionNotes,
+    };
   }
 
   const shot = db
     .prepare(
-      `SELECT s.id AS shot_id, sl.project_id
+      `SELECT s.id AS shot_id, sl.project_id, s.scene, s.shot_type, s.description, s.camera, s.lens, s.movement, s.production_notes
        FROM shots s
        JOIN shot_lists sl ON sl.id = s.shot_list_id
        WHERE s.id = ? AND sl.user_id = ?`,
     )
-    .get(shotId, userId) as { shot_id: number; project_id: number } | undefined;
+    .get(shotId, userId) as
+    | {
+        shot_id: number;
+        project_id: number;
+        scene: string;
+        shot_type: string;
+        description: string;
+        camera: string;
+        lens: string;
+        movement: string;
+        production_notes: string | null;
+      }
+    | undefined;
   if (!shot) throw new AppError("Plano não encontrado", 404);
-  return { shotId: shot.shot_id, projectId: shot.project_id };
+  return {
+    shotId: shot.shot_id,
+    projectId: shot.project_id,
+    scene: shot.scene,
+    shotType: shot.shot_type,
+    description: shot.description,
+    camera: shot.camera,
+    lens: shot.lens,
+    movement: shot.movement,
+    productionNotes: shot.production_notes,
+  };
 }
 
 async function getFrameOwnedByUser(userId: number, frameId: number): Promise<StoryboardFrameRecord> {
@@ -198,6 +262,59 @@ export async function createFrame(
     );
 
   return serializeFrame(db.prepare("SELECT * FROM shot_storyboard_frames WHERE id = ?").get((result as any).lastInsertRowid));
+}
+
+function buildFinalPrompt(context: ShotStoryboardContext, prompt: string): string {
+  const parts = [
+    "Style: black and white pencil storyboard sketch, clear cinematic composition, rough production planning frame, not a polished advertising render.",
+    `User intent: ${prompt}`,
+    context.scene ? `Scene: ${context.scene}` : "",
+    context.shotType ? `Shot type: ${context.shotType}` : "",
+    context.description ? `Shot description: ${context.description}` : "",
+    context.camera ? `Camera: ${context.camera}` : "",
+    context.lens ? `Lens: ${context.lens}` : "",
+    context.movement ? `Movement: ${context.movement}` : "",
+    context.productionNotes ? `Production notes: ${context.productionNotes}` : "",
+    "Avoid text, logos, watermarks, gore, nudity, or identifiable real people unless explicitly provided by the user.",
+  ];
+  return parts.filter(Boolean).join("\n");
+}
+
+export async function generateFrame(
+  userId: number,
+  shotId: number,
+  input: GenerateStoryboardFrameInput,
+): Promise<StoryboardFrameRecord> {
+  const context = await getShotContextOwnedByUser(userId, shotId);
+  const prompt = normalizeRequiredText(input.prompt, "Prompt");
+  const aspectRatio = input.aspectRatio ?? "16:9";
+  const finalPrompt = buildFinalPrompt(context, prompt);
+
+  try {
+    const result = await generateStoryboardImage({
+      prompt: finalPrompt,
+      style: "storyboard-pencil",
+      aspectRatio,
+    });
+    return createFrame(userId, shotId, {
+      prompt,
+      finalPrompt,
+      provider: result.provider,
+      model: result.model ?? null,
+      imageUrl: result.imageUrl ?? null,
+      status: "generated",
+    });
+  } catch (error) {
+    const errorMessage = sanitizeImageGenerationError(error);
+    await createFrame(userId, shotId, {
+      prompt,
+      finalPrompt,
+      provider: process.env.STORYBOARD_IMAGE_PROVIDER?.trim().toLowerCase() || "unconfigured",
+      status: "failed",
+      errorMessage,
+    });
+    throw error;
+  }
 }
 
 export async function approveFrame(userId: number, frameId: number): Promise<StoryboardFrameRecord> {
