@@ -15,8 +15,13 @@
 
 ## Fase 2 — Comunicação cliente-produtor
 
-- [ ] 2.1 Migrar convite de reunião existente para o renderer comum,
+- [x] 2.1 Migrar convite de reunião existente para o renderer comum,
   preservando `.ics`, `replyTo`, idioma e dados da reunião.
+  - O convite de reunião agora usa `renderTransactionalEmail()`, preserva
+    anexo `.ics`, `replyTo`, locale PT/EN da produtora e detalhes da reunião.
+    O adaptador da Resend também repassa `contentType: "text/calendar"` para
+    o anexo. Validação: `npm run test -- server/controllers/shareLinkExpiry.test.ts server/services/emailService.test.ts server/services/transactionalEmail.test.ts`,
+    `npm run check` e `npm run build`.
 - [ ] 2.2 Projetar ativação segura do Portal do Cliente (definir senha via
   token); não enviar senha criada pela produtora por e-mail.
 - [ ] 2.3 Implementar ação explícita para enviar proposta ao cliente, com

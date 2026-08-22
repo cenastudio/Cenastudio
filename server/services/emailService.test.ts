@@ -39,4 +39,24 @@ describe("emailService", () => {
       subject: "Welcome",
     }));
   });
+
+  it("preserves attachment content type for calendar invites", async () => {
+    resendSend.mockResolvedValue({ data: { id: "email_ics" }, error: null });
+    const { sendEmail } = await import("./emailService.js");
+
+    await sendEmail({
+      to: "client@example.com",
+      subject: "Meeting",
+      html: "<p>Meeting</p>",
+      attachments: [{ filename: "reuniao.ics", content: "BEGIN:VCALENDAR", contentType: "text/calendar" }],
+    });
+
+    expect(resendSend).toHaveBeenCalledWith(expect.objectContaining({
+      attachments: [expect.objectContaining({
+        filename: "reuniao.ics",
+        content: "BEGIN:VCALENDAR",
+        contentType: "text/calendar",
+      })],
+    }));
+  });
 });

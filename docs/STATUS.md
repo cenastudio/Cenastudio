@@ -45,8 +45,12 @@
   até exclusão) está em
   `.kiro/specs/email-transacional-cliente/`; ela separa eventos já reais de
   automações que ainda exigem consentimento, scheduler ou idempotência de
-  cobrança. Testes do provedor e dos três fluxos passaram em 2026-08-14; um
-  envio sandbox foi aceito pela Resend. **Ainda não está habilitado para
+  cobrança. Em 2026-08-22, o convite de reunião também passou a usar o renderer
+  transacional comum, preservando `.ics`, `replyTo`, idioma da produtora e dados
+  da reunião; o envio agora repassa `contentType: "text/calendar"` ao anexo.
+  Testes do provedor e dos três fluxos passaram em 2026-08-14; um
+  envio sandbox foi aceito pela Resend. A migração de reunião foi validada com
+  testes focados, `npm run check` e `npm run build`. **Ainda não está habilitado para
   clientes em produção:** a Vercel não contém `RESEND_API_KEY` nem
   `EMAIL_FROM`, e o remetente sandbox só aceita o e-mail da conta Resend.
   Gatilho: verificar domínio próprio na Resend, configurar as duas variáveis

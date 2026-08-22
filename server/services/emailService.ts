@@ -57,6 +57,7 @@ export async function sendEmail(input: SendEmailInput): Promise<{ id: string | n
     attachments: input.attachments?.map((a) => ({
       filename: a.filename,
       content: a.content,
+      contentType: a.contentType,
     })),
   });
 
