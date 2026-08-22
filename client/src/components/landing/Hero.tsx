@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Check, FolderKanban, LayoutDashboard, Pause, Play, FileText } from "lucide-react";
+import { ArrowRight, Check, Play } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
 
@@ -14,23 +14,14 @@ const heroScenes = [
   {
     id: "dashboard",
     image: "/landing/product/dashboard.png",
-    titleKey: "app.landing.hero.sceneDashboard",
-    descriptionKey: "app.landing.hero.sceneDashboardDescription",
-    icon: LayoutDashboard,
   },
   {
     id: "project",
     image: "/landing/product/project-hub.png",
-    titleKey: "app.landing.hero.sceneProject",
-    descriptionKey: "app.landing.hero.sceneProjectDescription",
-    icon: FolderKanban,
   },
   {
     id: "studio",
     image: "/landing/product/studio.png",
-    titleKey: "app.landing.hero.sceneStudio",
-    descriptionKey: "app.landing.hero.sceneStudioDescription",
-    icon: FileText,
   },
 ] as const;
 
@@ -39,23 +30,17 @@ export default function Hero() {
   const [, setLocation] = useLocation();
   const prefersReducedMotion = useReducedMotion();
   const [activeSceneIndex, setActiveSceneIndex] = useState(0);
-  const [isScenePlaying, setIsScenePlaying] = useState(!prefersReducedMotion);
   const activeScene = heroScenes[activeSceneIndex];
 
   useEffect(() => {
-    if (!isScenePlaying || prefersReducedMotion) return undefined;
+    if (prefersReducedMotion) return undefined;
 
     const interval = window.setInterval(() => {
       setActiveSceneIndex((current) => (current + 1) % heroScenes.length);
     }, 6400);
 
     return () => window.clearInterval(interval);
-  }, [isScenePlaying, prefersReducedMotion]);
-
-  const selectScene = (index: number) => {
-    setActiveSceneIndex(index);
-    setIsScenePlaying(false);
-  };
+  }, [prefersReducedMotion]);
 
   return (
     <section className="landing-hero landing-hero-product relative overflow-hidden">
@@ -121,44 +106,6 @@ export default function Hero() {
         </div>
       </div>
 
-      <div className="landing-hero-scene-controls" role="tablist" aria-label={t("app.landing.hero.sceneControlsLabel") as string}>
-        {heroScenes.map((scene, index) => {
-          const Icon = scene.icon;
-          const isActive = activeScene.id === scene.id;
-
-          return (
-            <button
-              key={scene.id}
-              type="button"
-              role="tab"
-              aria-selected={isActive}
-              aria-controls="landing-hero-stage"
-              onClick={() => selectScene(index)}
-              className={`landing-hero-scene-button ${isActive ? "is-active" : ""}`}
-            >
-              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>
-                <strong>{t(scene.titleKey) as string}</strong>
-                <small>{t(scene.descriptionKey) as string}</small>
-              </span>
-              {isActive && isScenePlaying && !prefersReducedMotion && <motion.i layoutId="landing-hero-scene-progress" />}
-            </button>
-          );
-        })}
-        <button
-          type="button"
-          onClick={() => setIsScenePlaying((current) => !current)}
-          className="landing-hero-scene-toggle"
-          title={t(isScenePlaying ? "app.landing.hero.pauseScene" : "app.landing.hero.playScene") as string}
-          aria-label={t(isScenePlaying ? "app.landing.hero.pauseScene" : "app.landing.hero.playScene") as string}
-        >
-          {isScenePlaying ? <Pause className="h-4 w-4" aria-hidden="true" /> : <Play className="h-4 w-4" aria-hidden="true" />}
-        </button>
-      </div>
-
-      <p id="landing-hero-stage" className="sr-only">
-        {t(activeScene.titleKey) as string}: {t(activeScene.descriptionKey) as string}
-      </p>
     </section>
   );
 }

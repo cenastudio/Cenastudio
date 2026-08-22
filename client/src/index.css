@@ -365,6 +365,26 @@ body.light .border-adaptive-primary {
   margin-bottom: 0.1rem;
 }
 
+.landing-nav span[role="group"] {
+  border-color: rgb(249 249 249 / 0.16);
+  border-radius: 8px;
+  background: rgb(0 0 0 / 0.34);
+  box-shadow: none;
+  backdrop-filter: blur(14px);
+}
+
+.landing-nav span[role="group"] button {
+  min-height: 40px;
+  min-width: 40px;
+  padding-right: 0.6rem;
+  padding-left: 0.6rem;
+}
+
+.landing-nav span[role="group"] button.bg-frame-orange {
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+}
+
 @media (min-width: 768px) {
   .landing-brand-wordmark .brand-wordmark-cena {
     font-size: 1.7rem;
@@ -526,7 +546,7 @@ body.light .border-adaptive-primary {
 
 .landing-hero-product-image {
   position: absolute;
-  inset: 0;
+  inset: -18px 0 0;
   overflow: hidden;
 }
 
@@ -535,24 +555,24 @@ body.light .border-adaptive-primary {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 66% center;
-  filter: brightness(1.08) saturate(1.05);
+  object-position: 66% 58%;
+  filter: brightness(0.9) saturate(1.08);
 }
 
 .landing-hero-product-image img[data-scene="project"] {
-  object-position: 60% center;
+  object-position: 60% 58%;
 }
 
 .landing-hero-product-image img[data-scene="studio"] {
-  object-position: 63% center;
+  object-position: 63% 58%;
 }
 
 .landing-hero-product-scrim {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgb(0 0 0 / 0.99) 0%, rgb(0 0 0 / 0.96) 47%, rgb(0 0 0 / 0.72) 61%, rgb(0 0 0 / 0.14) 81%, transparent 100%),
-    linear-gradient(180deg, rgb(0 0 0 / 0.2) 0%, transparent 38%, rgb(0 0 0 / 0.42) 100%);
+    linear-gradient(180deg, rgb(0 0 0) 0%, rgb(0 0 0 / 0.98) 86px, rgb(0 0 0 / 0.72) 168px, transparent 38%, rgb(0 0 0 / 0.62) 100%),
+    linear-gradient(90deg, rgb(0 0 0 / 0.99) 0%, rgb(0 0 0 / 0.96) 47%, rgb(0 0 0 / 0.74) 61%, rgb(0 0 0 / 0.2) 81%, rgb(0 0 0 / 0.08) 100%);
 }
 
 .landing-hero-title {
@@ -563,98 +583,11 @@ body.light .border-adaptive-primary {
   line-height: 0.98;
 }
 
-.landing-hero-scene-controls {
-  position: absolute;
-  right: max(16px, calc((100vw - 1220px) / 2));
-  bottom: 48px;
-  z-index: 20;
-  display: grid;
-  width: min(360px, 29vw);
-  grid-template-columns: minmax(0, 1fr) 48px;
-  border: 1px solid rgb(249 249 249 / 0.2);
-  background: rgb(0 0 0 / 0.68);
-  backdrop-filter: blur(18px);
-}
-
-.landing-hero-scene-button {
-  position: relative;
-  display: flex;
-  min-height: 66px;
-  align-items: center;
-  gap: 11px;
-  border-bottom: 1px solid rgb(249 249 249 / 0.12);
-  padding: 12px 14px;
-  color: var(--landing-muted);
-  text-align: left;
-  transition: background-color 180ms ease, color 180ms ease;
-}
-
-.landing-hero-scene-button:nth-of-type(3) {
-  border-bottom: 0;
-}
-
-.landing-hero-scene-button:hover,
-.landing-hero-scene-button:focus-visible,
-.landing-hero-scene-button.is-active {
-  background: rgb(var(--ds-orange-rgb) / 0.1);
-  color: var(--landing-text);
-}
-
-.landing-hero-scene-button > span {
-  display: grid;
-  gap: 3px;
-  min-width: 0;
-}
-
-.landing-hero-scene-button strong {
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0;
-}
-
-.landing-hero-scene-button small {
-  overflow: hidden;
-  color: var(--landing-muted);
-  font-size: 0.7rem;
-  line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.landing-hero-scene-button i {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: 2px;
-  background: var(--color-frame-orange);
-}
-
-.landing-hero-scene-toggle {
-  grid-column: 2;
-  grid-row: 1 / span 3;
-  display: grid;
-  place-items: center;
-  border-left: 1px solid rgb(249 249 249 / 0.12);
-  color: var(--landing-text);
-  transition: background-color 180ms ease, color 180ms ease;
-}
-
-.landing-hero-scene-toggle:hover,
-.landing-hero-scene-toggle:focus-visible {
-  background: rgb(var(--ds-orange-rgb) / 0.16);
-  color: var(--color-frame-orange);
-}
-
 @media (max-width: 1023px) {
   .landing-hero-product-scrim {
     background:
       linear-gradient(90deg, rgb(0 0 0 / 0.94) 0%, rgb(0 0 0 / 0.7) 58%, rgb(0 0 0 / 0.08) 100%),
       linear-gradient(180deg, rgb(0 0 0 / 0.24) 0%, transparent 42%, rgb(0 0 0 / 0.48) 100%);
-  }
-
-  .landing-hero-scene-controls {
-    display: none;
   }
 }
 
