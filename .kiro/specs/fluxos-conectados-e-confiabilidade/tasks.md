@@ -85,7 +85,7 @@ reproduzir contra Postgres/Supabase exige janela controlada e não foi executado
 - [ ] P1B.4 Cobrir criação, envio, visualização, aceite e portal do cliente.
   - [x] P1B.4.1 Cobrir estados privados e compartilhados: rascunho, envio,
     visualização, aceite e revogação.
-  - [ ] P1B.4.2 Cobrir visualização/aceite e isolamento no Portal com Postgres.
+  - [x] P1B.4.2 Cobrir visualização/aceite e isolamento no Portal com Postgres.
   - [ ] P1B.4.3 Executar E2E desktop e mobile do fluxo Cliente → Projeto →
     Orçamento → Proposta → Portal.
 

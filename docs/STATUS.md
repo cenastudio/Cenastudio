@@ -247,8 +247,12 @@ ownership na criação, envio, bloqueio de rascunho no Portal, primeira
 visualização, aceite com hash íntegro e revogação que também remove a proposta
 do Portal. A conexão de produção baixada via Vercel CLI mascara segredos por
 design, portanto não fornece uma URL utilizável para executar a P1B.4.2 contra
-Supabase. Essa subetapa e o E2E P1B.4.3 permanecem abertas até existir uma
-conexão de teste controlada, sem usar o Railway legado local.
+Supabase. A P1B.4.2 foi então validada pelo Supabase CLI em uma transação com
+`ROLLBACK`: proposta/reunião visíveis e ativas ficaram isoladas no cliente
+certo, enquanto itens ocultos, revogados ou cancelados retornaram zero para o
+outro cliente. O teste reproduzível sem segredos está em
+`scripts/verify-portal-isolation.sql`. Só o E2E P1B.4.3 permanece aberto, sem
+usar o Railway legado local.
 
 **Concluídas (`-OK`):** `00-fundacao-limpeza-e-documentacao`,
 `client-hub-connected-workflows`, `dre-por-projeto`,
