@@ -91,7 +91,7 @@ reproduzir contra Postgres/Supabase exige janela controlada e não foi executado
 
 ## Fase P1C — Navegação e Conta
 
-- [ ] P1C.1 Redesenhar a navegação de Produção por intenção de trabalho.
+- [x] P1C.1 Redesenhar a navegação de Produção por intenção de trabalho.
 - [x] P1C.2 Mover webhooks e API keys para Conta > Integrações sem quebrar URLs.
 - [x] P1C.3 Auditar Conta contra o inventário de capacidades e apresentar os
   gaps para aprovação antes de implementar novas superfícies.
@@ -101,7 +101,7 @@ reproduzir contra Postgres/Supabase exige janela controlada e não foi executado
 
 - [x] P1C.A Inventariar rotas e ações por intenção, removendo apenas duplicação
   comprovada.
-- [ ] P1C.B Projetar e implementar a nova entrada de Produção sem quebrar URLs.
+- [x] P1C.B Projetar e implementar a nova entrada de Produção sem quebrar URLs.
 - [x] P1C.C Centralizar integrações em Conta e preservar redirecionamentos.
   - [x] P1C.C.1 Expor Webhooks em `Conta > Integrações` sem remover a rota
     legada `/webhooks`.

@@ -8,7 +8,6 @@ import {
   FileText,
   Users,
   ChevronDown,
-  Package,
   MoreHorizontal,
   Camera,
   Clock,
@@ -18,6 +17,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { usePlanContext } from "@/contexts/PlanContext";
@@ -39,6 +40,13 @@ interface ProductionTab {
   requiresFeature?: FeatureName;
 }
 
+interface ProductionTabGroup {
+  key: "daily" | "resources" | "operation";
+  labelPt: string;
+  labelEn: string;
+  tabs: ProductionTab[];
+}
+
 /** Always-visible primary tabs — the areas used every day. */
 const PRIMARY_TABS: ProductionTab[] = [
   { href: "/projects", labelPt: "Jobs", labelEn: "Jobs", icon: FolderKanban },
@@ -54,12 +62,21 @@ const PRIMARY_TABS: ProductionTab[] = [
  * (spec: team-task-delegation, Fase 6). Alocação de membros a um projeto
  * específico agora acontece dentro do próprio ProjectHub.
  */
-const SECONDARY_TABS: ProductionTab[] = [
+const RESOURCE_TABS: ProductionTab[] = [
   { href: "/files-unified", labelPt: "Arquivos", labelEn: "Files", icon: FolderKanban },
   { href: "/documents", labelPt: "Documentos", labelEn: "Documents", icon: FileText },
   { href: "/equipment", labelPt: "Equipamento", labelEn: "Equipment", icon: Camera, requiresFeature: "equipment-inventory" },
+];
+
+const OPERATION_TABS: ProductionTab[] = [
   { href: "/timesheet", labelPt: "Timesheet", labelEn: "Timesheet", icon: Clock, requiresFeature: "timesheet" },
   { href: "/team", labelPt: "Equipe", labelEn: "Team", icon: Users, roles: ["admin"] },
+];
+
+const TAB_GROUPS: ProductionTabGroup[] = [
+  { key: "daily", labelPt: "Fluxo diário", labelEn: "Daily flow", tabs: PRIMARY_TABS },
+  { key: "resources", labelPt: "Recursos do job", labelEn: "Job resources", tabs: RESOURCE_TABS },
+  { key: "operation", labelPt: "Operação", labelEn: "Operations", tabs: OPERATION_TABS },
 ];
 
 function isTabActive(location: string, href: string) {
@@ -88,19 +105,27 @@ export default function ProductionNav() {
   const [location, setLocation] = useLocation();
   const { locale } = useLanguage();
   const { isAdmin, isTeamMember, teamRole } = useAuth();
+  const { planMode } = usePlanContext();
   const [mobileOpen, setMobileOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Don't show inside a specific project (ProjectHub has its own context)
   if (location.startsWith("/project/")) return null;
 
-  const { planMode } = usePlanContext();
   const effectiveRole: TeamRole | null = isAdmin ? "admin" : isTeamMember ? (teamRole as TeamRole | null) : "admin";
-  const visibleSecondaryTabs = SECONDARY_TABS.filter((tab) => {
+  const canSeeTab = (tab: ProductionTab) => {
     if (tab.roles && !(effectiveRole && tab.roles.includes(effectiveRole))) return false;
     if (tab.requiresFeature && !canAccessFeature(tab.requiresFeature, planMode).hasAccess) return false;
     return true;
-  });
+  };
+  const visibleSecondaryGroups = TAB_GROUPS.slice(1)
+    .map((group) => ({ ...group, tabs: group.tabs.filter(canSeeTab) }))
+    .filter((group) => group.tabs.length > 0);
+  const visibleSecondaryTabs = visibleSecondaryGroups.flatMap((group) => group.tabs);
+  const visibleMobileGroups = [
+    { ...TAB_GROUPS[0], tabs: TAB_GROUPS[0].tabs.filter(canSeeTab) },
+    ...visibleSecondaryGroups,
+  ].filter((group) => group.tabs.length > 0);
   const visibleAllTabs = [...PRIMARY_TABS, ...visibleSecondaryTabs];
 
   const activeTab = visibleAllTabs.find((tab) => isTabActive(location, tab.href)) || visibleAllTabs[0];
@@ -184,25 +209,33 @@ export default function ProductionNav() {
                 <ChevronDown className="w-3 h-3" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="bg-frame-black border-frame-gray-3 rounded-none min-w-[180px]">
-              {visibleSecondaryTabs.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = isTabActive(location, tab.href);
-                const label = locale === "en" ? tab.labelEn : tab.labelPt;
+            <DropdownMenuContent align="start" className="bg-frame-black border-frame-gray-3 rounded-none min-w-[220px]">
+              {visibleSecondaryGroups.map((group, groupIndex) => (
+                <div key={group.key}>
+                  {groupIndex > 0 && <DropdownMenuSeparator className="bg-frame-gray-3/60" />}
+                  <DropdownMenuLabel className="px-2 py-2 font-frame-mono text-[0.56rem] tracking-[0.14em] uppercase text-frame-gray-light">
+                    {locale === "en" ? group.labelEn : group.labelPt}
+                  </DropdownMenuLabel>
+                  {group.tabs.map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = isTabActive(location, tab.href);
+                    const label = locale === "en" ? tab.labelEn : tab.labelPt;
 
-                return (
-                  <DropdownMenuItem
-                    key={tab.href}
-                    onClick={() => setLocation(tab.href)}
-                    className={`min-h-11 gap-2.5 font-frame-mono text-[0.62rem] tracking-[0.1em] uppercase cursor-pointer ${
-                      isActive ? "text-frame-orange" : "text-frame-gray-light"
-                    }`}
-                  >
-                    <Icon className={`w-3.5 h-3.5 ${isActive ? "text-frame-orange" : ""}`} />
-                    {label}
-                  </DropdownMenuItem>
-                );
-              })}
+                    return (
+                      <DropdownMenuItem
+                        key={tab.href}
+                        onClick={() => setLocation(tab.href)}
+                        className={`min-h-11 gap-2.5 font-frame-mono text-[0.62rem] tracking-[0.1em] uppercase cursor-pointer ${
+                          isActive ? "text-frame-orange" : "text-frame-gray-light"
+                        }`}
+                      >
+                        <Icon className={`w-3.5 h-3.5 ${isActive ? "text-frame-orange" : ""}`} />
+                        {label}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </div>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -223,33 +256,40 @@ export default function ProductionNav() {
           </button>
 
           {mobileOpen && (
-            <div className="mt-1 border border-frame-gray-3/60 bg-frame-black/95 backdrop-blur-xl divide-y divide-frame-gray-3/30">
-              {visibleAllTabs.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = isTabActive(location, tab.href);
-                const label = locale === "en" ? tab.labelEn : tab.labelPt;
+            <div className="mt-1 border border-frame-gray-3/60 bg-frame-black/95 backdrop-blur-xl">
+              {visibleMobileGroups.map((group, groupIndex) => (
+                <div key={group.key} className={groupIndex > 0 ? "border-t border-frame-gray-3/40" : undefined}>
+                  <div className="px-3 pb-1 pt-3 font-frame-mono text-[0.55rem] tracking-[0.14em] uppercase text-frame-gray-light">
+                    {locale === "en" ? group.labelEn : group.labelPt}
+                  </div>
+                  {group.tabs.map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = isTabActive(location, tab.href);
+                    const label = locale === "en" ? tab.labelEn : tab.labelPt;
 
-                return (
-                  <button
-                    key={tab.href}
-                    type="button"
-                    onClick={() => {
-                      setLocation(tab.href);
-                      setMobileOpen(false);
-                    }}
-                    aria-current={isActive ? "page" : undefined}
-                    className={`flex min-h-11 w-full items-center gap-2.5 px-3 py-2.5 text-left font-frame-mono text-[0.62rem] tracking-[0.1em] uppercase transition ${
-                      isActive ? "bg-frame-orange/10 text-frame-orange" : "text-frame-gray-light hover:bg-frame-gray-2/40 hover:text-frame-white"
-                    }`}
-                  >
-                    <Icon className={`w-3.5 h-3.5 ${isActive || tab.highlight ? "text-frame-orange" : ""}`} />
-                    {label}
-                    {tab.highlight && !isActive && (
-                      <span className="ml-0.5 h-1.5 w-1.5 rounded-full bg-frame-orange animate-pulse" aria-hidden="true" />
-                    )}
-                  </button>
-                );
-              })}
+                    return (
+                      <button
+                        key={tab.href}
+                        type="button"
+                        onClick={() => {
+                          setLocation(tab.href);
+                          setMobileOpen(false);
+                        }}
+                        aria-current={isActive ? "page" : undefined}
+                        className={`flex min-h-11 w-full items-center gap-2.5 px-3 py-2.5 text-left font-frame-mono text-[0.62rem] tracking-[0.1em] uppercase transition ${
+                          isActive ? "bg-frame-orange/10 text-frame-orange" : "text-frame-gray-light hover:bg-frame-gray-2/40 hover:text-frame-white"
+                        }`}
+                      >
+                        <Icon className={`w-3.5 h-3.5 ${isActive || tab.highlight ? "text-frame-orange" : ""}`} />
+                        {label}
+                        {tab.highlight && !isActive && (
+                          <span className="ml-0.5 h-1.5 w-1.5 rounded-full bg-frame-orange animate-pulse" aria-hidden="true" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
           )}
         </div>

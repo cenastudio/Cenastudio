@@ -263,7 +263,7 @@ misturadas em Segurança e Webhooks está fora da Conta. A próxima implementaç
 move essas superfícies para `Conta > Integrações`, preservando `/webhooks` como
 rota legada, antes de qualquer novo redesenho de Produção.
 
-**P1C.C em andamento:** Webhooks agora também está em `Conta > Integrações`,
+**P1C.C concluída:** Webhooks agora também está em `Conta > Integrações`,
 com a mesma superfície funcional e PT/EN; a rota `/webhooks` foi preservada
 para links existentes. A migração das chaves de API foi concluída no mesmo
 bloco e o detalhe operacional atualizado abaixo.
@@ -274,6 +274,13 @@ listagem, criação com exibição única do segredo, cópia e revogação; Segu
 não busca nem mostra mais esses dados. A rota `/webhooks` permanece como
 entrada compatível para links existentes. Ela também saiu da navegação de
 Produção e os atalhos da paleta agora abrem `Conta > Integrações` diretamente.
+
+**P1C.B concluída:** a navegação de Produção foi reorganizada por intenção sem
+alterar URLs: o uso diário continua direto em Jobs, Estúdio IA e Aprovações,
+enquanto o menu secundário agora separa Recursos do job (Arquivos, Documentos,
+Equipamento) e Operação (Timesheet, Equipe). No mobile, o dropdown deixou de
+ser uma lista plana e passou a exibir os mesmos grupos, preservando navegação
+em dois toques e touch targets mínimos.
 
 **Concluídas (`-OK`):** `00-fundacao-limpeza-e-documentacao`,
 `client-hub-connected-workflows`, `dre-por-projeto`,

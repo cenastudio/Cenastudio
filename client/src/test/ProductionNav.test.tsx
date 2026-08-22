@@ -105,6 +105,18 @@ describe("ProductionNav mobile navigation", () => {
     }
   });
 
+  it("groups production areas by work intent on mobile", () => {
+    const { container } = renderProductionNav();
+    const mobileNav = container.querySelector(".sm\\:hidden");
+    expect(mobileNav).not.toBeNull();
+
+    fireEvent.click(getMobileTrigger(mobileNav as HTMLElement));
+
+    expect(within(mobileNav as HTMLElement).getByText("Fluxo diário")).toBeInTheDocument();
+    expect(within(mobileNav as HTMLElement).getByText("Recursos do job")).toBeInTheDocument();
+    expect(within(mobileNav as HTMLElement).getByText("Operação")).toBeInTheDocument();
+  });
+
   it("does not render inside a project route where ProjectNav owns context", () => {
     const { container } = renderProductionNav("/project/7");
     expect(screen.queryByRole("navigation", { name: /produção/i })).not.toBeInTheDocument();
