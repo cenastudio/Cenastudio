@@ -26,7 +26,7 @@ Esta fase implementa **8 features estratégicas** identificadas na análise comp
 **Referências:**
 - Análise competitiva: conversas anteriores (Task 2 do summary)
 - Stack atual: `ARCHITECTURE.md`, `package.json`
-- Fase anterior: `../fase-3-white-label/` (white-label básico concluído)
+- Fase anterior: `../fase-3-white-label-OK/` (white-label básico concluído)
 
 **Fora do escopo (requerem custos):**
 - Real-time collaboration (Redis $10/mo + WebSockets)

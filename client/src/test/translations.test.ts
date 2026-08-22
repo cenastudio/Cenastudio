@@ -54,4 +54,10 @@ describe("translations", () => {
     fireEvent.click(screen.getByRole("button"));
     expect(screen.getByRole("button")).toHaveTextContent("Create my account");
   });
+
+  it("injects the configured brand into translation placeholders", () => {
+    expect(translate("pt", "app.landing.hero.branding")).toContain("Cena Studio");
+    expect(translate("pt", "app.landing.hero.branding")).not.toContain("{{brand}}");
+    expect(translate("en", "app.landing.hero.branding")).toContain("Cena Studio");
+  });
 });

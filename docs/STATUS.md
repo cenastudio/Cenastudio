@@ -429,10 +429,14 @@ mobile.
 3. `.kiro/specs/qualidade-raciocinio-ia/` — tasks 14 e 15 (modelo high) foram
    concluídas. As tasks 16 a 18 continuam abertas: exigem dados reais de uso,
    reuso e avaliação que o schema e os dados locais ainda não comprovam.
-4. `.kiro/specs/fase-3-white-label/` — duas pendências reais e adiadas:
-   interpolação `{{brand}}` em i18n e upload de logo por `POST
-   /api/studio-settings/logo`. A configuração por ambiente existente continua
-   funcional, mas não substitui esses requisitos.
+4. `.kiro/specs/fase-3-white-label-OK/` — Bloco D finalizado em 2026-08-22:
+   i18n agora usa `{{brand}}` com injeção automática de `SITE_CONFIG.brandName`,
+   e `POST /api/studio-settings/logo` permite upload validado de PNG/JPEG/SVG/WebP
+   até 5MB para bucket público `studio-branding`, salvando `logoUrl` em
+   `studio_settings`. A tela de Configurações chama o endpoint e mantém fallback
+   por URL/path relativo no `PUT /api/studio-settings`. Validação:
+   `npm run test -- client/src/test/translations.test.ts server/controllers/studioSettingsLogo.test.ts server/services/supabaseStorage.test.ts`,
+   `npm run check` e `npm run build`.
 5. `.kiro/specs/features-criticas-gap-analysis/` — Timesheet e calendário têm
    implementação parcial, mas faltam o fluxo de timer/global rate/exportação e
    a integração Google OAuth/Calendar; a validação final ainda cita Railway e

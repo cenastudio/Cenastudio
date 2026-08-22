@@ -166,7 +166,7 @@ paralelizáveis. Cada task cita os requirements que valida e as dependências.
 
 ### Wave 3 — Substituições em UI, i18n e server (paralelizáveis)
 
-- [ ] 10. Migrar strings i18n com placeholder `{{brand}}` (deferido para Fase 4)
+- [x] 10. Migrar strings i18n com placeholder `{{brand}}`
   - Criar `scripts/replace-brand-in-i18n.mjs`: script Node que abre
     `client/src/contexts/LanguageContext.tsx` e
     `client/src/contexts/translationsSupplemental.ts`, e substitui
@@ -187,6 +187,11 @@ paralelizáveis. Cada task cita os requirements que valida e as dependências.
   - Rodar Vitest completo → 1088/1088.
   - _Requirements: 5.2, 5.3, 5.6_
   - _Depends on: 3_
+  - 2026-08-22: `client/src/contexts/LanguageContext.tsx` agora injeta
+    `SITE_CONFIG.brandName` automaticamente em `{{brand}}`; ocorrências de
+    "Cena Studio" em `LanguageContext.tsx` e `translationsSupplemental.ts`
+    foram migradas para placeholder. Validação: `npm run test --
+    client/src/test/translations.test.ts` e `npm run check`.
 
 - [x] 11. Substituir "Cena Studio" hardcoded em componentes UI e páginas
   - Grep `rg "Cena Studio" client/src/{components,pages}/` — resultados esperados
@@ -302,7 +307,7 @@ paralelizáveis. Cada task cita os requirements que valida e as dependências.
   - _Requirements: 4.2, 4.3, 4.6, 4.7, 5.6, 9.1_
   - _Depends on: 3, 4_
 
-- [ ] 17. Endpoint `POST /api/studio-settings/logo` para upload (deferido para Fase 4 — operador seta via env `APP_LOGO_URL` ou `PUT /api/studio-settings`)
+- [x] 17. Endpoint `POST /api/studio-settings/logo` para upload
   - Criar `server/services/supabaseStorage.ts::uploadBrandAsset({userId, file, mimeType, filename})` —
     análogo a `uploadProjectFile`. Bucket sugerido: `studio-branding`.
     Se o bucket não existir, log claro em stderr no primeiro upload.
@@ -325,6 +330,13 @@ paralelizáveis. Cada task cita os requirements que valida e as dependências.
     (Mockar `uploadBrandAsset` para não bater no Supabase real.)
   - _Requirements: 4.4, 4.5_
   - _Depends on: 4, 16_
+  - 2026-08-22: endpoint `POST /api/studio-settings/logo` criado com
+    `requireWhitelabel`, validação de PNG/JPEG/SVG/WebP até 5MB e upload para
+    bucket público `studio-branding` via `uploadBrandAsset`; o retorno salva
+    `logoUrl` em `studio_settings`. A tela `CompanySettings` agora seleciona
+    arquivo real e chama o endpoint. Validação: `npm run test --
+    server/controllers/studioSettingsLogo.test.ts server/services/supabaseStorage.test.ts`
+    e `npm run check`.
 
 ### Wave 5 — Validação final, docs, commit
 
@@ -339,7 +351,7 @@ paralelizáveis. Cada task cita os requirements que valida e as dependências.
   - Atualizar `PLANO-IDEAL-PROXIMOS-PASSOS.md`: Fase 3 → ✅ concluída
     com data. Fase 4 (multi-tenant) → "⏸️ Aguardando decisão de negócio".
   - Atualizar `WHITE_LABEL_PLAN.md`: seção §3 "Nível 1" com nota
-    "✅ Concluído — ver `.kiro/specs/fase-3-white-label/` e commit XXX".
+    "✅ Concluído — ver `.kiro/specs/fase-3-white-label-OK/` e commit XXX".
   - **Guardrails de grep** (comandos de validação):
     - `rg "Cena Studio" client/src/{components,pages}/` → zero matches em
       texto renderizado.

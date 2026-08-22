@@ -914,6 +914,11 @@ export const api = {
         method: "PUT",
         body: JSON.stringify(data),
       }),
+    uploadLogo: (data: { fileData: string; filename: string; mimeType: string }) =>
+      request<{ logoUrl: string }>("/studio-settings/logo", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
   },
   dashboard: {
     stats: () =>

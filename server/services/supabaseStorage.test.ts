@@ -6,6 +6,7 @@ const storageState = vi.hoisted(() => ({
   upload: vi.fn(),
   remove: vi.fn(),
   createSignedUrl: vi.fn(),
+  getPublicUrl: vi.fn(),
 }));
 
 vi.mock("@supabase/supabase-js", () => ({
@@ -17,6 +18,7 @@ vi.mock("@supabase/supabase-js", () => ({
         upload: storageState.upload,
         remove: storageState.remove,
         createSignedUrl: storageState.createSignedUrl,
+        getPublicUrl: storageState.getPublicUrl,
       })),
     },
   })),
@@ -34,6 +36,7 @@ describe("supabaseStorage", () => {
     storageState.upload.mockResolvedValue({ error: null });
     storageState.remove.mockResolvedValue({ error: null });
     storageState.createSignedUrl.mockResolvedValue({ data: { signedUrl: "https://signed.example/file" }, error: null });
+    storageState.getPublicUrl.mockReturnValue({ data: { publicUrl: "https://public.example/logo.png" } });
   });
 
   it("sanitizes object paths", async () => {
@@ -64,5 +67,29 @@ describe("supabaseStorage", () => {
     delete process.env.SUPABASE_SERVICE_ROLE_KEY;
     const storage = await import("./supabaseStorage.js");
     await expect(storage.uploadProjectFile("file.txt", Buffer.from("ok"))).rejects.toThrow("credentials");
+  });
+
+  it("uploads brand assets to the public branding bucket", async () => {
+    process.env.SUPABASE_BRANDING_BUCKET = "studio-branding-test";
+    const storage = await import("./supabaseStorage.js");
+
+    await expect(storage.uploadBrandAsset({
+      userId: 7,
+      filename: "Logo Final?.png",
+      body: Buffer.from("logo"),
+      contentType: "image/png",
+    })).resolves.toMatchObject({
+      publicUrl: "https://public.example/logo.png",
+    });
+
+    expect(storageState.createBucket).toHaveBeenCalledWith("studio-branding-test", {
+      public: true,
+      fileSizeLimit: "5MB",
+    });
+    expect(storageState.upload).toHaveBeenCalledWith(expect.stringMatching(/^studios\/7\/\d+_Logo_Final_.png$/), expect.any(Buffer), {
+      contentType: "image/png",
+      upsert: true,
+    });
+    expect(storageState.getPublicUrl).toHaveBeenCalledWith(expect.stringMatching(/^studios\/7\/\d+_Logo_Final_.png$/));
   });
 });

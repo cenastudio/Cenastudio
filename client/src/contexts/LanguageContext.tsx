@@ -3,6 +3,7 @@ import type { Language } from "@/lib/types";
 import { SUPPLEMENTAL_TRANSLATIONS } from "./translationsSupplemental";
 import ptTranslations from "./i18n/pt.json";
 import enTranslations from "./i18n/en.json";
+import { SITE_CONFIG } from "@shared/site";
 
 export type { Language };
 
@@ -1186,7 +1187,7 @@ const TRANSLATIONS: Record<Language, Record<string, string | Record<string, unkn
           filmmakers: "Feito por filmmakers, para filmmakers.",
           realProduct: "Produto real",
           reviewProduction: "Review e produção",
-          branding: "Cena Studio · Operação audiovisual",
+          branding: "{{brand}} · Operação audiovisual",
         },
         footer: {
           eyebrow: "// OPERAÇÃO AUDIOVISUAL",
@@ -1228,7 +1229,7 @@ const TRANSLATIONS: Record<Language, Record<string, string | Record<string, unkn
       },
       shared: {
         site: {
-          title: "Cena Studio",
+          title: "{{brand}}",
           description: "Feito por filmmakers, para filmmakers. Central operacional para produtoras: projetos, IA, clientes, arquivos, aprovações, equipe e documentos conectados por job.",
         },
       },
@@ -2435,7 +2436,7 @@ const TRANSLATIONS: Record<Language, Record<string, string | Record<string, unkn
           filmmakers: "Made by filmmakers, for filmmakers.",
           realProduct: "Real product",
           reviewProduction: "Review and production",
-          branding: "Cena Studio · Audiovisual operations",
+          branding: "{{brand}} · Audiovisual operations",
         },
         pricing: {
           title: "Plans",
@@ -2546,8 +2547,8 @@ const TRANSLATIONS: Record<Language, Record<string, string | Record<string, unkn
         },
         proof: {
           eyebrow: "Real product, not mockup",
-          heading: "Real-time screenshot of the project center in Cena Studio",
-          alt: "Real Cena Studio Project Center screen",
+          heading: "Real-time screenshot of the project center in {{brand}}",
+          alt: "Real {{brand}} Project Center screen",
           step1: "Create briefing",
           step2: "Generate documents",
           step3: "Track delivery",
@@ -2559,7 +2560,7 @@ const TRANSLATIONS: Record<Language, Record<string, string | Record<string, unkn
       },
       shared: {
         site: {
-          title: "Cena Studio",
+          title: "{{brand}}",
           description: "Made by filmmakers, for filmmakers. Operations center for production companies: projects, AI, clients, files, approvals, team and documents connected by job.",
         },
         tools: {
@@ -2596,10 +2597,10 @@ const TRANSLATIONS: Record<Language, Record<string, string | Record<string, unkn
 
 export function translate(locale: Language, key: string): string {
   const supplementalValue = (SUPPLEMENTAL_TRANSLATIONS[locale] as Record<string, string>)[key];
-  if (supplementalValue) return supplementalValue;
+  if (supplementalValue) return interpolateBrand(supplementalValue);
 
   const directValue = (TRANSLATIONS[locale] as Record<string, unknown>)[key];
-  if (typeof directValue === "string") return directValue;
+  if (typeof directValue === "string") return interpolateBrand(directValue);
 
   const parts = key.split(".");
   let value: unknown = TRANSLATIONS[locale];
@@ -2611,8 +2612,12 @@ export function translate(locale: Language, key: string): string {
       break;
     }
   }
-  if (typeof value === "string") return value;
+  if (typeof value === "string") return interpolateBrand(value);
   return key;
+}
+
+function interpolateBrand(value: string): string {
+  return value.replace(/\{\{brand\}\}/g, SITE_CONFIG.brandName);
 }
 
 type LanguageContextType = {

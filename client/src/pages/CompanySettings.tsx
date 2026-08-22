@@ -99,6 +99,8 @@ function CompanySettingsContent() {
   const [settings, setSettings] = useState<StudioSettings>(DEFAULT_STUDIO_SETTINGS);
   const [savedSettings, setSavedSettings] = useState<StudioSettings>(DEFAULT_STUDIO_SETTINGS);
   const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const isDirty = JSON.stringify(settings) !== JSON.stringify(savedSettings);
 
   // Check custom branding access
@@ -124,6 +126,34 @@ function CompanySettingsContent() {
 
   const update = (key: keyof StudioSettings, value: string) =>
     setSettings((prev) => ({ ...prev, [key]: value }));
+
+  const handleLogoFile = async (file: File | undefined) => {
+    if (!file) return;
+    setUploadingLogo(true);
+    try {
+      const fileData = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || "").split(",")[1] || "");
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+      const uploaded = await api.studioSettings.uploadLogo({
+        fileData,
+        filename: file.name,
+        mimeType: file.type || "application/octet-stream",
+      });
+      const next = { ...settings, logoUrl: uploaded.logoUrl };
+      setSettings(next);
+      setSavedSettings(next);
+      saveStudioSettings(next);
+      toast.success("Logo carregado.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel carregar o logo.");
+    } finally {
+      setUploadingLogo(false);
+      if (logoInputRef.current) logoInputRef.current.value = "";
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -315,7 +345,7 @@ function CompanySettingsContent() {
                   <span className="frame-label text-frame-gray-light">Logo do Estúdio</span>
                   {!hasCustomBranding && (
                     <span className="inline-flex items-center gap-1 text-[0.6rem] font-frame-mono uppercase tracking-wider text-frame-orange border border-frame-orange/30 bg-frame-orange/5 px-2 py-0.5 rounded">
-                      CENA Studio
+                      {SITE_CONFIG.brandName}
                     </span>
                   )}
                 </div>
@@ -327,7 +357,7 @@ function CompanySettingsContent() {
                           <span className="text-xl font-bold text-frame-orange">C</span>
                         </div>
                         <div>
-                          <p className="font-semibold text-frame-white">CENA Studio</p>
+                          <p className="font-semibold text-frame-white">{SITE_CONFIG.brandName}</p>
                           <p className="text-[0.62rem] text-frame-gray-light">Logo padrão da plataforma</p>
                         </div>
                       </div>
@@ -335,31 +365,43 @@ function CompanySettingsContent() {
                     </div>
                     <div className="border-t border-frame-gray-3 pt-3">
                       <p className="text-[0.7rem] text-frame-gray-light leading-relaxed mb-3">
-                        Nos planos Free, Pro e Studio, todos os documentos gerados (propostas, contratos, recibos) exibem a marca CENA Studio.
+                        Nos planos Free, Pro e Studio, todos os documentos gerados (propostas, contratos, recibos) exibem a marca {SITE_CONFIG.brandName}.
                       </p>
                       <div className="flex items-start gap-2 text-[0.68rem] text-frame-gray-light">
                         <Sparkles className="w-4 h-4 text-frame-orange shrink-0 mt-0.5" />
                         <p>
-                          <strong className="text-frame-white">Upgrade para Whitelabel:</strong> adicione seu próprio logo e personalize as cores, mantendo "powered by CENA".
+                          <strong className="text-frame-white">Upgrade para Whitelabel:</strong> adicione seu próprio logo e personalize as cores da marca.
                         </p>
                       </div>
                       <div className="flex items-start gap-2 text-[0.68rem] text-frame-gray-light mt-2">
                         <Crown className="w-4 h-4 text-frame-gold shrink-0 mt-0.5" />
                         <p>
-                          <strong className="text-frame-white">Enterprise:</strong> white-label completo, sem nenhuma marca CENA visível.
+                          <strong className="text-frame-white">Enterprise:</strong> white-label completo, sem nenhuma marca da plataforma visível.
                         </p>
                       </div>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <div className="border-2 border-dashed border-frame-gray-3/50 rounded-lg p-6 bg-frame-gray-1/20 hover:border-frame-orange/40 transition cursor-pointer">
+                    <input
+                      ref={logoInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                      className="hidden"
+                      onChange={(event) => handleLogoFile(event.target.files?.[0])}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => logoInputRef.current?.click()}
+                      disabled={uploadingLogo}
+                      className="w-full border-2 border-dashed border-frame-gray-3/50 rounded-lg p-6 bg-frame-gray-1/20 hover:border-frame-orange/40 transition cursor-pointer disabled:opacity-60"
+                    >
                       <div className="flex flex-col items-center justify-center text-center">
-                        <Camera className="w-10 h-10 text-frame-gray-light mb-2" />
-                        <p className="text-sm text-frame-gray-light">Arraste seu logo aqui ou clique para selecionar</p>
-                        <p className="text-[0.62rem] text-frame-gray-muted mt-1">PNG, JPG ou SVG até 2MB</p>
+                        {uploadingLogo ? <Save className="w-10 h-10 text-frame-orange mb-2 animate-pulse" /> : <Camera className="w-10 h-10 text-frame-gray-light mb-2" />}
+                        <p className="text-sm text-frame-gray-light">{uploadingLogo ? "Carregando logo..." : "Clique para selecionar seu logo"}</p>
+                        <p className="text-[0.62rem] text-frame-gray-muted mt-1">PNG, JPG, SVG ou WebP até 5MB</p>
                       </div>
-                    </div>
+                    </button>
                     {settings.logoUrl && (
                       <div className="border border-frame-gray-3 rounded-lg p-3 bg-frame-gray-1/20 flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -386,7 +428,7 @@ function CompanySettingsContent() {
                   <span className="frame-label text-frame-gray-light">{t("app.company.primaryColor")}</span>
                   {!hasCustomBranding && (
                     <span className="inline-flex items-center gap-1 text-[0.6rem] font-frame-mono uppercase tracking-wider text-frame-orange border border-frame-orange/30 bg-frame-orange/5 px-2 py-0.5 rounded">
-                      CENA Orange
+                      Cor padrão
                     </span>
                   )}
                 </div>
@@ -396,12 +438,12 @@ function CompanySettingsContent() {
                       <div className="w-12 h-12 rounded-lg shrink-0" style={{ background: SITE_CONFIG.primaryColor }} />
                       <div className="flex-1">
                         <p className="font-semibold text-frame-white">{SITE_CONFIG.primaryColor}</p>
-                        <p className="text-[0.62rem] text-frame-gray-light">Cor de marca CENA Studio (fixa)</p>
+                        <p className="text-[0.62rem] text-frame-gray-light">Cor de marca da plataforma (fixa)</p>
                       </div>
                       <Lock className="w-5 h-5 text-frame-gray-muted shrink-0" />
                     </div>
                     <p className="text-[0.7rem] text-frame-gray-light leading-relaxed">
-                      A cor laranja é a identidade visual da CENA Studio e aparece em todos os documentos gerados nos planos Free, Pro e Studio.
+                      A cor principal é a identidade visual da {SITE_CONFIG.brandName} e aparece em todos os documentos gerados nos planos Free, Pro e Studio.
                     </p>
                   </div>
                 ) : (

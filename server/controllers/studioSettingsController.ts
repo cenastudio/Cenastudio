@@ -2,6 +2,8 @@ import type { RequestHandler } from "express";
 import { db } from "../models/db.js";
 import { prisma, shouldUsePrisma } from "../models/prisma.js";
 import { SITE_CONFIG } from "@shared/site";
+import { AppError } from "../middleware/errorHandler.js";
+import { uploadBrandAsset } from "../services/supabaseStorage.js";
 
 interface StudioSettingsRow {
   studio_name: string;
@@ -49,6 +51,26 @@ function clean(value: unknown, fallback = "") {
   return typeof value === "string" ? value.trim().slice(0, 300) : fallback;
 }
 
+function isValidLogoUrl(value: string) {
+  if (value.length >= 2000) return false;
+  if (value.startsWith("/")) return !value.startsWith("//") && !value.includes("\\");
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" || parsed.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
+function normalizeLogoUrl(value: unknown): string | null {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== "string") throw new AppError("Logo URL inválida", 400);
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (!isValidLogoUrl(trimmed)) throw new AppError("Logo URL deve ser uma URL http(s) ou path relativo", 400);
+  return trimmed;
+}
+
 export const getStudioSettings: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
@@ -78,11 +100,7 @@ export const getStudioSettings: RequestHandler = async (req, res, next) => {
 export const updateStudioSettings: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
-    const rawLogoUrl = req.body.logoUrl;
-    const logoUrl: string | null =
-      typeof rawLogoUrl === "string" && rawLogoUrl.trim().length > 0 && rawLogoUrl.length < 2000
-        ? rawLogoUrl.trim()
-        : null;
+    const logoUrl = normalizeLogoUrl(req.body.logoUrl);
 
     // Validate the color first, then gate on the *validated* value. An
     // invalid string (e.g. "not-a-color") falls back to the default and must
@@ -153,6 +171,54 @@ export const updateStudioSettings: RequestHandler = async (req, res, next) => {
     );
 
     res.json({ success: true, data: settings });
+  } catch (e) {
+    next(e);
+  }
+};
+
+const ALLOWED_LOGO_TYPES = new Set(["image/png", "image/jpeg", "image/svg+xml", "image/webp"]);
+const MAX_LOGO_SIZE = 5 * 1024 * 1024;
+
+export const uploadStudioLogo: RequestHandler = async (req, res, next) => {
+  try {
+    const userId = req.user!.id;
+    const { fileData, filename, mimeType } = req.body as {
+      fileData?: unknown;
+      filename?: unknown;
+      mimeType?: unknown;
+    };
+    if (typeof fileData !== "string" || !fileData.trim()) throw new AppError("Arquivo do logo é obrigatório", 400);
+    if (typeof filename !== "string" || !filename.trim()) throw new AppError("Nome do arquivo é obrigatório", 400);
+    if (typeof mimeType !== "string" || !ALLOWED_LOGO_TYPES.has(mimeType)) {
+      throw new AppError("Formato de logo inválido. Use PNG, JPEG, SVG ou WebP.", 400);
+    }
+
+    const buffer = Buffer.from(fileData.replace(/^data:[^;]+;base64,/, ""), "base64");
+    if (!buffer.length) throw new AppError("Arquivo do logo está vazio", 400);
+    if (buffer.length > MAX_LOGO_SIZE) throw new AppError("Logo excede o limite de 5MB", 413);
+
+    const { publicUrl } = await uploadBrandAsset({
+      userId,
+      filename: filename.trim(),
+      body: buffer,
+      contentType: mimeType,
+    });
+
+    if (shouldUsePrisma) {
+      await prisma.studioSetting.upsert({
+        where: { userId: BigInt(userId) },
+        create: { userId: BigInt(userId), ...DEFAULT_SETTINGS, logoUrl: publicUrl },
+        update: { logoUrl: publicUrl, updatedAt: new Date() },
+      });
+    } else {
+      db.prepare(
+        `INSERT INTO studio_settings (user_id, studio_name, signature, primary_color, logo_url)
+         VALUES (?, ?, ?, ?, ?)
+         ON CONFLICT(user_id) DO UPDATE SET logo_url = excluded.logo_url, updated_at = datetime('now')`,
+      ).run(userId, DEFAULT_SETTINGS.studioName, DEFAULT_SETTINGS.signature, DEFAULT_SETTINGS.primaryColor, publicUrl);
+    }
+
+    res.json({ success: true, data: { logoUrl: publicUrl } });
   } catch (e) {
     next(e);
   }

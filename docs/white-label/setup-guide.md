@@ -182,7 +182,7 @@ ALTER TABLE "studio_settings" ADD COLUMN "logo_url" TEXT;
 
 - [`WHITE_LABEL_PLAN.md`](../../WHITE_LABEL_PLAN.md) — o "porquê" do
   white label + o roadmap completo Nível 1 / Nível 2.
-- [`.kiro/specs/fase-3-white-label/`](../../.kiro/specs/fase-3-white-label/) —
+- [`.kiro/specs/fase-3-white-label-OK/`](../../.kiro/specs/fase-3-white-label-OK/) —
   requirements, design e tasks da fase.
 - [`PLANO-IDEAL-PROXIMOS-PASSOS.md`](../../PLANO-IDEAL-PROXIMOS-PASSOS.md) —
   ordem macro das fases.

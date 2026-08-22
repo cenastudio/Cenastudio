@@ -127,7 +127,7 @@ Ao final de cada fase:
 
 - **Análise Competitiva:** Conversas anteriores (Task 2 do summary)
 - **Stack Atual:** [`ARCHITECTURE.md`](../../../ARCHITECTURE.md)
-- **Fase Anterior:** [`fase-3-white-label`](../fase-3-white-label/) (white-label básico)
+- **Fase Anterior:** [`fase-3-white-label-OK`](../fase-3-white-label-OK/) (white-label básico)
 - **Plano Macro:** `PLANO-IDEAL-PROXIMOS-PASSOS.md` — arquivo não existe mais no
   repo; a fila de trabalho vive em [`docs/STATUS.md`](../../../docs/STATUS.md)
 

@@ -1544,7 +1544,7 @@ Invariantes que o sistema DEVE preservar em todos os estados:
 
 - [Requirements](./requirements.md)
 - [Tasks](./tasks.md) _(a ser criado)_
-- Fase 3 White Label: `../fase-3-white-label/`
+- Fase 3 White Label: `../fase-3-white-label-OK/`
 - Architecture: `../../../ARCHITECTURE.md`
 - Existing services: `server/services/`
 - Existing components: `client/src/components/`

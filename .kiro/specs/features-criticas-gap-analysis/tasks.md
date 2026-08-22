@@ -530,6 +530,6 @@ Se prazo de 4 semanas for insuficiente, ordem de deferimento (menos crítico pri
 
 - Design: [`design.md`](./design.md)
 - Requirements: [`requirements.md`](./requirements.md)
-- Fase 3 (referência de estrutura): [`../fase-3-white-label/`](../fase-3-white-label/)
+- Fase 3 (referência de estrutura): [`../fase-3-white-label-OK/`](../fase-3-white-label-OK/)
 - Análise competitiva original: contexto da conversa (Task 2 do summary)
 - ARCHITECTURE.md: [`../../../ARCHITECTURE.md`](../../../ARCHITECTURE.md)
