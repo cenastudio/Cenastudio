@@ -282,6 +282,13 @@ Equipamento) e Operação (Timesheet, Equipe). No mobile, o dropdown deixou de
 ser uma lista plana e passou a exibir os mesmos grupos, preservando navegação
 em dois toques e touch targets mínimos.
 
+**P1C.D concluída:** a descoberta e retorno da navegação de Produção foram
+validados por E2E em 390px, tablet e desktop. A spec
+`tests/e2e/production-nav-intent.spec.ts` cobre grupos visíveis, ausência de
+overflow horizontal, touch targets dentro da navegação e ida/volta entre áreas
+diárias e secundárias. Rodou verde nos projetos `chromium-desktop` e
+`chromium-mobile`.
+
 **Concluídas (`-OK`):** `00-fundacao-limpeza-e-documentacao`,
 `client-hub-connected-workflows`, `dre-por-projeto`,
 `fase-1-testes-uso-real`, `fase-2-layout-mobile-e-tabs`,

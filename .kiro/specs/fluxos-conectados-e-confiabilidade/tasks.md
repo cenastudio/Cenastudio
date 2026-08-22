@@ -95,7 +95,7 @@ reproduzir contra Postgres/Supabase exige janela controlada e não foi executado
 - [x] P1C.2 Mover webhooks e API keys para Conta > Integrações sem quebrar URLs.
 - [x] P1C.3 Auditar Conta contra o inventário de capacidades e apresentar os
   gaps para aprovação antes de implementar novas superfícies.
-- [ ] P1C.4 Validar navegação em desktop, tablet e mobile.
+- [x] P1C.4 Validar navegação em desktop, tablet e mobile.
 
 ### Sequência P1C
 
@@ -107,7 +107,7 @@ reproduzir contra Postgres/Supabase exige janela controlada e não foi executado
     legada `/webhooks`.
   - [x] P1C.C.2 Mover gestão de chaves de API de Segurança para Integrações,
     preservando criação, cópia única, listagem e revogação.
-- [ ] P1C.D Testar descoberta, touch targets e retorno de navegação em 390px,
+- [x] P1C.D Testar descoberta, touch targets e retorno de navegação em 390px,
   tablet e desktop.
 
 ## Fase P2 — Decisão de evolução
