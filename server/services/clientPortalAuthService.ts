@@ -31,6 +31,14 @@ function normalizeEmail(email: string): string {
   return email.toLowerCase().trim();
 }
 
+function parseDbDate(value: unknown): Date {
+  if (value instanceof Date) return value;
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)) {
+    return new Date(`${value.replace(" ", "T")}Z`);
+  }
+  return new Date(String(value));
+}
+
 /** Verifies the client belongs to userId, throwing 404 otherwise (ownership check). */
 async function assertClientOwnership(userId: number, clientId: number): Promise<void> {
   if (shouldUsePrisma) {
@@ -53,9 +61,9 @@ function toRecord(raw: any): ClientPortalAccessRecord {
     userId: Number(raw.userId ?? raw.user_id),
     email: raw.email,
     active: Boolean(raw.active),
-    lastLoginAt: raw.lastLoginAt ?? (raw.last_login_at ? new Date(raw.last_login_at) : null),
-    createdAt: raw.createdAt ?? new Date(raw.created_at),
-    updatedAt: raw.updatedAt ?? new Date(raw.updated_at),
+    lastLoginAt: raw.lastLoginAt ?? (raw.last_login_at ? parseDbDate(raw.last_login_at) : null),
+    createdAt: raw.createdAt ?? parseDbDate(raw.created_at),
+    updatedAt: raw.updatedAt ?? parseDbDate(raw.updated_at),
   };
 }
 
@@ -257,5 +265,5 @@ export async function getActiveAccessByClientId(
     )
     .get(clientId) as any;
   if (!row) return null;
-  return { active: Boolean(row.active), userId: Number(row.owner_user_id), updatedAt: new Date(row.updated_at) };
+  return { active: Boolean(row.active), userId: Number(row.owner_user_id), updatedAt: parseDbDate(row.updated_at) };
 }

@@ -144,6 +144,25 @@ export interface PortalProposalSummary {
 }
 
 export async function listProposalsForClient(clientId: number): Promise<PortalProposalSummary[]> {
+  if (!shouldUsePrisma) {
+    const rows = db
+      .prepare(
+        `SELECT id, title, total, status, accepted_at, created_at
+         FROM proposals
+         WHERE client_id = ? AND visible_in_client_portal = 1 AND status != 'revoked'
+         ORDER BY created_at DESC`,
+      )
+      .all(clientId) as any[];
+    return rows.map((row) => ({
+      id: Number(row.id),
+      title: row.title,
+      total: Number(row.total),
+      status: row.status,
+      acceptedAt: row.accepted_at ? new Date(row.accepted_at).toISOString() : null,
+      createdAt: new Date(row.created_at).toISOString(),
+    }));
+  }
+
   const rows = await prisma.proposal.findMany({
     where: { clientId: BigInt(clientId), visibleInClientPortal: true, status: { not: "revoked" } },
     orderBy: { createdAt: "desc" },

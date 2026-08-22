@@ -1,7 +1,8 @@
 import type { RequestHandler } from "express";
 import { randomBytes, createHash } from "crypto";
 import { AppError } from "../middleware/errorHandler.js";
-import { prisma } from "../models/prisma.js";
+import { db } from "../models/db.js";
+import { prisma, shouldUsePrisma } from "../models/prisma.js";
 import { withSnakeCase } from "../utils/prismaSerialization.js";
 import { notifyUser } from "../services/notificationService.js";
 import { dispatchWebhookEvent } from "../services/webhookService.js";
@@ -101,6 +102,46 @@ function serializeProposal(value: any) {
   return result;
 }
 
+function serializeSqliteProposal(row: any) {
+  return {
+    id: Number(row.id),
+    user_id: Number(row.user_id),
+    client_id: Number(row.client_id),
+    project_id: row.project_id == null ? null : Number(row.project_id),
+    source_budget_id: row.source_budget_id == null ? null : Number(row.source_budget_id),
+    source_generation_id: row.source_generation_id == null ? null : Number(row.source_generation_id),
+    commercial_snapshot: row.commercial_snapshot ? JSON.parse(row.commercial_snapshot) : null,
+    title: row.title,
+    html: row.html,
+    total: Number(row.total),
+    status: row.status,
+    share_token: row.share_token,
+    document_hash: row.document_hash,
+    accepted_at: row.accepted_at,
+    accepted_by_name: row.accepted_by_name,
+    accepted_ip: row.accepted_ip,
+    accepted_user_agent: row.accepted_user_agent,
+    visible_in_client_portal: Boolean(row.visible_in_client_portal),
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    ...(row.client_name ? { client_name: row.client_name } : {}),
+    ...(row.client_email ? { client_email: row.client_email } : {}),
+    ...(row.project_name ? { project_name: row.project_name } : {}),
+  };
+}
+
+function selectSqliteProposalById(id: bigint, userId: number) {
+  return db
+    .prepare(
+      `SELECT p.*, c.name AS client_name, c.email AS client_email, pr.name AS project_name
+       FROM proposals p
+       JOIN clients c ON c.id = p.client_id
+       LEFT JOIN projects pr ON pr.id = p.project_id
+       WHERE p.id = ? AND p.user_id = ?`,
+    )
+    .get(Number(id), userId) as any;
+}
+
 // List proposals for a client (or all for the user)
 export const listProposals: RequestHandler = async (req, res, next) => {
   try {
@@ -108,6 +149,32 @@ export const listProposals: RequestHandler = async (req, res, next) => {
     const { clientId, projectId } = req.query;
     const linkedClientId = clientId === undefined ? undefined : proposalClientIdValue(clientId);
     const linkedProjectId = projectId === undefined ? undefined : proposalProjectIdValue(projectId);
+
+    if (!shouldUsePrisma) {
+      const conditions = ["p.user_id = ?"];
+      const values: Array<number> = [userId];
+      if (linkedClientId) {
+        conditions.push("p.client_id = ?");
+        values.push(Number(linkedClientId));
+      }
+      if (linkedProjectId) {
+        conditions.push("p.project_id = ?");
+        values.push(Number(linkedProjectId));
+      }
+      const rows = db
+        .prepare(
+          `SELECT p.*, c.name AS client_name, c.email AS client_email, pr.name AS project_name
+           FROM proposals p
+           JOIN clients c ON c.id = p.client_id
+           LEFT JOIN projects pr ON pr.id = p.project_id
+           WHERE ${conditions.join(" AND ")}
+           ORDER BY p.created_at DESC
+           LIMIT 100`,
+        )
+        .all(...values) as any[];
+      res.json({ success: true, data: rows.map(serializeSqliteProposal) });
+      return;
+    }
 
     const rows = await prisma.proposal.findMany({
       where: {
@@ -137,8 +204,17 @@ export const listProposals: RequestHandler = async (req, res, next) => {
 export const getProposal: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
+    const id = proposalIdValue(req.params.id);
+
+    if (!shouldUsePrisma) {
+      const row = selectSqliteProposalById(id, userId);
+      if (!row) throw new AppError("Proposta não encontrada", 404);
+      res.json({ success: true, data: serializeSqliteProposal(row) });
+      return;
+    }
+
     const proposal = await prisma.proposal.findFirst({
-      where: { id: proposalIdValue(req.params.id), userId: BigInt(userId) },
+      where: { id, userId: BigInt(userId) },
       include: { client: { select: { name: true, email: true } }, project: { select: { name: true } } },
     });
     if (!proposal) throw new AppError("Proposta não encontrada", 404);
@@ -155,12 +231,32 @@ export const createProposal: RequestHandler = async (req, res, next) => {
     const userId = req.user!.id;
     const { clientId, title, html, total } = validateProposalPayload(req.body ?? {});
 
+    const shareToken = randomBytes(24).toString("hex");
+    const documentHash = hashDocument(html);
+
+    if (!shouldUsePrisma) {
+      const sqliteClient = db.prepare("SELECT * FROM clients WHERE id = ? AND user_id = ?").get(Number(clientId), userId) as any;
+      if (!sqliteClient) throw new AppError("Cliente não encontrado ou acesso não autorizado", 404);
+      const result = db
+        .prepare(
+          `INSERT INTO proposals (user_id, client_id, title, html, total, status, share_token, document_hash, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, 'sent', ?, ?, datetime('now'), datetime('now'))`,
+        )
+        .run(userId, Number(clientId), title, html, total, shareToken, documentHash);
+      const row = selectSqliteProposalById(BigInt(Number(result.lastInsertRowid)), userId);
+      res.status(201).json({
+        success: true,
+        data: {
+          ...serializeSqliteProposal(row),
+          proposal_url: `${process.env.CLIENT_ORIGIN || "http://localhost:5173"}/proposal/${shareToken}`,
+        },
+      });
+      return;
+    }
+
     const owner = BigInt(userId);
     const client = await prisma.client.findFirst({ where: { id: clientId, userId: owner } });
     if (!client) throw new AppError("Cliente não encontrado ou acesso não autorizado", 404);
-
-    const shareToken = randomBytes(24).toString("hex");
-    const documentHash = hashDocument(html);
 
     const proposal = await prisma.proposal.create({
       data: {
@@ -208,8 +304,15 @@ export const createDraftFromBudget: RequestHandler = async (req, res, next) => {
 export const deleteProposal: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
+    const id = proposalIdValue(req.params.id);
+    if (!shouldUsePrisma) {
+      const result = db.prepare("DELETE FROM proposals WHERE id = ? AND user_id = ?").run(Number(id), userId);
+      if (result.changes === 0) throw new AppError("Proposta não encontrada ou acesso não autorizado", 404);
+      res.json({ success: true, data: { id: Number(req.params.id) } });
+      return;
+    }
     const result = await prisma.proposal.deleteMany({
-      where: { id: proposalIdValue(req.params.id), userId: BigInt(userId) },
+      where: { id, userId: BigInt(userId) },
     });
     if (result.count === 0) throw new AppError("Proposta não encontrada ou acesso não autorizado", 404);
     res.json({ success: true, data: { id: Number(req.params.id) } });
@@ -224,8 +327,23 @@ export const updatePortalVisibility: RequestHandler = async (req, res, next) => 
     const { visible } = req.body as { visible?: boolean };
     if (typeof visible !== "boolean") throw new AppError("Visible flag is required", 400);
 
+    const id = proposalIdValue(req.params.id);
+    if (!shouldUsePrisma) {
+      const proposal = db.prepare("SELECT id, status FROM proposals WHERE id = ? AND user_id = ?").get(Number(id), userId) as any;
+      if (!proposal) throw new AppError("Proposta não encontrada ou acesso não autorizado", 404);
+      if (visible && (proposal.status === "revoked" || proposal.status === "draft")) {
+        throw new AppError("Envie a proposta antes de liberá-la no portal.", 409);
+      }
+      db
+        .prepare("UPDATE proposals SET visible_in_client_portal = ?, updated_at = datetime('now') WHERE id = ?")
+        .run(visible ? 1 : 0, Number(id));
+      const row = selectSqliteProposalById(id, userId);
+      res.json({ success: true, data: serializeSqliteProposal(row) });
+      return;
+    }
+
     const proposal = await prisma.proposal.findFirst({
-      where: { id: proposalIdValue(req.params.id), userId: BigInt(userId) },
+      where: { id, userId: BigInt(userId) },
       select: { id: true, status: true },
     });
     if (!proposal) throw new AppError("Proposta não encontrada ou acesso não autorizado", 404);
@@ -249,8 +367,21 @@ export const updatePortalVisibility: RequestHandler = async (req, res, next) => 
 export const revokeProposal: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
+    const id = proposalIdValue(req.params.id);
+    if (!shouldUsePrisma) {
+      const proposal = db.prepare("SELECT id, status FROM proposals WHERE id = ? AND user_id = ?").get(Number(id), userId) as any;
+      if (!proposal) throw new AppError("Proposta não encontrada ou acesso não autorizado", 404);
+      if (proposal.status === "accepted") {
+        throw new AppError("Uma proposta já aceita não pode ter o link revogado.", 409);
+      }
+      db
+        .prepare("UPDATE proposals SET status = 'revoked', visible_in_client_portal = 0, updated_at = datetime('now') WHERE id = ?")
+        .run(Number(id));
+      res.json({ success: true, data: { id: Number(req.params.id), status: "revoked", visible_in_client_portal: false } });
+      return;
+    }
     const proposal = await prisma.proposal.findFirst({
-      where: { id: proposalIdValue(req.params.id), userId: BigInt(userId) },
+      where: { id, userId: BigInt(userId) },
       select: { id: true, status: true },
     });
     if (!proposal) throw new AppError("Proposta não encontrada ou acesso não autorizado", 404);
@@ -268,6 +399,36 @@ export const revokeProposal: RequestHandler = async (req, res, next) => {
 export const getPublicProposal: RequestHandler = async (req, res, next) => {
   try {
     const { token } = req.params;
+    if (!shouldUsePrisma) {
+      const proposal = db
+        .prepare(
+          `SELECT p.*, c.name AS client_name
+           FROM proposals p
+           JOIN clients c ON c.id = p.client_id
+           WHERE p.share_token = ?`,
+        )
+        .get(token) as any;
+      if (!proposal) throw new AppError("Proposta não encontrada", 404);
+      assertProposalLinkUsable({ status: proposal.status, createdAt: new Date(proposal.created_at) });
+      if (proposal.status === "sent") {
+        db.prepare("UPDATE proposals SET status = 'viewed', updated_at = datetime('now') WHERE id = ?").run(proposal.id);
+      }
+      res.json({
+        success: true,
+        data: {
+          title: proposal.title,
+          html: proposal.html,
+          total: Number(proposal.total),
+          status: proposal.status === "sent" ? "viewed" : proposal.status,
+          client_name: proposal.client_name,
+          document_hash: proposal.document_hash,
+          accepted_at: proposal.accepted_at,
+          accepted_by_name: proposal.accepted_by_name,
+        },
+      });
+      return;
+    }
+
     const proposal = await prisma.proposal.findUnique({
       where: { shareToken: token },
       include: { client: { select: { name: true } } },
@@ -307,6 +468,54 @@ export const acceptPublicProposal: RequestHandler = async (req, res, next) => {
     const { token } = req.params;
     const { name } = req.body;
     if (!name?.trim()) throw new AppError("Informe seu nome completo para aceitar.", 400);
+
+    if (!shouldUsePrisma) {
+      const proposal = db.prepare("SELECT * FROM proposals WHERE share_token = ?").get(token) as any;
+      if (!proposal) throw new AppError("Proposta não encontrada", 404);
+      assertProposalLinkUsable({ status: proposal.status, createdAt: new Date(proposal.created_at) });
+      if (proposal.status === "accepted") throw new AppError("Esta proposta já foi aceita.", 409);
+      if (proposal.status === "rejected") throw new AppError("Esta proposta foi rejeitada e não pode mais ser aceita.", 409);
+
+      const currentHash = hashDocument(proposal.html);
+      if (currentHash !== proposal.document_hash) {
+        throw new AppError("O conteúdo da proposta foi alterado desde o envio. Solicite uma nova versão.", 409);
+      }
+
+      const forwardedFor = req.headers["x-forwarded-for"];
+      const ip = (Array.isArray(forwardedFor) ? forwardedFor[0] : forwardedFor?.split(",")[0]) || req.socket.remoteAddress || "unknown";
+      const userAgent = req.headers["user-agent"] || "unknown";
+      const acceptedAt = new Date().toISOString();
+
+      db
+        .prepare(
+          `UPDATE proposals
+           SET status = 'accepted', accepted_at = ?, accepted_by_name = ?, accepted_ip = ?, accepted_user_agent = ?, updated_at = datetime('now')
+           WHERE id = ?`,
+        )
+        .run(acceptedAt, name.trim(), String(ip), String(userAgent), proposal.id);
+
+      notifyUser(
+        Number(proposal.user_id),
+        "Proposta aceita!",
+        `${name.trim()} aceitou a proposta "${proposal.title}".`,
+        "success",
+        "/clients",
+      );
+      dispatchWebhookEvent(Number(proposal.user_id), "proposal.accepted", {
+        proposalId: Number(proposal.id), title: proposal.title, acceptedByName: name.trim(),
+      });
+
+      res.json({
+        success: true,
+        data: {
+          status: "accepted",
+          accepted_at: acceptedAt,
+          accepted_by_name: name.trim(),
+          document_hash: proposal.document_hash,
+        },
+      });
+      return;
+    }
 
     const proposal = await prisma.proposal.findUnique({ where: { shareToken: token } });
     if (!proposal) throw new AppError("Proposta não encontrada", 404);

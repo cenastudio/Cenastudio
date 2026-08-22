@@ -120,6 +120,53 @@ describe("portalDataService", () => {
     insertFinancial.run(ownerId, clientId, "income", 25000, "First Payment", today);
     insertFinancial.run(ownerId, clientId, "expense", 5000, "Production Costs", today);
     insertFinancial.run(otherOwnerId, otherClientId, "income", 50000, "Full Payment", today);
+
+    const insertProposal = database.prepare(`
+      INSERT INTO proposals (
+        user_id, client_id, project_id, title, html, total, status, share_token,
+        document_hash, accepted_at, visible_in_client_portal, created_at, updated_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    `);
+    insertProposal.run(
+      ownerId,
+      clientId,
+      projectId,
+      "Proposal for Alpha",
+      "<h1>Alpha</h1>",
+      50000,
+      "accepted",
+      "proposal-alpha-token",
+      "hash-alpha",
+      "2026-08-22T10:00:00.000Z",
+      1,
+    );
+    insertProposal.run(
+      ownerId,
+      clientId,
+      projectId,
+      "Internal Alpha Draft",
+      "<h1>Draft</h1>",
+      25000,
+      "draft",
+      "proposal-alpha-draft-token",
+      "hash-draft",
+      null,
+      0,
+    );
+    insertProposal.run(
+      otherOwnerId,
+      otherClientId,
+      otherProjectId,
+      "Proposal for Beta",
+      "<h1>Beta</h1>",
+      75000,
+      "sent",
+      "proposal-beta-token",
+      "hash-beta",
+      null,
+      1,
+    );
   });
 
   it("lists projects filtered strictly by clientId", async () => {
@@ -201,8 +248,7 @@ describe("portalDataService", () => {
     expect(otherFiles.every((f) => f.projectId === otherProjectId)).toBe(true);
   });
 
-  // proposals e meetings usam Prisma puro (sem fallback SQLite) — só testáveis com Postgres real
-  it.skip("lists proposals filtered strictly by clientId", async () => {
+  it("lists proposals filtered strictly by clientId", async () => {
     const proposals = await portalDataService.listProposalsForClient(clientId);
 
     expect(proposals).toHaveLength(1);
@@ -213,7 +259,7 @@ describe("portalDataService", () => {
     });
   });
 
-  it.skip("returns empty proposals for cross-client access", async () => {
+  it("returns empty proposals for cross-client access", async () => {
     const proposals = await portalDataService.listProposalsForClient(otherClientId);
     expect(proposals).toHaveLength(1);
     expect(proposals[0].title).toBe("Proposal for Beta");
@@ -222,6 +268,7 @@ describe("portalDataService", () => {
     expect(ownProposals.every((p) => p.title !== "Proposal for Beta")).toBe(true);
   });
 
+  // meetings seguem Prisma puro no Portal; a P1B.4.3 atual cobre propostas.
   it.skip("lists meetings filtered strictly by clientId", async () => {
     const meetings = await portalDataService.listMeetingsForClient(clientId);
     expect(meetings).toHaveLength(1);

@@ -326,6 +326,53 @@ function ensureClientPortalTable() {
   `);
 }
 
+function ensureProposalTable() {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS proposals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+      project_id INTEGER REFERENCES projects(id) ON DELETE SET NULL,
+      source_budget_id INTEGER REFERENCES budgets(id) ON DELETE SET NULL,
+      source_generation_id INTEGER REFERENCES generations(id) ON DELETE SET NULL,
+      commercial_snapshot TEXT,
+      title TEXT NOT NULL,
+      html TEXT NOT NULL,
+      total INTEGER NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'sent',
+      share_token TEXT NOT NULL UNIQUE,
+      document_hash TEXT NOT NULL,
+      accepted_at TEXT,
+      accepted_by_name TEXT,
+      accepted_ip TEXT,
+      accepted_user_agent TEXT,
+      visible_in_client_portal INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+
+  const cols = (db.prepare("PRAGMA table_info(proposals)").all() as { name: string }[]).map(
+    (c) => c.name,
+  );
+  const additions = [
+    ["project_id", "INTEGER REFERENCES projects(id) ON DELETE SET NULL"],
+    ["source_budget_id", "INTEGER REFERENCES budgets(id) ON DELETE SET NULL"],
+    ["source_generation_id", "INTEGER REFERENCES generations(id) ON DELETE SET NULL"],
+    ["commercial_snapshot", "TEXT"],
+    ["accepted_at", "TEXT"],
+    ["accepted_by_name", "TEXT"],
+    ["accepted_ip", "TEXT"],
+    ["accepted_user_agent", "TEXT"],
+    ["visible_in_client_portal", "INTEGER NOT NULL DEFAULT 0"],
+  ] as const;
+  for (const [name, definition] of additions) {
+    if (!cols.includes(name)) {
+      db.prepare(`ALTER TABLE proposals ADD COLUMN ${name} ${definition}`).run();
+    }
+  }
+}
+
 function ensureWorkspaceTables() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS workspaces (
@@ -418,6 +465,12 @@ function createIndexes() {
     "CREATE INDEX IF NOT EXISTS idx_dre_settings_user_id ON dre_settings(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_client_portal_access_client_id ON client_portal_access(client_id)",
     "CREATE INDEX IF NOT EXISTS idx_client_portal_access_email ON client_portal_access(email)",
+    "CREATE INDEX IF NOT EXISTS idx_proposals_client_id ON proposals(client_id)",
+    "CREATE INDEX IF NOT EXISTS idx_proposals_user_id ON proposals(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_proposals_project_id ON proposals(project_id)",
+    "CREATE INDEX IF NOT EXISTS idx_proposals_source_budget_id ON proposals(source_budget_id)",
+    "CREATE INDEX IF NOT EXISTS idx_proposals_share_token ON proposals(share_token)",
+    "CREATE INDEX IF NOT EXISTS idx_proposals_visible_in_client_portal ON proposals(visible_in_client_portal)",
     "CREATE INDEX IF NOT EXISTS idx_reset_tokens_token ON reset_tokens(token)",
     "CREATE INDEX IF NOT EXISTS idx_lgpd_requests_user_id ON lgpd_requests(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_lgpd_requests_status ON lgpd_requests(status)",
@@ -871,6 +924,7 @@ export async function initDatabase() {
   ensureStudioSettingsColumns();
   ensureFinancialEntryColumns();
   ensureClientPortalTable();
+  ensureProposalTable();
   ensureWorkspaceTables();
   createIndexes();
 

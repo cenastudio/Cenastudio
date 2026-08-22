@@ -7,7 +7,7 @@ const prismaMock = vi.hoisted(() => ({
   proposal: { findFirst: vi.fn(), findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
 }));
 
-vi.mock("../models/prisma.js", () => ({ prisma: prismaMock }));
+vi.mock("../models/prisma.js", () => ({ prisma: prismaMock, shouldUsePrisma: true }));
 vi.mock("../services/notificationService.js", () => ({ notifyUser: vi.fn() }));
 vi.mock("../services/webhookService.js", () => ({ dispatchWebhookEvent: vi.fn() }));
 

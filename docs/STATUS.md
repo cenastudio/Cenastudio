@@ -230,8 +230,9 @@ custos, permissões e exportação de set.
 oportunidades, interações, arquivos, financeiro, propostas, vídeo reviews e
 gestão de Portal. A jornada de acesso foi validada localmente em 2026-08-22:
 43 testes passaram para criação, login, alteração/reset de senha, desativação,
-limites de plano e isolamento entre produtoras. Quatro cenários de propostas e
-reuniões no Portal permanecem pendentes de Postgres real e fazem parte da P1B.4.
+limites de plano e isolamento entre produtoras. Propostas agora têm fallback
+local e E2E; reuniões continuam Prisma-only e seguem cobertas pela validação
+SQL em Supabase.
 
 **P1B.3 concluída localmente:** `shared/proposalDocument.ts` é o contrato único
 para a proposta manual, a calculadora e o rascunho comercial gerado a partir de
@@ -240,7 +241,7 @@ escapa conteúdo livre e gera o HTML usado na impressão. O rascunho de orçamen
 busca as configurações persistidas do estúdio dentro da transação; links públicos
 continuam usando o HTML salvo da proposta. Validação focada: 15 testes passaram
 em `proposalDocument`, `commercialProposalService` e calculadora; `npm run check`
-passou. A P1B.4 ainda exige Postgres real e E2E do fluxo completo.
+passou.
 
 **P1B.4.1 concluída localmente:** a suíte do ciclo de vida da proposta cobre
 ownership na criação, envio, bloqueio de rascunho no Portal, primeira
@@ -251,8 +252,8 @@ Supabase. A P1B.4.2 foi então validada pelo Supabase CLI em uma transação com
 `ROLLBACK`: proposta/reunião visíveis e ativas ficaram isoladas no cliente
 certo, enquanto itens ocultos, revogados ou cancelados retornaram zero para o
 outro cliente. O teste reproduzível sem segredos está em
-`scripts/verify-portal-isolation.sql`. Só o E2E P1B.4.3 permanece aberto, sem
-usar o Railway legado local.
+`scripts/verify-portal-isolation.sql`. O E2E P1B.4.3 foi fechado depois com
+fallback local de propostas, sem usar o Railway legado local.
 
 **P1A.2/P1A.3 concluídas localmente:** a migration
 `20260822013000_link_proposals_to_budget` está coberta por teste de contrato:
@@ -262,6 +263,17 @@ O serviço comercial também reforça ownership por estúdio/projeto para geraç
 IA, busca rascunho apenas por `userId + sourceBudgetId + status=draft` e não
 trata proposta enviada/aceita como mutável. Isso valida o desenho; aplicar a
 migration em Supabase segue como ação operacional separada.
+
+**P1B.4/P1B.4.3 concluídas:** o fluxo Cliente → Projeto → Orçamento →
+Proposta → Portal agora tem E2E local em desktop e mobile. Para isso, o fallback
+SQLite de desenvolvimento passou a cobrir a tabela de propostas, criação/lista,
+liberação no portal, link público e aceite; o caminho Postgres/Supabase continua
+via Prisma quando há URL persistente. A rodada também corrigiu o parsing de
+`datetime('now')` do SQLite no auth do Portal do Cliente, que podia invalidar
+uma sessão recém-emitida por interpretar UTC como horário local. Validação:
+51 testes focados passaram, `npm run check` passou, e
+`tests/e2e/client-budget-proposal-portal.spec.ts` passou em
+`chromium-desktop` e `chromium-mobile`.
 
 **P1C.A / P1C.3 auditadas:** Produção já tem entradas diárias claras para Jobs,
 Estúdio IA e Aprovações, mas Arquivos, Documentos, Equipamento, Timesheet,
