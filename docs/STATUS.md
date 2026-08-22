@@ -272,7 +272,8 @@ bloco e o detalhe operacional atualizado abaixo.
 `Conta > Integrações`, ao lado de Webhooks. O componente próprio preserva
 listagem, criação com exibição única do segredo, cópia e revogação; Segurança
 não busca nem mostra mais esses dados. A rota `/webhooks` permanece como
-entrada compatível para links existentes.
+entrada compatível para links existentes. Ela também saiu da navegação de
+Produção e os atalhos da paleta agora abrem `Conta > Integrações` diretamente.
 
 **Concluídas (`-OK`):** `00-fundacao-limpeza-e-documentacao`,
 `client-hub-connected-workflows`, `dre-por-projeto`,

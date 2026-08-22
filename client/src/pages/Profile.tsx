@@ -272,10 +272,15 @@ function ProfileContent() {
   const { theme, toggleTheme } = useTheme();
   const { user, plan, logout, refresh } = useAuth();
   const { openModal, selectPlan } = useApp();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
 
   // Tab state
   const [activeTab, setActiveTab] = useState<ProfileTab>("profile");
+
+  useEffect(() => {
+    const requestedTab = new URLSearchParams(location.split("?")[1] || "").get("tab");
+    if (requestedTab === "integrations") setActiveTab("integrations");
+  }, [location]);
 
   // Profile form state
   const [name, setName] = useState("");

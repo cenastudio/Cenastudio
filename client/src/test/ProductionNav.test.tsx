@@ -72,7 +72,7 @@ describe("ProductionNav mobile navigation", () => {
 
     fireEvent.click(mobileTrigger);
 
-    for (const label of ["Jobs", "Estúdio IA", "Aprovações", "Arquivos", "Documentos", "Equipamento", "Timesheet", "Webhooks", "Equipe"]) {
+    for (const label of ["Jobs", "Estúdio IA", "Aprovações", "Arquivos", "Documentos", "Equipamento", "Timesheet", "Equipe"]) {
       expect(getMobileMenuItem(mobileNav as HTMLElement, label)).toHaveClass("min-h-11");
     }
   });
@@ -88,7 +88,6 @@ describe("ProductionNav mobile navigation", () => {
       ["Documentos", "/documents"],
       ["Equipamento", "/equipment"],
       ["Timesheet", "/timesheet"],
-      ["Webhooks", "/webhooks"],
       ["Equipe", "/team"],
     ] as const;
 

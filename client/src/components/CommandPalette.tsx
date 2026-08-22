@@ -139,7 +139,7 @@ const SECONDARY_COMMANDS: CommandItemDef[] = [
   {
     labelKey: "app.commandPalette.cmd.webhooks",
     label: "Webhooks",
-    path: "/webhooks",
+    path: "/profile?tab=integrations",
     icon: Webhook,
     category: "secondary",
     keywords: ["webhooks", "integrations", "integracoes", "api"]

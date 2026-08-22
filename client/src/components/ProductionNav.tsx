@@ -9,7 +9,6 @@ import {
   Users,
   ChevronDown,
   Package,
-  Webhook,
   MoreHorizontal,
   Camera,
   Clock,
@@ -60,7 +59,6 @@ const SECONDARY_TABS: ProductionTab[] = [
   { href: "/documents", labelPt: "Documentos", labelEn: "Documents", icon: FileText },
   { href: "/equipment", labelPt: "Equipamento", labelEn: "Equipment", icon: Camera, requiresFeature: "equipment-inventory" },
   { href: "/timesheet", labelPt: "Timesheet", labelEn: "Timesheet", icon: Clock, requiresFeature: "timesheet" },
-  { href: "/webhooks", labelPt: "Webhooks", labelEn: "Webhooks", icon: Webhook },
   { href: "/team", labelPt: "Equipe", labelEn: "Team", icon: Users, roles: ["admin"] },
 ];
 
@@ -75,7 +73,7 @@ function isTabActive(location: string, href: string) {
  * row growing unbounded as new verticals ship.
  *
  * - Primary tabs (Jobs, AI Studio, Approvals) are always visible — daily use.
- * - Secondary tabs (Files, Assets, Documents, Webhooks, External Crew, Team)
+ * - Secondary tabs (Files, Documents, Equipment, Timesheet, Team)
  *   live under a "Mais"/"More" dropdown on desktop.
  * - The AI Studio tab is visually highlighted since it's the product's key
  *   differentiator and would otherwise lose visibility now that it's no

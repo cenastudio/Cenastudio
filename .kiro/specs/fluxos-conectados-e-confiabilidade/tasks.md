@@ -102,7 +102,7 @@ reproduzir contra Postgres/Supabase exige janela controlada e não foi executado
 - [x] P1C.A Inventariar rotas e ações por intenção, removendo apenas duplicação
   comprovada.
 - [ ] P1C.B Projetar e implementar a nova entrada de Produção sem quebrar URLs.
-- [ ] P1C.C Centralizar integrações em Conta e preservar redirecionamentos.
+- [x] P1C.C Centralizar integrações em Conta e preservar redirecionamentos.
   - [x] P1C.C.1 Expor Webhooks em `Conta > Integrações` sem remover a rota
     legada `/webhooks`.
   - [x] P1C.C.2 Mover gestão de chaves de API de Segurança para Integrações,
