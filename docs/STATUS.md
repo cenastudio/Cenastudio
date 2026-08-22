@@ -139,8 +139,12 @@ verificar, está dito explicitamente.
   bloqueado pelo gate de Timesheet e mantém fallback de 30 dias no service.
   Categoria de tempo saiu do escopo ativo porque não existe no schema/UI atual;
   Timesheet passa a operar por projeto, descrição, período, duração e custo.
-- **Google Calendar:** rota `/calendar` registrada. A integração real com a API do
-  Google **não foi verificada** — só a existência da rota.
+- **Google Calendar:** rota `/calendar` registrada para exportação de agenda por
+  `.ics`. A integração real com a API do Google ainda **não existe**. Em
+  2026-08-22, `.env.example` e `docs/CONEXOES.md` passaram a listar as envs
+  planejadas (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
+  `GOOGLE_REDIRECT_URI`) e o runbook mínimo; faltam credenciais, `googleapis`,
+  migration de tokens/eventos, service, rotas OAuth/sync e UI.
 - **Portal do Cliente:** MVP funcional em evolução (spec `portal-do-cliente-OK/`).
   Rotas `/portal` e `/client-portal-auth`, model `ClientPortalAccess`, auth
   isolada, endpoints de projetos/arquivos/propostas/reuniões/resumo financeiro,

@@ -281,6 +281,7 @@
     ```
   - Instalar dependência: `npm install googleapis`.
   - _Requirements: 8.3_
+  - _2026-08-22: envs planejadas adicionadas ao `.env.example` e runbook registrado em `docs/CONEXOES.md`/`docs/STATUS.md`. Task segue aberta porque ainda faltam credenciais reais, instalação de `googleapis` e implementação OAuth/API._
 
 - [ ] 27. Prisma migration `add_calendar_events` + Google tokens em User
   - Editar `prisma/schema.prisma`: adicionar model `CalendarEvent` + colunas `googleAccessToken`, `googleRefreshToken`, `googleTokenExpiry` em `User`.

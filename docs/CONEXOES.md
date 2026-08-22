@@ -338,7 +338,23 @@ atualizar `.kiro/specs/storyboard-ia-shotlist/tasks.md`.
 
 ---
 
-## 9. Autenticação e sessão
+## 9. Google Calendar
+
+**Estado atual:** o produto exporta agenda por `.ics` via rota `/calendar`, mas
+sync real com Google Calendar ainda não existe.
+
+**Variáveis planejadas:** `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
+`GOOGLE_REDIRECT_URI`.
+
+Antes de implementar: criar projeto no Google Cloud, habilitar Calendar API,
+criar OAuth Client, registrar redirect URI
+`{APP_DOMAIN}/api/calendar/google/callback`, instalar `googleapis`, criar
+migration de tokens/eventos e implementar service/backend/UI conforme
+`.kiro/specs/features-criticas-gap-analysis/tasks.md`.
+
+---
+
+## 10. Autenticação e sessão
 
 Não é serviço externo, mas é conexão que quebra deploy quando mal configurada.
 
@@ -355,15 +371,14 @@ consequência negativa no ADR-012.
 
 ---
 
-## 10. O que NÃO existe
+## 11. O que NÃO existe
 
 Para evitar caça a configuração inexistente:
 
 - **Redis** — descartado por custo. Revogação de JWT usa Postgres (ADR-011).
-- **Scheduler / cron** — não há `node-cron` nem `setInterval`. Logo, não há
-  retry de webhook nem poda de `user_sessions` (ambos na Seção 4 do
-  `docs/STATUS.md`). `ENABLE_CRON_JOBS` aparece em relatórios antigos, mas não
-  existe no código.
+- **Cron residente em Node** — não há `node-cron` nem `setInterval` para a Vercel.
+  A manutenção serverless existe por Vercel Cron em
+  `/api/internal/cron/maintenance` e exige `CRON_SECRET`.
 - **Railway como produção atual** — foi substituído por Vercel + Supabase. Pode
   existir conexão antiga para auditoria/migração, mas não deve ser fonte de
   runtime.
@@ -371,7 +386,7 @@ Para evitar caça a configuração inexistente:
 
 ---
 
-## 11. Variáveis de verificação
+## 12. Variáveis de verificação
 
 Consumidas por scripts de smoke test e captura de screenshots. Devem ficar
 **vazias em produção**: `SMOKE_BASE_URL`, `SMOKE_EMAIL`, `SMOKE_PASSWORD`,
@@ -379,7 +394,7 @@ Consumidas por scripts de smoke test e captura de screenshots. Devem ficar
 
 ---
 
-## 12. Ordem de bring-up do zero
+## 13. Ordem de bring-up do zero
 
 1. `SUPABASE_DATABASE_URL` → `npx prisma migrate deploy` → `npm run smoke:prisma`
 2. `JWT_SECRET` e `CLIENT_ORIGIN` → app sobe e autentica
@@ -389,6 +404,7 @@ Consumidas por scripts de smoke test e captura de screenshots. Devem ficar
 6. `AI_PROVIDER` + chave correspondente → ferramentas de IA
 7. `STRIPE_*` → cobrança
 8. `GITHUB_*` → login social (opcional, deixar por último)
+9. `GOOGLE_*` → sync Google Calendar, quando a Feature H for implementada
 
 Do passo 1 ao 2 o sistema já sobe. Os demais habilitam áreas específicas e
 falham de forma isolada, sem derrubar a aplicação.
