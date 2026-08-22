@@ -260,6 +260,14 @@ revisão e responsável vinculados ao mesmo plano. A frente começa somente apó
 P1B atual e ganha spec própria para definir modelo de imagem, Supabase Storage,
 custos, permissões e exportação de set.
 
+**Bloco G0 concluído — spec Storyboard IA:** a spec
+`.kiro/specs/storyboard-ia-shotlist/` define requirements, design e tasks. A
+decisão de produto está fixada: Storyboard IA nasce dentro do Shot List, com
+frames vinculados a cada shot, não como ferramenta solta. Próximo corte real:
+G1, criar `ShotStoryboardFrame`, migration/fallback SQLite e service com
+isolamento entre produtoras, sem escolher provider de imagem antes da credencial
+e da política de storage.
+
 **P1B auditada:** a ficha do cliente já oferece CRM 360 com projetos,
 oportunidades, interações, arquivos, financeiro, propostas, vídeo reviews e
 gestão de Portal. A jornada de acesso foi validada localmente em 2026-08-22:
