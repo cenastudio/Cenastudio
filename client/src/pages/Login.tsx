@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { CheckCircle2, Github, Loader2 } from "lucide-react";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import { useLanguage } from "@/contexts/LanguageContext";
+import TurnstileChallenge from "@/components/auth/TurnstileChallenge";
 
 export default function Login() {
   const { t } = useLanguage();
@@ -14,13 +15,21 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [serverGitHubEnabled, setServerGitHubEnabled] = useState(false);
+  const [turnstileEnabled, setTurnstileEnabled] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | undefined>();
   const { login } = useAuth();
   const [, setLocation] = useLocation();
 
   useEffect(() => {
     api.auth.providers()
-      .then((providers) => setServerGitHubEnabled(providers.github))
-      .catch(() => setServerGitHubEnabled(false));
+      .then((providers) => {
+        setServerGitHubEnabled(providers.github);
+        setTurnstileEnabled(providers.turnstile);
+      })
+      .catch(() => {
+        setServerGitHubEnabled(false);
+        setTurnstileEnabled(false);
+      });
   }, []);
 
   const handleLogin = async () => {
@@ -30,7 +39,7 @@ export default function Login() {
     }
     setSubmitting(true);
     try {
-      const user = await login(email.trim(), password);
+      const user = await login(email.trim(), password, turnstileToken);
       toast.success(t("app.auth.loginSuccess"));
       setLocation(user.role === "admin" ? "/admin" : "/tools");
     } catch (error) {
@@ -110,10 +119,12 @@ export default function Login() {
             />
           </AuthField>
 
+          <TurnstileChallenge enabled={turnstileEnabled} onTokenChange={setTurnstileToken} />
+
           <button
             type="button"
             onClick={handleLogin}
-            disabled={submitting}
+            disabled={submitting || (turnstileEnabled && !turnstileToken)}
             className="frame-btn-primary w-full mt-1.5 flex items-center justify-center gap-2"
           >
             {submitting ? (

@@ -283,15 +283,15 @@ export interface StudioSettingsPayload {
 
 export const api = {
   auth: {
-    login: (email: string, password: string) =>
+    login: (email: string, password: string, turnstileToken?: string) =>
       request<{ user: AuthUser }>("/auth/login", {
         method: "POST",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, turnstileToken }),
       }),
-    register: (name: string, email: string, password: string, desiredPlan?: "pro" | "studio", referralCode?: string) =>
+    register: (name: string, email: string, password: string, desiredPlan?: "pro" | "studio", referralCode?: string, turnstileToken?: string) =>
       request<{ user: AuthUser }>("/auth/register", {
         method: "POST",
-        body: JSON.stringify({ name, email, password, desiredPlan, referralCode }),
+        body: JSON.stringify({ name, email, password, desiredPlan, referralCode, turnstileToken }),
       }),
     forgotPassword: (email: string) =>
       request<{ message: string }>("/auth/forgot-password", {
@@ -323,7 +323,7 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ accessToken }),
       }),
-    providers: () => request<{ github: boolean; supabase: boolean }>("/auth/providers"),
+    providers: () => request<{ github: boolean; supabase: boolean; turnstile: boolean }>("/auth/providers"),
 
     // LGPD / GDPR endpoints
     getDataStats: () => request<UserDataStats>("/auth/data-stats"),

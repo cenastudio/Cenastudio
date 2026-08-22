@@ -7,6 +7,8 @@ import { useState, useEffect } from "react";
 import { useLocation, useSearch } from "wouter";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { api } from "@/lib/api";
+import TurnstileChallenge from "@/components/auth/TurnstileChallenge";
 
 export default function Register() {
   const { t } = useLanguage();
@@ -17,6 +19,8 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
+  const [turnstileEnabled, setTurnstileEnabled] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | undefined>();
   const { register } = useAuth();
   const [, setLocation] = useLocation();
   const search = useSearch();
@@ -35,6 +39,12 @@ export default function Register() {
       sessionStorage.setItem('referralCode', ref);
     }
   }, [search]);
+
+  useEffect(() => {
+    api.auth.providers()
+      .then((providers) => setTurnstileEnabled(providers.turnstile))
+      .catch(() => setTurnstileEnabled(false));
+  }, []);
 
   const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -64,7 +74,7 @@ export default function Register() {
       // Get referral code from sessionStorage
       const referralCode = sessionStorage.getItem('referralCode') || undefined;
 
-      await register(name.trim(), email.trim(), password, desiredPlan, referralCode);
+      await register(name.trim(), email.trim(), password, desiredPlan, referralCode, turnstileToken);
 
       // Clear referral code after successful registration
       if (referralCode) {
@@ -219,9 +229,11 @@ export default function Register() {
           )}
         </AuthField>
 
+        <TurnstileChallenge enabled={turnstileEnabled} onTokenChange={setTurnstileToken} />
+
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || (turnstileEnabled && !turnstileToken)}
           className="frame-btn-primary w-full mt-1.5 flex items-center justify-center gap-2"
         >
           {submitting ? (

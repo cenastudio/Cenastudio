@@ -3,6 +3,12 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+const storageMock = vi.hoisted(() => ({
+  uploadStoryboardFrame: vi.fn(),
+}));
+
+vi.mock("./supabaseStorage.js", () => storageMock);
+
 let db: typeof import("../models/db.js").db;
 let shotListService: typeof import("./shotListService.js");
 let shotStoryboardService: typeof import("./shotStoryboardService.js");
@@ -29,6 +35,15 @@ describe("shotStoryboardService", () => {
   });
 
   beforeEach(() => {
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
+    delete process.env.OPENROUTER_API_KEY;
+    delete process.env.STORYBOARD_IMAGE_API_KEY;
+    delete process.env.STORYBOARD_IMAGE_MODEL;
+    storageMock.uploadStoryboardFrame.mockResolvedValue({
+      path: "1/1/1/storyboard.png",
+      publicUrl: "https://storage.example.com/storyboard.png",
+    });
     db.prepare("DELETE FROM shot_storyboard_frames").run();
     db.prepare("DELETE FROM shots").run();
     db.prepare("DELETE FROM shot_lists").run();
@@ -193,6 +208,47 @@ describe("shotStoryboardService", () => {
       image_url: expect.stringContaining("mock-storyboard"),
     });
     expect(frame.final_prompt).toContain("Style: black and white pencil storyboard sketch");
+  });
+
+  it("generates through OpenRouter Images and stores the storyboard frame in Supabase Storage", async () => {
+    const shot = await createOwnerShot();
+    process.env.STORYBOARD_IMAGE_PROVIDER = "openrouter";
+    process.env.OPENROUTER_API_KEY = "openrouter-test-key";
+    process.env.STORYBOARD_IMAGE_MODEL = "google/gemini-3.1-flash-lite-image";
+    const imageBytes = Buffer.from("storyboard image bytes");
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({
+      data: [{ b64_json: imageBytes.toString("base64"), media_type: "image/png" }],
+    }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const frame = await shotStoryboardService.generateFrame(ownerId, shot.id, {
+      prompt: "Plano em desenho a lápis com câmera baixa",
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://openrouter.ai/api/v1/images",
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({ Authorization: "Bearer openrouter-test-key" }),
+      }),
+    );
+    expect(storageMock.uploadStoryboardFrame).toHaveBeenCalledWith(expect.objectContaining({
+      userId: ownerId,
+      projectId,
+      shotId: shot.id,
+      body: imageBytes,
+      contentType: "image/png",
+    }));
+    expect(frame).toMatchObject({
+      status: "generated",
+      provider: "openrouter",
+      model: "google/gemini-3.1-flash-lite-image",
+      image_url: "https://storage.example.com/storyboard.png",
+      storage_path: "1/1/1/storyboard.png",
+    });
   });
 
   it("blocks monthly storyboard generation before creating a frame when the plan quota is reached", async () => {

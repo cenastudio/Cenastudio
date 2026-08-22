@@ -53,6 +53,11 @@ vi.mock("@/contexts/LanguageContext", () => ({
 
 vi.mock("@/lib/api", () => ({
   ApiError: class ApiError extends Error {},
+  api: {
+    auth: {
+      providers: vi.fn().mockResolvedValue({ github: false, supabase: false, turnstile: false }),
+    },
+  },
   startCheckout: vi.fn(),
 }));
 
@@ -116,7 +121,7 @@ describe("Register", () => {
     fireEvent.click(screen.getByRole("button", { name: "Criar conta e começar" }));
 
     await waitFor(() => {
-      expect(register).toHaveBeenCalledWith("Clara Souza", "clara@example.com", "CenaStudio1!", undefined, undefined);
+      expect(register).toHaveBeenCalledWith("Clara Souza", "clara@example.com", "CenaStudio1!", undefined, undefined, undefined);
     });
     expect(setLocation).toHaveBeenCalledWith("/tools");
   });

@@ -18,8 +18,8 @@ interface AuthContextType {
   isTeamMember: boolean;
   teamRole: string | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<AuthUser>;
-  register: (name: string, email: string, password: string, desiredPlan?: "pro" | "studio", referralCode?: string) => Promise<AuthUser>;
+  login: (email: string, password: string, turnstileToken?: string) => Promise<AuthUser>;
+  register: (name: string, email: string, password: string, desiredPlan?: "pro" | "studio", referralCode?: string, turnstileToken?: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
   setSession: (user: AuthUser, plan: UserPlan | null) => void;
@@ -110,10 +110,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("frame:auth-expired", handleExpiredSession);
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, turnstileToken?: string) => {
     let loggedIn: AuthUser;
     try {
-      const response = await api.auth.login(email, password);
+      const response = await api.auth.login(email, password, turnstileToken);
       loggedIn = response.user;
     } catch (error) {
       if (!(error instanceof ApiError) || error.status !== 401 || !isSupabaseConfigured || !supabase) throw error;
@@ -129,8 +129,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return loggedIn;
   };
 
-  const register = async (name: string, email: string, password: string, desiredPlan?: "pro" | "studio", referralCode?: string) => {
-    const { user: registered } = await api.auth.register(name, email, password, desiredPlan, referralCode);
+  const register = async (name: string, email: string, password: string, desiredPlan?: "pro" | "studio", referralCode?: string, turnstileToken?: string) => {
+    const { user: registered } = await api.auth.register(name, email, password, desiredPlan, referralCode, turnstileToken);
     setUser(registered);
     writeAuthSnapshot(registered, plan);
     await refresh();

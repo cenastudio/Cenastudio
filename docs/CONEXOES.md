@@ -313,19 +313,39 @@ custo estimado.
 
 ### Storyboard IA
 
-O Storyboard IA do Shot List já tem banco, quotas, rotas, UI e exportação PDF,
-mas a geração real de imagem ainda não está ligada a um provider externo.
+O Storyboard IA do Shot List usa OpenRouter Images como provider inicial e grava
+o arquivo gerado em storage público configurável. O default seguro continua
+Supabase Storage; Cloudflare R2 está implementado como opção S3-compatible, mas
+só deve virar runtime quando o endpoint e a URL pública estiverem validados. O
+`mock` continua restrito a teste/local e é bloqueado em produção.
 
 | Variável | Estado | Observação |
 |---|---|---|
-| `STORYBOARD_IMAGE_PROVIDER` | opcional | vazio/`disabled` mantém 503 controlado; `mock` só para teste/local |
-| `STORYBOARD_IMAGE_API_KEY` | futuro | reservar para o provider real escolhido |
-| `STORYBOARD_IMAGE_MODEL` | futuro | reservar para o modelo real escolhido |
+| `STORYBOARD_IMAGE_PROVIDER` | sim para gerar | `openrouter`; vazio/`disabled` mantém 503 controlado |
+| `OPENROUTER_API_KEY` | sim | usado também pelo Storyboard quando `STORYBOARD_IMAGE_API_KEY` está vazio |
+| `STORYBOARD_IMAGE_API_KEY` | opcional | chave dedicada, se quiser separar orçamento do texto |
+| `STORYBOARD_IMAGE_MODEL` | sim | default recomendado: `google/gemini-3.1-flash-lite-image` |
+| `STORYBOARD_IMAGE_RESOLUTION` | opcional | default `1K` |
+| `STORYBOARD_IMAGE_QUALITY` | opcional | default `medium` |
+| `STORYBOARD_IMAGE_FORMAT` | opcional | default `png` |
+| `STORYBOARD_STORAGE_PROVIDER` | opcional | `supabase` default; `cloudflare-r2` quando R2 estiver válido |
+| `SUPABASE_STORYBOARD_BUCKET` | opcional | default `shot-storyboards`, público |
+| `CLOUDFLARE_R2_ACCOUNT_ID` | opcional | necessário para `cloudflare-r2` |
+| `CLOUDFLARE_R2_ACCESS_KEY_ID` | opcional | necessário para `cloudflare-r2`; segredo |
+| `CLOUDFLARE_R2_SECRET_ACCESS_KEY` | opcional | necessário para `cloudflare-r2`; segredo |
+| `CLOUDFLARE_R2_BUCKET` | opcional | default operacional sugerido: `cena-storyboards` |
+| `CLOUDFLARE_R2_PUBLIC_URL` | obrigatório para R2 | URL pública/custom domain usada no `image_url` |
 
-Antes de habilitar em produção: escolher provider, implementar adapter em
-`server/services/imageGenerationService.ts`, gravar a imagem final em Supabase
-Storage ou storage equivalente, validar bucket/URL pública em staging/produção e
-atualizar `.kiro/specs/storyboard-ia-shotlist/tasks.md`.
+Validação de produção: confirmar que Vercel tem `STORYBOARD_IMAGE_PROVIDER`,
+`OPENROUTER_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` e, se
+customizado, `SUPABASE_STORYBOARD_BUCKET`; depois gerar um frame real em Shot
+List e conferir `image_url` pública + `storage_path` em
+`shot_storyboard_frames`.
+
+Em 2026-08-22, o suporte a Cloudflare R2 foi implementado no código, mas o
+endpoint informado falhou no handshake TLS antes de autenticar; portanto R2 não
+deve ser ativado em produção até `curl`/SDK conseguirem listar/criar bucket e
+uma URL pública estar definida.
 
 ---
 
@@ -354,7 +374,21 @@ migration de tokens/eventos e implementar service/backend/UI conforme
 
 ---
 
-## 10. Autenticação e sessão
+## 10. Cloudflare Turnstile
+
+**Faz:** protege login e cadastro contra bots quando configurado.
+
+**Variáveis:** `VITE_TURNSTILE_SITE_KEY` (pública, client) e
+`TURNSTILE_SECRET_KEY` (servidor). Sem `TURNSTILE_SECRET_KEY`, o backend não
+exige desafio e as telas continuam funcionando normalmente.
+
+Para ativar: criar um widget Turnstile no painel Cloudflare com domínios
+`cena-studio-prod.vercel.app`, previews desejados e `localhost` para teste; usar
+modo `managed`; configurar as duas envs na Vercel e validar login/cadastro.
+
+---
+
+## 11. Autenticação e sessão
 
 Não é serviço externo, mas é conexão que quebra deploy quando mal configurada.
 
@@ -371,7 +405,7 @@ consequência negativa no ADR-012.
 
 ---
 
-## 11. O que NÃO existe
+## 12. O que NÃO existe
 
 Para evitar caça a configuração inexistente:
 
@@ -386,7 +420,7 @@ Para evitar caça a configuração inexistente:
 
 ---
 
-## 12. Variáveis de verificação
+## 13. Variáveis de verificação
 
 Consumidas por scripts de smoke test e captura de screenshots. Devem ficar
 **vazias em produção**: `SMOKE_BASE_URL`, `SMOKE_EMAIL`, `SMOKE_PASSWORD`,
@@ -394,7 +428,7 @@ Consumidas por scripts de smoke test e captura de screenshots. Devem ficar
 
 ---
 
-## 13. Ordem de bring-up do zero
+## 14. Ordem de bring-up do zero
 
 1. `SUPABASE_DATABASE_URL` → `npx prisma migrate deploy` → `npm run smoke:prisma`
 2. `JWT_SECRET` e `CLIENT_ORIGIN` → app sobe e autentica
@@ -405,6 +439,7 @@ Consumidas por scripts de smoke test e captura de screenshots. Devem ficar
 7. `STRIPE_*` → cobrança
 8. `GITHUB_*` → login social (opcional, deixar por último)
 9. `GOOGLE_*` → sync Google Calendar, quando a Feature H for implementada
+10. `TURNSTILE_*` → proteção anti-bot de login/cadastro, quando widget existir
 
 Do passo 1 ao 2 o sistema já sobe. Os demais habilitam áreas específicas e
 falham de forma isolada, sem derrubar a aplicação.

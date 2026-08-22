@@ -327,12 +327,25 @@ White Label 300/mês e Enterprise/admin ilimitado. A contagem usa
 `shot_storyboard_frames` do mês atual com status `generated`/`approved`, separada
 das gerações textuais de IA. Quando a quota acaba, o service bloqueia antes de
 chamar provider e antes de criar frame, evitando frame fantasma. Teste focal:
-`server/services/shotStoryboardService.test.ts`. Em 2026-08-22, `.env.example` e
-`docs/CONEXOES.md` passaram a explicitar que `STORYBOARD_IMAGE_PROVIDER`
-vazio/`disabled` mantém 503 controlado, `mock` é apenas local/teste e nenhum
-provider real está ativo. Ainda aberto: escolher provider real, implementar
-adapter de imagem, validar storage em staging/produção e então completar G2.3 e
-G6.3.
+`server/services/shotStoryboardService.test.ts`. Em 2026-08-22, o provider
+inicial foi definido como OpenRouter Images (`STORYBOARD_IMAGE_PROVIDER=openrouter`)
+com modelo padrão `google/gemini-3.1-flash-lite-image`; a chave dedicada
+`STORYBOARD_IMAGE_API_KEY` é opcional porque o código usa `OPENROUTER_API_KEY`
+como fallback. A imagem gerada é gravada no bucket público
+`SUPABASE_STORYBOARD_BUCKET` (`shot-storyboards` por padrão) e o frame persiste
+`image_url` pública + `storage_path`. O código também aceita Cloudflare R2 via
+`STORYBOARD_STORAGE_PROVIDER=cloudflare-r2`, mas o endpoint fornecido em
+2026-08-22 falhou no handshake TLS antes de autenticar; por isso produção deve
+seguir em Supabase Storage até R2 listar/criar bucket e ter URL pública válida.
+Ainda aberto: validar uma geração real em staging/produção com envs ativas.
+
+**Cloudflare Turnstile preparado — login/cadastro:** backend e frontend agora
+aceitam Turnstile opcional. Se `TURNSTILE_SECRET_KEY` não existir, nada muda. Se
+existir, `/auth/login` e `/auth/register` exigem `turnstileToken`, validam em
+`/siteverify` e as telas mostram widget quando `VITE_TURNSTILE_SITE_KEY` está
+configurada. Ainda aberto: criar widget real na Cloudflare e configurar as envs
+na Vercel; o token de gerenciamento recebido em 2026-08-22 retornou `Invalid API
+Token`, então não foi possível criar o widget por API.
 
 **P1B auditada:** a ficha do cliente já oferece CRM 360 com projetos,
 oportunidades, interações, arquivos, financeiro, propostas, vídeo reviews e

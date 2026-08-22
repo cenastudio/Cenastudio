@@ -8,6 +8,7 @@ import {
   type GenerateImageInput,
 } from "./imageGenerationService.js";
 import { getUserEntitlements } from "./entitlementService.js";
+import { uploadStoryboardFrame } from "./supabaseStorage.js";
 
 export const STORYBOARD_FRAME_STATUSES = ["queued", "generating", "generated", "approved", "failed"] as const;
 export type StoryboardFrameStatus = (typeof STORYBOARD_FRAME_STATUSES)[number];
@@ -373,12 +374,22 @@ export async function generateFrame(
       style: "storyboard-pencil",
       aspectRatio,
     });
+    const stored = result.imageBuffer
+      ? await uploadStoryboardFrame({
+          userId,
+          projectId: context.projectId,
+          shotId,
+          body: result.imageBuffer,
+          contentType: result.mediaType,
+        })
+      : null;
     return createFrame(userId, shotId, {
       prompt,
       finalPrompt,
       provider: result.provider,
       model: result.model ?? null,
-      imageUrl: result.imageUrl ?? null,
+      imageUrl: stored?.publicUrl ?? result.imageUrl ?? null,
+      storagePath: stored?.path ?? null,
       status: "generated",
     });
   } catch (error) {

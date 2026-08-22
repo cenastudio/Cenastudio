@@ -76,7 +76,7 @@ vi.mock('@/lib/api', () => ({
       register: vi.fn(),
       logout: vi.fn(),
       me: vi.fn(),
-      providers: vi.fn().mockResolvedValue({ github: false, supabase: false }),
+      providers: vi.fn().mockResolvedValue({ github: false, supabase: false, turnstile: false }),
       getUsageMetrics: vi.fn().mockResolvedValue({
         period: '2026-07',
         generations: { used: 0, limit: 100 },

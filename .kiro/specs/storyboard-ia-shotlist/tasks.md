@@ -19,9 +19,10 @@
 
 - [x] G2.1 Criar `imageGenerationService` com interface provider-agnostic.
 - [x] G2.2 Implementar modo explicitamente indisponível quando env de imagem não existe.
-- [ ] G2.3 Definir provider inicial somente quando houver credencial/decisão.
+- [x] G2.3 Definir provider inicial somente quando houver credencial/decisão.
 - [x] G2.4 Sanitizar erro de provider e registrar status `failed` sem secret.
-- _2026-08-22: adapter criado em `imageGenerationService`. Sem `STORYBOARD_IMAGE_PROVIDER`, geração retorna 503 explícito e o service registra frame `failed` com erro sanitizado. Provider real segue aberto; há `mock` apenas para test/local e bloqueado em produção._
+- _2026-08-22: adapter criado em `imageGenerationService`. Sem `STORYBOARD_IMAGE_PROVIDER`, geração retorna 503 explícito e o service registra frame `failed` com erro sanitizado. Provider real definido depois como `openrouter`; há `mock` apenas para test/local e bloqueado em produção._
+- _2026-08-22: G2.3 concluído com OpenRouter Images (`/api/v1/images`) e modelo padrão configurável `google/gemini-3.1-flash-lite-image`, usando `STORYBOARD_IMAGE_API_KEY` ou fallback em `OPENROUTER_API_KEY`._
 
 ## Fase G3 — rotas
 
@@ -50,7 +51,7 @@
 
 - [x] G6.1 Definir quota mensal por plano.
 - [x] G6.2 Bloquear geração quando quota estourar sem criar frame fantasma.
-- [ ] G6.3 Validar Supabase Storage em staging/produção.
+- [ ] G6.3 Validar storage em staging/produção.
 - [x] G6.4 Atualizar `docs/STATUS.md` com provider, envs e limitações reais.
 - _2026-08-22: quotas mensais definidas em `shared/planEntitlements.ts`: Free 0, Pro 25, Studio 100, White Label 300, Enterprise/admin ilimitado. O service bloqueia antes de chamar provider e antes de criar frame quando a quota acabou. Teste focal: `server/services/shotStoryboardService.test.ts`._
-- _2026-08-22: `.env.example`, `docs/CONEXOES.md` e `docs/STATUS.md` agora documentam o estado real: `STORYBOARD_IMAGE_PROVIDER` vazio/`disabled` mantém 503 controlado, `mock` é local/teste e provider real/storage seguem pendentes._
+- _2026-08-22: `.env.example`, `docs/CONEXOES.md` e `docs/STATUS.md` agora documentam o estado real: OpenRouter Images é o provider inicial; storage default usa bucket público `SUPABASE_STORYBOARD_BUCKET`, com Cloudflare R2 implementado como opção. G6.3 segue aberta até smoke real em staging/produção; o endpoint R2 informado falhou no handshake TLS._

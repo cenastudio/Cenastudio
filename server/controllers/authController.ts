@@ -21,6 +21,7 @@ import * as twoFactorService from "../services/twoFactorService.js";
 import * as apiKeyService from "../services/apiKeyService.js";
 import * as activityLogService from "../services/activityLogService.js";
 import { getUserUsageMetrics } from "../services/entitlementService.js";
+import { isTurnstileConfigured, verifyTurnstileToken } from "../services/turnstileService.js";
 
 function getClientOrigin() {
   return process.env.CLIENT_ORIGIN || "http://localhost:5173";
@@ -43,6 +44,7 @@ interface SupabaseUserResponse {
 export const login: RequestHandler = async (req, res, next) => {
   try {
     const { email, password } = req.body;
+    await verifyTurnstileToken(req.body.turnstileToken, req.ip);
     const user = await authService.loginUser(email, password);
     const token = signToken(user);
     res.cookie(COOKIE_NAME, token, cookieOptions);
@@ -62,6 +64,7 @@ export const providers: RequestHandler = (_req, res) => {
         (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL) &&
         (process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY),
       ),
+      turnstile: isTurnstileConfigured(),
     },
   });
 };
@@ -69,6 +72,7 @@ export const providers: RequestHandler = (_req, res) => {
 export const register: RequestHandler = async (req, res, next) => {
   try {
     const { name, email, password, desiredPlan, referralCode } = req.body;
+    await verifyTurnstileToken(req.body.turnstileToken, req.ip);
     const user = await authService.registerUser(name, email, password, desiredPlan);
     const token = signToken(user);
     res.cookie(COOKIE_NAME, token, cookieOptions);

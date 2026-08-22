@@ -31,6 +31,7 @@ export const strongPasswordSchema = z
 export const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
+  turnstileToken: z.string().optional(),
 });
 
 export const registerSchema = z.object({
@@ -38,6 +39,7 @@ export const registerSchema = z.object({
   email: z.string().email(),
   password: strongPasswordSchema,
   desiredPlan: z.enum(["pro", "studio"]).optional(),
+  turnstileToken: z.string().optional(),
 });
 
 export const forgotPasswordSchema = z.object({

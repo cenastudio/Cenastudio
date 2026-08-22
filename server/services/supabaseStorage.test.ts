@@ -9,6 +9,10 @@ const storageState = vi.hoisted(() => ({
   getPublicUrl: vi.fn(),
 }));
 
+const s3State = vi.hoisted(() => ({
+  send: vi.fn(),
+}));
+
 vi.mock("@supabase/supabase-js", () => ({
   createClient: vi.fn(() => ({
     storage: {
@@ -24,6 +28,11 @@ vi.mock("@supabase/supabase-js", () => ({
   })),
 }));
 
+vi.mock("@aws-sdk/client-s3", () => ({
+  PutObjectCommand: vi.fn((input) => ({ kind: "PutObjectCommand", input })),
+  S3Client: vi.fn(() => ({ send: s3State.send })),
+}));
+
 describe("supabaseStorage", () => {
   beforeEach(() => {
     vi.resetModules();
@@ -31,12 +40,19 @@ describe("supabaseStorage", () => {
     process.env.SUPABASE_URL = "https://example.supabase.co";
     process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role";
     process.env.SUPABASE_STORAGE_BUCKET = "project-files-test";
+    delete process.env.STORYBOARD_STORAGE_PROVIDER;
+    delete process.env.CLOUDFLARE_R2_ACCOUNT_ID;
+    delete process.env.CLOUDFLARE_R2_ACCESS_KEY_ID;
+    delete process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY;
+    delete process.env.CLOUDFLARE_R2_BUCKET;
+    delete process.env.CLOUDFLARE_R2_PUBLIC_URL;
     storageState.getBucket.mockResolvedValue({ data: null });
     storageState.createBucket.mockResolvedValue({ error: null });
     storageState.upload.mockResolvedValue({ error: null });
     storageState.remove.mockResolvedValue({ error: null });
     storageState.createSignedUrl.mockResolvedValue({ data: { signedUrl: "https://signed.example/file" }, error: null });
     storageState.getPublicUrl.mockReturnValue({ data: { publicUrl: "https://public.example/logo.png" } });
+    s3State.send.mockResolvedValue({});
   });
 
   it("sanitizes object paths", async () => {
@@ -91,5 +107,61 @@ describe("supabaseStorage", () => {
       upsert: true,
     });
     expect(storageState.getPublicUrl).toHaveBeenCalledWith(expect.stringMatching(/^studios\/7\/\d+_Logo_Final_.png$/));
+  });
+
+  it("uploads storyboard frames to a public storyboard bucket", async () => {
+    process.env.SUPABASE_STORYBOARD_BUCKET = "storyboards-test";
+    storageState.getPublicUrl.mockReturnValue({ data: { publicUrl: "https://public.example/storyboard.png" } });
+    const storage = await import("./supabaseStorage.js");
+
+    await expect(storage.uploadStoryboardFrame({
+      userId: 7,
+      projectId: 9,
+      shotId: 11,
+      body: Buffer.from("image"),
+      contentType: "image/webp",
+    })).resolves.toMatchObject({
+      publicUrl: "https://public.example/storyboard.png",
+    });
+
+    expect(storageState.createBucket).toHaveBeenCalledWith("storyboards-test", {
+      public: true,
+      fileSizeLimit: "10MB",
+    });
+    expect(storageState.upload).toHaveBeenCalledWith(expect.stringMatching(/^7\/9\/11\/\d+_storyboard\.webp$/), expect.any(Buffer), {
+      contentType: "image/webp",
+      upsert: false,
+    });
+    expect(storageState.getPublicUrl).toHaveBeenCalledWith(expect.stringMatching(/^7\/9\/11\/\d+_storyboard\.webp$/));
+  });
+
+  it("uploads storyboard frames to Cloudflare R2 when selected", async () => {
+    process.env.STORYBOARD_STORAGE_PROVIDER = "cloudflare-r2";
+    process.env.CLOUDFLARE_R2_ACCOUNT_ID = "account-id";
+    process.env.CLOUDFLARE_R2_ACCESS_KEY_ID = "access-key";
+    process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY = "secret-key";
+    process.env.CLOUDFLARE_R2_BUCKET = "cena-storyboards";
+    process.env.CLOUDFLARE_R2_PUBLIC_URL = "https://assets.cenastudio.dev/storyboards/";
+    const storage = await import("./supabaseStorage.js");
+
+    await expect(storage.uploadStoryboardFrame({
+      userId: 7,
+      projectId: 9,
+      shotId: 11,
+      body: Buffer.from("image"),
+      contentType: "image/png",
+    })).resolves.toMatchObject({
+      path: expect.stringMatching(/^7\/9\/11\/\d+_storyboard\.png$/),
+      publicUrl: expect.stringMatching(/^https:\/\/assets\.cenastudio\.dev\/storyboards\/7\/9\/11\/\d+_storyboard\.png$/),
+    });
+
+    expect(s3State.send).toHaveBeenCalledWith(expect.objectContaining({
+      kind: "PutObjectCommand",
+      input: expect.objectContaining({
+        Bucket: "cena-storyboards",
+        Key: expect.stringMatching(/^7\/9\/11\/\d+_storyboard\.png$/),
+        ContentType: "image/png",
+      }),
+    }));
   });
 });
