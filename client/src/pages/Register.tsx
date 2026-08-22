@@ -1,7 +1,7 @@
 import AuthLayout, { AuthError, AuthField, AuthLink } from "@/components/AuthLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError, startCheckout } from "@/lib/api";
-import { isStrongPassword, passwordRequirements } from "@/lib/passwordPolicy";
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH, isStrongPassword, passwordRequirements } from "@/lib/passwordPolicy";
 import { Check, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useLocation, useSearch } from "wouter";
@@ -97,19 +97,43 @@ export default function Register() {
   };
 
   return (
-    <AuthLayout mode="register" title={t("app.auth.createAccount")} subtitle={t("app.auth.registerSubtitle")}>
+    <AuthLayout
+      mode="register"
+      title={t("app.auth.createAccount")}
+      subtitle={t("app.auth.registerSubtitle")}
+      mobileIntent={t("app.auth.registerMobileIntent")}
+    >
       <form noValidate onSubmit={handleRegister}>
         {inlineError && <AuthError message={inlineError} />}
 
-        <div className="auth-register-trial" aria-label={t("app.auth.trialIncluded")}>
-          <span aria-hidden="true" />
-          <p>{t("app.auth.trialIncluded")}</p>
-        </div>
+        <section className="auth-register-handoff" aria-labelledby="register-handoff-title">
+          <div>
+            <p className="auth-register-kicker">{t("app.auth.registerHandoffEyebrow")}</p>
+            <h3 id="register-handoff-title">{t("app.auth.registerHandoffTitle")}</h3>
+          </div>
+          <ol>
+            {[
+              ["app.auth.registerStepAccount", "app.auth.registerStepAccountDesc"],
+              ["app.auth.registerStepFirstJob", "app.auth.registerStepFirstJobDesc"],
+              ["app.auth.registerStepStudio", "app.auth.registerStepStudioDesc"],
+            ].map(([titleKey, descKey], index) => (
+              <li key={titleKey}>
+                <span aria-hidden="true">{index + 1}</span>
+                <div>
+                  <strong>{t(titleKey)}</strong>
+                  <p>{t(descKey)}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <p className="auth-register-trial">{t("app.auth.trialIncluded")}</p>
+        </section>
 
         <AuthField label={t("app.auth.name")} htmlFor="register-name" className="mb-3">
           <input
             id="register-name"
             autoComplete="name"
+            autoCapitalize="words"
             value={name}
             onChange={(e) => setName(e.target.value)}
             disabled={submitting}
@@ -123,6 +147,9 @@ export default function Register() {
             id="register-email"
             type="email"
             autoComplete="email"
+            inputMode="email"
+            autoCapitalize="none"
+            spellCheck={false}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={submitting}
@@ -137,6 +164,8 @@ export default function Register() {
               id="register-password"
               type={showPassword ? "text" : "password"}
               autoComplete="new-password"
+              minLength={PASSWORD_MIN_LENGTH}
+              maxLength={PASSWORD_MAX_LENGTH}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={submitting}
@@ -173,6 +202,8 @@ export default function Register() {
             id="register-confirm-password"
             type={showPassword ? "text" : "password"}
             autoComplete="new-password"
+            minLength={PASSWORD_MIN_LENGTH}
+            maxLength={PASSWORD_MAX_LENGTH}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             disabled={submitting}

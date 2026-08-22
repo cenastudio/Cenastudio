@@ -46,8 +46,17 @@
 
 ## Phase 4. Account creation handoff
 
-- [ ] 4.1 Turn the mobile registration screen into a clear, branded handoff
+- [x] 4.1 Turn the mobile registration screen into a clear, branded handoff
   from the landing without a duplicate navigation toggle.
-- [ ] 4.2 Align password guidance and client validation with the server's
+- [x] 4.2 Align password guidance and client validation with the server's
   strong-password policy, in Portuguese and English.
-- [ ] 4.3 Verify account creation interaction and the mobile viewport.
+- [x] 4.3 Verify account creation interaction and the mobile viewport.
+  - Cadastro mobile agora usa um handoff curto Conta → Primeiro job → Studio
+    pronto; o header mobile mantém somente um controle de retorno, e a marca
+    vira contexto estático. A política do cliente foi alinhada com
+    `server/schemas/auth.ts`: 10 a 128 caracteres, maiúscula, minúscula,
+    número e símbolo. Validação executada:
+    `npm run test -- client/src/pages/Register.test.tsx client/src/test/translations.test.ts`,
+    `npm run check`,
+    `npx playwright test tests/e2e/register-mobile-handoff.spec.ts --project=chromium-mobile`
+    e `npm run build`.

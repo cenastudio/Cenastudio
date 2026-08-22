@@ -395,8 +395,13 @@ mobile.
    quem busca operação sob medida. No mobile, o hero privilegia os dois CTAs,
    sem screenshot escuro comprimido nem repetição do bloco de fluxo. A revisão
    manual confirmou 390px sem overflow, controles de 44px ou mais e paridade
-   visual de tablet/desktop. `npm run check`, 6 testes direcionados e
-   `npm run build` passaram nesta rodada.
+   visual de tablet/desktop. A Phase 4 também foi concluída: `/register` agora
+   funciona como handoff direto da landing, sem duplicar navegação no header
+   mobile, e a validação de senha mostra exatamente a política do servidor
+   (10 a 128 caracteres, maiúscula, minúscula, número e símbolo) em PT/EN.
+   Validação desta frente: `npm run test -- client/src/pages/Register.test.tsx client/src/test/translations.test.ts`,
+   `npm run check`, `npx playwright test tests/e2e/register-mobile-handoff.spec.ts --project=chromium-mobile`
+   e `npm run build`.
 3. `.kiro/specs/qualidade-raciocinio-ia/` — tasks 14 e 15 (modelo high) foram
    concluídas. As tasks 16 a 18 continuam abertas: exigem dados reais de uso,
    reuso e avaliação que o schema e os dados locais ainda não comprovam.

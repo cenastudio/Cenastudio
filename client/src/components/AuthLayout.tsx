@@ -10,11 +10,13 @@ interface AuthLayoutProps {
   children: React.ReactNode;
   /** login | register toggle */
   mode?: "login" | "register";
+  mobileIntent?: string;
 }
 
-export default function AuthLayout({ title, subtitle, children, mode }: AuthLayoutProps) {
+export default function AuthLayout({ title, subtitle, children, mode, mobileIntent }: AuthLayoutProps) {
   const [, setLocation] = useLocation();
   const { t } = useLanguage();
+  const brandClassName = mobileIntent ? "auth-mobile-brand is-static" : "auth-mobile-brand";
 
   return (
     <div className="cena-auth cinematic-theme dark min-h-screen flex flex-col lg:flex-row text-frame-white">
@@ -54,14 +56,10 @@ export default function AuthLayout({ title, subtitle, children, mode }: AuthLayo
           >
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </button>
-          <button
-            type="button"
-            onClick={() => setLocation("/")}
-            className="auth-mobile-brand"
-            aria-label={t("app.auth.backToLanding")}
-          >
+          <div className={brandClassName} aria-label={mobileIntent || t("app.auth.backToLanding")}>
             <BrandLogo tone="onDark" className="text-[1.55rem] font-semibold" />
-          </button>
+            {mobileIntent && <span>{mobileIntent}</span>}
+          </div>
           <LanguageSwitcher compact />
         </div>
 
