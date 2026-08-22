@@ -57,7 +57,7 @@ export const addEntry: RequestHandler = async (req, res, next) => {
       receiptUrl: receiptUrl ?? null,
     });
     const overview = await budgetService.getOverview(req.user!.id, projectId);
-    res.status(201).json({ success: true, data: { entry, overview } });
+    res.status(201).json({ success: true, data: { ...entry, entry, overview } });
   } catch (e) {
     next(e);
   }
