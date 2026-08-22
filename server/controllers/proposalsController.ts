@@ -34,6 +34,37 @@ function proposalIdValue(value: unknown) {
   return BigInt(parsed);
 }
 
+function proposalClientIdValue(value: unknown) {
+  const parsed = typeof value === "string" && !/^\d+$/.test(value.trim())
+    ? Number.NaN
+    : Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+    throw new AppError("O ID do cliente é inválido", 400);
+  }
+  return BigInt(parsed);
+}
+
+export function validateProposalPayload(input: Record<string, unknown>) {
+  const clientId = proposalClientIdValue(input.clientId);
+  const total = input.total;
+  if (typeof input.title !== "string" || !input.title.trim()) {
+    throw new AppError("O título da proposta é obrigatório", 400);
+  }
+  if (typeof input.html !== "string" || !input.html.trim()) {
+    throw new AppError("O conteúdo da proposta é obrigatório", 400);
+  }
+  if (typeof total !== "number" || !Number.isSafeInteger(total) || total < 0) {
+    throw new AppError("Valor total inválido", 400);
+  }
+
+  return {
+    clientId,
+    title: input.title.trim(),
+    html: input.html,
+    total,
+  };
+}
+
 function serializeProposal(value: any) {
   const result = withSnakeCase(value, {
     userId: "user_id", clientId: "client_id", shareToken: "share_token",
@@ -55,11 +86,12 @@ export const listProposals: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
     const { clientId } = req.query;
+    const linkedClientId = clientId === undefined ? undefined : proposalClientIdValue(clientId);
 
     const rows = await prisma.proposal.findMany({
       where: {
         userId: BigInt(userId),
-        ...(clientId ? { clientId: BigInt(Number(clientId)) } : {}),
+        ...(linkedClientId ? { clientId: linkedClientId } : {}),
       },
       orderBy: { createdAt: "desc" },
       take: 100,
@@ -96,16 +128,10 @@ export const getProposal: RequestHandler = async (req, res, next) => {
 export const createProposal: RequestHandler = async (req, res, next) => {
   try {
     const userId = req.user!.id;
-    const { clientId, title, html, total } = req.body;
-
-    if (!clientId) throw new AppError("O ID do cliente é obrigatório", 400);
-    if (!title?.trim()) throw new AppError("O título da proposta é obrigatório", 400);
-    if (!html?.trim()) throw new AppError("O conteúdo da proposta é obrigatório", 400);
-    if (typeof total !== "number" || total < 0) throw new AppError("Valor total inválido", 400);
+    const { clientId, title, html, total } = validateProposalPayload(req.body ?? {});
 
     const owner = BigInt(userId);
-    const linkedClientId = BigInt(Number(clientId));
-    const client = await prisma.client.findFirst({ where: { id: linkedClientId, userId: owner } });
+    const client = await prisma.client.findFirst({ where: { id: clientId, userId: owner } });
     if (!client) throw new AppError("Cliente não encontrado ou acesso não autorizado", 404);
 
     const shareToken = randomBytes(24).toString("hex");
@@ -114,10 +140,10 @@ export const createProposal: RequestHandler = async (req, res, next) => {
     const proposal = await prisma.proposal.create({
       data: {
         userId: owner,
-        clientId: linkedClientId,
-        title: title.trim(),
+        clientId,
+        title,
         html,
-        total: Math.round(total),
+        total,
         status: "sent",
         shareToken,
         documentHash,

@@ -203,4 +203,38 @@ test.describe("@budget-bridge fluxo completo da ponte de orçamento", () => {
       await cleanupTestData(page, { projects: project ? [project] : [], clients: [client] });
     }
   });
+
+  test("@budget-bridge bloqueio de plano mantém a escolha aberta para nova tentativa", async ({ page }) => {
+    const client = await createClientViaApi(page);
+    let project: TestProject | null = null;
+
+    try {
+      project = await createProjectViaApi(page, client.id);
+      await seedToolOutput(page, project.id);
+
+      await page.route(`**/api/budgets/${project.id}`, async (route) => {
+        if (route.request().method() !== "PUT") {
+          await route.continue();
+          return;
+        }
+
+        await route.fulfill({
+          status: 403,
+          contentType: "application/json",
+          body: JSON.stringify({ success: false, error: "Seu plano não inclui este recurso." }),
+        });
+      });
+
+      const dialog = await openBridgeDialog(page, project.id);
+      const confirm = dialog.getByRole("button", { name: /Confirmar e enviar/i });
+      await confirm.click();
+
+      await expect(page.getByText("Seu plano não inclui este recurso.", { exact: true })).toBeVisible();
+      await expect(dialog).toBeVisible();
+      await expect(dialog.getByRole("radio", { name: /Teto da faixa/i })).toBeChecked();
+      await expect(confirm).toBeEnabled();
+    } finally {
+      await cleanupTestData(page, { projects: project ? [project] : [], clients: [client] });
+    }
+  });
 });

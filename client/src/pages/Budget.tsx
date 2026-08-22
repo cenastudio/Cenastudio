@@ -89,10 +89,7 @@ function BudgetContent() {
       .getOverview(projectId)
       .then((data) => {
         setOverview(data);
-        // byCategory doubles as the entry list source for now — refetch entries via a
-        // lightweight overview-only view isn't enough for the ledger, so we track
-        // entries locally as they're added/removed in this session plus a full
-        // reload triggers overview only (entries list comes from mutations below).
+        setEntries(data.entries);
       })
       .catch((e) => toast.error(e instanceof Error ? e.message : "Falha ao carregar orçamento"))
       .finally(() => setLoading(false));
@@ -155,13 +152,14 @@ function BudgetContent() {
     }
     setSavingEntry(true);
     try {
-      const created = await api.budgets.addEntry(projectId, {
+      const result = await api.budgets.addEntry(projectId, {
         category: entryCategory.trim(),
         description: entryDescription.trim(),
         amount,
         entryDate,
       });
-      setEntries((prev) => [created, ...prev]);
+      setOverview(result.overview);
+      setEntries(result.overview.entries);
 
       // Save to autocomplete history
       categoryAutocomplete.saveToHistory(entryCategory.trim());
@@ -172,7 +170,6 @@ function BudgetContent() {
       setEntryCategory("");
       setEntryDescription("");
       setEntryAmountInput("");
-      load();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao lançar gasto");
     } finally {

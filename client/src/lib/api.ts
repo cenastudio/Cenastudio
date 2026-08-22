@@ -686,7 +686,7 @@ export const api = {
       projectId: number,
       data: { category: string; description: string; amount: number; entryDate: string; receiptUrl?: string | null },
     ) =>
-      request<BudgetEntryItem>(`/budgets/${projectId}/entries`, {
+      request<BudgetEntryMutation>(`/budgets/${projectId}/entries`, {
         method: "POST",
         body: JSON.stringify(data),
       }),
@@ -1373,6 +1373,7 @@ export interface BudgetOverview {
   currency: string;
   byCategory: BudgetCategoryOverview[];
   alerts: BudgetAlert[];
+  entries: BudgetEntryItem[];
 }
 
 export interface BudgetEntryItem {
@@ -1384,6 +1385,11 @@ export interface BudgetEntryItem {
   entry_date: string;
   receipt_url: string | null;
   created_at: string;
+}
+
+export interface BudgetEntryMutation {
+  entry: BudgetEntryItem;
+  overview: BudgetOverview;
 }
 
 export interface DreDeduction {

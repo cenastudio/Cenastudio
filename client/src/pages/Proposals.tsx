@@ -155,6 +155,7 @@ function printHtmlDocument(docHtml: string, preparationError: string) {
   iframe.style.height = "0";
   iframe.style.border = "0";
   iframe.style.opacity = "0";
+  iframe.setAttribute("sandbox", "allow-same-origin allow-modals");
   document.body.appendChild(iframe);
 
   const cleanup = () => {

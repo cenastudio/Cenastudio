@@ -25,6 +25,7 @@ function printProposalAsPdf(html: string) {
   iframe.style.height = "0";
   iframe.style.border = "0";
   iframe.style.opacity = "0";
+  iframe.setAttribute("sandbox", "allow-same-origin allow-modals");
   document.body.appendChild(iframe);
 
   const cleanup = () => {
@@ -250,6 +251,7 @@ export default function ProposalView() {
             ref={iframeRef}
             title="Proposta"
             srcDoc={proposal.html}
+            sandbox="allow-same-origin"
             className="bg-[var(--ds-surface-tooltip)] border-0"
             style={{
               width: scale < 1 ? `${100 / scale}%` : "100%",

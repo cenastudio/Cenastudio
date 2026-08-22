@@ -118,6 +118,16 @@ function formatBRL(value: number): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 }
 
+export function escapeProposalHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  }[character] ?? character));
+}
+
 let costIdCounter = 0;
 function nextCostId() {
   costIdCounter += 1;
@@ -148,14 +158,36 @@ export default function PricingCalculatorModal({ open, onOpenChange }: PricingCa
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<number | "">("");
   const [selectedClientId, setSelectedClientId] = useState<number | "">("");
+  const [loadingDestinations, setLoadingDestinations] = useState(false);
+  const [destinationsError, setDestinationsError] = useState<string | null>(null);
   const [savingBudget, setSavingBudget] = useState(false);
   const [savingProposal, setSavingProposal] = useState(false);
   const [generatedProposal, setGeneratedProposal] = useState<{ url: string; clientName: string } | null>(null);
 
   useEffect(() => {
     if (!open) return;
-    api.projects.list().then(setProjects).catch(() => setProjects([]));
-    api.clients.list().then(setClients).catch(() => setClients([]));
+    let active = true;
+    setLoadingDestinations(true);
+    setDestinationsError(null);
+
+    Promise.allSettled([api.projects.list(), api.clients.list()])
+      .then(([projectsResult, clientsResult]) => {
+        if (!active) return;
+
+        setProjects(projectsResult.status === "fulfilled" ? projectsResult.value : []);
+        setClients(clientsResult.status === "fulfilled" ? clientsResult.value : []);
+
+        if (projectsResult.status === "rejected" || clientsResult.status === "rejected") {
+          setDestinationsError("Não foi possível carregar projetos ou clientes. Feche e abra a calculadora para tentar novamente.");
+        }
+      })
+      .finally(() => {
+        if (active) setLoadingDestinations(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, [open]);
 
   // Picking a project tied to a client pre-selects that client for the
@@ -234,7 +266,7 @@ export default function PricingCalculatorModal({ open, onOpenChange }: PricingCa
       `<tr><td>Mão de obra (${breakdown.hoursNum}h × ${formatBRL(breakdown.rateNum)})</td><td style="text-align:right">${formatBRL(breakdown.laborCost)}</td></tr>`,
       ...fixedCosts
         .filter((c) => c.label.trim())
-        .map((c) => `<tr><td>${c.label}</td><td style="text-align:right">${formatBRL(parseBRL(c.value))}</td></tr>`),
+        .map((c) => `<tr><td>${escapeProposalHtml(c.label)}</td><td style="text-align:right">${formatBRL(parseBRL(c.value))}</td></tr>`),
       isRush && breakdown.rushAmount > 0
         ? `<tr><td>Acréscimo de urgência</td><td style="text-align:right">${formatBRL(breakdown.rushAmount)}</td></tr>`
         : "",
@@ -242,8 +274,8 @@ export default function PricingCalculatorModal({ open, onOpenChange }: PricingCa
     ].filter(Boolean).join("");
 
     return `
-      <h2>${defaultTitle}</h2>
-      <p>${activePreset.label}</p>
+      <h2>${escapeProposalHtml(defaultTitle)}</h2>
+      <p>${escapeProposalHtml(activePreset.label)}</p>
       <table style="width:100%;border-collapse:collapse;margin-top:16px">
         ${rows}
         <tr style="font-weight:bold;border-top:2px solid ${DOCUMENT_EXPORT_COLORS.dark.signBorder}">
@@ -501,6 +533,7 @@ export default function PricingCalculatorModal({ open, onOpenChange }: PricingCa
                 <select
                   value={selectedProjectId}
                   onChange={(e) => setSelectedProjectId(e.target.value ? Number(e.target.value) : "")}
+                  disabled={loadingDestinations}
                   className="frame-input w-full"
                 >
                   <option value="">Selecione um projeto</option>
@@ -517,6 +550,7 @@ export default function PricingCalculatorModal({ open, onOpenChange }: PricingCa
                     setSelectedClientId(e.target.value ? Number(e.target.value) : "");
                     setGeneratedProposal(null);
                   }}
+                  disabled={loadingDestinations}
                   className="frame-input w-full"
                 >
                   <option value="">Selecione um cliente</option>
@@ -526,11 +560,16 @@ export default function PricingCalculatorModal({ open, onOpenChange }: PricingCa
                 </select>
               </div>
             </div>
+            {destinationsError && (
+              <p role="alert" className="text-xs text-frame-red">
+                {destinationsError}
+              </p>
+            )}
             <div className="flex flex-col sm:flex-row gap-2">
               <button
                 type="button"
                 onClick={handleAddToBudget}
-                disabled={savingBudget || !selectedProjectId}
+                disabled={loadingDestinations || savingBudget || !selectedProjectId}
                 className="frame-btn-ghost flex-1 inline-flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {savingBudget ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wallet className="w-4 h-4" />}
@@ -539,7 +578,7 @@ export default function PricingCalculatorModal({ open, onOpenChange }: PricingCa
               <button
                 type="button"
                 onClick={handleGenerateProposal}
-                disabled={savingProposal || !selectedClientId}
+                disabled={loadingDestinations || savingProposal || !selectedClientId}
                 className="frame-btn-primary flex-1 inline-flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {savingProposal ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}

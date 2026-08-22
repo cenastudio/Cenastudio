@@ -5,7 +5,7 @@
 > de estado, edite a seção correspondente, não acrescente uma nova
 > no fim sem contexto. Data da última atualização no topo.
 
-**Última atualização:** 2026-08-14
+**Última atualização:** 2026-08-22
 
 > **Handoff desta sessão:** os commits `2aab029`, `fada13e`, `b396ce4` e
 > `ef68cb5` consolidam proteção contra segredos, ciclo de e-mail da conta,
@@ -186,6 +186,19 @@ verificar, está dito explicitamente.
 O conteúdo de cada frente vive na spec. A varredura abaixo foi cruzada contra o
 código, testes e build atuais em 2026-08-14; um sufixo `-OK` só é aplicado quando
 nenhum item real permanece aberto.
+
+**Frente P0 concluída localmente, aguardando commit:**
+`.kiro/specs/fluxos-conectados-e-confiabilidade/`. A arquitetura aprovada mantém
+`Budget` interno ao `Project` e `Proposal` comercial para o `Client`; P1 cria o
+vínculo aditivo por origem e snapshot imutável. P0 corrigiu o extrato de gasto
+efêmero, validação de lançamentos, contrato de retorno e rastreabilidade segura
+de erros com `X-Request-Id`; a ponte IA foi confirmada com feedback e estados de
+sucesso/falha; Propostas passaram a validar IDs e totais antes de `BigInt`; e a
+calculadora de precificação deixou de esconder falhas ao carregar destinos.
+Evidência: 25 testes focados, E2E desktop/mobile dos fluxos de orçamento,
+`npm run check` e `npm run build` passaram em 2026-08-22. A única pendência de
+P0 é 0.3: reprodução controlada contra Postgres/Supabase, que exige janela e
+backup aprovados. Não houve push ou deploy desta frente.
 
 **Concluídas (`-OK`):** `00-fundacao-limpeza-e-documentacao`,
 `client-hub-connected-workflows`, `dre-por-projeto`,

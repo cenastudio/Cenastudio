@@ -41,17 +41,18 @@ export interface BudgetOverview {
   currency: string;
   byCategory: CategoryOverview[];
   alerts: BudgetAlert[];
+  entries: BudgetEntryRecord[];
 }
 
 export interface BudgetEntryRecord {
   id: number;
-  budgetId: number;
+  budget_id: number;
   category: string;
   description: string;
   amount: number;
-  entryDate: string;
-  receiptUrl: string | null;
-  createdAt: string;
+  entry_date: string;
+  receipt_url: string | null;
+  created_at: string;
 }
 
 function serializeEntry(value: any) {
@@ -77,6 +78,61 @@ function parseCategories(value: unknown): BudgetCategory[] {
   return [];
 }
 
+function normalizeBudgetCategories(categories: unknown): BudgetCategory[] {
+  if (!Array.isArray(categories)) throw new AppError("Categorias inválidas", 400);
+
+  return categories.map((category) => {
+    if (!category || typeof category !== "object" || typeof category.name !== "string") {
+      throw new AppError("Categoria inválida", 400);
+    }
+
+    const name = category.name.trim();
+    if (!name) throw new AppError("Categoria sem nome", 400);
+    if (!Number.isSafeInteger(category.budgeted) || category.budgeted < 0) {
+      throw new AppError(`Valor inválido para a categoria "${name}"`, 400);
+    }
+
+    return { name, budgeted: category.budgeted };
+  });
+}
+
+function normalizeEntryDate(value: unknown): string {
+  if (typeof value !== "string") throw new AppError("Data inválida", 400);
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) throw new AppError("Data inválida", 400);
+
+  const [, year, month, day] = match;
+  const parsed = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+  if (
+    parsed.getUTCFullYear() !== Number(year)
+    || parsed.getUTCMonth() !== Number(month) - 1
+    || parsed.getUTCDate() !== Number(day)
+  ) {
+    throw new AppError("Data inválida", 400);
+  }
+
+  return value;
+}
+
+function normalizeReceiptUrl(value: unknown): string | null {
+  if (value === undefined || value === null || value === "") return null;
+  if (typeof value !== "string") throw new AppError("URL do comprovante inválida", 400);
+
+  const receiptUrl = value.trim();
+  try {
+    const parsed = new URL(receiptUrl);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+      throw new AppError("URL do comprovante inválida", 400);
+    }
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError("URL do comprovante inválida", 400);
+  }
+
+  return receiptUrl;
+}
+
 /** Verifies the project belongs to userId, throwing 404 otherwise (ownership check). */
 async function assertProjectOwnership(userId: number, projectId: number): Promise<void> {
   if (shouldUsePrisma) {
@@ -97,20 +153,17 @@ export async function getOrCreateBudget(userId: number, projectId: number) {
   await assertProjectOwnership(userId, projectId);
 
   if (shouldUsePrisma) {
-    const existing = await prisma.budget.findUnique({ where: { projectId: BigInt(projectId) } });
-    if (existing) return existing;
-    return prisma.budget.create({
-      data: { userId: BigInt(userId), projectId: BigInt(projectId) },
+    return prisma.budget.upsert({
+      where: { projectId: BigInt(projectId) },
+      create: { userId: BigInt(userId), projectId: BigInt(projectId) },
+      update: {},
     });
   }
 
-  const existing = db.prepare("SELECT * FROM budgets WHERE project_id = ?").get(projectId) as any;
-  if (existing) return existing;
-
-  const result = db
-    .prepare("INSERT INTO budgets (user_id, project_id, created_at, updated_at) VALUES (?, ?, datetime('now'), datetime('now'))")
+  db
+    .prepare("INSERT OR IGNORE INTO budgets (user_id, project_id, created_at, updated_at) VALUES (?, ?, datetime('now'), datetime('now'))")
     .run(userId, projectId);
-  return db.prepare("SELECT * FROM budgets WHERE id = ?").get((result as any).lastInsertRowid);
+  return db.prepare("SELECT * FROM budgets WHERE project_id = ?").get(projectId);
 }
 
 /** Replaces the budget baseline: total amount, currency, and per-category budgeted values. */
@@ -119,13 +172,14 @@ export async function updateBudgetBaseline(
   projectId: number,
   data: { totalAmount: number; currency: string; categories: BudgetCategory[] },
 ) {
-  if (data.totalAmount < 0) throw new AppError("Valor de orçamento não pode ser negativo", 400);
-  for (const category of data.categories) {
-    if (!category.name?.trim()) throw new AppError("Categoria sem nome", 400);
-    if (typeof category.budgeted !== "number" || category.budgeted < 0) {
-      throw new AppError(`Valor inválido para a categoria "${category.name}"`, 400);
-    }
+  if (!Number.isSafeInteger(data.totalAmount) || data.totalAmount < 0) {
+    throw new AppError("Valor de orçamento inválido", 400);
   }
+  if (typeof data.currency !== "string" || !/^[A-Z]{3}$/.test(data.currency.trim().toUpperCase())) {
+    throw new AppError("Moeda inválida", 400);
+  }
+  const categories = normalizeBudgetCategories(data.categories);
+  const currency = data.currency.trim().toUpperCase();
 
   const budget = await getOrCreateBudget(userId, projectId);
   const budgetId = Number((budget as any).id);
@@ -135,8 +189,8 @@ export async function updateBudgetBaseline(
       where: { id: BigInt(budgetId) },
       data: {
         totalAmount: data.totalAmount,
-        currency: data.currency,
-        categories: data.categories,
+        currency,
+        categories,
         updatedAt: new Date(),
       },
     });
@@ -144,7 +198,7 @@ export async function updateBudgetBaseline(
 
   db.prepare(
     "UPDATE budgets SET total_amount = ?, currency = ?, categories = ?, updated_at = datetime('now') WHERE id = ?",
-  ).run(data.totalAmount, data.currency, JSON.stringify(data.categories), budgetId);
+  ).run(data.totalAmount, currency, JSON.stringify(categories), budgetId);
   return db.prepare("SELECT * FROM budgets WHERE id = ?").get(budgetId);
 }
 
@@ -154,12 +208,11 @@ export async function addEntry(
   projectId: number,
   data: { category: string; description: string; amount: number; entryDate: string; receiptUrl?: string | null },
 ): Promise<BudgetEntryRecord> {
-  if (!data.category?.trim()) throw new AppError("Categoria é obrigatória", 400);
-  if (!data.description?.trim()) throw new AppError("Descrição é obrigatória", 400);
-  if (typeof data.amount !== "number" || data.amount < 0) throw new AppError("Valor inválido", 400);
-  if (!data.entryDate || Number.isNaN(new Date(data.entryDate).getTime())) {
-    throw new AppError("Data inválida", 400);
-  }
+  if (typeof data.category !== "string" || !data.category.trim()) throw new AppError("Categoria é obrigatória", 400);
+  if (typeof data.description !== "string" || !data.description.trim()) throw new AppError("Descrição é obrigatória", 400);
+  if (!Number.isSafeInteger(data.amount) || data.amount <= 0) throw new AppError("Valor inválido", 400);
+  const entryDate = normalizeEntryDate(data.entryDate);
+  const receiptUrl = normalizeReceiptUrl(data.receiptUrl);
 
   const budget = await getOrCreateBudget(userId, projectId);
   const budgetId = Number((budget as any).id);
@@ -172,8 +225,8 @@ export async function addEntry(
         category: data.category.trim(),
         description: data.description.trim(),
         amount: data.amount,
-        entryDate: new Date(data.entryDate),
-        receiptUrl: data.receiptUrl ?? null,
+        entryDate: new Date(`${entryDate}T00:00:00.000Z`),
+        receiptUrl,
       },
     });
     return serializeEntry(created) as unknown as BudgetEntryRecord;
@@ -184,9 +237,11 @@ export async function addEntry(
       `INSERT INTO budget_entries (budget_id, user_id, category, description, amount, entry_date, receipt_url, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
     )
-    .run(budgetId, userId, data.category.trim(), data.description.trim(), data.amount, data.entryDate, data.receiptUrl ?? null);
+    .run(budgetId, userId, data.category.trim(), data.description.trim(), data.amount, entryDate, receiptUrl);
 
-  return db.prepare("SELECT * FROM budget_entries WHERE id = ?").get((result as any).lastInsertRowid) as unknown as BudgetEntryRecord;
+  return serializeEntry(
+    db.prepare("SELECT * FROM budget_entries WHERE id = ?").get((result as any).lastInsertRowid),
+  ) as unknown as BudgetEntryRecord;
 }
 
 /** Deletes a spend entry, scoped to the owning user (ownership enforced via budget.userId). */
@@ -213,17 +268,18 @@ export async function getOverview(userId: number, projectId: number): Promise<Bu
   const categories = parseCategories((budget as any).categories);
   const currency = (budget as any).currency ?? "BRL";
 
-  let entries: Array<{ category: string; amount: number }>;
+  let entries: BudgetEntryRecord[];
   if (shouldUsePrisma) {
     const rows = await prisma.budgetEntry.findMany({
       where: { budgetId: BigInt(budgetId) },
-      select: { category: true, amount: true },
+      orderBy: [{ entryDate: "desc" }, { createdAt: "desc" }],
     });
-    entries = rows.map((row) => ({ category: row.category, amount: row.amount }));
+    entries = rows.map((row) => serializeEntry(row) as unknown as BudgetEntryRecord);
   } else {
     entries = db
-      .prepare("SELECT category, amount FROM budget_entries WHERE budget_id = ?")
-      .all(budgetId) as Array<{ category: string; amount: number }>;
+      .prepare("SELECT * FROM budget_entries WHERE budget_id = ? ORDER BY entry_date DESC, created_at DESC")
+      .all(budgetId)
+      .map((row: Record<string, unknown>) => serializeEntry(row) as unknown as BudgetEntryRecord);
   }
 
   const spentByCategory = new Map<string, number>();
@@ -261,5 +317,6 @@ export async function getOverview(userId: number, projectId: number): Promise<Bu
     currency,
     byCategory,
     alerts,
+    entries,
   };
 }

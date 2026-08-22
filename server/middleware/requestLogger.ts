@@ -1,8 +1,12 @@
 import type { RequestHandler } from "express";
+import { randomUUID } from "node:crypto";
 import { logger } from "../utils/logger.js";
 
 export const requestLogger: RequestHandler = (req, res, next) => {
   const start = Date.now();
+  const requestId = randomUUID();
+  res.locals.requestId = requestId;
+  res.setHeader("X-Request-Id", requestId);
 
   res.on("finish", () => {
     const durationMs = Date.now() - start;
@@ -14,6 +18,7 @@ export const requestLogger: RequestHandler = (req, res, next) => {
         status: res.statusCode,
         durationMs,
         userId: req.user?.id,
+        requestId,
       },
       "HTTP request",
     );
