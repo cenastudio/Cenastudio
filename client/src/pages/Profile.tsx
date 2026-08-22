@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { useLocation } from "wouter";
 import { SITE_CONFIG } from "@shared/site";
 import { hexToRgba } from "@shared/color";
+import { WebhooksContent } from "@/pages/Webhooks";
+import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
 import { useEffect, useState, useRef } from "react";
 import {
   CalendarClock, Crown, LogOut, ShieldCheck, UserRound, Zap, Settings,
@@ -23,7 +25,7 @@ import {
   Palette, Languages, Sparkles, Key, QrCode, Copy, RefreshCw, Activity,
   AlertCircle, CheckCircle2, Layout, Grid, List, Play, PlayCircle,
   SortAsc, Image, Film, Calendar, Sliders, Database, BarChart3,
-  UserCheck, Search, Share2, FileCheck
+  UserCheck, Search, Share2, FileCheck, Webhook
 } from "lucide-react";
 
 // Referral types
@@ -46,7 +48,7 @@ interface ReferralInfo {
   stats: ReferralStats;
 }
 
-type ProfileTab = "profile" | "security" | "plan" | "preferences" | "privacy";
+type ProfileTab = "profile" | "security" | "integrations" | "plan" | "preferences" | "privacy";
 type BillingHistory = Awaited<ReturnType<typeof api.checkout.invoices>>;
 
 function formatBillingAmount(amountInCents: number, currency: string, locale: "pt" | "en") {
@@ -1054,6 +1056,7 @@ function ProfileContent() {
           >
             <option value="profile">{t("app.profile.tabProfile")}</option>
             <option value="security">{t("app.profile.tabSecurity")}</option>
+            <option value="integrations">{locale === "en" ? "Integrations" : "Integrações"}</option>
             <option value="plan">{t("app.profile.tabPlan")}</option>
             <option value="preferences">{t("app.profile.tabPreferences")}</option>
             <option value="privacy">{t("app.profile.tabPrivacy")}</option>
@@ -1070,6 +1073,12 @@ function ProfileContent() {
               onClick={() => setActiveTab("security")}
               icon={Shield}
               label={t("app.profile.tabSecurity")}
+            />
+            <TabButton
+              active={activeTab === "integrations"}
+              onClick={() => setActiveTab("integrations")}
+              icon={Webhook}
+              label={locale === "en" ? "Integrations" : "Integrações"}
             />
             <TabButton
               active={activeTab === "plan"}
@@ -1810,6 +1819,23 @@ function ProfileContent() {
               </div>
             </div>
           </div>
+        )}
+
+        {activeTab === "integrations" && (
+          <section className="animate-in fade-in duration-300">
+            <div className="mb-6 border-b border-frame-gray-3/50 pb-4">
+              <p className="frame-label mb-2">// {locale === "en" ? "Integrations" : "Integrações"}</p>
+              <h2 className="text-xl font-bold text-frame-white">{locale === "en" ? "Webhooks and automations" : "Webhooks e automações"}</h2>
+              <p className="mt-2 max-w-2xl text-sm text-frame-gray-light">
+                {locale === "en"
+                  ? "Connect Cena Studio to other tools and manage your studio's automated deliveries."
+                  : "Conecte o Cena Studio a outras ferramentas e gerencie as entregas automáticas do seu estúdio."}
+              </p>
+            </div>
+            <FeatureUpgradeRequired feature="webhooks" variant="full">
+              <WebhooksContent embedded />
+            </FeatureUpgradeRequired>
+          </section>
         )}
 
 

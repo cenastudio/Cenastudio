@@ -61,7 +61,7 @@ function formatDate(iso: string | null) {
   return new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 }
 
-function WebhooksContent() {
+export function WebhooksContent({ embedded = false }: { embedded?: boolean }) {
   const { t } = useLanguage();
   const [webhooks, setWebhooks] = useState<WebhookItem[]>([]);
   const [events, setEvents] = useState<WebhookEvent[]>([]);
@@ -170,9 +170,9 @@ function WebhooksContent() {
   };
 
   return (
-    <div className="min-h-screen bg-frame-black text-frame-white font-frame-body">
-      <AppNavBar />
-      <ProductionNav />
+    <div className={embedded ? "text-frame-white font-frame-body" : "min-h-screen bg-frame-black text-frame-white font-frame-body"}>
+      {!embedded && <AppNavBar />}
+      {!embedded && <ProductionNav />}
       <main id="main-content" className="px-4 sm:px-6 py-5 sm:py-6 max-w-[1200px] mx-auto space-y-6">
         {/* Header */}
         <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-frame-gray-3 pb-4">
