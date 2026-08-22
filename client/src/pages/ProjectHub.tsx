@@ -28,7 +28,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { api, type ProposalItem } from "@/lib/api";
+import { api, ApiError, type ProposalItem } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { isActionComplete, WORKFLOW_STAGES, type WorkflowStage } from "@/lib/workflow";
 import { useFeatureAccess } from "@/hooks/useFeatureAccess";
@@ -186,6 +186,7 @@ function ProjectHubContent() {
   const [loading, setLoading] = useState(true);
   const [projectName, setProjectName] = useState("");
   const [savingName, setSavingName] = useState(false);
+  const [syncingGoogleCalendar, setSyncingGoogleCalendar] = useState(false);
 
   // Project team (spec team-task-delegation, Fase 6-A): allocate team members
   // to the project by userId. Owner/producer manage; reuses the workspace
@@ -216,6 +217,32 @@ function ProjectHubContent() {
       toast.success(t("app.hub.memberRemoved"));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("app.hub.memberRemoveError"));
+    }
+  };
+
+  const handleGoogleCalendarSync = async () => {
+    try {
+      setSyncingGoogleCalendar(true);
+      const result = await api.calendar.syncGoogle(projectId);
+      toast.success(
+        locale === "en"
+          ? `${result.synced.length} event(s) synced with Google Calendar.`
+          : `${result.synced.length} evento(s) sincronizado(s) com Google Calendar.`,
+      );
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
+        try {
+          const { url } = await api.calendar.googleAuthUrl();
+          window.location.assign(url);
+          return;
+        } catch (authErr) {
+          toast.error(authErr instanceof Error ? authErr.message : "Google Calendar OAuth unavailable.");
+          return;
+        }
+      }
+      toast.error(err instanceof Error ? err.message : "Google Calendar sync failed.");
+    } finally {
+      setSyncingGoogleCalendar(false);
     }
   };
 
@@ -430,26 +457,35 @@ function ProjectHubContent() {
               {/* Calendar Export - Highlighted action (Studio+ feature) */}
               {hasCalendarExport && (
               <div className="pt-3 border-t border-frame-gray-3/50">
-                <a
-                  href={api.calendar.projectIcsUrl(projectId)}
-                  download
-                  className="inline-flex items-center gap-2 px-4 py-2 border border-frame-gray-3 bg-frame-gray-1/20 hover:border-frame-orange hover:bg-frame-orange/10 text-frame-white hover:text-frame-orange transition-all text-sm font-medium group"
-                  title={
-                    locale === "en"
-                      ? "Download project schedule as .ics file (compatible with Google Calendar, Outlook, Apple Calendar)"
-                      : "Baixar cronograma do projeto como arquivo .ics (compatível com Google Calendar, Outlook, Apple Calendar)"
-                  }
-                >
-                  <CalendarPlus className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                  <span>{locale === "en" ? "Export to Calendar" : "Exportar para Agenda"}</span>
-                  <span className="text-[0.65rem] px-1.5 py-0.5 bg-frame-gray-2 text-frame-gray-light font-frame-mono rounded group-hover:bg-frame-orange/20 group-hover:text-adaptive-primary transition">
-                    .ics
-                  </span>
-                </a>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleGoogleCalendarSync}
+                    disabled={syncingGoogleCalendar}
+                    className="inline-flex min-h-11 items-center gap-2 px-4 py-2 border border-frame-orange bg-frame-orange/10 hover:bg-frame-orange hover:text-frame-black text-frame-orange transition-all text-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+                    title={locale === "en" ? "Sync deadline and linked meetings to Google Calendar" : "Sincronizar prazo e reuniões vinculadas com Google Calendar"}
+                  >
+                    {syncingGoogleCalendar ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarPlus className="w-4 h-4" />}
+                    <span>{locale === "en" ? "Sync Google" : "Sincronizar Google"}</span>
+                  </button>
+                  <a
+                    href={api.calendar.projectIcsUrl(projectId)}
+                    download
+                    className="inline-flex min-h-11 items-center gap-2 px-4 py-2 border border-frame-gray-3 bg-frame-gray-1/20 hover:border-frame-orange hover:bg-frame-orange/10 text-frame-white hover:text-frame-orange transition-all text-sm font-medium group"
+                    title={
+                      locale === "en"
+                        ? "Download project schedule as .ics file (compatible with Google Calendar, Outlook, Apple Calendar)"
+                        : "Baixar cronograma do projeto como arquivo .ics (compatível com Google Calendar, Outlook, Apple Calendar)"
+                    }
+                  >
+                    <CalendarPlus className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                    <span>{locale === "en" ? "Download .ics" : "Baixar .ics"}</span>
+                  </a>
+                </div>
                 <p className="text-[0.6rem] text-frame-gray-muted mt-1.5 font-frame-mono tracking-wide">
                   {locale === "en"
-                    ? "Includes project deadline + linked meetings"
-                    : "Inclui prazo do projeto + reuniões vinculadas"}
+                    ? "Includes project deadline + linked meetings. Google sync requires OAuth credentials in production."
+                    : "Inclui prazo do projeto + reuniões vinculadas. Sync Google exige OAuth configurado em produção."}
                 </p>
               </div>
               )}

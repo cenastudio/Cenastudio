@@ -868,6 +868,14 @@ export const api = {
   },
   calendar: {
     projectIcsUrl: (projectId: number) => apiUrl(`/calendar/project/${projectId}.ics`),
+    googleStatus: () => request<{ connected: boolean; email: string | null }>("/calendar/google/status"),
+    googleAuthUrl: () => request<{ url: string }>("/calendar/google/auth", { method: "POST" }),
+    syncGoogle: (projectId: number) =>
+      request<{ projectId: number; synced: Array<{ id: number; googleEventId: string; htmlLink: string | null; title: string }> }>(
+        `/calendar/google/sync/${projectId}`,
+        { method: "POST" },
+      ),
+    revokeGoogle: () => request<null>("/calendar/google/revoke", { method: "DELETE" }),
   },
   tasks: {
     listMine: () => request<TaskItem[]>("/tasks/mine"),

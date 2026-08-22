@@ -290,6 +290,9 @@ Vercel Production como variáveis sensíveis. O teste direto para
 `oldbarbier@gmail.com` foi recusado pela Resend com `403` porque o domínio
 `atomicmail.io` ainda não está verificado. Até verificar o domínio em Resend, o
 código preserva cadastro e troca de senha, mas não entrega e-mail ao cliente
+externo. Cobrança via Stripe registra envios idempotentes em `email_deliveries`
+antes de chamar Resend; isso evita e-mail duplicado quando a Stripe reenviar o
+mesmo webhook.
 real.
 
 ---
@@ -360,17 +363,26 @@ uma URL pública estar definida.
 
 ## 9. Google Calendar
 
-**Estado atual:** o produto exporta agenda por `.ics` via rota `/calendar`, mas
-sync real com Google Calendar ainda não existe.
+**Estado atual:** o produto exporta agenda por `.ics` via
+`GET /api/calendar/project/:projectId.ics` e já tem a base de sync real com
+Google Calendar: schema `CalendarEvent`, tokens OAuth no `User`, dependência
+`googleapis`, endpoints OAuth/sync/revoke e botão inicial no Hub do Projeto.
+Ainda falta criar as credenciais reais no Google Cloud e configurar Vercel para
+validar OAuth/sync em produção.
 
-**Variáveis planejadas:** `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
-`GOOGLE_REDIRECT_URI`.
+**Variáveis:** `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
+`GOOGLE_REDIRECT_URI` e `PUBLIC_APP_URL`.
 
-Antes de implementar: criar projeto no Google Cloud, habilitar Calendar API,
-criar OAuth Client, registrar redirect URI
-`{APP_DOMAIN}/api/calendar/google/callback`, instalar `googleapis`, criar
-migration de tokens/eventos e implementar service/backend/UI conforme
-`.kiro/specs/features-criticas-gap-analysis/tasks.md`.
+Para ativar:
+1. Criar projeto no Google Cloud e habilitar Google Calendar API.
+2. Criar OAuth Client Web.
+3. Registrar redirect URI exatamente como
+   `https://SEU_DOMINIO/api/calendar/google/callback`.
+4. Configurar as envs na Vercel Production/Preview.
+5. Rodar `npx prisma migrate deploy` depois do deploy do schema.
+6. Testar em um projeto com deadline/reuniões: clicar em "Sincronizar Google",
+   autorizar a conta, voltar ao app e confirmar eventos criados no Google
+   Calendar + linhas em `calendar_events`.
 
 ---
 

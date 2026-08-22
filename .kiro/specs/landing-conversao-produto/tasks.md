@@ -43,6 +43,11 @@
     `LandingProductStory.test.tsx`, traduções e build de produção passaram.
 - [ ] 3.5 After deployment, validate the root preview and shared-link metadata
   with real crawler tools.
+  - _2026-08-22: produção `https://cena-studio-prod.vercel.app/` validada por
+    `curl`: HTML raiz retorna title/description/canonical, OG/Twitter image
+    `/landing/social/cena-product.png`, JSON-LD, `robots.txt` e `sitemap.xml`.
+    Ainda falta validar preview visual em ferramentas sociais reais
+    (LinkedIn/WhatsApp) e repetir após domínio próprio._
 
 ## Phase 4. Account creation handoff
 

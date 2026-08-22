@@ -281,13 +281,14 @@
     ```
   - Instalar dependência: `npm install googleapis`.
   - _Requirements: 8.3_
-  - _2026-08-22: envs planejadas adicionadas ao `.env.example` e runbook registrado em `docs/CONEXOES.md`/`docs/STATUS.md`. Task segue aberta porque ainda faltam credenciais reais, instalação de `googleapis` e implementação OAuth/API._
+  - _2026-08-22: `googleapis` instalado, envs adicionadas ao `.env.example` e runbook registrado em `docs/CONEXOES.md`/`docs/STATUS.md`. Task segue aberta porque faltam credenciais reais no Google Cloud/Vercel e smoke OAuth em produção._
 
-- [ ] 27. Prisma migration `add_calendar_events` + Google tokens em User
+- [x] 27. Prisma migration `add_calendar_events` + Google tokens em User
   - Editar `prisma/schema.prisma`: adicionar model `CalendarEvent` + colunas `googleAccessToken`, `googleRefreshToken`, `googleTokenExpiry` em `User`.
   - Adicionar relações `calendarEvents CalendarEvent[]` em `User` e `Project`.
   - Rodar `npx prisma migrate dev --name add_calendar_events`.
   - _Requirements: 8.7_
+  - _2026-08-22: migration `20260822175500_add_google_calendar_sync` criada com tokens OAuth no `users` e tabela `calendar_events`; `npx prisma generate` passou._
 
 - [ ] 28. Backend: `calendarService` — ICS + Google API
   - Estender `server/services/icsService.ts` (já existe): função `generateICSFromCallsheet(callsheetData)` que retorna string RFC 5545 compliant com múltiplos VEVENTs (um por marco de horário).
@@ -307,6 +308,7 @@
   - Error handling: token expirado → refresh automático; refresh falhou → limpa tokens e força re-auth.
   - Testes cobrindo: ICS generation RFC 5545, mock googleapis client (não bater API real), retry lógico.
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9_
+  - _2026-08-22: backend inicial implementado para OAuth URL/callback, sync one-way do projeto para calendário primário, persistência em `CalendarEvent`, revoke e fallback `.ics`. Ainda faltam update/delete de evento existente, quota mensal específica do Google Calendar e testes mockando `googleapis`._
 
 - [ ] 29. Frontend: botões de export + Settings integration
   - Modificar `client/src/pages/Studio.tsx` (tool Callsheet ID 03): após output, exibir três botões:
@@ -318,6 +320,7 @@
   - Modificar `client/src/pages/Settings.tsx`: nova aba "Integrações" (adicionar tab ao lado de webhooks).
   - Após sync, mostrar toast: "Evento adicionado ao Google Calendar" com link direto para o evento (via `event.htmlLink`).
   - _Requirements: 8.1, 8.2, 8.3, 8.5, 8.6, 8.7, 8.8_
+  - _2026-08-22: Hub do Projeto ganhou botão "Sincronizar Google" com fallback de OAuth e mantém "Baixar .ics". Ainda faltam componente reutilizável, aba Settings/Integrações e botões dentro do Callsheet/Studio._
 
 ### FASE 5 — Validação final e docs
 

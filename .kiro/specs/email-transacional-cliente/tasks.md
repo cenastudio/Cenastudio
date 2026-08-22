@@ -59,11 +59,19 @@
 
 ## Fase 3 — Cobrança e confiabilidade
 
-- [ ] 3.1 Criar registro idempotente de eventos/deliveries antes de enviar
+- [x] 3.1 Criar registro idempotente de eventos/deliveries antes de enviar
   e-mails a partir de webhooks Stripe.
-- [ ] 3.2 Implementar e-mails de ativação, falha de pagamento e cancelamento
+- [x] 3.2 Implementar e-mails de ativação, falha de pagamento e cancelamento
   após 3.1, sem duplicar recibos fiscais da Stripe.
 - [ ] 3.3 Registrar observabilidade de entrega e caminho de reenvio manual.
+  - _2026-08-22: adicionados `EmailDelivery`/`email_deliveries` e
+    `sendBillingEmailOnce()`, com `idempotency_key` por evento Stripe +
+    template. Webhooks `checkout.session.completed`, `invoice.payment_failed`
+    e `customer.subscription.deleted` agora disparam e-mails transacionais de
+    ativação, falha e cancelamento em modo best-effort. Sem Resend, o delivery
+    fica `skipped`; duplicatas ficam bloqueadas antes do envio. Validação:
+    `npx prisma generate`, `NODE_OPTIONS=--max-old-space-size=4096 npm run check`
+    e `npm run test -- server/services/stripeService.test.ts server/services/emailService.test.ts server/services/transactionalEmail.test.ts`._
 
 ## Fase 4 — Lifecycle opt-in
 

@@ -36,6 +36,7 @@
     "db:reset-sequences": "node scripts/reset-postgres-sequences.mjs",
     "measure:budget-block": "tsx scripts/measure-budget-block.ts",
     "eval:ai": "tsx scripts/run-ai-eval.ts",
+    "ai:usage-metrics": "tsx scripts/ai-usage-metrics.ts",
     "lint": "tsc --noEmit",
     "format": "prettier --write ."
   },
@@ -93,6 +94,7 @@
     "express-rate-limit": "^7.5.0",
     "framer-motion": "^12.23.22",
     "geoip-lite": "^2.0.3",
+    "googleapis": "^176.0.0",
     "helmet": "^8.0.0",
     "input-otp": "^1.4.2",
     "jsonwebtoken": "^9.0.2",

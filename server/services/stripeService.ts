@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import { db } from "../models/db.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { prisma, shouldUsePrisma } from "../models/prisma.js";
+import { sendBillingEmailOnce, type BillingEmailKind } from "./emailDeliveryService.js";
 
 function getStripe(): Stripe {
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -505,6 +506,34 @@ async function cancelPersistedStripeSubscription(subscription: Stripe.Subscripti
   if (result.changes !== 1) throw new AppError("Cancelamento Stripe não foi persistido.", 500);
 }
 
+async function notifyStripeBillingEvent(input: {
+  eventId: string;
+  kind: BillingEmailKind;
+  userId?: number | null;
+  planId?: string | null;
+  hostedInvoiceUrl?: string | null;
+}) {
+  try {
+    if (!shouldUsePrisma || !input.userId) return;
+    const user = await prisma.user.findUnique({
+      where: { id: BigInt(input.userId) },
+      select: { id: true, email: true, name: true },
+    });
+    if (!user?.email) return;
+    await sendBillingEmailOnce({
+      eventId: input.eventId,
+      kind: input.kind,
+      userId: Number(user.id),
+      toEmail: user.email,
+      userName: user.name,
+      planId: input.planId,
+      hostedInvoiceUrl: input.hostedInvoiceUrl,
+    });
+  } catch (error) {
+    console.warn("[stripe] billing email notification failed", error);
+  }
+}
+
 export async function handleWebhook(rawBody: Buffer, signature: string) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!secret) {
@@ -537,14 +566,41 @@ export async function handleWebhook(rawBody: Buffer, signature: string) {
       }
       const subscription = await stripe.subscriptions.retrieve(subscriptionId);
       await persistActiveStripeSubscription({ userId, planId, customerId, subscription });
+      await notifyStripeBillingEvent({ eventId: event.id, kind: "subscription_activated", userId, planId });
+      break;
+    }
+    case "invoice.payment_failed": {
+      const invoice = event.data.object as Stripe.Invoice;
+      const subscriptionId = typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription?.id;
+      if (!subscriptionId) break;
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      const userId = Number(subscription.metadata?.userId);
+      const planId = subscription.metadata?.planId || null;
+      await notifyStripeBillingEvent({
+        eventId: event.id,
+        kind: "payment_failed",
+        userId: Number.isInteger(userId) ? userId : null,
+        planId,
+        hostedInvoiceUrl: invoice.hosted_invoice_url,
+      });
       break;
     }
     case "customer.subscription.updated":
       await updatePersistedStripeSubscription(event.data.object as Stripe.Subscription);
       break;
-    case "customer.subscription.deleted":
-      await cancelPersistedStripeSubscription(event.data.object as Stripe.Subscription);
+    case "customer.subscription.deleted": {
+      const subscription = event.data.object as Stripe.Subscription;
+      const userId = Number(subscription.metadata?.userId);
+      const planId = subscription.metadata?.planId || null;
+      await cancelPersistedStripeSubscription(subscription);
+      await notifyStripeBillingEvent({
+        eventId: event.id,
+        kind: "subscription_cancelled",
+        userId: Number.isInteger(userId) ? userId : null,
+        planId,
+      });
       break;
+    }
     default:
       break;
   }

@@ -71,8 +71,16 @@
   de proposta foi validado com `server/controllers/proposalLifecycle.test.ts` e
   `npm run check`; envio de review foi validado com
   `server/controllers/videoReviewsSend.test.ts` e `npm run check`. Em
-  2026-08-22, `RESEND_API_KEY` e `EMAIL_FROM` foram configurados como envs
-  sensíveis em Production na Vercel. **Ainda não está habilitado para clientes
+  2026-08-22, cobrança ganhou delivery idempotente em Postgres: model
+  `EmailDelivery`, migration `20260822182500_add_email_deliveries`,
+  `sendBillingEmailOnce()` e webhooks Stripe de ativação, falha de pagamento e
+  cancelamento com e-mail transacional best-effort. O idempotency key é
+  `stripe:{event.id}:{template}` e bloqueia duplicatas antes do Resend; sem
+  Resend o delivery fica `skipped`. Validação:
+  `NODE_OPTIONS=--max-old-space-size=4096 npm run check` e
+  `npm run test -- server/services/stripeService.test.ts server/services/emailService.test.ts server/services/transactionalEmail.test.ts`.
+  Também em 2026-08-22, `RESEND_API_KEY` e `EMAIL_FROM` foram configurados como
+  envs sensíveis em Production na Vercel. **Ainda não está habilitado para clientes
   em produção:** teste direto para `oldbarbier@gmail.com` retornou `403` porque
   `atomicmail.io` não está verificado na Resend. Gatilho: verificar o domínio
   próprio na Resend e repetir o teste de entrega externo.
@@ -140,11 +148,17 @@ verificar, está dito explicitamente.
   Categoria de tempo saiu do escopo ativo porque não existe no schema/UI atual;
   Timesheet passa a operar por projeto, descrição, período, duração e custo.
 - **Google Calendar:** rota `/calendar` registrada para exportação de agenda por
-  `.ics`. A integração real com a API do Google ainda **não existe**. Em
-  2026-08-22, `.env.example` e `docs/CONEXOES.md` passaram a listar as envs
-  planejadas (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
-  `GOOGLE_REDIRECT_URI`) e o runbook mínimo; faltam credenciais, `googleapis`,
-  migration de tokens/eventos, service, rotas OAuth/sync e UI.
+  `.ics`. Em 2026-08-22, o sync real começou a existir no produto: dependência
+  `googleapis`, migration `20260822175500_add_google_calendar_sync`, tokens
+  OAuth no `User`, model `CalendarEvent`, service OAuth/sync/revoke, endpoints
+  `/api/calendar/google/*` e botão "Sincronizar Google" no Hub do Projeto. O
+  fallback `.ics` continua disponível. Validação local: `npx prisma generate`,
+  `NODE_OPTIONS=--max-old-space-size=4096 npm run check` e
+  `npm run test -- server/controllers/domainFlow.test.ts server/services/icsService.test.ts`.
+  Ainda aberto: configurar credenciais reais no Google Cloud/Vercel
+  (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`,
+  `PUBLIC_APP_URL`), rodar `npx prisma migrate deploy` em produção e testar OAuth
+  + criação real de eventos.
 - **Portal do Cliente:** MVP funcional em evolução (spec `portal-do-cliente-OK/`).
   Rotas `/portal` e `/client-portal-auth`, model `ClientPortalAccess`, auth
   isolada, endpoints de projetos/arquivos/propostas/reuniões/resumo financeiro,
@@ -199,7 +213,12 @@ verificar, está dito explicitamente.
   da Fase D aplicou `nvidia/nemotron-3-super-120b-a12b:free` em
   `TIER_MODEL.high`: o modelo provisório anterior (`poolside/laguna-m.1:free`)
   retornou 404 em 16/16 casos; Nemotron Super marcou 63/76 critérios (82,9%) com
-  1 resposta vazia.
+  1 resposta vazia. Em 2026-08-22, foi criado `npm run ai:usage-metrics` para
+  extrair volume por ferramenta, reuso via `proposals.source_generation_id` e
+  lista de alto volume/baixo reuso. A execução local não tem DB e a tentativa via
+  `vercel env run -e production -- npm run ai:usage-metrics` falhou com
+  `Server has closed the connection`; portanto Fase E de IA continua sem ranking
+  real. Rating de geração também ainda não existe no schema.
 - **Catálogo `:free` do OpenRouter envelhece sem aviso.** Na conferência de
   2026-07-27, 2 dos 5 modelos da cadeia de fallback já não existiam
   (`meta-llama/llama-3.3-70b-instruct:free`, `qwen/qwen3-next-80b-a3b-instruct:free`)
@@ -211,8 +230,11 @@ verificar, está dito explicitamente.
   domínio no Google Search Console, publicar/enviar sitemap e robots, conferir
   canonicals no domínio final e inspecionar as URLs públicas. Em 2026-08-22, o
   `robots.txt` e o `sitemap.xml` públicos foram corrigidos do domínio Railway
-  legado para `https://cena-studio-prod.vercel.app/`. Não fazer Search Console
-  antes: o domínio canônico ainda é o da Vercel.
+  legado para `https://cena-studio-prod.vercel.app/`. Também em 2026-08-22,
+  produção foi validada por `curl`: HTML raiz 200 com title/description,
+  canonical, OG/Twitter image 1200x630 e JSON-LD; `robots.txt` e `sitemap.xml`
+  retornam 200. Ainda falta conferir preview visual em LinkedIn/WhatsApp e não
+  fazer Search Console antes: o domínio canônico ainda é o da Vercel.
 - **Rotação de credenciais — ADIADA por decisão do operador (2026-07-26).**
   Inventário completo em `docs/CREDENCIAIS_PARA_ROTACIONAR.md` (não versionado) e
   em `.private/CREDENCIAIS_ROTACIONAR.md` (procedência + valores). Nada foi
@@ -338,6 +360,13 @@ como fallback. A imagem gerada é gravada no bucket público
 2026-08-22 falhou no handshake TLS antes de autenticar; por isso produção deve
 seguir em Supabase Storage até R2 listar/criar bucket e ter URL pública válida.
 Ainda aberto: validar uma geração real em staging/produção com envs ativas.
+Em 2026-08-22, a produção foi testada até o provider: deploy Ready em
+`cena-studio-prod.vercel.app`, usuário/projeto/shot de smoke criados por API e
+`POST /api/shotlists/shots/:id/storyboard/generate` retornou 500. A chamada
+direta ao OpenRouter Images com a env ativa retornou 402 `Insufficient credits`;
+portanto G6.3 está bloqueada por crédito/provider, não por falta de código ou
+env de storage. Falta repetir o smoke depois de adicionar créditos ou trocar por
+provider de imagem com quota disponível.
 
 **Cloudflare Turnstile preparado — login/cadastro:** backend e frontend agora
 aceitam Turnstile opcional. Se `TURNSTILE_SECRET_KEY` não existir, nada muda. Se
@@ -395,6 +424,17 @@ uma sessão recém-emitida por interpretar UTC como horário local. Validação:
 51 testes focados passaram, `npm run check` passou, e
 `tests/e2e/client-budget-proposal-portal.spec.ts` passou em
 `chromium-desktop` e `chromium-mobile`.
+
+**Validação Postgres/Supabase pendente (0.3):** em 2026-08-22,
+`vercel env ls --scope cenastudio-3104s-projects` confirmou que as envs Supabase
+sensíveis existem em Production (`SUPABASE_DATABASE_URL`, `DATABASE_URL`,
+`SUPABASE_URL`, anon/service role e Vite Supabase). A execução local com essas
+envs não fechou a evidência: `vercel env run -e production -- npm run
+ai:usage-metrics` recebeu `Server has closed the connection` do Postgres e
+`vercel env run -e production -- npm run launch:check` não enxergou as chaves
+Supabase depois de carregar `.env.local/.env`. Não marcar a reprodução de
+lançamento financeiro em Postgres como concluída até rodar o smoke no ambiente
+certo e capturar `requestId`, payload sanitizado e resposta.
 
 **P1C.A / P1C.3 auditadas:** Produção já tem entradas diárias claras para Jobs,
 Estúdio IA e Aprovações, mas Arquivos, Documentos, Equipamento, Timesheet,

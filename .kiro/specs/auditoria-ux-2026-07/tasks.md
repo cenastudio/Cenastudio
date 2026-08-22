@@ -124,6 +124,7 @@ Esta spec consolida correções de uma auditoria UX/técnica focada em fechar o 
   - Validado em 2026-08-14: `npm run check`, testes direcionados de metadata e `npm run build` passaram. Vercel recebeu rewrites para renderizar metadata de links públicos válidos antes do bundle; links inválidos, expirados ou revogados recebem shell genérico `noindex` sem vazar título, cliente ou conteúdo.
 - [ ] E7. Testar com crawlers/validadores de SEO
   - Depende de preview ou produção publicado: conferir resposta HTML e preview de compartilhamento por `curl`, LinkedIn Post Inspector e WhatsApp. Não foi declarado validado localmente.
+  - _2026-08-22: validação técnica em produção via `curl` passou para home, `robots.txt` e `sitemap.xml`: status 200, title/description, canonical, OG/Twitter image 1200x630 e JSON-LD presentes; `robots.txt` aponta para sitemap do domínio Vercel atual. Ainda falta validar render visual nos crawlers sociais (LinkedIn/WhatsApp) e configurar Search Console depois do domínio próprio._
 
 ## Fase F — P3: skills descobríveis
 

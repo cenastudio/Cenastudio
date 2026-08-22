@@ -21,6 +21,10 @@ model User {
   phone          String?
   mustResetPassword Boolean @default(false) @map("must_reset_password")
   disabled       Boolean   @default(false)
+  googleAccessToken String? @map("google_access_token")
+  googleRefreshToken String? @map("google_refresh_token")
+  googleTokenExpiry DateTime? @map("google_token_expiry") @db.Timestamptz
+  googleCalendarEmail String? @map("google_calendar_email")
 
   // LGPD / Privacy Settings
   privacySettings Json    @default("{\"profileVisibility\":\"team\",\"allowSearchEngineIndexing\":true,\"shareAnalyticsWithTeam\":true}") @map("privacy_settings")
@@ -72,6 +76,8 @@ model User {
   tasksAssigned  Task[] @relation("TaskAssignee")
   tasksCreated   Task[] @relation("TaskCreator")
   financialEntries FinancialEntry[]
+  calendarEvents CalendarEvent[]
+  emailDeliveries EmailDelivery[]
   dreSettings    DreSettings[]
   studioSettings StudioSetting?
   checklistItems ChecklistItem[]
@@ -106,6 +112,31 @@ model Referral {
   @@index([referredUserId], map: "idx_referrals_referred")
   @@index([referralCode], map: "idx_referrals_code")
   @@map("referrals")
+}
+
+model EmailDelivery {
+  id                BigInt    @id @default(autoincrement())
+  userId            BigInt?   @map("user_id")
+  idempotencyKey    String    @unique @map("idempotency_key")
+  eventType         String    @map("event_type")
+  template          String
+  toEmail           String    @map("to_email")
+  subject           String
+  provider          String    @default("resend")
+  providerMessageId String?   @map("provider_message_id")
+  status            String    @default("queued")
+  payload           Json      @default("{}")
+  errorMessage      String?   @map("error_message")
+  sentAt            DateTime? @map("sent_at") @db.Timestamptz
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @default(now()) @map("updated_at") @db.Timestamptz
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId], map: "idx_email_deliveries_user_id")
+  @@index([eventType], map: "idx_email_deliveries_event_type")
+  @@index([status], map: "idx_email_deliveries_status")
+  @@map("email_deliveries")
 }
 
 model Workspace {
@@ -352,12 +383,35 @@ model Project {
   financialEntries FinancialEntry[]
   dreSettings   DreSettings?
   proposals     Proposal[] @relation("ProposalProject")
+  calendarEvents CalendarEvent[]
 
   @@index([userId], map: "idx_projects_user_id")
   @@index([clientId], map: "idx_projects_client_id")
   @@index([status], map: "idx_projects_status")
   @@index([deadline], map: "idx_projects_deadline")
   @@map("projects")
+}
+
+model CalendarEvent {
+  id            BigInt   @id @default(autoincrement())
+  userId        BigInt   @map("user_id")
+  projectId     BigInt   @map("project_id")
+  googleEventId String   @map("google_event_id")
+  htmlLink      String?  @map("html_link")
+  title         String
+  startsAt      DateTime @map("starts_at") @db.Timestamptz
+  endsAt        DateTime @map("ends_at") @db.Timestamptz
+  source        String   @default("project_schedule")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, googleEventId], map: "calendar_events_user_google_event_unique")
+  @@index([userId], map: "idx_calendar_events_user_id")
+  @@index([projectId], map: "idx_calendar_events_project_id")
+  @@map("calendar_events")
 }
 
 model ProjectState {

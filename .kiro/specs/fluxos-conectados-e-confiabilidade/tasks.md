@@ -9,6 +9,14 @@
 - [x] 0.2 Confirmar que a ponte IA já tem feedback unitariamente coberto.
 - [ ] 0.3 Reproduzir o lançamento de gasto no ambiente com Postgres e capturar
   `requestId`, payload sanitizado e resposta.
+  - _2026-08-22: validação ainda não fechada. `vercel env ls --scope
+    cenastudio-3104s-projects` confirma que `SUPABASE_DATABASE_URL`,
+    `DATABASE_URL`, `SUPABASE_URL`, anon/service role e Vite Supabase existem em
+    Production. Porém execuções locais via `vercel env run -e production`
+    falharam: `npm run ai:usage-metrics` recebeu `Server has closed the
+    connection` do Postgres, e `npm run launch:check` viu chaves Supabase
+    ausentes após a CLI carregar `.env.local/.env`. Não declarar 0.3 concluída
+    até rodar smoke financeiro em ambiente com env/conexão estáveis._
 - [x] 0.4 Exercitar a ponte IA com projeto, sem projeto, bloco inválido,
   substituição e plano sem entitlement.
 - [x] 0.5 Registrar no fim desta spec os achados da auditoria de erros de

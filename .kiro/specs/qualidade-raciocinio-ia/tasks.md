@@ -298,15 +298,30 @@ comportamento — está registrada como provisória no ADR-014 justamente por is
     rating médio.
   - Executar em produção ou, na falta de acesso, em staging — dizendo qual foi.
   - _Requirements: E1, E2_
+  - _2026-08-22: extractor versionado criado em `scripts/ai-usage-metrics.ts`
+    (`npm run ai:usage-metrics`). Ele agrupa `generations` por `tool_id`, cruza
+    reuso por `proposals.source_generation_id`, aponta ferramentas de alto
+    volume/baixo reuso e declara `averageRating=null` porque o schema atual ainda
+    não registra rating/feedback de geração. Execução local recusou por ausência
+    de `DATABASE_URL/SUPABASE_DATABASE_URL`; execução com
+    `vercel env run -e production -- npm run ai:usage-metrics` baixou envs mas o
+    Postgres fechou a conexão antes da query (`Server has closed the connection`).
+    Task segue aberta até rodar em ambiente com conexão Supabase estável._
 
 - [ ] 17. Cruzar volume, reuso e rating para achar as ferramentas que doem
   - Identificar as de alto volume com baixo reuso ou rating baixo.
   - _Requirements: E3_
+  - _2026-08-22: lógica de cruzamento volume/reuso foi adicionada ao extractor.
+    Rating ainda é lacuna de instrumentação porque não há coluna/tabela de
+    avaliação das gerações._
 
 - [ ] 18. Repriorizar os próximos upgrades com base nos dados
   - Documentar em `docs/STATUS.md`, seção de próximas tarefas de IA.
   - Priorizar por dado real, não distribuir esforço igualmente entre as 12.
   - _Requirements: E4, E5_
+  - _2026-08-22: não repriorizar ainda; sem leitura real do banco, qualquer
+    ranking seria palpite. Próximo passo técnico é executar o extractor dentro de
+    uma janela/ambiente que consiga conectar no Supabase de produção._
 
 ## Task Dependency Graph
 
