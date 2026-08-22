@@ -800,6 +800,47 @@ verificáveis sem markdown.
 
 ---
 
+### ADR-015: Orçamento interno e proposta comercial vinculados por snapshot
+
+**Status:** Aceito
+**Data:** 2026-08-22
+**Contexto:** `Budget` é o plano de custo 1:1 de um `Project`, enquanto
+`Proposal` é o documento comercial associado somente a um `Client`. Sem vínculo
+entre eles, gerar uma proposta a partir de um orçamento exige cópia manual e não
+preserva qual cenário foi efetivamente enviado. Fundir as entidades confundiria
+custo previsto, gasto realizado e preço ofertado ao cliente.
+
+**Decisão:** As entidades permanecem separadas. A proposta recebe campos
+opcionais `projectId`, `sourceBudgetId`, `sourceGenerationId` e
+`commercialSnapshot`.
+
+- `projectId` fornece contexto operacional, mas não torna o projeto dono do
+  documento comercial.
+- `sourceBudgetId` e `sourceGenerationId` são proveniência, não fonte mutável de
+  verdade. Seus relacionamentos usam `ON DELETE SET NULL`.
+- `commercialSnapshot` é o payload estruturado, versionado e imutável que gerou
+  o HTML e os totais da proposta. Histórico anterior fica com snapshot nulo.
+- Apenas rascunhos podem ser atualizados. Ao enviar, visualizar ou aceitar, a
+  proposta vira uma versão imutável; uma alteração posterior cria um novo
+  rascunho/revisão, nunca altera o documento original.
+- O fluxo existente de criação direta continua criando `sent`, preservando links
+  públicos e integrações. O novo fluxo IA/orçamento cria explicitamente
+  `draft` antes de qualquer envio.
+
+**Consequências:**
+
+- Positivas: preço enviado pode ser auditado mesmo após mudança no orçamento;
+  Comercial e Produção ganham uma ligação rastreável; dados existentes seguem
+  legíveis sem backfill inventado.
+- Negativas: aparecem estados e versões adicionais na UI; é necessário manter
+  as migrations Postgres e o fallback SQLite em paridade.
+
+**Revisão:** antes de gerar recebíveis automáticos a partir de proposta aceita,
+definir no módulo Financeiro o evento comercial, impostos e política de
+cancelamento. Aceite de proposta por si só não cria lançamento financeiro.
+
+---
+
 ## 🎨 Padrões de Design
 
 ### Controller Pattern

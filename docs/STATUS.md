@@ -200,6 +200,12 @@ Evidência: 25 testes focados, E2E desktop/mobile dos fluxos de orçamento,
 P0 é 0.3: reprodução controlada contra Postgres/Supabase, que exige janela e
 backup aprovados. Não houve push ou deploy desta frente.
 
+**P1A em andamento:** ADR-015 registra o vínculo aditivo entre `Proposal`,
+`Project`, `Budget` e `Generation`, com snapshot comercial imutável. A migration
+`20260822013000_link_proposals_to_budget` foi criada e validada no schema, mas
+**não foi aplicada** a Supabase/produção; a próxima etapa é testar a migration e
+implementar o serviço transacional de rascunho.
+
 **Concluídas (`-OK`):** `00-fundacao-limpeza-e-documentacao`,
 `client-hub-connected-workflows`, `dre-por-projeto`,
 `fase-1-testes-uso-real`, `fase-2-layout-mobile-e-tabs`,

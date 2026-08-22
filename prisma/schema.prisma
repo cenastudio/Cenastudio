@@ -169,6 +169,7 @@ model Generation {
   user    User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   tool    Tool?    @relation(fields: [toolId], references: [id])
   project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  commercialProposals Proposal[] @relation("ProposalSourceGeneration")
 
   @@index([userId], map: "idx_generations_user_id")
   @@index([toolId], map: "idx_generations_tool_id")
@@ -343,6 +344,7 @@ model Project {
   tasks         Task[]
   financialEntries FinancialEntry[]
   dreSettings   DreSettings?
+  proposals     Proposal[] @relation("ProposalProject")
 
   @@index([userId], map: "idx_projects_user_id")
   @@index([clientId], map: "idx_projects_client_id")
@@ -418,6 +420,10 @@ model Proposal {
   id              BigInt    @id @default(autoincrement())
   userId          BigInt    @map("user_id")
   clientId        BigInt    @map("client_id")
+  projectId       BigInt?   @map("project_id")
+  sourceBudgetId  BigInt?   @map("source_budget_id")
+  sourceGenerationId BigInt? @map("source_generation_id")
+  commercialSnapshot Json?  @map("commercial_snapshot")
   title           String
   html            String
   total           Int
@@ -434,9 +440,15 @@ model Proposal {
 
   client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
   owner User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project? @relation("ProposalProject", fields: [projectId], references: [id], onDelete: SetNull)
+  sourceBudget Budget? @relation("ProposalSourceBudget", fields: [sourceBudgetId], references: [id], onDelete: SetNull)
+  sourceGeneration Generation? @relation("ProposalSourceGeneration", fields: [sourceGenerationId], references: [id], onDelete: SetNull)
 
   @@index([clientId], map: "idx_proposals_client_id")
   @@index([userId], map: "idx_proposals_user_id")
+  @@index([projectId], map: "idx_proposals_project_id")
+  @@index([sourceBudgetId], map: "idx_proposals_source_budget_id")
+  @@index([sourceGenerationId], map: "idx_proposals_source_generation_id")
   @@map("proposals")
 }
 
@@ -781,6 +793,7 @@ model Budget {
   user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   project Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   entries BudgetEntry[]
+  commercialProposals Proposal[] @relation("ProposalSourceBudget")
 
   @@index([userId], map: "idx_budgets_user_id")
   @@map("budgets")
