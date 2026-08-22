@@ -597,11 +597,14 @@ model WebhookDelivery {
   success      Boolean   @default(false)
   error        String?
   attempt      Int       @default(1)
+  nextRetryAt  DateTime? @map("next_retry_at") @db.Timestamptz
+  finalFailedAt DateTime? @map("final_failed_at") @db.Timestamptz
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   webhook Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
 
   @@index([webhookId], map: "idx_webhook_deliveries_webhook_id")
+  @@index([nextRetryAt], map: "idx_webhook_deliveries_next_retry_at")
   @@map("webhook_deliveries")
 }
 

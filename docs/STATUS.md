@@ -100,16 +100,21 @@ verificar, está dito explicitamente.
   chamada por job externo se necessário. Teste focal:
   `server/services/sessionService.test.ts`. UI vive em `client/src/pages/Profile.tsx`,
   não em página dedicada.
-- **Webhooks:** funcional sem retry. `/webhooks` (`router.ts:180`), models
-  `Webhook` e `WebhookDelivery`, `server/services/webhookService.ts` (377 linhas)
-  com CRUD, HMAC, `listDeliveries`, `sendTestPing` e `dispatchWebhookEvent`. Tela
-  em `client/src/pages/Webhooks.tsx`. Eventos realmente disparados:
+- **Webhooks:** funcional com retry persistente de falhas transitórias. `/webhooks`
+  (`router.ts:180`), models `Webhook` e `WebhookDelivery`,
+  `server/services/webhookService.ts` com CRUD, HMAC, `listDeliveries`,
+  `sendTestPing`, `dispatchWebhookEvent` e `retryFailedDeliveries`. Tela em
+  `client/src/pages/Webhooks.tsx`. Eventos realmente disparados:
   `client.created`, `project.created`, `proposal.accepted`,
   `video_review.approved`, `video_review.changes_requested` — **não** os
   `project.completed` / `file.uploaded` / `client.approved` / `meeting.scheduled`
-  que os relatórios afirmavam. **Não existe motor de retry:** sem
-  `retryFailedDeliveries`, sem campo `nextRetryAt` no schema, sem `node-cron`
-  instalado, sem `server/jobs/`. Ver Seção 4.
+  que os relatórios afirmavam. Em 2026-08-22, falhas de rede/5xx passaram a
+  gravar `next_retry_at`; o runner tenta novamente até 3 tentativas, finaliza 4xx
+  sem novo agendamento e guarda `final_failed_at`. O job `startWebhookRetryJob()`
+  roda a cada 6h em servidor tradicional, com opt-out por
+  `ENABLE_WEBHOOK_RETRY_JOB=false`; em Vercel/serverless a execução periódica
+  depende de cron/job externo chamando o mesmo service. Teste focal:
+  `server/services/webhookService.test.ts`.
 - **Portal do Cliente (auth):** autenticação própria, separada da do app. Login
   por e-mail + senha (bcrypt cost 12) em `client_portal_access`; JWT de 7 dias em
   cookie httpOnly `client_portal_token`, assinado com o **mesmo** segredo do app,
@@ -532,10 +537,11 @@ Tarefas soltas identificadas na verificação, sem spec própria ainda:
   sessões revogadas após a janela de expiração do JWT, para não reabilitar token
   revogado. `startSessionCleanupJob()` agenda a execução diária em servidor
   tradicional; em Vercel/serverless depende de job externo.
-- Implementar retry de webhook delivery. Hoje uma entrega que falha morre ali: não
-  há reprocessamento, campo de agendamento (`nextRetryAt`) nem scheduler. Exige
-  migration (campo no `WebhookDelivery`), função no service e um scheduler — o
-  mesmo scheduler serviria para a poda de `user_sessions` acima.
+- ~~Implementar retry de webhook delivery.~~ **Feito em 2026-08-22.**
+  `WebhookDelivery` ganhou `next_retry_at` e `final_failed_at`; falhas
+  transitórias são retomadas por `retryFailedDeliveries()`, enquanto 4xx viram
+  falha final sem retry. `startWebhookRetryJob()` agenda execução em servidor
+  tradicional; Vercel/serverless exige cron/job externo.
 - ~~Fechar a checagem de claim `type` na autenticação (ADR-012, risco aceito)~~ —
   **feito.** `signToken` emite `type: "app"`; `authenticate` rejeita qualquer
   `type` presente e diferente de `"app"`. Token sem a claim continua aceito, para

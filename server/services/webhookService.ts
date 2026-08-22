@@ -31,6 +31,9 @@ export const WEBHOOK_EVENTS = [
 
 export type WebhookEventId = (typeof WEBHOOK_EVENTS)[number]["id"];
 
+const WEBHOOK_MAX_ATTEMPTS = 3;
+const WEBHOOK_RETRY_BACKOFF_MS = [10_000, 30_000] as const;
+
 export interface WebhookRecord {
   id: number;
   url: string;
@@ -197,6 +200,8 @@ export interface DeliveryRecord {
   success: boolean;
   error: string | null;
   attempt: number;
+  nextRetryAt: string | null;
+  finalFailedAt: string | null;
   createdAt: string;
 }
 
@@ -220,6 +225,8 @@ export async function listDeliveries(userId: number, webhookId: number): Promise
       success: row.success,
       error: row.error,
       attempt: row.attempt,
+      nextRetryAt: row.nextRetryAt?.toISOString() ?? null,
+      finalFailedAt: row.finalFailedAt?.toISOString() ?? null,
       createdAt: row.createdAt.toISOString(),
     }));
   }
@@ -229,12 +236,12 @@ export async function listDeliveries(userId: number, webhookId: number): Promise
 
   const rows = db
     .prepare(
-      `SELECT id, event, status_code, success, error, attempt, created_at
+      `SELECT id, event, status_code, success, error, attempt, next_retry_at, final_failed_at, created_at
        FROM webhook_deliveries WHERE webhook_id = ? ORDER BY created_at DESC LIMIT 50`,
     )
     .all(webhookId) as Array<{
       id: number; event: string; status_code: number | null; success: number;
-      error: string | null; attempt: number; created_at: string;
+      error: string | null; attempt: number; next_retry_at: string | null; final_failed_at: string | null; created_at: string;
     }>;
 
   return rows.map((row) => ({
@@ -244,6 +251,8 @@ export async function listDeliveries(userId: number, webhookId: number): Promise
     success: Boolean(row.success),
     error: row.error,
     attempt: row.attempt,
+    nextRetryAt: row.next_retry_at,
+    finalFailedAt: row.final_failed_at,
     createdAt: row.created_at,
   }));
 }
@@ -269,7 +278,8 @@ export async function sendTestPing(userId: number, webhookId: number): Promise<{
 /**
  * Fire-and-forget dispatch for a real product event. Looks up every active
  * webhook a user has registered for this event and delivers to all of them
- * in parallel, with retry on transient failures.
+ * in parallel. Transient failures are persisted with a next retry timestamp;
+ * a background job resumes them later so retries survive process restarts.
  */
 export function dispatchWebhookEvent(userId: number, event: WebhookEventId, payload: Record<string, unknown>): void {
   void dispatchAsync(userId, event, payload).catch((error) => {
@@ -285,30 +295,30 @@ async function dispatchAsync(userId: number, event: WebhookEventId, payload: Rec
   const matching = webhooks.filter((webhook: any) => serializeEvents(webhook.events).includes(event));
   if (matching.length === 0) return;
 
-  await Promise.all(matching.map((webhook: any) => deliverWithRetry(webhook, event, payload)));
+  await Promise.all(matching.map((webhook: any) => deliverAndScheduleRetry(webhook, event, payload)));
 }
 
-async function deliverWithRetry(webhook: any, event: string, payload: Record<string, unknown>): Promise<void> {
-  const maxAttempts = 3;
-  let lastResult: { success: boolean; statusCode: number | null; error: string | null } = {
-    success: false,
-    statusCode: null,
-    error: null,
-  };
-
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    lastResult = await deliverOnce(webhook.url, webhook.secret, event, payload);
-    await logDelivery(Number(webhook.id), event, payload, lastResult, attempt);
-
-    if (lastResult.success) break;
-    // Only retry on network errors or 5xx — a 4xx means the endpoint itself
-    // rejected the request, retrying identically won't help.
-    const isRetryable = lastResult.statusCode == null || lastResult.statusCode >= 500;
-    if (!isRetryable) break;
-    if (attempt < maxAttempts) await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
-  }
-
+async function deliverAndScheduleRetry(webhook: any, event: string, payload: Record<string, unknown>): Promise<void> {
+  const lastResult = await deliverOnce(webhook.url, webhook.secret, event, payload);
+  const retryState = buildRetryState(lastResult, 1);
+  await logDelivery(Number(webhook.id), event, payload, lastResult, 1, retryState.nextRetryAt, retryState.finalFailedAt);
   await updateLastFired(Number(webhook.id), lastResult.statusCode);
+}
+
+function isRetryableDelivery(result: { success: boolean; statusCode: number | null }) {
+  return !result.success && (result.statusCode == null || result.statusCode >= 500);
+}
+
+function buildRetryState(
+  result: { success: boolean; statusCode: number | null },
+  attempt: number,
+  now = new Date(),
+): { nextRetryAt: Date | null; finalFailedAt: Date | null } {
+  if (result.success) return { nextRetryAt: null, finalFailedAt: null };
+  if (!isRetryableDelivery(result)) return { nextRetryAt: null, finalFailedAt: now };
+  if (attempt >= WEBHOOK_MAX_ATTEMPTS) return { nextRetryAt: null, finalFailedAt: now };
+  const delayMs = WEBHOOK_RETRY_BACKOFF_MS[Math.max(0, attempt - 1)] ?? WEBHOOK_RETRY_BACKOFF_MS[WEBHOOK_RETRY_BACKOFF_MS.length - 1];
+  return { nextRetryAt: new Date(now.getTime() + delayMs), finalFailedAt: null };
 }
 
 async function deliverOnce(
@@ -343,6 +353,8 @@ async function logDelivery(
   payload: Record<string, unknown>,
   result: { success: boolean; statusCode: number | null; error: string | null },
   attempt: number,
+  nextRetryAt: Date | null = null,
+  finalFailedAt: Date | null = null,
 ): Promise<void> {
   if (shouldUsePrisma) {
     await prisma.webhookDelivery.create({
@@ -354,15 +366,28 @@ async function logDelivery(
         success: result.success,
         error: result.error,
         attempt,
+        nextRetryAt,
+        finalFailedAt,
       },
     });
     return;
   }
 
   db.prepare(
-    `INSERT INTO webhook_deliveries (webhook_id, event, payload, status_code, success, error, attempt, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
-  ).run(webhookId, event, JSON.stringify(payload), result.statusCode, result.success ? 1 : 0, result.error, attempt);
+    `INSERT INTO webhook_deliveries
+      (webhook_id, event, payload, status_code, success, error, attempt, next_retry_at, final_failed_at, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+  ).run(
+    webhookId,
+    event,
+    JSON.stringify(payload),
+    result.statusCode,
+    result.success ? 1 : 0,
+    result.error,
+    attempt,
+    nextRetryAt?.toISOString() ?? null,
+    finalFailedAt?.toISOString() ?? null,
+  );
 }
 
 async function updateLastFired(webhookId: number, statusCode: number | null): Promise<void> {
@@ -374,4 +399,77 @@ async function updateLastFired(webhookId: number, statusCode: number | null): Pr
     return;
   }
   db.prepare("UPDATE webhooks SET last_status = ?, last_fired_at = datetime('now') WHERE id = ?").run(statusCode, webhookId);
+}
+
+function parseDeliveryPayload(payload: unknown): Record<string, unknown> {
+  if (typeof payload === "string") {
+    try {
+      const parsed = JSON.parse(payload);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Record<string, unknown> : {};
+    } catch {
+      return {};
+    }
+  }
+  return payload && typeof payload === "object" && !Array.isArray(payload) ? payload as Record<string, unknown> : {};
+}
+
+async function markDeliveryRetryConsumed(deliveryId: number, finalFailedAt: Date | null = null): Promise<void> {
+  if (shouldUsePrisma) {
+    await prisma.webhookDelivery.update({
+      where: { id: BigInt(deliveryId) },
+      data: { nextRetryAt: null, finalFailedAt },
+    });
+    return;
+  }
+
+  db.prepare("UPDATE webhook_deliveries SET next_retry_at = NULL, final_failed_at = ? WHERE id = ?")
+    .run(finalFailedAt?.toISOString() ?? null, deliveryId);
+}
+
+export async function retryFailedDeliveries(limit = 25): Promise<{ processed: number; succeeded: number; failed: number }> {
+  const now = new Date();
+  const dueDeliveries = shouldUsePrisma
+    ? await prisma.webhookDelivery.findMany({
+        where: {
+          success: false,
+          nextRetryAt: { lte: now },
+          finalFailedAt: null,
+          webhook: { active: true },
+        },
+        include: { webhook: true },
+        orderBy: { nextRetryAt: "asc" },
+        take: limit,
+      })
+    : (db.prepare(
+        `SELECT d.*, w.url, w.secret
+         FROM webhook_deliveries d
+         JOIN webhooks w ON w.id = d.webhook_id
+         WHERE d.success = 0
+           AND d.next_retry_at IS NOT NULL
+           AND datetime(d.next_retry_at) <= datetime(?)
+           AND d.final_failed_at IS NULL
+           AND w.active = 1
+         ORDER BY datetime(d.next_retry_at) ASC
+         LIMIT ?`,
+      ).all(now.toISOString(), limit) as any[]);
+
+  let succeeded = 0;
+  let failed = 0;
+
+  for (const delivery of dueDeliveries as any[]) {
+    const webhook = delivery.webhook ?? delivery;
+    const attempt = Number(delivery.attempt ?? 1) + 1;
+    const payload = parseDeliveryPayload(delivery.payload);
+    const result = await deliverOnce(webhook.url, webhook.secret, delivery.event, payload);
+    const retryState = buildRetryState(result, attempt, now);
+
+    await markDeliveryRetryConsumed(Number(delivery.id));
+    await logDelivery(Number(delivery.webhookId ?? delivery.webhook_id), delivery.event, payload, result, attempt, retryState.nextRetryAt, retryState.finalFailedAt);
+    await updateLastFired(Number(delivery.webhookId ?? delivery.webhook_id), result.statusCode);
+
+    if (result.success) succeeded += 1;
+    else failed += 1;
+  }
+
+  return { processed: dueDeliveries.length, succeeded, failed };
 }

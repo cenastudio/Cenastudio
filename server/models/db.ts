@@ -110,6 +110,18 @@ function ensureSubscriptionColumns() {
   }
 }
 
+function ensureWebhookDeliveryColumns() {
+  const deliveryCols = (db.prepare("PRAGMA table_info(webhook_deliveries)").all() as { name: string }[]).map(
+    (c) => c.name,
+  );
+  if (!deliveryCols.includes("next_retry_at")) {
+    db.prepare("ALTER TABLE webhook_deliveries ADD COLUMN next_retry_at TEXT").run();
+  }
+  if (!deliveryCols.includes("final_failed_at")) {
+    db.prepare("ALTER TABLE webhook_deliveries ADD COLUMN final_failed_at TEXT").run();
+  }
+}
+
 function ensureProjectColumns() {
   const genCols = (db.prepare("PRAGMA table_info(generations)").all() as { name: string }[]).map(
     (c) => c.name,
@@ -458,6 +470,7 @@ function createIndexes() {
     "CREATE INDEX IF NOT EXISTS idx_user_sessions_token_hash ON user_sessions(token_hash)",
     "CREATE INDEX IF NOT EXISTS idx_webhooks_user_id ON webhooks(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_webhook_id ON webhook_deliveries(webhook_id)",
+    "CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_next_retry_at ON webhook_deliveries(next_retry_at)",
     "CREATE INDEX IF NOT EXISTS idx_budgets_user_id ON budgets(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_budget_entries_budget_id ON budget_entries(budget_id)",
     "CREATE INDEX IF NOT EXISTS idx_equipment_user_id ON equipment(user_id)",
@@ -782,6 +795,8 @@ export async function initDatabase() {
       success INTEGER DEFAULT 0,
       error TEXT,
       attempt INTEGER DEFAULT 1,
+      next_retry_at TEXT,
+      final_failed_at TEXT,
       created_at TEXT DEFAULT (datetime('now'))
     );
 
@@ -958,6 +973,7 @@ export async function initDatabase() {
 
   ensureUserColumns();
   ensureSubscriptionColumns();
+  ensureWebhookDeliveryColumns();
   ensureProjectColumns();
   ensureClientColumns();
   ensureFileColumns();

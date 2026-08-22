@@ -2,6 +2,7 @@ import "dotenv/config";
 import { createServer } from "http";
 import { createApp } from "./app.js";
 import { startSessionCleanupJob } from "./jobs/sessionCleanupJob.js";
+import { startWebhookRetryJob } from "./jobs/webhookRetryJob.js";
 import { logger } from "./utils/logger.js";
 
 // Force rebuild: 2026-07-04 15:25 - Fix getWidgetData deployed
@@ -18,5 +19,6 @@ if (process.env.NODE_ENV !== "production" || !process.env.VERCEL) {
     logger.info({ port }, "Server started");
   });
   startSessionCleanupJob();
+  startWebhookRetryJob();
 }
 // Force rebuild Tue Jul  7 01:25:06 -03 2026
