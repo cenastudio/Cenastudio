@@ -128,8 +128,23 @@ describe("commercialProposalService", () => {
     await createOrUpdateDraftFromBudget(1, { projectId: 7 });
 
     expect(prismaMock.proposal.findFirst).toHaveBeenCalledWith(expect.objectContaining({
-      where: expect.objectContaining({ status: "draft" }),
+      where: expect.objectContaining({ userId: 1n, sourceBudgetId: 9n, status: "draft" }),
     }));
+  });
+
+  it("requires the AI generation to belong to the same studio and project", async () => {
+    prismaMock.generation.findFirst.mockResolvedValue(null);
+
+    await expect(createOrUpdateDraftFromBudget(1, {
+      projectId: 7,
+      sourceGenerationId: 33,
+    })).rejects.toMatchObject({ status: 404 });
+
+    expect(prismaMock.generation.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 33n, userId: 1n, projectId: 7n },
+    }));
+    expect(prismaMock.proposal.create).not.toHaveBeenCalled();
+    expect(prismaMock.proposal.update).not.toHaveBeenCalled();
   });
 
   it("records the persisted AI generation as escaped commercial narrative", async () => {

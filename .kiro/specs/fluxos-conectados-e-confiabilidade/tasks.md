@@ -59,8 +59,8 @@ reproduzir contra Postgres/Supabase exige janela controlada e não foi executado
 
 - [x] P1A.1 Registrar ADR: orçamento interno e proposta comercial são entidades
   vinculadas, não uma só entidade.
-- [ ] P1A.2 Criar migration aditiva e backfill idempotente para origem/snapshot.
-- [ ] P1A.3 Criar testes de migração, ownership e imutabilidade de proposta
+- [x] P1A.2 Criar migration aditiva e backfill idempotente para origem/snapshot.
+- [x] P1A.3 Criar testes de migração, ownership e imutabilidade de proposta
   enviada/aceita.
 - [x] P1A.4 Implementar serviço transacional: orçamento IA → rascunho de
   proposta vinculado.

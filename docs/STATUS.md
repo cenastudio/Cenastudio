@@ -254,6 +254,15 @@ outro cliente. O teste reproduzível sem segredos está em
 `scripts/verify-portal-isolation.sql`. Só o E2E P1B.4.3 permanece aberto, sem
 usar o Railway legado local.
 
+**P1A.2/P1A.3 concluídas localmente:** a migration
+`20260822013000_link_proposals_to_budget` está coberta por teste de contrato:
+as novas colunas são opcionais, constraints e índices são idempotentes, e
+propostas públicas antigas não são reescritas nem inferidas a partir de HTML.
+O serviço comercial também reforça ownership por estúdio/projeto para geração
+IA, busca rascunho apenas por `userId + sourceBudgetId + status=draft` e não
+trata proposta enviada/aceita como mutável. Isso valida o desenho; aplicar a
+migration em Supabase segue como ação operacional separada.
+
 **P1C.A / P1C.3 auditadas:** Produção já tem entradas diárias claras para Jobs,
 Estúdio IA e Aprovações, mas Arquivos, Documentos, Equipamento, Timesheet,
 Equipe e Webhooks ainda competem no menu secundário. A Conta já cobre perfil,
