@@ -26,6 +26,8 @@ import {
   Users,
   FileSignature,
   Activity,
+  TrendingUp,
+  Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getStageForTool, getWorkflowStage } from "@/lib/workflow";
@@ -56,6 +58,20 @@ interface ProjectMetadata {
   };
 }
 
+interface DashboardFinanceSummary {
+  receivedMonth: number;
+  expensesMonth: number;
+  profitMonth: number;
+  toReceive: number;
+  overdueReceivables: number;
+  weightedPipeline: number;
+  openPipeline: number;
+}
+
+interface DashboardFinancePulse {
+  summary: DashboardFinanceSummary;
+}
+
 export const getMetadata = (p: Project): ProjectMetadata => {
   try {
     return JSON.parse(p.metadataJson || "{}");
@@ -70,6 +86,13 @@ const formatDate = (value?: string, locale = "pt-BR") => {
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleDateString(locale, { day: "2-digit", month: "short" });
 };
+
+const formatCurrency = (value: number, locale = "pt-BR") =>
+  new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0,
+  }).format(value / 100);
 
 function getGreeting(locale = "pt"): string {
   const hour = new Date().getHours();
@@ -101,6 +124,9 @@ function DashboardContent() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+  const [financePulse, setFinancePulse] = useState<DashboardFinancePulse | null>(null);
+  const [isFinancePulseLoading, setIsFinancePulseLoading] = useState(true);
+  const [financePulseFailed, setFinancePulseFailed] = useState(false);
 
   // Onboarding States
   const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
@@ -171,6 +197,18 @@ function DashboardContent() {
       .then((data) => setActivities(data || []))
       .catch(() => {})
       .finally(() => setIsActivitiesLoading(false));
+
+    fetch("/api/analytics/finance", { credentials: "include" })
+      .then((response) => response.json())
+      .then((payload) => {
+        if (payload?.success && payload.data?.summary) {
+          setFinancePulse(payload.data);
+        } else {
+          setFinancePulseFailed(true);
+        }
+      })
+      .catch(() => setFinancePulseFailed(true))
+      .finally(() => setIsFinancePulseLoading(false));
   }, []);
 
   // Derived data — team members only see assigned projects
@@ -254,6 +292,33 @@ function DashboardContent() {
     nextStep ? `${locale === "en" ? "next" : "próximo"}: ${nextStep}` : null,
     deadlineStr ? `${locale === "en" ? "due" : "prazo"}: ${deadlineStr}` : null,
   ].filter(Boolean);
+
+  const financeSummary = financePulse?.summary;
+  const financeLocale = locale === "en" ? "en-US" : "pt-BR";
+  const dashboardFinanceItems = financeSummary
+    ? [
+        {
+          label: locale === "en" ? "Cash this month" : "Caixa do mês",
+          value: formatCurrency(financeSummary.profitMonth, financeLocale),
+          detail: `${formatCurrency(financeSummary.receivedMonth, financeLocale)} ${locale === "en" ? "in" : "entrada"} · ${formatCurrency(financeSummary.expensesMonth, financeLocale)} ${locale === "en" ? "out" : "saída"}`,
+          tone: financeSummary.profitMonth >= 0 ? "text-green-400" : "text-red-400",
+        },
+        {
+          label: locale === "en" ? "Receivables" : "A receber",
+          value: formatCurrency(financeSummary.toReceive, financeLocale),
+          detail: financeSummary.overdueReceivables > 0
+            ? `${formatCurrency(financeSummary.overdueReceivables, financeLocale)} ${locale === "en" ? "overdue" : "vencido"}`
+            : locale === "en" ? "No overdue receivables" : "Sem vencidos",
+          tone: financeSummary.overdueReceivables > 0 ? "text-red-400" : "text-frame-orange",
+        },
+        {
+          label: locale === "en" ? "Weighted pipeline" : "Pipeline ponderado",
+          value: formatCurrency(financeSummary.weightedPipeline, financeLocale),
+          detail: `${formatCurrency(financeSummary.openPipeline, financeLocale)} ${locale === "en" ? "in negotiation" : "em negociação"}`,
+          tone: "text-frame-white",
+        },
+      ]
+    : [];
 
   // Seleciona (ou desmarca) um template e pré-preenche os campos do formulário
   // usando os dados de briefing/roteiro já definidos em PROJECT_TEMPLATES.
@@ -409,6 +474,73 @@ function DashboardContent() {
             </div>
           </div>
         </header>
+
+        {/* ─── P2.4: PULSO FINANCEIRO COM FONTE REAL ─── */}
+        <section className="animate-stagger-1 border border-frame-gray-3/70 bg-frame-gray-1/20 p-4 sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08]">
+                <Wallet className="h-4 w-4 text-frame-orange" />
+              </div>
+              <div>
+                <p className="font-frame-mono text-[0.56rem] uppercase tracking-[0.18em] text-frame-orange">
+                  {locale === "en" ? "Finance pulse" : "Pulso financeiro"}
+                </p>
+                <p className="mt-1 text-[0.74rem] leading-relaxed text-frame-gray-light">
+                  {locale === "en"
+                    ? "Cash, receivables and forecast from real finance records."
+                    : "Caixa, recebíveis e previsão vindos dos lançamentos reais."}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setLocation("/analytics")}
+              className="frame-btn-ghost flex min-h-11 items-center justify-center gap-2 px-3 py-2"
+            >
+              {locale === "en" ? "Open finance" : "Abrir financeiro"}
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          {isFinancePulseLoading ? (
+            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+              {[0, 1, 2].map((item) => (
+                <div key={item} className="min-h-[92px] animate-pulse border border-frame-gray-3/50 p-3">
+                  <div className="h-3 w-24 rounded bg-frame-gray-3" />
+                  <div className="mt-3 h-6 w-28 rounded bg-frame-gray-3" />
+                  <div className="mt-2 h-3 w-32 rounded bg-frame-gray-2" />
+                </div>
+              ))}
+            </div>
+          ) : financePulseFailed || !financeSummary ? (
+            <div className="mt-4 flex min-h-11 items-center gap-2 border border-frame-gray-3/60 px-3 py-2 text-[0.74rem] text-frame-gray-light">
+              <TrendingUp className="h-3.5 w-3.5 text-frame-orange" />
+              {locale === "en"
+                ? "Finance pulse is unavailable right now. The full dashboard remains accessible."
+                : "Pulso financeiro indisponível agora. O Financeiro completo continua acessível."}
+            </div>
+          ) : (
+            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+              {dashboardFinanceItems.map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => setLocation("/analytics")}
+                  className="group min-h-[92px] border border-frame-gray-3/60 p-3 text-left transition hover:border-frame-orange/50 hover:bg-frame-orange/[0.04]"
+                >
+                  <span className="block font-frame-mono text-[0.54rem] uppercase tracking-[0.14em] text-frame-gray-light">
+                    {item.label}
+                  </span>
+                  <strong className={`mt-2 block text-lg leading-tight ${item.tone}`}>{item.value}</strong>
+                  <span className="mt-1 block text-[0.64rem] leading-relaxed text-frame-gray-light">
+                    {item.detail}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
 
         {/* ─── JOB EM FOCO ─── */}
         {isProjectsLoading ? (

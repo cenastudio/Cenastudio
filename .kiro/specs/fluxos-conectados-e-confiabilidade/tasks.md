@@ -115,7 +115,18 @@ reproduzir contra Postgres/Supabase exige janela controlada e não foi executado
 - [x] P2.1 Propor dashboard com métricas cuja fonte exista no banco.
 - [x] P2.2 Propor financeiro por fases: caixa, recebíveis e resultado por projeto.
 - [x] P2.3 Trocar nomenclatura de faixa e adicionar ajuda contextual PT/EN.
-- [ ] P2.4 Implementar somente blocos P2 aprovados.
+- [x] P2.4 Implementar somente blocos P2 aprovados.
+
+**P2.4 concluída em 2026-08-22:** o Painel recebeu um bloco compacto de Pulso
+financeiro usando somente `/api/analytics/finance`: caixa do mês, a receber e
+pipeline ponderado. A implementação não cria migration, não transforma proposta
+aceita em caixa e não altera o Financeiro completo. O bloco tem estado de
+loading, fallback discreto quando a API falha e CTA para `/analytics`.
+
+**Evidência P2.4:** `npm run test -- client/src/test/appImport.test.ts
+client/src/test/translations.test.ts`, `npm run check`, `npm run build` e
+`npx playwright test tests/e2e/launch.spec.ts -g "critical authenticated app
+screens" --project=chromium-desktop --project=chromium-mobile` passaram.
 
 **P2.1/P2.2 concluídas em 2026-08-22:** `design.md` agora define o dashboard
 somente com fontes existentes (`financial_entries`, `opportunities`,

@@ -328,6 +328,14 @@ por projeto via `financial_entries.projectId`, `budgets`, `budget_entries` e
 `dre_settings`. Limite importante registrado: proposta aceita não vira caixa
 automaticamente, e lançamentos financeiros ainda não têm `currency`.
 
+**P2.4 concluída:** o Painel agora mostra um Pulso financeiro compacto usando
+somente `/api/analytics/finance`: caixa do mês, recebíveis pendentes/vencidos e
+pipeline ponderado. O bloco não depende de migration, não interpreta proposta
+aceita como caixa e leva para `/analytics` para operação detalhada. Validação:
+`appImport` + traduções passaram, `npm run check` passou, `npm run build`
+passou, e o E2E `critical authenticated app screens` passou em desktop e
+mobile.
+
 **Concluídas (`-OK`):** `00-fundacao-limpeza-e-documentacao`,
 `client-hub-connected-workflows`, `dre-por-projeto`,
 `fase-1-testes-uso-real`, `fase-2-layout-mobile-e-tabs`,

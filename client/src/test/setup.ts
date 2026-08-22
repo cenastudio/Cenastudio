@@ -190,6 +190,10 @@ vi.mock('@/lib/api', () => ({
       update: vi.fn(),
       remove: vi.fn(),
     },
+    demo: {
+      check: vi.fn().mockResolvedValue({ exists: false, project: null }),
+      create: vi.fn(),
+    },
     projectMembers: {
       list: vi.fn(),
       add: vi.fn(),
