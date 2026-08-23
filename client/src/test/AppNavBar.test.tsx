@@ -9,7 +9,7 @@ import { ProjectProvider } from '@/contexts/ProjectContext';
 import { api } from '@/lib/api';
 
 /**
- * AppNavBar - 4 Tab Navigation
+ * AppNavBar - Operational Journey Navigation
  *
  * Covers the current job-story navigation: Painel → Comercial → Produção →
  * Financeiro. This replaces the previous 5-tab (HOME/CLIENTS/JOBS/STUDIO/
@@ -65,7 +65,7 @@ const AllProviders = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-describe('AppNavBar - 4 Tab Navigation', () => {
+describe('AppNavBar - Operational Journey Navigation', () => {
   beforeEach(() => {
     mockSetLocation.mockClear();
     mockLocation = '/dashboard';
@@ -74,7 +74,7 @@ describe('AppNavBar - 4 Tab Navigation', () => {
   });
 
   describe('Desktop Navigation', () => {
-    it('should render exactly 4 navigation tabs', () => {
+    it('should render the full operational journey in navigation', () => {
       render(
         <AllProviders>
           <AppNavBar />
@@ -84,10 +84,10 @@ describe('AppNavBar - 4 Tab Navigation', () => {
       const nav = screen.getAllByRole('navigation')[0];
       const navButtons = within(nav).getAllByRole('button');
 
-      expect(navButtons).toHaveLength(4);
+      expect(navButtons).toHaveLength(7);
     });
 
-    it('should render tabs in job-story order: PAINEL, COMERCIAL, PRODUÇÃO, FINANCEIRO', () => {
+    it('should render tabs in operational order', () => {
       render(
         <AllProviders>
           <AppNavBar />
@@ -99,8 +99,11 @@ describe('AppNavBar - 4 Tab Navigation', () => {
 
       expect(navButtons[0]).toHaveTextContent('PAINEL');
       expect(navButtons[1]).toHaveTextContent('COMERCIAL');
-      expect(navButtons[2]).toHaveTextContent('PRODUÇÃO');
-      expect(navButtons[3]).toHaveTextContent('FINANCEIRO');
+      expect(navButtons[2]).toHaveTextContent('PROJETOS');
+      expect(navButtons[3]).toHaveTextContent('PRODUÇÃO');
+      expect(navButtons[4]).toHaveTextContent('APROVAÇÃO');
+      expect(navButtons[5]).toHaveTextContent('ENTREGA');
+      expect(navButtons[6]).toHaveTextContent('FINANCEIRO');
     });
 
     it('should have data-tour attributes matching each tab', () => {
@@ -116,7 +119,10 @@ describe('AppNavBar - 4 Tab Navigation', () => {
       expect(navButtons[0]).toHaveAttribute('data-tour', 'dashboard');
       expect(navButtons[1]).toHaveAttribute('data-tour', 'clients');
       expect(navButtons[2]).toHaveAttribute('data-tour', 'projects');
-      expect(navButtons[3]).toHaveAttribute('data-tour', 'analytics');
+      expect(navButtons[3]).toHaveAttribute('data-tour', 'production');
+      expect(navButtons[4]).toHaveAttribute('data-tour', 'reviews');
+      expect(navButtons[5]).toHaveAttribute('data-tour', 'files');
+      expect(navButtons[6]).toHaveAttribute('data-tour', 'analytics');
     });
 
     it('should highlight PAINEL as active when on /dashboard', () => {
@@ -147,7 +153,7 @@ describe('AppNavBar - 4 Tab Navigation', () => {
       expect(commercialButton).toHaveClass('active');
     });
 
-    it('should highlight PRODUÇÃO as active when on /projects', () => {
+    it('should highlight PROJETOS as active when on /projects', () => {
       mockLocation = '/projects';
       render(
         <AllProviders>
@@ -170,7 +176,7 @@ describe('AppNavBar - 4 Tab Navigation', () => {
       );
 
       const nav = screen.getAllByRole('navigation')[0];
-      const productionButton = within(nav).getAllByRole('button')[2];
+      const productionButton = within(nav).getAllByRole('button')[3];
 
       expect(productionButton).toHaveClass('active');
     });
@@ -184,7 +190,7 @@ describe('AppNavBar - 4 Tab Navigation', () => {
       );
 
       const nav = screen.getAllByRole('navigation')[0];
-      const financeButton = within(nav).getAllByRole('button')[3];
+      const financeButton = within(nav).getAllByRole('button')[6];
 
       expect(financeButton).toHaveClass('active');
     });
@@ -225,6 +231,15 @@ describe('AppNavBar - 4 Tab Navigation', () => {
       expect(mockSetLocation).toHaveBeenCalledWith('/projects');
 
       fireEvent.click(navButtons[3]);
+      expect(mockSetLocation).toHaveBeenCalledWith('/tools');
+
+      fireEvent.click(navButtons[4]);
+      expect(mockSetLocation).toHaveBeenCalledWith('/video-reviews');
+
+      fireEvent.click(navButtons[5]);
+      expect(mockSetLocation).toHaveBeenCalledWith('/files-unified');
+
+      fireEvent.click(navButtons[6]);
       expect(mockSetLocation).toHaveBeenCalledWith('/analytics');
     });
   });
@@ -256,10 +271,12 @@ describe('AppNavBar - 4 Tab Navigation', () => {
       const nav = await screen.findByRole('navigation');
       const navButtons = within(nav).getAllByRole('button');
 
-      // Only PAINEL and PRODUÇÃO remain for team members.
-      expect(navButtons).toHaveLength(2);
+      expect(navButtons).toHaveLength(5);
       expect(navButtons[0]).toHaveTextContent('PAINEL');
-      expect(navButtons[1]).toHaveTextContent('PRODUÇÃO');
+      expect(navButtons[1]).toHaveTextContent('PROJETOS');
+      expect(navButtons[2]).toHaveTextContent('PRODUÇÃO');
+      expect(navButtons[3]).toHaveTextContent('APROVAÇÃO');
+      expect(navButtons[4]).toHaveTextContent('ENTREGA');
     });
   });
 

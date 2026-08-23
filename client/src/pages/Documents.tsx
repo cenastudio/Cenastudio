@@ -5,6 +5,11 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AnimatedModal from "@/components/AnimatedModal";
 import ProjectNav from "@/components/ProjectNav";
 import ProductionNav from "@/components/ProductionNav";
+import {
+  NextActionsPanel,
+  OperationMap,
+  type DiscoveryAction,
+} from "@/components/discovery/DiscoverySystem";
 import { api } from "@/lib/api";
 import {
   CalendarDays,
@@ -770,6 +775,31 @@ function DocumentsContent() {
           </div>
         </header>
 
+        <OperationMap current="production" />
+
+        <NextActionsPanel
+          actions={[
+            {
+              id: "choose-type",
+              label: "Escolher tipo de documento",
+              description: `${selectedDoc.label}: ${selectedDoc.description}`,
+              href: "#document-type-mobile",
+            },
+            {
+              id: "fill-context",
+              label: "Completar contexto",
+              description: `${filledFields}/${activeFields.length} campos preenchidos`,
+              href: "#document-form",
+            },
+            {
+              id: "export",
+              label: "Salvar e exportar",
+              description: "Gerar PDF ou Word quando o preview estiver pronto",
+              href: "#document-preview",
+            },
+          ] satisfies DiscoveryAction[]}
+        />
+
         {/* ═══ DOC TYPE TABS ═══ */}
         <label htmlFor="document-type-mobile" className="sr-only">
           Tipo de documento
@@ -824,7 +854,7 @@ function DocumentsContent() {
         )}
 
         {/* ═══ SPLIT VIEW: Form (left) | Preview (right) ═══ */}
-        <div className="grid grid-cols-1 xl:grid-cols-[480px_minmax(0,1fr)] gap-5 items-start">
+        <div id="document-form" className="grid grid-cols-1 xl:grid-cols-[480px_minmax(0,1fr)] gap-5 items-start">
 
           {/* LEFT: Inline Form */}
           <aside className="space-y-3 xl:sticky xl:top-24 xl:max-h-[calc(100vh-120px)] xl:overflow-y-auto xl:pr-2 scrollbar-thin">
@@ -862,7 +892,7 @@ function DocumentsContent() {
 
           {/* RIGHT: Live Preview + History */}
           <div className="space-y-4">
-            <section className="border border-frame-gray-3 overflow-hidden bg-frame-gray-1/10">
+            <section id="document-preview" className="border border-frame-gray-3 overflow-hidden bg-frame-gray-1/10">
               <div className="flex items-center justify-between px-4 py-3 border-b border-frame-gray-3 bg-frame-gray-1/20">
                 <span className="font-frame-mono text-[0.58rem] uppercase tracking-[0.1em]" style={{ color: selectedDoc.accent }}>
                   Preview · {selectedDoc.label}

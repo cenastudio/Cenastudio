@@ -137,7 +137,7 @@ export default function FinalCTASection() {
             opacity: { delay: 0.7, duration: 3.2, repeat: Infinity, ease: "easeInOut" },
             scale: { delay: 0.7, duration: 3.2, repeat: Infinity, ease: "easeInOut" },
           }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full border border-frame-orange/20 pointer-events-none"
+          className="absolute top-1/2 left-1/2 h-[360px] w-[360px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-frame-orange/20 pointer-events-none sm:h-[600px] sm:w-[600px]"
         />
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
@@ -147,7 +147,7 @@ export default function FinalCTASection() {
             opacity: { delay: 0.9, duration: 3.6, repeat: Infinity, ease: "easeInOut" },
             scale: { delay: 0.9, duration: 3.6, repeat: Infinity, ease: "easeInOut" },
           }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full border border-frame-orange/10 pointer-events-none"
+          className="absolute top-1/2 left-1/2 h-[360px] w-[360px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-frame-orange/10 pointer-events-none sm:h-[800px] sm:w-[800px]"
         />
       </div>
     </section>

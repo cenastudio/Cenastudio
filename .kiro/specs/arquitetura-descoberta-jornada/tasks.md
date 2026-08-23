@@ -1,0 +1,30 @@
+# Tasks
+
+- [x] 1. Corrigir bugs e overflow encontrados na auditoria ampla.
+  - [x] 1.1 Corrigir fallback SQLite de `shot_types`.
+  - [x] 1.2 Corrigir fallback SQLite de reuniões do Portal.
+  - [x] 1.3 Corrigir storage stats no modo local.
+  - [x] 1.4 Corrigir overflow mobile em Jobs e Perfil.
+- [x] 2. Implementar camada de descoberta.
+  - [x] 2.1 Criar mapa operacional global.
+  - [x] 2.2 Criar catálogo visível de módulos.
+  - [x] 2.3 Criar próximas ações contextuais.
+- [x] 3. Redesenhar Dashboard e Project Hub.
+- [x] 4. Redesenhar Comercial e Cliente.
+- [x] 5. Redesenhar Documentos.
+- [x] 6. Redesenhar Portal.
+- [x] 7. Validar com testes, build e auditoria visual final.
+- [x] 8. Redesenhar visualmente as telas preservadas na primeira passada.
+  - [x] 8.1 Atualizar Landing, Login e Cadastro sem perder clareza original.
+  - [x] 8.2 Aplicar header operacional em Tools, Arquivos, Orçamento e Shot List.
+  - [x] 8.3 Aplicar header operacional em Timesheet, Financeiro, Equipamento, Perfil, Empresa, Equipe, Webhooks e Admin.
+  - [x] 8.4 Atualizar layout do Portal para guiar todas as subtelas.
+  - [x] 8.5 Corrigir overflow mobile em Arquivos e decoração da Landing.
+  - [x] 8.6 Revalidar com check, testes, build e 43 screenshots desktop/mobile.
+- [x] 9. Polimento final de direção de arte e QA visual humano.
+  - [x] 9.1 Redesenhar o miolo do Studio IA interno com workbench guiado.
+  - [x] 9.2 Reforçar jornada interna de Perfil e Admin.
+  - [x] 9.3 Lapidar upload/lista de Arquivos e estados de foco.
+  - [x] 9.4 Reforçar hierarquia visual das subtelas do Portal.
+  - [x] 9.5 Lapidar microcopy e estados de carregamento/foco em Portal/Auth.
+  - [x] 9.6 Revalidar com check, build e 44 screenshots desktop/mobile.

@@ -2,7 +2,7 @@ import { useLocation } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
 import BrandLogo from "@/components/BrandLogo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, BriefcaseBusiness, FolderKanban, PackageCheck, ShieldCheck } from "lucide-react";
 
 interface AuthLayoutProps {
   title: string;
@@ -17,6 +17,12 @@ export default function AuthLayout({ title, subtitle, children, mode, mobileInte
   const [, setLocation] = useLocation();
   const { t } = useLanguage();
   const brandClassName = mobileIntent ? "auth-mobile-brand is-static" : "auth-mobile-brand";
+  const accessStages = [
+    { label: t("app.auth.loginTab"), detail: t("app.auth.operationalAccess"), icon: ShieldCheck },
+    { label: "Comercial", detail: t("app.auth.accessItemProjects"), icon: BriefcaseBusiness },
+    { label: "Projeto", detail: t("app.auth.accessItemStudio"), icon: FolderKanban },
+    { label: "Entrega", detail: t("app.auth.accessItemDelivery"), icon: PackageCheck },
+  ];
 
   return (
     <div className="cena-auth cinematic-theme dark min-h-screen flex flex-col lg:flex-row text-frame-white">
@@ -40,6 +46,25 @@ export default function AuthLayout({ title, subtitle, children, mode, mobileInte
                 </div>
               )
             )}
+          </div>
+          <div className="mt-10 border border-frame-gray-3/60 bg-frame-black/35 p-4">
+            <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-orange">
+              Jornada depois do acesso
+            </p>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {accessStages.map(({ label, detail, icon: Icon }, index) => (
+                <div key={label} className="min-w-0 border border-frame-gray-3/60 bg-frame-gray-1/20 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-frame-mono text-[0.52rem] uppercase tracking-[0.14em] text-frame-gray-light">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <Icon className="h-3.5 w-3.5 shrink-0 text-frame-orange" aria-hidden="true" />
+                  </div>
+                  <strong className="mt-2 block truncate text-sm text-frame-white">{label}</strong>
+                  <span className="mt-1 block truncate text-[0.68rem] text-frame-gray-light">{detail}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -68,6 +93,16 @@ export default function AuthLayout({ title, subtitle, children, mode, mobileInte
         </div>
 
         <div className="auth-panel w-full max-w-[430px] p-6 sm:p-8">
+          <div className="mb-5 grid grid-cols-4 gap-1.5 lg:hidden" aria-hidden="true">
+            {accessStages.map(({ label }, index) => (
+              <div key={label} className="min-h-9 border border-frame-gray-3/60 bg-frame-gray-1/20 px-2 py-1.5">
+                <span className="block font-frame-mono text-[0.48rem] uppercase tracking-[0.1em] text-frame-orange">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <span className="block truncate text-[0.62rem] text-frame-gray-light">{label}</span>
+              </div>
+            ))}
+          </div>
           {mode && (
             <div className="auth-desktop-switch mb-8 hidden border border-frame-gray-3 bg-frame-gray-1/30 p-1 lg:flex">
               <button

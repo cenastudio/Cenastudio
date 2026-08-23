@@ -50,11 +50,11 @@ export function ResponsiveTabs({
       value={value}
       defaultValue={defaultValue ?? tabs[0]?.value}
       onValueChange={onValueChange}
-      className="gap-0"
+      className="min-w-0 max-w-full gap-0 overflow-hidden"
     >
       <TabsList
         className={[
-          "!min-h-11 !h-auto w-full justify-start overflow-x-auto scrollbar-none",
+          "!min-h-11 !h-auto w-full max-w-full justify-start overflow-x-auto scrollbar-none",
           "bg-transparent border-b border-frame-gray-3 rounded-none p-0 gap-0",
           listClassName ?? "",
         ]

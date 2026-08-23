@@ -379,28 +379,40 @@ function FilesContent({ embedded, initialProjectId }: FilesContentProps) {
       {!embedded && <AppNavBar />}
       {!embedded && (isProjectScoped && projectId ? <ProjectNav projectId={projectId} /> : <ProductionNav />)}
 
-      <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-6 py-10 space-y-8">
+      <main id="main-content" className={embedded ? "w-full min-w-0 space-y-8" : "flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-8 md:py-10 space-y-8"}>
         {/* Header com seletor de projeto */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
+        <div className={`flex min-w-0 flex-col justify-between gap-5 border border-frame-gray-3/70 bg-frame-gray-1/15 p-4 sm:p-5 md:flex-row md:items-center ${embedded ? "" : "md:p-6"}`}>
+          <div className="min-w-0">
             <p className="frame-label mb-2">// {t("app.files.projectMaterials")}</p>
-            <h1 className="frame-title text-[clamp(2.1rem,4vw,3.5rem)]">
+            <h1 className={`frame-title leading-none text-frame-white ${embedded ? "text-[clamp(1.65rem,4vw,2.6rem)]" : "text-[clamp(2.1rem,4vw,3.5rem)]"}`}>
               {currentProject ? currentProject.name : t("app.files.title")}
             </h1>
-            <p className="text-frame-gray-light text-sm mt-2">
+            <p className="text-frame-gray-light text-sm mt-3 max-w-2xl leading-relaxed">
               {currentProject
                 ? `${files.length} ${files.length === 1 ? t("app.files.organizedMaterial") : t("app.files.organizedMaterials")} ${t("app.files.inThisProject")}`
                 : t("app.files.subtitle")}
             </p>
+            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+              {[
+                { label: "Projeto", value: currentProject ? "Selecionado" : "Pendente" },
+                { label: "Materiais", value: files.length },
+                { label: "Portal", value: files.filter((file) => file.visible_in_client_portal).length },
+              ].map((item) => (
+                <div key={item.label} className="min-w-0 border border-frame-gray-3/60 bg-frame-black/25 px-3 py-2">
+                  <span className="block truncate font-frame-mono text-[0.5rem] uppercase tracking-[0.12em] text-frame-gray-light">{item.label}</span>
+                  <strong className="mt-1 block truncate text-sm text-frame-white">{item.value}</strong>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex w-full min-w-0 flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
             {!projectId ? (
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
                 <select
                   value=""
                   onChange={(e) => { const v = e.target.value; if (v) handleSelectProject(parseInt(v)); }}
-                  className="bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange min-w-[180px]"
+                  className="min-h-11 min-w-0 bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm focus-visible:border-frame-orange focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-frame-orange/30 sm:min-w-[180px]"
                 >
                   <option value="">{t("app.files.selectProject")}</option>
                   {projects.map((p) => (
@@ -409,17 +421,17 @@ function FilesContent({ embedded, initialProjectId }: FilesContentProps) {
                 </select>
                 <button
                   onClick={() => setShowNewProject(true)}
-                  className="frame-btn-ghost flex items-center gap-1.5 text-sm"
+                  className="frame-btn-ghost flex min-h-11 items-center justify-center gap-1.5 text-sm"
                 >
                   <Plus className="w-4 h-4" /> {t("app.common.new")}
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
                 <select
                   value={projectId}
                   onChange={(e) => { const v = e.target.value; if (v) handleSelectProject(parseInt(v)); }}
-                  className="bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm outline-none focus:border-frame-orange min-w-[180px]"
+                  className="min-h-11 min-w-0 bg-frame-gray-2 border border-frame-gray-3 px-3 py-2 text-sm focus-visible:border-frame-orange focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-frame-orange/30 sm:min-w-[180px]"
                 >
                   {projects.map((p) => (
                     <option key={p.id} value={p.id}>{p.name}</option>
@@ -445,7 +457,7 @@ function FilesContent({ embedded, initialProjectId }: FilesContentProps) {
                 setUploadTab("link");
                 setIsUploadOpen(true);
               }}
-              className="frame-btn-primary flex items-center gap-2"
+              className="frame-btn-primary flex min-h-11 items-center justify-center gap-2 sm:shrink-0"
             >
               <Upload className="w-4 h-4" />
               {t("app.common.add")}

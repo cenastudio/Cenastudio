@@ -5,9 +5,34 @@
 > de estado, edite a seção correspondente, não acrescente uma nova
 > no fim sem contexto. Data da última atualização no topo.
 
-**Última atualização:** 2026-08-22
+**Última atualização:** 2026-08-23
 
-> **Handoff desta sessão:** os commits `2aab029`, `fada13e`, `b396ce4` e
+> **Handoff desta sessão:** em 2026-08-23 foi concluída a frente
+> `.kiro/specs/arquitetura-descoberta-jornada/`: navegação principal em jornada
+> `Painel -> Comercial -> Projetos -> Produção -> Aprovação -> Entrega -> Financeiro`,
+> componente transversal `DiscoverySystem` com mapa operacional, próximas ações
+> e catálogo de módulos, redesenho de descoberta em Dashboard, Project Hub,
+> Comercial, Cliente, Documentos e Portal. Depois da crítica de que telas ainda
+> pareciam preservadas, a mesma frente recebeu uma Fase 2 visual tela por tela:
+> Landing, Login, Cadastro, Tools, Arquivos, Orçamento, Shot List, Timesheet,
+> Financeiro, Equipamento, Perfil, Empresa, Equipe, Webhooks, Admin e layout do
+> Portal ganharam uma camada operacional comum (`ScreenDesignPass` ou rail
+> equivalente), com etapa da jornada, métricas e ações da tela. Também foram
+> corrigidos fallbacks locais SQLite para `shot_types`, reuniões do Portal e
+> storage stats, além de overflows mobile em Projetos, Perfil, Project Hub,
+> Comercial, Documentos, Portal e Arquivos. Validação final:
+> `npm run test -- server/services/discoveryFallbacks.test.ts client/src/test/discovery-ux.test.tsx client/src/test/AppNavBar.test.tsx client/src/test/ProductionNav.test.tsx`,
+> `npm run check`, `npm run build` e auditoria Playwright com 43 screenshots em
+> `tmp/final-visual-redesign-audit-2026-08-23/`; resultado da auditoria:
+> 0 falhas HTTP, 0 erros de console, 0 overflow horizontal e 0 tela em
+> branco/overlay. A rodada final de direção de arte também redesenhou o miolo do
+> Studio IA, reforçou Perfil/Admin, lapidou Arquivos, Portal, Auth e microcopy,
+> corrigiu `/studio` para redirecionar a `/studio/01` e foi validada com
+> `npm run check`, `npm run build` e QA visual humano com 44 screenshots em
+> `tmp/final-human-design-qa-2026-08-23/`; resultado: 0 falhas HTTP,
+> 0 erros de console, 0 overflow horizontal e 0 tela em branco/overlay.
+>
+> **Handoff anterior:** os commits `2aab029`, `fada13e`, `b396ce4` e
 > `ef68cb5` consolidam proteção contra segredos, ciclo de e-mail da conta,
 > fechamento de specs verificadas e o lote de UX/mobile, onboarding, landing
 > e SEO. Validação realizada no estado final: `npm run check`, `npm run build`
@@ -187,14 +212,12 @@ verificar, está dito explicitamente.
   proposta/cancelar reunião remove o item do portal. Em 2026-08-22, a central
   do portal no cadastro do cliente foi ajustada para deixar ações operacionais
   explícitas: definir senha e ativar, enviar convite por link, redefinir senha,
-  copiar link de login e abrir as áreas que alimentam o portal. Próxima frente
-  recomendada: redesenhar Comercial como jornada guiada, não como abas isoladas.
-  Observação de aceite UX em 2026-08-22: o módulo de Equipamento/almoxarifado foi
-  aprovado visualmente pelo operador; Documentos não foi aprovado e deve voltar
-  para redesenho. O problema transversal continua sendo descoberta e condução de
-  tarefa: Comercial e áreas conectadas precisam contar a jornada operacional
-  Cliente → oportunidade → proposta → aprovação → portal → financeiro, em vez de
-  depender de abas e ferramentas escondidas.
+  copiar link de login e abrir as áreas que alimentam o portal. Em 2026-08-23,
+  a frente `arquitetura-descoberta-jornada` redesenhou Comercial, Cliente,
+  Documentos, Portal, Dashboard e Project Hub como jornada guiada, com próximas
+  ações antes de listas secundárias e catálogo visível de módulos. O aceite
+  visual anterior de Equipamento/almoxarifado foi preservado; a revisão desta
+  frente ficou registrada por screenshots e auditoria Playwright local.
 - **Project Templates:** presets no frontend (`PROJECT_TEMPLATES` em
   `Dashboard.tsx`, `lib/studioContext.ts`, `components/studio/ToolWorkspace.tsx`).
   Sem entidade persistida nem rota.
@@ -521,7 +544,7 @@ passou, e o E2E `critical authenticated app screens` passou em desktop e
 mobile.
 
 **Concluídas (`-OK`):** `00-fundacao-limpeza-e-documentacao`,
-`client-hub-connected-workflows`, `dre-por-projeto`,
+`arquitetura-descoberta-jornada`, `client-hub-connected-workflows`, `dre-por-projeto`,
 `fase-1-testes-uso-real`, `fase-2-layout-mobile-e-tabs`,
 `landing-features-implementation`, `onboarding-primeiro-fluxo`,
 `portal-do-cliente` e `team-task-delegation`.

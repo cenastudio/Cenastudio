@@ -1,5 +1,6 @@
 import AppNavBar from "@/components/AppNavBar";
 import ProductionNav from "@/components/ProductionNav";
+import { ScreenDesignPass } from "@/components/discovery/ScreenDesignPass";
 import { api } from "@/lib/api";
 import { getToolIcon } from "@/lib/toolIcons";
 import { localizeTools } from "@/lib/toolTranslations";
@@ -11,6 +12,7 @@ import type { ToolFromApi } from "@/lib/api";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getStageForTool, WORKFLOW_STAGES } from "@/lib/workflow";
+import { Sparkles } from "lucide-react";
 
 const TOOL_FOCUS: Record<string, { phase: string; outcome: string; critical?: boolean }> = {
   briefing: { phase: "01 Descoberta", outcome: "Base para roteiro, proposta e contrato.", critical: true },
@@ -52,27 +54,27 @@ function ToolsContent({ embedded }: { embedded?: boolean }) {
       {!embedded && <AppNavBar />}
       {!embedded && <ProductionNav />}
 
-      <section className="px-4 sm:px-6 md:px-12 py-10 md:py-16">
-        <div className="mb-8 grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px] xl:items-end">
-          <div>
-            <p className="frame-label mb-3">// {t("app.tools.allTools")}</p>
-            <h1 className="frame-title text-[clamp(2.3rem,4.3vw,3.8rem)] text-frame-white">
-              ORGANIZE O JOB <em className="not-italic text-transparent [-webkit-text-stroke:1px_var(--ds-hero-stroke)]">COM IA</em>
-            </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-frame-gray-light">
-              {t("app.tools.pageDescription") as string}
-            </p>
-            <div className={`mt-5 border p-3 ${activeProject ? "border-frame-orange/35 bg-frame-orange/[0.06]" : "border-frame-gray-3 bg-frame-gray-1/20"}`}>
-              <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-orange">
-                {activeProject ? "Modo projeto ativo" : "Biblioteca sem job ativo"}
-              </p>
-              <p className="mt-1 text-xs leading-relaxed text-frame-gray-light">
-                {activeProject
-                  ? `As ferramentas abrem dentro de "${activeProject.name}" para salvar histórico, contexto e versões no job.`
-                  : "Escolha uma ferramenta para trabalhar solto ou abra um projeto para conectar IA, documentos e histórico."}
-              </p>
-            </div>
-          </div>
+      <section className="px-3 sm:px-6 md:px-12 py-8 md:py-12">
+        <div className="mb-8 space-y-5">
+          <ScreenDesignPass
+            eyebrow={`// ${t("app.tools.allTools")}`}
+            title="IA entra no momento certo do job."
+            description={t("app.tools.pageDescription") as string}
+            icon={Sparkles}
+            currentStage="Produção"
+            metrics={[
+              { label: "Ferramentas", value: localizedTools.length, detail: activeProject ? "neste projeto" : "biblioteca" },
+              { label: "Capítulos", value: WORKFLOW_STAGES.length, detail: "por etapa" },
+              { label: "Contexto", value: activeProject ? "Ativo" : "Solto", detail: activeProject?.name || "sem job" },
+              { label: "Críticas", value: Object.values(TOOL_FOCUS).filter((focus) => focus.critical).length, detail: "comerciais" },
+            ]}
+            actions={[
+              { label: activeProject ? "Abrir jornada do job" : "Ver capítulos", detail: "Escolher pelo momento", href: activeProject ? `/project/${activeProject.id}/journey/discovery` : "#discovery" },
+              { label: "Orçamento", detail: "Transformar briefing em custo", href: activeProject ? `/project/${activeProject.id}/budget` : "#commercial" },
+              { label: "Entrega", detail: "Fechar pacote e aceite", href: "#delivery" },
+            ]}
+            onNavigate={setLocation}
+          />
 
           <div className="border border-frame-orange/30 bg-frame-orange/5 p-4">
             <p className="font-frame-mono text-[0.6rem] uppercase tracking-[0.16em] text-frame-orange">Escolha pelo momento do job</p>

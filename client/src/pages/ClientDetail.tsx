@@ -15,6 +15,11 @@ import { api } from "@/lib/api";
 import ScheduleMeetingModal from "@/components/ScheduleMeetingModal";
 import ClientPortalAccessSection from "@/components/ClientPortalAccessSection";
 import EmptyState from "@/components/EmptyState";
+import {
+  NextActionsPanel,
+  OperationMap,
+  type DiscoveryAction,
+} from "@/components/discovery/DiscoverySystem";
 
 interface ClientData {
   id: number;
@@ -376,9 +381,49 @@ function ClientDetailContent() {
           </div>
         </div>
 
+        <OperationMap current={projects.length > 0 ? "project" : "commercial"} />
+
+        <NextActionsPanel
+          actions={[
+            projects.length === 0
+              ? {
+                  id: "new-project",
+                  label: "Criar primeiro job",
+                  description: "Transformar este cliente em operação ativa",
+                  href: `/dashboard?newProject=1&clientId=${clientId}`,
+                }
+              : {
+                  id: "open-project",
+                  label: "Abrir projeto mais recente",
+                  description: projects[0]?.name || "Continuar produção",
+                  href: `/project/${projects[0]?.id}`,
+                },
+            proposals.length === 0
+              ? {
+                  id: "proposal",
+                  label: "Preparar proposta",
+                  description: "Registrar valor, escopo e aceite",
+                  href: `/proposals?clientId=${clientId}`,
+                }
+              : {
+                  id: "proposal",
+                  label: "Revisar propostas",
+                  description: `${proposals.length} proposta${proposals.length === 1 ? "" : "s"} no relacionamento`,
+                  href: `/proposals?clientId=${clientId}`,
+                },
+            {
+              id: "interaction",
+              label: "Registrar próximo contato",
+              description: "Manter histórico comercial visível",
+              href: `/interactions?new=1&clientId=${clientId}`,
+            },
+          ] satisfies DiscoveryAction[]}
+          onNavigate={setLocation}
+        />
+
         {/* Quick Actions Grid */}
         <div>
-          <h2 className="font-frame-mono text-[0.65rem] uppercase tracking-wider text-frame-orange mb-4">Ações Rápidas</h2>
+          <h2 className="font-frame-mono text-[0.65rem] uppercase tracking-wider text-frame-orange mb-4">Ações do relacionamento</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             <button onClick={() => setLocation(`/dashboard?newProject=1&clientId=${clientId}`)} className="frame-btn-primary flex flex-col items-center gap-2 py-4 text-center">
               <FileText className="w-5 h-5" />

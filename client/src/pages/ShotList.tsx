@@ -5,6 +5,7 @@ import EmptyState from "@/components/EmptyState";
 import ProjectNav from "@/components/ProjectNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
+import { ScreenDesignPass } from "@/components/discovery/ScreenDesignPass";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { usePlanContext } from "@/contexts/PlanContext";
 import { api, type EquipmentItem, type ShotItem, type ShotStoryboardFrameItem } from "@/lib/api";
@@ -1039,48 +1040,25 @@ function ShotListContent() {
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body">
       <AppNavBar />
       <ProjectNav projectId={projectId} />
-      <main id="main-content" className="px-4 sm:px-6 py-5 sm:py-6 max-w-[1200px] mx-auto space-y-6">
-        <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-frame-gray-3 pb-4">
-          <div>
-            <p className="frame-label mb-1">{t("app.shotlist.eyebrow")}</p>
-            <h1 className="frame-title text-[clamp(1.5rem,3vw,2.2rem)] leading-none">{t("app.shotlist.title")}</h1>
-            <p className="text-xs text-frame-gray-light mt-2 max-w-lg leading-relaxed">
-              {t("app.shotlist.description")}
-            </p>
-          </div>
-          <div className="flex w-full flex-wrap items-center gap-2 self-start sm:w-auto lg:shrink-0">
-            {shots.length > 0 && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => printShotList(shots, projectId, t)}
-                  className="frame-btn-ghost inline-flex flex-1 items-center justify-center gap-2 sm:flex-none"
-                >
-                  <Printer className="w-4 h-4" />
-                  {t("app.shotlist.export")}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleExportPdf}
-                  className="frame-btn-ghost inline-flex flex-1 items-center justify-center gap-2 sm:flex-none"
-                >
-                  <FileText className="w-4 h-4" />
-                  Exportar PDF
-                </button>
-              </>
-            )}
-            <button
-              type="button"
-              onClick={openCreateDialog}
-              className="frame-btn-primary inline-flex flex-1 items-center justify-center gap-2 sm:flex-none"
-              disabled={isAtLimit}
-              title={isAtLimit ? `Limite de ${shotLimit} shots atingido` : undefined}
-            >
-              <Plus className="w-4 h-4" />
-              {t("app.shotlist.addShot")}
-            </button>
-          </div>
-        </header>
+      <main id="main-content" className="px-3 sm:px-6 py-5 sm:py-6 max-w-[1200px] mx-auto space-y-6">
+        <ScreenDesignPass
+          eyebrow={t("app.shotlist.eyebrow")}
+          title={t("app.shotlist.title")}
+          description={t("app.shotlist.description")}
+          icon={Clapperboard}
+          currentStage="Produção"
+          metrics={[
+            { label: "Planos", value: shotCount, detail: shotLimit === -1 ? "ilimitado" : `de ${shotLimit}` },
+            { label: "Cenas", value: shotGroups.length, detail: "agrupadas" },
+            { label: "Duração", value: formatDuration(totalDurationSec(shots)), detail: "estimada" },
+            { label: "Tipos", value: loadingTypes ? "..." : shotTypes.length, detail: "shot types" },
+          ]}
+          actions={[
+            { label: t("app.shotlist.addShot"), detail: isAtLimit ? `Limite de ${shotLimit}` : "Novo plano", onClick: openCreateDialog },
+            ...(shots.length > 0 ? [{ label: t("app.shotlist.export"), detail: "Versão de set", onClick: () => printShotList(shots, projectId, t) }] : []),
+            ...(shots.length > 0 ? [{ label: "Exportar PDF", detail: "Documento compartilhável", onClick: handleExportPdf }] : []),
+          ]}
+        />
 
         {/* Shot Limit Banner */}
         {isNearLimit && (

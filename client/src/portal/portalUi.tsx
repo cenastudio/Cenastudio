@@ -12,16 +12,30 @@ export function PortalPageHeader({
   action?: ReactNode;
 }) {
   return (
-    <section className="border-b border-frame-gray-3 pb-6 mb-6">
-      <p className="frame-label mb-2">// {eyebrow}</p>
-      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+    <section className="mb-6 border border-frame-gray-3/70 bg-frame-gray-1/15 p-4 sm:p-5">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0">
-          <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-frame-white">{title}</h1>
+          <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-orange">// {eyebrow}</p>
+          <h1 className="mt-2 frame-title text-[clamp(1.75rem,4vw,3.2rem)] leading-none text-frame-white text-balance">{title}</h1>
           {description && (
-            <p className="text-sm text-frame-gray-light mt-2 max-w-2xl leading-relaxed">{description}</p>
+            <p className="text-sm text-frame-gray-light mt-3 max-w-2xl leading-relaxed text-pretty">{description}</p>
           )}
         </div>
-        {action}
+        <div className="flex flex-col gap-3 lg:items-end">
+          <div className="grid grid-cols-3 gap-2 sm:w-[360px]">
+            {[
+              ["01", "Projeto"],
+              ["02", "Aprovar"],
+              ["03", "Baixar"],
+            ].map(([number, label]) => (
+              <div key={number} className="min-w-0 border border-frame-gray-3/60 bg-frame-black/25 px-3 py-2">
+                <span className="block font-frame-mono text-[0.5rem] uppercase tracking-[0.12em] text-frame-orange">{number}</span>
+                <span className="mt-1 block truncate text-xs font-semibold text-frame-white">{label}</span>
+              </div>
+            ))}
+          </div>
+          {action}
+        </div>
       </div>
     </section>
   );

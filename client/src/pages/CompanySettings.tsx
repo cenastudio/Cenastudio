@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ScreenDesignPass } from "@/components/discovery/ScreenDesignPass";
 import { api } from "@/lib/api";
 import { DEFAULT_STUDIO_SETTINGS, readStudioSettings, saveStudioSettings, type StudioSettings } from "@/lib/studioSettings";
 import {
@@ -192,39 +193,26 @@ function CompanySettingsContent() {
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
       <AppNavBar />
 
-      <main id="main-content" className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-10 md:py-14 space-y-8">
+      <main id="main-content" className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 py-8 md:py-12 space-y-8">
 
-        {/* ─── HERO ─── */}
-        <header className="relative overflow-hidden pb-8 border-b border-frame-gray-3/50">
-          <div className="absolute top-0 right-0 w-72 h-72 rounded-full blur-3xl opacity-[0.08] pointer-events-none"
-            style={{ background: color }} />
-          <div className="relative">
-            <p className="font-frame-mono text-[0.56rem] uppercase tracking-[0.22em] text-frame-orange mb-2">
-              // {t("app.company.eyebrow")}
-            </p>
-            <h1 className="frame-title text-[clamp(2rem,4vw,3rem)] text-frame-white leading-tight">
-              {t("app.company.title")} <span className="text-frame-orange">{t("app.company.titleHighlight")}</span>
-            </h1>
-            <p className="text-frame-gray-light text-sm mt-3 max-w-lg leading-relaxed">
-              {t("app.company.subtitle")}
-            </p>
-          </div>
-
-          {/* Steps de impacto */}
-          <div className="relative flex flex-wrap gap-2 mt-5">
-            {[
-              { icon: FileSignature, label: t("app.company.impactProposals") },
-              { icon: FileText, label: t("app.company.impactContracts") },
-              { icon: Receipt, label: t("app.company.impactReceipts") },
-              { icon: ShieldCheck, label: t("app.company.impactStudioAi") },
-            ].map(({ icon: Icon, label }) => (
-              <div key={label} className="flex items-center gap-1.5 border border-frame-orange/20 bg-frame-orange/[0.05] px-3 py-1.5 rounded-lg">
-                <Icon className="w-3 h-3 text-frame-orange" />
-                <span className="font-frame-mono text-[0.58rem] uppercase tracking-wider text-frame-gray-light">{label}</span>
-              </div>
-            ))}
-          </div>
-        </header>
+        <ScreenDesignPass
+          eyebrow={`// ${t("app.company.eyebrow")}`}
+          title={`${t("app.company.title")} ${t("app.company.titleHighlight")}`}
+          description={t("app.company.subtitle") as string}
+          icon={Building2}
+          currentStage="Projeto"
+          metrics={[
+            { label: "Estúdio", value: settings.studioName || "Pendente", detail: settings.legalName || "razão social" },
+            { label: "Marca", value: hasCustomBranding ? "Ativa" : "Limitada", detail: color },
+            { label: "Contato", value: settings.email ? "OK" : "Falta", detail: settings.phone || "WhatsApp" },
+            { label: "Salvar", value: isDirty ? "Pendente" : "OK", detail: isDirty ? "alterações locais" : "sincronizado" },
+          ]}
+          actions={[
+            { label: "Identidade", detail: "Nome, logo e dados legais", href: "#company-identity" },
+            { label: "Documentos", detail: "Propostas, contratos e recibos", href: "#company-documents" },
+            { label: saving ? "Salvando..." : "Salvar alterações", detail: isDirty ? "Publicar padrão do estúdio" : "Sem pendências", onClick: handleSave },
+          ]}
+        />
 
         {/* ─── LAYOUT 2 COLUNAS ─── */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8 items-start">
@@ -233,7 +221,7 @@ function CompanySettingsContent() {
           <div className="space-y-6">
 
             {/* Identidade */}
-            <div className="liquid-glass p-6 space-y-5">
+            <div id="company-identity" className="liquid-glass p-6 space-y-5">
               <div className="flex items-center gap-3 pb-4 border-b border-frame-gray-3/50">
                 <div className="w-9 h-9 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg">
                   <Building2 className="w-4 h-4 text-frame-orange" />
@@ -269,7 +257,7 @@ function CompanySettingsContent() {
             </div>
 
             {/* Contato */}
-            <div className="liquid-glass p-6 space-y-5">
+            <div id="company-documents" className="liquid-glass p-6 space-y-5">
               <div className="flex items-center gap-3 pb-4 border-b border-frame-gray-3/50">
                 <div className="w-9 h-9 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg">
                   <Phone className="w-4 h-4 text-frame-orange" />

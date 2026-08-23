@@ -841,6 +841,40 @@ cancelamento. Aceite de proposta por si só não cria lançamento financeiro.
 
 ---
 
+### ADR-016: Descoberta operacional como camada transversal
+
+**Status:** Aceito
+**Data:** 2026-08-23
+**Contexto:** A landing explicava a promessa do Cena melhor que o app. Dentro do
+produto, módulos como Comercial, Produção, Documentos e Portal existiam, mas a
+jornada ficava escondida em abas, atalhos, comando global ou memória do usuário.
+Isso deixava telas funcionais com sensação de blocos isolados.
+
+**Decisão:** A navegação e as telas operacionais devem expor a jornada
+`Comercial -> Projeto -> Produção -> Aprovação -> Entrega -> Financeiro`.
+Essa camada é transversal e composta por três peças reutilizáveis:
+
+- mapa operacional visível;
+- próximas ações contextuais antes de listas secundárias;
+- catálogo de módulos agrupado pelo momento do trabalho.
+
+Dashboard, Project Hub, Comercial, Cliente, Documentos e Portal passam a usar
+essa lógica antes de painéis densos. A navegação principal deixa de ser só
+quatro áreas amplas e mostra também Projeto, Aprovação e Entrega.
+
+**Consequências:**
+
+- Positivas: o app conta a mesma promessa da landing dentro do fluxo real;
+  usuários descobrem módulos sem depender de "Mais" ou busca; mobile ganha
+  etapas claras antes de blocos longos.
+- Negativas: mais itens no topo exigem disciplina de hierarquia visual e testes
+  de overflow a cada mudança de navegação.
+
+**Revisão:** reavaliar depois da próxima auditoria de uso real se o catálogo
+deve virar uma superfície persistente global ou continuar contextual por tela.
+
+---
+
 ## 🎨 Padrões de Design
 
 ### Controller Pattern
@@ -1025,4 +1059,4 @@ export function useDebounce<T>(value: T, delay: number): T {
 
 ---
 
-**Última atualização:** 14 de julho de 2026
+**Última atualização:** 23 de agosto de 2026

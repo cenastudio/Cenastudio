@@ -25,7 +25,7 @@ export default function PortalMeetings() {
         description="Veja os proximos encontros, alinhamentos e historico de conversas vinculadas ao seu projeto."
       />
 
-      {meetings === null && <p className="text-frame-gray-light">Carregando...</p>}
+      {meetings === null && <p className="text-frame-gray-light">Carregando…</p>}
       {meetings?.length === 0 && (
         <PortalEmptyState
           title="Nenhuma reuniao agendada."

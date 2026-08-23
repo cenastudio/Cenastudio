@@ -4,6 +4,7 @@ import EmptyState from "@/components/EmptyState";
 import ProductionNav from "@/components/ProductionNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
+import { ScreenDesignPass } from "@/components/discovery/ScreenDesignPass";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTimer } from "@/contexts/TimerContext";
@@ -271,37 +272,24 @@ function TimesheetContent() {
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body">
       <AppNavBar />
       <ProductionNav />
-      <main id="main-content" className="px-4 sm:px-6 py-5 sm:py-6 max-w-[1200px] mx-auto space-y-6">
-        <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-frame-gray-3 pb-4">
-          <div>
-            <p className="frame-label mb-1">// Produção</p>
-            <h1 className="frame-title text-[clamp(1.5rem,3vw,2.2rem)] leading-none">Timesheet</h1>
-            <p className="text-xs text-frame-gray-light mt-2 max-w-lg leading-relaxed">
-              Cronometre horas trabalhadas por projeto e calcule o custo real com base na taxa horária.
-              Use a calculadora de preço para estimar quanto cobrar antes de aceitar um trabalho.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 shrink-0 self-start">
-            <button
-              type="button"
-              onClick={() => setCalculatorOpen(true)}
-              className="frame-btn-ghost inline-flex items-center gap-2"
-            >
-              <Calculator className="w-4 h-4" />
-              Calculadora de preço
-            </button>
-            {!running && (
-              <button
-                type="button"
-                onClick={() => setManualOpen(true)}
-                className="frame-btn-ghost inline-flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Registro manual
-              </button>
-            )}
-          </div>
-        </header>
+      <main id="main-content" className="px-3 sm:px-6 py-5 sm:py-6 max-w-[1200px] mx-auto space-y-6">
+        <ScreenDesignPass
+          eyebrow="// Produção"
+          title="Horas viram custo real."
+          description="Cronometre trabalho por job, estime preço antes de aceitar escopo e envie horas fechadas para o orçamento sem perder contexto."
+          icon={Clock}
+          currentStage="Produção"
+          metrics={[
+            { label: "Total de horas", value: formatDuration(totals.totalDurationSec), detail: entries.length ? `${entries.length} registros` : "sem registros" },
+            { label: "Custo total", value: formatCurrency(totals.totalCost), detail: "com taxa/hora" },
+            { label: "Timer", value: running ? "Ativo" : "Livre", detail: running ? formatDuration(elapsed) : "pronto para iniciar" },
+            { label: "Projetos", value: projects.length, detail: "disponíveis" },
+          ]}
+          actions={[
+            { label: "Calcular preço", detail: "Simular diária, margem e pacote", onClick: () => setCalculatorOpen(true) },
+            ...(!running ? [{ label: "Registro manual", detail: "Adicionar horas já executadas", onClick: () => setManualOpen(true) }] : []),
+          ]}
+        />
 
         {/* Timer widget */}
         <div className="border border-frame-orange/40 bg-frame-orange/[0.06] p-5">

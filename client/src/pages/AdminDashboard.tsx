@@ -8,6 +8,7 @@ import {
 import AppNavBar from "@/components/AppNavBar";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AnimatedModal from "@/components/AnimatedModal";
+import { ScreenDesignPass } from "@/components/discovery/ScreenDesignPass";
 import { TabsContent } from "@/components/ui/tabs";
 import { ResponsiveTabs } from "@/components/ui/responsive-tabs";
 import {
@@ -348,24 +349,79 @@ export function AdminContent() {
     }
   };
 
+  const adminTabGuidance = {
+    overview: {
+      label: "Comando",
+      title: "Priorize risco, receita e acesso antes de mexer em listas.",
+      description: "A visão geral agora separa saúde da operação, atividade recente e ações administrativas de alto impacto.",
+      icon: ShieldCheck,
+    },
+    users: {
+      label: "Acessos",
+      title: "Usuários precisam ser geridos por risco e plano.",
+      description: "Busca, plano, papel e ação destrutiva aparecem na mesma linha, com confirmação forte antes de excluir.",
+      icon: Users,
+    },
+    tools: {
+      label: "Ferramentas",
+      title: "Ative módulos sabendo o que fica visível para a operação.",
+      description: "Cada ferramenta é um interruptor de capacidade; o estado deve ser claro antes de expor ao usuário.",
+      icon: Wrench,
+    },
+    referrals: {
+      label: "Crescimento",
+      title: "Indicações mostram aquisição com rastro de recompensa.",
+      description: "Resumo e lista ficam juntos para separar volume, conversão e pagamento de benefício.",
+      icon: Gift,
+    },
+    lgpd: {
+      label: "LGPD",
+      title: "Solicitações legais precisam de fila explícita.",
+      description: "Cada protocolo mostra tipo, status e ação; rejeições exigem confirmação porque têm impacto jurídico.",
+      icon: FileCheck,
+    },
+    "ai-usage": {
+      label: "Consumo IA",
+      title: "Uso de IA precisa mostrar concentração antes de custo.",
+      description: "Ferramentas e usuários mais ativos indicam onde otimizar limites, prompts e planos.",
+      icon: Bot,
+    },
+    audit: {
+      label: "Auditoria",
+      title: "Toda ação sensível deve deixar rastro legível.",
+      description: "Logs administrativos mostram autor, alvo, detalhe e horário sem misturar com operação comum.",
+      icon: AlertTriangle,
+    },
+  } as const;
+  const adminGuidance = adminTabGuidance[activeTab as keyof typeof adminTabGuidance] ?? adminTabGuidance.overview;
+  const AdminGuidanceIcon = adminGuidance.icon;
+
   // ═══════════════════════════════════════════════════════════════════════
   // RENDER
   // ═══════════════════════════════════════════════════════════════════════
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
       <AppNavBar />
-      <main id="main-content" className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 flex-1">
-        {/* Hero header */}
+      <main id="main-content" className="max-w-7xl w-full mx-auto px-3 sm:px-6 py-6 sm:py-10 flex-1">
         <div className="mb-6">
-          <p className="font-frame-mono text-[0.64rem] tracking-[0.18em] uppercase text-adaptive-primary mb-1">
-            // {t("app.admin.adminTitle")}
-          </p>
-          <h1 className="frame-title text-2xl sm:text-3xl text-frame-white">
-            {t("app.admin.administration")}
-          </h1>
-          <p className="text-frame-gray-light text-sm mt-1">
-            {t("app.admin.adminSubtitle")}
-          </p>
+          <ScreenDesignPass
+            eyebrow={`// ${t("app.admin.adminTitle")}`}
+            title="Administração com fila de risco."
+            description={t("app.admin.adminSubtitle") as string}
+            icon={ShieldCheck}
+            currentStage="Financeiro"
+            metrics={[
+              { label: "Usuários", value: users.length, detail: `${users.filter((item) => item.role === "admin").length} admins` },
+              { label: "Ferramentas", value: tools.length, detail: `${tools.filter((item) => item.isActive).length} ativas` },
+              { label: "Pagantes", value: metrics ? String(metrics.paidActive ?? 0) : "—", detail: "assinaturas ativas" },
+              { label: "Alertas", value: lgpdRequests.length + auditLog.length, detail: "logs e LGPD" },
+            ]}
+            actions={[
+              { label: "Criar usuário", detail: "Liberar acesso e plano", onClick: () => setCreateOpen(true) },
+              { label: "Ver auditoria", detail: "Ações administrativas", onClick: () => setActiveTab("audit") },
+              { label: "Uso de IA", detail: "Consumo por ferramenta", onClick: () => setActiveTab("ai-usage") },
+            ]}
+          />
         </div>
 
         {/* Tabs */}
@@ -382,9 +438,35 @@ export function AdminContent() {
           value={activeTab}
           onValueChange={setActiveTab}
         >
+          <section className="mt-6 border border-frame-gray-3/70 bg-frame-gray-1/15 p-4 sm:p-5">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-frame-orange/35 bg-frame-orange/[0.08]">
+                  <AdminGuidanceIcon className="h-5 w-5 text-frame-orange" aria-hidden="true" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-orange">{adminGuidance.label}</p>
+                  <h2 className="mt-1 text-xl font-semibold leading-tight text-frame-white text-balance">{adminGuidance.title}</h2>
+                  <p className="mt-2 max-w-3xl text-sm leading-relaxed text-frame-gray-light text-pretty">{adminGuidance.description}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2 md:w-[360px]">
+                {[
+                  { label: "Risco", value: lgpdRequests.length + auditLog.length },
+                  { label: "Acesso", value: users.length },
+                  { label: "IA", value: aiUsage?.last7d ?? "—" },
+                ].map((item) => (
+                  <div key={item.label} className="min-w-0 border border-frame-gray-3/60 bg-frame-black/25 p-2">
+                    <span className="block truncate font-frame-mono text-[0.5rem] uppercase tracking-[0.12em] text-frame-gray-light">{item.label}</span>
+                    <strong className="mt-1 block truncate text-lg leading-none text-frame-white">{item.value}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
 
           {/* ═══ TAB: OVERVIEW ═══ */}
-          <TabsContent value="overview" className="mt-6">
+          <TabsContent value="overview" className="mt-5">
             {/* Stat cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-7">
               {[
@@ -1187,7 +1269,7 @@ export function AdminContent() {
               {t("app.common.cancel")}
             </button>
             <button type="button" onClick={sendBroadcast} disabled={broadcastSending} className="frame-btn-primary disabled:opacity-60">
-              {broadcastSending ? "Enviando..." : "Enviar aviso"}
+              {broadcastSending ? "Enviando…" : "Enviar aviso"}
             </button>
           </>
         }
@@ -1207,7 +1289,7 @@ export function AdminContent() {
             <textarea
               value={broadcastForm.message}
               onChange={(e) => setBroadcastForm({ ...broadcastForm, message: e.target.value })}
-              placeholder="Escreva o aviso..."
+              placeholder="Escreva o aviso…"
               className="frame-input w-full min-h-[100px]"
             />
           </div>

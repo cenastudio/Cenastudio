@@ -194,7 +194,7 @@ function ProjectsContent({ embedded }: { embedded?: boolean }) {
             action={{ label: t("app.projects.newJob"), onClick: () => setLocation("/dashboard?newProject=1") }}
           />
         ) : (
-          <section className={viewMode === "grid" ? "grid gap-4 md:grid-cols-2 xl:grid-cols-3" : "space-y-3"}>
+          <section className={viewMode === "grid" ? "grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3" : "min-w-0 space-y-3"}>
             {sortedProjects.map((project) => {
               const meta = getMetadata(project.metadataJson);
               const deadline = meta.deadline;
@@ -214,12 +214,12 @@ function ProjectsContent({ embedded }: { embedded?: boolean }) {
                     boxShadow: "0 4px 20px rgba(255, 107, 0, 0.12)"
                   }}
                   transition={{ duration: 0.2 }}
-                  className={`w-full group border border-frame-gray-3 bg-frame-gray-1/10 p-5 text-left hover:border-frame-orange/50 hover:bg-frame-orange/[0.02] ${viewMode === "grid" ? "min-h-[220px]" : ""}`}
+                  className={`w-full min-w-0 group border border-frame-gray-3 bg-frame-gray-1/10 p-5 text-left hover:border-frame-orange/50 hover:bg-frame-orange/[0.02] ${viewMode === "grid" ? "min-h-[220px]" : ""}`}
                 >
-                  <div className={viewMode === "grid" ? "flex h-full flex-col justify-between gap-6" : "flex flex-col sm:flex-row sm:items-center justify-between gap-4"}>
+                  <div className={viewMode === "grid" ? "flex h-full min-w-0 flex-col justify-between gap-6" : "flex min-w-0 flex-col sm:flex-row sm:items-center justify-between gap-4"}>
                     {/* Left: info */}
                     <div className="min-w-0 flex-1 space-y-1.5">
-                      <div className="flex items-center gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
                         <motion.h2
                           className="text-lg font-semibold text-frame-white group-hover:text-frame-orange transition truncate"
                           whileHover={{ x: 2 }}

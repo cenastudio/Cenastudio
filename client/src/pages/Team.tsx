@@ -13,6 +13,7 @@ import AppNavBar from "@/components/AppNavBar";
 import ProductionNav from "@/components/ProductionNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import EmptyState from "@/components/EmptyState";
+import { ScreenDesignPass } from "@/components/discovery/ScreenDesignPass";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { api } from "@/lib/api";
@@ -174,39 +175,28 @@ function TeamContent() {
       <AppNavBar />
       <ProductionNav />
 
-      <main id="main-content" className="flex-1 max-w-4xl w-full mx-auto px-6 py-12 md:py-16 space-y-10">
-
-        {/* Header */}
-        <div className="border-b border-frame-gray-3/60 pb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <div>
-            <p className="frame-label mb-2">{t("app.team.eyebrow") as string}</p>
-            <h1 className="frame-title text-[clamp(2rem,4vw,3.2rem)]">
-              {locale === "en" ? <>Studio <em className="not-italic text-transparent [-webkit-text-stroke:1px_rgba(245,240,232,0.85)]">Team</em></> : <>Equipe do <em className="not-italic text-transparent [-webkit-text-stroke:1px_rgba(245,240,232,0.85)]">Estúdio</em></>}
-            </h1>
-            <p className="text-frame-gray-light text-sm mt-2 max-w-xl">
-              {t("app.team.description") as string}
-            </p>
-          </div>
-
-          {isStudio && canAddMore ? (
-            <button type="button" onClick={openCreate} className="frame-btn-primary flex items-center gap-2 shrink-0">
-              <UserPlus className="w-4 h-4" />
-              {t("app.team.newMember") as string}
-            </button>
-          ) : isStudio && !canAddMore ? (
-            <div className="text-xs font-frame-mono text-amber-400 border border-amber-400/20 bg-amber-400/[0.06] px-3 py-2 flex items-center gap-2">
-              <AlertCircle className="w-3.5 h-3.5" />
-              {(t("app.team.memberLimitReached") as string).replace("{max}", String(MAX_MEMBERS))}
-            </div>
-          ) : (
-            <div className="text-xs font-frame-mono text-frame-gray-light border border-frame-gray-3 px-3 py-2">
-              {t("app.team.availableOnStudio") as string}
-            </div>
-          )}
-        </div>
+      <main id="main-content" className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 py-8 md:py-12 space-y-8">
+        <ScreenDesignPass
+          eyebrow={t("app.team.eyebrow") as string}
+          title={locale === "en" ? "Crew Access By Role." : "Equipe com papel claro."}
+          description={t("app.team.description") as string}
+          icon={Users}
+          currentStage="Produção"
+          metrics={[
+            { label: "Ativos", value: activeCount, detail: `de ${MAX_MEMBERS}` },
+            { label: "Plano", value: isStudio ? "Studio" : "Bloqueado", detail: isStudio ? "assentos liberados" : "upgrade necessário" },
+            { label: "Produtores", value: members.filter((m) => m.role === "producer").length, detail: "gestão" },
+            { label: "Edição", value: members.filter((m) => m.role === "editor").length, detail: "produção" },
+          ]}
+          actions={[
+            ...(isStudio && canAddMore ? [{ label: t("app.team.newMember") as string, detail: "Criar acesso com senha temporária", onClick: openCreate }] : []),
+            ...(isStudio && !canAddMore ? [{ label: "Limite atingido", detail: (t("app.team.memberLimitReached") as string).replace("{max}", String(MAX_MEMBERS)), href: "#team-members" }] : []),
+            ...(!isStudio ? [{ label: t("app.team.availableOnStudio") as string, detail: "Plano Studio necessário", href: "#team-plan" }] : []),
+          ]}
+        />
 
         {/* Plan info + count */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div id="team-plan" className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <div className="glow-card p-4">
             <Users className="w-4 h-4 text-frame-orange mb-2" />
             <p className="font-frame-mono text-[0.6rem] uppercase tracking-[0.14em] text-frame-gray-light">{t("app.team.activeMembers") as string}</p>
@@ -225,6 +215,7 @@ function TeamContent() {
         </div>
 
         {/* Members list */}
+        <div id="team-members" className="space-y-4">
         {loading ? (
           <div className="liquid-glass p-10 text-center">
             <Loader2 className="w-6 h-6 animate-spin text-frame-orange mx-auto" />
@@ -307,6 +298,7 @@ function TeamContent() {
             ))}
           </div>
         )}
+        </div>
       </main>
 
       {/* CREATE MODAL */}

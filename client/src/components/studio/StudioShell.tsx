@@ -9,7 +9,7 @@ import ToolWorkspace from "./ToolWorkspace";
 import OutputPanel from "./OutputPanel";
 import HistoryPanel from "./HistoryPanel";
 import AppNavBar from "../AppNavBar";
-import { Loader2, ChevronLeft } from "lucide-react";
+import { Loader2, ChevronLeft, Bot, ClipboardList, FileCheck2, FolderKanban, Sparkles } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ProjectTimeline from "./ProjectTimeline";
@@ -372,7 +372,96 @@ export default function StudioShell() {
         </button>
 
         {/* Studio Shell Body Container */}
-        <div className="studio-main flex-1 flex flex-col md:flex-row relative lg:overflow-hidden">
+        <div className="studio-main flex-1 flex flex-col relative lg:overflow-hidden">
+          {tool.slug !== "assistente" && (
+            <section className="shrink-0 border-b border-frame-gray-3/70 bg-frame-gray-1/15 px-3 py-4 sm:px-5 lg:px-6">
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.72fr)] xl:items-end">
+                <div className="min-w-0">
+                  <div className="mb-3 flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-frame-orange/35 bg-frame-orange/[0.08]">
+                      <Bot className="h-5 w-5 text-frame-orange" aria-hidden="true" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-orange">
+                        Studio IA / Produção
+                      </p>
+                      <p className="mt-0.5 truncate text-xs text-frame-gray-light">
+                        {activeProject ? activeProject.name : "Biblioteca sem projeto ativo"}
+                      </p>
+                    </div>
+                  </div>
+                  <h1 className="frame-title max-w-4xl text-[clamp(1.75rem,3vw,2.75rem)] leading-none text-frame-white text-balance">
+                    {tool.name} vira artefato do job.
+                  </h1>
+                  <p className="mt-3 max-w-3xl text-sm leading-relaxed text-frame-gray-light text-pretty">
+                    Preencha o essencial, aplique o contexto conectado e gere uma versão que pode seguir para revisão, proposta ou entrega.
+                  </p>
+                </div>
+
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {[
+                    {
+                      label: "Contexto",
+                      value: linkedContext ? "Conectado" : "Manual",
+                      detail: linkedContext?.sourceLabel || activeProject?.clientName || "sem vínculo",
+                      icon: FolderKanban,
+                    },
+                    {
+                      label: "Campos",
+                      value: linkedContext ? countFillableFields(formData, linkedContext.prefill) : visibleFormValues(formData).length,
+                      detail: linkedContext ? "preenchíveis" : "preenchidos",
+                      icon: ClipboardList,
+                    },
+                    {
+                      label: "Artefato",
+                      value: getArtifactStatus(formData),
+                      detail: `v${getArtifactVersion(formData)}`,
+                      icon: FileCheck2,
+                    },
+                  ].map(({ label, value, detail, icon: Icon }) => (
+                    <div key={label} className="min-w-0 border border-frame-gray-3/60 bg-frame-black/25 p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-frame-mono text-[0.52rem] uppercase tracking-[0.14em] text-frame-gray-light">{label}</span>
+                        <Icon className="h-3.5 w-3.5 shrink-0 text-frame-orange" aria-hidden="true" />
+                      </div>
+                      <strong className="mt-2 block truncate text-lg leading-none text-frame-white">{value}</strong>
+                      <span className="mt-1 block truncate text-[0.65rem] text-frame-gray-light">{detail}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                <button
+                  type="button"
+                  onClick={handleApplyLinkedContext}
+                  disabled={!linkedContext}
+                  className="flex min-h-12 min-w-0 items-center justify-center gap-2 border border-frame-gray-3/70 bg-frame-black/30 px-3 text-sm font-semibold text-frame-white transition hover:border-frame-orange/60 disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  <Sparkles className="h-4 w-4 shrink-0 text-frame-orange" aria-hidden="true" />
+                  <span className="truncate">Aplicar contexto</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWorkspaceCollapsed(false)}
+                  className="flex min-h-12 min-w-0 items-center justify-center gap-2 border border-frame-gray-3/70 bg-frame-black/30 px-3 text-sm font-semibold text-frame-white transition hover:border-frame-orange/60"
+                >
+                  <ClipboardList className="h-4 w-4 shrink-0 text-frame-orange" aria-hidden="true" />
+                  <span className="truncate">Editar entrada</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHistoryOpen(true)}
+                  className="flex min-h-12 min-w-0 items-center justify-center gap-2 border border-frame-gray-3/70 bg-frame-black/30 px-3 text-sm font-semibold text-frame-white transition hover:border-frame-orange/60"
+                >
+                  <FileCheck2 className="h-4 w-4 shrink-0 text-frame-orange" aria-hidden="true" />
+                  <span className="truncate">Ver versões</span>
+                </button>
+              </div>
+            </section>
+          )}
+
+          <div className="flex flex-1 flex-col md:flex-row lg:overflow-hidden">
           {tool.slug === "assistente" ? (
             <AssistantChatWorkspace tool={tool} projectId={activeProject?.id} />
           ) : (
@@ -499,6 +588,7 @@ export default function StudioShell() {
             </>
           )}
 
+          </div>
         </div>
       </div>
     </div>

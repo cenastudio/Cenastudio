@@ -5,6 +5,12 @@ import ProjectNav from "@/components/ProjectNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ProjectTasksPanel from "@/components/ProjectTasksPanel";
 import ProjectTimeSummary from "@/components/timesheet/ProjectTimeSummary";
+import {
+  ModuleCatalog,
+  NextActionsPanel,
+  OperationMap,
+  type DiscoveryModule,
+} from "@/components/discovery/DiscoverySystem";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Film,
@@ -336,6 +342,17 @@ function ProjectHubContent() {
   const progress = Math.round((completedSteps.length / stageStates.length) * 100);
   const nextStep = stageStates.find((stage) => !stage.complete) || stageStates[stageStates.length - 1];
   const nextAction = nextStep.actions.find((action) => !isActionComplete(action, populatedStates)) || nextStep.actions[0];
+  const hubModules: DiscoveryModule[] = [
+    ...QUICK_TOOLS.map((tool) => ({
+      id: tool.id,
+      label: t(tool.nameKey) as string,
+      description: t(tool.hintKey) as string,
+      href: tool.id === "__docs" ? `/project/${projectId}/documents` : `/project/${projectId}/studio/${tool.slug}`,
+      group: "Produção",
+    })),
+    { id: "files", label: t("app.hub.recentFiles") as string, description: "Materiais do job", href: `/project/${projectId}/files`, group: "Entrega" },
+    { id: "reviews", label: t("app.hub.approvals") as string, description: "Revisões e aprovações", href: `/project/${projectId}/video-reviews`, group: "Aprovação" },
+  ];
   const createdAt = project.createdAt || project.created_at;
   const updatedAt = project.updatedAt || project.updated_at;
   const pendingReviews = recentReviews.filter((review) => review.status !== "approved").length;
@@ -347,7 +364,7 @@ function ProjectHubContent() {
       <AppNavBar />
       <ProjectNav projectId={projectId} />
 
-      <main id="main-content" className="max-w-7xl w-full mx-auto px-4 md:px-6 py-6 flex-1 space-y-6">
+      <main id="main-content" className="max-w-7xl w-full mx-auto px-3 sm:px-4 md:px-6 py-6 flex-1 space-y-6">
 
         {/* ═══ HERO: Identity of this job ═══ */}
         <section className="space-y-4">
@@ -554,28 +571,34 @@ function ProjectHubContent() {
           </div>
         </section>
 
-        {/* ═══ NEXT ACTION: What to do NOW ═══ */}
-        <section className="border border-frame-orange/40 bg-frame-orange/[0.04] p-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="min-w-0">
-              <p className="font-frame-mono text-[0.58rem] tracking-[0.14em] uppercase text-adaptive-primary mb-1">
-                <span>{t("app.hub.nextStep")}</span> <span>{nextStep.label}</span>
-              </p>
-              <h2 className="text-lg font-semibold text-frame-white">{nextAction.label}</h2>
-              <p className="text-sm text-frame-gray-light mt-1 leading-relaxed max-w-lg">
-                {nextAction.description}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setLocation(nextAction.route(projectId))}
-              className="frame-btn-primary !py-3 !px-6 min-h-11 flex items-center gap-2 shrink-0"
-            >
-              {t("app.hub.open")} {nextAction.label}
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </section>
+        <OperationMap current="production" />
+
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <NextActionsPanel
+            actions={[
+              {
+                id: nextStep.id,
+                label: nextAction.label,
+                description: nextAction.description,
+                href: nextAction.route(projectId),
+              },
+              {
+                id: "files",
+                label: t("app.hub.recentFiles") as string,
+                description: "Materiais liberados e arquivos do job",
+                href: `/project/${projectId}/files`,
+              },
+              {
+                id: "reviews",
+                label: t("app.hub.approvals") as string,
+                description: pendingReviews > 0 ? `${pendingReviews} pendente${pendingReviews > 1 ? "s" : ""}` : "Revisões do projeto",
+                href: `/project/${projectId}/video-reviews`,
+              },
+            ]}
+            onNavigate={setLocation}
+          />
+          <ModuleCatalog modules={hubModules} onNavigate={setLocation} />
+        </div>
 
         {/* ═══ MAIN CONTENT: Two columns ═══ */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

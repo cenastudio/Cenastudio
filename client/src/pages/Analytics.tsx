@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import AppNavBar from "@/components/AppNavBar";
 import EmptyState from "@/components/EmptyState";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ScreenDesignPass } from "@/components/discovery/ScreenDesignPass";
 import { useClientIdFromQuery } from "@/hooks/useClientIdFromQuery";
 import {
   ArrowUpRight,
@@ -354,46 +355,25 @@ function AnalyticsContent() {
     <div className="min-h-screen bg-frame-black text-frame-white">
       <AppNavBar />
 
-      <main id="main-content" className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-9">
-
-        {/* ═══ HEADER ═══ */}
-        <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between border-b border-frame-gray-3 pb-6">
-          <div>
-            <p className="frame-label mb-2">{t("app.finance.eyebrow")}</p>
-            <h1 className="frame-title text-[clamp(1.8rem,3.5vw,2.8rem)]">
-              {t("app.finance.title")}
-            </h1>
-            <p className="mt-2 max-w-xl text-sm leading-relaxed text-frame-gray-light">
-              {t("app.finance.subtitle")}
-            </p>
-            {/* Workflow steps */}
-            <div className="flex gap-2 mt-4">
-              <div className="border border-frame-orange/30 bg-frame-orange/[0.06] px-3 py-2 text-center min-w-[90px]">
-                <span className="block font-frame-mono text-[0.5rem] text-frame-orange">01</span>
-                <span className="block text-[0.6rem] font-medium text-frame-white mt-0.5">{t("app.finance.step1")}</span>
-              </div>
-              <div className="border border-frame-gray-3/40 px-3 py-2 text-center min-w-[90px]">
-                <span className="block font-frame-mono text-[0.5rem] text-frame-gray-light">02</span>
-                <span className="block text-[0.6rem] font-medium text-frame-gray-light mt-0.5">{t("app.finance.step2")}</span>
-              </div>
-              <div className="border border-frame-gray-3/40 px-3 py-2 text-center min-w-[90px]">
-                <span className="block font-frame-mono text-[0.5rem] text-frame-gray-light">03</span>
-                <span className="block text-[0.6rem] font-medium text-frame-gray-light mt-0.5">{t("app.finance.step3")}</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <button type="button" onClick={() => window.open("/api/export-pipeline?format=csv", "_blank")} className="frame-btn-ghost inline-flex items-center gap-2">
-              <Download className="h-4 w-4" /> {t("app.finance.export")}
-            </button>
-            <button type="button" onClick={loadAnalytics} disabled={refreshing} className="frame-btn-ghost inline-flex items-center gap-2">
-              <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} /> {t("app.finance.refresh")}
-            </button>
-            <button type="button" onClick={openProjectEntry} className="frame-btn-primary inline-flex items-center gap-2">
-              <Plus className="h-4 w-4" /> {t("app.finance.newEntry")}
-            </button>
-          </div>
-        </header>
+      <main id="main-content" className="mx-auto w-full max-w-7xl space-y-6 px-3 py-6 sm:px-6 sm:py-9">
+        <ScreenDesignPass
+          eyebrow={t("app.finance.eyebrow") as string}
+          title="Financeiro conectado ao job."
+          description={t("app.finance.subtitle") as string}
+          icon={LayoutDashboard}
+          currentStage="Financeiro"
+          metrics={[
+            { label: "Recebido", value: formatCurrency(summary.receivedMonth), detail: "mês atual" },
+            { label: "Lucro", value: formatCurrency(profit), detail: `${margin}% margem` },
+            { label: "A receber", value: formatCurrency(summary.toReceive), detail: summary.overdueReceivables > 0 ? `${formatCurrency(summary.overdueReceivables)} vencido` : "sem vencidos" },
+            { label: "Forecast", value: formatCurrency(summary.weightedPipeline), detail: "pipeline ponderado" },
+          ]}
+          actions={[
+            { label: "Novo lançamento", detail: "Registrar receita ou custo", onClick: openProjectEntry },
+            { label: "Atualizar dados", detail: refreshing ? "Atualizando…" : "Recarregar financeiro", onClick: loadAnalytics },
+            { label: "Exportar pipeline", detail: "Baixar CSV comercial", onClick: () => window.open("/api/export-pipeline?format=csv", "_blank") },
+          ]}
+        />
 
         {/* ═══ CONTEXT: Job being closed ═══ */}
         {contextProject && (

@@ -119,20 +119,29 @@ export default function AppNavBar({ children }: AppNavBarProps) {
     );
   };
 
-  // Navigation follows the job story: Painel → Comercial → Produção → Financeiro
+  // Navigation follows the job story: Painel → Comercial → Projeto → Produção → Aprovação → Entrega → Financeiro
   const commercialRoutes = ["/commercial", "/clients", "/pipeline", "/interactions", "/proposals"];
-  const productionRoutes = ["/projects", "/project/", "/tools", "/studio/", "/files", "/video-reviews", "/documents", "/team"];
+  const projectRoutes = ["/projects", "/project/"];
+  const productionRoutes = ["/tools", "/studio/", "/documents", "/team"];
+  const approvalRoutes = ["/video-reviews"];
+  const deliveryRoutes = ["/files", "/files-unified"];
   const financeRoutes = ["/analytics"];
 
   const isInCommercial = commercialRoutes.some((r) => location === r || location.startsWith(r + "/") || (r.endsWith("/") && location.startsWith(r)));
+  const isInProject = projectRoutes.some((r) => location === r || location.startsWith(r + "/") || (r.endsWith("/") && location.startsWith(r)));
   const isInProduction = productionRoutes.some((r) => location === r || location.startsWith(r + "/") || (r.endsWith("/") && location.startsWith(r)));
+  const isInApproval = approvalRoutes.some((r) => location === r || location.startsWith(r + "/"));
+  const isInDelivery = deliveryRoutes.some((r) => location === r || location.startsWith(r + "/"));
   const isInFinance = financeRoutes.some((r) => location === r || location.startsWith(r + "/"));
 
   const primaryNavItems = (
     [
       ["/dashboard",  locale === "en" ? "PANEL"      : "PAINEL",     "●", "dashboard", location === "/dashboard" || location === "/home"],
       ["/commercial", locale === "en" ? "COMMERCIAL" : "COMERCIAL",  "●", "clients",   isInCommercial],
-      ["/projects",   locale === "en" ? "PRODUCTION" : "PRODUÇÃO",   "●", "projects",  isInProduction],
+      ["/projects",   locale === "en" ? "PROJECTS"   : "PROJETOS",   "●", "projects",  isInProject],
+      ["/tools",      locale === "en" ? "PRODUCTION" : "PRODUÇÃO",   "●", "production", isInProduction],
+      ["/video-reviews", locale === "en" ? "APPROVAL" : "APROVAÇÃO", "●", "reviews", isInApproval],
+      ["/files-unified", locale === "en" ? "DELIVERY" : "ENTREGA",   "●", "files", isInDelivery],
       ["/analytics",  locale === "en" ? "FINANCE"    : "FINANCEIRO", "●", "analytics", isInFinance],
     ] as const
   ).filter(([path]) => {

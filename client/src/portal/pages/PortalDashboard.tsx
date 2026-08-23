@@ -18,6 +18,10 @@ import {
   PortalStatCard,
   portalStatusLabel,
 } from "../portalUi";
+import {
+  NextActionsPanel,
+  type DiscoveryAction,
+} from "@/components/discovery/DiscoverySystem";
 
 export default function PortalDashboard() {
   const [projects, setProjects] = useState<PortalProjectSummary[] | null>(null);
@@ -50,6 +54,47 @@ export default function PortalDashboard() {
     .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime())[0];
   const latestFiles = files.slice(0, 4);
   const latestProposals = proposals.slice(0, 3);
+  const portalActions: DiscoveryAction[] = [
+    activeProjects[0]
+      ? {
+          id: "active-project",
+          label: "Acompanhar projeto ativo",
+          description: `${activeProjects[0].name} · ${activeProjects[0].progress}%`,
+          href: `/portal/projects/${activeProjects[0].id}`,
+        }
+      : {
+          id: "files",
+          label: "Ver arquivos liberados",
+          description: `${files.length} arquivo${files.length === 1 ? "" : "s"} disponível${files.length === 1 ? "" : "is"}`,
+          href: "/portal/files",
+        },
+    nextMeeting
+      ? {
+          id: "meeting",
+          label: "Preparar próxima reunião",
+          description: formatPortalDateTime(nextMeeting.startsAt),
+          href: "/portal/meetings",
+        }
+      : {
+          id: "meeting-history",
+          label: "Ver agenda",
+          description: "Histórico e próximas reuniões",
+          href: "/portal/meetings",
+        },
+    latestProposals[0]
+      ? {
+          id: "proposal",
+          label: "Revisar proposta",
+          description: `${latestProposals[0].title} · ${formatPortalCurrency(latestProposals[0].total)}`,
+          href: "/portal/proposals",
+        }
+      : {
+          id: "financial",
+          label: "Conferir financeiro",
+          description: financial ? `${formatPortalCurrency(financial.totalPending)} em aberto` : "Pagamentos e vencimentos",
+          href: "/portal/financial",
+        },
+  ];
 
   return (
     <PortalLayout>
@@ -68,7 +113,7 @@ export default function PortalDashboard() {
         }
       />
 
-      {projects === null && <p className="text-frame-gray-light">Carregando...</p>}
+      {projects === null && <p className="text-frame-gray-light">Carregando…</p>}
 
       {projects && (
         <>
@@ -78,6 +123,10 @@ export default function PortalDashboard() {
             <PortalStatCard label="Em aberto" value={financial ? formatPortalCurrency(financial.totalPending) : "--"} />
             <PortalStatCard label="Proxima reuniao" value={nextMeeting ? formatPortalDate(nextMeeting.startsAt) : "Nada agendado"} />
           </section>
+
+          <div className="mb-6">
+            <NextActionsPanel actions={portalActions} onNavigate={setLocation} />
+          </div>
 
           {projects.length === 0 ? (
             <PortalEmptyState

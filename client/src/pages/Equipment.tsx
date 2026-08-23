@@ -4,6 +4,7 @@ import EmptyState from "@/components/EmptyState";
 import ProductionNav from "@/components/ProductionNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
+import { ScreenDesignPass } from "@/components/discovery/ScreenDesignPass";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { api, type EquipmentItem, type EquipmentBookingItem } from "@/lib/api";
@@ -255,49 +256,27 @@ function EquipmentContent() {
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body">
       <AppNavBar />
       <ProductionNav />
-      <main id="main-content" className="px-4 sm:px-6 py-5 sm:py-6 max-w-[1200px] mx-auto space-y-6">
-        <header className="grid gap-5 border-b border-frame-gray-3 pb-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
-          <div className="max-w-3xl">
-            <p className="frame-label mb-1">// Almoxarifado de produção</p>
-            <h1 className="frame-title text-[clamp(1.5rem,3vw,2.2rem)] leading-none">Armazém de equipamento</h1>
-            <p className="text-sm text-frame-gray-light mt-3 max-w-2xl leading-relaxed">
-              Controle câmeras, lentes, áudio, luz e acessórios como um estoque vivo da produtora, com disponibilidade e reservas por projeto.
-            </p>
-            {!loading && items.length > 0 && (
-              <div className="mt-5 grid gap-2 sm:grid-cols-4">
-                <div className="border border-frame-orange/30 bg-frame-orange/[0.06] px-3 py-3">
-                  <span className="block font-frame-mono text-[0.52rem] uppercase tracking-[0.14em] text-frame-orange">Inventário</span>
-                  <span className="mt-1 block text-sm font-semibold text-frame-white">{items.length} itens</span>
-                </div>
-                <div className="border border-frame-gray-3 bg-frame-gray-1/15 px-3 py-3">
-                  <span className="block font-frame-mono text-[0.52rem] uppercase tracking-[0.14em] text-frame-gray-light">Disponível</span>
-                  <span className="mt-1 block text-sm font-semibold text-frame-white">{inventoryStats.available}</span>
-                </div>
-                <div className="border border-frame-gray-3 bg-frame-gray-1/15 px-3 py-3">
-                  <span className="block font-frame-mono text-[0.52rem] uppercase tracking-[0.14em] text-frame-gray-light">Reservado/uso</span>
-                  <span className="mt-1 block text-sm font-semibold text-frame-white">{inventoryStats.reservedOrUse}</span>
-                </div>
-                <div className="border border-frame-gray-3 bg-frame-gray-1/15 px-3 py-3">
-                  <span className="block font-frame-mono text-[0.52rem] uppercase tracking-[0.14em] text-frame-gray-light">Valor/dia</span>
-                  <span className="mt-1 block text-sm font-semibold text-frame-white">
-                    {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(inventoryStats.dailyValue / 100)}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={openCreateDialog}
-            className="frame-btn-primary inline-flex items-center gap-2 shrink-0 self-start"
-          >
-            <Plus className="w-4 h-4" />
-            Cadastrar equipamento
-          </button>
-        </header>
+      <main id="main-content" className="px-3 sm:px-6 py-5 sm:py-6 max-w-[1200px] mx-auto space-y-6">
+        <ScreenDesignPass
+          eyebrow="// Almoxarifado de produção"
+          title="Equipamento com disponibilidade clara."
+          description="Controle câmeras, lentes, áudio, luz e acessórios como estoque vivo da produtora, com reserva por job antes do set."
+          icon={Camera}
+          currentStage="Produção"
+          metrics={[
+            { label: "Inventário", value: items.length, detail: "itens" },
+            { label: "Disponível", value: inventoryStats.available, detail: "pronto para reserva" },
+            { label: "Reservado", value: inventoryStats.reservedOrUse, detail: "uso ou bloqueio" },
+            { label: "Valor/dia", value: new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(inventoryStats.dailyValue / 100), detail: "estimado" },
+          ]}
+          actions={[
+            { label: "Cadastrar equipamento", detail: "Adicionar item ao estoque", onClick: openCreateDialog },
+            { label: "Filtrar disponibilidade", detail: "Encontrar câmera, luz ou áudio", href: "#equipment-filters" },
+          ]}
+        />
 
         {!loading && items.length > 0 && (
-          <div className="grid gap-3 border border-frame-gray-3 bg-frame-gray-1/10 p-3 lg:grid-cols-[minmax(240px,1fr)_auto_auto]">
+          <div id="equipment-filters" className="grid gap-3 border border-frame-gray-3 bg-frame-gray-1/10 p-3 lg:grid-cols-[minmax(240px,1fr)_auto_auto]">
             <label className="relative block">
               <span className="sr-only">Buscar equipamento</span>
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-frame-gray-light" />

@@ -16,6 +16,7 @@ import { hexToRgba } from "@shared/color";
 import { WebhooksContent } from "@/pages/Webhooks";
 import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
 import ApiKeysManager from "@/components/account/ApiKeysManager";
+import { ScreenDesignPass } from "@/components/discovery/ScreenDesignPass";
 import { useEffect, useState, useRef } from "react";
 import {
   CalendarClock, Crown, LogOut, ShieldCheck, UserRound, Zap, Settings,
@@ -257,7 +258,7 @@ function SessionCard({ device, ipAddress, lastActive, current, onRevoke, revokin
             disabled={revoking}
             className="text-frame-red/70 hover:text-frame-red text-xs disabled:opacity-50"
           >
-            {revoking ? "..." : t("app.profile.endSession")}
+            {revoking ? "…" : t("app.profile.endSession")}
           </button>
         )}
       </div>
@@ -968,21 +969,77 @@ function ProfileContent() {
     }
   };
 
+  const profileTabGuidance: Record<ProfileTab, { label: string; title: string; description: string; action: string; icon: React.ElementType }> = {
+    profile: {
+      label: "Identidade",
+      title: locale === "en" ? "Keep your operator profile current." : "Mantenha sua identidade operacional pronta.",
+      description: locale === "en" ? "Name, avatar and contact details feed documents, client communication and internal account context." : "Nome, avatar e contato alimentam documentos, comunicação com cliente e contexto interno da conta.",
+      action: locale === "en" ? "Review public account data" : "Revise os dados públicos da conta",
+      icon: UserRound,
+    },
+    security: {
+      label: "Segurança",
+      title: locale === "en" ? "Protect access before sharing work." : "Proteja o acesso antes de compartilhar trabalho.",
+      description: locale === "en" ? "Password, sessions and security signals stay together so risky access is easier to spot." : "Senha, sessões e sinais de segurança ficam juntos para facilitar a leitura de risco.",
+      action: locale === "en" ? "Check sessions and password" : "Confira sessões e senha",
+      icon: Shield,
+    },
+    integrations: {
+      label: "Integrações",
+      title: locale === "en" ? "Connect the systems around the studio." : "Conecte os sistemas em volta do estúdio.",
+      description: locale === "en" ? "API keys and webhooks should support the operation without hiding status or setup steps." : "Chaves e webhooks devem apoiar a operação sem esconder status ou etapas de configuração.",
+      action: locale === "en" ? "Audit external access" : "Audite os acessos externos",
+      icon: Webhook,
+    },
+    plan: {
+      label: "Plano",
+      title: locale === "en" ? "See limits before they interrupt work." : "Veja limites antes deles interromperem o trabalho.",
+      description: locale === "en" ? "Usage, billing and feature gates are grouped around what changes the operation." : "Uso, cobrança e limites ficam agrupados pelo impacto real na operação.",
+      action: locale === "en" ? "Review usage and billing" : "Revise uso e cobrança",
+      icon: Crown,
+    },
+    preferences: {
+      label: "Preferências",
+      title: locale === "en" ? "Tune the workspace without losing focus." : "Ajuste o ambiente sem perder foco.",
+      description: locale === "en" ? "Visual, language and behavior choices stay separated from security and billing." : "Preferências visuais, idioma e comportamento ficam separadas de segurança e cobrança.",
+      action: locale === "en" ? "Set workspace behavior" : "Defina o comportamento do workspace",
+      icon: Settings,
+    },
+    privacy: {
+      label: "Privacidade",
+      title: locale === "en" ? "Make data rights visible and actionable." : "Deixe direitos de dados visíveis e acionáveis.",
+      description: locale === "en" ? "LGPD actions should be clear, reversible where possible and explicit when destructive." : "Ações LGPD precisam ser claras, reversíveis quando possível e explícitas quando destrutivas.",
+      action: locale === "en" ? "Review data controls" : "Revise controles de dados",
+      icon: ShieldCheck,
+    },
+  };
+  const activeGuidance = profileTabGuidance[activeTab];
+  const ActiveGuidanceIcon = activeGuidance.icon;
+
   return (
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body flex flex-col">
       <AppNavBar />
 
-      <main id="main-content" className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 md:py-12">
-
-        {/* ─── HEADER ─── */}
-        <div className="border-b border-frame-gray-3/60 pb-6 mb-6">
-          <p className="frame-label mb-2">// {t("app.profile.account")}</p>
-          <h1 className="frame-title text-[clamp(1.8rem,4vw,2.8rem)]">
-            {t("app.profile.myAccount")}
-          </h1>
-          <p className="text-frame-gray-light text-sm mt-2 max-w-xl">
-            {t("app.profile.subtitle")}
-          </p>
+      <main id="main-content" className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-6 py-8 md:py-12">
+        <div className="mb-6">
+          <ScreenDesignPass
+            eyebrow={`// ${t("app.profile.account")}`}
+            title="Conta, acesso e preferências em uma fila."
+            description={t("app.profile.subtitle") as string}
+            icon={UserRound}
+            currentStage="Projeto"
+            metrics={[
+              { label: "Usuário", value: user?.role === "admin" ? "Admin" : "Conta", detail: user?.email || "sem e-mail" },
+              { label: "Plano", value: planLabel, detail: plan?.status || "sem status" },
+              { label: "Tela", value: activeTab, detail: "seção ativa" },
+              { label: "Segurança", value: sessions.length, detail: "sessões" },
+            ]}
+            actions={[
+              { label: t("app.profile.tabSecurity") as string, detail: "Senha, sessões e 2FA", onClick: () => setActiveTab("security") },
+              { label: t("app.profile.tabPlan") as string, detail: "Uso, cobrança e limites", onClick: () => setActiveTab("plan") },
+              { label: t("app.profile.tabPrivacy") as string, detail: "LGPD e exportação", onClick: () => setActiveTab("privacy") },
+            ]}
+          />
         </div>
 
         <div className="mb-8 border-b border-frame-gray-3/30 pb-4">
@@ -1041,6 +1098,31 @@ function ProfileContent() {
             />
           </div>
         </div>
+
+        <section className="mb-6 border border-frame-gray-3/70 bg-frame-gray-1/15 p-4 sm:p-5">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-frame-orange/35 bg-frame-orange/[0.08]">
+                <ActiveGuidanceIcon className="h-5 w-5 text-frame-orange" aria-hidden="true" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-orange">
+                  {activeGuidance.label}
+                </p>
+                <h2 className="mt-1 text-xl font-semibold leading-tight text-frame-white text-balance">
+                  {activeGuidance.title}
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-frame-gray-light text-pretty">
+                  {activeGuidance.description}
+                </p>
+              </div>
+            </div>
+            <div className="min-w-0 border border-frame-gray-3/60 bg-frame-black/25 px-3 py-2 md:w-[260px]">
+              <p className="font-frame-mono text-[0.52rem] uppercase tracking-[0.14em] text-frame-gray-light">Próxima revisão</p>
+              <p className="mt-1 truncate text-sm font-semibold text-frame-white">{activeGuidance.action}</p>
+            </div>
+          </div>
+        </section>
 
 
         {/* ═══════════════════════════════════════════════════════════════════
@@ -1128,7 +1210,7 @@ function ProfileContent() {
 
             {/* Link para configurações do estúdio */}
             <div className="liquid-glass p-6">
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col items-start gap-4 sm:flex-row sm:justify-between">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 flex items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08] rounded-lg shrink-0">
                     <Building2 className="w-5 h-5 text-frame-orange" />
@@ -1143,7 +1225,7 @@ function ProfileContent() {
                 <button
                   type="button"
                   onClick={() => setLocation("/company")}
-                  className="frame-btn-primary flex items-center gap-2 shrink-0"
+                  className="frame-btn-primary flex w-full items-center justify-center gap-2 sm:w-auto sm:shrink-0"
                 >
                   <Settings className="w-4 h-4" />
                   Configurar
@@ -1304,7 +1386,7 @@ function ProfileContent() {
                     disabled={enabling2FA}
                     className="frame-btn-primary text-sm px-4 py-2"
                   >
-                    {enabling2FA ? "Gerando..." : "Ativar 2FA"}
+                    {enabling2FA ? "Gerando…" : "Ativar 2FA"}
                   </button>
                 )}
               </div>
@@ -1431,7 +1513,7 @@ function ProfileContent() {
                   disabled={revokingAll || sessions.filter((s) => !s.current).length === 0}
                   className="frame-btn-ghost text-xs text-frame-red/70 hover:text-frame-red disabled:opacity-40"
                 >
-                  {revokingAll ? "..." : t("app.profile.endAll")}
+                  {revokingAll ? "…" : t("app.profile.endAll")}
                 </button>
               </div>
 
@@ -1480,7 +1562,7 @@ function ProfileContent() {
               </div>
 
               {loadingActivity ? (
-                <p className="text-xs text-frame-gray-light py-4">Carregando atividades...</p>
+                <p className="text-xs text-frame-gray-light py-4">Carregando atividades…</p>
               ) : activityLog.length === 0 ? (
                 <p className="text-xs text-frame-gray-light py-4 text-center">
                   Nenhuma atividade recente
@@ -1698,7 +1780,7 @@ function ProfileContent() {
               </div>
               <div className="relative mt-6 pt-6 border-t border-white/10">
                 {usageMetricsLoading ? (
-                  <p className="text-xs text-frame-gray-light">Carregando uso real...</p>
+                  <p className="text-xs text-frame-gray-light">Carregando uso real…</p>
                 ) : usageMetricsError || !usageMetrics ? (
                   <p className="text-xs text-frame-red">Não foi possível confirmar o consumo agora. Nenhum valor estimado será exibido.</p>
                 ) : (
@@ -1719,7 +1801,7 @@ function ProfileContent() {
               </div>
 
               {usageMetricsLoading ? (
-                <p className="py-6 text-center text-xs text-frame-gray-light">Consultando métricas do usuário...</p>
+                <p className="py-6 text-center text-xs text-frame-gray-light">Consultando métricas do usuário…</p>
               ) : usageMetricsError || !usageMetrics ? (
                 <div className="border border-frame-red/30 bg-frame-red/5 p-4 text-sm text-frame-red">
                   Métricas indisponíveis. Valores simulados não serão exibidos.
@@ -2023,7 +2105,7 @@ function ProfileContent() {
 
               {billingHistoryLoading ? (
                 <div className="py-8 text-center text-sm text-frame-gray-light">
-                  Confirmando cobranças com a Stripe...
+                  Confirmando cobranças com a Stripe…
                 </div>
               ) : billingHistoryError || !billingHistory ? (
                 <div className="border border-frame-red/30 bg-frame-red/5 p-4 text-sm text-frame-red">
@@ -2256,14 +2338,14 @@ function ProfileContent() {
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-medium text-frame-white">Suas indicações</span>
                   <span className="text-[0.6rem] font-mono uppercase tracking-wider text-frame-gray-light bg-frame-gray-2 px-2 py-1 rounded">
-                    {loadingReferral ? "..." : `${referralInfo?.stats.convertedReferrals || 0} ativas`}
+                    {loadingReferral ? "…" : `${referralInfo?.stats.convertedReferrals || 0} ativas`}
                   </span>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
                     <span className="text-frame-gray-light">Progresso para próxima recompensa</span>
                     <span className="font-mono text-frame-white">
-                      {loadingReferral ? "..." : `${referralInfo?.stats.nextRewardProgress.current || 0} / ${referralInfo?.stats.nextRewardProgress.target || 1}`}
+                      {loadingReferral ? "…" : `${referralInfo?.stats.nextRewardProgress.current || 0} / ${referralInfo?.stats.nextRewardProgress.target || 1}`}
                     </span>
                   </div>
                   <div className="h-2 bg-frame-gray-2 rounded-full overflow-hidden">
@@ -2920,7 +3002,7 @@ function ProfileContent() {
                 <p className="text-xs text-frame-gray-light mb-4">Seus dados no CENA Studio:</p>
 
                 {dataStatsLoading ? (
-                  <p className="py-6 text-center text-xs text-frame-gray-light">Consultando dados vinculados à sua conta...</p>
+                  <p className="py-6 text-center text-xs text-frame-gray-light">Consultando dados vinculados à sua conta…</p>
                 ) : dataStatsError || !dataStats ? (
                   <div className="border border-frame-red/30 bg-frame-red/5 p-4 text-sm text-frame-red">
                     Não foi possível confirmar os dados agora. Nenhum valor estimado será exibido.
@@ -3453,7 +3535,7 @@ function ProfileContent() {
                       className="flex-1 px-4 py-2 bg-frame-red text-white rounded-lg font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:bg-frame-red/80 transition"
                     >
                       {submittingDeleteRequest
-                        ? (locale === "en" ? "Submitting..." : "Enviando...")
+                        ? (locale === "en" ? "Submitting…" : "Enviando…")
                         : t("app.profile.deletePermanently")}
                     </button>
                     <button

@@ -4,6 +4,7 @@ import EmptyState from "@/components/EmptyState";
 import ProductionNav from "@/components/ProductionNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
+import { ScreenDesignPass } from "@/components/discovery/ScreenDesignPass";
 import { api } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
@@ -173,26 +174,26 @@ export function WebhooksContent({ embedded = false }: { embedded?: boolean }) {
     <div className={embedded ? "text-frame-white font-frame-body" : "min-h-screen bg-frame-black text-frame-white font-frame-body"}>
       {!embedded && <AppNavBar />}
       {!embedded && <ProductionNav />}
-      <main id="main-content" className="px-4 sm:px-6 py-5 sm:py-6 max-w-[1200px] mx-auto space-y-6">
-        {/* Header */}
-        <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-frame-gray-3 pb-4">
-          <div>
-            <p className="frame-label mb-1">// Automação</p>
-            <h1 className="frame-title text-[clamp(1.5rem,3vw,2.2rem)] leading-none">Webhooks</h1>
-            <p className="text-xs text-frame-gray-light mt-2 max-w-lg leading-relaxed">
-              Avise outras ferramentas automaticamente quando algo acontecer no Cena Studio — sem precisar checar
-              manualmente. Cadastre uma URL, escolha os eventos, e recebemos o aviso na hora via POST HTTP.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="frame-btn-primary inline-flex items-center gap-2 shrink-0 self-start"
-          >
-            <Plus className="w-4 h-4" />
-            Novo Webhook
-          </button>
-        </header>
+      <main id="main-content" className="px-3 sm:px-6 py-5 sm:py-6 max-w-[1200px] mx-auto space-y-6">
+        {!embedded && (
+          <ScreenDesignPass
+            eyebrow="// Automação"
+            title="Eventos saem do Cena sem caçar tela."
+            description="Avise Slack, planilhas, CRM ou ferramentas internas quando clientes, propostas, projetos e entregas mudarem de estado."
+            icon={WebhookIcon}
+            currentStage="Entrega"
+            metrics={[
+              { label: "Webhooks", value: webhooks.length, detail: "configurados" },
+              { label: "Ativos", value: webhooks.filter((item) => item.active).length, detail: "recebendo eventos" },
+              { label: "Eventos", value: events.length, detail: "disponíveis" },
+              { label: "Testes", value: testingId ? "Rodando" : "Pronto", detail: "ping manual" },
+            ]}
+            actions={[
+              { label: "Novo webhook", detail: "Cadastrar URL e eventos", onClick: () => setCreateOpen(true) },
+              { label: "Escolher eventos", detail: "Cliente, projeto, proposta e entrega", href: "#webhook-events" },
+            ]}
+          />
+        )}
 
         {/* Loading */}
         {loading && (
@@ -352,7 +353,7 @@ export function WebhooksContent({ embedded = false }: { embedded?: boolean }) {
                 className="frame-input w-full"
               />
             </div>
-            <div>
+            <div id="webhook-events">
               <label className="block text-xs font-medium text-frame-gray-light mb-1.5">URL de destino</label>
               <input
                 type="url"

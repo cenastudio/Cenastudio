@@ -4,6 +4,7 @@ import AppNavBar from "@/components/AppNavBar";
 import ProductionNav from "@/components/ProductionNav";
 import ProjectNav from "@/components/ProjectNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { ScreenDesignPass } from "@/components/discovery/ScreenDesignPass";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TabsContent } from "@/components/ui/tabs";
 import { ResponsiveTabs } from "@/components/ui/responsive-tabs";
@@ -44,20 +45,29 @@ function FilesUnifiedContent() {
         <ProductionNav />
       )}
 
-      <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-6 py-10">
-        {/* Header */}
-        <div className="mb-8">
-          <p className="frame-label mb-2">// {isEn ? "File Management" : "Gerenciamento de Arquivos"}</p>
-          <h1 className="frame-title text-[clamp(2.1rem,4vw,3.5rem)]">
-            <FolderOpen className="inline-block w-8 h-8 mr-3 text-frame-orange -translate-y-1" />
-            {isEn ? "FILES" : "ARQUIVOS"}
-          </h1>
-          <p className="text-frame-gray-light text-sm mt-2">
-            {isEn
-              ? "Manage all your project materials, uploads, and storage in one unified place"
-              : "Gerencie todos os materiais de projeto, uploads e armazenamento em um só lugar"}
-          </p>
-        </div>
+      <main id="main-content" className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-8 md:py-10 space-y-8">
+        <ScreenDesignPass
+          eyebrow={`// ${isEn ? "File Management" : "Gerenciamento de Arquivos"}`}
+          title={isEn ? "Files stay tied to delivery." : "Arquivos ligados à entrega."}
+          description={
+            isEn
+              ? "Manage all project materials, uploads, storage and client-facing delivery from one visible place."
+              : "Gerencie materiais, uploads, armazenamento e entrega ao cliente em uma tela com caminho claro."
+          }
+          icon={FolderOpen}
+          currentStage="Entrega"
+          metrics={[
+            { label: "Escopo", value: isProjectScoped ? "Projeto" : "Todos", detail: projectId ? `#${projectId}` : "biblioteca" },
+            { label: "Aba", value: activeTab, detail: "ativa" },
+            { label: "Entrega", value: "Portal", detail: "cliente" },
+            { label: "Storage", value: "Uso", detail: "monitorado" },
+          ]}
+          actions={[
+            { label: isEn ? "All files" : "Todos", detail: "Biblioteca completa", onClick: () => setActiveTab("all") },
+            { label: isEn ? "By project" : "Por projeto", detail: "Materiais por job", onClick: () => setActiveTab("project") },
+            { label: isEn ? "Storage" : "Armazenamento", detail: "Uso e limites", onClick: () => setActiveTab("storage") },
+          ]}
+        />
 
         {/* Tabs */}
         <ResponsiveTabs

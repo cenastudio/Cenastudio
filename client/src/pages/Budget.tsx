@@ -5,6 +5,7 @@ import EmptyState from "@/components/EmptyState";
 import ProjectNav from "@/components/ProjectNav";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { FeatureUpgradeRequired } from "@/components/FeatureUpgradeRequired";
+import { ScreenDesignPass } from "@/components/discovery/ScreenDesignPass";
 import { api, type BudgetOverview, type BudgetEntryItem } from "@/lib/api";
 import { useAutocomplete } from "@/hooks/useAutocomplete";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -216,43 +217,25 @@ function BudgetContent() {
     <div className="min-h-screen bg-frame-black text-frame-white font-frame-body">
       <AppNavBar />
       <ProjectNav projectId={projectId} />
-      <main id="main-content" className="px-4 sm:px-6 py-5 sm:py-6 max-w-[1200px] mx-auto space-y-6">
-        <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-frame-gray-3 pb-4">
-          <div>
-            <p className="frame-label mb-1">// Financeiro</p>
-            <h1 className="frame-title text-[clamp(1.5rem,3vw,2.2rem)] leading-none">Orçamento</h1>
-            <p className="text-xs text-frame-gray-light mt-2 max-w-lg leading-relaxed">
-              Defina o orçamento por categoria e lance os gastos reais para saber, em tempo real, se o
-              projeto está dentro do previsto.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 shrink-0 self-start">
-            <button type="button" onClick={openBaselineDialog} className="frame-btn-ghost">
-              {hasBaseline ? "Editar orçamento" : "Definir orçamento"}
-            </button>
-            {hasBaseline && (
-              <button
-                type="button"
-                onClick={handleCreateCommercialDraft}
-                disabled={creatingCommercialDraft}
-                className="frame-btn-ghost inline-flex items-center gap-2 disabled:opacity-40"
-              >
-                {creatingCommercialDraft ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSignature className="w-4 h-4" />}
-                Rascunho comercial
-              </button>
-            )}
-            {hasBaseline && (
-              <button
-                type="button"
-                onClick={() => setEntryOpen(true)}
-                className="frame-btn-primary inline-flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Lançar gasto
-              </button>
-            )}
-          </div>
-        </header>
+      <main id="main-content" className="px-3 sm:px-6 py-5 sm:py-6 max-w-[1200px] mx-auto space-y-6">
+        <ScreenDesignPass
+          eyebrow="// Financeiro"
+          title="Orçamento mostra margem antes do susto."
+          description="Defina categorias, acompanhe gasto real e gere rascunho comercial a partir do previsto."
+          icon={Wallet}
+          currentStage="Financeiro"
+          metrics={[
+            { label: "Orçado", value: overview ? formatCurrency(overview.totalBudgeted, currencyForDisplay) : "Pendente", detail: overview?.currency || "BRL" },
+            { label: "Realizado", value: overview ? formatCurrency(overview.totalSpent, currencyForDisplay) : "—", detail: "gasto real" },
+            { label: "Categorias", value: overview?.byCategory.length || 0, detail: hasBaseline ? "ativas" : "definir" },
+            { label: "Saldo", value: overview ? formatCurrency(overview.totalBudgeted - overview.totalSpent, currencyForDisplay) : "—", detail: "previsto" },
+          ]}
+          actions={[
+            { label: hasBaseline ? "Editar orçamento" : "Definir orçamento", detail: "Categorias e valores", onClick: openBaselineDialog },
+            ...(hasBaseline ? [{ label: "Lançar gasto", detail: "Atualizar realizado", onClick: () => setEntryOpen(true) }] : []),
+            ...(hasBaseline ? [{ label: creatingCommercialDraft ? "Criando..." : "Rascunho comercial", detail: "Enviar para proposta", onClick: handleCreateCommercialDraft }] : []),
+          ]}
+        />
 
         {loading && (
           <div className="flex items-center justify-center py-20">

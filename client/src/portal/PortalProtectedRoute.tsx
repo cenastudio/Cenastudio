@@ -14,7 +14,7 @@ export default function PortalProtectedRoute({ children }: { children: React.Rea
   if (isLoading) {
     return (
       <div className="min-h-screen bg-frame-black flex items-center justify-center">
-        <p className="text-frame-gray-light">Carregando...</p>
+        <p className="text-frame-gray-light">Carregando…</p>
       </div>
     );
   }

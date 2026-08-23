@@ -17,6 +17,13 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { SITE_CONFIG } from "@shared/site";
 import { hexToRgba } from "@shared/color";
 import { DOCUMENT_EXPORT_COLORS } from "@/design-system/color-presets";
+import { useLocation } from "wouter";
+import {
+  ModuleCatalog,
+  NextActionsPanel,
+  OperationMap,
+  type DiscoveryModule,
+} from "@/components/discovery/DiscoverySystem";
 
 
 interface CommercialStats {
@@ -74,6 +81,7 @@ interface ForecastData {
 
 export default function CommercialOverview() {
   const { t, locale } = useLanguage();
+  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [stats, setStats] = useState<CommercialStats>({
     totalRevenue: 0,
@@ -139,7 +147,16 @@ export default function CommercialOverview() {
     try {
       setLoading(true);
       const data = await api.commercial.dashboard();
-      setStats(data);
+      setStats({
+        totalRevenue: Number(data?.totalRevenue ?? 0),
+        monthlyRevenue: Number(data?.monthlyRevenue ?? 0),
+        conversionRate: Number(data?.conversionRate ?? 0),
+        pipelineValue: Number(data?.pipelineValue ?? 0),
+        averageTicket: Number(data?.averageTicket ?? 0),
+        activeDeals: Number(data?.activeDeals ?? 0),
+        wonDeals: Number(data?.wonDeals ?? 0),
+        lostDeals: Number(data?.lostDeals ?? 0),
+      });
     } catch (error) {
       console.error("Error loading commercial dashboard:", error);
       toast.error(t("app.commercial.toastDashboardError"));
@@ -223,6 +240,15 @@ export default function CommercialOverview() {
     setFilteredStats(null);
     toast.info(t("app.commercial.toastFiltersCleared"));
   }
+
+  const commercialModules: DiscoveryModule[] = [
+    { id: "clients", label: "Clientes", description: "Base, contatos e histórico", href: "/clients", group: "Entrada" },
+    { id: "pipeline", label: "Pipeline", description: "Oportunidades por etapa", href: "/pipeline", group: "Negociação" },
+    { id: "proposals", label: "Propostas", description: "Valores, aceite e follow-up", href: "/proposals", group: "Negociação" },
+    { id: "interactions", label: "Interações", description: "Reuniões, notas e próximos contatos", href: "/interactions", group: "Relacionamento" },
+    { id: "projects", label: "Jobs", description: "Projetos ganhos em produção", href: "/projects", group: "Conversão" },
+    { id: "finance", label: "Financeiro", description: "Recebíveis e resultado", href: "/analytics", group: "Conversão" },
+  ];
 
   async function handleExport(format: 'excel' | 'pdf' | 'csv') {
     try {
@@ -445,7 +471,7 @@ td{padding:10px 12px;border-top:1px solid ${dark.border};color:${dark.textSoft};
     return (
       <div className="py-8">
         {/* Content skeleton */}
-        <div className="mx-auto max-w-7xl px-6">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
           {/* Cards skeleton */}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
@@ -473,7 +499,7 @@ td{padding:10px 12px;border-top:1px solid ${dark.border};color:${dark.textSoft};
     <>
       {/* Header */}
       <div className="border-b border-frame-gray-3 bg-frame-gray-1/50 backdrop-blur-sm">
-        <div className="mx-auto max-w-7xl px-6 py-6">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
             <div>
               <p className="frame-label mb-1">{t("app.commercial.eyebrow")}</p>
@@ -482,12 +508,14 @@ td{padding:10px 12px;border-top:1px solid ${dark.border};color:${dark.textSoft};
                 {t("app.commercial.subtitle")}
               </p>
             </div>
-            {/* Workflow steps */}
-            <div className="grid grid-cols-3 gap-2 shrink-0 lg:min-w-[300px]" aria-label={locale === "en" ? "Commercial workflow" : "Fluxo comercial"}>
+            <div className="grid grid-cols-2 gap-2 shrink-0 sm:grid-cols-3 xl:grid-cols-6 xl:min-w-[620px]" aria-label={locale === "en" ? "Commercial workflow" : "Fluxo comercial"}>
               {[
-                { step: "01", label: t("app.commercial.stepProspect"), active: true },
-                { step: "02", label: t("app.commercial.stepQualify"), active: false },
-                { step: "03", label: t("app.commercial.stepClose"), active: false },
+                { step: "01", label: "Lead", active: true },
+                { step: "02", label: "Cliente", active: false },
+                { step: "03", label: "Oportunidade", active: false },
+                { step: "04", label: "Proposta", active: false },
+                { step: "05", label: "Aceite", active: false },
+                { step: "06", label: "Job", active: false },
               ].map((item) => (
                 <div
                   key={item.step}
@@ -511,7 +539,37 @@ td{padding:10px 12px;border-top:1px solid ${dark.border};color:${dark.textSoft};
       </div>
 
       {/* Content */}
-      <div className="mx-auto max-w-7xl px-6 py-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+        <div className="mb-8 space-y-5">
+          <OperationMap current="commercial" />
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
+            <NextActionsPanel
+              actions={[
+                {
+                  id: "new-client",
+                  label: "Criar ou revisar cliente",
+                  description: `${stats.activeDeals} negócio${stats.activeDeals === 1 ? "" : "s"} ativo${stats.activeDeals === 1 ? "" : "s"} no funil`,
+                  href: "/clients",
+                },
+                {
+                  id: "pipeline",
+                  label: "Mover oportunidade",
+                  description: `Pipeline de R$ ${stats.pipelineValue.toLocaleString("pt-BR")} precisa de próxima etapa`,
+                  href: "/pipeline",
+                },
+                {
+                  id: "proposal",
+                  label: "Gerar proposta",
+                  description: "Transformar negociação em aceite e job",
+                  href: "/proposals",
+                },
+              ]}
+              onNavigate={setLocation}
+            />
+            <ModuleCatalog modules={commercialModules} onNavigate={setLocation} />
+          </div>
+        </div>
+
         <ResponsiveTabs
           tabs={[
             { value: "dashboard", label: t("app.commercial.tabDashboard") as string },

@@ -5,6 +5,13 @@ import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { api, type Client, type Project, type RecentActivity } from "@/lib/api";
 import AppNavBar from "@/components/AppNavBar";
+import {
+  ModuleCatalog,
+  NextActionsPanel,
+  OperationMap,
+  type DiscoveryAction,
+  type DiscoveryModule,
+} from "@/components/discovery/DiscoverySystem";
 import EmptyState from "@/components/EmptyState";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -276,6 +283,39 @@ function DashboardContent() {
     })),
   ].slice(0, 5);
 
+  const discoveryActions: DiscoveryAction[] = directorQueue.length > 0
+    ? directorQueue.map((item) => {
+        let href = "/dashboard";
+        if (item.id.startsWith("briefing-")) href = `/project/${item.id.replace("briefing-", "")}/studio/briefing`;
+        if (item.id.startsWith("deadline-")) href = `/project/${item.id.replace("deadline-", "")}`;
+        if (item.id.startsWith("activity-")) href = focusActionRoute || "/tools";
+        return {
+          id: item.id,
+          label: item.label,
+          description: item.detail,
+          href,
+          tone: item.tone.includes("amber") ? "warning" : "primary",
+        };
+      })
+    : [
+        {
+          id: "new-project",
+          label: locale === "en" ? "Start a project" : "Criar próximo job",
+          description: locale === "en" ? "Open the guided project setup." : "Abrir criação guiada de projeto.",
+          href: "/dashboard?newProject=1",
+        },
+      ];
+
+  const dashboardModules: DiscoveryModule[] = [
+    { id: "clients", label: "Clientes", description: "Relacionamentos e histórico", href: "/clients", group: "Comercial" },
+    { id: "pipeline", label: "Pipeline", description: "Oportunidades e propostas", href: "/pipeline", group: "Comercial" },
+    { id: "projects", label: "Projetos", description: "Jobs ativos e etapas", href: "/projects", group: "Operação" },
+    { id: "tools", label: "Studio IA", description: "Briefing, roteiro e produção", href: "/tools", group: "Operação" },
+    { id: "reviews", label: "Aprovação", description: "Revisões de vídeo", href: "/video-reviews", group: "Entrega" },
+    { id: "files", label: "Arquivos", description: "Materiais e entrega", href: "/files-unified", group: "Entrega" },
+    { id: "finance", label: "Financeiro", description: "Receitas, custos e previsão", href: "/analytics", group: "Gestão" },
+  ];
+
   // Summary line
   const nextStep = focusProject
     ? !focusMeta?.objective && !focusFormat
@@ -474,6 +514,13 @@ function DashboardContent() {
             </div>
           </div>
         </header>
+
+        <OperationMap current="project" />
+
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <NextActionsPanel actions={discoveryActions.slice(0, 3)} onNavigate={setLocation} />
+          <ModuleCatalog modules={dashboardModules} onNavigate={setLocation} />
+        </div>
 
         {/* ─── P2.4: PULSO FINANCEIRO COM FONTE REAL ─── */}
         <section className="animate-stagger-1 border border-frame-gray-3/70 bg-frame-gray-1/20 p-4 sm:p-5">

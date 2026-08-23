@@ -43,18 +43,18 @@ export default function JourneyBreadcrumb() {
       data-touch-target-exempt
       className="border-b border-frame-gray-3/50 bg-frame-black/80 backdrop-blur-sm"
     >
-      <div className="mx-auto max-w-7xl px-4 md:px-6">
-        <ol className="flex items-center gap-1.5 py-2.5 overflow-x-auto scrollbar-none">
+      <div className="mx-auto max-w-7xl min-w-0 px-4 md:px-6">
+        <ol className="flex min-w-0 max-w-full items-center gap-1.5 overflow-x-auto py-2.5 scrollbar-none">
           {crumbs.map((crumb, i) => {
             const isLast = i === crumbs.length - 1;
             return (
-              <li key={`${crumb.label}-${i}`} className="flex items-center gap-1.5 shrink-0">
+              <li key={`${crumb.label}-${i}`} className={`flex items-center gap-1.5 ${isLast ? "min-w-0 shrink" : "shrink-0"}`}>
                 {i > 0 && (
                   <ChevronRight className="w-3 h-3 text-frame-gray-light/40" />
                 )}
                 {isLast || !crumb.href ? (
                   <span
-                    className={`font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase ${
+                    className={`block max-w-[52vw] truncate font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase md:max-w-none ${
                       isLast ? "text-frame-white" : "text-frame-gray-light"
                     }`}
                   >
@@ -64,7 +64,7 @@ export default function JourneyBreadcrumb() {
                   <Link
                     href={crumb.href}
                     data-touch-target-exempt
-                    className="font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase text-frame-gray-light hover:text-frame-orange transition"
+                    className="block max-w-[52vw] truncate font-frame-mono text-[0.62rem] uppercase tracking-[0.12em] text-frame-gray-light transition hover:text-frame-orange md:max-w-none"
                   >
                     {crumb.label}
                   </Link>

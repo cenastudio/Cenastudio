@@ -22,7 +22,7 @@ export default function PortalProposals() {
         description="Veja o que foi enviado, o status de cada proposta e o valor total associado ao relacionamento."
       />
 
-      {proposals === null && <p className="text-frame-gray-light">Carregando...</p>}
+      {proposals === null && <p className="text-frame-gray-light">Carregando…</p>}
       {proposals?.length === 0 && (
         <PortalEmptyState
           title="Nenhuma proposta ainda."

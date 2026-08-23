@@ -18,7 +18,7 @@ export default function PortalFiles() {
         description="Tudo que o estudio compartilhou com voce, organizado por projeto e pronto para download."
       />
 
-      {files === null && <p className="text-frame-gray-light">Carregando...</p>}
+      {files === null && <p className="text-frame-gray-light">Carregando…</p>}
       {files?.length === 0 && (
         <PortalEmptyState
           title="Nenhum arquivo disponivel ainda."

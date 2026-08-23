@@ -72,7 +72,7 @@ export default function PortalActivate() {
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="min-h-11 w-full bg-frame-black border border-frame-gray-3 px-3 py-2 text-frame-white focus:outline-none focus:border-frame-orange"
+              className="min-h-11 w-full bg-frame-black border border-frame-gray-3 px-3 py-2 text-frame-white focus-visible:border-frame-orange focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-frame-orange/30"
             />
           </div>
           <div>
@@ -86,7 +86,7 @@ export default function PortalActivate() {
               autoComplete="new-password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="min-h-11 w-full bg-frame-black border border-frame-gray-3 px-3 py-2 text-frame-white focus:outline-none focus:border-frame-orange"
+              className="min-h-11 w-full bg-frame-black border border-frame-gray-3 px-3 py-2 text-frame-white focus-visible:border-frame-orange focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-frame-orange/30"
             />
           </div>
           <ul className="grid gap-2 text-xs text-frame-gray-light sm:grid-cols-2">
@@ -103,7 +103,7 @@ export default function PortalActivate() {
           </ul>
           {error && <p className="text-sm text-frame-red">{error}</p>}
           <button type="submit" disabled={isSubmitting} className="frame-btn-primary min-h-11 w-full justify-center">
-            {isSubmitting ? "Ativando..." : "Criar senha e entrar"}
+            {isSubmitting ? "Ativando…" : "Criar senha e entrar"}
           </button>
         </form>
       </main>

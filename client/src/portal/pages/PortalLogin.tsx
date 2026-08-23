@@ -72,7 +72,7 @@ export default function PortalLogin() {
               autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="min-h-11 w-full bg-frame-black border border-frame-gray-3 px-3 py-2 text-frame-white focus:outline-none focus:border-frame-orange"
+              className="min-h-11 w-full bg-frame-black border border-frame-gray-3 px-3 py-2 text-frame-white focus-visible:border-frame-orange focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-frame-orange/30"
             />
           </div>
           <div>
@@ -86,12 +86,12 @@ export default function PortalLogin() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="min-h-11 w-full bg-frame-black border border-frame-gray-3 px-3 py-2 text-frame-white focus:outline-none focus:border-frame-orange"
+              className="min-h-11 w-full bg-frame-black border border-frame-gray-3 px-3 py-2 text-frame-white focus-visible:border-frame-orange focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-frame-orange/30"
             />
           </div>
           {error && <p className="text-sm text-frame-red">{error}</p>}
           <button type="submit" disabled={isSubmitting} className="frame-btn-primary min-h-11 w-full justify-center">
-            {isSubmitting ? "Entrando..." : "Entrar"}
+            {isSubmitting ? "Entrando…" : "Entrar"}
           </button>
         </form>
         </section>
