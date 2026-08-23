@@ -31,15 +31,18 @@
 > `npm run check`, `npm run build` e QA visual humano com 44 screenshots em
 > `tmp/final-human-design-qa-2026-08-23/`; resultado: 0 falhas HTTP,
 > 0 erros de console, 0 overflow horizontal e 0 tela em branco/overlay. A branch
-> `codex/discovery-journey-redesign` foi enviada para o GitHub e implantada em
-> produção pela Vercel em `dpl_Ck8BVZR7AheNiUzgfCzhaUTo7ySx`
+> `codex/discovery-journey-redesign` foi enviada para o GitHub, fast-forward em
+> `main` e implantada em produção pela Vercel em
+> `dpl_7X6K9oLyaVtNVsKwArTk9nzm926Y`
 > (`https://cena-studio-prod.vercel.app`). Validação pós-deploy:
 > deployment `Ready`, `/` HTTP 200, `/health` `status: ok`, `/ready` com banco
 > `ok` e smoke visual público com 8 screenshots em
-> `tmp/prod-smoke-qa-2026-08-23/`; resultado: 0 falhas HTTP inesperadas,
+> `tmp/prod-main-smoke-qa-2026-08-23/`; resultado: 0 falhas HTTP inesperadas,
 > 0 erros de console inesperados, 0 overflow horizontal e 0 tela em
-> branco/overlay. O Preview da branch ficou com backend indisponível por falta
-> de envs críticas no ambiente Preview; produção usa as envs corretas.
+> branco/overlay. `/ready` retornou `ready: true`; memória apareceu como `warn`
+> no cold start, com banco `ok`. O Preview da branch ficou com backend
+> indisponível por falta de envs críticas no ambiente Preview; produção usa as
+> envs corretas.
 >
 > **Handoff anterior:** os commits `2aab029`, `fada13e`, `b396ce4` e
 > `ef68cb5` consolidam proteção contra segredos, ciclo de e-mail da conta,
