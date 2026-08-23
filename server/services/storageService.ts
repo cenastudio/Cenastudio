@@ -32,6 +32,54 @@ interface StorageStats {
  * @returns Storage statistics including total used, by type, and top files
  */
 export async function calculateStorageStats(userId: number): Promise<StorageStats> {
+  if (!shouldUsePrisma) {
+    const totalResult = db
+      .prepare("SELECT COALESCE(SUM(size), 0) AS totalUsed, COUNT(*) AS fileCount FROM files WHERE user_id = ?")
+      .get(userId) as { totalUsed: number; fileCount: number };
+    const filesByType = db
+      .prepare("SELECT mime_type, COALESCE(SUM(size), 0) AS size FROM files WHERE user_id = ? GROUP BY mime_type")
+      .all(userId) as Array<{ mime_type: string | null; size: number }>;
+    const byType: StorageStatsByType = { images: 0, videos: 0, documents: 0, audio: 0, other: 0 };
+    filesByType.forEach((item) => {
+      const size = Number(item.size || 0);
+      const mime = (item.mime_type || "").toLowerCase();
+      if (mime.startsWith("image/")) byType.images += size;
+      else if (mime.startsWith("video/")) byType.videos += size;
+      else if (mime.startsWith("audio/")) byType.audio += size;
+      else if (
+        mime.includes("pdf") ||
+        mime.includes("document") ||
+        mime.includes("spreadsheet") ||
+        mime.includes("presentation") ||
+        mime.startsWith("text/")
+      ) byType.documents += size;
+      else byType.other += size;
+    });
+    const topRows = db
+      .prepare(
+        `SELECT f.id, f.original_name, f.size, f.project_id, p.name AS project_name
+         FROM files f
+         LEFT JOIN projects p ON p.id = f.project_id
+         WHERE f.user_id = ?
+         ORDER BY f.size DESC
+         LIMIT 10`,
+      )
+      .all(userId) as Array<{ id: number; original_name: string; size: number; project_id: number | null; project_name: string | null }>;
+    return {
+      totalUsed: Number(totalResult.totalUsed || 0),
+      quota: await getStorageQuotaBytes(userId),
+      byType,
+      topFiles: topRows.map((file) => ({
+        id: Number(file.id),
+        name: file.original_name,
+        size: Number(file.size || 0),
+        project: file.project_name || "Sem projeto",
+        projectId: file.project_id ? Number(file.project_id) : null,
+      })),
+      fileCount: Number(totalResult.fileCount || 0),
+    };
+  }
+
   // 1. Get total storage used
   const totalResult = await prisma.file.aggregate({
     where: { userId: BigInt(userId) },
@@ -124,6 +172,57 @@ export async function calculateProjectStorageStats(
   projectId: number,
   userId: number
 ): Promise<Omit<StorageStats, "quota">> {
+  if (!shouldUsePrisma) {
+    const project = db
+      .prepare("SELECT id, name FROM projects WHERE id = ? AND user_id = ?")
+      .get(projectId, userId) as { id: number; name: string } | undefined;
+    if (!project) throw new Error("Project not found or access denied");
+
+    const totalResult = db
+      .prepare("SELECT COALESCE(SUM(size), 0) AS totalUsed, COUNT(*) AS fileCount FROM files WHERE project_id = ? AND user_id = ?")
+      .get(projectId, userId) as { totalUsed: number; fileCount: number };
+    const filesByType = db
+      .prepare("SELECT mime_type, COALESCE(SUM(size), 0) AS size FROM files WHERE project_id = ? AND user_id = ? GROUP BY mime_type")
+      .all(projectId, userId) as Array<{ mime_type: string | null; size: number }>;
+    const byType: StorageStatsByType = { images: 0, videos: 0, documents: 0, audio: 0, other: 0 };
+    filesByType.forEach((item) => {
+      const size = Number(item.size || 0);
+      const mime = (item.mime_type || "").toLowerCase();
+      if (mime.startsWith("image/")) byType.images += size;
+      else if (mime.startsWith("video/")) byType.videos += size;
+      else if (mime.startsWith("audio/")) byType.audio += size;
+      else if (
+        mime.includes("pdf") ||
+        mime.includes("document") ||
+        mime.includes("spreadsheet") ||
+        mime.includes("presentation") ||
+        mime.startsWith("text/")
+      ) byType.documents += size;
+      else byType.other += size;
+    });
+    const topRows = db
+      .prepare(
+        `SELECT id, original_name, size, project_id
+         FROM files
+         WHERE project_id = ? AND user_id = ?
+         ORDER BY size DESC
+         LIMIT 10`,
+      )
+      .all(projectId, userId) as Array<{ id: number; original_name: string; size: number; project_id: number }>;
+    return {
+      totalUsed: Number(totalResult.totalUsed || 0),
+      byType,
+      topFiles: topRows.map((file) => ({
+        id: Number(file.id),
+        name: file.original_name,
+        size: Number(file.size || 0),
+        project: project.name,
+        projectId: Number(file.project_id),
+      })),
+      fileCount: Number(totalResult.fileCount || 0),
+    };
+  }
+
   // Verify user has access to project
   const project = await prisma.project.findFirst({
     where: {

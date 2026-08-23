@@ -156,6 +156,15 @@ function ensureFileColumns() {
   }
 }
 
+function ensureMeetingColumns() {
+  const meetingCols = (db.prepare("PRAGMA table_info(meetings)").all() as { name: string }[]).map(
+    (c) => c.name,
+  );
+  if (!meetingCols.includes("visible_in_client_portal")) {
+    db.prepare("ALTER TABLE meetings ADD COLUMN visible_in_client_portal INTEGER NOT NULL DEFAULT 0").run();
+  }
+}
+
 function ensureClientColumns() {
   const clientCols = (db.prepare("PRAGMA table_info(clients)").all() as { name: string }[]).map(
     (c) => c.name,
@@ -855,6 +864,15 @@ export async function initDatabase() {
       updated_at TEXT DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS shot_types (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      is_default INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')),
+      UNIQUE(user_id, name)
+    );
+
     CREATE TABLE IF NOT EXISTS shots (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       shot_list_id INTEGER NOT NULL REFERENCES shot_lists(id) ON DELETE CASCADE,
@@ -935,6 +953,7 @@ export async function initDatabase() {
       email_sent_at TEXT,
       email_error TEXT,
       status TEXT DEFAULT 'scheduled',
+      visible_in_client_portal INTEGER NOT NULL DEFAULT 0,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     );
@@ -977,6 +996,7 @@ export async function initDatabase() {
   ensureProjectColumns();
   ensureClientColumns();
   ensureFileColumns();
+  ensureMeetingColumns();
   ensureVideoReviewColumns();
   ensureStudioSettingsColumns();
   ensureFinancialEntryColumns();

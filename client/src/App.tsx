@@ -139,6 +139,7 @@ function Router() {
         <Route path="/analytics" component={Analytics} />
         <Route path="/success" component={Success} />
         <Route path="/profile" component={Profile} />
+        <Route path="/studio">{() => <Redirect to="/studio/01" />}</Route>
         <Route path="/studio/:id" component={Studio} />
         <Route path="/project/:projectId/journey/:stage" component={ProjectChapter} />
         <Route path="/project/:id" component={ProjectHub} />

@@ -188,6 +188,25 @@ export interface PortalMeetingSummary {
 }
 
 export async function listMeetingsForClient(clientId: number): Promise<PortalMeetingSummary[]> {
+  if (!shouldUsePrisma) {
+    const rows = db
+      .prepare(
+        `SELECT id, title, location, starts_at, duration_minutes, status
+         FROM meetings
+         WHERE client_id = ? AND visible_in_client_portal = 1 AND status != 'cancelled'
+         ORDER BY starts_at DESC`,
+      )
+      .all(clientId) as any[];
+    return rows.map((row) => ({
+      id: Number(row.id),
+      title: row.title,
+      location: row.location,
+      startsAt: new Date(row.starts_at).toISOString(),
+      durationMinutes: Number(row.duration_minutes),
+      status: row.status,
+    }));
+  }
+
   const rows = await prisma.meeting.findMany({
     where: { clientId: BigInt(clientId), visibleInClientPortal: true, status: { not: "cancelled" } },
     orderBy: { startsAt: "desc" },
