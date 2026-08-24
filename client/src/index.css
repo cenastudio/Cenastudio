@@ -423,6 +423,7 @@ body.light .border-adaptive-primary {
   justify-content: center;
   gap: 0.45rem;
   border: 1px solid var(--app-border);
+  border-radius: 999px;
   background: color-mix(in srgb, var(--app-surface) 66%, transparent 34%);
   color: var(--app-muted);
   padding: 0 0.55rem;
@@ -2520,8 +2521,13 @@ body.light .border-adaptive-primary {
 /* Glow Card */
 .glow-card {
   border: 1px solid rgba(var(--ds-orange-rgb), 0.15);
+  border-radius: 16px;
   background: rgba(var(--ds-orange-rgb), 0.03);
-  transition: all 0.3s ease;
+  transition:
+    border-color 0.3s ease,
+    background 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
 }
 
 .glow-card:hover {

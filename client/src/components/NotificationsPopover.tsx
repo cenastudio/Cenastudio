@@ -203,7 +203,7 @@ export default function NotificationsPopover() {
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="notification-trigger relative flex h-11 w-11 items-center justify-center border border-frame-gray-3 text-frame-gray-light hover:text-frame-orange hover:border-frame-orange transition"
+          className="notification-trigger relative flex h-11 w-11 items-center justify-center rounded-full border border-frame-gray-3 text-frame-gray-light transition-colors hover:border-frame-orange hover:text-frame-orange"
           title={t("app.notifications.title") as string}
           aria-label={unreadCount > 0 ? `${unreadCount} ${t("app.notifications.unread") as string}` : t("app.notifications.title") as string}
         >

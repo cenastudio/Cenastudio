@@ -282,7 +282,7 @@ export default function AppNavBar({ children }: AppNavBarProps) {
               </div>
             </button>
             {/* Dropdown on hover */}
-            <div className="absolute right-0 top-full mt-1 w-56 border border-frame-gray-3 bg-frame-black/98 backdrop-blur-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+            <div className="absolute right-0 top-full mt-1 w-56 overflow-hidden rounded-2xl border border-frame-gray-3 bg-frame-black/98 backdrop-blur-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-200 z-50">
               <div className="p-3 border-b border-frame-gray-3">
                 <p className="text-xs font-semibold text-frame-white truncate">{user.name ?? user.email}</p>
                 <p className="text-[0.6rem] text-frame-gray-light truncate">{user.email}</p>

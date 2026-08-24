@@ -523,10 +523,10 @@ function DashboardContent() {
         </div>
 
         {/* ─── P2.4: PULSO FINANCEIRO COM FONTE REAL ─── */}
-        <section className="animate-stagger-1 border border-frame-gray-3/70 bg-frame-gray-1/20 p-4 sm:p-5">
+        <section className="animate-stagger-1 rounded-2xl border border-frame-gray-3/70 bg-frame-gray-1/20 p-4 sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-frame-orange/30 bg-frame-orange/[0.08]">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-frame-orange/30 bg-frame-orange/[0.08]">
                 <Wallet className="h-4 w-4 text-frame-orange" />
               </div>
               <div>
@@ -553,7 +553,7 @@ function DashboardContent() {
           {isFinancePulseLoading ? (
             <div className="mt-4 grid gap-2 sm:grid-cols-3">
               {[0, 1, 2].map((item) => (
-                <div key={item} className="min-h-[92px] animate-pulse border border-frame-gray-3/50 p-3">
+                <div key={item} className="min-h-[92px] animate-pulse rounded-xl border border-frame-gray-3/50 p-3">
                   <div className="h-3 w-24 rounded bg-frame-gray-3" />
                   <div className="mt-3 h-6 w-28 rounded bg-frame-gray-3" />
                   <div className="mt-2 h-3 w-32 rounded bg-frame-gray-2" />
@@ -561,7 +561,7 @@ function DashboardContent() {
               ))}
             </div>
           ) : financePulseFailed || !financeSummary ? (
-            <div className="mt-4 flex min-h-11 items-center gap-2 border border-frame-gray-3/60 px-3 py-2 text-[0.74rem] text-frame-gray-light">
+            <div className="mt-4 flex min-h-11 items-center gap-2 rounded-xl border border-frame-gray-3/60 px-3 py-2 text-[0.74rem] text-frame-gray-light">
               <TrendingUp className="h-3.5 w-3.5 text-frame-orange" />
               {locale === "en"
                 ? "Finance pulse is unavailable right now. The full dashboard remains accessible."
@@ -574,7 +574,7 @@ function DashboardContent() {
                   key={item.label}
                   type="button"
                   onClick={() => setLocation("/analytics")}
-                  className="group min-h-[92px] border border-frame-gray-3/60 p-3 text-left transition hover:border-frame-orange/50 hover:bg-frame-orange/[0.04]"
+                  className="group min-h-[92px] rounded-xl border border-frame-gray-3/60 p-3 text-left transition-colors hover:border-frame-orange/50 hover:bg-frame-orange/[0.04]"
                 >
                   <span className="block font-frame-mono text-[0.54rem] uppercase tracking-[0.14em] text-frame-gray-light">
                     {item.label}
@@ -591,7 +591,7 @@ function DashboardContent() {
 
         {/* ─── JOB EM FOCO ─── */}
         {isProjectsLoading ? (
-          <section className="animate-pulse border border-frame-gray-3 p-5 sm:p-7 space-y-4">
+          <section className="animate-pulse rounded-2xl border border-frame-gray-3 p-5 sm:p-7 space-y-4">
             <div className="h-4 bg-frame-gray-3 rounded w-24" />
             <div className="h-8 bg-frame-gray-3 rounded w-3/4" />
             <div className="flex gap-2">
@@ -613,6 +613,7 @@ function DashboardContent() {
               background: `linear-gradient(135deg, ${hexToRgba(SITE_CONFIG.primaryColor, 0.10)} 0%, ${hexToRgba(SITE_CONFIG.primaryColor, 0.03)} 60%, transparent 100%)`,
               border: `1px solid ${hexToRgba(SITE_CONFIG.primaryColor, 0.25)}`,
               borderLeft: `3px solid ${SITE_CONFIG.primaryColor}`,
+              borderRadius: "24px",
             }}
           >
             <div className="absolute top-0 right-0 w-48 h-48 rounded-full pointer-events-none opacity-[0.06]"
@@ -625,15 +626,15 @@ function DashboardContent() {
                   <h2 className="text-xl sm:text-2xl font-bold text-frame-white leading-tight">{focusProject.name}</h2>
                   <div className="flex flex-wrap items-center gap-2">
                     {focusFormat && (
-                      <span className="font-frame-mono text-[0.6rem] px-2 py-0.5 border border-frame-orange/25 bg-frame-orange/[0.07] text-frame-orange">{focusFormat}</span>
+                      <span className="rounded-full border border-frame-orange/25 bg-frame-orange/[0.07] px-2 py-0.5 font-frame-mono text-[0.6rem] text-frame-orange">{focusFormat}</span>
                     )}
                     {focusClient && (
-                      <span className="font-frame-mono text-[0.6rem] px-2 py-0.5 border border-frame-gray-3 bg-frame-gray-2/30 text-frame-gray-light flex items-center gap-1">
+                      <span className="flex items-center gap-1 rounded-full border border-frame-gray-3 bg-frame-gray-2/30 px-2 py-0.5 font-frame-mono text-[0.6rem] text-frame-gray-light">
                         <Building2 className="w-2.5 h-2.5" />{focusClient}
                       </span>
                     )}
                     {focusDeadline && (
-                      <span className="font-frame-mono text-[0.6rem] px-2 py-0.5 border border-frame-gray-3 bg-frame-gray-2/30 text-frame-gray-light flex items-center gap-1">
+                      <span className="flex items-center gap-1 rounded-full border border-frame-gray-3 bg-frame-gray-2/30 px-2 py-0.5 font-frame-mono text-[0.6rem] text-frame-gray-light">
                         <CalendarClock className="w-2.5 h-2.5" />{formatDate(focusDeadline)}
                       </span>
                     )}
@@ -668,7 +669,7 @@ function DashboardContent() {
                 <ListChecks className="w-4 h-4 text-frame-orange" />
                 <h2 className="font-frame-mono text-[0.7rem] uppercase tracking-[0.16em] text-frame-white font-semibold">{locale === "en" ? "Pending" : "Pendências"}</h2>
               </div>
-              <span className="font-frame-mono text-[0.6rem] text-frame-gray-light border border-frame-gray-3 px-2 py-0.5">
+              <span className="rounded-full border border-frame-gray-3 px-2 py-0.5 font-frame-mono text-[0.6rem] text-frame-gray-light">
                 {directorQueue.length} item{directorQueue.length !== 1 ? "s" : ""}
               </span>
             </div>
@@ -685,7 +686,7 @@ function DashboardContent() {
                   return (
                     <button key={item.id} type="button" onClick={item.action}
                       className="w-full group glow-card p-3.5 text-left flex items-center gap-3 min-h-11">
-                      <div className="w-7 h-7 flex items-center justify-center border border-frame-gray-3 bg-frame-gray-2/30 shrink-0">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-frame-gray-3 bg-frame-gray-2/30">
                         <Icon className={`w-3.5 h-3.5 ${item.tone}`} />
                       </div>
                       <span className="min-w-0 flex-1">

@@ -56,6 +56,25 @@
 > Webhooks e Admin). O padrão deixou de ser uma moldura pesada com cards
 > internos e virou um cabeçalho operacional compacto com título, descrição,
 > trilha de jornada em chips, métricas condensadas e ações horizontais.
+> Em seguida, o sistema transversal de descoberta (`DiscoverySystem`) foi
+> simplificado pelo mesmo critério: `OperationMap` deixou de ocupar uma caixa
+> grande com seis blocos, `NextActionsPanel` virou uma faixa de comandos com
+> primeira ação dominante e `ModuleCatalog` trocou cards pequenos truncados por
+> grupos de links arredondados. A tela Comercial também removeu a régua quadrada
+> do cabeçalho e passou a usar chips horizontais arredondados. Validação:
+> `npm run check`, `npm run build`, `npm run test --
+> client/src/test/discovery-ux.test.tsx` e `git diff --check`. O QA visual
+> autenticado local não foi concluído porque o backend de desenvolvimento
+> respondeu 500 no login por conexão Prisma encerrada (`P1017`/`Connection
+> terminated unexpectedly`), antes de chegar à rota `/commercial`.
+> Na mesma rodada, o Dashboard recebeu correção visual de consistência: cards
+> `glow-card` agora têm raio global, busca e notificações do topo ficaram
+> arredondadas, dropdown de perfil ganhou cantos arredondados, Pulso Financeiro,
+> tags, skeletons e Job em foco deixaram as caixas retas. Validação adicional:
+> `npm run check`, `npm run build`, `npm run test --
+> client/src/test/discovery-ux.test.tsx client/src/test/AppNavBar.test.tsx` e
+> `git diff --check`; os testes passaram com warnings antigos de ambiente
+> (`act`, `whileHover` e fetch para `localhost:3000`) sem falha.
 > Validação adicional: screenshots em
 > `tmp/rounded-studio-rebrand-qa-2026-08-24/` e
 > `tmp/studio-full-rebrand-qa-2026-08-24/`, ambos sem overflow horizontal em

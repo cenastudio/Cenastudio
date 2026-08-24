@@ -508,7 +508,10 @@ td{padding:10px 12px;border-top:1px solid ${dark.border};color:${dark.textSoft};
                 {t("app.commercial.subtitle")}
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-2 shrink-0 sm:grid-cols-3 xl:grid-cols-6 xl:min-w-[620px]" aria-label={locale === "en" ? "Commercial workflow" : "Fluxo comercial"}>
+            <div
+              className="flex max-w-full shrink-0 gap-1.5 overflow-x-auto pb-1 lg:justify-end xl:min-w-[560px]"
+              aria-label={locale === "en" ? "Commercial workflow" : "Fluxo comercial"}
+            >
               {[
                 { step: "01", label: "Lead", active: true },
                 { step: "02", label: "Cliente", active: false },
@@ -519,16 +522,16 @@ td{padding:10px 12px;border-top:1px solid ${dark.border};color:${dark.textSoft};
               ].map((item) => (
                 <div
                   key={item.step}
-                  className={`border px-2.5 py-2 text-center ${
+                  className={`flex min-h-9 shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 ${
                     item.active
-                      ? "border-frame-orange/30 bg-frame-orange/[0.06]"
-                      : "border-frame-gray-3/40 bg-frame-gray-1/20"
+                      ? "border-frame-orange bg-frame-orange text-frame-black"
+                      : "border-frame-gray-3/50 bg-frame-black/25 text-frame-gray-light"
                   }`}
                 >
-                  <span className={`block font-frame-mono text-[0.5rem] ${item.active ? "text-frame-orange" : "text-frame-gray-light"}`}>
+                  <span className={`font-frame-mono text-[0.5rem] ${item.active ? "text-frame-black/70" : "text-frame-orange"}`}>
                     {item.step}
                   </span>
-                  <span className={`block text-[0.58rem] sm:text-[0.6rem] font-medium mt-0.5 leading-tight ${item.active ? "text-frame-white" : "text-frame-gray-light"}`}>
+                  <span className={`text-[0.68rem] font-semibold leading-tight ${item.active ? "text-frame-black" : "text-frame-white"}`}>
                     {item.label}
                   </span>
                 </div>
