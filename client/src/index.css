@@ -2407,14 +2407,26 @@ body.light .border-adaptive-primary {
 }
 
 .studio-runbar {
-  position: sticky;
-  bottom: 0;
-  background: linear-gradient(180deg, transparent, var(--app-surface-strong) 18%);
+  position: static;
+  background: var(--app-surface-strong);
   border-color: var(--app-border) !important;
-  /* On phones the home-indicator/gesture area overlaps a plain sticky bar —
-     env() resolves to 0 on desktop/browsers without a safe area, so this is
-     a no-op there. */
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (max-width: 767px) {
+  .studio-runbar {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    margin-left: -1rem;
+    margin-right: -1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    background:
+      linear-gradient(180deg, transparent, color-mix(in srgb, var(--app-surface-strong) 96%, transparent) 22%),
+      color-mix(in srgb, var(--app-surface-strong) 92%, transparent);
+    backdrop-filter: blur(16px);
+  }
 }
 
 .clients-stage-column {
@@ -2449,7 +2461,15 @@ body.light .border-adaptive-primary {
 }
 
 .dark .studio-runbar {
-  background: linear-gradient(180deg, transparent, rgba(5, 5, 5, 0.94) 18%);
+  background: rgba(5, 5, 5, 0.94);
+}
+
+@media (max-width: 767px) {
+  .dark .studio-runbar {
+    background:
+      linear-gradient(180deg, transparent, rgba(5, 5, 5, 0.96) 22%),
+      rgba(5, 5, 5, 0.92);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

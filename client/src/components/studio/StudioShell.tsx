@@ -63,12 +63,9 @@ export default function StudioShell() {
   const [error, setError] = useState<string | null>(null);
   const [limitReached, setLimitReached] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  // On phones/tablets (<1024px) the 12-tool list and the metadata/context
-  // panel eat ~40% of the viewport height before the user even sees the
-  // form or the AI output — the tool is already chosen when landing here
-  // (via URL/dashboard), so start collapsed there and let the toggle button
-  // (visible at every breakpoint, not just desktop) reveal it on demand.
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    () => typeof window !== "undefined" && window.innerWidth < 1024,
+  );
   const [linkedContext, setLinkedContext] = useState<StudioLinkedContext | null>(null);
   const [selectedModel, setSelectedModel] = useState(() => localStorage.getItem("cena-ai-model") || "");
   const [commercialDraft, setCommercialDraft] = useState<{ clientId: number; reused: boolean } | null>(null);

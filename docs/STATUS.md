@@ -45,6 +45,11 @@
 > apagada/opaca para explicar o ciclo Brief -> Versão -> Próximo passo. O layout
 > principal agora usa duas áreas claras, brief e artefato, em vez de painéis
 > técnicos concorrendo por rolagem.
+> Ajuste posterior no mesmo dia: o botão "Gerar Artefato" deixou de ser sticky
+> no desktop, onde subia preso ao scroll e brigava com o formulário; a ação
+> sticky ficou restrita ao mobile, com safe area e fundo translúcido. No mobile,
+> a oficina de ferramentas voltou a iniciar recolhida para o usuário chegar mais
+> rápido no brief e na saída.
 > Validação adicional: screenshots em
 > `tmp/rounded-studio-rebrand-qa-2026-08-24/` e
 > `tmp/studio-full-rebrand-qa-2026-08-24/`, ambos sem overflow horizontal em
