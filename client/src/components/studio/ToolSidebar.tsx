@@ -15,6 +15,7 @@ interface CategoryGroup {
   key: string;
   slugs: string[];
   numbered?: boolean;
+  description: string;
 }
 
 const CATEGORIES: CategoryGroup[] = [
@@ -22,23 +23,28 @@ const CATEGORIES: CategoryGroup[] = [
     key: "commercial",
     slugs: ["briefing", "orcamento", "proposta", "contrato"],
     numbered: true,
+    description: "Captação, valor e proposta.",
   },
   {
     key: "preproduction",
     slugs: ["roteiro", "decupagem", "callsheet", "cronograma", "checklist"],
     numbered: true,
+    description: "Plano criativo e operação.",
   },
   {
     key: "delivery",
     slugs: ["entrega"],
+    description: "Fechamento e handoff.",
   },
   {
     key: "creative",
     slugs: ["moodboard"],
+    description: "Direção visual.",
   },
   {
     key: "assistant",
     slugs: ["assistente"],
+    description: "Perguntas livres.",
   },
 ];
 
@@ -68,12 +74,16 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
     activeCategory?.tools[0];
 
   return (
-    <aside className="studio-sidebar w-full shrink-0 border-b lg:w-[280px] lg:border-b-0 flex flex-col lg:overflow-y-auto">
-      {/* Brand Header (Hidden on Mobile) */}
-      <div className="hidden lg:block border-b border-frame-gray-2 px-5 py-5">
-        <p className="frame-label mb-1">// Studio</p>
-        <p className="font-frame-mono text-[0.62rem] uppercase tracking-[0.15em] text-frame-gray-light">
-          {t("app.studio.workspace") as string}
+    <aside className="studio-sidebar w-full shrink-0 border-b lg:w-[320px] lg:border-b-0 flex flex-col">
+      <div className="border-b border-frame-gray-2 px-4 py-4 lg:px-5">
+        <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.18em] text-frame-orange">
+          Oficina do Studio IA
+        </p>
+        <h2 className="mt-2 text-lg font-semibold leading-tight text-frame-white">
+          Escolha a entrega que precisa criar.
+        </h2>
+        <p className="mt-1 text-xs leading-relaxed text-frame-gray-light">
+          As ferramentas seguem a jornada real: vender, planejar, produzir e entregar.
         </p>
       </div>
 
@@ -120,14 +130,18 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
         </div>
       )}
 
-      <div className="hidden w-full shrink-0 py-2 lg:flex lg:shrink lg:flex-col lg:py-4">
+      <div className="hidden w-full shrink-0 py-3 lg:flex lg:shrink lg:flex-col">
         {visibleCategories.map((cat) => {
           return (
             <div key={cat.key} className="flex shrink-0 items-center lg:shrink lg:flex-col lg:items-stretch">
-              {/* Category label (Hidden on mobile or rendered as badge) */}
-              <p className="hidden px-[18px] pb-1.5 pt-4 font-frame-mono text-[0.62rem] uppercase tracking-[0.2em] text-frame-gray-muted lg:block">
-                // {categoryLabels[cat.key]}
-              </p>
+              <div className="px-4 pb-2 pt-4">
+                <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-orange">
+                  {categoryLabels[cat.key]}
+                </p>
+                <p className="mt-1 text-[0.68rem] leading-relaxed text-frame-gray-muted">
+                  {cat.description}
+                </p>
+              </div>
               <div className="flex gap-2 px-2 lg:flex-col lg:px-3">
                 {cat.tools.map((t, index) => {
                    const TIcon = getToolIcon(t.slug);
@@ -137,21 +151,28 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
                       key={t.id}
                       type="button"
                       onClick={() => onSelectTool(t.id)}
-                      className={`studio-tool-nav flex shrink-0 items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-left transition-[background-color,border-color,color,box-shadow] lg:shrink ${
+                      className={`studio-tool-nav group flex min-h-[58px] shrink-0 items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-[background-color,border-color,color,box-shadow] lg:shrink ${
                         active
                           ? "is-active border-frame-orange/70 text-frame-white shadow-[0_0_24px_rgba(var(--ds-orange-rgb),0.08)]"
                           : "border-transparent text-frame-gray-light hover:border-frame-gray-3/70 hover:bg-frame-white/[0.03] hover:text-frame-white"
                       }`}
                     >
                       {cat.numbered ? (
-                        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border font-frame-mono text-[0.58rem] ${active ? "border-frame-orange bg-frame-orange text-frame-black" : "border-frame-gray-3 text-frame-gray-light"}`}>
+                        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border font-frame-mono text-[0.62rem] ${active ? "border-frame-orange bg-frame-orange text-frame-black" : "border-frame-gray-3 text-frame-gray-light group-hover:border-frame-gray-light"}`}>
                           {index + 1}
                         </span>
                       ) : (
-                        <TIcon className={`h-4 w-4 shrink-0 transition-colors ${active ? "text-frame-orange" : "text-frame-gray-light"}`} />
+                        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border ${active ? "border-frame-orange bg-frame-orange/10" : "border-frame-gray-3 group-hover:border-frame-gray-light"}`}>
+                          <TIcon className={`h-4 w-4 shrink-0 transition-colors ${active ? "text-frame-orange" : "text-frame-gray-light"}`} />
+                        </span>
                       )}
-                      <span className="text-[0.76rem] font-medium tracking-wide font-frame-body">
-                        {t.name}
+                      <span className="min-w-0">
+                        <span className="block truncate text-[0.82rem] font-semibold tracking-wide font-frame-body">
+                          {t.name}
+                        </span>
+                        <span className="mt-0.5 block line-clamp-1 text-[0.62rem] leading-relaxed text-frame-gray-muted">
+                          {t.description}
+                        </span>
                       </span>
                     </button>
                   );

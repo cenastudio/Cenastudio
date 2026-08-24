@@ -1,6 +1,6 @@
 import { type ToolFromApi } from "@/lib/api";
 import FormDispatcher from "./forms/FormDispatcher";
-import { ClipboardList, FileText, Link2, Loader2, Layers, Sparkles } from "lucide-react";
+import { ClipboardList, FileText, Link2, Loader2, Layers, Sparkles, Wand2 } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import StudioTextLocalizer from "./StudioTextLocalizer";
@@ -95,19 +95,19 @@ export default function ToolWorkspace({
   };
 
   return (
-    <div className="studio-input-panel w-full shrink-0 border-b border-[var(--ds-border)] bg-frame-black/45 p-4 select-none md:p-5 lg:w-[430px] lg:border-b-0 lg:border-r xl:w-[460px]">
+    <div className="studio-input-panel w-full shrink-0 rounded-2xl border border-[var(--ds-border)] bg-frame-black/45 p-4 select-none md:p-5">
       <div className="space-y-4">
         <div className="studio-panel-header rounded-xl border border-frame-orange/20 bg-[linear-gradient(145deg,rgba(var(--ds-orange-rgb),0.1),rgba(8,8,8,0.72))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <span className="font-frame-mono text-[0.58rem] font-semibold uppercase tracking-[0.18em] text-frame-orange">
-                Entrada guiada
+                Brief de entrada
               </span>
               <h2 className="mt-2 text-base font-semibold leading-tight text-frame-white">
-                Transforme briefing em saída pronta.
+                Coloque o mínimo para a IA trabalhar direito.
               </h2>
               <p className="mt-1 text-[0.75rem] leading-relaxed text-[var(--ds-text-muted)]">
-                Preencha só o essencial, aplique contexto quando houver e gere uma versão para revisão.
+                O Studio pega este contexto e transforma em artefato revisável, com versão e próximo passo.
               </p>
             </div>
             <div className="shrink-0 text-right">
@@ -119,10 +119,10 @@ export default function ToolWorkspace({
           </div>
 
           <ol className="mt-4 grid grid-cols-3 gap-2">
-            {[
-              { label: "Entrada", icon: ClipboardList, active: true },
-              { label: "Gerar", icon: Sparkles, active: isProcessing },
-              { label: "Revisar", icon: FileText, active: Boolean(filledFieldsCount) },
+              {[
+              { label: "Brief", icon: ClipboardList, active: true },
+              { label: "Gerar", icon: Sparkles, active: isProcessing || filledFieldsCount > 0 },
+              { label: "Usar", icon: FileText, active: Boolean(filledFieldsCount) },
             ].map(({ label, icon: Icon, active }, index) => (
               <li
                 key={label}
@@ -217,7 +217,7 @@ export default function ToolWorkspace({
         )}
 
         {/* Specialized Form Dispatcher */}
-        <div className="studio-form-stack space-y-4 rounded-xl border border-frame-gray-3/60 bg-frame-black/25 p-3">
+        <div className="studio-form-stack space-y-4 rounded-xl border border-frame-gray-3/60 bg-frame-black/25 p-3 md:p-4">
           <StudioTextLocalizer>
             <FormDispatcher
               slug={tool.slug}
@@ -251,7 +251,10 @@ export default function ToolWorkspace({
                 {t("app.studio.processing") as string}
               </>
             ) : (
-              <>▶ {t("app.studio.runAI") as string}</>
+              <>
+                <Wand2 className="h-4 w-4" aria-hidden="true" />
+                Gerar Artefato
+              </>
             )}
           </button>
         </div>

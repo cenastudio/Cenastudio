@@ -9,7 +9,7 @@ import ToolWorkspace from "./ToolWorkspace";
 import OutputPanel from "./OutputPanel";
 import HistoryPanel from "./HistoryPanel";
 import AppNavBar from "../AppNavBar";
-import { Loader2, ChevronLeft, Bot, ClipboardList, FileCheck2, FolderKanban, Sparkles } from "lucide-react";
+import { Loader2, Bot, ClipboardList, FileCheck2, FolderKanban, Sparkles, Wand2 } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TOOLS } from "../../../../shared/tools";
@@ -68,10 +68,7 @@ export default function StudioShell() {
   // form or the AI output — the tool is already chosen when landing here
   // (via URL/dashboard), so start collapsed there and let the toggle button
   // (visible at every breakpoint, not just desktop) reveal it on demand.
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(
-    () => typeof window !== "undefined" && window.innerWidth < 1024,
-  );
-  const [workspaceCollapsed, setWorkspaceCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [linkedContext, setLinkedContext] = useState<StudioLinkedContext | null>(null);
   const [selectedModel, setSelectedModel] = useState(() => localStorage.getItem("cena-ai-model") || "");
   const [commercialDraft, setCommercialDraft] = useState<{ clientId: number; reused: boolean } | null>(null);
@@ -375,6 +372,10 @@ export default function StudioShell() {
     setLocation(path);
   };
 
+  const filledFieldsCount = visibleFormValues(formData).length;
+  const artifactStatus = getArtifactStatus(formData);
+  const artifactVersion = getArtifactVersion(formData);
+
   return (
     <div className="studio-app min-h-screen bg-frame-black text-frame-white flex flex-col">
       <AppNavBar />
@@ -383,9 +384,6 @@ export default function StudioShell() {
       {/* The Studio scrolls as one page on every breakpoint. Internal locked
           panes were fragile in Safari and made long forms feel broken. */}
       <div className="studio-workbench flex flex-1 flex-col lg:flex-row">
-        {/* Tool Sidebar — normal flow, collapsible. Below lg it stacks in
-            the column flow (h-0 collapses height), matching how the
-            sidebar itself lays out horizontally on small screens. */}
         <div className={`overflow-hidden shrink-0 transition-[height,width,max-height] duration-200 ${sidebarCollapsed ? "h-0 lg:h-auto lg:w-0" : "w-auto max-h-[40vh] lg:max-h-none"}`}>
           <div className="h-full overflow-y-auto">
             <ToolSidebar
@@ -396,50 +394,41 @@ export default function StudioShell() {
           </div>
         </div>
 
-        {/* Sidebar toggle — visible at every breakpoint so mobile users can
-            reclaim the space taken by the 12-tool list once they've already
-            picked a tool. Horizontal bar on mobile (matches the sidebar's
-            row layout there), thin vertical strip on desktop. */}
         <button
           type="button"
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="flex items-center justify-center w-full h-8 min-h-11 lg:h-auto lg:w-5 lg:min-h-0 shrink-0 gap-1.5 border-b border-frame-gray-2 lg:border-b-0 transition-colors"
+          className="flex min-h-11 w-full shrink-0 items-center justify-center gap-2 border-b border-frame-gray-2 px-3 transition-colors hover:bg-frame-white/[0.03] lg:hidden"
           title={sidebarCollapsed ? "Mostrar ferramentas" : "Esconder ferramentas"}
         >
-          <span className="lg:hidden font-frame-mono text-[0.6rem] uppercase tracking-[0.12em] text-frame-gray-light">
-            {sidebarCollapsed ? "Ferramentas" : "Esconder ferramentas"}
+          <Wand2 className="h-4 w-4 text-frame-orange" aria-hidden="true" />
+          <span className="font-frame-mono text-[0.62rem] uppercase tracking-[0.12em] text-frame-gray-light">
+            {sidebarCollapsed ? "Mostrar oficina de IA" : "Recolher oficina de IA"}
           </span>
-          <ChevronLeft
-            className={`w-4 h-4 text-frame-orange transition-transform ${
-              sidebarCollapsed ? "rotate-[-90deg] lg:rotate-180" : "rotate-90 lg:rotate-0"
-            }`}
-          />
         </button>
 
-        {/* Studio Shell Body Container */}
         <div className="studio-main flex-1 flex flex-col relative">
           {tool.slug !== "assistente" && (
-            <section className="shrink-0 border-b border-frame-gray-3/70 bg-[radial-gradient(circle_at_18%_0%,rgba(var(--ds-orange-rgb),0.18),transparent_34%),linear-gradient(135deg,rgba(34,18,10,0.74),rgba(7,7,7,0.94))] px-3 py-5 sm:px-5 lg:px-6">
-              <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(380px,0.72fr)] xl:items-end">
+            <section className="shrink-0 border-b border-frame-gray-3/70 bg-[radial-gradient(circle_at_18%_0%,rgba(var(--ds-orange-rgb),0.18),transparent_34%),linear-gradient(135deg,rgba(18,18,18,0.96),rgba(7,7,7,0.98))] px-4 py-5 sm:px-6 lg:px-8">
+              <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(420px,0.62fr)] xl:items-end">
                 <div className="min-w-0">
                   <div className="mb-3 flex items-center gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-frame-orange/35 bg-frame-orange/[0.1] shadow-[0_0_28px_rgba(var(--ds-orange-rgb),0.12)]">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-frame-orange/35 bg-frame-orange/[0.1] shadow-[0_0_28px_rgba(var(--ds-orange-rgb),0.12)]">
                       <Bot className="h-5 w-5 text-frame-orange" aria-hidden="true" />
                     </div>
                     <div className="min-w-0">
                       <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-orange">
-                        Studio IA / Produção guiada
+                        Studio IA / Oficina de artefatos
                       </p>
                       <p className="mt-0.5 truncate text-xs text-frame-gray-light">
                         {activeProject ? activeProject.name : "Biblioteca sem projeto ativo"}
                       </p>
                     </div>
                   </div>
-                  <h1 className="frame-title max-w-4xl text-[clamp(2rem,3.6vw,3.25rem)] leading-none text-frame-white text-balance">
-                    {tool.name} pronto para virar entrega.
+                  <h1 className="frame-title max-w-4xl text-[clamp(2.2rem,4vw,4rem)] leading-none text-frame-white text-balance">
+                    {tool.name}
                   </h1>
                   <p className="mt-3 max-w-3xl text-sm leading-relaxed text-frame-gray-light text-pretty sm:text-base">
-                    Use contexto do job quando existir, preencha o briefing mínimo e gere um artefato que já nasce com status, versão e próximo passo.
+                    Escolha a peça da jornada, transforme contexto em brief e gere uma entrega pronta para revisar, exportar ou levar para o próximo módulo.
                   </p>
                 </div>
 
@@ -452,19 +441,19 @@ export default function StudioShell() {
                       icon: FolderKanban,
                     },
                     {
-                      label: "Campos",
-                      value: linkedContext ? countFillableFields(formData, linkedContext.prefill) : visibleFormValues(formData).length,
-                      detail: linkedContext ? "preenchíveis" : "preenchidos",
+                      label: "Brief",
+                      value: filledFieldsCount,
+                      detail: filledFieldsCount > 0 ? "campos preenchidos" : "aguardando entrada",
                       icon: ClipboardList,
                     },
                     {
                       label: "Artefato",
-                      value: getArtifactStatus(formData),
-                      detail: `v${getArtifactVersion(formData)}`,
+                      value: output ? "Gerado" : artifactStatus,
+                      detail: `v${artifactVersion}`,
                       icon: FileCheck2,
                     },
                   ].map(({ label, value, detail, icon: Icon }) => (
-                    <div key={label} className="min-w-0 rounded-lg border border-frame-gray-3/60 bg-frame-black/35 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                    <div key={label} className="min-w-0 rounded-xl border border-frame-gray-3/60 bg-frame-black/35 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-frame-mono text-[0.52rem] uppercase tracking-[0.14em] text-frame-gray-light">{label}</span>
                         <Icon className="h-3.5 w-3.5 shrink-0 text-frame-orange" aria-hidden="true" />
@@ -481,7 +470,7 @@ export default function StudioShell() {
                   <button
                     type="button"
                     onClick={handleApplyLinkedContext}
-                    className="frame-btn-ghost flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold normal-case tracking-normal"
+                    className="frame-btn-ghost flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold normal-case tracking-normal"
                   >
                     <Sparkles className="h-4 w-4 shrink-0 text-frame-orange" aria-hidden="true" />
                     <span className="truncate">Aplicar contexto</span>
@@ -489,16 +478,17 @@ export default function StudioShell() {
                 )}
                 <button
                   type="button"
-                  onClick={() => setWorkspaceCollapsed(false)}
-                  className="frame-btn-primary flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold normal-case tracking-normal"
+                  onClick={handleExecute}
+                  disabled={isProcessing}
+                  className="frame-btn-primary flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold normal-case tracking-normal disabled:opacity-70"
                 >
-                  <ClipboardList className="h-4 w-4 shrink-0 text-frame-black" aria-hidden="true" />
-                  <span className="truncate">Editar entrada</span>
+                  {isProcessing ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" /> : <Wand2 className="h-4 w-4 shrink-0 text-frame-black" aria-hidden="true" />}
+                  <span className="truncate">{output ? "Gerar nova versão" : "Gerar artefato"}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setHistoryOpen(true)}
-                  className="frame-btn-ghost flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold normal-case tracking-normal"
+                  className="frame-btn-ghost flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold normal-case tracking-normal"
                 >
                   <FileCheck2 className="h-4 w-4 shrink-0 text-frame-orange" aria-hidden="true" />
                   <span className="truncate">Ver versões</span>
@@ -507,14 +497,12 @@ export default function StudioShell() {
             </section>
           )}
 
-          <div className="flex flex-1 flex-col md:flex-row">
+          <div className="studio-production-grid grid flex-1 gap-4 p-4 md:p-5 xl:grid-cols-[minmax(360px,0.44fr)_minmax(0,1fr)] xl:gap-5 xl:p-6">
           {tool.slug === "assistente" ? (
             <AssistantChatWorkspace tool={tool} projectId={activeProject?.id} />
           ) : (
             <>
-              {/* Main workspace (Inputs & Forms) — collapsible */}
-              {/* Mobile stacks panels in a column, so height is the collapse axis there (h-0); md+ stacks in a row, so width stays the collapse axis (w-0), unchanged from before. */}
-              <div className={`overflow-hidden shrink-0 transition-[height,width] duration-200 ${workspaceCollapsed ? "h-0 w-auto md:h-auto md:w-0" : "w-auto md:w-[380px] lg:w-[420px]"}`}>
+              <div className="min-w-0">
                 <ToolWorkspace
                   tool={tool}
                   formData={formData}
@@ -539,20 +527,7 @@ export default function StudioShell() {
                 />
               </div>
 
-              {/* Workspace toggle — orange chevron icon. Visible on mobile too (rotated to point up/down) since the panels stack vertically there. */}
-              <button
-                type="button"
-                onClick={() => setWorkspaceCollapsed(!workspaceCollapsed)}
-                className="flex items-center justify-center w-full h-5 md:w-5 md:h-auto shrink-0 transition-colors"
-                title={workspaceCollapsed ? "Mostrar formulário" : "Esconder formulário"}
-              >
-                <ChevronLeft className={`w-4 h-4 text-frame-orange transition-transform md:rotate-0 ${workspaceCollapsed ? "rotate-90 md:rotate-180" : "-rotate-90 md:rotate-0"}`} />
-              </button>
-
-              {/* Output and Refinement Chat Panel — min height on mobile so the
-                  document/output area stays comfortably tall in the natural
-                  page flow instead of collapsing to its content height. */}
-              <div className="flex-1 flex flex-col min-h-[70vh]">
+              <div className="min-w-0">
                 {/* Limit Reached Warning Alert Banner */}
                 {limitReached && (
                   <div className="mx-6 mt-4 px-4 py-3 border border-frame-orange/40 bg-[rgba(255,77,0,0.08)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0 rounded-none">

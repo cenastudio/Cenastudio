@@ -37,6 +37,14 @@
 > desktop/Safari e em formulários longos. A estrutura passou a rolar como uma
 > página única em todos os breakpoints, preservando colapso de ferramentas,
 > formulário e runbar sticky, mas sem travar o usuário em caixas internas.
+> Em seguida, o fluxo do Studio IA recebeu redesign estrutural: a rota passou a
+> se apresentar como "Oficina de artefatos", a navegação lateral virou mapa de
+> jornada com etapas e descrições, o header deixou de usar "Editar entrada" como
+> CTA principal e passou a priorizar "Gerar artefato", o formulário foi
+> reposicionado como "Brief de entrada" e a área vazia de saída deixou de ser
+> apagada/opaca para explicar o ciclo Brief -> Versão -> Próximo passo. O layout
+> principal agora usa duas áreas claras, brief e artefato, em vez de painéis
+> técnicos concorrendo por rolagem.
 > Validação adicional: screenshots em
 > `tmp/rounded-studio-rebrand-qa-2026-08-24/` e
 > `tmp/studio-full-rebrand-qa-2026-08-24/`, ambos sem overflow horizontal em
