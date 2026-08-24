@@ -79,7 +79,7 @@ export default function Hero() {
               type="button"
               onClick={() => setLocation("/login")}
               data-testid="landing-hero-primary-cta"
-              className="landing-hero-cta inline-flex min-h-12 items-center justify-center gap-3 bg-frame-orange px-5 text-sm font-semibold text-black transition hover:bg-frame-orange/90"
+              className="frame-btn-primary landing-hero-cta inline-flex min-h-12 items-center justify-center gap-3 px-5 text-sm"
             >
               {t("app.landing.hero.cta") as string}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -88,7 +88,7 @@ export default function Hero() {
               type="button"
               onClick={() => document.querySelector("#product-proof")?.scrollIntoView({ behavior: "smooth" })}
               data-testid="landing-hero-product-cta"
-              className="landing-hero-secondary-cta inline-flex min-h-12 items-center justify-center gap-2 border border-white/30 bg-black/35 px-5 text-sm font-medium text-white backdrop-blur-sm transition hover:border-white/60 hover:bg-black/55"
+              className="frame-btn-ghost landing-hero-secondary-cta inline-flex min-h-12 items-center justify-center gap-2 px-5 text-sm"
             >
               <Play className="h-3.5 w-3.5" aria-hidden="true" />
               {t("app.landing.hero.exploreProduct") as string}

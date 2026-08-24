@@ -7,6 +7,7 @@ let interval: NodeJS.Timeout | null = null;
 
 export function startWebhookRetryJob(intervalMs = DEFAULT_INTERVAL_MS) {
   if (process.env.NODE_ENV === "test") return null;
+  if (process.env.NODE_ENV !== "production" && process.env.ENABLE_WEBHOOK_RETRY_JOB !== "true") return null;
   if (process.env.ENABLE_WEBHOOK_RETRY_JOB === "false") return null;
   if (interval) return interval;
 

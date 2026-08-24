@@ -5,7 +5,26 @@
 > de estado, edite a seção correspondente, não acrescente uma nova
 > no fim sem contexto. Data da última atualização no topo.
 
-**Última atualização:** 2026-08-23
+**Última atualização:** 2026-08-24
+
+> **Handoff desta sessão:** em 2026-08-24 foi feita uma correção global de
+> consistência visual após comparação direta entre Landing e Login: CTAs da
+> Landing, menu mobile, seletor de idioma, checkout público e primitivos antigos
+> de design system (`Button`, `Input`, `Badge`, `Card`) passaram a usar cantos
+> retos/baixos e transições específicas, alinhados ao padrão `frame-btn-*`.
+> Também foram aparados controles manuais em Perfil, Financeiro e upload de
+> vídeo que ainda puxavam `rounded-lg/full` em ações clicáveis. No Studio IA, o
+> fallback local de ferramentas evita a tela genérica de ferramenta não
+> encontrada quando a API falha, a entrada ganhou cabeçalho guiado, contagem de
+> campos e etapas Entrada/Gerar/Revisar, e o toolbar mobile deixou de renderizar
+> botões vazios. Para estabilizar QA local, jobs periódicos de sessão/webhook
+> ficaram opt-in em desenvolvimento e falha de seed Prisma não derruba o app fora
+> de produção. Validação: `npm run check`; screenshots/medição Playwright em
+> `tmp/global-button-shape-qa-2026-08-24/` confirmaram Landing/Login/Cadastro
+> com controles capturados em `border-radius: 0px`; screenshots autenticados do
+> Studio IA em `tmp/studio-ai-visual-qa-2026-08-24/` confirmaram `/studio/01`,
+> sem overflow horizontal, sem fallback de ferramenta indisponível e toolbar
+> mobile com labels visíveis.
 
 > **Handoff desta sessão:** em 2026-08-23 foi concluída a frente
 > `.kiro/specs/arquitetura-descoberta-jornada/`: navegação principal em jornada

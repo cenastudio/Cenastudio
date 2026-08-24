@@ -48,11 +48,11 @@ import { cn } from "@/lib/utils";
 
 const cardVariants = cva(
   [
-    "rounded-lg",
+    "rounded-sm",
     "bg-[var(--plan-surface-raised)]",
     "border border-[var(--plan-border-default)]",
     "text-[var(--plan-text-primary)]",
-    "transition-all duration-200",
+    "transition-[background-color,border-color,box-shadow,transform] duration-200",
   ].join(" "),
   {
     variants: {

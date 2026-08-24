@@ -32,14 +32,14 @@ import { cn } from "@/lib/utils";
 
 const inputVariants = cva(
   [
-    "flex w-full rounded-lg",
+    "flex w-full rounded-sm",
     "bg-[var(--plan-surface-raised)]",
     "border border-[var(--plan-border-default)]",
     "px-3 py-2",
     "text-sm text-[var(--plan-text-primary)]",
     "placeholder:text-[var(--plan-text-muted)]",
     "shadow-[var(--plan-shadow-inset)]",
-    "transition-all duration-200",
+    "transition-[background-color,border-color,color,box-shadow] duration-200",
     "focus-visible:outline-none",
     "focus-visible:ring-2 focus-visible:ring-offset-2",
     "focus-visible:ring-[var(--plan-accent-primary)]",

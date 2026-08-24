@@ -12,6 +12,7 @@ import AppNavBar from "../AppNavBar";
 import { Loader2, ChevronLeft, Bot, ClipboardList, FileCheck2, FolderKanban, Sparkles } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { TOOLS } from "../../../../shared/tools";
 import ProjectTimeline from "./ProjectTimeline";
 import AssistantChatWorkspace from "./AssistantChatWorkspace";
 import {
@@ -21,6 +22,19 @@ import {
   type StudioLinkedContext,
 } from "@/lib/studioContext";
 import { getArtifactStatus, getArtifactVersion, type ArtifactStatus, visibleFormValues } from "@/lib/workflow";
+
+const fallbackTools: ToolFromApi[] = TOOLS.map((tool) => ({
+  id: tool.id,
+  slug: tool.slug,
+  name: tool.name,
+  description: tool.description,
+  category: tool.category,
+  icon: tool.icon,
+  tags: tool.tags,
+  processingTime: tool.processingTime,
+  placeholder: tool.placeholder,
+  isActive: true,
+}));
 
 export default function StudioShell() {
   const [, setLocation] = useLocation();
@@ -69,7 +83,9 @@ export default function StudioShell() {
     return () => window.removeEventListener("cena:model-change", handler);
   }, []);
 
-  const tool = tools.find((t) => t.id === activeToolId || t.slug === activeToolId);
+  const tool =
+    tools.find((t) => t.id === activeToolId || t.slug === activeToolId) ||
+    fallbackTools.find((t) => t.id === activeToolId || t.slug === activeToolId);
   const { t, locale } = useLanguage();
 
   // Sync active project state from URL parameters
@@ -85,17 +101,27 @@ export default function StudioShell() {
   useEffect(() => {
     api.tools.list()
       .then((data) => {
-        setTools(data);
+        const activeTools = data.length > 0 ? data : fallbackTools;
+        setTools(activeTools);
         // If no tool selected, redirect to the first active tool
-        if (!activeToolId && data.length > 0) {
-          const firstTool = data.find((t) => t.isActive) || data[0];
+        if (!activeToolId && activeTools.length > 0) {
+          const firstTool = activeTools.find((t) => t.isActive) || activeTools[0];
           const path = projectIdParam
             ? `/project/${projectIdParam}/studio/${firstTool.id}`
             : `/studio/${firstTool.id}`;
           setLocation(path);
         }
       })
-      .catch(() => {})
+      .catch(() => {
+        setTools(fallbackTools);
+        if (!activeToolId) {
+          const firstTool = fallbackTools[0];
+          const path = projectIdParam
+            ? `/project/${projectIdParam}/studio/${firstTool.id}`
+            : `/studio/${firstTool.id}`;
+          setLocation(path);
+        }
+      })
       .finally(() => {
         setIsLoading(false);
       });
@@ -178,15 +204,37 @@ export default function StudioShell() {
 
   if (!tool) {
     return (
-      <div className="min-h-screen bg-frame-black text-frame-white flex flex-col items-center justify-center gap-4">
-        <p className="frame-label">{t("app.studio.toolNotFound") as string}</p>
-        <button
-          type="button"
-          onClick={() => setLocation("/tools")}
-          className="frame-btn-ghost font-frame-mono text-xs"
-        >
-          {t("app.studio.backToTools") as string}
-        </button>
+      <div className="min-h-screen bg-frame-black text-frame-white">
+        <AppNavBar />
+        <main className="mx-auto flex min-h-[70vh] max-w-4xl flex-col justify-center px-4 py-10">
+          <section className="border border-frame-gray-3/70 bg-frame-gray-1/20 p-6 sm:p-8">
+            <p className="font-frame-mono text-[0.62rem] uppercase tracking-[0.16em] text-frame-orange">
+              Studio IA / ferramenta indisponível
+            </p>
+            <h1 className="mt-3 frame-title text-[clamp(2rem,5vw,3.5rem)] leading-none text-frame-white">
+              Escolha uma ferramenta ativa.
+            </h1>
+            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-frame-gray-light">
+              A rota atual não encontrou uma ferramenta válida. Volte para a biblioteca ou abra a primeira ferramenta de produção para continuar no mesmo fluxo.
+            </p>
+            <div className="mt-6 grid gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => setLocation("/tools")}
+                className="frame-btn-ghost min-h-11"
+              >
+                {t("app.studio.backToTools") as string}
+              </button>
+              <button
+                type="button"
+                onClick={() => setLocation("/studio/01")}
+                className="frame-btn-primary min-h-11"
+              >
+                Abrir roteiro
+              </button>
+            </div>
+          </section>
+        </main>
       </div>
     );
   }
@@ -341,7 +389,7 @@ export default function StudioShell() {
         {/* Tool Sidebar — normal flow, collapsible. Below lg it stacks in
             the column flow (h-0 collapses height), matching how the
             sidebar itself lays out horizontally on small screens. */}
-        <div className={`transition-all duration-200 overflow-hidden shrink-0 ${sidebarCollapsed ? "h-0 lg:h-auto lg:w-0" : "w-auto max-h-[40vh] lg:max-h-none"}`}>
+        <div className={`overflow-hidden shrink-0 transition-[height,width,max-height] duration-200 ${sidebarCollapsed ? "h-0 lg:h-auto lg:w-0" : "w-auto max-h-[40vh] lg:max-h-none"}`}>
           <div className="h-full overflow-y-auto">
             <ToolSidebar
               tools={tools}
@@ -431,20 +479,21 @@ export default function StudioShell() {
                 </div>
               </div>
 
-              <div className="mt-4 grid gap-2 sm:grid-cols-3">
-                <button
-                  type="button"
-                  onClick={handleApplyLinkedContext}
-                  disabled={!linkedContext}
-                  className="flex min-h-12 min-w-0 items-center justify-center gap-2 border border-frame-gray-3/70 bg-frame-black/30 px-3 text-sm font-semibold text-frame-white transition hover:border-frame-orange/60 disabled:cursor-not-allowed disabled:opacity-45"
-                >
-                  <Sparkles className="h-4 w-4 shrink-0 text-frame-orange" aria-hidden="true" />
-                  <span className="truncate">Aplicar contexto</span>
-                </button>
+              <div className={`mt-4 grid gap-2 ${linkedContext ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+                {linkedContext && (
+                  <button
+                    type="button"
+                    onClick={handleApplyLinkedContext}
+                    className="flex min-h-12 min-w-0 items-center justify-center gap-2 border border-frame-gray-3/70 bg-frame-black/30 px-3 text-sm font-semibold text-frame-white transition-[background-color,border-color,color] hover:border-frame-orange/60"
+                  >
+                    <Sparkles className="h-4 w-4 shrink-0 text-frame-orange" aria-hidden="true" />
+                    <span className="truncate">Aplicar contexto</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setWorkspaceCollapsed(false)}
-                  className="flex min-h-12 min-w-0 items-center justify-center gap-2 border border-frame-gray-3/70 bg-frame-black/30 px-3 text-sm font-semibold text-frame-white transition hover:border-frame-orange/60"
+                  className="flex min-h-12 min-w-0 items-center justify-center gap-2 border border-frame-gray-3/70 bg-frame-black/30 px-3 text-sm font-semibold text-frame-white transition-[background-color,border-color,color] hover:border-frame-orange/60"
                 >
                   <ClipboardList className="h-4 w-4 shrink-0 text-frame-orange" aria-hidden="true" />
                   <span className="truncate">Editar entrada</span>
@@ -452,7 +501,7 @@ export default function StudioShell() {
                 <button
                   type="button"
                   onClick={() => setHistoryOpen(true)}
-                  className="flex min-h-12 min-w-0 items-center justify-center gap-2 border border-frame-gray-3/70 bg-frame-black/30 px-3 text-sm font-semibold text-frame-white transition hover:border-frame-orange/60"
+                  className="flex min-h-12 min-w-0 items-center justify-center gap-2 border border-frame-gray-3/70 bg-frame-black/30 px-3 text-sm font-semibold text-frame-white transition-[background-color,border-color,color] hover:border-frame-orange/60"
                 >
                   <FileCheck2 className="h-4 w-4 shrink-0 text-frame-orange" aria-hidden="true" />
                   <span className="truncate">Ver versões</span>
@@ -468,7 +517,7 @@ export default function StudioShell() {
             <>
               {/* Main workspace (Inputs & Forms) — collapsible */}
               {/* Mobile stacks panels in a column, so height is the collapse axis there (h-0); md+ stacks in a row, so width stays the collapse axis (w-0), unchanged from before. */}
-              <div className={`transition-all duration-200 overflow-hidden shrink-0 ${workspaceCollapsed ? "h-0 w-auto md:h-auto md:w-0" : "w-auto md:w-[380px] lg:w-[420px]"}`}>
+              <div className={`overflow-hidden shrink-0 transition-[height,width] duration-200 ${workspaceCollapsed ? "h-0 w-auto md:h-auto md:w-0" : "w-auto md:w-[380px] lg:w-[420px]"}`}>
                 <ToolWorkspace
                   tool={tool}
                   formData={formData}

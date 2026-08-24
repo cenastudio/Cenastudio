@@ -1,11 +1,12 @@
 import { type ToolFromApi } from "@/lib/api";
 import FormDispatcher from "./forms/FormDispatcher";
-import { Link2, Loader2, Layers } from "lucide-react";
+import { ClipboardList, FileText, Link2, Loader2, Layers, Sparkles } from "lucide-react";
 import { useProject } from "@/contexts/ProjectContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import StudioTextLocalizer from "./StudioTextLocalizer";
 import { PROJECT_TEMPLATES, applyTemplateToSlug } from "@/lib/studioContext";
 import { useState } from "react";
+import { visibleFormValues } from "@/lib/workflow";
 
 interface LinkedContextSummary {
   projectName?: string;
@@ -46,6 +47,10 @@ export default function ToolWorkspace({
 
   // Filter templates that have fields for this tool
   const relevantTemplates = PROJECT_TEMPLATES.filter(tmpl => Object.keys(tmpl.prefill[tool.slug] || {}).length > 0);
+  const filledFieldsCount = visibleFormValues(formData).length;
+  const fieldStatusLabel = filledFieldsCount > 0
+    ? `${filledFieldsCount} ${filledFieldsCount === 1 ? "campo preenchido" : "campos preenchidos"}`
+    : "Sem entrada ainda";
 
   const renderAutosaveStatus = () => {
     if (!activeProject) {
@@ -90,33 +95,68 @@ export default function ToolWorkspace({
   };
 
   return (
-    <div className="studio-input-panel w-full lg:w-[390px] shrink-0 p-4 md:p-5 lg:overflow-y-auto border-b lg:border-b-0 lg:border-r border-[var(--ds-border)] flex flex-col justify-between lg:h-full select-none">
+    <div className="studio-input-panel w-full shrink-0 border-b border-[var(--ds-border)] p-4 select-none md:p-5 lg:h-full lg:w-[430px] lg:overflow-y-auto lg:border-b-0 lg:border-r xl:w-[460px]">
       <div className="space-y-4">
-        {/* Workspace Title & Input Marker */}
-        <div className="studio-panel-header flex justify-between items-center border-b border-[var(--ds-border)] pb-3 mb-3">
-          <div>
-            <span className="font-frame-mono text-[0.62rem] tracking-[0.18em] uppercase text-[var(--ds-primary)] font-semibold">
-              {t("app.studio.inputParams") as string}
-            </span>
-            <p className="mt-1 text-[0.75rem] leading-relaxed text-[var(--ds-text-muted)]">
-              {t("app.studio.inputHint") as string}
-            </p>
+        <div className="studio-panel-header border border-frame-gray-3/70 bg-frame-black/35 p-3">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <span className="font-frame-mono text-[0.58rem] font-semibold uppercase tracking-[0.18em] text-frame-orange">
+                Entrada guiada
+              </span>
+              <h2 className="mt-2 text-base font-semibold leading-tight text-frame-white">
+                Transforme briefing em saída pronta.
+              </h2>
+              <p className="mt-1 text-[0.75rem] leading-relaxed text-[var(--ds-text-muted)]">
+                Preencha só o essencial, aplique contexto quando houver e gere uma versão para revisão.
+              </p>
+            </div>
+            <div className="shrink-0 text-right">
+              {renderAutosaveStatus()}
+              <p className="mt-2 font-frame-mono text-[0.56rem] uppercase tracking-[0.12em] text-frame-gray-light">
+                {fieldStatusLabel}
+              </p>
+            </div>
           </div>
-          {renderAutosaveStatus()}
+
+          <ol className="mt-4 grid grid-cols-3 gap-2">
+            {[
+              { label: "Entrada", icon: ClipboardList, active: true },
+              { label: "Gerar", icon: Sparkles, active: isProcessing },
+              { label: "Revisar", icon: FileText, active: Boolean(filledFieldsCount) },
+            ].map(({ label, icon: Icon, active }, index) => (
+              <li
+                key={label}
+                className={`min-w-0 border px-2 py-2 ${
+                  active ? "border-frame-orange bg-frame-orange/[0.08]" : "border-frame-gray-3/60 bg-frame-black/25"
+                }`}
+              >
+                <span className="block font-frame-mono text-[0.5rem] uppercase tracking-[0.12em] text-frame-orange">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <span className="mt-1 flex min-w-0 items-center gap-1.5">
+                  <Icon className="h-3.5 w-3.5 shrink-0 text-frame-orange" aria-hidden="true" />
+                  <span className="truncate text-xs font-semibold text-frame-white">{label}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
         </div>
 
         {/* Template selector — só mostra se tem templates para esta ferramenta */}
         {relevantTemplates.length > 0 && (
-          <div>
+          <div className="border border-frame-gray-3/60 bg-frame-black/25 p-3">
             <button
               type="button"
               onClick={() => setShowTemplates(v => !v)}
-              className="flex items-center gap-1.5 font-frame-mono text-[0.58rem] uppercase tracking-[0.14em] text-frame-gray-light hover:text-frame-orange transition mb-2"
+              className="mb-2 flex min-h-10 w-full items-center justify-between gap-2 font-frame-mono text-[0.58rem] uppercase tracking-[0.14em] text-frame-gray-light transition-[color,border-color,background-color] hover:text-frame-orange"
+              aria-expanded={showTemplates}
             >
-              <Layers className="w-3 h-3" />
-              Templates de projeto
-              <span className="ml-1 text-[0.5rem] border border-frame-gray-3 px-1 py-0.5 rounded">
-                {showTemplates ? "▲" : "▼"}
+              <span className="flex items-center gap-1.5">
+                <Layers className="h-3.5 w-3.5" aria-hidden="true" />
+                Templates de projeto
+              </span>
+              <span className="border border-frame-gray-3 px-1.5 py-0.5 text-[0.5rem]">
+                {relevantTemplates.length}
               </span>
             </button>
             {showTemplates && (
@@ -133,10 +173,10 @@ export default function ToolWorkspace({
                       }
                       setShowTemplates(false);
                     }}
-                    className="group text-left p-2 border border-frame-gray-3/50 hover:border-frame-orange/40 hover:bg-frame-orange/[0.04] transition rounded"
+                    className="group min-h-[74px] text-left border border-frame-gray-3/50 p-2 transition-[color,border-color,background-color] hover:border-frame-orange/40 hover:bg-frame-orange/[0.04]"
                   >
                     <span className="block text-base mb-0.5">{tmpl.icon}</span>
-                    <span className="block font-frame-mono text-[0.56rem] text-frame-white group-hover:text-frame-orange transition">{tmpl.label}</span>
+                    <span className="block truncate font-frame-mono text-[0.56rem] text-frame-white transition-colors group-hover:text-frame-orange">{tmpl.label}</span>
                     <span className="block text-[0.52rem] text-frame-gray-light">{tmpl.description}</span>
                   </button>
                 ))}
@@ -177,7 +217,7 @@ export default function ToolWorkspace({
         )}
 
         {/* Specialized Form Dispatcher */}
-        <div className="studio-form-stack space-y-4">
+        <div className="studio-form-stack space-y-4 rounded-none border border-frame-gray-3/60 bg-frame-black/20 p-3">
           <StudioTextLocalizer>
             <FormDispatcher
               slug={tool.slug}
@@ -190,8 +230,8 @@ export default function ToolWorkspace({
 
         {/* Error Notice */}
         {error && (
-          <p className="text-[var(--ds-danger)] font-frame-mono text-[0.65rem] mt-2 border border-[var(--ds-danger)]/20 bg-[var(--ds-danger)]/5 p-2 rounded-[var(--ds-radius-1)] leading-relaxed">
-            ⚠ {error}
+          <p className="mt-2 border border-[var(--ds-danger)]/20 bg-[var(--ds-danger)]/5 p-2 font-frame-mono text-[0.65rem] leading-relaxed text-[var(--ds-danger)]">
+            {error}
           </p>
         )}
       </div>

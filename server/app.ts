@@ -17,6 +17,7 @@ import { assertLaunchReadyEnvironment } from "./config/launchGuards.js";
 import apiRouter from "./router.js";
 import healthRoutes from "./routes/health.js";
 import { shouldUsePrisma } from "./models/prisma.js";
+import { logger } from "./utils/logger.js";
 import {
   buildGenericPublicShareMetadata,
   getPublicShareLocale,
@@ -40,7 +41,10 @@ function ensureDatabase() {
       sqliteInitReady = initDatabase();
     }
     if (shouldUsePrisma) {
-      prismaCoreReady = initPrismaCoreData();
+      prismaCoreReady = initPrismaCoreData().catch((error) => {
+        if (process.env.NODE_ENV === "production") throw error;
+        logger.error({ error }, "Prisma core seed failed in development");
+      });
     } else {
       prismaCoreReady = Promise.resolve();
     }

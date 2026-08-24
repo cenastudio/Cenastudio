@@ -67,28 +67,28 @@ export default function ActionToolbar({
       </div>
 
       {/* Operation Actions */}
-      <div className="grid grid-cols-3 sm:flex sm:items-center gap-1.5 w-full sm:w-auto">
+      <div className="grid w-full grid-cols-2 gap-1.5 sm:flex sm:w-auto sm:items-center">
         {hasOutput && (
           <>
             <button
               type="button"
               onClick={onCopy}
               title={t("app.studio.copyToClipboard") as string}
-              className="min-h-11 justify-center font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase px-3 py-2 border border-frame-gray-3 text-frame-gray-light bg-transparent transition hover:border-frame-gray-muted hover:text-frame-white flex items-center gap-1.5"
+              className="min-h-11 justify-center font-frame-mono text-[0.58rem] tracking-[0.1em] uppercase px-3 py-2 border border-frame-gray-3 text-frame-gray-light bg-transparent transition-[border-color,color] hover:border-frame-gray-muted hover:text-frame-white flex items-center gap-1.5"
             >
               <Copy className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{t("app.studio.copy") as string}</span>
+              <span>{t("app.studio.copy") as string}</span>
             </button>
             <div ref={downloadRef} className="relative">
               <button
                 type="button"
                 onClick={() => setDownloadOpen((open) => !open)}
                 title={t("app.studio.export") as string}
-                className="min-h-11 w-full justify-center font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase px-3 py-2 border border-frame-gray-3 text-frame-gray-light bg-transparent transition hover:border-frame-gray-muted hover:text-frame-white flex items-center gap-1.5"
+                className="min-h-11 w-full justify-center font-frame-mono text-[0.58rem] tracking-[0.1em] uppercase px-3 py-2 border border-frame-gray-3 text-frame-gray-light bg-transparent transition-[border-color,color] hover:border-frame-gray-muted hover:text-frame-white flex items-center gap-1.5"
                 aria-expanded={downloadOpen}
               >
                 <Download className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{t("app.studio.export") as string}</span>
+                <span>{t("app.studio.export") as string}</span>
                 <ChevronDown className="h-3 w-3" />
               </button>
               {downloadOpen && (
@@ -117,20 +117,20 @@ export default function ActionToolbar({
           type="button"
           onClick={onClear}
           title={t("app.studio.clearFields") as string}
-          className="min-h-11 justify-center font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase px-3 py-2 border border-frame-gray-3 text-frame-gray-light bg-transparent transition hover:border-frame-red/40 hover:text-frame-red flex items-center gap-1.5"
+          className="min-h-11 justify-center font-frame-mono text-[0.58rem] tracking-[0.1em] uppercase px-3 py-2 border border-frame-gray-3 text-frame-gray-light bg-transparent transition-[border-color,color] hover:border-frame-red/40 hover:text-frame-red flex items-center gap-1.5"
         >
           <RefreshCw className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">{t("app.studio.clear") as string}</span>
+          <span>{t("app.studio.clear") as string}</span>
         </button>
 
         <button
           type="button"
           onClick={onToggleHistory}
           title={t("app.studio.viewHistory") as string}
-          className="min-h-11 justify-center font-frame-mono text-[0.6rem] tracking-[0.1em] uppercase px-3 py-2 border border-frame-gray-3 text-frame-gray-light bg-transparent transition hover:border-frame-gold/40 hover:text-frame-gold flex items-center gap-1.5"
+          className="min-h-11 justify-center font-frame-mono text-[0.58rem] tracking-[0.1em] uppercase px-3 py-2 border border-frame-gray-3 text-frame-gray-light bg-transparent transition-[border-color,color] hover:border-frame-gold/40 hover:text-frame-gold flex items-center gap-1.5"
         >
           <History className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">{t("app.studio.history") as string}</span>
+          <span>{t("app.studio.history") as string}</span>
         </button>
       </div>
     </div>

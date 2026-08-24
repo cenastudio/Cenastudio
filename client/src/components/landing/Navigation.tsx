@@ -70,7 +70,7 @@ export default function Navigation() {
           <button
             type="button"
             onClick={() => setLocation("/register")}
-            className="min-h-10 rounded-md bg-frame-orange px-5 text-xs font-medium text-black transition hover:bg-[var(--ds-orange-3)]"
+            className="frame-btn-primary min-h-10 px-5 py-0 text-xs"
           >
             {t("start") as string}
           </button>
@@ -79,7 +79,7 @@ export default function Navigation() {
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}
-          className="grid h-10 w-10 place-items-center rounded-md border border-white/15 bg-black/30 text-white backdrop-blur-xl sm:hidden"
+          className="grid h-10 w-10 place-items-center border border-white/15 bg-black/30 text-white backdrop-blur-xl transition-colors hover:border-frame-orange/60 sm:hidden"
           aria-label={open ? (t("closeMenu") as string) : (t("openMenu") as string)}
           aria-expanded={open}
         >
@@ -91,7 +91,7 @@ export default function Navigation() {
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="landing-shell mt-2 grid gap-1 rounded-md border border-white/15 bg-black/85 p-2 shadow-2xl backdrop-blur-2xl sm:hidden"
+          className="landing-shell mt-2 grid gap-1 border border-white/15 bg-black/85 p-2 shadow-2xl backdrop-blur-2xl sm:hidden"
         >
           {NAVIGATION.map((link) => (
             <button
