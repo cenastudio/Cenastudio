@@ -50,6 +50,12 @@
 > sticky ficou restrita ao mobile, com safe area e fundo translúcido. No mobile,
 > a oficina de ferramentas voltou a iniciar recolhida para o usuário chegar mais
 > rápido no brief e na saída.
+> Também foi redesenhado o componente comum `ScreenDesignPass`, origem dos
+> blocos grandes repetidos em várias telas (Arquivos, Tools, Budget, Shot List,
+> Timesheet, Analytics/Financeiro, Equipamento, Perfil, Empresa, Equipe,
+> Webhooks e Admin). O padrão deixou de ser uma moldura pesada com cards
+> internos e virou um cabeçalho operacional compacto com título, descrição,
+> trilha de jornada em chips, métricas condensadas e ações horizontais.
 > Validação adicional: screenshots em
 > `tmp/rounded-studio-rebrand-qa-2026-08-24/` e
 > `tmp/studio-full-rebrand-qa-2026-08-24/`, ambos sem overflow horizontal em
