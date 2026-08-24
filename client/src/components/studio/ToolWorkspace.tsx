@@ -95,7 +95,7 @@ export default function ToolWorkspace({
   };
 
   return (
-    <div className="studio-input-panel w-full shrink-0 border-b border-[var(--ds-border)] bg-frame-black/45 p-4 select-none md:p-5 lg:h-full lg:w-[430px] lg:overflow-y-auto lg:border-b-0 lg:border-r xl:w-[460px]">
+    <div className="studio-input-panel w-full shrink-0 border-b border-[var(--ds-border)] bg-frame-black/45 p-4 select-none md:p-5 lg:w-[430px] lg:border-b-0 lg:border-r xl:w-[460px]">
       <div className="space-y-4">
         <div className="studio-panel-header rounded-xl border border-frame-orange/20 bg-[linear-gradient(145deg,rgba(var(--ds-orange-rgb),0.1),rgba(8,8,8,0.72))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
           <div className="flex items-start justify-between gap-3">

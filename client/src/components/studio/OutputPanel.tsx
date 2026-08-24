@@ -55,7 +55,7 @@ export default function OutputPanel({
   }
 
   return (
-    <div className="flex-1 flex flex-col lg:overflow-hidden bg-frame-black border-t lg:border-t-0 border-frame-gray-2">
+    <div className="flex-1 flex flex-col bg-frame-black border-t lg:border-t-0 border-frame-gray-2">
       {/* Top Action Toolbar */}
       <ActionToolbar
         onCopy={onCopy}
@@ -68,7 +68,7 @@ export default function OutputPanel({
       />
 
       {/* Main Content Pane */}
-      <div className="flex-1 flex flex-col lg:overflow-hidden">
+      <div className="flex-1 flex flex-col">
         {activeTab === "refine" ? (
           <RefineChatPanel
             toolId={tool.id}
@@ -76,7 +76,7 @@ export default function OutputPanel({
             onRefineComplete={onUpdateOutput}
           />
         ) : (
-          <div className="flex-1 p-4 md:p-8 lg:overflow-y-auto">
+          <div className="flex-1 p-4 md:p-8">
             {output ? (
               <div className="space-y-5">
                 {projectId && onArtifactStatusChange && (

@@ -31,10 +31,17 @@
 > hero operacional com promessa clara, timeline arredondada, sidebar de
 > ferramentas redesenhada, seletor de projeto arredondado, cards de contexto
 > mais premium, form stack e output toolbar com hierarquia de etapa guiada.
+> Após crítica visual em 2026-08-24, foi corrigido um bloqueio real de UX no
+> Studio IA: a tela ainda usava `lg:h-screen` e múltiplos `lg:overflow-hidden`,
+> prendendo a experiência em painéis internos e impedindo rolagem natural no
+> desktop/Safari e em formulários longos. A estrutura passou a rolar como uma
+> página única em todos os breakpoints, preservando colapso de ferramentas,
+> formulário e runbar sticky, mas sem travar o usuário em caixas internas.
 > Validação adicional: screenshots em
 > `tmp/rounded-studio-rebrand-qa-2026-08-24/` e
 > `tmp/studio-full-rebrand-qa-2026-08-24/`, ambos sem overflow horizontal em
-> desktop e mobile.
+> desktop e mobile. Validação da correção de scroll: `npm run check` e
+> `npm run build`.
 
 > **Handoff desta sessão:** em 2026-08-23 foi concluída a frente
 > `.kiro/specs/arquitetura-descoberta-jornada/`: navegação principal em jornada

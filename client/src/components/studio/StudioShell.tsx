@@ -376,16 +376,13 @@ export default function StudioShell() {
   };
 
   return (
-    <div className="studio-app min-h-screen bg-frame-black text-frame-white flex flex-col lg:h-screen">
+    <div className="studio-app min-h-screen bg-frame-black text-frame-white flex flex-col">
       <AppNavBar />
       <ProjectTimeline activeToolId={tool.slug} />
 
-      {/* Below lg the studio flows as one naturally-scrolling page instead of a
-          fixed-height split-pane. The desktop layout (h-screen + nested
-          overflow panes) crammed the tool list, form and AI output into a
-          single viewport with competing internal scrollbars — unusable on a
-          phone. lg+ keeps the original split-pane behaviour. */}
-      <div className="studio-workbench flex flex-1 flex-col lg:flex-row lg:overflow-hidden">
+      {/* The Studio scrolls as one page on every breakpoint. Internal locked
+          panes were fragile in Safari and made long forms feel broken. */}
+      <div className="studio-workbench flex flex-1 flex-col lg:flex-row">
         {/* Tool Sidebar — normal flow, collapsible. Below lg it stacks in
             the column flow (h-0 collapses height), matching how the
             sidebar itself lays out horizontally on small screens. */}
@@ -420,7 +417,7 @@ export default function StudioShell() {
         </button>
 
         {/* Studio Shell Body Container */}
-        <div className="studio-main flex-1 flex flex-col relative lg:overflow-hidden">
+        <div className="studio-main flex-1 flex flex-col relative">
           {tool.slug !== "assistente" && (
             <section className="shrink-0 border-b border-frame-gray-3/70 bg-[radial-gradient(circle_at_18%_0%,rgba(var(--ds-orange-rgb),0.18),transparent_34%),linear-gradient(135deg,rgba(34,18,10,0.74),rgba(7,7,7,0.94))] px-3 py-5 sm:px-5 lg:px-6">
               <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(380px,0.72fr)] xl:items-end">
@@ -510,7 +507,7 @@ export default function StudioShell() {
             </section>
           )}
 
-          <div className="flex flex-1 flex-col md:flex-row lg:overflow-hidden">
+          <div className="flex flex-1 flex-col md:flex-row">
           {tool.slug === "assistente" ? (
             <AssistantChatWorkspace tool={tool} projectId={activeProject?.id} />
           ) : (
@@ -555,7 +552,7 @@ export default function StudioShell() {
               {/* Output and Refinement Chat Panel — min height on mobile so the
                   document/output area stays comfortably tall in the natural
                   page flow instead of collapsing to its content height. */}
-              <div className="flex-1 flex flex-col lg:overflow-hidden min-h-[70vh] lg:min-h-0">
+              <div className="flex-1 flex flex-col min-h-[70vh]">
                 {/* Limit Reached Warning Alert Banner */}
                 {limitReached && (
                   <div className="mx-6 mt-4 px-4 py-3 border border-frame-orange/40 bg-[rgba(255,77,0,0.08)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0 rounded-none">
