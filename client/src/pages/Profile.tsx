@@ -102,7 +102,7 @@ function TabButton({ active, onClick, icon: Icon, label }: {
       onClick={onClick}
       aria-label={label}
       title={label}
-      className={`flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap border px-4 py-2.5 text-sm font-medium transition-[background-color,border-color,color] ${
+      className={`flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2.5 text-sm font-medium transition-[background-color,border-color,color] ${
         active
           ? "bg-frame-orange/15 text-frame-orange border border-frame-orange/30"
           : "border-transparent text-frame-gray-light hover:bg-frame-gray-2/50 hover:text-frame-white"
@@ -2877,7 +2877,7 @@ function ProfileContent() {
               </div>
 
               <button type="button" onClick={handleToggleAnimations}
-                className="flex w-full items-center justify-between border border-frame-gray-3 p-3 text-left transition-[border-color,background-color] hover:border-frame-orange/30">
+                className="flex w-full items-center justify-between rounded-lg border border-frame-gray-3 p-3 text-left transition-[border-color,background-color] hover:border-frame-orange/30">
                 <span className="flex items-center gap-3">
                   <Sliders className="w-4 h-4 text-frame-orange" />
                   <span><span className="block text-sm font-medium text-frame-white">Reduzir animações</span><span className="block text-xs text-frame-gray-light">Remove transições e movimentos decorativos</span></span>
@@ -2909,12 +2909,12 @@ function ProfileContent() {
               <div className="space-y-2">
                 <label className="frame-label text-frame-gray-light flex items-center gap-2"><Layout className="w-3.5 h-3.5" />Visualização Padrão de Projetos</label>
                 <div className="grid grid-cols-2 gap-2">
-                  <button type="button" onClick={() => handleDefaultViewChange("grid")} className={`flex items-center justify-center gap-2 border px-3 py-2.5 text-sm font-medium transition-[background-color,border-color,color] ${behaviorPrefs.defaultView === "grid" ? "border-frame-orange bg-frame-orange/10 text-frame-white" : "border-frame-gray-3 text-frame-gray-light"}`}><Grid className="w-4 h-4" /> Grade</button>
-                  <button type="button" onClick={() => handleDefaultViewChange("list")} className={`flex items-center justify-center gap-2 border px-3 py-2.5 text-sm font-medium transition-[background-color,border-color,color] ${behaviorPrefs.defaultView === "list" ? "border-frame-orange bg-frame-orange/10 text-frame-white" : "border-frame-gray-3 text-frame-gray-light"}`}><List className="w-4 h-4" /> Lista</button>
+                  <button type="button" onClick={() => handleDefaultViewChange("grid")} className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-[background-color,border-color,color] ${behaviorPrefs.defaultView === "grid" ? "border-frame-orange bg-frame-orange/10 text-frame-white" : "border-frame-gray-3 text-frame-gray-light"}`}><Grid className="w-4 h-4" /> Grade</button>
+                  <button type="button" onClick={() => handleDefaultViewChange("list")} className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-[background-color,border-color,color] ${behaviorPrefs.defaultView === "list" ? "border-frame-orange bg-frame-orange/10 text-frame-white" : "border-frame-gray-3 text-frame-gray-light"}`}><List className="w-4 h-4" /> Lista</button>
                 </div>
               </div>
 
-              <button type="button" onClick={handleAutoplayVideosChange} className="flex w-full items-center justify-between border border-frame-gray-3 p-3 text-left transition-[border-color,background-color] hover:border-frame-orange/30">
+              <button type="button" onClick={handleAutoplayVideosChange} className="flex w-full items-center justify-between rounded-lg border border-frame-gray-3 p-3 text-left transition-[border-color,background-color] hover:border-frame-orange/30">
                 <span className="flex items-center gap-3"><PlayCircle className="w-4 h-4 text-frame-orange" /><span><span className="block text-sm font-medium text-frame-white">Autoplay de vídeos</span><span className="block text-xs text-frame-gray-light">Inicia reviews automaticamente, sem som</span></span></span>
                 <span className={`relative w-11 h-6 rounded-full transition-colors ${behaviorPrefs.autoplayVideos ? "bg-frame-orange" : "bg-frame-gray-3"}`}><span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${behaviorPrefs.autoplayVideos ? "translate-x-5" : "translate-x-0"}`} /></span>
               </button>

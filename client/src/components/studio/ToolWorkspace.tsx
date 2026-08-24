@@ -95,9 +95,9 @@ export default function ToolWorkspace({
   };
 
   return (
-    <div className="studio-input-panel w-full shrink-0 border-b border-[var(--ds-border)] p-4 select-none md:p-5 lg:h-full lg:w-[430px] lg:overflow-y-auto lg:border-b-0 lg:border-r xl:w-[460px]">
+    <div className="studio-input-panel w-full shrink-0 border-b border-[var(--ds-border)] bg-frame-black/45 p-4 select-none md:p-5 lg:h-full lg:w-[430px] lg:overflow-y-auto lg:border-b-0 lg:border-r xl:w-[460px]">
       <div className="space-y-4">
-        <div className="studio-panel-header border border-frame-gray-3/70 bg-frame-black/35 p-3">
+        <div className="studio-panel-header rounded-xl border border-frame-orange/20 bg-[linear-gradient(145deg,rgba(var(--ds-orange-rgb),0.1),rgba(8,8,8,0.72))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <span className="font-frame-mono text-[0.58rem] font-semibold uppercase tracking-[0.18em] text-frame-orange">
@@ -126,7 +126,7 @@ export default function ToolWorkspace({
             ].map(({ label, icon: Icon, active }, index) => (
               <li
                 key={label}
-                className={`min-w-0 border px-2 py-2 ${
+                className={`min-w-0 rounded-lg border px-2 py-2 ${
                   active ? "border-frame-orange bg-frame-orange/[0.08]" : "border-frame-gray-3/60 bg-frame-black/25"
                 }`}
               >
@@ -144,18 +144,18 @@ export default function ToolWorkspace({
 
         {/* Template selector — só mostra se tem templates para esta ferramenta */}
         {relevantTemplates.length > 0 && (
-          <div className="border border-frame-gray-3/60 bg-frame-black/25 p-3">
+          <div className="rounded-xl border border-frame-gray-3/60 bg-frame-black/25 p-3">
             <button
               type="button"
               onClick={() => setShowTemplates(v => !v)}
-              className="mb-2 flex min-h-10 w-full items-center justify-between gap-2 font-frame-mono text-[0.58rem] uppercase tracking-[0.14em] text-frame-gray-light transition-[color,border-color,background-color] hover:text-frame-orange"
+              className="mb-2 flex min-h-10 w-full items-center justify-between gap-2 rounded-lg px-1 font-frame-mono text-[0.58rem] uppercase tracking-[0.14em] text-frame-gray-light transition-[color,border-color,background-color] hover:text-frame-orange"
               aria-expanded={showTemplates}
             >
               <span className="flex items-center gap-1.5">
                 <Layers className="h-3.5 w-3.5" aria-hidden="true" />
                 Templates de projeto
               </span>
-              <span className="border border-frame-gray-3 px-1.5 py-0.5 text-[0.5rem]">
+              <span className="rounded border border-frame-gray-3 px-1.5 py-0.5 text-[0.5rem]">
                 {relevantTemplates.length}
               </span>
             </button>
@@ -173,7 +173,7 @@ export default function ToolWorkspace({
                       }
                       setShowTemplates(false);
                     }}
-                    className="group min-h-[74px] text-left border border-frame-gray-3/50 p-2 transition-[color,border-color,background-color] hover:border-frame-orange/40 hover:bg-frame-orange/[0.04]"
+                    className="group min-h-[74px] rounded-lg border border-frame-gray-3/50 p-2 text-left transition-[color,border-color,background-color] hover:border-frame-orange/40 hover:bg-frame-orange/[0.04]"
                   >
                     <span className="block text-base mb-0.5">{tmpl.icon}</span>
                     <span className="block truncate font-frame-mono text-[0.56rem] text-frame-white transition-colors group-hover:text-frame-orange">{tmpl.label}</span>
@@ -186,7 +186,7 @@ export default function ToolWorkspace({
         )}
 
         {linkedContext && linkedContext.availableCount > 0 && (
-          <div className="border border-frame-orange/30 bg-frame-orange/5 p-3 shadow-[inset_0_0_0_1px_rgba(255,77,0,0.04)]">
+          <div className="rounded-xl border border-frame-orange/30 bg-frame-orange/5 p-3 shadow-[inset_0_0_0_1px_rgba(255,77,0,0.04)]">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
@@ -208,7 +208,7 @@ export default function ToolWorkspace({
                 type="button"
                 onClick={onApplyLinkedContext}
                 disabled={!linkedContext.fillableCount}
-                className="shrink-0 border border-frame-orange/45 px-2.5 py-2 font-frame-mono text-[0.56rem] uppercase tracking-[0.12em] text-frame-orange transition hover:bg-frame-orange hover:text-frame-black disabled:cursor-not-allowed disabled:border-frame-gray-3 disabled:text-frame-gray-light disabled:hover:bg-transparent"
+                className="shrink-0 rounded-lg border border-frame-orange/45 px-2.5 py-2 font-frame-mono text-[0.56rem] uppercase tracking-[0.12em] text-frame-orange transition hover:bg-frame-orange hover:text-frame-black disabled:cursor-not-allowed disabled:border-frame-gray-3 disabled:text-frame-gray-light disabled:hover:bg-transparent"
               >
                 {t("app.studio.linkedContextFill") as string}
               </button>
@@ -217,7 +217,7 @@ export default function ToolWorkspace({
         )}
 
         {/* Specialized Form Dispatcher */}
-        <div className="studio-form-stack space-y-4 rounded-none border border-frame-gray-3/60 bg-frame-black/20 p-3">
+        <div className="studio-form-stack space-y-4 rounded-xl border border-frame-gray-3/60 bg-frame-black/25 p-3">
           <StudioTextLocalizer>
             <FormDispatcher
               slug={tool.slug}
@@ -230,7 +230,7 @@ export default function ToolWorkspace({
 
         {/* Error Notice */}
         {error && (
-          <p className="mt-2 border border-[var(--ds-danger)]/20 bg-[var(--ds-danger)]/5 p-2 font-frame-mono text-[0.65rem] leading-relaxed text-[var(--ds-danger)]">
+          <p className="mt-2 rounded-lg border border-[var(--ds-danger)]/20 bg-[var(--ds-danger)]/5 p-2 font-frame-mono text-[0.65rem] leading-relaxed text-[var(--ds-danger)]">
             {error}
           </p>
         )}

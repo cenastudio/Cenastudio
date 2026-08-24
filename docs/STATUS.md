@@ -11,9 +11,9 @@
 > consistência visual após comparação direta entre Landing e Login: CTAs da
 > Landing, menu mobile, seletor de idioma, checkout público e primitivos antigos
 > de design system (`Button`, `Input`, `Badge`, `Card`) passaram a usar cantos
-> retos/baixos e transições específicas, alinhados ao padrão `frame-btn-*`.
-> Também foram aparados controles manuais em Perfil, Financeiro e upload de
-> vídeo que ainda puxavam `rounded-lg/full` em ações clicáveis. No Studio IA, o
+> arredondados consistentes e transições específicas, alinhados ao padrão visual
+> da Landing. Também foram revisados controles manuais em Perfil, Financeiro e
+> upload de vídeo para manter o mesmo raio em ações clicáveis. No Studio IA, o
 > fallback local de ferramentas evita a tela genérica de ferramenta não
 > encontrada quando a API falha, a entrada ganhou cabeçalho guiado, contagem de
 > campos e etapas Entrada/Gerar/Revisar, e o toolbar mobile deixou de renderizar
@@ -21,10 +21,20 @@
 > ficaram opt-in em desenvolvimento e falha de seed Prisma não derruba o app fora
 > de produção. Validação: `npm run check`; screenshots/medição Playwright em
 > `tmp/global-button-shape-qa-2026-08-24/` confirmaram Landing/Login/Cadastro
-> com controles capturados em `border-radius: 0px`; screenshots autenticados do
+> com controles arredondados de forma consistente; screenshots autenticados do
 > Studio IA em `tmp/studio-ai-visual-qa-2026-08-24/` confirmaram `/studio/01`,
 > sem overflow horizontal, sem fallback de ferramenta indisponível e toolbar
-> mobile com labels visíveis.
+> mobile com labels visíveis. Após correção de direção visual, o padrão global
+> foi ajustado para cantos arredondados, não retos: `frame-btn-*`, Auth,
+> LanguageSwitcher, Landing, inputs e controles do Studio IA seguem raio
+> consistente. O Studio IA recebeu ainda um rebrand mais profundo em web/mobile:
+> hero operacional com promessa clara, timeline arredondada, sidebar de
+> ferramentas redesenhada, seletor de projeto arredondado, cards de contexto
+> mais premium, form stack e output toolbar com hierarquia de etapa guiada.
+> Validação adicional: screenshots em
+> `tmp/rounded-studio-rebrand-qa-2026-08-24/` e
+> `tmp/studio-full-rebrand-qa-2026-08-24/`, ambos sem overflow horizontal em
+> desktop e mobile.
 
 > **Handoff desta sessão:** em 2026-08-23 foi concluída a frente
 > `.kiro/specs/arquitetura-descoberta-jornada/`: navegação principal em jornada

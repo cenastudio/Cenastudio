@@ -104,11 +104,11 @@ export default function AuthLayout({ title, subtitle, children, mode, mobileInte
             ))}
           </div>
           {mode && (
-            <div className="auth-desktop-switch mb-8 hidden border border-frame-gray-3 bg-frame-gray-1/30 p-1 lg:flex">
+            <div className="auth-desktop-switch mb-8 hidden rounded-xl border border-frame-gray-3 bg-frame-gray-1/30 p-1 lg:flex">
               <button
                 type="button"
                 onClick={() => setLocation("/login")}
-                className={`min-h-11 flex-1 py-2.5 font-frame-mono text-[0.63rem] tracking-[0.12em] uppercase transition ${
+                className={`min-h-11 flex-1 rounded-lg py-2.5 font-frame-mono text-[0.63rem] tracking-[0.12em] uppercase transition ${
                   mode === "login"
                     ? "bg-frame-orange text-frame-black"
                     : "bg-transparent text-frame-gray-light hover:text-frame-white"
@@ -119,7 +119,7 @@ export default function AuthLayout({ title, subtitle, children, mode, mobileInte
               <button
                 type="button"
                 onClick={() => setLocation("/register")}
-                className={`min-h-11 flex-1 py-2.5 font-frame-mono text-[0.63rem] tracking-[0.12em] uppercase transition ${
+                className={`min-h-11 flex-1 rounded-lg py-2.5 font-frame-mono text-[0.63rem] tracking-[0.12em] uppercase transition ${
                   mode === "register"
                     ? "bg-frame-orange text-frame-black"
                     : "bg-transparent text-frame-gray-light hover:text-frame-white"

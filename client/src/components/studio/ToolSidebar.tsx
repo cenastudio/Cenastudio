@@ -68,11 +68,11 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
     activeCategory?.tools[0];
 
   return (
-    <aside className="studio-sidebar w-full lg:w-[260px] shrink-0 border-b lg:border-b-0 flex flex-col lg:overflow-y-auto">
+    <aside className="studio-sidebar w-full shrink-0 border-b lg:w-[280px] lg:border-b-0 flex flex-col lg:overflow-y-auto">
       {/* Brand Header (Hidden on Mobile) */}
-      <div className="hidden lg:block px-5 py-5 border-b border-frame-gray-2">
+      <div className="hidden lg:block border-b border-frame-gray-2 px-5 py-5">
         <p className="frame-label mb-1">// Studio</p>
-        <p className="font-frame-mono text-[0.62rem] tracking-[0.15em] uppercase text-frame-gray-light">
+        <p className="font-frame-mono text-[0.62rem] uppercase tracking-[0.15em] text-frame-gray-light">
           {t("app.studio.workspace") as string}
         </p>
       </div>
@@ -82,7 +82,7 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
 
       {/* Categories / Navigation */}
       {activeCategory && activeTool && (
-        <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-2 px-3 py-3 border-t border-frame-gray-2">
+        <div className="grid grid-cols-1 gap-2 border-t border-frame-gray-2 px-3 py-3 sm:grid-cols-2 lg:hidden">
           <label className="sr-only" htmlFor="studio-tool-category">
             {locale === "pt" ? "Categoria de ferramenta" : "Tool category"}
           </label>
@@ -94,7 +94,7 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
               const firstTool = nextCategory?.tools[0];
               if (firstTool) onSelectTool(firstTool.id);
             }}
-            className="w-full min-h-11 bg-frame-gray-1 border border-frame-gray-3 px-3 text-sm text-frame-white outline-none focus:border-frame-orange"
+            className="w-full min-h-11 rounded-xl bg-frame-gray-1 border border-frame-gray-3 px-3 text-sm text-frame-white outline-none focus:border-frame-orange"
           >
             {visibleCategories.map((cat) => (
               <option key={cat.key} value={cat.key}>
@@ -109,7 +109,7 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
             id="studio-tool-select"
             value={activeTool.id}
             onChange={(event) => onSelectTool(event.target.value)}
-            className="w-full min-h-11 bg-frame-gray-1 border border-frame-gray-3 px-3 text-sm text-frame-white outline-none focus:border-frame-orange"
+            className="w-full min-h-11 rounded-xl bg-frame-gray-1 border border-frame-gray-3 px-3 text-sm text-frame-white outline-none focus:border-frame-orange"
           >
             {activeCategory.tools.map((tool) => (
               <option key={tool.id} value={tool.id}>
@@ -120,15 +120,15 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
         </div>
       )}
 
-      <div className="hidden lg:flex lg:flex-col shrink-0 lg:shrink py-2 lg:py-3 w-full">
+      <div className="hidden w-full shrink-0 py-2 lg:flex lg:shrink lg:flex-col lg:py-4">
         {visibleCategories.map((cat) => {
           return (
-            <div key={cat.key} className="flex lg:flex-col items-center lg:items-stretch shrink-0 lg:shrink">
+            <div key={cat.key} className="flex shrink-0 items-center lg:shrink lg:flex-col lg:items-stretch">
               {/* Category label (Hidden on mobile or rendered as badge) */}
-              <p className="hidden lg:block font-frame-mono text-[0.62rem] tracking-[0.2em] uppercase text-frame-gray-muted px-[18px] pt-4 pb-1.5">
+              <p className="hidden px-[18px] pb-1.5 pt-4 font-frame-mono text-[0.62rem] uppercase tracking-[0.2em] text-frame-gray-muted lg:block">
                 // {categoryLabels[cat.key]}
               </p>
-              <div className="flex lg:flex-col gap-2 px-2 lg:px-3">
+              <div className="flex gap-2 px-2 lg:flex-col lg:px-3">
                 {cat.tools.map((t, index) => {
                    const TIcon = getToolIcon(t.slug);
                    const active = t.id === activeToolId || t.slug === activeToolId;
@@ -137,18 +137,18 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
                       key={t.id}
                       type="button"
                       onClick={() => onSelectTool(t.id)}
-                      className={`studio-tool-nav flex items-center gap-2.5 px-3.5 py-2.5 text-left border transition shrink-0 lg:shrink ${
+                      className={`studio-tool-nav flex shrink-0 items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-left transition-[background-color,border-color,color,box-shadow] lg:shrink ${
                         active
-                          ? "is-active border-frame-orange text-frame-white"
-                          : "border-transparent text-frame-gray-light hover:text-frame-white"
+                          ? "is-active border-frame-orange/70 text-frame-white shadow-[0_0_24px_rgba(var(--ds-orange-rgb),0.08)]"
+                          : "border-transparent text-frame-gray-light hover:border-frame-gray-3/70 hover:bg-frame-white/[0.03] hover:text-frame-white"
                       }`}
                     >
                       {cat.numbered ? (
-                        <span className={`w-5 h-5 shrink-0 rounded-full border flex items-center justify-center font-frame-mono text-[0.58rem] ${active ? "border-frame-orange bg-frame-orange text-frame-black" : "border-frame-gray-3 text-frame-gray-light"}`}>
+                        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border font-frame-mono text-[0.58rem] ${active ? "border-frame-orange bg-frame-orange text-frame-black" : "border-frame-gray-3 text-frame-gray-light"}`}>
                           {index + 1}
                         </span>
                       ) : (
-                        <TIcon className={`w-4 h-4 shrink-0 transition-colors ${active ? "text-frame-orange" : "text-frame-gray-light"}`} />
+                        <TIcon className={`h-4 w-4 shrink-0 transition-colors ${active ? "text-frame-orange" : "text-frame-gray-light"}`} />
                       )}
                       <span className="text-[0.76rem] font-medium tracking-wide font-frame-body">
                         {t.name}

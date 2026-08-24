@@ -422,27 +422,27 @@ export default function StudioShell() {
         {/* Studio Shell Body Container */}
         <div className="studio-main flex-1 flex flex-col relative lg:overflow-hidden">
           {tool.slug !== "assistente" && (
-            <section className="shrink-0 border-b border-frame-gray-3/70 bg-frame-gray-1/15 px-3 py-4 sm:px-5 lg:px-6">
-              <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.72fr)] xl:items-end">
+            <section className="shrink-0 border-b border-frame-gray-3/70 bg-[radial-gradient(circle_at_18%_0%,rgba(var(--ds-orange-rgb),0.18),transparent_34%),linear-gradient(135deg,rgba(34,18,10,0.74),rgba(7,7,7,0.94))] px-3 py-5 sm:px-5 lg:px-6">
+              <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(380px,0.72fr)] xl:items-end">
                 <div className="min-w-0">
                   <div className="mb-3 flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-frame-orange/35 bg-frame-orange/[0.08]">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-frame-orange/35 bg-frame-orange/[0.1] shadow-[0_0_28px_rgba(var(--ds-orange-rgb),0.12)]">
                       <Bot className="h-5 w-5 text-frame-orange" aria-hidden="true" />
                     </div>
                     <div className="min-w-0">
                       <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-orange">
-                        Studio IA / Produção
+                        Studio IA / Produção guiada
                       </p>
                       <p className="mt-0.5 truncate text-xs text-frame-gray-light">
                         {activeProject ? activeProject.name : "Biblioteca sem projeto ativo"}
                       </p>
                     </div>
                   </div>
-                  <h1 className="frame-title max-w-4xl text-[clamp(1.75rem,3vw,2.75rem)] leading-none text-frame-white text-balance">
-                    {tool.name} vira artefato do job.
+                  <h1 className="frame-title max-w-4xl text-[clamp(2rem,3.6vw,3.25rem)] leading-none text-frame-white text-balance">
+                    {tool.name} pronto para virar entrega.
                   </h1>
-                  <p className="mt-3 max-w-3xl text-sm leading-relaxed text-frame-gray-light text-pretty">
-                    Preencha o essencial, aplique o contexto conectado e gere uma versão que pode seguir para revisão, proposta ou entrega.
+                  <p className="mt-3 max-w-3xl text-sm leading-relaxed text-frame-gray-light text-pretty sm:text-base">
+                    Use contexto do job quando existir, preencha o briefing mínimo e gere um artefato que já nasce com status, versão e próximo passo.
                   </p>
                 </div>
 
@@ -467,7 +467,7 @@ export default function StudioShell() {
                       icon: FileCheck2,
                     },
                   ].map(({ label, value, detail, icon: Icon }) => (
-                    <div key={label} className="min-w-0 border border-frame-gray-3/60 bg-frame-black/25 p-3">
+                    <div key={label} className="min-w-0 rounded-lg border border-frame-gray-3/60 bg-frame-black/35 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-frame-mono text-[0.52rem] uppercase tracking-[0.14em] text-frame-gray-light">{label}</span>
                         <Icon className="h-3.5 w-3.5 shrink-0 text-frame-orange" aria-hidden="true" />
@@ -479,12 +479,12 @@ export default function StudioShell() {
                 </div>
               </div>
 
-              <div className={`mt-4 grid gap-2 ${linkedContext ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+              <div className={`mt-5 grid gap-2 ${linkedContext ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
                 {linkedContext && (
                   <button
                     type="button"
                     onClick={handleApplyLinkedContext}
-                    className="flex min-h-12 min-w-0 items-center justify-center gap-2 border border-frame-gray-3/70 bg-frame-black/30 px-3 text-sm font-semibold text-frame-white transition-[background-color,border-color,color] hover:border-frame-orange/60"
+                    className="frame-btn-ghost flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold normal-case tracking-normal"
                   >
                     <Sparkles className="h-4 w-4 shrink-0 text-frame-orange" aria-hidden="true" />
                     <span className="truncate">Aplicar contexto</span>
@@ -493,15 +493,15 @@ export default function StudioShell() {
                 <button
                   type="button"
                   onClick={() => setWorkspaceCollapsed(false)}
-                  className="flex min-h-12 min-w-0 items-center justify-center gap-2 border border-frame-gray-3/70 bg-frame-black/30 px-3 text-sm font-semibold text-frame-white transition-[background-color,border-color,color] hover:border-frame-orange/60"
+                  className="frame-btn-primary flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold normal-case tracking-normal"
                 >
-                  <ClipboardList className="h-4 w-4 shrink-0 text-frame-orange" aria-hidden="true" />
+                  <ClipboardList className="h-4 w-4 shrink-0 text-frame-black" aria-hidden="true" />
                   <span className="truncate">Editar entrada</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setHistoryOpen(true)}
-                  className="flex min-h-12 min-w-0 items-center justify-center gap-2 border border-frame-gray-3/70 bg-frame-black/30 px-3 text-sm font-semibold text-frame-white transition-[background-color,border-color,color] hover:border-frame-orange/60"
+                  className="frame-btn-ghost flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold normal-case tracking-normal"
                 >
                   <FileCheck2 className="h-4 w-4 shrink-0 text-frame-orange" aria-hidden="true" />
                   <span className="truncate">Ver versões</span>

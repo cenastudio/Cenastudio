@@ -80,7 +80,7 @@ export default function OutputPanel({
             {output ? (
               <div className="space-y-5">
                 {projectId && onArtifactStatusChange && (
-                  <div className="border border-frame-gray-3 bg-frame-black/30 p-3">
+                  <div className="rounded-xl border border-frame-gray-3 bg-frame-black/30 p-3">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="font-frame-mono text-[0.56rem] uppercase tracking-[0.16em] text-frame-orange">Ciclo do artefato · v{artifactVersion}</p>
@@ -93,7 +93,7 @@ export default function OutputPanel({
                           ["approved", "Aprovado", CheckCircle2],
                           ["archived", "Arquivado", Archive],
                         ] as const).map(([status, label, Icon]) => (
-                          <button key={status} type="button" onClick={() => onArtifactStatusChange(status)} className={`flex min-h-9 items-center justify-center gap-1.5 border px-2.5 font-frame-mono text-[0.54rem] uppercase tracking-[0.08em] transition ${artifactStatus === status ? "border-frame-orange bg-frame-orange/10 text-frame-orange" : "border-frame-gray-3 text-frame-gray-light hover:text-frame-white"}`} aria-pressed={artifactStatus === status}>
+                          <button key={status} type="button" onClick={() => onArtifactStatusChange(status)} className={`flex min-h-9 items-center justify-center gap-1.5 rounded-lg border px-2.5 font-frame-mono text-[0.54rem] uppercase tracking-[0.08em] transition ${artifactStatus === status ? "border-frame-orange bg-frame-orange/10 text-frame-orange" : "border-frame-gray-3 text-frame-gray-light hover:text-frame-white"}`} aria-pressed={artifactStatus === status}>
                             <Icon className="h-3 w-3" /> {label}
                           </button>
                         ))}
@@ -101,7 +101,7 @@ export default function OutputPanel({
                     </div>
                   </div>
                 )}
-                <div className="flex flex-col gap-3 border border-frame-gray-3 bg-frame-gray-1/55 p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-3 rounded-xl border border-frame-gray-3 bg-frame-gray-1/55 p-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-orange">
                       {t("app.studio.outputNextStep") as string}
@@ -134,7 +134,7 @@ export default function OutputPanel({
 
                 {/* ─── PRÓXIMA FERRAMENTA SUGERIDA ─── */}
                 {nextSuggestions.length > 0 && (
-                  <div className="border border-frame-gray-3/50 bg-frame-gray-2/20 p-4 space-y-3 mt-2">
+                  <div className="mt-2 space-y-3 rounded-xl border border-frame-gray-3/50 bg-frame-gray-2/20 p-4">
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-3.5 h-3.5 text-frame-orange" />
                       <span className="font-frame-mono text-[0.58rem] uppercase tracking-[0.18em] text-frame-orange">
@@ -152,7 +152,7 @@ export default function OutputPanel({
                               : `/studio/${s.slug}`;
                             setLocation(path);
                           }}
-                          className="group w-full text-left flex items-center gap-3 p-3 border border-frame-gray-3/50 hover:border-frame-orange/40 hover:bg-frame-orange/[0.04] transition-all rounded"
+                          className="group flex w-full items-center gap-3 rounded-lg border border-frame-gray-3/50 p-3 text-left transition-[background-color,border-color] hover:border-frame-orange/40 hover:bg-frame-orange/[0.04]"
                         >
                           <div className="flex-1 min-w-0">
                             <p className="text-[0.78rem] font-semibold text-frame-white group-hover:text-frame-orange transition-colors">{s.label}</p>

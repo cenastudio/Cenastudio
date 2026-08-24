@@ -7,7 +7,7 @@ export default function LanguageSwitcher({ compact = false }: { compact?: boolea
   const ariaLabel = t("language.label");
 
   const base =
-    "min-h-11 min-w-11 inline-flex items-center justify-center px-2.5 text-[0.62rem] font-frame-mono font-semibold uppercase tracking-[0.12em] transition focus:outline-none focus:ring-2 focus:ring-frame-orange/50";
+    "min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg px-2.5 text-[0.62rem] font-frame-mono font-semibold uppercase tracking-[0.12em] transition focus:outline-none focus:ring-2 focus:ring-frame-orange/50";
 
   const inactive =
     "bg-transparent text-frame-gray-light hover:bg-frame-gray-2/50 hover:text-frame-white";
@@ -17,7 +17,7 @@ export default function LanguageSwitcher({ compact = false }: { compact?: boolea
 
   if (compact) {
     return (
-      <span className="inline-flex items-center overflow-hidden border border-[var(--ds-language-border)] bg-white shadow-[var(--ds-language-shadow)] dark:border-frame-gray-3 dark:bg-frame-black/50 dark:shadow-none" role="group" aria-label={ariaLabel}>
+      <span className="inline-flex items-center gap-1 overflow-hidden rounded-xl border border-[var(--ds-language-border)] bg-white p-1 shadow-[var(--ds-language-shadow)] dark:border-frame-gray-3 dark:bg-frame-black/50 dark:shadow-none" role="group" aria-label={ariaLabel}>
         <button
           type="button"
           onClick={() => setLocale("pt")}
@@ -38,7 +38,7 @@ export default function LanguageSwitcher({ compact = false }: { compact?: boolea
   }
 
   return (
-      <span className="inline-flex items-center overflow-hidden border border-[var(--ds-language-border)] bg-white shadow-[var(--ds-language-shadow)] dark:border-frame-gray-3 dark:bg-frame-black/50 dark:shadow-none" role="group" aria-label={ariaLabel}>
+      <span className="inline-flex items-center gap-1 overflow-hidden rounded-xl border border-[var(--ds-language-border)] bg-white p-1 shadow-[var(--ds-language-shadow)] dark:border-frame-gray-3 dark:bg-frame-black/50 dark:shadow-none" role="group" aria-label={ariaLabel}>
       <button
         type="button"
         onClick={() => setLocale("pt")}

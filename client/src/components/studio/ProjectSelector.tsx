@@ -143,19 +143,19 @@ export default function ProjectSelector() {
   };
 
   return (
-    <div className="px-[18px] py-4 border-b border-frame-gray-2 bg-frame-black/30 select-none">
-      <span className="block font-frame-mono text-[0.62rem] tracking-[0.2em] uppercase text-frame-gray-light mb-1.5">
+    <div className="select-none border-b border-frame-gray-2 bg-frame-black/30 px-[18px] py-4">
+      <span className="mb-1.5 block font-frame-mono text-[0.62rem] uppercase tracking-[0.2em] text-frame-gray-light">
         {t("app.studio.projectSelector.workContext") as string}
       </span>
 
-      <div className="flex gap-1.5 items-center">
+      <div className="flex items-center gap-1.5">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex-1 flex items-center justify-between gap-2.5 px-3 py-2 text-left border border-frame-gray-3 bg-frame-gray-1/80 text-frame-white hover:bg-frame-gray-2 transition group rounded-none outline-none cursor-pointer"
+              className="group flex flex-1 cursor-pointer items-center justify-between gap-2.5 rounded-xl border border-frame-gray-3 bg-frame-gray-1/80 px-3 py-2 text-left text-frame-white outline-none transition hover:bg-frame-gray-2"
             >
-              <div className="flex items-center gap-2 min-w-0">
+              <div className="flex min-w-0 items-center gap-2">
                 <Folder
                   className={`w-3.5 h-3.5 shrink-0 ${
                     activeProject ? "text-frame-orange animate-pulse" : "text-frame-gray-light"
@@ -169,7 +169,7 @@ export default function ProjectSelector() {
             </button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="start" className="w-[220px] bg-frame-gray-1 border-frame-gray-3 text-frame-white rounded-none">
+          <DropdownMenuContent align="start" className="w-[240px] rounded-xl bg-frame-gray-1 border-frame-gray-3 text-frame-white">
             <DropdownMenuLabel className="font-frame-mono text-[0.62rem] tracking-[0.15em] text-frame-gray-light uppercase">
               {t("app.studio.projectSelector.yourProjects") as string}
             </DropdownMenuLabel>
@@ -189,7 +189,7 @@ export default function ProjectSelector() {
                   <DropdownMenuItem
                     key={p.id}
                     onClick={() => handleSelectProject(p.id)}
-                    className={`flex items-center gap-2 text-xs py-2 px-2.5 cursor-pointer rounded-none hover:bg-frame-gray-2 focus:bg-frame-gray-2 ${
+                    className={`flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs hover:bg-frame-gray-2 focus:bg-frame-gray-2 ${
                       activeProject?.id === p.id ? "text-frame-orange bg-[rgba(255,77,0,0.05)] font-medium" : "text-frame-gray-light"
                     }`}
                   >
@@ -208,7 +208,7 @@ export default function ProjectSelector() {
             {activeProject && (
               <DropdownMenuItem
                 onClick={() => handleSelectProject(null)}
-                className="flex items-center gap-2 text-xs py-2 px-2.5 text-frame-gray-light cursor-pointer rounded-none hover:bg-frame-gray-2 focus:bg-frame-gray-2"
+                className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs text-frame-gray-light hover:bg-frame-gray-2 focus:bg-frame-gray-2"
               >
                 <X className="w-3 h-3 text-frame-red" />
                 {t("app.studio.projectSelector.deactivate") as string}
@@ -222,7 +222,7 @@ export default function ProjectSelector() {
                 setClientId("");
                 setIsCreateOpen(true);
               }}
-              className="flex items-center gap-2 text-xs py-2 px-2.5 text-frame-orange font-frame-mono tracking-wide cursor-pointer rounded-none hover:bg-frame-gray-2 focus:bg-frame-gray-2"
+              className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 font-frame-mono text-xs tracking-wide text-frame-orange hover:bg-frame-gray-2 focus:bg-frame-gray-2"
             >
               <Plus className="w-3 h-3" />
               {t("app.studio.projectSelector.newProject") as string}
@@ -231,11 +231,11 @@ export default function ProjectSelector() {
         </DropdownMenu>
 
         {activeProject && (
-          <div className="flex gap-0.5 shrink-0">
+          <div className="flex shrink-0 gap-0.5">
             <button
               type="button"
               onClick={openEditDialog}
-              className="p-2 border border-frame-gray-3 bg-frame-gray-1/80 text-frame-gray-light hover:text-frame-white hover:border-frame-gray-light transition rounded-none cursor-pointer outline-none"
+              className="cursor-pointer rounded-lg border border-frame-gray-3 bg-frame-gray-1/80 p-2 text-frame-gray-light outline-none transition hover:border-frame-gray-light hover:text-frame-white"
               title={t("app.studio.projectSelector.editMetadata") as string}
             >
               <Edit3 className="w-3.5 h-3.5" />
@@ -243,7 +243,7 @@ export default function ProjectSelector() {
             <button
               type="button"
               onClick={() => setIsDeleteOpen(true)}
-              className="p-2 border border-frame-gray-3 bg-frame-gray-1/80 text-frame-gray-light hover:text-frame-red hover:border-frame-red/40 transition rounded-none cursor-pointer outline-none"
+              className="cursor-pointer rounded-lg border border-frame-gray-3 bg-frame-gray-1/80 p-2 text-frame-gray-light outline-none transition hover:border-frame-red/40 hover:text-frame-red"
               title={t("app.studio.projectSelector.deleteProject") as string}
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -254,7 +254,7 @@ export default function ProjectSelector() {
 
       {/* CREATE DIALOG */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-sm rounded-none p-6">
+        <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-sm rounded-xl p-6">
           <DialogHeader>
             <DialogTitle className="font-frame-display text-2xl tracking-wider text-frame-white">
               {t("app.studio.metadataModal.createTitle") as string}
@@ -276,7 +276,7 @@ export default function ProjectSelector() {
                 placeholder={t("app.studio.projectSelector.namePlaceholder") as string}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none"
+                className="w-full rounded-lg bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange"
               />
             </div>
 
@@ -292,7 +292,7 @@ export default function ProjectSelector() {
                     disabled={isSubmitting}
                     value={clientId}
                     onChange={(event) => setClientId(event.target.value)}
-                    className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white pl-9 pr-3 py-2.5 font-frame-body text-[0.83rem] outline-none focus:border-frame-orange rounded-none appearance-none"
+                    className="w-full rounded-lg bg-frame-gray-1 border border-frame-gray-3 text-frame-white pl-9 pr-3 py-2.5 font-frame-body text-[0.83rem] outline-none focus:border-frame-orange appearance-none"
                   >
                     <option value="">Selecione um cliente</option>
                     {clients.map((client) => (
@@ -323,7 +323,7 @@ export default function ProjectSelector() {
                 disabled={isSubmitting}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition resize-none h-[75px] focus:border-frame-orange rounded-none"
+                className="w-full rounded-lg bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition resize-none h-[75px] focus:border-frame-orange"
               />
             </div>
 
@@ -357,7 +357,7 @@ export default function ProjectSelector() {
 
       {/* EDIT DIALOG */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-sm rounded-none p-6">
+        <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-sm rounded-xl p-6">
           <DialogHeader>
             <DialogTitle className="font-frame-display text-2xl tracking-wider text-frame-white">
               {t("app.studio.metadataModal.editTitle") as string}
@@ -378,7 +378,7 @@ export default function ProjectSelector() {
                 disabled={isSubmitting}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange rounded-none"
+                className="w-full rounded-lg bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition focus:border-frame-orange"
               />
             </div>
 
@@ -390,7 +390,7 @@ export default function ProjectSelector() {
                 disabled={isSubmitting}
                 value={clientId}
                 onChange={(event) => setClientId(event.target.value)}
-                className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white px-3 py-2.5 font-frame-body text-[0.83rem] outline-none focus:border-frame-orange rounded-none appearance-none"
+                className="w-full rounded-lg bg-frame-gray-1 border border-frame-gray-3 text-frame-white px-3 py-2.5 font-frame-body text-[0.83rem] outline-none focus:border-frame-orange appearance-none"
               >
                 <option value="">Sem cliente vinculado</option>
                 {clients.map((client) => (
@@ -409,7 +409,7 @@ export default function ProjectSelector() {
                 disabled={isSubmitting}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition resize-none h-[75px] focus:border-frame-orange rounded-none"
+                className="w-full rounded-lg bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2.5 font-frame-body text-[0.83rem] outline-none transition resize-none h-[75px] focus:border-frame-orange"
               />
             </div>
 
@@ -443,7 +443,7 @@ export default function ProjectSelector() {
 
       {/* DELETE DIALOG */}
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-sm rounded-none p-6">
+        <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-sm rounded-xl p-6">
           <DialogHeader>
             <DialogTitle className="font-frame-display text-2xl tracking-wider text-frame-red">
               {t("app.studio.projectSelector.deleteTitle") as string}
@@ -467,7 +467,7 @@ export default function ProjectSelector() {
               type="button"
               disabled={isSubmitting}
               onClick={handleDeleteConfirm}
-              className="font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase font-semibold text-frame-white bg-frame-red hover:bg-frame-red/80 py-2 px-4 transition duration-150 rounded-none cursor-pointer flex items-center justify-center gap-1.5"
+              className="font-frame-mono text-[0.62rem] tracking-[0.12em] uppercase font-semibold text-frame-white bg-frame-red hover:bg-frame-red/80 py-2 px-4 transition duration-150 rounded-lg cursor-pointer flex items-center justify-center gap-1.5"
             >
               {isSubmitting ? (
                 <>

@@ -130,7 +130,7 @@ export function CheckoutModal() {
           style={{
             background: "linear-gradient(160deg, rgba(15,12,10,0.96) 0%, rgba(8,8,8,0.98) 100%)",
             border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 0,
+            borderRadius: "16px",
           }}
         >
           {/* Header */}
@@ -145,7 +145,7 @@ export function CheckoutModal() {
 
           {/* Plan tabs */}
           <div className="px-6 pt-5">
-            <div className="grid grid-cols-3 gap-2 border border-white/10 bg-white/[0.04] p-1">
+            <div className="grid grid-cols-3 gap-2 rounded-lg border border-white/10 bg-white/[0.04] p-1">
               {PLANS.map((plan) => {
                 const Icon = plan.icon;
                 const isFree = plan.id === "free";
@@ -155,7 +155,7 @@ export function CheckoutModal() {
                     type="button"
                     onClick={() => !isFree && setActivePlan(plan.id as "pro" | "studio")}
                     disabled={isFree}
-                    className={`relative flex flex-col items-center gap-1 py-3 px-2 transition-[background,border-color,color] duration-200 ${isFree ? "opacity-50 cursor-default" : "cursor-pointer"}`}
+                    className={`relative flex flex-col items-center gap-1 rounded-md py-3 px-2 transition-[background,border-color,color] duration-200 ${isFree ? "opacity-50 cursor-default" : "cursor-pointer"}`}
                     style={{
                       background: !isFree && activePlan === plan.id ? plan.colorBg : "transparent",
                       border: !isFree && activePlan === plan.id ? `1px solid ${plan.colorBorder}` : "1px solid transparent",
@@ -185,7 +185,7 @@ export function CheckoutModal() {
           {/* Active plan features */}
           <div className="px-6 py-5">
             <div
-              className="space-y-3 p-4"
+              className="space-y-3 rounded-lg p-4"
               style={{ background: planData.colorBg, border: `1px solid ${planData.colorBorder}` }}
             >
               <div className="flex items-center justify-between">

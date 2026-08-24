@@ -48,7 +48,7 @@ import { cn } from "@/lib/utils";
 
 const cardVariants = cva(
   [
-    "rounded-sm",
+    "rounded-lg",
     "bg-[var(--plan-surface-raised)]",
     "border border-[var(--plan-border-default)]",
     "text-[var(--plan-text-primary)]",

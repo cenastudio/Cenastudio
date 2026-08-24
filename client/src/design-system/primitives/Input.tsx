@@ -32,7 +32,7 @@ import { cn } from "@/lib/utils";
 
 const inputVariants = cva(
   [
-    "flex w-full rounded-sm",
+    "flex w-full rounded-md",
     "bg-[var(--plan-surface-raised)]",
     "border border-[var(--plan-border-default)]",
     "px-3 py-2",

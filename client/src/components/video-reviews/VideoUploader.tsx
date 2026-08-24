@@ -445,7 +445,7 @@ export function VideoUploader({
             <div className="flex gap-2">
               <button
                 onClick={handleRemove}
-                className="flex-1 border border-frame-gray-3 px-3 py-2 text-sm transition-colors hover:border-frame-gray-4"
+                className="flex-1 rounded border border-frame-gray-3 px-3 py-2 text-sm transition-colors hover:border-frame-gray-4"
               >
                 {videoFile.status === 'complete' ? t("app.videoUploader.remove") : t("app.videoUploader.cancel")}
               </button>
@@ -453,7 +453,7 @@ export function VideoUploader({
               {videoFile.status === 'complete' && (
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex-1 bg-frame-orange px-3 py-2 text-sm text-frame-black transition-colors hover:bg-frame-orange/90"
+                  className="flex-1 rounded bg-frame-orange px-3 py-2 text-sm text-frame-black transition-colors hover:bg-frame-orange/90"
                 >
                   {t("app.videoUploader.sendAnother")}
                 </button>

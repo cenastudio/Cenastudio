@@ -60,7 +60,7 @@ export default function ProjectTimeline({ activeToolId }: ProjectTimelineProps) 
   const mobileStageValue = activeStage || WORKFLOW_STAGES[0]?.id || "";
 
   return (
-    <div className="w-full bg-frame-gray-1 border-b border-frame-gray-2 px-4 sm:px-6 py-3 select-none">
+    <div className="w-full border-b border-frame-gray-2 bg-frame-gray-1/90 px-4 py-3 select-none sm:px-6">
       <label className="sr-only" htmlFor="studio-mobile-stage">
         {t("app.studio.timeline.pipeline") as string}
       </label>
@@ -68,7 +68,7 @@ export default function ProjectTimeline({ activeToolId }: ProjectTimelineProps) 
         id="studio-mobile-stage"
         value={mobileStageValue}
         onChange={(event) => handleNavigateStep(event.target.value)}
-        className="md:hidden w-full min-h-11 bg-frame-black border border-frame-gray-3 px-3 text-sm text-frame-white outline-none focus:border-frame-orange"
+        className="md:hidden w-full min-h-11 rounded-xl bg-frame-black border border-frame-gray-3 px-3 text-sm text-frame-white outline-none focus:border-frame-orange"
       >
         {WORKFLOW_STAGES.map((step, idx) => (
           <option key={step.id} value={step.id}>
@@ -89,7 +89,7 @@ export default function ProjectTimeline({ activeToolId }: ProjectTimelineProps) 
         </div>
 
         {/* Steps Nodes Flex container */}
-        <div className="flex items-center flex-1 justify-between gap-1 sm:gap-2 relative">
+        <div className="relative flex flex-1 items-center justify-between gap-1 sm:gap-2">
           {/* Subtle connector timeline line background */}
           <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[1px] bg-frame-gray-3/40 z-0 pointer-events-none" />
 
@@ -102,7 +102,11 @@ export default function ProjectTimeline({ activeToolId }: ProjectTimelineProps) 
                 key={step.id}
                 type="button"
                 onClick={() => handleNavigateStep(step.id)}
-                className="min-h-11 flex items-center gap-1.5 md:gap-2.5 z-10 bg-frame-gray-1 px-2 py-1 border border-transparent hover:border-frame-gray-3 transition-[background-color,border-color,color,transform] duration-200 group rounded-none outline-none shrink-0"
+                className={`z-10 flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl border px-2 py-1 outline-none transition-[background-color,border-color,color,transform,box-shadow] duration-200 md:gap-2.5 ${
+                  isActive
+                    ? "border-frame-orange/45 bg-frame-orange/[0.08] shadow-[0_0_24px_rgba(var(--ds-orange-rgb),0.08)]"
+                    : "border-transparent bg-frame-gray-1 hover:border-frame-gray-3 hover:bg-frame-black/25"
+                }`}
               >
                 {/* Node circle state */}
                 <div
