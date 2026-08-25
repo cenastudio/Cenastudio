@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLanguage, type Translate } from "@/contexts/LanguageContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
 import { useClientIdFromQuery } from "@/hooks/useClientIdFromQuery";
 import AppNavBar from "@/components/AppNavBar";
@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { readStudioSettings, saveStudioSettings, type StudioSettings } from "@/lib/studioSettings";
-import { DOCUMENT_EXPORT_COLORS } from "@/design-system/color-presets";
 import { proposalMoneyToCents, renderProposalDocument } from "@shared/proposalDocument";
 
 interface ServiceItem {
@@ -128,16 +127,6 @@ function formatCurrency(value: number) {
   }).format(Number.isFinite(value) ? value : 0);
 }
 
-function esc(value: string | number | null | undefined) {
-  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;",
-  }[char] || char));
-}
-
 function readJson<T>(key: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key);
@@ -171,17 +160,18 @@ async function downloadProposalPdf(docHtml: string, title: string, preparationEr
   iframe.style.height = "1123px";
   iframe.style.border = "0";
   iframe.style.opacity = "0";
-  iframe.setAttribute("sandbox", "allow-same-origin");
   document.body.appendChild(iframe);
 
   try {
-    await new Promise<void>((resolve, reject) => {
-      iframe.onload = () => resolve();
-      iframe.onerror = () => reject(new Error(preparationError));
-      iframe.srcdoc = docHtml;
+    const frameDocument = iframe.contentDocument;
+    if (!frameDocument) throw new Error(preparationError);
+    frameDocument.open();
+    frameDocument.write(docHtml);
+    frameDocument.close();
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
     });
 
-    const frameDocument = iframe.contentDocument;
     const page = frameDocument?.querySelector<HTMLElement>(".page");
     if (!page) throw new Error(preparationError);
     await frameDocument?.fonts?.ready;
@@ -218,103 +208,21 @@ async function downloadProposalPdf(docHtml: string, title: string, preparationEr
       pageIndex += 1;
     }
 
-    pdf.save(`${safeProposalFilename(title)}.pdf`);
+    const blob = pdf.output("blob");
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${safeProposalFilename(title)}.pdf`;
+    anchor.rel = "noopener";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
   } catch (error) {
     toast.error(error instanceof Error ? error.message : preparationError);
   } finally {
     iframe.remove();
   }
-}
-
-function buildProposalHtml(form: ProposalForm, lines: ProposalLine[], studio: StudioSettings, t: Translate, locale: "pt" | "en") {
-  const { dark } = DOCUMENT_EXPORT_COLORS;
-  const subtotal = lines.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const discountValue = Math.round((subtotal * form.discount) / 100);
-  const total = subtotal - discountValue;
-  const docNumber = String(Date.now()).slice(-6);
-  const rows = lines.map((item) => `
-    <tr>
-      <td><strong>${esc(item.name)}</strong><small>${esc(item.description)}</small></td>
-      <td>${item.quantity}x</td>
-      <td>${formatCurrency(item.price)}</td>
-      <td>${formatCurrency(item.price * item.quantity)}</td>
-    </tr>
-  `).join("");
-
-  return `<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>${esc(t("app.proposals.documentTitle"))} - ${esc(form.clientName || form.company || t("app.proposals.clientFallback"))}</title>
-  <style>
-    @page{size:A4;margin:0}
-    *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    html,body{margin:0;min-height:100%;background:${dark.canvas};color:${dark.text};font-family:Arial,sans-serif}
-    body{background:radial-gradient(circle at 88% 5%,${studio.primaryColor}2e,transparent 34%),linear-gradient(135deg,${dark.canvasWarm} 0%,${dark.canvas} 42%,${dark.canvasDeep} 100%)}
-    .page{width:210mm;min-height:297mm;margin:0 auto;padding:18mm;background:radial-gradient(circle at 92% 4%,${studio.primaryColor}30,transparent 33%),linear-gradient(180deg,${dark.page} 0%,${dark.canvas} 100%);position:relative;overflow:visible}
-    .page:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,${studio.primaryColor}14,transparent 32%),radial-gradient(circle at 10% 92%,rgba(217,195,171,.08),transparent 32%);pointer-events:none}
-    .page>*{position:relative;z-index:1}.header{display:flex;justify-content:space-between;gap:32px;padding-bottom:28px;border-bottom:3px solid ${studio.primaryColor}}
-    .brand{font-size:34px;font-weight:900;letter-spacing:.06em;color:${dark.textStrong}}.brand span{color:${studio.primaryColor}}.sub{font-size:11px;color:${studio.primaryColor};font-weight:900;letter-spacing:.18em;text-transform:uppercase;margin-top:5px}
-    .doc{text-align:right}.doc small{display:block;color:${dark.textSubtle};font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.doc strong{display:block;color:${studio.primaryColor};font-size:28px;margin-top:4px}
-    h1{font-size:42px;line-height:1;margin:38px 0 10px;color:${dark.textStrong}}.muted{color:${dark.textMuted};line-height:1.55}
-    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:28px 0}.field{background:${dark.panel};border:1px solid ${dark.border};padding:13px 15px}.label{font-size:9px;color:${dark.textSubtle};font-weight:900;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}.value{font-size:13px;color:${dark.textValue};font-weight:700}
-    .section{margin-top:34px}.section-title{font-size:11px;color:${studio.primaryColor};font-weight:900;letter-spacing:.16em;text-transform:uppercase;margin-bottom:12px}
-    table{width:100%;border-collapse:collapse;background:${dark.table};border:1px solid ${dark.border}} th{padding:12px 14px;text-align:left;background:${dark.tableHeader};color:${dark.textSubtle};font-size:10px;text-transform:uppercase;letter-spacing:.1em}
-    td{padding:13px 14px;border-top:1px solid ${dark.border};color:${dark.textSoft};font-size:13px;vertical-align:top}td:nth-child(2){text-align:center}td:nth-child(3),td:nth-child(4){text-align:right}td small{display:block;color:${dark.textSubtle};font-size:11px;margin-top:3px;line-height:1.35}
-    .totals{margin-top:12px;background:${dark.table};border:1px solid ${dark.border}}.total-row{display:flex;justify-content:space-between;padding:12px 18px;border-top:1px solid ${dark.border};color:${dark.textFaint}}.total-row:first-child{border-top:0}
-    .final{margin-top:16px;display:flex;justify-content:space-between;align-items:center;gap:20px;padding:22px 24px;border:1px solid ${studio.primaryColor}77;background:linear-gradient(135deg,${studio.primaryColor}29,rgba(0,0,0,0))}
-    .final small{display:block;color:${studio.primaryColor};font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.12em}.final strong{font-size:40px;color:${dark.textStrong}}
-    .terms{background:${dark.page};border:1px solid ${dark.borderSoft};padding:20px;margin-top:28px;color:${dark.textFaint};font-size:12px;line-height:1.7}.footer{display:flex;justify-content:space-between;gap:40px;margin-top:56px}.sign{width:240px;border-top:1px solid ${dark.signBorder};padding-top:8px;text-align:center;color:${dark.textSubtle};font-size:10px}
-    @media screen{.page{box-shadow:0 22px 70px rgba(0,0,0,.34)}}
-    @media print{
-      html,body{width:210mm;min-height:297mm;background:${dark.canvas}}
-      body:before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 92% 4%,${studio.primaryColor}24,transparent 33%),linear-gradient(180deg,${dark.page} 0%,${dark.canvas} 100%);z-index:0}
-      .page{width:210mm;min-height:297mm;height:auto;margin:0;padding:16mm;box-shadow:none;background:radial-gradient(circle at 92% 4%,${studio.primaryColor}24,transparent 33%),linear-gradient(180deg,${dark.page} 0%,${dark.canvas} 100%);overflow:visible;-webkit-box-decoration-break:clone;box-decoration-break:clone}
-      .page:before{display:none}
-      .page>*{position:relative;z-index:1}
-      .header,.field,.totals,.final,.terms,.footer,tr{break-inside:avoid;page-break-inside:avoid}
-      .section-title{break-after:avoid;page-break-after:avoid}
-      .footer{margin-top:24px;padding-top:18px}
-      .sign{padding-top:10px}
-      thead{display:table-header-group}
-      table{page-break-inside:auto}
-    }
-  </style>
-</head>
-<body>
-  <main class="page">
-    <header class="header">
-      <div><div class="brand">${esc(studio.studioName)}<span>.</span></div><div class="sub">${esc(studio.legalName || t("app.proposals.commercialProposal"))}</div></div>
-      <div class="doc"><small>${esc(t("app.proposals.documentTitle"))}</small><strong>#${docNumber}</strong><small>${new Date().toLocaleDateString(locale === "pt" ? "pt-BR" : "en-US")}</small></div>
-    </header>
-    <h1>${esc(form.projectTitle || t("app.proposals.audiovisualProposal"))}</h1>
-    <p class="muted">${esc(t("app.proposals.documentDescription"))}</p>
-    <div class="grid">
-      ${[
-        [t("app.proposals.clientLabel"), form.clientName || t("app.proposals.toDefine")],
-        [t("app.proposals.companyLabel"), form.company || t("app.proposals.toDefine")],
-        [t("app.proposals.emailLabel"), form.email || t("app.proposals.toDefine")],
-        ["WhatsApp", form.phone || t("app.proposals.toDefine")],
-        [t("app.proposals.cityLabel"), form.city || studio.city || t("app.proposals.toDefine")],
-        [t("app.proposals.deadlineLabel"), form.deadline || t("app.proposals.toDefine")],
-        [t("app.proposals.validityLabel"), `${form.validityDays || 15} ${t("app.proposals.days")}`],
-        [t("app.proposals.paymentLabel"), form.paymentTerms],
-      ].map(([label, value]) => `<div class="field"><div class="label">${esc(label)}</div><div class="value">${esc(value)}</div></div>`).join("")}
-    </div>
-    <section class="section">
-      <div class="section-title">${esc(t("app.proposals.servicesScope"))}</div>
-      <table><thead><tr><th>${esc(t("app.proposals.service"))}</th><th>${esc(t("app.proposals.quantityShort"))}</th><th>${esc(t("app.proposals.unitPrice"))}</th><th>${esc(t("app.proposals.total"))}</th></tr></thead><tbody>${rows}</tbody></table>
-      <div class="totals">
-        <div class="total-row"><span>${esc(t("app.proposals.subtotal"))}</span><strong>${formatCurrency(subtotal)}</strong></div>
-        ${form.discount ? `<div class="total-row"><span>${esc(t("app.proposals.discount"))} (${form.discount}%)</span><strong>-${formatCurrency(discountValue)}</strong></div>` : ""}
-      </div>
-      <div class="final"><div><small>${esc(t("app.proposals.projectTotal"))}</small>${form.notes ? `<p class="muted">${esc(form.notes)}</p>` : ""}</div><strong>${formatCurrency(total)}</strong></div>
-    </section>
-    <div class="terms">${esc(t("app.proposals.termsPrefix"))} ${form.validityDays || 15} ${esc(t("app.proposals.termsSuffix"))}</div>
-    <footer class="footer"><div class="sign">${esc(studio.studioName)}<br/>${esc(studio.signature || studio.email || t("app.proposals.commercialLead"))}</div><div class="sign">${esc(form.clientName || t("app.proposals.clientFallback"))}<br/>${esc(t("app.proposals.proposalAcceptance"))}</div></footer>
-  </main>
-</body>
-</html>`;
 }
 
 function buildUnifiedProposalHtml(form: ProposalForm, lines: ProposalLine[], studio: StudioSettings, locale: "pt" | "en") {

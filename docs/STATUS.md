@@ -5,7 +5,7 @@
 > de estado, edite a seção correspondente, não acrescente uma nova
 > no fim sem contexto. Data da última atualização no topo.
 
-**Última atualização:** 2026-08-24
+**Última atualização:** 2026-08-25
 
 > **Handoff desta sessão:** em 2026-08-24 foi feita uma correção global de
 > consistência visual após comparação direta entre Landing e Login: CTAs da
@@ -90,6 +90,21 @@
 > `npm run test -- server/services/proposalDocument.test.ts
 > server/controllers/proposalsController.test.ts`, `npm run check` e
 > `npm run build`.
+> Follow-up no mesmo dia: a exportação da Proposta Comercial foi endurecida
+> para Safari usando escrita direta no iframe, sem `srcdoc`/sandbox, e download
+> por Blob em vez de `pdf.save()`. O template ativo deixou de usar tabela para
+> os serviços; descrição do serviço agora ocupa largura total em cards,
+> quantidade/unitário/total viraram metadados abaixo do texto, notas e condições
+> ficaram em seção própria e o total não compete mais com a descrição. O builder
+> antigo comprimido foi removido para deixar uma única fonte de verdade. QA:
+> amostra longa em `tmp/proposta-pdf-debug/proposta-sample-v3.html`, screenshot
+> `tmp/proposta-pdf-debug/proposta-sample-v3-page.png`, PDF renderizado em
+> `tmp/proposta-pdf-debug/proposta-sample-v3.pdf`/`proposta-sample-v3-rendered-1.png`;
+> resultado: 1 página A4, sem overflow horizontal, sem texto cortado e
+> R$ 5.800,00 correto. Validação:
+> `npm run test -- server/services/proposalDocument.test.ts
+> server/controllers/proposalsController.test.ts`, `npm run check`,
+> `git diff --check` e `npm run build`.
 > Validação adicional: screenshots em
 > `tmp/rounded-studio-rebrand-qa-2026-08-24/` e
 > `tmp/studio-full-rebrand-qa-2026-08-24/`, ambos sem overflow horizontal em

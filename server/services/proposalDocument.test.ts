@@ -41,6 +41,28 @@ describe("renderProposalDocument", () => {
     expect(html).toContain("$1,250.00");
   });
 
+  it("keeps service descriptions and notes in spacious document sections", () => {
+    const html = renderProposalDocument({
+      ...base,
+      locale: "pt",
+      lines: [{
+        name: "Filme hero",
+        description: "Descricao longa do servico.\n\nInclui filmagem, direcao e finalizacao.",
+        quantity: 1,
+        unitPrice: 580_000,
+        total: 580_000,
+      }],
+      notes: "Nota comercial longa.\n\nSegunda condicao importante.",
+      subtotal: 580_000,
+      total: 580_000,
+    });
+
+    expect(html).toContain("line-description");
+    expect(html).toContain("Notas e condicoes");
+    expect(html).toContain("Nota comercial longa.");
+    expect(html).not.toContain("<table>");
+  });
+
   it("escapes every free-text field and rejects an unsafe brand color", () => {
     const html = renderProposalDocument({
       ...base,
