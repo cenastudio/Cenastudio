@@ -20,7 +20,7 @@ import {
 import { toast } from "sonner";
 import { readStudioSettings, saveStudioSettings, type StudioSettings } from "@/lib/studioSettings";
 import { DOCUMENT_EXPORT_COLORS } from "@/design-system/color-presets";
-import { renderProposalDocument } from "@shared/proposalDocument";
+import { proposalMoneyToCents, renderProposalDocument } from "@shared/proposalDocument";
 
 interface ServiceItem {
   id: string;
@@ -147,38 +147,83 @@ function readJson<T>(key: string, fallback: T): T {
   }
 }
 
-function printHtmlDocument(docHtml: string, preparationError: string) {
+function safeProposalFilename(value: string) {
+  const cleaned = value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return cleaned || "proposta-comercial";
+}
+
+async function downloadProposalPdf(docHtml: string, title: string, preparationError: string) {
+  const [{ jsPDF }, html2canvasModule] = await Promise.all([
+    import("jspdf"),
+    import("html2canvas"),
+  ]);
+  const html2canvas = html2canvasModule.default;
   const iframe = document.createElement("iframe");
   iframe.style.position = "fixed";
-  iframe.style.right = "0";
-  iframe.style.bottom = "0";
-  iframe.style.width = "0";
-  iframe.style.height = "0";
+  iframe.style.left = "-10000px";
+  iframe.style.top = "0";
+  iframe.style.width = "794px";
+  iframe.style.height = "1123px";
   iframe.style.border = "0";
   iframe.style.opacity = "0";
-  iframe.setAttribute("sandbox", "allow-same-origin allow-modals");
+  iframe.setAttribute("sandbox", "allow-same-origin");
   document.body.appendChild(iframe);
 
-  const cleanup = () => {
-    window.setTimeout(() => iframe.remove(), 1000);
-  };
+  try {
+    await new Promise<void>((resolve, reject) => {
+      iframe.onload = () => resolve();
+      iframe.onerror = () => reject(new Error(preparationError));
+      iframe.srcdoc = docHtml;
+    });
 
-  iframe.onload = () => {
-    const frameWindow = iframe.contentWindow;
-    if (!frameWindow) {
-      cleanup();
-      toast.error(preparationError);
-      return;
+    const frameDocument = iframe.contentDocument;
+    const page = frameDocument?.querySelector<HTMLElement>(".page");
+    if (!page) throw new Error(preparationError);
+    await frameDocument?.fonts?.ready;
+
+    const canvas = await html2canvas(page, {
+      backgroundColor: "rgb(5, 5, 5)",
+      scale: Math.min(2, window.devicePixelRatio || 1.5),
+      useCORS: true,
+      windowWidth: page.scrollWidth,
+      windowHeight: page.scrollHeight,
+    });
+
+    const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+    const pageWidthMm = 210;
+    const pageHeightMm = 297;
+    const pageHeightPx = Math.floor(canvas.width * (pageHeightMm / pageWidthMm));
+    let sourceY = 0;
+    let pageIndex = 0;
+
+    while (sourceY < canvas.height) {
+      const sliceHeight = Math.min(pageHeightPx, canvas.height - sourceY);
+      const slice = document.createElement("canvas");
+      slice.width = canvas.width;
+      slice.height = sliceHeight;
+      const context = slice.getContext("2d");
+      if (!context) throw new Error(preparationError);
+      context.fillStyle = "rgb(5, 5, 5)";
+      context.fillRect(0, 0, slice.width, slice.height);
+      context.drawImage(canvas, 0, sourceY, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
+      if (pageIndex > 0) pdf.addPage();
+      const heightMm = (sliceHeight / canvas.width) * pageWidthMm;
+      pdf.addImage(slice.toDataURL("image/png"), "PNG", 0, 0, pageWidthMm, heightMm);
+      sourceY += sliceHeight;
+      pageIndex += 1;
     }
-    frameWindow.focus();
-    frameWindow.onafterprint = cleanup;
-    window.setTimeout(() => {
-      frameWindow.print();
-      cleanup();
-    }, 250);
-  };
 
-  iframe.srcdoc = docHtml;
+    pdf.save(`${safeProposalFilename(title)}.pdf`);
+  } catch (error) {
+    toast.error(error instanceof Error ? error.message : preparationError);
+  } finally {
+    iframe.remove();
+  }
 }
 
 function buildProposalHtml(form: ProposalForm, lines: ProposalLine[], studio: StudioSettings, t: Translate, locale: "pt" | "en") {
@@ -275,6 +320,7 @@ function buildProposalHtml(form: ProposalForm, lines: ProposalLine[], studio: St
 function buildUnifiedProposalHtml(form: ProposalForm, lines: ProposalLine[], studio: StudioSettings, locale: "pt" | "en") {
   const subtotal = lines.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const discount = Math.round((subtotal * form.discount) / 100);
+  const total = subtotal - discount;
   return renderProposalDocument({
     locale,
     currency: "BRL",
@@ -288,10 +334,16 @@ function buildUnifiedProposalHtml(form: ProposalForm, lines: ProposalLine[], stu
       primaryColor: studio.primaryColor,
     },
     recipient: { name: form.clientName, company: form.company, email: form.email, phone: form.phone, city: form.city },
-    lines: lines.map((item) => ({ name: item.name, description: item.description, quantity: item.quantity, unitPrice: item.price, total: item.price * item.quantity })),
-    subtotal,
-    discount,
-    total: subtotal - discount,
+    lines: lines.map((item) => ({
+      name: item.name,
+      description: item.description,
+      quantity: item.quantity,
+      unitPrice: proposalMoneyToCents(item.price),
+      total: proposalMoneyToCents(item.price * item.quantity),
+    })),
+    subtotal: proposalMoneyToCents(subtotal),
+    discount: proposalMoneyToCents(discount),
+    total: proposalMoneyToCents(total),
     deadline: form.deadline,
     paymentTerms: form.paymentTerms,
     validityDays: form.validityDays,
@@ -433,12 +485,12 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
     setSelected((current) => current.filter((item) => item.id !== id));
   };
 
-  const exportPdf = (html = proposalHtml, requireSelection = true) => {
+  const exportPdf = async (html = proposalHtml, requireSelection = true, title = proposal.projectTitle) => {
     if (requireSelection && !selected.length) {
       toast.error(t("app.errors.selectAtLeastOneService") as string);
       return;
     }
-    printHtmlDocument(html, t("app.errors.couldNotPreparePdf"));
+    await downloadProposalPdf(html, title || (t("app.proposals.audiovisualProposal") as string), t("app.errors.couldNotPreparePdf") as string);
   };
 
   const [isSendingProposal, setIsSendingProposal] = useState(false);
@@ -476,7 +528,7 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
         clientId: Number(selectedClientId),
         title: proposal.projectTitle || (t("app.proposals.audiovisualProposal") as string),
         html: proposalHtml,
-        total,
+        total: proposalMoneyToCents(total),
       });
       setSentProposalUrl(created.proposal_url);
       toast.success(t("app.proposals.sentForAcceptance") as string);

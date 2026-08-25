@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { renderProposalDocument } from "../../shared/proposalDocument.js";
+import { proposalMoneyToCents, renderProposalDocument } from "../../shared/proposalDocument.js";
 
 const base = {
   currency: "BRL",
@@ -13,6 +13,17 @@ const base = {
 } as const;
 
 describe("renderProposalDocument", () => {
+  it("converts proposal form money values to cents without changing magnitude", () => {
+    expect(proposalMoneyToCents(5_800)).toBe(580_000);
+    expect(renderProposalDocument({
+      ...base,
+      locale: "pt",
+      lines: [{ name: "Campanha", quantity: 1, unitPrice: proposalMoneyToCents(5_800), total: proposalMoneyToCents(5_800) }],
+      subtotal: proposalMoneyToCents(5_800),
+      total: proposalMoneyToCents(5_800),
+    })).toContain("R$\u00a05.800,00");
+  });
+
   it("renders a branded Portuguese document from cent values", () => {
     const html = renderProposalDocument({ ...base, locale: "pt", validityDays: 15 });
 

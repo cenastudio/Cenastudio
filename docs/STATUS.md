@@ -75,6 +75,21 @@
 > client/src/test/discovery-ux.test.tsx client/src/test/AppNavBar.test.tsx` e
 > `git diff --check`; os testes passaram com warnings antigos de ambiente
 > (`act`, `whileHover` e fetch para `localhost:3000`) sem falha.
+> Em 2026-08-25, a aba de Proposta Comercial recebeu correção crítica de PDF:
+> o builder de `/proposals` usava valores em reais dentro do template
+> compartilhado que espera centavos, fazendo R$ 5.800,00 aparecer como
+> R$ 58,00/R$ 5.800,00 apenas quando o usuário digitava valores inflados. O
+> fluxo agora converte reais para centavos antes de renderizar documento e antes
+> de enviar a proposta para aceite. A exportação também deixou de depender do
+> `window.print()` do Safari, que adicionava cabeçalho/rodapé (`about:srcdoc`,
+> data e paginação do navegador), e passou a gerar PDF pelo app com
+> `html2canvas` + `jsPDF`. O template compartilhado foi compactado para reduzir
+> quebras artificiais de página; uma amostra com conteúdo equivalente ao PDF
+> enviado coube em uma página A4 e exibiu R$ 5.800,00 corretamente em
+> `tmp/proposta-pdf-debug/proposta-sample-page.png`. Validação:
+> `npm run test -- server/services/proposalDocument.test.ts
+> server/controllers/proposalsController.test.ts`, `npm run check` e
+> `npm run build`.
 > Validação adicional: screenshots em
 > `tmp/rounded-studio-rebrand-qa-2026-08-24/` e
 > `tmp/studio-full-rebrand-qa-2026-08-24/`, ambos sem overflow horizontal em
