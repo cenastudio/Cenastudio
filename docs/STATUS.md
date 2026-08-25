@@ -115,6 +115,14 @@
 > `npm run test -- server/app.test.ts server/services/publicShareSeo.test.ts
 > server/controllers/proposalLifecycle.test.ts`, `npm run check`,
 > `git diff --check` e `npm run build`.
+> Follow-up de UX na mesma tela: o histórico local de propostas em `/proposals`
+> deixou de abrir como download ao clicar no item. O clique principal agora
+> reabre a proposta no editor para gerar novo link de aceite; o download ficou
+> restrito ao ícone de exportação. Propostas salvas a partir desta versão guardam
+> também cliente, campos e itens para reabrir editável; propostas antigas, que
+> tinham apenas HTML salvo, reabrem como documento arquivado e ainda permitem
+> escolher cliente e gerar link de aceite com o HTML original. Validação:
+> `npm run check`, `git diff --check` e `npm run build`.
 > Validação adicional: screenshots em
 > `tmp/rounded-studio-rebrand-qa-2026-08-24/` e
 > `tmp/studio-full-rebrand-qa-2026-08-24/`, ambos sem overflow horizontal em

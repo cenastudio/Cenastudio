@@ -56,6 +56,9 @@ interface SavedProposal {
   createdAt: string;
   status?: 'draft' | 'sent' | 'viewed' | 'accepted' | 'rejected';
   template?: 'modern' | 'corporate' | 'creative';
+  clientId?: string;
+  proposal?: ProposalForm;
+  lines?: ProposalLine[];
 }
 
 const CATALOG_KEY = "frame.proposal.catalog.v1";
@@ -279,6 +282,7 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
   const [studio, setStudio] = useState<StudioSettings>(() => readStudioSettings());
   const [clients, setClients] = useState<Array<{ id: number; name: string; company?: string | null; email?: string | null; phone?: string | null }>>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>("");
+  const [historyDraft, setHistoryDraft] = useState<SavedProposal | null>(null);
   const [editingService, setEditingService] = useState<ServiceItem>({
     id: "",
     name: "",
@@ -340,6 +344,8 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
   const discountValue = Math.round((subtotal * proposal.discount) / 100);
   const total = subtotal - discountValue;
   const proposalHtml = useMemo(() => buildUnifiedProposalHtml(proposal, selected, studio, locale), [proposal, selected, studio, locale]);
+  const displayedTotal = historyDraft?.total ?? total;
+  const displayedProposalHtml = historyDraft?.html ?? proposalHtml;
   const projectBackedProposals = connectedProposals.filter((item) => item.source_budget_id);
 
   const persistCatalog = (items: ServiceItem[]) => {
@@ -353,10 +359,12 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
   };
 
   const updateProposal = (key: keyof ProposalForm, value: string | number) => {
+    setHistoryDraft(null);
     setProposal((current) => ({ ...current, [key]: value }));
   };
 
   const addLine = (service: ServiceItem) => {
+    setHistoryDraft(null);
     setSelected((current) => {
       const existing = current.find((item) => item.id === service.id);
       if (existing) {
@@ -367,6 +375,7 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
   };
 
   const updateLine = (id: string, data: Partial<ProposalLine>) => {
+    setHistoryDraft(null);
     setSelected((current) => current.map((item) => item.id === id ? { ...item, ...data } : item));
   };
 
@@ -390,11 +399,12 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
 
   const removeService = (id: string) => {
     persistCatalog(catalog.filter((item) => item.id !== id));
+    setHistoryDraft(null);
     setSelected((current) => current.filter((item) => item.id !== id));
   };
 
-  const exportPdf = async (html = proposalHtml, requireSelection = true, title = proposal.projectTitle) => {
-    if (requireSelection && !selected.length) {
+  const exportPdf = async (html = displayedProposalHtml, requireSelection = true, title = historyDraft?.title || proposal.projectTitle) => {
+    if (requireSelection && !selected.length && !historyDraft) {
       toast.error(t("app.errors.selectAtLeastOneService") as string);
       return;
     }
@@ -416,13 +426,40 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
       total,
       html: proposalHtml,
       createdAt: new Date().toISOString(),
+      clientId: selectedClientId,
+      proposal,
+      lines: selected,
     };
     persistHistory([item, ...history].slice(0, 40));
+    setHistoryDraft(null);
     toast.success(t("app.proposals.savedToHistory") as string);
   };
 
+  const loadSavedProposal = (item: SavedProposal) => {
+    setSentProposalUrl(null);
+    if (item.proposal && Array.isArray(item.lines) && item.lines.length > 0) {
+      setProposal(item.proposal);
+      setSelected(item.lines);
+      setHistoryDraft(null);
+      if (item.clientId) setSelectedClientId(item.clientId);
+    } else {
+      setProposal((current) => ({
+        ...current,
+        projectTitle: item.title || current.projectTitle,
+        clientName: item.clientName || current.clientName,
+      }));
+      setSelected([]);
+      setHistoryDraft(item);
+    }
+    window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
+    toast.success(locale === "en" ? "Proposal loaded" : "Proposta reaberta");
+  };
+
   const sendProposalForAcceptance = async () => {
-    if (!selected.length) {
+    const htmlForAcceptance = historyDraft?.html ?? proposalHtml;
+    const totalForAcceptance = historyDraft?.total ?? total;
+    const titleForAcceptance = historyDraft?.title || proposal.projectTitle || (t("app.proposals.audiovisualProposal") as string);
+    if (!selected.length && !historyDraft) {
       toast.error(t("app.errors.selectAtLeastOneService") as string);
       return;
     }
@@ -434,9 +471,9 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
     try {
       const created = await api.proposals.create({
         clientId: Number(selectedClientId),
-        title: proposal.projectTitle || (t("app.proposals.audiovisualProposal") as string),
-        html: proposalHtml,
-        total: proposalMoneyToCents(total),
+        title: titleForAcceptance,
+        html: htmlForAcceptance,
+        total: proposalMoneyToCents(totalForAcceptance),
       });
       setSentProposalUrl(created.proposal_url);
       toast.success(t("app.proposals.sentForAcceptance") as string);
@@ -581,7 +618,7 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
               </div>
               <div className="proposal-total-card proposal-total-card-accent p-3">
                 <p className="text-[0.64rem] font-frame-mono uppercase text-adaptive-primary">{t("app.common.total") as string}</p>
-                <p className="text-sm font-bold">{formatCurrency(total)}</p>
+                <p className="text-sm font-bold">{formatCurrency(displayedTotal)}</p>
               </div>
             </div>
           </div>
@@ -743,6 +780,18 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
               </button>
             </div>
 
+            {historyDraft && (
+              <div className="proposal-panel p-5 space-y-2 border-frame-orange/40">
+                <p className="frame-label">{locale === "en" ? "Loaded from history" : "Reaberta do histórico"}</p>
+                <p className="text-sm text-frame-white font-semibold">{historyDraft.title}</p>
+                <p className="text-[0.68rem] text-frame-gray-light leading-relaxed">
+                  {locale === "en"
+                    ? "This older saved proposal is using the archived document. Choose the client and send it again to create a new acceptance link."
+                    : "Esta proposta salva antiga está usando o documento arquivado. Escolha o cliente e envie novamente para criar um novo link de aceite."}
+                </p>
+              </div>
+            )}
+
             {sentProposalUrl && (
               <div className="proposal-panel p-5 space-y-3 border-frame-orange/40">
                 <p className="frame-label">{t("app.proposals.acceptanceLinkReady") as string}</p>
@@ -776,9 +825,12 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
                   {history.map((item) => (
                     <div key={item.id} className="proposal-line flex items-center gap-3 p-3">
                       <BriefcaseBusiness className="w-4 h-4 text-frame-orange shrink-0" />
-                      <button type="button" onClick={() => exportPdf(item.html, false)} className="flex-1 text-left min-w-0">
+                      <button type="button" onClick={() => loadSavedProposal(item)} className="flex-1 text-left min-w-0">
                         <div className="text-sm font-semibold truncate">{item.title}</div>
                         <div className="text-[0.62rem] text-frame-gray-light truncate">{item.clientName} · {formatCurrency(item.total)} · {new Date(item.createdAt).toLocaleDateString(locale === "pt" ? "pt-BR" : "en-US")}</div>
+                        <div className="text-[0.58rem] text-frame-orange mt-1">
+                          {locale === "en" ? "Open to create acceptance link" : "Abrir para criar link de aceite"}
+                        </div>
                       </button>
                       <button type="button" onClick={() => exportPdf(item.html, false)} className="text-frame-orange hover:text-frame-white" title={t("app.common.export") as string}>
                         <Download className="w-4 h-4" />
@@ -796,10 +848,10 @@ function ProposalsContent({ embedded }: { embedded?: boolean }) {
           <aside className="proposal-preview overflow-hidden min-h-[720px] 2xl:sticky 2xl:top-24">
             <div className="h-14 border-b border-frame-gray-3 px-5 flex items-center justify-between">
               <span className="font-frame-mono text-[0.62rem] tracking-[0.14em] uppercase text-adaptive-primary">{t("app.proposals.preview") as string}</span>
-              <span className="text-[0.62rem] text-frame-gray-light">{formatCurrency(total)}</span>
+              <span className="text-[0.62rem] text-frame-gray-light">{formatCurrency(displayedTotal)}</span>
             </div>
-            {selected.length ? (
-              <iframe title={t("app.proposals.proposalPreview") as string} srcDoc={proposalHtml} className="w-full h-[680px] bg-[var(--ds-surface-tooltip)]" />
+            {selected.length || historyDraft ? (
+              <iframe title={t("app.proposals.proposalPreview") as string} srcDoc={displayedProposalHtml} className="w-full h-[680px] bg-[var(--ds-surface-tooltip)]" />
             ) : (
               <div className="proposal-preview-empty h-[680px] flex items-center justify-center p-8 text-center text-frame-gray-light">
                 <div className="proposal-paper-ghost">
