@@ -83,7 +83,9 @@ export function createPublicShareSeoHandler(staticPath: string) {
   let spaShell: Promise<string> | null = null;
 
   return async (req: Request, res: Response, next: NextFunction) => {
-    const kind = req.query.publicSeo;
+    const queryKind = req.query.publicSeo;
+    const pathMatch = /^\/(review|proposal|meeting)\/([^/?#]+)$/.exec(req.path);
+    const kind = isPublicShareKind(queryKind) ? queryKind : pathMatch?.[1];
     if (!isPublicShareKind(kind)) {
       next();
       return;
@@ -91,7 +93,7 @@ export function createPublicShareSeoHandler(staticPath: string) {
 
     try {
       const locale = getPublicShareLocale(req.get("accept-language"));
-      const token = typeof req.query.token === "string" ? req.query.token : "";
+      const token = typeof req.query.token === "string" ? req.query.token : decodeURIComponent(pathMatch?.[2] || "");
       const metadata = await getPublicShareMetadata(kind, token, locale)
         || buildGenericPublicShareMetadata({
           locale,
@@ -190,7 +192,9 @@ export function createApp() {
 
   // Vercel rewrites public links here so social crawlers receive metadata
   // before the SPA bundle loads. This route intentionally remains public.
-  app.get("/api", createPublicShareSeoHandler(path.resolve(__dirname, "public")));
+  const publicShareSeoHandler = createPublicShareSeoHandler(path.resolve(__dirname, "public"));
+  app.get(["/review/:token", "/proposal/:token", "/meeting/:token"], publicShareSeoHandler);
+  app.get("/api", publicShareSeoHandler);
 
   app.use("/api", apiRouter);
 

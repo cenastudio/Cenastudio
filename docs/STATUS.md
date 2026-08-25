@@ -105,6 +105,16 @@
 > `npm run test -- server/services/proposalDocument.test.ts
 > server/controllers/proposalsController.test.ts`, `npm run check`,
 > `git diff --check` e `npm run build`.
+> Ainda em 2026-08-25, foi corrigido o link público de aceite de proposta:
+> `/proposal/:token` estava chegando ao Express em produção e retornando
+> `Cannot GET /proposal/...`, embora `/api/public-proposal/:token` estivesse
+> saudável. O handler público de SEO/SPA agora também atende diretamente
+> `/review/:token`, `/proposal/:token` e `/meeting/:token`, além do caminho
+> reescrito `/api?publicSeo=...`, evitando dependência frágil do rewrite da
+> Vercel. Validação focada: `curl` confirmou a API pública da proposta,
+> `npm run test -- server/app.test.ts server/services/publicShareSeo.test.ts
+> server/controllers/proposalLifecycle.test.ts`, `npm run check`,
+> `git diff --check` e `npm run build`.
 > Validação adicional: screenshots em
 > `tmp/rounded-studio-rebrand-qa-2026-08-24/` e
 > `tmp/studio-full-rebrand-qa-2026-08-24/`, ambos sem overflow horizontal em
