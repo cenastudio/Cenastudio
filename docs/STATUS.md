@@ -29,7 +29,13 @@
 > console, 0 overflow horizontal, scroll funcional e botões medidos em 14px de
 > raio. Observação: o backend local segue com falha de conexão Prisma no seed em
 > desenvolvimento, então o QA visual protegido foi feito com mocks de API no
-> navegador; produção deve ser validada após push/deploy.
+> navegador. Deploy automático via `main` concluído no mesmo dia após o commit
+> `9f48d2a`; produção respondeu `HTTP 200` em `/`, `/ready` retornou
+> `ready: true` com banco e memória `ok`, e smoke público Playwright em
+> `.codex-screenshots/prod-smoke-2026-08-31/` validou Landing/Login em
+> desktop/mobile sem overflow horizontal e com raios de botões consistentes
+> (14px/18px). O único 401 no smoke público foi a checagem esperada de sessão
+> anônima.
 
 > **Handoff desta sessão:** em 2026-08-24 foi feita uma correção global de
 > consistência visual após comparação direta entre Landing e Login: CTAs da
