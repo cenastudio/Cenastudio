@@ -33,7 +33,10 @@
 > tests/e2e/critical-pages-mobile.spec.ts --workers=1` (13 passed, 5 skipped),
 > `npx playwright test tests/e2e/shotlist-storyboard-mobile.spec.ts --workers=1`
 > (1 passed, 1 skipped), `npm run check`, `npm run build`, `git diff --check`,
-> metadata pública por `curl` e `/ready` em produção com banco `ok`.
+> metadata pública por `curl` e `/ready` em produção com banco `ok`. Deploy em
+> produção concluído no Vercel em `dpl_72iBdAo3AZ7SFtmHFRs2dLKdx2AN`, alias
+> `https://cena-studio-prod.vercel.app`, status `Ready`; smoke pós-deploy:
+> `/` HTTP 200 e `/ready` `ready:true` com banco `ok` e memória `warn`.
 
 > **Handoff desta sessão:** em 2026-08-31 foi concluída uma rodada P0 de
 > consistência visual e Studio IA após críticas diretas sobre botões quadrados,
