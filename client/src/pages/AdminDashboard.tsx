@@ -395,6 +395,17 @@ export function AdminContent() {
   } as const;
   const adminGuidance = adminTabGuidance[activeTab as keyof typeof adminTabGuidance] ?? adminTabGuidance.overview;
   const AdminGuidanceIcon = adminGuidance.icon;
+  const handleAdminTabChange = (value: string) => {
+    setActiveTab(value);
+    if (typeof window === "undefined" || window.innerWidth >= 768) {
+      return;
+    }
+    window.setTimeout(() => {
+      document
+        .querySelector<HTMLElement>('[role="tabpanel"][data-state="active"]')
+        ?.scrollIntoView({ block: "start", inline: "nearest" });
+    }, 0);
+  };
 
   // ═══════════════════════════════════════════════════════════════════════
   // RENDER
@@ -436,7 +447,7 @@ export function AdminContent() {
             { value: "audit", label: "Auditoria" },
           ]}
           value={activeTab}
-          onValueChange={setActiveTab}
+          onValueChange={handleAdminTabChange}
         >
           <section className="mt-6 border border-frame-gray-3/70 bg-frame-gray-1/15 p-4 sm:p-5">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

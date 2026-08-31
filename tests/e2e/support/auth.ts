@@ -41,6 +41,12 @@ export async function disableOnboarding(page: Page): Promise<void> {
 export async function loginAsAdmin(page: Page): Promise<void> {
   // Deve rodar antes de qualquer navegação para valer no primeiro paint.
   await disableOnboarding(page);
+  await expect
+    .poll(async () => {
+      const response = await page.request.get("/api/ready");
+      return response.ok();
+    }, { timeout: 20_000 })
+    .toBe(true);
 
   const currentUrl = page.url();
   const alreadyAuthenticated =

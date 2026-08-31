@@ -51,7 +51,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               {client?.company && <p className="text-xs text-frame-gray-light truncate">{client.company}</p>}
             </div>
           </div>
-          <button type="button" onClick={handleLogout} className="inline-flex min-h-11 items-center gap-2 px-3 font-frame-mono text-xs text-frame-gray-light hover:text-frame-orange transition">
+          <button type="button" onClick={handleLogout} className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-[var(--ds-radius-control)] px-3 font-frame-mono text-xs text-frame-gray-light transition-[color,background-color] hover:bg-frame-white/[0.04] hover:text-frame-orange">
             <LogOut className="h-4 w-4" aria-hidden="true" />
             <span className="hidden sm:inline">Sair</span>
           </button>

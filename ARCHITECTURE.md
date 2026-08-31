@@ -551,19 +551,17 @@ validação dos fluxos de acesso, por isso a decisão é `Aceito`.
     criação de acesso; aceitável no volume atual, revisar se o portal virar rota
     de tráfego alto
 
-**Risco aceito:** token confusion se algum código futuro esquecer de checar a
-claim `type`. Hoje o `authenticate` do app **não** verifica `type` — um token de
-portal é rejeitado apenas como efeito colateral, porque o payload não tem `email`
-e a comparação com `currentUser.email` falha. Essa proteção é acidental, não uma
-asserção: qualquer refatoração que relaxe a checagem de e-mail, ou qualquer novo
-middleware que confie só em `jwt.verify()` com o segredo compartilhado, reabre o
-caminho. Mitigação de baixo custo, ainda não aplicada: exigir explicitamente
-`type !== "client-portal"` no `authenticate` do app, e passar a emitir o token do
-app com uma claim `type: "app"`.
+**Risco mitigado em 2026-08-31:** token confusion se algum código futuro esquecer
+de checar a claim `type`. O `authenticate` do app agora rejeita explicitamente
+qualquer payload com `type` diferente de `"app"`, e o token emitido pelo app
+carrega `type: "app"`. Tokens antigos sem `type` continuam aceitos até expirar,
+para não derrubar sessões legítimas durante o deploy. Regressão coberta em
+`server/controllers/coreFlow.test.ts`: um token `client-portal` enviado como
+`frame_token` recebe 401.
 
 **Revisão:** revisar se o portal passar a receber tráfego relevante (ver nota
-sobre `hashSync`) e aplicar a mitigação explícita contra token confusion antes
-de ampliar autenticação compartilhada.
+sobre `hashSync`) ou se os domínios de autenticação deixarem de compartilhar
+`JWT_SECRET`.
 
 ---
 
@@ -872,6 +870,75 @@ quatro áreas amplas e mostra também Projeto, Aprovação e Entrega.
 
 **Revisão:** reavaliar depois da próxima auditoria de uso real se o catálogo
 deve virar uma superfície persistente global ou continuar contextual por tela.
+
+---
+
+### ADR-017: Asset Library como view operacional sobre Arquivos
+
+**Status:** Aceito
+**Data:** 2026-08-31
+**Contexto:** O produto tem telas chamadas "Arquivos" e "Assets", mas o código
+real não tem model `Asset`, migration própria nem storage separado. `Assets.tsx`
+consome os mesmos dados de arquivos (`/files/all`, `/files/:id/download`) e
+funciona como recorte de biblioteca para produção. Documentos históricos
+afirmavam que havia um módulo de Asset Library completo, o que não corresponde
+ao repositório.
+
+**Decisão:** manter Asset Library como view operacional sobre `files`.
+
+- `files` continua sendo a entidade canônica para uploads, download, storage,
+  visibilidade no Portal e vínculo com projeto.
+- `Assets.tsx` pode oferecer filtros, linguagem de biblioteca e organização por
+  uso audiovisual, mas não cria uma segunda entidade.
+- Não criar model `Asset` até existir uma necessidade real que `files` não cubra:
+  versionamento independente, licenciamento, reutilização entre projetos sem
+  duplicar arquivo, ou taxonomia persistida de mídia.
+
+**Consequências:**
+- Positivas:
+  - evita duplicar storage/permissões;
+  - reduz risco de arquivo aparecer em uma superfície e não em outra;
+  - encerra a ambiguidade criada pelos relatórios antigos.
+- Negativas:
+  - o nome "Assets" pode sugerir um módulo mais rico do que existe;
+  - filtros avançados de biblioteca continuam limitados pelo schema de `files`.
+
+**Revisão:** reabrir apenas se uma tarefa de produto exigir asset reutilizável
+entre projetos ou governança de direitos/licenças separada do arquivo.
+
+---
+
+### ADR-018: `sessionService` mantém acesso dual Prisma/SQLite
+
+**Status:** Aceito
+**Data:** 2026-08-31
+**Contexto:** `sessionService.ts` implementa tracking, listagem, revogação e poda
+de sessões tanto via Prisma/Postgres quanto via SQL direto no SQLite local. Isso
+parece duplicação, mas segue a decisão do ADR-002: Postgres é o runtime principal
+e SQLite permanece como fallback local quando nenhuma URL de Postgres está
+configurada.
+
+**Decisão:** manter os dois caminhos no `sessionService` enquanto o fallback
+SQLite existir.
+
+- Produção usa Prisma/Postgres (`shouldUsePrisma === true`).
+- Testes e desenvolvimento sem banco externo usam SQLite com `DATABASE_PATH`.
+- A regra de negócio fica compartilhada no service; a duplicação aceitável é só
+  de acesso a dados.
+- Mudança futura para remover SQLite deve ser feita no ADR-002 antes de apagar
+  os branches SQL do service.
+
+**Consequências:**
+- Positivas:
+  - testes de auth/sessão continuam sem depender de Supabase;
+  - onboarding local segue simples;
+  - revogação de sessão continua coberta nos dois runtimes.
+- Negativas:
+  - cada alteração em sessão precisa manter paridade Postgres/SQLite;
+  - há custo de manutenção e risco de divergência.
+
+**Revisão:** quando o projeto decidir abandonar SQLite local, remover os branches
+SQL crus em uma única frente com testes de auth, sessões e portal.
 
 ---
 

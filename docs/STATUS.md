@@ -7,6 +7,34 @@
 
 **Última atualização:** 2026-08-31
 
+> **Handoff desta sessão:** em 2026-08-31 foi executada a triagem técnica das
+> pendências antigas antes de abrir nova frente visual. Foram encerradas duas
+> ambiguidades de arquitetura: Asset Library permanece como view operacional
+> sobre `files` (**ADR-017**) e `sessionService` mantém o caminho dual
+> Prisma/SQLite enquanto o fallback local existir (**ADR-018**). A mitigação do
+> ADR-012 deixou de ser só nota: `authenticate` já rejeita token de portal usado
+> como sessão do app, e a regressão foi coberta em
+> `server/controllers/coreFlow.test.ts`. Também foi verificado que produção
+> ainda não tem `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
+> `VITE_TURNSTILE_SITE_KEY` nem `TURNSTILE_SECRET_KEY`; essas quatro dependem de
+> criação/configuração nos consoles externos. Storyboard IA segue bloqueado por
+> crédito/provider de imagem, não por falta de rota. Na mesma rodada, o QA E2E
+> expôs problemas concretos em uso real: primeiro login E2E podia rodar antes do
+> seed local terminar, o botão "Sair" do Portal ficava abaixo de 44px no mobile,
+> a aba Admin mobile não trazia o painel ativo para o viewport e o teste do
+> Studio ainda esperava uma sidebar sem descrição. Correções aplicadas:
+> `loginAsAdmin` aguarda `/api/ready`, o logout do Portal ganhou alvo mínimo e
+> raio por token, Admin mobile rola para o tabpanel ativo, e a navegação do
+> Studio ganhou `aria-label` por ferramenta. Validação: `npm run test --
+> server/controllers/coreFlow.test.ts server/services/sessionService.test.ts
+> client/src/test/discovery-ux.test.tsx client/src/test/AppNavBar.test.tsx`
+> (29 testes passando), `npx playwright test tests/e2e/launch.spec.ts
+> tests/e2e/client-budget-proposal-portal.spec.ts
+> tests/e2e/critical-pages-mobile.spec.ts --workers=1` (13 passed, 5 skipped),
+> `npx playwright test tests/e2e/shotlist-storyboard-mobile.spec.ts --workers=1`
+> (1 passed, 1 skipped), `npm run check`, `npm run build`, `git diff --check`,
+> metadata pública por `curl` e `/ready` em produção com banco `ok`.
+
 > **Handoff desta sessão:** em 2026-08-31 foi concluída uma rodada P0 de
 > consistência visual e Studio IA após críticas diretas sobre botões quadrados,
 > blocos pesados e scroll quebrado. A base de raios foi centralizada nos tokens
@@ -387,7 +415,8 @@ verificar, está dito explicitamente.
   Sem entidade persistida nem rota.
 - **Asset Library:** tela `client/src/pages/Assets.tsx` servida pelo módulo de
   arquivos (`api.assets` → `/files/all`, `/files/:id/download`). Não é módulo
-  próprio; não existe model `Asset`.
+  próprio; não existe model `Asset`. Decisão encerrada em 2026-08-31 no
+  **ADR-017**: Asset Library permanece como view operacional sobre `files`.
 - **Script Breakdown:** sem rota, model ou tela dedicada. Aparece como ferramenta
   de IA/copy. Escopo real a confirmar quando a área de Studio for revisada.
 
@@ -400,18 +429,13 @@ verificar, está dito explicitamente.
 
 ## 2. Decisões de arquitetura em aberto
 
-- **Asset Library: view sobre `files` ou entidade própria?** Hoje é uma view — a
-  tela `Assets.tsx` consome os endpoints de arquivos e não existe model `Asset`.
-  O nome sugere entidade própria, e essa ambiguidade já produziu um documento de
-  auditoria afirmando que existia um módulo de assets com testes. Se a decisão
-  for "permanece view", vale um ADR curto em `ARCHITECTURE.md` para encerrar a
-  confusão; se for "vira entidade", precisa de model, rotas e migration.
-- **Caminho duplo de acesso a dados em `server/services/sessionService.ts`.** Cada
-  função (`trackSession`, `listSessions`, `revokeSession`, `isTokenRevoked`) está
-  escrita duas vezes: via Prisma sob `shouldUsePrisma`, e via SQL cru
-  (`db.prepare(...)`). Parece resíduo da remoção do better-sqlite3 (commit
-  `4f6b5d7`). Decidir se o fallback ainda tem propósito ou se sai. Alcance real
-  fora de `sessionService.ts` ainda não medido.
+Nenhuma decisão de arquitetura está aberta neste momento. Em 2026-08-31:
+
+- **ADR-017** encerrou Asset Library como view operacional sobre `files`, sem
+  criar entidade própria até existir necessidade real de asset reutilizável,
+  licenciamento ou taxonomia persistida.
+- **ADR-018** encerrou o caminho duplo de `sessionService.ts`: Prisma/Postgres é
+  produção e SQLite segue fallback local enquanto o ADR-002 estiver vigente.
 
 ## 3. Gatilhos pendentes
 
@@ -447,15 +471,15 @@ verificar, está dito explicitamente.
   fazer Search Console antes: o domínio canônico ainda é o da Vercel.
 - **Rotação de credenciais — ADIADA por decisão do operador (2026-07-26).**
   Inventário completo em `docs/CREDENCIAIS_PARA_ROTACIONAR.md` (não versionado) e
-  em `.private/CREDENCIAIS_ROTACIONAR.md` (procedência + valores). Nada foi
-  revogado. Bloqueia o push: **não empurrar com o PAT atual**, que está em texto
-  puro na URL do remote em `.git/config`. Ordem quando retomar: revogar o PAT →
-  remote sem credencial embutida → rotar Cloudinary, `DATABASE_URL` e
-  `JWT_SECRET` (vazamento já documentado) → decidir sobre `git filter-repo` →
-  push. Rotar `JWT_SECRET` derruba todas as sessões do app e do portal de uma vez.
-  Pendente também: descobrir se o histórico já foi reescrito (os commits citados
-  no doc de `.private/` não existem no histórico atual, mas
-  `CREDENCIAIS_TEMPLATE.md` em `1d0dc81` sobreviveu).
+  em `.private/CREDENCIAIS_ROTACIONAR.md` (procedência + valores). Em
+  2026-08-31, o remote local foi verificado sem PAT embutido; isso remove o
+  bloqueio operacional de push desta máquina. Ainda aberto: revogar/rotacionar
+  Cloudinary, `DATABASE_URL`, `JWT_SECRET` e qualquer segredo citado no
+  inventário privado, porque isso exige acesso aos provedores. Rotar
+  `JWT_SECRET` derruba todas as sessões do app e do portal de uma vez. Pendente
+  também: decidir sobre `git filter-repo` e confirmar se o histórico público já
+  foi reescrito; os commits citados no doc de `.private/` não existem no
+  histórico atual, mas `CREDENCIAIS_TEMPLATE.md` em `1d0dc81` sobreviveu.
 - ~~`.gitignore`: ancorar `RELATORIO_*` e `SESSAO_*`~~ — **resolvido.**
   `/RELATORIO_*.md` no commit `065bc36`; `/SESSAO_*.md` no lote de arquivamento
   de features-criticas. Ambos verificados nos dois sentidos (arquivo arquivado
@@ -821,10 +845,11 @@ Tarefas soltas identificadas na verificação, sem spec própria ainda:
   tradicional; `vercel.json` agenda `/api/internal/cron/maintenance` para
   Vercel Cron, protegido por `CRON_SECRET`.
 - ~~Fechar a checagem de claim `type` na autenticação (ADR-012, risco aceito)~~ —
-  **feito.** `signToken` emite `type: "app"`; `authenticate` rejeita qualquer
-  `type` presente e diferente de `"app"`. Token sem a claim continua aceito, para
-  não invalidar sessões emitidas antes da mudança. Verificado: token de portal
-  rejeitado, token do app aceito, token legado aceito.
+  **feito e coberto em 2026-08-31.** `signToken` emite `type: "app"`;
+  `authenticate` rejeita qualquer `type` presente e diferente de `"app"`. Token
+  sem a claim continua aceito, para não invalidar sessões emitidas antes da
+  mudança. Verificado por teste: token de portal rejeitado como `frame_token`,
+  token do app aceito, token legado aceito.
 - Completar `scripts/validate-env.ts`. O script checa **24** variáveis, mas o
   código referencia **79** (`.env.example` declara 89 contando aliases e as
   comentadas). Passar no `npm run validate:env` hoje não significa que o ambiente
@@ -967,9 +992,5 @@ request, em vez de aceitar token sem linha).
 
 **Resolvido:** registrado como **ADR-012** em `ARCHITECTURE.md` com status
 `Aceito` — a spec `portal-do-cliente-OK/` foi encerrada após validação da
-implementação. A mitigação de token confusion permanece como pendência de
-segurança independente.
-
-Pendência de segurança derivada, ainda não aplicada (ver Seção 4): o
-`authenticate` do app não checa a claim `type`. Um token de portal só é rejeitado
-por efeito colateral (payload sem `email`), não por asserção explícita.
+implementação. A mitigação de token confusion foi aplicada e coberta por teste
+em 2026-08-31: `authenticate` rejeita explicitamente `type` diferente de `"app"`.

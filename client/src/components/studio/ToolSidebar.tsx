@@ -150,6 +150,7 @@ export default function ToolSidebar({ tools, activeToolId, onSelectTool }: ToolS
                     <button
                       key={t.id}
                       type="button"
+                      aria-label={`${index + 1} ${t.name}`}
                       onClick={() => onSelectTool(t.id)}
                       className={`studio-tool-nav group flex min-h-[58px] shrink-0 items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition-[background-color,border-color,color,box-shadow] lg:shrink ${
                         active

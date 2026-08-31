@@ -155,7 +155,7 @@ test("client, project and studio workflow stay connected", async ({ page }) => {
     if (!compactStudio) {
       await expect(desktopTools.first()).toBeVisible();
       const workflowLabels = await desktopTools.evaluateAll((nodes) =>
-        nodes.slice(0, 9).map((node) => node.textContent?.replace(/^(\d)(\S)/, "$1 $2").replace(/\s+/g, " ").trim()),
+        nodes.slice(0, 9).map((node) => node.getAttribute("aria-label")?.replace(/\s+/g, " ").trim()),
       );
       expect(workflowLabels).toEqual([
         "1 Briefing Inteligente",

@@ -1,6 +1,7 @@
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import jwt from "jsonwebtoken";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import type { RequestHandler } from "express";
 
@@ -84,6 +85,38 @@ describe("core controller flow", () => {
 
     expect(capturedError?.status).toBe(401);
     expect(capturedError?.message).toBe("Unauthorized");
+  });
+
+  it("rejects a client-portal token even when it is sent as the app cookie", async () => {
+    const email = `token-confusion-${Date.now()}@example.com`;
+    const register = await invoke(authController.register, {
+      headers: {},
+      body: {
+        name: "Token Confusion",
+        email,
+        password: "flow-password-123",
+      },
+    });
+    const portalToken = jwt.sign(
+      {
+        id: register.body.data.user.id,
+        email,
+        role: "user",
+        type: "client-portal",
+      },
+      process.env.JWT_SECRET!,
+      { expiresIn: "7d" },
+    );
+    const req = { cookies: { [authMiddleware.COOKIE_NAME]: portalToken } };
+    const res = createResponse();
+    let capturedError: any;
+
+    await authMiddleware.authenticate(req as any, res as any, (error?: unknown) => {
+      capturedError = error;
+    });
+
+    expect(capturedError?.status).toBe(401);
+    expect(capturedError?.message).toBe("Invalid or expired session");
   });
 
   it("registers, authenticates and persists client/project records", async () => {
