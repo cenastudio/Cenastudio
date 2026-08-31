@@ -1189,16 +1189,25 @@ export async function deleteManagedUser(userId: number, actorId: number) {
       prisma.generation.count({ where: { userId: BigInt(userId) } }),
     ]);
 
+    let externalAuthDeleted = !user.supabaseId;
     if (user.supabaseId) {
       const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
       const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-      if (!supabaseUrl || !serviceRoleKey) throw new AppError("Supabase Admin nao esta configurado.", 503);
-      const response = await fetch(`${supabaseUrl}/auth/v1/admin/users/${user.supabaseId}`, {
-        method: "DELETE",
-        headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` },
-      });
-      if (!response.ok && response.status !== 404) {
-        throw new AppError("Nao foi possivel apagar a conta persistente no Supabase.", 502);
+      if (supabaseUrl && serviceRoleKey) {
+        try {
+          const response = await fetch(`${supabaseUrl}/auth/v1/admin/users/${user.supabaseId}`, {
+            method: "DELETE",
+            headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` },
+          });
+          externalAuthDeleted = response.ok || response.status === 404;
+          if (!externalAuthDeleted) {
+            logger.warn({ status: response.status, userId }, "Supabase Auth delete failed; deleting operational user only");
+          }
+        } catch (error) {
+          logger.warn({ err: error, userId }, "Supabase Auth delete failed; deleting operational user only");
+        }
+      } else {
+        logger.warn({ userId }, "Supabase Auth Admin is not configured; deleting operational user only");
       }
     }
 
@@ -1207,6 +1216,7 @@ export async function deleteManagedUser(userId: number, actorId: number) {
       id: userId,
       email: user.email,
       deleted: true,
+      externalAuthDeleted,
       summary: { projects, clients, files, reviews, generations },
     };
   }
@@ -1233,16 +1243,25 @@ export async function deleteManagedUser(userId: number, actorId: number) {
   });
 
   const sqliteSupabaseId = "supabase_id" in user ? user.supabase_id : user.supabaseId;
+  let externalAuthDeleted = !sqliteSupabaseId;
   if (sqliteSupabaseId) {
     const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!supabaseUrl || !serviceRoleKey) throw new AppError("Supabase Admin nao esta configurado.", 503);
-    const response = await fetch(`${supabaseUrl}/auth/v1/admin/users/${sqliteSupabaseId}`, {
-      method: "DELETE",
-      headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` },
-    });
-    if (!response.ok && response.status !== 404) {
-      throw new AppError("Nao foi possivel apagar a conta persistente no Supabase.", 502);
+    if (supabaseUrl && serviceRoleKey) {
+      try {
+        const response = await fetch(`${supabaseUrl}/auth/v1/admin/users/${sqliteSupabaseId}`, {
+          method: "DELETE",
+          headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` },
+        });
+        externalAuthDeleted = response.ok || response.status === 404;
+        if (!externalAuthDeleted) {
+          logger.warn({ status: response.status, userId }, "Supabase Auth delete failed; deleting operational user only");
+        }
+      } catch (error) {
+        logger.warn({ err: error, userId }, "Supabase Auth delete failed; deleting operational user only");
+      }
+    } else {
+      logger.warn({ userId }, "Supabase Auth Admin is not configured; deleting operational user only");
     }
   }
   remove();
@@ -1251,6 +1270,7 @@ export async function deleteManagedUser(userId: number, actorId: number) {
     id: userId,
     email: user.email,
     deleted: true,
+    externalAuthDeleted,
     summary,
   };
 }

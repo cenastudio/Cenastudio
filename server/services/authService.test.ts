@@ -84,6 +84,51 @@ describe("authService", () => {
     expect(plan).toMatchObject({ planId: "studio", status: "active" });
   });
 
+  it("deletes operational users even when Supabase Auth cleanup fails", async () => {
+    const originalFetch = global.fetch;
+    const originalSupabaseUrl = process.env.SUPABASE_URL;
+    const originalServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    process.env.SUPABASE_URL = "https://supabase.example.com";
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role-test-key";
+    const fetchMock = vi.fn(async () => new Response("bad gateway", { status: 502 }));
+    global.fetch = fetchMock as typeof fetch;
+
+    try {
+      const actor = await authService.registerUser(
+        "Delete Actor",
+        `delete-actor-${Date.now()}@example.com`,
+        "password-123",
+      );
+      const user = await authService.createManagedUser({
+        name: "Delete Target",
+        email: `delete-target-${Date.now()}@example.com`,
+        password: "password-123",
+        role: "user",
+        planId: "free",
+      });
+      database.prepare("UPDATE users SET supabase_id = ? WHERE id = ?").run(
+        "00000000-0000-4000-8000-000000000001",
+        user.id,
+      );
+
+      await expect(authService.deleteManagedUser(user.id, actor.id)).resolves.toMatchObject({
+        deleted: true,
+        externalAuthDeleted: false,
+      });
+      expect(fetchMock).toHaveBeenCalledWith(
+        "https://supabase.example.com/auth/v1/admin/users/00000000-0000-4000-8000-000000000001",
+        expect.objectContaining({ method: "DELETE" }),
+      );
+      await expect(authService.getUserById(user.id)).resolves.toBeNull();
+    } finally {
+      global.fetch = originalFetch;
+      if (originalSupabaseUrl === undefined) delete process.env.SUPABASE_URL;
+      else process.env.SUPABASE_URL = originalSupabaseUrl;
+      if (originalServiceRoleKey === undefined) delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+      else process.env.SUPABASE_SERVICE_ROLE_KEY = originalServiceRoleKey;
+    }
+  });
+
   it("creates reset tokens and resets password once", async () => {
     const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
     const email = `reset-${Date.now()}@example.com`;
