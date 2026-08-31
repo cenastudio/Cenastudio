@@ -28,10 +28,10 @@
   --color-frame-red: #ff3b3b;
   --color-frame-gold: #ffb800;
 
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  --radius-sm: var(--ds-radius-1);
+  --radius-md: var(--ds-radius-control);
+  --radius-lg: var(--ds-radius-panel);
+  --radius-xl: var(--ds-radius-shell);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -169,7 +169,7 @@ body.light .border-adaptive-primary {
 }
 
 :root {
-  --radius: 12px;
+  --radius: var(--ds-radius-control);
   --app-font-scale: 1.06;
 
   --background: #000000;
@@ -1514,6 +1514,7 @@ body.light .border-adaptive-primary {
 .proposal-service-card,
 .proposal-line {
   border: 1px solid rgba(217, 195, 171, 0.62);
+  border-radius: var(--ds-radius-panel);
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.28));
   box-shadow: 0 22px 80px rgba(51, 51, 51, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.62);
   -webkit-backdrop-filter: blur(30px) saturate(1.24);
@@ -1578,7 +1579,7 @@ body.light .border-adaptive-primary {
 }
 
 /* ─── PLAN CARDS — laranja translúcido em ambos os temas ─── */
-.plan-card { border-radius: var(--ds-radius-1); }
+.plan-card { border-radius: var(--ds-radius-panel); }
 
 .plan-card-free   { background: rgba(var(--ds-orange-rgb),0.07);  border: 1px solid rgba(var(--ds-orange-rgb),0.30); }
 .plan-card-pro    { background: rgba(var(--ds-orange-rgb),0.12);  border: 1px solid rgba(var(--ds-orange-rgb),0.55); }
@@ -1611,6 +1612,7 @@ body.light .border-adaptive-primary {
   min-height: 390px;
   padding: 28px;
   border: 1px dashed rgba(var(--ds-orange-rgb), 0.25);
+  border-radius: var(--ds-radius-panel);
   background: rgba(var(--ds-orange-rgb), 0.05);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.2);
   -webkit-backdrop-filter: blur(12px) saturate(1.1);
@@ -1669,6 +1671,7 @@ body.light .border-adaptive-primary {
 .app-panel {
   background: var(--app-surface);
   border: 1px solid var(--app-border);
+  border-radius: var(--ds-radius-panel);
   box-shadow: var(--app-shadow);
   -webkit-backdrop-filter: blur(18px) saturate(1.14);
   backdrop-filter: blur(18px) saturate(1.14);
@@ -1710,6 +1713,29 @@ body.light .border-adaptive-primary {
 .frame-shell .border-frame-gray-2,
 .frame-shell .border-frame-gray-3 {
   border-color: var(--app-border) !important;
+}
+
+.frame-shell :not(.cena-landing):not(.cena-auth) :is(
+  section,
+  article,
+  aside,
+  form,
+  [role="dialog"],
+  [class*="border-frame-gray"],
+  [class*="bg-frame-gray-1"],
+  [class*="bg-frame-gray-2"],
+  [class*="bg-frame-black/"]
+):not(.frame-nav):not(.frame-nav *) {
+  border-radius: var(--ds-radius-panel);
+}
+
+.frame-shell :not(.cena-landing):not(.cena-auth) :is(button, input, textarea, select, [role="button"]) {
+  border-radius: var(--ds-radius-control);
+}
+
+.frame-shell :not(.cena-landing):not(.cena-auth) :is(button, input, textarea, select, a):focus-visible {
+  outline: 2px solid rgba(var(--ds-orange-rgb), 0.58);
+  outline-offset: 3px;
 }
 
 .frame-shell :not(.cena-landing):not(.cena-auth) .text-frame-white,
@@ -1789,7 +1815,7 @@ body.light .border-adaptive-primary {
     font-weight: 500;
     padding: 14px 28px;
     border: none;
-    border-radius: 12px;
+    border-radius: var(--ds-radius-control);
     transition: background var(--ds-transition-fast) var(--ds-ease-out),
       transform var(--ds-transition-bounce) var(--ds-ease-out),
       box-shadow var(--ds-transition-normal) var(--ds-ease-out);
@@ -1801,6 +1827,11 @@ body.light .border-adaptive-primary {
     background: var(--color-frame-orange-dark);
     transform: translateY(-2px);
     box-shadow: var(--ds-shadow-glow);
+  }
+
+  .frame-btn-primary:focus-visible {
+    outline: 2px solid rgba(var(--ds-orange-rgb), 0.72);
+    outline-offset: 3px;
   }
 
   .frame-btn-primary:active:not(:disabled) {
@@ -1822,7 +1853,7 @@ body.light .border-adaptive-primary {
     text-transform: uppercase;
     background: rgba(34, 34, 34, 0.48);
     border: 1px solid var(--color-frame-gray-3);
-    border-radius: 12px;
+    border-radius: var(--ds-radius-control);
     padding: 12px 18px;
     transition: color var(--ds-transition-fast) var(--ds-ease-out),
       border-color var(--ds-transition-fast) var(--ds-ease-out),
@@ -1840,6 +1871,11 @@ body.light .border-adaptive-primary {
     box-shadow: 0 0 16px rgba(var(--ds-orange-rgb), 0.08);
   }
 
+  .frame-btn-ghost:focus-visible {
+    outline: 2px solid rgba(var(--ds-orange-rgb), 0.55);
+    outline-offset: 3px;
+  }
+
   .frame-btn-ghost:active {
     transform: translateY(0) scale(0.98);
     background: var(--ds-state-active);
@@ -1849,7 +1885,7 @@ body.light .border-adaptive-primary {
   .frame-card {
     background: var(--app-surface);
     border: 1px solid var(--app-border);
-    border-radius: var(--ds-radius-1);
+    border-radius: var(--ds-radius-panel);
     box-shadow: var(--app-shadow);
     -webkit-backdrop-filter: blur(20px) saturate(1.16);
     backdrop-filter: blur(20px) saturate(1.16);
@@ -1899,7 +1935,7 @@ body.light .border-adaptive-primary {
     padding: 12px 15px;
     font-family: var(--font-frame-body);
     font-size: 0.88rem;
-    border-radius: var(--ds-radius-1);
+    border-radius: var(--ds-radius-control);
     outline: none;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -2354,7 +2390,12 @@ body.light .border-adaptive-primary {
 .studio-main > .flex-1 {
   background: var(--app-surface-strong) !important;
   border-color: var(--app-border) !important;
+  border-radius: var(--ds-radius-panel);
   box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.35);
+}
+
+.studio-command-deck {
+  border-radius: 0 0 var(--ds-radius-shell) var(--ds-radius-shell);
 }
 
 .studio-sidebar {
@@ -2369,7 +2410,7 @@ body.light .border-adaptive-primary {
 }
 
 .studio-tool-nav {
-  border-radius: var(--radius-md);
+  border-radius: var(--ds-radius-control);
   background: transparent;
 }
 
@@ -2387,6 +2428,7 @@ body.light .border-adaptive-primary {
 
 .studio-panel-header {
   border-color: var(--app-border) !important;
+  border-radius: var(--ds-radius-panel);
 }
 
 .studio-form-stack input,
@@ -2409,24 +2451,43 @@ body.light .border-adaptive-primary {
 
 .studio-runbar {
   position: static;
-  background: var(--app-surface-strong);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--app-surface-strong) 88%, transparent), color-mix(in srgb, var(--app-surface-muted) 48%, transparent));
   border-color: var(--app-border) !important;
+  border-radius: var(--ds-radius-panel);
+  margin-inline: -0.25rem;
+  padding: 1rem 0.25rem 0;
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 @media (max-width: 767px) {
+  .studio-command-deck {
+    border-radius: 0 0 var(--ds-radius-panel) var(--ds-radius-panel);
+    padding: 1rem;
+  }
+
+  .studio-input-panel {
+    padding: 0.75rem;
+  }
+
+  .studio-panel-header,
+  .studio-form-stack {
+    border-radius: var(--ds-radius-panel);
+  }
+
+  .studio-form-stack {
+    padding: 0.75rem;
+  }
+
   .studio-runbar {
-    position: sticky;
-    bottom: 0;
-    z-index: 20;
-    margin-left: -1rem;
-    margin-right: -1rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
+    position: static;
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
     background:
-      linear-gradient(180deg, transparent, color-mix(in srgb, var(--app-surface-strong) 96%, transparent) 22%),
-      color-mix(in srgb, var(--app-surface-strong) 92%, transparent);
-    backdrop-filter: blur(16px);
+      linear-gradient(180deg, color-mix(in srgb, var(--app-surface-strong) 86%, transparent), color-mix(in srgb, var(--app-surface-muted) 62%, transparent));
+    backdrop-filter: none;
   }
 }
 
@@ -2462,14 +2523,14 @@ body.light .border-adaptive-primary {
 }
 
 .dark .studio-runbar {
-  background: rgba(5, 5, 5, 0.94);
+  background:
+    linear-gradient(180deg, rgba(8, 8, 8, 0.88), rgba(18, 18, 18, 0.62));
 }
 
 @media (max-width: 767px) {
   .dark .studio-runbar {
     background:
-      linear-gradient(180deg, transparent, rgba(5, 5, 5, 0.96) 22%),
-      rgba(5, 5, 5, 0.92);
+      linear-gradient(180deg, rgba(8, 8, 8, 0.88), rgba(18, 18, 18, 0.72));
   }
 }
 

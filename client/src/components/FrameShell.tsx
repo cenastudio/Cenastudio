@@ -15,7 +15,7 @@ const FrameShell = memo(function FrameShell({ children, cursor = false }: FrameS
     <div className="frame-shell min-h-screen text-frame-white font-frame-body">
       <a
         href="#main-content"
-        className="fixed left-3 top-3 z-[1000] -translate-y-20 bg-frame-orange px-4 py-2 font-frame-mono text-xs uppercase text-black transition-transform focus:translate-y-0"
+        className="fixed left-3 top-3 z-[1000] -translate-y-[calc(100%+1rem)] rounded-[var(--ds-radius-control)] bg-frame-orange px-4 py-2 font-frame-mono text-xs uppercase text-black transition-transform focus-visible:translate-y-0"
       >
         {t("app.common.skipToContent") as string}
       </a>

@@ -23,7 +23,7 @@ export default function MoodboardForm({ data, onChange }: FormProps) {
             <select
               value={data.tom || t("app.studio.forms.moodboard.optToneModern")}
               onChange={(e) => onChange("tom", e.target.value)}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition cursor-pointer"
             >
               <option value={t("app.studio.forms.moodboard.optToneModern")}>{t("app.studio.forms.moodboard.optToneModern")}</option>
               <option value={t("app.studio.forms.moodboard.optToneWarm")}>{t("app.studio.forms.moodboard.optToneWarm")}</option>
@@ -45,7 +45,7 @@ export default function MoodboardForm({ data, onChange }: FormProps) {
               onChange={(e) => onChange("referencias", e.target.value)}
               placeholder="Ex: Wong Kar-Wai, Terrence Malick, Ari Aster, Roger Deakins..."
               rows={2}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition resize-y"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition resize-y"
             />
           </div>
 
@@ -58,7 +58,7 @@ export default function MoodboardForm({ data, onChange }: FormProps) {
               value={data.cores || ""}
               onChange={(e) => onChange("cores", e.target.value)}
               placeholder="Ex: Tons terrosos, azul frio, preto e laranja, pastel neon..."
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
             />
           </div>
         </div>
@@ -77,7 +77,7 @@ export default function MoodboardForm({ data, onChange }: FormProps) {
             <select
               value={data.aspecto || t("app.studio.forms.moodboard.optAspect169")}
               onChange={(e) => onChange("aspecto", e.target.value)}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition cursor-pointer"
             >
               <option value={t("app.studio.forms.moodboard.optAspect169")}>{t("app.studio.forms.moodboard.optAspect169")}</option>
               <option value={t("app.studio.forms.moodboard.optAspect239")}>{t("app.studio.forms.moodboard.optAspect239")}</option>
@@ -95,7 +95,7 @@ export default function MoodboardForm({ data, onChange }: FormProps) {
             <select
               value={data.colorizacao || t("app.studio.forms.moodboard.optGradingCinematic")}
               onChange={(e) => onChange("colorizacao", e.target.value)}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition cursor-pointer"
             >
               <option value={t("app.studio.forms.moodboard.optGradingNatural")}>{t("app.studio.forms.moodboard.optGradingNatural")}</option>
               <option value={t("app.studio.forms.moodboard.optGradingCinematic")}>{t("app.studio.forms.moodboard.optGradingCinematic")}</option>
@@ -114,7 +114,7 @@ export default function MoodboardForm({ data, onChange }: FormProps) {
             <select
               value={data.luz || t("app.studio.forms.moodboard.optLightGolden")}
               onChange={(e) => onChange("luz", e.target.value)}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition cursor-pointer"
             >
               <option value={t("app.studio.forms.moodboard.optLightGolden")}>{t("app.studio.forms.moodboard.optLightGolden")}</option>
               <option value={t("app.studio.forms.moodboard.optLightDiffuse")}>{t("app.studio.forms.moodboard.optLightDiffuse")}</option>
@@ -133,7 +133,7 @@ export default function MoodboardForm({ data, onChange }: FormProps) {
               onChange={(e) => onChange("descricao", e.target.value)}
               placeholder="Descreva o sentimento, atmosfera e o ambiente visual do projeto..."
               rows={3}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition resize-y"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition resize-y"
             />
           </div>
         </div>

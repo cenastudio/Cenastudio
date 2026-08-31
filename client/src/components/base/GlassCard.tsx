@@ -5,7 +5,7 @@ export interface GlassCardProps {
   children: React.ReactNode;
   variant?: 'light' | 'dark';
   padding?: 'sm' | 'md' | 'lg' | 'xl';
-  borderRadius?: '12px' | '16px' | '24px' | '32px';
+  borderRadius?: 'control' | 'panel' | 'shell' | '12px' | '16px' | '24px' | '32px';
   hover?: boolean;
   onClick?: () => void;
   className?: string;
@@ -27,7 +27,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   children,
   variant = 'dark',
   padding = 'md',
-  borderRadius = '24px',
+  borderRadius = 'panel',
   hover = false,
   onClick,
   className,
@@ -50,11 +50,20 @@ export const GlassCard: React.FC<GlassCardProps> = ({
     lg: '24px',
     xl: '32px',
   };
+  const radiusMap = {
+    control: 'var(--ds-radius-control)',
+    panel: 'var(--ds-radius-panel)',
+    shell: 'var(--ds-radius-shell)',
+    '12px': 'var(--ds-radius-control)',
+    '16px': 'var(--ds-radius-panel)',
+    '24px': 'var(--ds-radius-shell)',
+    '32px': 'var(--ds-radius-shell)',
+  };
 
   const baseStyles: React.CSSProperties = {
-    borderRadius,
+    borderRadius: radiusMap[borderRadius],
     padding: paddingMap[padding],
-    transition: 'all 300ms ease-out',
+    transition: 'background-color 300ms ease-out, border-color 300ms ease-out, box-shadow 300ms ease-out, transform 300ms ease-out',
     willChange: hover ? 'transform, box-shadow' : 'auto',
   };
 

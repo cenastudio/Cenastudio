@@ -38,7 +38,7 @@ const buttonVariants = cva(
   // Base styles - applied to all buttons
   [
     "inline-flex items-center justify-center gap-2",
-    "rounded-md font-medium transition-[background-color,border-color,color,box-shadow,transform] duration-200",
+    "rounded-[var(--ds-radius-control)] font-medium transition-[background-color,border-color,color,box-shadow,transform] duration-200",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
     "disabled:pointer-events-none disabled:opacity-50",
     "whitespace-nowrap",

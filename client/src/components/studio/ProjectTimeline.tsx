@@ -112,7 +112,7 @@ export default function ProjectTimeline({ activeToolId }: ProjectTimelineProps) 
                 <div
                   className={`w-[18px] h-[18px] md:w-5 md:h-5 rounded-full flex items-center justify-center border font-frame-mono text-[0.64rem] font-bold transition duration-300 ${
                     isActive
-                      ? "border-frame-orange bg-frame-orange text-frame-black shadow-[0_0_12px_rgba(255,77,0,0.3)]"
+                      ? "border-frame-orange bg-frame-orange text-frame-black shadow-[0_0_12px_rgba(var(--ds-orange-rgb),0.3)]"
                       : isFilled
                         ? "border-frame-green bg-frame-green/10 text-frame-green"
                         : "border-frame-gray-3 bg-frame-black text-frame-gray-light group-hover:border-frame-white group-hover:text-frame-white"

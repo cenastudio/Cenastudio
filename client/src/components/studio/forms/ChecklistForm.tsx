@@ -231,7 +231,7 @@ export default function ChecklistForm({ data, onChange, onSetOutput }: Checklist
                   onChange("prompt", `Gere um checklist de set personalizado para: ${e.target.value}`);
                 }}
                 placeholder="Ex: Casamento ao ar livre, comercial de moda em estúdio..."
-                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
               />
             </div>
             <button

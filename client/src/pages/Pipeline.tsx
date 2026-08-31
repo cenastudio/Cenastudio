@@ -1082,7 +1082,18 @@ function OpportunityCard({
       animate={{ opacity: 1, y: 0 }}
       className="group border border-frame-gray-3 bg-frame-black/80 hover:border-frame-orange/50 transition"
     >
-      <button onClick={onOpen} className="w-full text-left p-3 space-y-3">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onOpen}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onOpen();
+          }
+        }}
+        className="w-full cursor-pointer p-3 text-left space-y-3"
+      >
         <div className="flex items-start justify-between gap-3">
           <h3 className="text-sm font-semibold leading-snug">{opportunity.title}</h3>
           <DropdownMenu>
@@ -1151,7 +1162,7 @@ function OpportunityCard({
           <Calendar className="w-3.5 h-3.5" />
           <span>{formatDate(opportunity.expected_close_date)}</span>
         </div>
-      </button>
+      </div>
 
       <div className="grid grid-cols-2 border-t border-frame-gray-3">
         <button

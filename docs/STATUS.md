@@ -5,7 +5,31 @@
 > de estado, edite a seção correspondente, não acrescente uma nova
 > no fim sem contexto. Data da última atualização no topo.
 
-**Última atualização:** 2026-08-25
+**Última atualização:** 2026-08-31
+
+> **Handoff desta sessão:** em 2026-08-31 foi concluída uma rodada P0 de
+> consistência visual e Studio IA após críticas diretas sobre botões quadrados,
+> blocos pesados e scroll quebrado. A base de raios foi centralizada nos tokens
+> (`--ds-radius-control`, `--ds-radius-panel`, `--ds-radius-shell`) e aplicada
+> aos primitivos de botão, GlassCard, QuickActionButton, painéis do app,
+> controles, formulários e descoberta operacional. O Studio IA foi refinado
+> para não prender rolagem: `studio-runbar` ficou estático, o hero ficou mais
+> compacto no mobile, as etapas de Brief/Gerar/Usar foram condensadas no
+> celular, os CTAs agora usam ação específica por ferramenta ("Gerar Orçamento",
+> "Criar Proposta", etc.) e a área de entrada/saída segue a mesma linguagem de
+> produção. Também foi corrigido o link "Pular para o conteúdo" para aparecer
+> somente em foco de teclado e o card clicável do Pipeline deixou de renderizar
+> botão dentro de botão. Validação local: `npm run test --
+> client/src/test/operationsUx.test.tsx client/src/components/base/GlassCard.test.tsx
+> client/src/test/design-system/QuickActionButton.test.tsx
+> client/src/test/discovery-ux.test.tsx` (79 testes passando), `npm run check`,
+> `npm run build`, `git diff --check` e QA Playwright com screenshots em
+> `.codex-screenshots/studio-radius-qa-final/`. Resultado do QA: Studio,
+> Dashboard, Comercial e Arquivos renderizados em desktop/mobile com 0 erro de
+> console, 0 overflow horizontal, scroll funcional e botões medidos em 14px de
+> raio. Observação: o backend local segue com falha de conexão Prisma no seed em
+> desenvolvimento, então o QA visual protegido foi feito com mocks de API no
+> navegador; produção deve ser validada após push/deploy.
 
 > **Handoff desta sessão:** em 2026-08-24 foi feita uma correção global de
 > consistência visual após comparação direta entre Landing e Login: CTAs da

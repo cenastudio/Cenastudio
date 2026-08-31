@@ -190,7 +190,7 @@ export default function ProjectSelector() {
                     key={p.id}
                     onClick={() => handleSelectProject(p.id)}
                     className={`flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-xs hover:bg-frame-gray-2 focus:bg-frame-gray-2 ${
-                      activeProject?.id === p.id ? "text-frame-orange bg-[rgba(255,77,0,0.05)] font-medium" : "text-frame-gray-light"
+                      activeProject?.id === p.id ? "text-frame-orange bg-frame-orange/[0.05] font-medium" : "text-frame-gray-light"
                     }`}
                   >
                     <Folder className={`w-3 h-3 shrink-0 ${activeProject?.id === p.id ? "text-frame-orange" : ""}`} />

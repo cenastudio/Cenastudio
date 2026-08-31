@@ -262,7 +262,7 @@ describe("operational UI and UX flows", () => {
     renderWithLanguage(<Pipeline />, "pro");
 
     const title = await screen.findByText("Filme Aurora");
-    fireEvent.click(title.closest("button")!);
+    fireEvent.click(title.closest("[role='button']")!);
     const convert = await screen.findByRole("button", { name: "Transformar em projeto" });
     fireEvent.click(convert);
 

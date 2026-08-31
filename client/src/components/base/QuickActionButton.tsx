@@ -84,8 +84,8 @@ export const QuickActionButton: React.FC<QuickActionButtonProps> = ({
     // Layout
     'inline-flex items-center justify-center gap-1',
     'font-medium',
-    'transition-all duration-200 ease-out',
-    'focus:outline-none focus:ring-2 focus:ring-offset-2',
+    'transition-[background-color,border-color,color,box-shadow,transform] duration-200 ease-out',
+    'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
     // Accessibility
     'disabled:cursor-not-allowed disabled:opacity-50',
     // Reduced motion support
@@ -97,12 +97,12 @@ export const QuickActionButton: React.FC<QuickActionButtonProps> = ({
     sm: cn(
       isIconOnly ? 'p-1' : 'px-2 py-1',
       'text-xs', // 0.75rem
-      'rounded-md' // --radius-md (12px)
+      'rounded-[var(--ds-radius-control)]'
     ),
     md: cn(
       isIconOnly ? 'p-2' : 'px-4 py-2',
       'text-sm', // 0.875rem
-      'rounded-lg' // --radius-lg (16px)
+      'rounded-[var(--ds-radius-control)]'
     ),
   };
 

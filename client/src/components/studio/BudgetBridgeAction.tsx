@@ -195,7 +195,7 @@ export default function BudgetBridgeAction({
       </div>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-xl rounded-none p-5 sm:p-6">
+        <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-xl rounded-[var(--ds-radius-control)] p-5 sm:p-6">
           <DialogHeader>
             <DialogTitle className="frame-title text-xl sm:text-2xl">
               Enviar orçamento para o módulo

@@ -119,7 +119,7 @@ export default function ProjectMetadataModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-md rounded-none p-6 overflow-y-auto max-h-[90vh]">
+      <DialogContent className="bg-frame-black border-frame-gray-3 text-frame-white max-w-md rounded-[var(--ds-radius-control)] p-6 overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="font-frame-display text-2xl tracking-wider text-frame-white">
             {t("app.studio.metadataModal.title") as string}
@@ -148,7 +148,7 @@ export default function ProjectMetadataModal({
                   placeholder={t("app.studio.metadataModal.namePlaceholder") as string}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2 md:p-2.5 font-frame-body text-[0.8rem] outline-none transition focus:border-frame-orange rounded-none"
+                  className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2 md:p-2.5 font-frame-body text-[0.8rem] outline-none transition focus:border-frame-orange rounded-[var(--ds-radius-control)]"
                 />
               </div>
 
@@ -161,7 +161,7 @@ export default function ProjectMetadataModal({
                   disabled={isSubmitting}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2 md:p-2.5 font-frame-body text-[0.8rem] outline-none transition resize-none h-[65px] focus:border-frame-orange rounded-none"
+                  className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2 md:p-2.5 font-frame-body text-[0.8rem] outline-none transition resize-none h-[65px] focus:border-frame-orange rounded-[var(--ds-radius-control)]"
                 />
               </div>
             </div>
@@ -184,7 +184,7 @@ export default function ProjectMetadataModal({
                   placeholder={t("app.studio.metadataModal.formatPlaceholder") as string}
                   value={format}
                   onChange={(e) => setFormat(e.target.value)}
-                  className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2 font-frame-body text-[0.8rem] outline-none transition focus:border-frame-orange rounded-none"
+                  className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2 font-frame-body text-[0.8rem] outline-none transition focus:border-frame-orange rounded-[var(--ds-radius-control)]"
                 />
               </div>
 
@@ -198,7 +198,7 @@ export default function ProjectMetadataModal({
                   placeholder={t("app.studio.metadataModal.clientPlaceholder") as string}
                   value={client}
                   onChange={(e) => setClient(e.target.value)}
-                  className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2 font-frame-body text-[0.8rem] outline-none transition focus:border-frame-orange rounded-none"
+                  className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2 font-frame-body text-[0.8rem] outline-none transition focus:border-frame-orange rounded-[var(--ds-radius-control)]"
                 />
               </div>
             </div>
@@ -214,7 +214,7 @@ export default function ProjectMetadataModal({
                   placeholder={t("app.studio.metadataModal.tonePlaceholder") as string}
                   value={tone}
                   onChange={(e) => setTone(e.target.value)}
-                  className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2 font-frame-body text-[0.8rem] outline-none transition focus:border-frame-orange rounded-none"
+                  className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2 font-frame-body text-[0.8rem] outline-none transition focus:border-frame-orange rounded-[var(--ds-radius-control)]"
                 />
               </div>
 
@@ -228,7 +228,7 @@ export default function ProjectMetadataModal({
                   placeholder={t("app.studio.metadataModal.cameraPlaceholder") as string}
                   value={cameraModel}
                   onChange={(e) => setCameraModel(e.target.value)}
-                  className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2 font-frame-body text-[0.8rem] outline-none transition focus:border-frame-orange rounded-none"
+                  className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2 font-frame-body text-[0.8rem] outline-none transition focus:border-frame-orange rounded-[var(--ds-radius-control)]"
                 />
               </div>
             </div>
@@ -243,7 +243,7 @@ export default function ProjectMetadataModal({
                 placeholder={t("app.studio.metadataModal.budgetPlaceholder") as string}
                 value={budget}
                 onChange={(e) => setBudget(e.target.value)}
-                className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2 font-frame-body text-[0.8rem] outline-none transition focus:border-frame-orange rounded-none"
+                className="w-full bg-frame-gray-1 border border-frame-gray-3 text-frame-white p-2 font-frame-body text-[0.8rem] outline-none transition focus:border-frame-orange rounded-[var(--ds-radius-control)]"
               />
             </div>
           </div>

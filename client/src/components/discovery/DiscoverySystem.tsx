@@ -33,7 +33,7 @@ export function OperationMap({ current = "project" }: { current?: string }) {
   return (
     <nav
       aria-label="Mapa operacional"
-      className="min-w-0 rounded-2xl border border-frame-gray-3/60 bg-frame-black/25 px-3 py-3 shadow-[0_18px_70px_rgba(0,0,0,0.22)] sm:px-4"
+      className="min-w-0 rounded-[var(--ds-radius-panel)] border border-frame-gray-3/60 bg-frame-black/25 px-3 py-3 shadow-[0_18px_70px_rgba(0,0,0,0.22)] sm:px-4"
     >
       <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-center">
         <div className="flex shrink-0 items-center gap-2">
@@ -48,7 +48,7 @@ export function OperationMap({ current = "project" }: { current?: string }) {
           return (
             <li
               key={step.id}
-              className={`flex min-h-9 shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 transition-colors ${
+              className={`flex min-h-9 shrink-0 items-center gap-2 rounded-[var(--ds-radius-pill)] border px-3 py-1.5 transition-colors ${
                 active
                   ? "border-frame-orange bg-frame-orange text-frame-black"
                   : "border-frame-gray-3/70 bg-frame-gray-1/20 text-frame-gray-light"
@@ -77,14 +77,14 @@ export function NextActionsPanel({ actions, onNavigate }: { actions: DiscoveryAc
   return (
     <section
       aria-label="Próximas ações"
-      className="min-w-0 max-w-full overflow-hidden rounded-2xl border border-frame-orange/30 bg-frame-orange/[0.045] p-3 shadow-[0_18px_80px_rgba(255,76,0,0.08)] sm:p-4"
+      className="min-w-0 max-w-full overflow-hidden rounded-[var(--ds-radius-panel)] border border-frame-orange/30 bg-frame-orange/[0.045] p-3 shadow-[0_18px_80px_rgba(var(--ds-orange-rgb),0.08)] sm:p-4"
     >
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <CheckCircle2 className="h-4 w-4 shrink-0 text-frame-orange" aria-hidden="true" />
           <h2 className="truncate font-frame-mono text-xs uppercase tracking-[0.16em] text-frame-orange">Próximas ações</h2>
         </div>
-        <span className="hidden rounded-full border border-frame-orange/25 px-2.5 py-1 font-frame-mono text-[0.52rem] uppercase tracking-[0.12em] text-frame-gray-light sm:inline">
+        <span className="hidden rounded-[var(--ds-radius-pill)] border border-frame-orange/25 px-2.5 py-1 font-frame-mono text-[0.52rem] uppercase tracking-[0.12em] text-frame-gray-light sm:inline">
           {actions.length} passos
         </span>
       </div>
@@ -96,19 +96,24 @@ export function NextActionsPanel({ actions, onNavigate }: { actions: DiscoveryAc
             key={action.id}
             href={action.href}
             onClick={(event) => handleClick(event, action.href)}
-            className={`group flex min-h-16 w-full min-w-0 max-w-full items-center justify-between gap-3 overflow-hidden rounded-xl border px-3 py-2.5 transition-colors focus-visible:ring-2 focus-visible:ring-frame-orange/70 ${
+            className={`group flex min-h-16 w-full min-w-0 max-w-full items-center justify-between gap-3 overflow-hidden rounded-[var(--ds-radius-control)] border px-3 py-2.5 transition-colors focus-visible:ring-2 focus-visible:ring-frame-orange/70 ${
               primary
                 ? "border-frame-orange/65 bg-frame-orange/[0.14] hover:bg-frame-orange/[0.18]"
                 : "border-frame-gray-3/70 bg-frame-black/30 hover:border-frame-orange/55"
             }`}
           >
             <span className="flex min-w-0 flex-1 items-center gap-3">
-              <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-frame-mono text-[0.56rem] ${
+              <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--ds-radius-pill)] font-frame-mono text-[0.56rem] ${
                 primary ? "bg-frame-orange text-frame-black" : "border border-frame-orange/30 text-frame-orange"
               }`}>
                 {String(index + 1).padStart(2, "0")}
               </span>
               <span className="min-w-0 flex-1">
+                {primary && (
+                  <span className="mb-0.5 block font-frame-mono text-[0.52rem] uppercase tracking-[0.12em] text-frame-orange">
+                    Próximo passo →
+                  </span>
+                )}
                 <span className="block truncate text-sm font-semibold text-frame-white">{action.label}</span>
                 <span className="block truncate text-xs text-frame-gray-light">{action.description}</span>
               </span>
@@ -137,14 +142,14 @@ export function ModuleCatalog({ modules, onNavigate }: { modules: DiscoveryModul
   return (
     <section
       aria-label="Catálogo de módulos"
-      className="min-w-0 max-w-full overflow-hidden rounded-2xl border border-frame-gray-3/60 bg-frame-black/20 p-3 sm:p-4"
+      className="min-w-0 max-w-full overflow-hidden rounded-[var(--ds-radius-panel)] border border-frame-gray-3/60 bg-frame-black/20 p-3 sm:p-4"
     >
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <LayoutGrid className="h-4 w-4 shrink-0 text-frame-orange" aria-hidden="true" />
           <h2 className="truncate font-frame-mono text-xs uppercase tracking-[0.16em] text-frame-gray-light">Tudo que o Cena faz</h2>
         </div>
-        <span className="rounded-full border border-frame-gray-3/70 px-2 py-1 font-frame-mono text-[0.52rem] uppercase tracking-[0.12em] text-frame-gray-light">
+        <span className="rounded-[var(--ds-radius-pill)] border border-frame-gray-3/70 px-2 py-1 font-frame-mono text-[0.52rem] uppercase tracking-[0.12em] text-frame-gray-light">
           {modules.length}
         </span>
       </div>
@@ -158,7 +163,7 @@ export function ModuleCatalog({ modules, onNavigate }: { modules: DiscoveryModul
                 key={item.id}
                 href={item.href}
                 onClick={(event) => handleClick(event, item.href)}
-                className="group inline-flex min-h-10 max-w-full items-center gap-2 rounded-full border border-frame-gray-3/70 bg-frame-gray-1/20 px-3 py-2 transition-colors hover:border-frame-orange/60 hover:bg-frame-orange/[0.08] focus-visible:ring-2 focus-visible:ring-frame-orange/70"
+                className="group inline-flex min-h-10 max-w-full items-center gap-2 rounded-[var(--ds-radius-pill)] border border-frame-gray-3/70 bg-frame-gray-1/20 px-3 py-2 transition-colors hover:border-frame-orange/60 hover:bg-frame-orange/[0.08] focus-visible:ring-2 focus-visible:ring-frame-orange/70"
               >
                 <Circle className="h-2.5 w-2.5 shrink-0 text-frame-orange" aria-hidden="true" />
                 <span className="min-w-0 truncate text-sm font-semibold text-frame-white">{item.label}</span>

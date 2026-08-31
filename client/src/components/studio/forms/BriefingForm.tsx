@@ -44,7 +44,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
               value={data.cliente || ""}
               onChange={(e) => onChange("cliente", e.target.value)}
               placeholder="Ex: Startup TechXYZ"
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
             />
           </div>
 
@@ -57,7 +57,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
               value={data.segmento || ""}
               onChange={(e) => onChange("segmento", e.target.value)}
               placeholder="Ex: Tecnologia, Saúde, Educação, Finanças"
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
             />
           </div>
 
@@ -68,7 +68,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
             <select
               value={data.tipo || t("app.studio.forms.briefing.optInstitutional")}
               onChange={(e) => onChange("tipo", e.target.value)}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition cursor-pointer"
             >
               <option value={t("app.studio.forms.briefing.optInstitutional")}>{t("app.studio.forms.briefing.optInstitutional")}</option>
               <option value={t("app.studio.forms.briefing.optProduct")}>{t("app.studio.forms.briefing.optProduct")}</option>
@@ -97,7 +97,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
               onChange={(e) => onChange("objetivo", e.target.value)}
               placeholder="O que o cliente deseja comunicar com este vídeo? Qual o problema a resolver?"
               rows={3.5}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition resize-y"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition resize-y"
             />
           </div>
 
@@ -110,7 +110,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
               value={data.publico || ""}
               onChange={(e) => onChange("publico", e.target.value)}
               placeholder="Ex: Jovens profissionais de 20-30 anos, B2B..."
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
             />
           </div>
 
@@ -123,7 +123,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
               value={data.veiculacao || ""}
               onChange={(e) => onChange("veiculacao", e.target.value)}
               placeholder="Ex: YouTube, Instagram, TV Corporativa, Site Institucional"
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
             />
           </div>
 
@@ -137,7 +137,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
                 value={data.duracao || ""}
                 onChange={(e) => onChange("duracao", e.target.value)}
                 placeholder="Ex: 2-3 min"
-                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
               />
             </div>
             <div>
@@ -149,7 +149,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
                 value={data.prazo || ""}
                 onChange={(e) => onChange("prazo", e.target.value)}
                 placeholder="Ex: 30 dias"
-                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
               />
             </div>
           </div>
@@ -163,7 +163,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
               value={data.referencias || ""}
               onChange={(e) => onChange("referencias", e.target.value)}
               placeholder="Ex: Estilo documentário da Apple, cores frias..."
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
             />
           </div>
 
@@ -176,7 +176,7 @@ export default function BriefingForm({ data, onChange }: FormProps) {
               onChange={(e) => onChange("restricoes", e.target.value)}
               placeholder="Linguagem agressiva, piadas internas, cenas externas de dia..."
               rows={2}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition resize-y"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition resize-y"
             />
           </div>
         </div>

@@ -28,14 +28,14 @@ describe('GlassCard', () => {
       });
     });
 
-    it('applies default border radius (24px)', () => {
+    it('applies default panel border radius', () => {
       const { container } = render(
         <GlassCard>
           <span>Content</span>
         </GlassCard>
       );
       const card = container.querySelector('.glass-card');
-      expect(card).toHaveStyle({ borderRadius: '24px' });
+      expect(card?.getAttribute('style')).toContain('border-radius: var(--ds-radius-panel)');
     });
 
     it('applies default padding (md - 16px)', () => {
@@ -85,7 +85,7 @@ describe('GlassCard', () => {
         </GlassCard>
       );
       const card = container.querySelector('.glass-card');
-      expect(card).toHaveStyle({ borderRadius: '12px' });
+      expect(card?.getAttribute('style')).toContain('border-radius: var(--ds-radius-control)');
     });
 
     it('applies 16px border radius', () => {
@@ -95,7 +95,7 @@ describe('GlassCard', () => {
         </GlassCard>
       );
       const card = container.querySelector('.glass-card');
-      expect(card).toHaveStyle({ borderRadius: '16px' });
+      expect(card?.getAttribute('style')).toContain('border-radius: var(--ds-radius-panel)');
     });
 
     it('applies 24px border radius (default)', () => {
@@ -105,7 +105,7 @@ describe('GlassCard', () => {
         </GlassCard>
       );
       const card = container.querySelector('.glass-card');
-      expect(card).toHaveStyle({ borderRadius: '24px' });
+      expect(card?.getAttribute('style')).toContain('border-radius: var(--ds-radius-shell)');
     });
 
     it('applies 32px border radius', () => {
@@ -115,7 +115,7 @@ describe('GlassCard', () => {
         </GlassCard>
       );
       const card = container.querySelector('.glass-card');
-      expect(card).toHaveStyle({ borderRadius: '32px' });
+      expect(card?.getAttribute('style')).toContain('border-radius: var(--ds-radius-shell)');
     });
   });
 
@@ -189,7 +189,9 @@ describe('GlassCard', () => {
         </GlassCard>
       );
       const card = container.querySelector('.glass-card');
-      expect(card).toHaveStyle({ transition: 'all 300ms ease-out' });
+      expect(card).toHaveStyle({
+        transition: 'background-color 300ms ease-out, border-color 300ms ease-out, box-shadow 300ms ease-out, transform 300ms ease-out',
+      });
     });
   });
 
@@ -435,8 +437,8 @@ describe('GlassCard', () => {
       expect(card).toHaveClass('glass-card--hover');
       expect(card).toHaveClass('glass-card--clickable');
       expect(card).toHaveClass('custom-card');
+      expect(card?.getAttribute('style')).toContain('border-radius: var(--ds-radius-shell)');
       expect(card).toHaveStyle({
-        borderRadius: '32px',
         padding: '24px',
         background: 'rgba(255, 255, 255, 0.7)',
         border: '1px solid rgba(0, 0, 0, 0.08)',

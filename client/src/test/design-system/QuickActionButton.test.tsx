@@ -127,7 +127,7 @@ describe('QuickActionButton', () => {
       expect(button.className).toContain('px-2');
       expect(button.className).toContain('py-1');
       expect(button.className).toContain('text-xs');
-      expect(button.className).toContain('rounded-md');
+      expect(button.className).toContain('rounded-[var(--ds-radius-control)]');
     });
 
     it('renders medium size with correct padding and text size', () => {
@@ -143,7 +143,7 @@ describe('QuickActionButton', () => {
       expect(button.className).toContain('px-4');
       expect(button.className).toContain('py-2');
       expect(button.className).toContain('text-sm');
-      expect(button.className).toContain('rounded-lg');
+      expect(button.className).toContain('rounded-[var(--ds-radius-control)]');
     });
 
     it('defaults to medium size when size prop not provided', () => {
@@ -339,7 +339,7 @@ describe('QuickActionButton', () => {
       const button = screen.getByRole('button', { name: /transition/i });
 
       // Check for transition classes (200ms ease-out)
-      expect(button.className).toContain('transition-all');
+      expect(button.className).toContain('transition-[background-color,border-color,color,box-shadow,transform]');
       expect(button.className).toContain('duration-200');
       expect(button.className).toContain('ease-out');
     });
@@ -376,8 +376,8 @@ describe('QuickActionButton', () => {
       const button = screen.getByRole('button', { name: /focus/i });
 
       expect(button.className).toContain('focus:outline-none');
-      expect(button.className).toContain('focus:ring-2');
-      expect(button.className).toContain('focus:ring-offset-2');
+      expect(button.className).toContain('focus-visible:ring-2');
+      expect(button.className).toContain('focus-visible:ring-offset-2');
       expect(button.className).toContain('focus:ring-[var(--color-orange-primary)]');
     });
 
@@ -426,7 +426,7 @@ describe('QuickActionButton', () => {
       // Should have both custom and base classes
       expect(button.className).toContain('custom-class');
       expect(button.className).toContain('inline-flex');
-      expect(button.className).toContain('transition-all');
+      expect(button.className).toContain('transition-[background-color,border-color,color,box-shadow,transform]');
     });
   });
 

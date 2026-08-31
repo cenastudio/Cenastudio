@@ -13,6 +13,7 @@
   --ds-white: #f9f9f9;
   --ds-cream: #d9c3ab;
   --ds-orange: #e85002;
+  --ds-orange-rgb: 232, 80, 2;
   --ds-orange-2: #c10801;
   --ds-orange-3: #f16001;
   --ds-orange-light-theme: #d64400; /* Laranja mais escuro para tema claro - melhor contraste */
@@ -29,7 +30,7 @@
   --ds-chart-grid: #2a2a2a;
   --ds-chart-axis: #999999;
   --ds-chart-reference: #666666;
-  --ds-chart-accent: #ff4e00;
+  --ds-chart-accent: var(--ds-orange);
   --ds-metric-info: #4d9fff;
   --ds-stage-prospect: #6366f1;
   --ds-stage-qualified: #8b5cf6;
@@ -84,7 +85,13 @@
   --ds-border-1: 1px;
   --ds-border-2: 2px;
   --ds-radius-0: 0px;
-  --ds-radius-1: 2px;
+  --ds-radius-1: 12px;
+  --ds-radius-2: 16px;
+  --ds-radius-3: 20px;
+  --ds-radius-control: 14px;
+  --ds-radius-panel: 18px;
+  --ds-radius-shell: 24px;
+  --ds-radius-pill: 999px;
 
   /* Spacing scale (4pt-ish, tuned for cinematic density) */
   --ds-space-0: 0px;

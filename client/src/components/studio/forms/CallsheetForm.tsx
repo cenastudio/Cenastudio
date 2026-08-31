@@ -25,7 +25,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
               value={data.producao || ""}
               onChange={(e) => onChange("producao", e.target.value)}
               placeholder="Ex: Vídeo Institucional XYZ"
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
             />
           </div>
 
@@ -38,7 +38,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
                 type="date"
                 value={data.data || ""}
                 onChange={(e) => onChange("data", e.target.value)}
-                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
               />
             </div>
             <div>
@@ -50,7 +50,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
                 value={data.cidade || ""}
                 onChange={(e) => onChange("cidade", e.target.value)}
                 placeholder="Ex: São Paulo, SP"
-                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
               />
             </div>
           </div>
@@ -64,7 +64,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
               value={data.endereco || ""}
               onChange={(e) => onChange("endereco", e.target.value)}
               placeholder="Ex: Rua das Flores, 123 — Vila Madalena"
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
             />
           </div>
 
@@ -77,7 +77,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
                 type="time"
                 value={data.calltime || "07:00"}
                 onChange={(e) => onChange("calltime", e.target.value)}
-                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
               />
             </div>
             <div>
@@ -88,7 +88,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
                 type="time"
                 value={data.wrap || "19:00"}
                 onChange={(e) => onChange("wrap", e.target.value)}
-                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
               />
             </div>
           </div>
@@ -111,7 +111,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
                 value={data.diretor || ""}
                 onChange={(e) => onChange("diretor", e.target.value)}
                 placeholder="Nome — Celular"
-                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
               />
             </div>
             <div>
@@ -123,7 +123,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
                 value={data.produtor || ""}
                 onChange={(e) => onChange("produtor", e.target.value)}
                 placeholder="Nome — Celular"
-                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
               />
             </div>
           </div>
@@ -138,7 +138,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
                 value={data.dop || ""}
                 onChange={(e) => onChange("dop", e.target.value)}
                 placeholder="Nome — Celular"
-                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
               />
             </div>
             <div>
@@ -150,7 +150,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
                 value={data.som || ""}
                 onChange={(e) => onChange("som", e.target.value)}
                 placeholder="Nome — Celular"
-                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
               />
             </div>
           </div>
@@ -164,7 +164,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
               onChange={(e) => onChange("equipe", e.target.value)}
               placeholder="Função — Nome — Celular (um por linha)..."
               rows={2.5}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition resize-y"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition resize-y"
             />
           </div>
         </div>
@@ -185,7 +185,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
               onChange={(e) => onChange("equipamentos", e.target.value)}
               placeholder="Sony FX3, Gimbal DJI, Kit de LEDs, Microfone Boom..."
               rows={2}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition resize-y"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition resize-y"
             />
           </div>
 
@@ -198,7 +198,7 @@ export default function CallsheetForm({ data, onChange }: FormProps) {
               onChange={(e) => onChange("observacoes", e.target.value)}
               placeholder="Estacionamento livre, alimentação no local às 12h, trazer casaco..."
               rows={2}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition resize-y"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition resize-y"
             />
           </div>
         </div>

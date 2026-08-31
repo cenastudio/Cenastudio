@@ -372,6 +372,20 @@ export default function StudioShell() {
   const filledFieldsCount = visibleFormValues(formData).length;
   const artifactStatus = getArtifactStatus(formData);
   const artifactVersion = getArtifactVersion(formData);
+  const studioActionLabels: Record<string, string> = {
+    briefing: "Montar Briefing",
+    roteiro: "Escrever Roteiro",
+    decupagem: "Criar Decupagem",
+    orcamento: "Gerar Orçamento",
+    proposta: "Criar Proposta",
+    contrato: "Preparar Contrato",
+    callsheet: "Montar Callsheet",
+    cronograma: "Planejar Cronograma",
+    checklist: "Criar Checklist",
+    entrega: "Preparar Entrega",
+    moodboard: "Gerar Direção Visual",
+  };
+  const studioActionLabel = studioActionLabels[tool.slug] || "Gerar Peça";
 
   return (
     <div className="studio-app min-h-screen bg-frame-black text-frame-white flex flex-col">
@@ -405,27 +419,27 @@ export default function StudioShell() {
 
         <div className="studio-main flex-1 flex flex-col relative">
           {tool.slug !== "assistente" && (
-            <section className="shrink-0 border-b border-frame-gray-3/70 bg-[radial-gradient(circle_at_18%_0%,rgba(var(--ds-orange-rgb),0.18),transparent_34%),linear-gradient(135deg,rgba(18,18,18,0.96),rgba(7,7,7,0.98))] px-4 py-5 sm:px-6 lg:px-8">
+            <section className="studio-command-deck shrink-0 border-b border-frame-gray-3/70 bg-[radial-gradient(circle_at_18%_0%,rgba(var(--ds-orange-rgb),0.18),transparent_34%),linear-gradient(135deg,rgba(18,18,18,0.96),rgba(7,7,7,0.98))] px-4 py-5 sm:px-6 lg:px-8">
               <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(420px,0.62fr)] xl:items-end">
                 <div className="min-w-0">
                   <div className="mb-3 flex items-center gap-3">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-frame-orange/35 bg-frame-orange/[0.1] shadow-[0_0_28px_rgba(var(--ds-orange-rgb),0.12)]">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--ds-radius-control)] border border-frame-orange/35 bg-frame-orange/[0.1] shadow-[0_0_28px_rgba(var(--ds-orange-rgb),0.12)]">
                       <Bot className="h-5 w-5 text-frame-orange" aria-hidden="true" />
                     </div>
                     <div className="min-w-0">
                       <p className="font-frame-mono text-[0.58rem] uppercase tracking-[0.16em] text-frame-orange">
-                        Studio IA / Oficina de artefatos
+                        Studio IA / Oficina de produção
                       </p>
                       <p className="mt-0.5 truncate text-xs text-frame-gray-light">
                         {activeProject ? activeProject.name : "Biblioteca sem projeto ativo"}
                       </p>
                     </div>
                   </div>
-                  <h1 className="frame-title max-w-4xl text-[clamp(2.2rem,4vw,4rem)] leading-none text-frame-white text-balance">
+                  <h1 className="frame-title max-w-4xl text-[2.15rem] leading-none text-frame-white text-balance sm:text-[clamp(2.7rem,4vw,4rem)]">
                     {tool.name}
                   </h1>
                   <p className="mt-3 max-w-3xl text-sm leading-relaxed text-frame-gray-light text-pretty sm:text-base">
-                    Escolha a peça da jornada, transforme contexto em brief e gere uma entrega pronta para revisar, exportar ou levar para o próximo módulo.
+                    Transforme contexto real do job em uma peça de produção pronta para revisar, exportar ou levar ao próximo módulo.
                   </p>
                 </div>
 
@@ -450,7 +464,7 @@ export default function StudioShell() {
                       icon: FileCheck2,
                     },
                   ].map(({ label, value, detail, icon: Icon }) => (
-                    <div key={label} className="min-w-0 rounded-xl border border-frame-gray-3/60 bg-frame-black/35 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                    <div key={label} className="min-w-0 rounded-[var(--ds-radius-control)] border border-frame-gray-3/60 bg-frame-black/35 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-frame-mono text-[0.52rem] uppercase tracking-[0.14em] text-frame-gray-light">{label}</span>
                         <Icon className="h-3.5 w-3.5 shrink-0 text-frame-orange" aria-hidden="true" />
@@ -467,7 +481,7 @@ export default function StudioShell() {
                   <button
                     type="button"
                     onClick={handleApplyLinkedContext}
-                    className="frame-btn-ghost flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold normal-case tracking-normal"
+                    className="frame-btn-ghost flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-[var(--ds-radius-control)] px-3 text-sm font-semibold normal-case tracking-normal"
                   >
                     <Sparkles className="h-4 w-4 shrink-0 text-frame-orange" aria-hidden="true" />
                     <span className="truncate">Aplicar contexto</span>
@@ -477,15 +491,15 @@ export default function StudioShell() {
                   type="button"
                   onClick={handleExecute}
                   disabled={isProcessing}
-                  className="frame-btn-primary flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold normal-case tracking-normal disabled:opacity-70"
+                  className="frame-btn-primary flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-[var(--ds-radius-control)] px-3 text-sm font-semibold normal-case tracking-normal disabled:opacity-70"
                 >
                   {isProcessing ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" /> : <Wand2 className="h-4 w-4 shrink-0 text-frame-black" aria-hidden="true" />}
-                  <span className="truncate">{output ? "Gerar nova versão" : "Gerar artefato"}</span>
+                  <span className="truncate">{output ? "Gerar Nova Versão" : studioActionLabel}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setHistoryOpen(true)}
-                  className="frame-btn-ghost flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold normal-case tracking-normal"
+                  className="frame-btn-ghost flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-[var(--ds-radius-control)] px-3 text-sm font-semibold normal-case tracking-normal"
                 >
                   <FileCheck2 className="h-4 w-4 shrink-0 text-frame-orange" aria-hidden="true" />
                   <span className="truncate">Ver versões</span>
@@ -521,13 +535,14 @@ export default function StudioShell() {
                       saveToolStateImmediately(tool.id, formData, newOut);
                     }
                   }}
+                  actionLabel={output ? "Gerar Nova Versão" : studioActionLabel}
                 />
               </div>
 
               <div className="min-w-0">
                 {/* Limit Reached Warning Alert Banner */}
                 {limitReached && (
-                  <div className="mx-6 mt-4 px-4 py-3 border border-frame-orange/40 bg-[rgba(255,77,0,0.08)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0 rounded-none">
+                  <div className="mx-6 mt-4 px-4 py-3 border border-frame-orange/40 bg-frame-orange/[0.08] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0">
                     <p className="font-frame-mono text-[0.63rem] tracking-[0.1em] text-frame-orange">
                       {t("app.studio.limitReached") as string}
                     </p>

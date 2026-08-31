@@ -42,7 +42,7 @@ export default function BudgetForm({ data, onChange }: FormProps) {
             <select
               value={data.tipo || t("app.studio.forms.budget.optInstitutional")}
               onChange={(e) => onChange("tipo", e.target.value)}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition cursor-pointer"
             >
               <option value={t("app.studio.forms.budget.optInstitutional")}>{t("app.studio.forms.budget.optInstitutional")}</option>
               <option value={t("app.studio.forms.budget.optAdvertising")}>{t("app.studio.forms.budget.optAdvertising")}</option>
@@ -64,7 +64,7 @@ export default function BudgetForm({ data, onChange }: FormProps) {
                 value={data.dias || "2"}
                 onChange={(e) => onChange("dias", e.target.value)}
                 placeholder="2"
-                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
               />
             </div>
             <div>
@@ -76,7 +76,7 @@ export default function BudgetForm({ data, onChange }: FormProps) {
                 value={data.locacoes || "2"}
                 onChange={(e) => onChange("locacoes", e.target.value)}
                 placeholder="2"
-                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
               />
             </div>
           </div>
@@ -96,7 +96,7 @@ export default function BudgetForm({ data, onChange }: FormProps) {
             <select
               value={data.equipe || t("app.studio.forms.budget.optCrewMedium")}
               onChange={(e) => onChange("equipe", e.target.value)}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition cursor-pointer"
             >
               <option value={t("app.studio.forms.budget.optCrewSmall")}>{t("app.studio.forms.budget.optCrewSmall")}</option>
               <option value={t("app.studio.forms.budget.optCrewMedium")}>{t("app.studio.forms.budget.optCrewMedium")}</option>
@@ -111,7 +111,7 @@ export default function BudgetForm({ data, onChange }: FormProps) {
             <select
               value={data.atores || t("app.studio.forms.budget.optCastNone")}
               onChange={(e) => onChange("atores", e.target.value)}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition cursor-pointer"
             >
               <option value={t("app.studio.forms.budget.optCastNone")}>{t("app.studio.forms.budget.optCastNone")}</option>
               <option value={t("app.studio.forms.budget.optCastInternal")}>{t("app.studio.forms.budget.optCastInternal")}</option>
@@ -135,7 +135,7 @@ export default function BudgetForm({ data, onChange }: FormProps) {
             <select
               value={data.camera || t("app.studio.forms.budget.optCameraOwn")}
               onChange={(e) => onChange("camera", e.target.value)}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition cursor-pointer"
             >
               <option value={t("app.studio.forms.budget.optCameraOwn")}>{t("app.studio.forms.budget.optCameraOwn")}</option>
               <option value={t("app.studio.forms.budget.optCameraBasic")}>{t("app.studio.forms.budget.optCameraBasic")}</option>
@@ -151,7 +151,7 @@ export default function BudgetForm({ data, onChange }: FormProps) {
             <select
               value={data.drone || t("app.studio.forms.budget.optDroneNo")}
               onChange={(e) => onChange("drone", e.target.value)}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition cursor-pointer"
             >
               <option value={t("app.studio.forms.budget.optDroneNo")}>{t("app.studio.forms.budget.optDroneNo")}</option>
               <option value={t("app.studio.forms.budget.optDroneOwn")}>{t("app.studio.forms.budget.optDroneOwn")}</option>
@@ -166,7 +166,7 @@ export default function BudgetForm({ data, onChange }: FormProps) {
             <select
               value={data.luz || t("app.studio.forms.budget.optLightNatural")}
               onChange={(e) => onChange("luz", e.target.value)}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition cursor-pointer"
             >
               <option value={t("app.studio.forms.budget.optLightNatural")}>{t("app.studio.forms.budget.optLightNatural")}</option>
               <option value={t("app.studio.forms.budget.optLightBasic")}>{t("app.studio.forms.budget.optLightBasic")}</option>
@@ -189,7 +189,7 @@ export default function BudgetForm({ data, onChange }: FormProps) {
             <select
               value={data.edicao || t("app.studio.forms.budget.optEditBasic")}
               onChange={(e) => onChange("edicao", e.target.value)}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition cursor-pointer"
             >
               <option value={t("app.studio.forms.budget.optEditBasic")}>{t("app.studio.forms.budget.optEditBasic")}</option>
               <option value={t("app.studio.forms.budget.optEditPro")}>{t("app.studio.forms.budget.optEditPro")}</option>
@@ -204,7 +204,7 @@ export default function BudgetForm({ data, onChange }: FormProps) {
             <select
               value={data.trilha || t("app.studio.forms.budget.optMusicFree")}
               onChange={(e) => onChange("trilha", e.target.value)}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition cursor-pointer"
             >
               <option value={t("app.studio.forms.budget.optMusicFree")}>{t("app.studio.forms.budget.optMusicFree")}</option>
               <option value={t("app.studio.forms.budget.optMusicPremium")}>{t("app.studio.forms.budget.optMusicPremium")}</option>

@@ -42,7 +42,7 @@ export default function ContractForm({ data, onChange }: FormProps) {
             <select
               value={data.tipo || t("app.studio.forms.contract.optAudiovisual")}
               onChange={(e) => onChange("tipo", e.target.value)}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition cursor-pointer"
             >
               <option value={t("app.studio.forms.contract.optAudiovisual")}>{t("app.studio.forms.contract.optAudiovisual")}</option>
               <option value={t("app.studio.forms.contract.optImageRights")}>{t("app.studio.forms.contract.optImageRights")}</option>
@@ -71,7 +71,7 @@ export default function ContractForm({ data, onChange }: FormProps) {
                 value={data.contratante || ""}
                 onChange={(e) => onChange("contratante", e.target.value)}
                 placeholder="Razão Social / Nome completo"
-                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
               />
             </div>
             <div>
@@ -83,7 +83,7 @@ export default function ContractForm({ data, onChange }: FormProps) {
                 value={data.cpf_contratante || ""}
                 onChange={(e) => onChange("cpf_contratante", e.target.value)}
                 placeholder="00.000.000/0001-00"
-                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
               />
             </div>
           </div>
@@ -98,7 +98,7 @@ export default function ContractForm({ data, onChange }: FormProps) {
                 value={data.contratado || ""}
                 onChange={(e) => onChange("contratado", e.target.value)}
                 placeholder="Seu nome / Nome da sua empresa"
-                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
               />
             </div>
             <div>
@@ -110,7 +110,7 @@ export default function ContractForm({ data, onChange }: FormProps) {
                 value={data.cpf_contratado || ""}
                 onChange={(e) => onChange("cpf_contratado", e.target.value)}
                 placeholder="00.000.000/0001-00"
-                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
               />
             </div>
           </div>
@@ -132,7 +132,7 @@ export default function ContractForm({ data, onChange }: FormProps) {
               onChange={(e) => onChange("objeto", e.target.value)}
               placeholder="Descreva o serviço a ser contratado de forma precisa..."
               rows={2.5}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition resize-y"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition resize-y"
             />
           </div>
 
@@ -146,7 +146,7 @@ export default function ContractForm({ data, onChange }: FormProps) {
                 value={data.valor || ""}
                 onChange={(e) => onChange("valor", e.target.value)}
                 placeholder="Ex: R$ 5.000,00"
-                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
               />
             </div>
             <div>
@@ -158,7 +158,7 @@ export default function ContractForm({ data, onChange }: FormProps) {
                 value={data.prazo || ""}
                 onChange={(e) => onChange("prazo", e.target.value)}
                 placeholder="Ex: 30 dias"
-                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
               />
             </div>
           </div>
@@ -172,7 +172,7 @@ export default function ContractForm({ data, onChange }: FormProps) {
               value={data.foro || ""}
               onChange={(e) => onChange("foro", e.target.value)}
               placeholder="Ex: São Paulo, SP"
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
             />
           </div>
         </div>

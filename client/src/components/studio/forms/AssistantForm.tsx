@@ -20,7 +20,7 @@ export default function AssistantForm({ data, onChange }: FormProps) {
               onChange={(e) => onChange("prompt", e.target.value)}
               placeholder="Ex: Como estruturar um plano de contingência para filmagens na chuva? Quais os microfones indicados para som direto em externa com vento?"
               rows={6}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition resize-y"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition resize-y"
             />
           </div>
           <p className="font-frame-mono text-[0.62rem] text-frame-gray-muted leading-relaxed">

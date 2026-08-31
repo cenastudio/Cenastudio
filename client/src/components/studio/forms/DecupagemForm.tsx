@@ -25,7 +25,7 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
               onChange={(e) => onChange("cena", e.target.value)}
               placeholder="Ex: Perseguição em rua movimentada, noturno, 2 personagens..."
               rows={3}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition resize-y"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition resize-y"
             />
           </div>
 
@@ -39,7 +39,7 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
                 value={data.planos || "10"}
                 onChange={(e) => onChange("planos", e.target.value)}
                 placeholder="10"
-                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
               />
             </div>
             <div>
@@ -51,7 +51,7 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
                 value={data.duracao || ""}
                 onChange={(e) => onChange("duracao", e.target.value)}
                 placeholder="Ex: 2 min"
-                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+                className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
               />
             </div>
           </div>
@@ -73,7 +73,7 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
               value={data.camera || ""}
               onChange={(e) => onChange("camera", e.target.value)}
               placeholder="Ex: Sony FX3, RED Komodo, ARRI Alexa Mini"
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
             />
           </div>
 
@@ -84,7 +84,7 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
             <select
               value={data.estilo || t("app.studio.forms.decupagem.optMixed")}
               onChange={(e) => onChange("estilo", e.target.value)}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition cursor-pointer"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition cursor-pointer"
             >
               <option value={t("app.studio.forms.decupagem.optHandheld")}>{t("app.studio.forms.decupagem.optHandheld")}</option>
               <option value={t("app.studio.forms.decupagem.optTripod")}>{t("app.studio.forms.decupagem.optTripod")}</option>
@@ -103,7 +103,7 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
               value={data.referencia || ""}
               onChange={(e) => onChange("referencia", e.target.value)}
               placeholder="Ex: Cidade de Deus, Drive, Euphoria"
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
             />
           </div>
 
@@ -116,7 +116,7 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
               value={data.equipe || ""}
               onChange={(e) => onChange("equipe", e.target.value)}
               placeholder="Ex: Diretor, DOP, Assistente de Câmera, Gaffer"
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition"
             />
           </div>
 
@@ -129,7 +129,7 @@ export default function DecupagemForm({ data, onChange }: FormProps) {
               onChange={(e) => onChange("observacoes", e.target.value)}
               placeholder="Luz natural, kit de LED portátil, locação externa sem energia..."
               rows={2}
-              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-none outline-none w-full font-frame-body transition resize-y"
+              className="bg-frame-gray-1 border border-frame-gray-3 focus:border-frame-orange text-frame-white px-3 py-2 text-[0.8rem] rounded-[var(--ds-radius-control)] outline-none w-full font-frame-body transition resize-y"
             />
           </div>
         </div>
